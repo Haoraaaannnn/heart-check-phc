@@ -1,4 +1,7 @@
 // TODO: add the rest of the services
+
+//! This will be temporary until we have setup for database to store the ui in the database 
+//! and fetch it in the frontend. For now, we will hardcode the services in the frontend.
 'use client';
 
 import { ServiceButton } from "@/components/kiosk/ServiceButton";
