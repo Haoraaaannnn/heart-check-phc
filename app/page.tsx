@@ -1,3 +1,7 @@
+// TODO: pede etong gawing homepage or yung ads na nagbabagobago
+//! DO NOT DELETE THIS FILE! This is the main entry point for the application.
+
+
 import Image from "next/image";
 
 export default function Home() {

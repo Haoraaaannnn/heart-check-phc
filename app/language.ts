@@ -1,3 +1,5 @@
+//? Pede na rin ata tong burahin
+
 export const languages = {
   en: {
     greeting: "Good Day",
@@ -8,6 +10,7 @@ export const languages = {
       opdCard: "OPD Card",
       prescriptionRefill: "Prescription Refill",
       ecg: "ECG",
+
     }
   },
   fil: {
@@ -19,6 +22,10 @@ export const languages = {
       opdCard: "OPD Kard",
       presciptionRefill: "Magparefill ng gamot",
       ecg: "ECG",
+      warfarin: "Warfarin",
+      reschedule: "OPD Reskedyul",
+      benzathine: "Benzathine",
+      opdScreening: "OPD Screening"
     }
   }
 };

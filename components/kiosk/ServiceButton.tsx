@@ -1,4 +1,5 @@
 // TODO change fonts and colors later
+//! Pede na ata to idelete
 
 import Image from "next/image";
 

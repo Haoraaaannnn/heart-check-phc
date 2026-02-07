@@ -1,5 +1,6 @@
 //! WALA AKO MAINTINDIHAN DITO
 //! need ng maayos na language switcher
+//? pede naman pagsamahin yung dalawang language sa iisang services
 
 "use client";
 import { createContext, useContext, useState, ReactNode } from "react";

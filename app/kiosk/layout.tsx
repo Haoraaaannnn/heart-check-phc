@@ -1,3 +1,5 @@
+//! Di pa gumagana language switcher
+
 import { createClient } from "@/lib/supabase/server";
 
 interface ThemeConfig {
@@ -64,11 +66,7 @@ export default async function KioskLayout({ children }: { children: React.ReactN
 
 
 
-
-
-
-
-
+// old source code for reference
 /*'use client';
 
 import { useState } from "react";
