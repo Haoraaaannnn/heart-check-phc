@@ -1,4 +1,5 @@
 //! Di pa gumagana language switcher
+//* Nasa database lahat fonts and etc to be adjusted later
 
 import { createClient } from "@/lib/supabase/server";
 
