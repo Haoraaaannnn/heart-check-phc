@@ -16,9 +16,9 @@ export default async function KioskPage() {
         <button
           key={service.id}
           style={{ backgroundColor: service.bg_color }}
-          className="group relative flex flex-col items-center justify-center py-8 max-w-80 rounded-[2rem] shadow-xl hover:scale-105 transition-all active:scale-95 text-white"
+          className="group relative flex flex-col items-center justify-center py-8 max-w-80 rounded-4xl shadow-xl hover:scale-105 transition-all active:scale-95 text-white"
         >
-          <img 
+          <img
             src={service.icon_src} 
             alt={service.label_en} 
             className="w-30 h-30 mb-6 drop-shadow-md"
