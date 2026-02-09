@@ -20,10 +20,11 @@ export default async function KioskPage() {
         >
           <img
             src={service.icon_src} 
-            alt={service.label_en} 
+            alt={service.label_en}
             className="w-30 h-30 mb-6 drop-shadow-md"
           />
-          <span className="text-2xl font-bold block">{service.label_en}</span>
+          <span className="text-2xl font-bold block">{service.label_fil}</span>
+          <span className="text-xl font-extralight block">{service.label_en}</span>
         </button>
       ))}
     </div>
