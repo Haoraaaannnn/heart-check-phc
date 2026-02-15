@@ -1,6 +1,7 @@
-  //          <main>{children}</main>
+ //* Possible Template for all screen. Need ma meeting yung about sa database dito (totong laban)
 
-  //* Possible Template for all screen. Need ma meeting yung about sa database dito (totong laban)
+import { tiltWarp } from "@/fonts/fonts";
+
 export default function RegistrationPage ({children}: {children: React.ReactNode}){
     return(
         <div className ="w-screen h-screen bg-white md:py-10 md:px-10 flex flex-col items-center justify-center">

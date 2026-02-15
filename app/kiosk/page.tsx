@@ -2,6 +2,7 @@
 
 import { createClient } from "@/lib/supabase/server";
 
+
 export default async function KioskPage() {
     const supabase = await createClient();
 
@@ -23,7 +24,7 @@ export default async function KioskPage() {
             alt={service.label_en}
             className="w-30 h-30 mb-6 drop-shadow-md"
           />
-          <span className="text-2xl font-bold block">{service.label_fil}</span>
+          <span className="text-2xl font-bold block ">{service.label_fil}</span>
           <span className="text-xl font-extralight block">{service.label_en}</span>
         </button>
       ))}
