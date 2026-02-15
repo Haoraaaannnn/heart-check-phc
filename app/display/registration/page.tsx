@@ -1,5 +1,5 @@
 //just an example
-
+'use client'
 export default function RegistrationPage() {
   return (
     <div className="bg-white p-10 rounded-4xl shadow-xl w-full content-center">
