@@ -6,7 +6,6 @@ export default function RegistrationPage ({children}: {children: React.ReactNode
             <div className = "w-full max-w-8xl h-full bg-gray-200 rounded-4xl p-6 md:p-10 shadow-lg flex flex-col item-center justify-baseline gap-8">
                 <h1 className="w-full max-w-8xl bg-white py-5 rounded-4xl shadow-2xl text-4xl font-bold text-black text-center">Registration</h1>
                 <main>{children}</main>
-
             </div>
             <div className= "w-full mt-auto py-8 flex justify-center item-center gap-12">
                 <div className="flex items-center gap-4"> 

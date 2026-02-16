@@ -2,7 +2,6 @@
 //* Nasa database lahat fonts and etc to be adjusted later
 
 import { createClient } from "@/lib/supabase/server";
-import { tiltWarp } from "@/fonts/fonts";
 
 interface ThemeConfig {
     primaryColor: string;
@@ -43,12 +42,7 @@ export default async function KioskLayout({ children }: { children: React.ReactN
         style= {{ backgroundColor: config?.primaryColor || '#FFFFFF', borderRadius: config?.borderRadius }}
         className="flex flex-col min-h-screen bg-white">
             <header className={`${config?.headerPadding} bg-[#2B59FF] text-white text-center p-10 rounded-b-[50px] shadow-lg`}>
-                <h1 
-  className={`${tiltWarp.className} font-bold`} 
-  style={{ fontSize: config?.titleSize }} // If titleSize is "64px"
->
-    {t?.greeting?.en}
-</h1>
+                <h1 className={config?.titleSize}>{t?.greeting?.en}</h1>
                 <p>{t?.instructions?.en}</p>
             </header>
             <main>{children}</main>
