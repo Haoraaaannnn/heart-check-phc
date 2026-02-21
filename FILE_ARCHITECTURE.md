@@ -13,15 +13,15 @@ HEART_CHECK_PHC/
 │   │       ├── page.tsx                 
 │   │       └── layout.tsx   
 │   ├── (display)/                      # Queue Information Displays (Front-End) 
-│   │   └── registration/               # Main waiting area queue status 
+│   │   ├── registration/               # Main waiting area queue status 
+│   │   │   ├── page.tsx
+│   │   │   ├── layout.tsx          
+│   │   ├── adult/                      # Adult-specific room/doctor tracking 
+│   │   │   ├── page.tsx
+│   │   │   └── layout.tsx          
+│   │   └── pedia/                      # Pedia-specific room/doctor tracking 
 │   │       ├── page.tsx
-│   │       ├── layout.tsx          
-│   │       ├── adult/                  # Adult-specific room/doctor tracking 
-│   │       │   ├── page.tsx
-│   │       │   └── layout.tsx          
-│   │       └── pedia/                  # Pedia-specific room/doctor tracking 
-│   │           ├── page.tsx
-│   │           └── layout.tsx        
+│   │       └── layout.tsx        
 │   ├── (dashboard)/                    # Staff & Administrative Control 
 │   │   ├── nurse/
 │   │   │   ├── page.tsx                # Patient transfer and status management 
@@ -39,8 +39,8 @@ HEART_CHECK_PHC/
 │   │   ├── queue/                      # Logic for generation and timestamps 
 │   │   ├── notify/                     # SMS alert trigger system 
 │   │   └── route.ts
-│   ├── layout.tsx                      # Root layout (Metadata, Google Fonts)
-│   └── page.tsx                        # Root landing (Redirects to /kiosk)
+│   ├── layout.tsx                      # Root layout (change to instruction menu na may ads)
+│   └── page.tsx                        # Root landing (change to instruction menu na may ads)
 ├── components/                         # Modular UI pieces
 │   ├── kiosk/                          # ServiceCards, TouchKeyboard
 │   ├── display/                        # AnnouncementBoard, NumberTicker
@@ -51,6 +51,6 @@ HEART_CHECK_PHC/
 ├── lib/                                # Core logic & Shared utilities
 │   └── supabase/
 │       ├── client.ts                   # Supabase client for Client Components
-│       └── server.ts                   # Supabase client for Server Components
+│       └── server.ts                   # Supabase client for Server Components (di ko know if need ilagay to)
 └── public/                             # Media (icons, images, logos)
 ```
