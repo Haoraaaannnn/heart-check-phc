@@ -1,3 +1,4 @@
+```text
 HEART_CHECK_PHC/
 ├── app/
 │   ├── (auth)/                         # Login routes for staff/admin 
@@ -52,3 +53,4 @@ HEART_CHECK_PHC/
 │       ├── client.ts                   # Supabase client for Client Components
 │       └── server.ts                   # Supabase client for Server Components
 └── public/                             # Media (icons, images, logos)
+```
