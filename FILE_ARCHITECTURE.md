@@ -7,20 +7,20 @@ HEART_CHECK_PHC/
 │   ├── (kiosk)/                        # Patient-Facing Kiosk System 
 │   │   ├── kiosk-selection/            # Service selection (Consultation, ECG, etc.) 
 │   │   │   ├── page.tsx                
-│   │   |   └── layout.tsx
-│   │   └── confirmation/               # Confirm and type???
-|   |       ├── page.tsx                 
+│   │   │   └── layout.tsx
+│   │   └── confirmation/               # Confirmation and input handling
+│   │       ├── page.tsx                 
 │   │       └── layout.tsx   
 │   ├── (display)/                      # Queue Information Displays (Front-End) 
 │   │   └── registration/               # Main waiting area queue status 
-│   │       │   ├─── page.tsx
-|   |       |   └─── layout.tsx          
+│   │       ├── page.tsx
+│   │       ├── layout.tsx          
 │   │       ├── adult/                  # Adult-specific room/doctor tracking 
-│   │       │   ├─── page.tsx
-|   |       |   └─── layout.tsx          
+│   │       │   ├── page.tsx
+│   │       │   └── layout.tsx          
 │   │       └── pedia/                  # Pedia-specific room/doctor tracking 
-│   │           ├─── page.tsx
-|   |           └─── layout.tsx        
+│   │           ├── page.tsx
+│   │           └── layout.tsx        
 │   ├── (dashboard)/                    # Staff & Administrative Control 
 │   │   ├── nurse/
 │   │   │   ├── page.tsx                # Patient transfer and status management 
@@ -43,14 +43,12 @@ HEART_CHECK_PHC/
 ├── components/                         # Modular UI pieces
 │   ├── kiosk/                          # ServiceCards, TouchKeyboard
 │   ├── display/                        # AnnouncementBoard, NumberTicker
-│   ├── dashboard/                      # AnalyticsCharts (Recharts), Sidebar, StatCards 
-│   └── ui/                             # Buttons, Modals, Inputs (Tailwind/Shadcn), some reusable designs
-|── fonts/
-|   └── fonts.ts                        # Where the fonts are stored
+│   ├── dashboard/                      # AnalyticsCharts, Sidebar, StatCards 
+│   └── ui/                             # Reusable atoms (Buttons, Modals, Inputs)
+├── fonts/
+│   └── fonts.ts                        # Centralized font configurations
 ├── lib/                                # Core logic & Shared utilities
-|   └── supabase/
-|       ├── client.ts
-|       └── server.ts                   # di ko know if need to
-└──public/                              # All media components (icons, images, audio, logos, etc)
-
- 
+│   └── supabase/
+│       ├── client.ts                   # Supabase client for Client Components
+│       └── server.ts                   # Supabase client for Server Components
+└── public/                             # Media (icons, images, logos)
