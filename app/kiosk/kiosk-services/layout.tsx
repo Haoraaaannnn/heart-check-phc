@@ -1,9 +1,23 @@
 //! Di pa gumagana language switcher
 //* Nasa database lahat fonts and etc to be adjusted later
 
-import { createClient } from "@/lib/supabase/server";
+'use client'
 
-interface ThemeConfig {
+export default function KioskLayout({children}: {children: React.ReactNode}){
+    return(
+        <div className="flex flex-col min-h-screen bg-white">
+            <header className=" bg-[#2B59FF] text-white text-center p-10 rounded-b-[50px] shadow-lg">
+                <h1 className= "text-4xl">Magandang Araw!</h1>
+                <p>Pumili at pindutin ang serbisyong kailangan ninyo:</p>
+            </header>
+            <main>{children}</main>
+            <footer className="bg-[#2B59FF] text-white text-center p-8 rounded-t-[50px] shadow-inner mt-auto">               
+            </footer>
+        </div>
+    );
+}
+
+/*interface ThemeConfig {
     primaryColor: string;
     borderRadius: string;
     headerPadding: string;
@@ -51,7 +65,6 @@ export default async function KioskLayout({ children }: { children: React.ReactN
                     {t?.languageType?.en || 'Language:'}
                 </h2>
                 
-                {/* Language Switcher Buttons */}
                 <div className="inline-flex bg-white rounded-full p-1 shadow-md">
                     <button className="px-8 py-2 text-[#2B59FF] font-bold text-xl rounded-full">
                         Filipino
@@ -63,7 +76,7 @@ export default async function KioskLayout({ children }: { children: React.ReactN
             </footer>
         </div>
     );
-}
+}*/
 
 
 
