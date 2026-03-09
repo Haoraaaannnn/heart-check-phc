@@ -83,7 +83,7 @@ export default function DashboardPage() {
   const fetchTodayPatients = async () => {
     const { data: { session } } = await supabase.auth.getSession();
     console.log('Session:', session);
-    
+
     const now = new Date();
     const startOfDay = new Date(now.getFullYear(), now.getMonth(), now.getDate()).toISOString(); //binabago everyday
     const endOfDay = new Date(now.getFullYear(), now.getMonth(), now.getDate() + 1).toISOString();
