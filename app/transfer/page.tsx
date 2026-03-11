@@ -7,17 +7,18 @@ type Patient = {
   id: number;
   patientNum: string;
   status?: string;
+  cubicleNum?: string;
 };
 
 const services = [
-  { name: 'Consultation', color: 'bg-[#3599CC]' },
-  { name: 'OPD Card', color: 'bg-[#4cd137]' },
-  { name: 'Refill Prescription', color: 'bg-[#a8f07a]' },
-  { name: 'ECG', color: 'bg-[#ff6b81]' },
-  { name: 'Warfarin', color: 'bg-[#c084fc]' },
-  { name: 'OPD Reschedule', color: 'bg-[#a29bfe]' },
-  { name: 'Benzathine', color: 'bg-[#00cec9]' },
-  { name: 'OPD Screening', color: 'bg-[#f9ca24]' },
+  { name: 'Cubicle 1' },
+  { name: 'Cubicle 2' },
+  { name: 'Cubicle 3' },
+  { name: 'Cubicle 4' },
+  { name: 'Cubicle 5' },
+  { name: 'Cubicle 6' },
+  { name: 'Cubicle 7' },
+  { name: 'Cubicle 8' },
 ];
 
 export default function TransferPage() {
@@ -28,6 +29,17 @@ export default function TransferPage() {
   const [dragOverService, setDragOverService] = useState<string | null>(null);
 
   useEffect(() => {
+    
+  const checkSession = async () => {
+    const { data } = await supabase.auth.getSession();
+    if (!data.session) {
+      router.replace('/login');
+      return;
+    }
+  };
+
+  checkSession();
+
     const fetchPatients = async () => {
       const now = new Date();
       const startOfDay = new Date(now.getFullYear(), now.getMonth(), now.getDate()).toISOString();
@@ -40,7 +52,21 @@ export default function TransferPage() {
         .lt('created_at', endOfDay)
         .order('created_at', { ascending: true });
 
-      if (!error && data) setPatients(data);
+      if (!error && data) {
+
+        const queue = data.filter((p: Patient) => !p.cubicleNum);
+        const assigned = data.filter((p: Patient) => p.cubicleNum);
+
+        setPatients(queue);
+
+        const rebuilt: Record<string, Patient[]> = {};
+        for (const p of assigned) {
+          if (!p.cubicleNum) continue;
+          if (!rebuilt[p.cubicleNum]) rebuilt[p.cubicleNum] = [];
+          rebuilt[p.cubicleNum].push(p);
+        }
+        setAssignments(rebuilt);
+      }
     };
 
     fetchPatients();
@@ -58,19 +84,22 @@ export default function TransferPage() {
   const handleDrop = async (serviceName: string) => {
     if (!dragging) return;
 
-    // Adder
-    setAssignments(prev => ({
-      ...prev,
-      [serviceName]: [...(prev[serviceName] ?? []), dragging],
-    }));
+    setAssignments(prev => {
+      const updated = { ...prev };
+      for (const key in updated) {
+        updated[key] = updated[key].filter(p => p.id !== dragging.id);
+      }
+      return {
+        ...updated,
+        [serviceName]: [...(updated[serviceName] ?? []), dragging],
+      };
+    });
 
-    // Remover
     setPatients(prev => prev.filter(p => p.id !== dragging.id));
 
-    // Updater
     await supabase
       .from('patients')
-      .update({ status: serviceName })
+      .update({ cubicleNum: serviceName, status: 'On Progress' })
       .eq('id', dragging.id);
 
     setDragging(null);
@@ -78,118 +107,94 @@ export default function TransferPage() {
   };
 
   return (
-    <div className="min-h-screen w-full bg-gradient-to-br from-[#ff0202] to-[#320000] font-sans">
+<div className="min-h-screen w-full bg-gradient-to-br from-white via-red-50 to-red-100 font-sans">
 
-   
-      <div className="relative flex items-center justify-between px-6 py-4">
-        <div className="flex items-center gap-2">
-          <svg width="44" height="44" viewBox="0 0 44 44" fill="none">
-          </svg>
+      <div className="flex items-center gap-2 justify-end px-8 py-4 bg-white/80 backdrop-blur-sm border-b border-red-100 shadow-sm">
+
+        <div className="flex items-center gap-1 bg-gray-100 px-2 py-2 rounded-full">
+          <button className="px-5 py-2 bg-[#cc3535] text-white rounded-full text-sm font-semibold shadow-sm">Transfer</button>
+          <button className="px-5 py-2 text-gray-500 text-sm font-medium hover:text-[#cc3535] transition" onClick={() => router.push('/dashboard')}>Dashboard</button>
+          <button className="px-5 py-2 text-gray-500 text-sm font-medium hover:text-[#cc3535] transition">History</button>
+          <button className="px-5 py-2 text-gray-500 text-sm font-medium hover:text-[#cc3535] transition">Analytics</button>
+          <button className="px-5 py-2 text-gray-500 text-sm font-medium hover:text-[#cc3535] transition" onClick={async () => { await supabase.auth.signOut(); router.replace('/login'); }}>Logout</button>
         </div>
 
         <div className="flex items-center gap-2">
-        <div className="flex items-center gap-1 bg-white p-3 rounded-4xl">
-          <button className="px-5 py-2 bg-[#3599CC] text-white rounded-full text-sm font-semibold">
-            Dashboard
+          <button className="w-10 h-10 bg-gray-100 rounded-full flex items-center justify-center hover:bg-red-50 transition">
+            <i className='bx bxs-bell text-lg text-gray-500'></i>
           </button>
-          <button className="px-5 py-2 text-gray-600 text-sm font-medium hover:text-[#3599CC] underline">
-            History
+          <button className="w-10 h-10 bg-gray-100 rounded-full flex items-center justify-center hover:bg-red-50 transition">
+            <i className='bx bxs-user-circle text-lg text-gray-500'></i>
           </button>
-          <button className="px-5 py-2 text-gray-600 text-sm font-medium hover:text-[#3599CC] underline">
-            Analytics
-          </button>
-          <button className="px-5 py-2 text-gray-600 text-sm font-medium hover:text-[#3599CC] underline">
-            Reports
-          </button>
-          <button
-          onClick={() => router.push('/')}
-          className="px-5 py-2 text-gray-600 text-sm font-medium hover:text-[#3599CC] underline"
-        >
-          <span>Logout</span>
-        </button>
         </div>
-        <button className="flex items-center gap-1 bg-white p-3 rounded-4xl hover:bg-[#3599CC]" onClick={() => router.push('/')}>
-          <i className='bx bxs-bell text-2xl text-[#000000]'></i>
-        </button>
-          <button className="flex items-center gap-1 bg-white p-3 rounded-4xl hover:bg-[#3599CC]" onClick={() => router.push('/')}>
-            <i className='bx bxs-user-circle text-2xl text-[#000000] '></i>
-          </button>
       </div>
-    </div>
 
+      <div className="px-8 py-6 flex gap-5 h-[calc(100vh-73px)]">
 
-      <div className="px-10 pb-10 flex gap-6 h-[calc(100vh-90px)]">
-
-
-        <div className="bg-white rounded-3xl shadow-lg p-6 w-48 flex flex-col gap-3 overflow-y-auto"
-        onDragOver={(e) => e.preventDefault()}
-        onDrop={() => {
+        <div
+          className="bg-white border-2 border-gray-200 rounded-3xl p-5 w-44 h-143 flex flex-col gap-2 overflow-y-auto shadow-sm"
+          onDragOver={(e) => e.preventDefault()}
+          onDrop={() => {
             if (!dragging) return;
-
             setAssignments(prev => {
-            const updated = { ...prev };
-            for (const key in updated) {
+              const updated = { ...prev };
+              for (const key in updated) {
                 updated[key] = updated[key].filter(p => p.id !== dragging.id);
-            }
-            return updated;
+              }
+              return updated;
             });
-
             setPatients(prev => {
-            if (prev.find(p => p.id === dragging.id)) return prev;
-            return [...prev, dragging].sort((a, b) => a.id - b.id);
+              if (prev.find(p => p.id === dragging.id)) return prev;
+              return [...prev, dragging].sort((a, b) => a.id - b.id);
             });
-
-            supabase
-            .from('patients')
-            .update({ status: 'Waiting' })
-            .eq('id', dragging.id);
-
+            supabase.from('patients').update({ cubicleNum: null, status: 'Waiting' }).eq('id', dragging.id);
             setDragging(null);
-        }}
+          }}
         >
-        <h2 className="text-gray-700 font-semibold text-base mb-2">Patient Queue</h2>
-        {patients.length === 0 && (
-            <p className="text-gray-300 text-xs">No patients today.</p>
-        )}
-        {patients.map((p) => (
+          <h2 className="text-gray-400 font-semibold text-xs mb-1 tracking-widest uppercase">Queue</h2>
+          {patients.length === 0 && (
+            <p className="text-gray-300 text-xs mt-2">No patients today.</p>
+          )}
+          {patients.map((p) => (
             <div
-            key={p.id}
-            draggable
-            onDragStart={() => setDragging(p)}
-            onDragEnd={() => setDragging(null)}
-            className={`px-4 py-2 bg-[#3599CC] text-white rounded-full text-sm font-semibold cursor-grab active:cursor-grabbing select-none transition ${
-                dragging?.id === p.id ? 'opacity-50' : 'opacity-100'
-            }`}
+              key={p.id}
+              draggable
+              onDragStart={() => setDragging(p)}
+              onDragEnd={() => setDragging(null)}
+              className={`px-3 py-2 bg-[#cc3535] text-white rounded-2xl text-sm font-semibold cursor-grab active:cursor-grabbing select-none shadow-sm transition-opacity ${
+                dragging?.id === p.id ? 'opacity-40' : 'opacity-100'
+              }`}
             >
-            {p.patientNum}
+              {p.patientNum}
             </div>
-        ))}
+          ))}
         </div>
 
-        
-        <div className="flex-1 grid grid-cols-3 gap-4 content-start">
+        <div className="flex-1 grid grid-cols-4 gap-3 content-start">
           {services.map((service) => (
             <div
               key={service.name}
               onDragOver={(e) => { e.preventDefault(); setDragOverService(service.name); }}
               onDragLeave={() => setDragOverService(null)}
               onDrop={() => handleDrop(service.name)}
-              className={`${service.color} rounded-3xl p-4 flex flex-col gap-2 min-h-32 transition-all ${
-                dragOverService === service.name ? 'scale-105 ring-4 ring-white ring-opacity-70' : ''
+              className={`bg-white border-2 rounded-3xl p-4 flex flex-col gap-2 min-h-70 shadow-sm transition-all duration-150 ${
+                dragOverService === service.name
+                  ? 'border-[#cc3535] bg-red-50 scale-105'
+                  : 'border-gray-100 hover:border-red-200'
               }`}
             >
-              <span className="text-white font-semibold text-sm">{service.name}</span>
-              <div className="flex flex-wrap gap-1 mt-1">
+              <span className="text-gray-700 font-semibold text-sm">{service.name}</span>
+              <div className="flex flex-wrap gap-1">
                 {(assignments[service.name] ?? []).map((p) => (
-                <span
+                  <span
                     key={p.id}
                     draggable
-                    onDragStart={() => setDragging(p)}
+                    onDragStart={(e) => { e.stopPropagation(); setDragging(p); }}
                     onDragEnd={() => setDragging(null)}
-                    className="px-2 py-1 bg-white/30 text-white rounded-full text-xs font-medium cursor-grab active:cursor-grabbing select-none"
-                >
+                    className="px-2 py-1 bg-[#cc3535] text-white rounded-full text-xs font-medium cursor-grab active:cursor-grabbing select-none hover:bg-red-700 transition"
+                  >
                     {p.patientNum}
-                </span>
+                  </span>
                 ))}
               </div>
             </div>

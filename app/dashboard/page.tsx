@@ -75,11 +75,21 @@ function MiniCalendar() {
 
 export default function DashboardPage() {
 
-  //patient counter
   const router = useRouter();
   const [todayCount, setTodayCount] = useState<number | null>(null);
 
   useEffect(() => {
+    
+  const checkSession = async () => {
+    const { data } = await supabase.auth.getSession();
+    if (!data.session) {
+      router.replace('/login');
+      return;
+    }
+  };
+
+  checkSession();
+
   const fetchTodayPatients = async () => {
     const { data: { session } } = await supabase.auth.getSession();
     console.log('Session:', session);
@@ -117,7 +127,7 @@ export default function DashboardPage() {
 }, []);
 
   return (
-    <div className="min-h-screen w-full bg-gradient-to-br from-white to-[#86C0E9] font-sans">
+    <div className="min-h-screen w-full bg-gradient-to-br from-white via-red-50 to-red-100 font-sans">
 
     <div className="flex items-center justify-between px-6 py-4">
 
@@ -138,20 +148,17 @@ export default function DashboardPage() {
           <button className="px-5 py-2 text-gray-600 text-sm font-medium hover:text-[#3599CC] underline">
             Analytics
           </button>
-          <button className="px-5 py-2 text-gray-600 text-sm font-medium hover:text-[#3599CC] underline">
-            Reports
+          <button className="px-5 py-2 text-gray-600 text-sm font-medium hover:text-[#3599CC] underline" onClick={() => router.push('/transfer')}>
+            Transfer
           </button>
-          <button
-          onClick={() => router.push('/')}
-          className="px-5 py-2 text-gray-600 text-sm font-medium hover:text-[#3599CC] underline"
-        >
-          <span>Logout</span>
+          <button className="px-5 py-2 text-gray-600 text-sm font-medium hover:text-[#cc3535] underline" onClick={async () => { await supabase.auth.signOut(); router.replace('/login'); }}>
+          Logout
         </button>
         </div>
-        <button className="flex items-center gap-1 bg-white p-3 rounded-4xl hover:bg-[#3599CC]" onClick={() => router.push('/')}>
+        <button className="flex items-center gap-1 bg-white p-3 rounded-4xl hover:bg-[#3599CC]">
           <i className='bx bxs-bell text-2xl text-[#000000]'></i>
         </button>
-          <button className="flex items-center gap-1 bg-white p-3 rounded-4xl hover:bg-[#3599CC]" onClick={() => router.push('/')}>
+          <button className="flex items-center gap-1 bg-white p-3 rounded-4xl hover:bg-[#3599CC]">
             <i className='bx bxs-user-circle text-2xl text-[#000000] '></i>
           </button>
       </div>

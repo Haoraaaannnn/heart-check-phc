@@ -55,7 +55,7 @@ export default function LoginPage() {
   };
 
   return (
-    <div className="min-h-screen w-full flex justify-center items-center bg-gradient-to-br from-white to-[#86C0E9] px-5 font-sans">
+    <div className="min-h-screen w-full flex justify-center items-center bg-gradient-to-br from-white via-red-50 to-red-100 px-5 font-sans">
       <div className="bg-white rounded-lg shadow-[0_10px_25px_rgba(204,204,204,0.514)] pt-10 px-10 pb-8 w-full max-w-md">
 
         <h1 className="text-center text-[#000000] text-[28px] font-semibold mb-8">Login</h1>
