@@ -3,6 +3,7 @@
 
 import type { Metadata } from "next";
 import { Geist, Geist_Mono } from "next/font/google";
+import { tiltWarp, Baloo } from "@/fonts/fonts"; // 👈 add this (adjust path if needed)
 import { LanguageProvider } from "@/app/LanguageContext";
 import "@/app/globals.css";
 
@@ -27,7 +28,7 @@ export default function RootLayout({
   children: React.ReactNode;
 }>) {
   return (
-    <html lang="en">
+    <html lang="en" className={`${tiltWarp.variable} ${Baloo.variable}`}> 
       <body
         className={`${geistSans.variable} ${geistMono.variable} antialiased`}
       >

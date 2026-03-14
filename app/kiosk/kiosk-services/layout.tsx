@@ -1,22 +1,18 @@
 //! Di pa gumagana language switcher
 //* Nasa database lahat fonts and etc to be adjusted later
-
 "use client";
 
-export default function KioskLayout({
-  children,
-}: {
-  children: React.ReactNode;
-}) {
+import KioskBackground from "@/components/kiosk/KioskBackground";
+import KioskHeader from "@/components/kiosk/KioskHeader";
+import KioskBanner from "@/components/kiosk/KioskBanner";
+
+export default function KioskLayout({children,}: {children: React.ReactNode;}) {
   return (
-    <div className="flex flex-col min-h-screen bg-white">
-      <header className=" bg-[#2B59FF] text-white text-center p-10 rounded-b-[50px] shadow-lg">
-        <h1 className="text-4xl">Magandang Araw!</h1>
-        <p>Pumili at pindutin ang serbisyong kailangan ninyo:</p>
-      </header>
+    <KioskBackground>
+      <KioskHeader/>
+      <KioskBanner/>
       <main>{children}</main>
-      <footer className="bg-[#2B59FF] text-white text-center p-8 rounded-t-[50px] shadow-inner mt-auto"></footer>
-    </div>
+    </KioskBackground>
   );
 }
 
@@ -77,36 +73,6 @@ export default async function KioskLayout({ children }: { children: React.ReactN
                     </button>
                 </div>
             </footer>
-        </div>
-    );
-}*/
-
-// old source code for reference
-/*'use client';
-
-import { useState } from "react";
-import { languages } from "@/app/language";
-
-type language = "en" | "fil";
-
-export default function KioskLayout({ children }: { children: React.ReactNode }) {
-    const [language, setlanguage] = useState<language>('fil');
-    const t = languages[language];
-    return (
-        <div className="flex flex-col min-h-screen bg-white">
-            <header className="bg-[#2B59FF] text-white text-center p-10 rounded-b-[50px] shadow-lg">
-                <h1 className="text-4xl font-bold mb-2">{t.greeting}</h1>
-                <p className="text-2xl">{t.instruction}</p>
-            </header>
-                    
-            <main className="grow flex items-center justify-center p-10">
-                {children}
-            </main>
-
-            <footer className="bg-[#2B59FF] text-white text-center p-8 rounded-t-[50px] flex flex-col items-center">
-                <span className="text-xl font-bold mb-2">{t.languageType}</span>
-                
-            </footer> 
         </div>
     );
 }*/

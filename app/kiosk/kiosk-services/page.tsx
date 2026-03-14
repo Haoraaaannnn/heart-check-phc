@@ -11,7 +11,7 @@ export default async function KioskPage() {
     .order("display_order", { ascending: true });
 
   return (
-    <div className="grid grid-cols-3 gap-8 p-10">
+    <div className="grid grid-cols-2 gap-8 p-10">
       {services?.map((service) => (
         <Link
           key={service.id}
