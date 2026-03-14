@@ -1,38 +1,40 @@
-// TODO: add link
-
+import Link from "next/link";
+import Image from "next/image";
 import { createClient } from "@/lib/supabase/server";
 
-
 export default async function KioskPage() {
-    const supabase = await createClient();
+  const supabase = await createClient();
 
-    const { data: services } = await supabase
-    .from('services')
-    .select('*')
-    .order('display_order', { ascending: true });
+  const { data: services } = await supabase
+    .from("services")
+    .select("*")
+    .order("display_order", { ascending: true });
 
-    return (
+  return (
     <div className="grid grid-cols-3 gap-8 p-10">
       {services?.map((service) => (
-        <button
+        <Link
           key={service.id}
-          style={{ backgroundColor: service.bg_color }}
+          href={`/kiosk/confirmation?serviceId=${service.id}`}
           className="group relative flex flex-col items-center justify-center py-8 max-w-80 rounded-4xl shadow-xl hover:scale-105 transition-all active:scale-95 text-white"
+          style={{ backgroundColor: service.bg_color }}
         >
-          <img
-            src={service.icon_src} 
+          <Image
+            src={service.icon_src}
             alt={service.label_en}
+            width={120}
+            height={120}
             className="w-30 h-30 mb-6 drop-shadow-md"
           />
           <span className="text-2xl font-bold block ">{service.label_fil}</span>
-          <span className="text-xl font-extralight block">{service.label_en}</span>
-        </button>
+          <span className="text-xl font-extralight block">
+            {service.label_en}
+          </span>
+        </Link>
       ))}
     </div>
   );
 }
-
-
 
 // old source code
 /*'use client';
