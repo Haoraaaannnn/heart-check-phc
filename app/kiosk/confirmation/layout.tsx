@@ -1,10 +1,6 @@
 "use client";
 
-export default function KioskLayout({
-  children,
-}: {
-  children: React.ReactNode;
-}) {
+export default function KioskLayout({children,}: {children: React.ReactNode;}) {
   return (
     <div className="flex flex-col min-h-screen bg-white">
       <header className=" bg-[#2B59FF] text-white text-center p-10 rounded-b-[50px] shadow-lg">

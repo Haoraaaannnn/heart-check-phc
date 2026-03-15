@@ -1,6 +1,6 @@
-import Link from "next/link";
-import Image from "next/image";
 import { createClient } from "@/lib/supabase/server";
+import ServiceCard from "@/components/kiosk/KioskServicesCard";
+import { Service } from "@/types/Services"
 
 export default async function KioskPage() {
   const supabase = await createClient();
@@ -11,45 +11,10 @@ export default async function KioskPage() {
     .order("display_order", { ascending: true });
 
   return (
-    <div className="grid grid-cols-2 gap-8 p-10">
-      {services?.map((service) => (
-        <Link
-          key={service.id}
-          href={`/kiosk/confirmation?serviceId=${service.id}`}
-          className="group relative flex flex-col items-center justify-center py-8 max-w-80 rounded-4xl shadow-xl hover:scale-105 transition-all active:scale-95 text-white"
-          style={{ backgroundColor: service.bg_color }}
-        >
-          <Image
-            src={service.icon_src}
-            alt={service.label_en}
-            width={120}
-            height={120}
-            className="w-30 h-30 mb-6 drop-shadow-md"
-          />
-          <span className="text-2xl font-bold block ">{service.label_fil}</span>
-          <span className="text-xl font-extralight block">
-            {service.label_en}
-          </span>
-        </Link>
+    <div className="grid grid-cols-2 gap-6 p-10">
+      {services?.map((service: Service)=>(
+        <ServiceCard key = {service.id} service={service}/>
       ))}
     </div>
   );
 }
-
-// old source code
-/*'use client';
-
-import { ServiceButton } from "@/components/kiosk/ServiceButton";
-import { useLanguage } from "@/app/LanguageContext";
-
-export default function KioskPage() {
-    const { t } = useLanguage();
-    return (
-        <div className="grid grid-cols-3 gap-8 p-10">
-            <ServiceButton label={t.services?.consultation || "Konsultasyon"} iconSrc="/icons/consultationIcon.png" bgColor="#7EC8E3" />
-            <ServiceButton label={t.services?.opdCard || "OPD Kard"} iconSrc="/icons/opdCardIcon.png" bgColor="#58D2F7" />
-            <ServiceButton label={t.services?.prescriptionRefill || "Magparefill ng gamot"} iconSrc="/icons/refillPrescriptionIcon.png" bgColor="#58D2F7" />
-            <ServiceButton label={t.services?.ecg || "ECG"} iconSrc="/icons/ecgIcon.png" bgColor="#7EC8E3" />
-        </div>
-    )
-}*/
