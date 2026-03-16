@@ -2,7 +2,7 @@ import Image from "next/image";
 
 export default function KioskBanner(){
     return(
-        <div className="relative z-10 mx-8 mt-8 bg-gradient-to-br from-[#DE1717] to-[#F66565] rounded-[45px] px-6 py-4 overflow-hidden shadow-[0_4px_30px_5px_#CF000080]">
+        <div className="relative z-10 mx-8 mt-8 bg-gradient-to-br from-[#DE1717] to-[#FF7F7F] rounded-[45px] px-6 py-4 overflow-hidden shadow-[0_4px_30px_5px_#CF000080]">
             <div className="absolute -top-20 -right-10 w-80 h-80 rounded-full bg-[#FF7373] opacity-75 -z-10"/>
             <div className="absolute right-10 bottom-1 animate-[heartbeat_1.6s_ease-in-out_infinite]">
             <Image
