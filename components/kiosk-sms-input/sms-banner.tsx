@@ -8,7 +8,7 @@ export default function SMSBanner(){
                 opacity: 0.3
             }}>
             </div>
-            <p className="text-[#FFE600] font-baloo font-black text-[50px] drop-shadow-sm">Welcome to Heart Check PHC!</p>
+            <p className="text-[#FFE600] font-baloo font-black text-[50px] drop-shadow-sm text-center">Welcome to Heart Check PHC!</p>
         </div>
     );
 }

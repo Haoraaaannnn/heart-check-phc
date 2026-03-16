@@ -6,10 +6,10 @@ import KioskBanner from "@/components/kiosk/KioskBanner";
 
 export default function KioskLayout({children,}: {children: React.ReactNode;}) {
   return (
-    <KioskBackground>
+    <KioskBackground >
       <KioskHeader/>
       <KioskBanner/>
-      <main>{children}</main>
+      <main className="flex flex-col items-center justify-center w-full">{children}</main>
     </KioskBackground>
   );
 }
