@@ -22,8 +22,8 @@ export default function ServiceBanner({ service }: Props) {
                 className="w-30 h-30 mb-6 drop-shadow-md"
             />
                 <div className="relative z-10 flex flex-col text-white">
-                    <span className="font-baloo font-black text-[50px]">{service.label_fil}</span>
-                    <span className="font- text-xl font-extralight block">{service.label_en}</span>
+                    <span className="font-baloo font-black text-[70px]">{service.label_fil}</span>
+                    <span className="font- text-[50px] font-extralight block">{service.label_en}</span>
                 </div>
             </div>
         </div>
