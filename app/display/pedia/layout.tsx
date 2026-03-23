@@ -4,11 +4,11 @@ import DisplayHeader from "@/components/ui/displayHeader";
 
 export default function RegistrationPage ({children}: {children: React.ReactNode}){
     return(
-        <BgDisplay>
-            <BgCard>
-                <DisplayHeader>Pedia Clinic</DisplayHeader>
-                <main>{children}</main>
-            </BgCard>
-        </BgDisplay>
+    <BgDisplay>
+        <BgCard>
+            <DisplayHeader>Adult Clinic</DisplayHeader>
+            <main>{children}</main>
+        </BgCard>
+    </BgDisplay>
     );
 }
