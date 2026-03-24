@@ -1,8 +1,11 @@
 "use client";
 
+import { Service } from "@/types/Services";
+
 interface Props {
   phone: string;
   onDelete: () => void;
+  service: Service
 }
 
 const formatPhone = (raw: string) => {
@@ -12,7 +15,7 @@ const formatPhone = (raw: string) => {
   return `${d.slice(0, 4)} ${d.slice(4, 7)} ${d.slice(7)}`;
 };
 
-export default function PhoneInput({ phone, onDelete }: Props) {
+export default function PhoneInput({ phone, onDelete, service }: Props) {
   return (
     <div className="mx-8 my-8 flex items-center bg-white rounded-[45px] px-4 py-3 gap-3 shadow-[inset_0_0_10px_rgba(0,0,0,0.2)]">
       <div className="flex-1 text-[70px] font-semibold tracking-widest text-black flex-item-center p-[16px]">
@@ -24,8 +27,8 @@ export default function PhoneInput({ phone, onDelete }: Props) {
       </div>
       <button
         onClick={onDelete}
-        className="h-full w-[150px] shrink-0 text-white text-center text-[70px] px-4 py-4 bg-red-700 active:scale-95 rounded-[45px] shadow-2xl"
-      >
+        className="h-full w-[150px] shrink-0 text-white text-center text-[70px] px-4 py-4 active:scale-95 rounded-[45px] shadow-2xl"
+        style={{background: service.bg_color}}>
         ⌫
       </button>
     </div>

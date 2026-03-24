@@ -1,14 +1,21 @@
-export default function SMSBanner(){
+import { Service } from "@/types/Services";
+
+interface Props{
+    service: Service
+}
+
+export default function SMSBanner({service}: Props ){
     return(
-        <div className="relative z-10 mx-8 mt-8 bg-gradient-to-br from-[#DE1717] to-[#F66565] rounded-[45px] px-6 py-4 overflow-hidden shadow-[0_4px_30px_5px_#CF000080]">
-            <div className="absolute inset-0 z-0"
-            style={{
-                backgroundImage: `radial-gradient(circle, #c4a0a0 3px, transparent 1px)`,
-                backgroundSize: "64px 64px",
-                opacity: 0.3
-            }}>
+        <div className="relative z-10 mx-8 mt-8  rounded-[45px] px-6 py-4 overflow-hidden"
+        style={{ background: service.bg_color, boxShadow: `0 4px 30px ${service.shadow_color}80`}}
+        >
+            <span className="absolute -top-6 -right-6 w-35 h-35 rounded-full opacity-20 bg-white pointer-events-none" />
+            <span className="absolute -bottom-6 -left-3 w-50 h-50 rounded-full opacity-20 bg-white pointer-events-none" />
+
+            <div className="relative z-10 flex flex-col flex-1 min-w-0   text-white">
+                <span className="font-baloo font-black text-[45px]">{service.label_fil}</span>
+                <span className="w-fit inline-block bg-white/20 border border-white/35 text-white text-[20px] font-bold px-4 py-1 rounded-full">{service.label_en}</span>
             </div>
-            <p className="text-[#FFE600] font-baloo font-black text-[50px] drop-shadow-sm text-center">Welcome to Heart Check PHC!</p>
         </div>
     );
 }

@@ -23,9 +23,9 @@ export default async function ConfirmationPage({ searchParams }: Props) {
     <div className="min-h-screen flex flex-col">
       <div className="flex-1">
         <ServiceBanner service={service} />
-        <ConfirmationDescriptions service={service} />
+        <ConfirmationDescriptions service={service} descColor={service.bg_color} />
       </div>
-      <ConfirmationActions serviceId={service.id} />
+      <ConfirmationActions serviceId={service.id} serviceColor={service.bg_color}/>
     </div>
   );
 }

@@ -21,7 +21,7 @@ export default function ServiceBanner({ service }: Props) {
                 height={120}
                 className="w-30 h-30 drop-shadow-md"
             />
-                <div className="relative z-10 flex flex-col text-white">
+                <div className="relative z-10 flex flex-col text-white p-8">
                     <span className="font-baloo font-black text-[70px]">{service.label_fil}</span>
                     <span className="w-fit inline-block bg-white/20 border border-white/35 text-white text-[30px] font-bold px-4 py-1 rounded-full">{service.label_en}</span>
                 </div>
