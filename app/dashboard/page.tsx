@@ -139,7 +139,7 @@ export default function DashboardPage() {
 
 
           <div className="bg-white rounded-3xl shadow-sm border-2 border-red-100 p-6 h-72 flex items-center justify-center text-gray-300 text-sm">
-            Chart coming soon...
+            Chart sana
           </div>
 
         </div>
