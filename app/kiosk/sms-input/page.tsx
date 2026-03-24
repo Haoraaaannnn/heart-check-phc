@@ -27,10 +27,19 @@ export default async function SMSPage({ searchParams }: Props) {
     }
 
     return (
-      <div>
-        <SMSBanner service={service} />
-        <SMSInstruction/>
-        <KioskPhoneEntry service={service}/>
-      </div>
+    <div className="h-screen flex flex-col overflow-hidden bg-white">
+        
+        {/* 2. Top Content: Banner and Instructions stay at the top */}
+        <div className="flex-none">
+            <SMSBanner service={service} />
+            <SMSInstruction service={service}/>
+        </div>
+
+        {/* 3. Flexible Middle: The PhoneEntry (Input + NumPad) takes the remaining space */}
+        <div className="flex-1 flex flex-col">
+            <KioskPhoneEntry service={service}/>
+        </div>
+
+    </div>
     );
 }

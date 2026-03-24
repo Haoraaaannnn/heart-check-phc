@@ -12,9 +12,9 @@ export default function SMSBanner({service}: Props ){
             <span className="absolute -top-6 -right-6 w-35 h-35 rounded-full opacity-20 bg-white pointer-events-none" />
             <span className="absolute -bottom-6 -left-3 w-50 h-50 rounded-full opacity-20 bg-white pointer-events-none" />
 
-            <div className="relative z-10 flex flex-col flex-1 min-w-0   text-white">
-                <span className="font-baloo font-black text-[45px]">{service.label_fil}</span>
-                <span className="w-fit inline-block bg-white/20 border border-white/35 text-white text-[20px] font-bold px-4 py-1 rounded-full">{service.label_en}</span>
+            <div className="relative z-10 flex flex-col flex-1 min-w-0 text-white items-center text-center">
+                <span className="font-baloo font-black text-[60px]">{service.label_fil}</span>
+                <span className="w-fit inline-block bg-white/20 border border-white/35 text-white text-[30px] font-bold px-4 py-1 rounded-full">{service.label_en}</span>
             </div>
         </div>
     );

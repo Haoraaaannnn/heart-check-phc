@@ -28,10 +28,24 @@ export default function KioskPhoneEntry({service}: Props) {
   };
 
   return (
-    <div className="flex flex-col justify-center">
-      <PhoneInput phone={phone} onDelete={deleteLast} service={service}/>
-      <NumPad onDigit={addDigit} />
-      <ContinueButton disabled={phone.length !== MAX} onClick={handleContinue} />
+<div className="flex flex-col h-full">
+        
+        {/* Top Section: Phone Input and Numpad */}
+        <div className="flex flex-col">
+          <PhoneInput phone={phone} onDelete={deleteLast} service={service}/>
+          <NumPad onDigit={addDigit} />
+        </div>
+
+        {/* This empty div pushes the buttons to the bottom of this container */}
+        <div className="flex-1" />
+        
+        {/* Bottom Section: Buttons will now appear right at the bottom edge */}
+        <ContinueButton 
+          disabled={phone.length !== MAX} 
+          onClick={handleContinue} 
+          onSkip={handleContinue} 
+          service={service}
+        />
     </div>
   );
 }
