@@ -1,8 +1,11 @@
-export default function DashboardLayout(){
+import DashboardBG from "@/components/dashboard/DashBG";
+import Sidebar from "@/components/dashboard/DashSideNavigation";
+
+export default function DashboardLayout({children}:{children: React.ReactNode}){
     return(
-        <div className="flex min-h-screen bg-[#FFF0F0]">
-
-        </div>
+    <DashboardBG>
+        <Sidebar/>
+        {children}
+    </DashboardBG>
     );
-
 }
