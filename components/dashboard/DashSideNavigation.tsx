@@ -61,7 +61,7 @@ const Sidebar = () => {
 
         {/* Departments Section */}
         <div>
-          <p className="text-[10px] font-bold text-gray-400 uppercase tracking-widest mb-4">Departments</p>
+          <p className="text-[10px] font-bold text-gray-400 uppercase tracking-widest mb-4">Services</p>
           {departments.map((dept) => {
             const isActive = pathname === dept.href;
             return (

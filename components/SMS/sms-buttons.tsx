@@ -12,7 +12,7 @@ interface Props {
 
 export default function ContinueButton({ disabled, onClick, onSkip, service }: Props) {
   return (
-    <div className="mx-8 flex-col gap4">
+    <div className="mx-8 flex-col mb-8">
       <button
       onClick={onClick}
       disabled={disabled}
@@ -20,10 +20,10 @@ export default function ContinueButton({ disabled, onClick, onSkip, service }: P
       style={{background: service.bg_color}}>
       Magpatuloy - Continue
     </button>
-      <div className="flex flex-row justify-between items-center my-8 gap-4 w-full">
+      <div className="flex flex-row justify-between items-center gap-4 w-full">
         <Link 
           href="/kiosk/kiosk-services"
-          className="flex-1 items-center justify-center py-[18px] h-30 border-[6px] border-gray-400 text-gray-400 text-center text-[50px] font-baloo font-black rounded-[45px] transition-all active:scale-90 shadow-xl"
+          className="flex-1 items-center justify-center my-6 py-[18px] h-30 border-[6px] border-gray-400 text-gray-400 text-center text-[50px] font-baloo font-black rounded-[45px] transition-all active:scale-90 shadow-xl"
           > Bumalik - Cancel
         </Link>
         <button

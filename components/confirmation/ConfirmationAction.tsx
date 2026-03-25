@@ -17,7 +17,7 @@ export default function ConfirmationActions({ serviceId, serviceColor }: Props) 
       </Link>
       <Link
         href="/kiosk/kiosk-services"
-        className="mx-8 my-3 max-w-full py-[18px] px-[18px] border-gray-400 border-[4px] text-center rounded-[45px] text-gray-800 text-[50px] transition-all active:scale-90"
+        className="mx-8 my-3 max-w-full py-[18px] px-[18px] border-gray-400 border-[6px] text-center rounded-[45px] font-baloo font-black text-gray-400 text-[50px] transition-all active:scale-90"
       >
         Bumalik - Cancel
       </Link>
