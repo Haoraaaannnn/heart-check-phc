@@ -20,12 +20,22 @@ export default async function ConfirmationPage({ searchParams }: Props) {
   const service: Service = data;
 
   return (
-    <div className="min-h-screen flex flex-col">
-      <div className="flex-1">
+    /* h-full and overflow-hidden ensure the page NEVER pushes past the layout box */
+    <div className="h-full flex flex-col w-full bg-white overflow-hidden">
+      
+      <div className="shrink-0">
         <ServiceBanner service={service} />
+      </div>
+
+      {/* THE FIX: `min-h-0` and `overflow-hidden` force this section to stay strictly inside the remaining space. It cannot cause a scrollbar anymore. */}
+      <div className="flex-1 flex flex-col justify-center px-10 py-6 min-h-0 overflow-hidden">
         <ConfirmationDescriptions service={service} descColor={service.bg_color} />
       </div>
-      <ConfirmationActions serviceId={service.id} serviceColor={service.bg_color}/>
+
+      <div className="shrink-0 px-10 pb-12 pt-4 w-full">
+        <ConfirmationActions serviceId={service.id} serviceColor={service.bg_color}/>
+      </div>
+      
     </div>
   );
 }
