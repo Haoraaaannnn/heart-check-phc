@@ -20,10 +20,9 @@ export default async function SMSPage({ searchParams }: Props) {
     if (!service || error) notFound();
 
     return (
-      // Using larger padding on big screens (lg:p-12) to keep it from touching the absolute edges
       <div className="w-full h-[100dvh] flex flex-col overflow-hidden bg-white items-center p-4 md:p-8 lg:p-12">
         
-        {/* THE FIX: Removed max-w-7xl. Now it uses w-full to stretch 100% across 1920px screens! */}
+
         <div className="flex flex-col w-full h-full gap-4 md:gap-8 lg:gap-10">
             
             <div className="flex-none">

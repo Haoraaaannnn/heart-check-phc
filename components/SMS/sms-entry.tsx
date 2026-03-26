@@ -25,28 +25,17 @@ export default function KioskPhoneEntry({service}: Props) {
   const handleContinue = () => { /* your logic */ };
 
   return (
-    // Portrait: flex-col (renders in exact order). 
-    // Landscape: 2 columns, 3 rows.
     <div className="h-full min-h-0 w-full flex flex-col landscape:grid landscape:grid-cols-2 landscape:grid-rows-[auto_auto_1fr] gap-3 sm:gap-4 md:gap-6 landscape:gap-x-12 landscape:gap-y-6">
         
-        {/* 1. Instruction */}
         <div className="w-full landscape:col-start-1 landscape:row-start-1">
             <SMSInstruction service={service}/>
         </div>
-
-        {/* 2. Phone Input */}
         <div className="w-full landscape:col-start-1 landscape:row-start-2">
             <PhoneInput phone={phone} onDelete={deleteLast} service={service}/>
         </div>
-
-        {/* 3. NUMPAD (This is now in the correct physical order!) */}
-        {/* flex-1 makes it absorb empty space in Portrait. row-span-3 makes it fill the right side in Landscape. */}
         <div className="flex-1 min-h-0 w-full flex justify-center items-center portrait:max-h-[50vh] landscape:col-start-2 landscape:row-start-1 landscape:row-span-3 landscape:px-4 lg:landscape:px-8">
              <NumPad onDigit={addDigit} />
         </div>
-
-        {/* 4. Action Buttons */}
-        {/* mt-auto forces them to the bottom in Portrait. self-end forces them to the bottom-left in Landscape. */}
         <div className="flex-none w-full mt-auto landscape:col-start-1 landscape:row-start-3 landscape:self-end">
           <ContinueButton 
             disabled={phone.length !== MAX} 

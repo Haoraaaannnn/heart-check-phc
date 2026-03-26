@@ -15,7 +15,7 @@ export default function SMSBanner({service}: Props ){
 
             <div className="relative z-10 flex flex-col items-center text-center">
                 <span className="font-baloo font-black text-2xl sm:text-4xl md:text-5xl lg:text-[60px] leading-none mb-1 text-white">{service.label_fil}</span>
-<span className="w-fit inline-block bg-white/20 border border-white/35 text-white text-xs sm:text-sm md:text-xl lg:text-[30px] font-bold px-3 py-1 rounded-full">{service.label_en}</span>
+                <span className="w-fit inline-block bg-white/20 border border-white/35 text-white text-xs sm:text-sm md:text-xl lg:text-[30px] font-bold px-3 py-1 rounded-full">{service.label_en}</span>
             </div>
         </div>
     );

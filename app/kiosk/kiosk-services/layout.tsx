@@ -23,7 +23,6 @@ export default function KioskLayout({ children }: { children: React.ReactNode })
       
       setScale(Math.min(scaleX, scaleY));
       
-      // Tell the app to fade in ONLY after the first math calculation is done
       setMounted(true); 
     };
 
@@ -32,15 +31,12 @@ export default function KioskLayout({ children }: { children: React.ReactNode })
     return () => window.removeEventListener("resize", updateScale);
   }, []);
 
-  /* THE FIX: We removed the 'if (!mounted) return...' line entirely. */
 
   return (
-    /* We use the 'mounted' state to switch from opacity-0 to opacity-100 smoothly */
     <div 
       className={`w-screen h-screen overflow-hidden flex items-center justify-center bg-[#FFE4E6] relative transition-opacity duration-300 ${mounted ? 'opacity-100' : 'opacity-0'}`}
     >
       
-      {/* Infinite Dot Pattern */}
       <div 
         className="absolute inset-0 z-0 pointer-events-none"
         style={{
@@ -50,7 +46,6 @@ export default function KioskLayout({ children }: { children: React.ReactNode })
         }}
       />
 
-      {/* Dynamic Scaling Container */}
       <div
         className="flex-shrink-0 z-10 transition-transform duration-300 ease-in-out"
         style={{
