@@ -1,3 +1,4 @@
+//pede pa baguhin amount ng rooms and kung alin lang may rooms thru supabase
 'use client';
 
 import { useRouter } from 'next/navigation';
