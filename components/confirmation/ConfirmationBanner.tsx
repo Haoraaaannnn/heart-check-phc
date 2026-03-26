@@ -8,7 +8,7 @@ interface Props {
 export default function ServiceBanner({ service }: Props) {
     return (
         <div>
-            <div className="relative flex justify-center items-center px-8 py-8 overflow-hidden"
+            <div className="relative flex justify-center items-center px-6 py-6 overflow-hidden"
             style={{background: service.bg_color}}
             >
             <span className="absolute -top-6 -right-6 w-35 h-35 rounded-full opacity-20 bg-white pointer-events-none" />

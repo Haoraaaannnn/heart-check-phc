@@ -20,8 +20,8 @@ export default function ServiceCard({service}: {service: Service}){
                 className="w-30 h-30 drop-shadow-md"
             />
             <div className="relative z-10 flex flex-col flex-1 min-w-0   text-white">
-                <span className="font-baloo font-black text-[45px]">{service.label_fil}</span>
-                <span className="w-fit inline-block bg-white/20 border border-white/35 text-white text-[20px] font-bold px-4 py-1 rounded-full">{service.label_en}</span>
+                <span className="font-baloo font-black text-[40px]">{service.label_fil}</span>
+                <span className="w-fit inline-block bg-white/20 border border-white/35 text-white text-[25px] font-bold px-4 py-1 rounded-full">{service.label_en}</span>
             </div>
         </Link>
     );
