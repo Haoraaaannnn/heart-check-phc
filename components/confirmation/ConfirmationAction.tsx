@@ -4,6 +4,7 @@ import { supabase } from '@/lib/supabase';
 
 interface Props {
   serviceId: number;
+  serviceColor: string;
 }
 
 const SERVICE_PREFIXES: Record<string, string> = {
@@ -17,7 +18,7 @@ const SERVICE_PREFIXES: Record<string, string> = {
   'OPD Screening': 'P',
 };
 
-export default function ConfirmationActions({ serviceId }: Props) {
+export default function ConfirmationActions({ serviceId, serviceColor}: Props) {
   const router = useRouter();
 
 const handleContinue = async () => {
@@ -119,14 +120,14 @@ const handleContinue = async () => {
     <div className="flex flex-col justify-center">
       <button
         onClick={handleContinue}
-        className="mx-8 my-3 max-w-full py-[18px] px-[18px] bg-red-600 text-white text-center text-[60px] font-baloo font-black rounded-[45px] transition-all active:scale-90 shadow-xl"
-      >
+        className="w-full py-[15px] text-white text-center text-[55px] font-baloo font-black rounded-[45px] transition-all active:scale-95 shadow-md"
+        style={{background: serviceColor}}>
         Magpatuloy - Continue
       </button>
       <button
         onClick={() => router.push('/kiosk/kiosk-services')}
-        className="mx-8 my-3 max-w-full py-[18px] px-[18px] border-gray-600 text-center rounded-[45px] bg-gray-500 text-gray-800 text-[50px] transition-all active:scale-90"
-      >
+        className="w-full py-[15px] border-gray-400 border-[5px] text-center rounded-[45px] font-baloo font-black text-gray-500 text-[50px] transition-all active:scale-95 bg-white"
+        style={{borderColor: serviceColor}}>
         Bumalik - Cancel
       </button>
     </div>
