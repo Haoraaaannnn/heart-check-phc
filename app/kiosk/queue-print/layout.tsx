@@ -12,7 +12,7 @@ export default function KioskLayout({
   return (
     <UnviBackground>
       <PrintHeader/>
-      <main>{children}</main>
+      <main className="flex-1 min-h-0 w-full overflow-hidden">{children}</main>
       <PrintFooter/>
     </UnviBackground>
   );

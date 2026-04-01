@@ -1,18 +1,30 @@
 
 
-export default async function ConfirmationLayout({
-  children,
-}: {
-  children: React.ReactNode;
-}) {
-return (
-      <div className="bg-white rounded-[45px] shadow-lg p-10 w-[700px] h-[500px] text-center text-black flex flex-col items-center justify-center">
-        <div className="w-full border-b-[4px] border-dashed border-black/80"/>
-          <div>BANANA</div>
-        <div className="w-full border-b-[4px] border-dashed border-black/80"/>
-      </div>
-  );
+import { createClient } from '@/lib/supabase/server';
+import { notFound } from 'next/navigation';
+import { Service } from '@/types/Services';
+import QueuePrintContent from '@/components/queue_Print/QueuePrintContent';
+
+interface Props {
+  searchParams: Promise<{ patientNum?: string; serviceId?: string }>;
 }
 
+export default async function QueuePrintPage({ searchParams }: Props) {
+  const { patientNum = '---', serviceId } = await searchParams;
+  const supabase = await createClient();
 
-//temporary lang itu
+  let service: Service | null = null;
+
+  if (serviceId) {
+    const { data } = await supabase
+      .from('services')
+      .select('*')
+      .eq('id', parseInt(serviceId, 10))
+      .single();
+    service = data;
+  }
+
+  if (!service) notFound();
+
+  return <QueuePrintContent service={service} patientNum={patientNum} />;
+}

@@ -1,6 +1,6 @@
 import { createClient } from "@/lib/supabase/server";
 import ServiceBanner from "@/components/confirmation/ConfirmationBanner";
-import ConfirmationActions from "@/components/confirmation/ConfirmationAction";
+import ConfirmationActions from "@/components/confirmation/ConfirmationButton";
 import ConfirmationDescriptions from "@/components/confirmation/ConfimationDescription";
 import type { Service } from "@/types/Services";
 

@@ -31,6 +31,6 @@
     ".next/dev/types/**/*.ts",
     "**/*.mts",
     "**/*.css"
-  ],
+, "app/api/print-ticket/route.js"  ],
   "exclude": ["node_modules"]
 }
