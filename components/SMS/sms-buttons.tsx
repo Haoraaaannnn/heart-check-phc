@@ -43,8 +43,31 @@ export default function ContinueButton({
         </button>
       </div>
 
-      <ConfirmationModal isOpen={showContinueModal} titleFil="Magpatuloy?" titleEng="Continue?" messageFil="Tama ba ang inyong numero?" messageEng="Is this your correct phone number?" confirmText="Oo, Tama - Yes, Correct" cancelText="Hindi, Baguhin - No, Change" phone={phone} onConfirm={onContinueConfirm} onCancel={onContinueCancel} />
-      <ConfirmationModal isOpen={showSkipModal} titleFil="Walang Notipikasyon" titleEng="No Notification" messageFil="Kung laktawan ninyo ang numero, hindi kayo makakatanggap ng SMS notipikasyon. Magpatuloy pa rin?" messageEng="" phone="" confirmText="Oo, Magpatuloy - Yes, Continue" cancelText="Bumalik - Go Back" onConfirm={onSkipConfirm} onCancel={onSkipCancel} isDangerous={true} />
+      <ConfirmationModal 
+        isOpen={showContinueModal} 
+        titleFil="Magpatuloy?" 
+        titleEng="Continue?" 
+        messageFil="Tama ba ang inyong numero?" 
+        messageEng="Is this your correct phone number?" 
+        confirmText="Oo, Tama - Yes, Correct" 
+        cancelText="Hindi, Baguhin - No, Change" 
+        phone={phone} 
+        onConfirm={onContinueConfirm} 
+        onCancel={onContinueCancel} 
+      />
+      <ConfirmationModal 
+        isOpen={showSkipModal} 
+        titleFil="Walang Notipikasyon" 
+        titleEng="No Notification" 
+        messageFil="Kung laktawan ninyo ang numero, hindi kayo makakatanggap ng SMS notipikasyon. Magpatuloy pa rin?" 
+        messageEng="If you skip the number, you will not receive SMS notifications. Continue anyway?" 
+        phone={phone} 
+        confirmText="Oo, Magpatuloy - Yes, Continue" 
+        cancelText="Bumalik - Go Back" 
+        onConfirm={onSkipConfirm} 
+        onCancel={onSkipCancel} 
+        isDangerous={true} 
+      />
     </div>
   );
 }

@@ -41,38 +41,38 @@ const formatPhone = (raw: string) => {
       <div className="bg-white rounded-[45px] p-8 md:p-12 max-w-2xl w-full shadow-2xl">
         <h2 className="mb-4 text-center flex flex-col gap-1 mb-8">
           {/* Filipino Title: Larger, bolder, darker */}
-          <span className="text-3xl md:text-6xl font-baloo font-bold text-black">
+          <span className="text-xl md:text-4xl font-baloo font-bold text-black">
             {titleFil}
           </span>
           
           {/* English Title: Smaller, lighter color, perhaps less bold */}
-          <span className="text-xl md:text-3xl font-normal text-gray-600">
+          <span className="text-xl md:text-2xl font-normal text-gray-600">
             {titleEng}
           </span>
         </h2>
         
-        <p className="text-1xl md:text-4xl text-gray-600 gap-1 leading-relaxed text-center font-bold">
+        <p className="text-xl md:text-2xl text-black gap-1 leading-relaxed text-center font-bold">
           {messageFil}
         </p>
-        <p className="text-lg md:text-3xl text-gray-600 mb-8 leading-relaxed text-center font-extralight">
+        <p className="text-lg md:text-xl text-gray-600 mb-8 leading-relaxed text-center font-extralight">
           {messageEng}
         </p>
-        <p className="text-lg md:text-5xl text-black text-bold mb-8 leading-relaxed text-center">
+        <p className="text-lg md:text-4xl text-black text-bold mb-8 leading-relaxed text-center">
           {formatPhone(phone)}
         </p>
 
         <div className="flex gap-4 flex-col md:flex-row">
           <button
             onClick={onCancel}
-            className="flex-1 py-3 md:py-4 px-4 rounded-[25px] font-baloo font-bold text-2xl md:text-2xl
-              bg-white border-gray-400 border-[5px] text-gray-400 transition-all active:scale-95"
+            className="flex-1 py-3 md:py-4 px-4 rounded-[25px] font-baloo font-bold text-xl md:text-xl
+              bg-white border-gray-400 border-[3px] text-gray-400 transition-all active:scale-95"
           >
             {cancelText}
           </button>
           
           <button
             onClick={onConfirm}
-            className={`flex-1 py-3 md:py-4 px-4 rounded-[25px] font-baloo font-bold text-2xl md:text-2xl text-white
+            className={`flex-1 py-3 md:py-4 px-4 rounded-[25px] font-baloo font-bold text-xl md:text-xl text-white
               transition-all active:scale-95 ${
               isDangerous
                 ? 'bg-red-500 hover:bg-red-600'

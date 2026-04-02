@@ -97,46 +97,41 @@ export default function QueuePrintContent({ service, patientNum }: Props) {
   }, [router]);
 
 
-  return (
-    <div
-      className="w-full h-full flex items-center justify-center overflow-hidden"
-      style={{ backgroundColor: service?.bg_color || '#ffffff' }}
-    >
-      <div className="w-full h-full flex flex-col items-center justify-center p-3 sm:p-4 md:p-6 lg:p-8">
-        {/* Main Card Container */}
-        <div className="w-full max-w-sm sm:max-w-md md:max-w-lg lg:max-w-2xl xl:max-w-3xl 2xl:max-w-4xl bg-white rounded-2xl sm:rounded-3xl md:rounded-4xl lg:rounded-5xl shadow-2xl p-4 sm:p-6 md:p-8 lg:p-10 xl:p-12 flex flex-col gap-4 sm:gap-6 md:gap-8 lg:gap-10">
-          
-          {/* Service Information Section */}
-          <div className="flex flex-col items-center justify-center gap-2 sm:gap-3 md:gap-4">
-            <div className="text-xl sm:text-2xl md:text-3xl lg:text-4xl xl:text-5xl font-baloo font-black text-gray-800 text-center">
-              {service?.label_fil || 'Service'}
-            </div>
-            
-            <div className="text-xs sm:text-sm md:text-base lg:text-lg xl:text-xl font-baloo font-bold text-gray-600 px-3 sm:px-4 md:px-5 py-1 sm:py-2 md:py-3 bg-gray-100 rounded-lg sm:rounded-xl md:rounded-2xl">
-              {service?.label_en || 'Service'}
-            </div>
+return (
+    // Only the white card is returned! No outer background divs.
+    <div className="w-full max-w-lg md:max-w-3xl lg:max-w-4xl bg-white rounded-[32px] sm:rounded-[40px] shadow-2xl p-6 md:p-10 flex flex-col items-center justify-center gap-4">
+      
+      {/* Service Information Section */}
+      <div className="flex flex-col items-center justify-center gap-2 text-center">
+        {service?.label_fil && (
+          <div className="text-3xl sm:text-4xl md:text-5xl font-baloo font-black text-[#1a2530] leading-tight shrink-0">
+            {service.label_fil}
           </div>
-
-          {/* Divider */}
-          <div className="w-full h-px sm:h-1 bg-gray-200"></div>
-
-          {/* Queue Number Section */}
-          <div className="flex flex-col items-center justify-center gap-2 sm:gap-3 md:gap-4">
-            <div className="text-xs sm:text-sm md:text-base lg:text-lg xl:text-xl font-baloo font-bold text-gray-600">
-              Your Queue Number
-            </div>
-            
-            <div className="text-6xl sm:text-7xl md:text-8xl lg:text-9xl xl:text-[160px] 2xl:text-[180px] font-baloo font-black text-gray-800 leading-none">
-              {patientNum}
-            </div>
-            
-            <div className="text-xs sm:text-sm md:text-base lg:text-lg xl:text-xl font-baloo text-gray-500 animate-pulse mt-2 sm:mt-4 md:mt-6">
-              Please wait...
-            </div>
-          </div>
-
+        )}
+        
+        <div className="text-sm sm:text-base md:text-lg font-baloo font-bold text-gray-600 px-6 py-2 bg-gray-50 rounded-xl md:rounded-2xl border border-gray-100 shrink-0">
+          {service?.label_en || 'Consultation'}
         </div>
       </div>
+
+      {/* Divider */}
+      <div className="w-full h-px bg-gray-200 my-2 shrink-0"></div>
+
+      {/* Queue Number Section */}
+      <div className="flex flex-col items-center justify-center w-full">
+        <div className="text-sm sm:text-base md:text-lg font-baloo font-bold text-gray-500 mb-2 shrink-0">
+          Your Queue Number
+        </div>
+        
+        {/* 
+          Using clamp(min, viewport-size, max) to ensure the text shrinks dynamically
+          if the screen isn't tall enough, but maxes out at 180px on large displays.
+        */}
+        <div className="text-[clamp(60px,15vh,120px)] font-baloo font-black text-[#1a2530] leading-[0.85] tracking-tight text-center py-2 shrink-0">
+          {patientNum}
+        </div>
+      </div>
+
     </div>
   );
 }

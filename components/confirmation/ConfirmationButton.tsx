@@ -26,7 +26,7 @@ export default function ConfirmationActions({ serviceId, serviceColor}: Props) {
       </button>
       <button
         onClick={() => router.push('/kiosk/kiosk-services')}
-        className="w-full py-[15px] border-gray-400 border-[5px] text-center rounded-[45px] font-baloo font-black text-gray-500 text-[50px] transition-all active:scale-95 bg-white"
+        className="w-full py-[15px] border-gray-400 border-[3px] text-center rounded-[45px] font-baloo font-black text-gray-500 text-[50px] transition-all active:scale-95 bg-white"
         style={{borderColor: serviceColor}}>
         Bumalik - Cancel
       </button>
