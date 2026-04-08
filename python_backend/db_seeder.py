@@ -49,7 +49,7 @@ def generate_fake_patients(num_days=30, patients_per_day=50, start_date="2026-03
             consult_end = consult_start + timedelta(minutes=consult_duration)
             doctor_free_time = consult_end
 
-            purposes = ['General', 'General', 'Warfarin', 'Benzathine', 'ECG', 'OPD Screening']
+            purposes = ['Consultation', 'General', 'Warfarin', 'Benzathine', 'ECG', 'OPD Screening']
             purpose = random.choice(purposes)
 
             data.append({
