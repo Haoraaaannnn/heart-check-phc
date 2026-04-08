@@ -6,9 +6,7 @@ HEART_CHECK_PHC/
 │   │   │   └── page.tsx                # Secure login interface 
 │   │   └── layout.tsx                  # Centered login box layout
 │   ├── (kiosk)/                        # Patient-Facing Kiosk System 
-│   │   ├── kiosk-selection/            # Service selection (Consultation, ECG, etc.) 
-│   │   │   ├── page.tsx                
-│   │   │   └── layout.tsx
+│   │   ├── kiosk-selection/            # Service selection (Consultation, ECG, etc.)              
 │   │   └── confirmation/               # Confirmation and input handling
 │   │       ├── page.tsx                 
 │   │       └── layout.tsx   

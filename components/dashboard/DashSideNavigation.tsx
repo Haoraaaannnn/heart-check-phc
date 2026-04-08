@@ -8,7 +8,7 @@ const Sidebar = () => {
 
   const menuItems = [
     { label: 'Overview', href: '/dashboard' },
-    { label: 'Analytics', href: '/dashboard/queue' },
+    { label: 'Analytics', href: '/dashboard/analytics' },
     { label: 'Counters', href: '/dashboard/counters' },
     { label: 'Patients', href: '/dashboard/patients' },
   ];
@@ -17,11 +17,11 @@ const Sidebar = () => {
     { name: 'Consultation', href: '/dashboard/opd' },
     { name: 'OPD Card', href: '/dashboard/laboratory' },
     { name: 'Refill Prescription', href: '/dashboard/pharmacy' },
-    { name: 'ECG', href: '/dashboard/radiology' },
+    { name: 'ECG', href: '/dashboard/ecg' },
     { name: 'Warfarin', href: '/dashboard/dental' },
     { name: 'OPD Reschedule', href: '/dashboard/pediatrics' },
-    { name: 'Benzathine', href: '/dashboard/pediatrics' },
-    { name: 'OPD Screening', href: '/dashboard/pediatrics' }
+    { name: 'Benzathine', href: '/dashboard/benzathine' },
+    { name: 'OPD Screening', href: '/dashboard/screening' }
   ];
 
   return (

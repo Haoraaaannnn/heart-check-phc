@@ -56,11 +56,11 @@ def generate_fake_patients(num_days=30, patients_per_day=50, start_date="2026-03
                 'patient_id': f"{current_date.strftime('%Y%m%d')}-{i}",
                 'queue_number': f"{purpose[0:3].upper()}-{i:03d}",
                 'visit_date': current_date.strftime("%Y-%m-%d"),
-                'kiosk_time': kiosk_time.round('S').strftime("%Y-%m-%d %H:%M:%S"),
-                'reg_start': reg_start.round('S').strftime("%Y-%m-%d %H:%M:%S"),
-                'reg_end': reg_end.round('S').strftime("%Y-%m-%d %H:%M:%S"),
-                'consult_start': consult_start.round('S').strftime("%Y-%m-%d %H:%M:%S"),
-                'consult_end': consult_end.round('S').strftime("%Y-%m-%d %H:%M:%S"),
+                'kiosk_time': kiosk_time.replace(microsecond=0).strftime("%Y-%m-%d %H:%M:%S"),
+                'reg_start': reg_start.replace(microsecond=0).strftime("%Y-%m-%d %H:%M:%S"),
+                'reg_end': reg_end.replace(microsecond=0).strftime("%Y-%m-%d %H:%M:%S"),
+                'consult_start': consult_start.replace(microsecond=0).strftime("%Y-%m-%d %H:%M:%S"),
+                'consult_end': consult_end.replace(microsecond=0).strftime("%Y-%m-%d %H:%M:%S"),
                 'purpose': purpose
             })
 
