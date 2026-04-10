@@ -9,19 +9,19 @@ const Sidebar = () => {
   const menuItems = [
     { label: 'Overview', href: '/dashboard' },
     { label: 'Analytics', href: '/dashboard/analytics' },
-    { label: 'Counters', href: '/dashboard/counters' },
+    { label: 'Cubicles', href: '/dashboard/cubicles' },
     { label: 'Patients', href: '/dashboard/patients' },
   ];
 
   const departments = [
-    { name: 'Consultation', href: '/dashboard/opd' },
-    { name: 'OPD Card', href: '/dashboard/laboratory' },
-    { name: 'Refill Prescription', href: '/dashboard/pharmacy' },
-    { name: 'ECG', href: '/dashboard/ecg' },
-    { name: 'Warfarin', href: '/dashboard/dental' },
-    { name: 'OPD Reschedule', href: '/dashboard/pediatrics' },
-    { name: 'Benzathine', href: '/dashboard/benzathine' },
-    { name: 'OPD Screening', href: '/dashboard/screening' }
+    { name: 'Consultation', href: '/dashboard/servicesPHC/consultation' },
+    { name: 'OPD Card', href: '/dashboard/servicesPHC/opdCard' },
+    { name: 'Refill Prescription', href: '/dashboard/servicesPHC/refillPrescription' },
+    { name: 'ECG', href: '/dashboard/servicesPHC/ecg' },
+    { name: 'Warfarin', href: '/dashboard/servicesPHC/warfarin' },
+    { name: 'OPD Reschedule', href: '/dashboard/servicesPHC/opdReschedule' },
+    { name: 'Benzathine', href: '/dashboard/servicesPHC/benzathine' },
+    { name: 'OPD Screening', href: '/dashboard/servicesPHC/opdScreening' }
   ];
 
   return (
