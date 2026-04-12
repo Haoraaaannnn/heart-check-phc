@@ -15,7 +15,6 @@ from sklearn.linear_model import LinearRegression
 # ══════════════════════════════════════════════════════════════
 
 def safe_to_datetime(series: pd.Series) -> pd.Series:
-    """Convert values to UTC-aware datetime without triggering Pandas duplicate-key errors."""
     series = pd.to_datetime(series, errors='coerce')
     if series.dt.tz is None:
         return series.dt.tz_localize('UTC')
@@ -23,14 +22,9 @@ def safe_to_datetime(series: pd.Series) -> pd.Series:
 
 # ══════════════════════════════════════════════════════════════
 # 1. DATA PREPROCESSING
-# ══════════════════════════════════════════════════════
+# ══════════════════════════════════════════════════════════════
 
 def preprocess_queue_data(df: pd.DataFrame) -> pd.DataFrame:
-    """
-    Adapts your Supabase schema to analytics-ready columns and 
-    safely handles incomplete (ongoing) visits without crashing.
-    """
-    # 1. Rename columns to match what analytics expects
     rename_map = {}
     if 'id' in df.columns and 'patient_id' not in df.columns:
         rename_map['id'] = 'patient_id'
@@ -43,35 +37,28 @@ def preprocess_queue_data(df: pd.DataFrame) -> pd.DataFrame:
     if rename_map:
         df = df.rename(columns=rename_map)
 
-    # 2. Convert timestamps to Pandas Datetime
     timestamp_cols = ['kiosk_time', 'reg_start', 'reg_end', 'consult_start', 'consult_end']
     for col in timestamp_cols:
         if col in df.columns:
             df[col] = safe_to_datetime(df[col])
 
-    # 3. THE BULLETPROOF FIX: Handle NULLs (Ongoing visits)
-    # Instead of dropping them, we fill missing times with the CURRENT time.
-    # This prevents crashes and allows "Live" wait time calculations.
     now = pd.Timestamp.now(tz='UTC')
     if 'reg_start' in df.columns:     df['reg_start']     = df['reg_start'].fillna(now)
     if 'reg_end' in df.columns:       df['reg_end']       = df['reg_end'].fillna(now)
     if 'consult_start' in df.columns: df['consult_start'] = df['consult_start'].fillna(now)
     if 'consult_end' in df.columns:   df['consult_end']   = df['consult_end'].fillna(now)
 
-    # 4. Enforce chronological logic (prevents negative times if data is weird)
     df['reg_start']     = df[['kiosk_time', 'reg_start']].max(axis=1)
     df['reg_end']       = df[['reg_start', 'reg_end']].max(axis=1)
     df['consult_start'] = df[['reg_end', 'consult_start']].max(axis=1)
     df['consult_end']   = df[['consult_start', 'consult_end']].max(axis=1)
 
-    # 5. Calculate durations (in minutes)
     df['wait_registration']    = (df['reg_start']     - df['kiosk_time']).dt.total_seconds() / 60
     df['service_registration'] = (df['reg_end']       - df['reg_start']).dt.total_seconds() / 60
     df['wait_consultation']    = (df['consult_start'] - df['reg_end']).dt.total_seconds() / 60
     df['service_consultation'] = (df['consult_end']   - df['consult_start']).dt.total_seconds() / 60
     df['total_time']           = (df['consult_end']   - df['kiosk_time']).dt.total_seconds() / 60
 
-    # 6. Extract Date and Time for grouping
     df['visit_date']  = df['kiosk_time'].dt.date
     df['hour']        = df['kiosk_time'].dt.hour
     df['day_of_week'] = df['kiosk_time'].dt.day_name()
@@ -179,25 +166,15 @@ def evaluate_forecasting_algorithms(
         actual      = volumes[i]
         window_data = volumes[i - window_size:i]
 
-        # --- SMA ---
         sma = np.mean(window_data)
-
-        # --- WMA ---
         wma = np.dot(window_data, weights) / weights.sum()
-
-        # --- EMA ---
         ema = (alpha * volumes[i - 1]) + ((1 - alpha) * current_ema)
         current_ema = ema
 
-        # --- Linear Regression ---
-        X_train = np.arange(window_size).reshape(-1, 1)
-        y_train = window_data
-        X_next  = np.array([[window_size]])
-
-        lr_model    = LinearRegression()
-        lr_model.fit(X_train, y_train)
-        lr = float(lr_model.predict(X_next)[0])
-        lr = max(0, lr)
+        X_train  = np.arange(window_size).reshape(-1, 1)
+        X_next   = np.array([[window_size]])
+        lr_model = LinearRegression().fit(X_train, window_data)
+        lr       = max(0, float(lr_model.predict(X_next)[0]))
 
         actuals.append(actual)
         sma_preds.append(sma)
@@ -229,10 +206,8 @@ def evaluate_forecasting_algorithms(
     elif best_algo == "EMA":
         forecast = (alpha * volumes[-1]) + ((1 - alpha) * current_ema)
     else:
-        lr_final = LinearRegression()
-        lr_final.fit(X_train_final, latest_window)
-        forecast = float(lr_final.predict(np.array([[window_size]]))[0])
-        forecast = max(0, forecast)
+        lr_final = LinearRegression().fit(X_train_final, latest_window)
+        forecast = max(0, float(lr_final.predict(np.array([[window_size]]))[0]))
 
     return {
         "evaluation_metrics"    : results,
@@ -242,6 +217,60 @@ def evaluate_forecasting_algorithms(
         ),
         "best_algorithm"        : best_algo,
         "next_day_forecast"     : round(forecast)
+    }
+
+# ══════════════════════════════════════════════════════════════
+# 4b. LINEAR REGRESSION CHART DATA
+# ══════════════════════════════════════════════════════════════
+
+def get_lr_chart_data(df: pd.DataFrame, window_size: int = 7) -> dict:
+    daily_counts = df.groupby('visit_date')['patient_id'].count().reset_index()
+    daily_counts = daily_counts.sort_values('visit_date').reset_index(drop=True)
+
+    # ── FIX: Return a "Zero-State" chart instead of an error ──
+    if len(daily_counts) < 2:
+        today = pd.Timestamp.now(tz='UTC').date()
+        dates = [(today - pd.Timedelta(days=i)).strftime('%Y-%m-%d') for i in range(4, -1, -1)]
+        forecast_date = (today + pd.Timedelta(days=1)).strftime('%Y-%m-%d')
+
+        return {
+            "labels"         : dates,
+            "actual"         : [0, 0, 0, 0, 0],
+            "lr_line"        : [0, 0, 0, 0, 0],
+            "forecast_date"  : forecast_date,
+            "forecast_value" : 0,
+            "slope"          : 0.0,
+            "trend"          : "stable",
+        }
+
+    dates   = [str(d) for d in daily_counts['visit_date']]
+    volumes = daily_counts['patient_id'].values.astype(float)
+    n       = len(volumes)
+
+    # Fit LR over ALL historical data for the trend line
+    X_all   = np.arange(n).reshape(-1, 1)
+    lr_all  = LinearRegression().fit(X_all, volumes)
+    lr_line = [round(max(0, float(v)), 1) for v in lr_all.predict(X_all)]
+    slope   = round(float(lr_all.coef_[0]), 4)
+
+    # Forecast: fit on latest window, predict next day
+    latest_window = volumes[-window_size:]
+    X_win  = np.arange(window_size).reshape(-1, 1)
+    lr_win = LinearRegression().fit(X_win, latest_window)
+    forecast_val  = round(max(0, float(lr_win.predict(np.array([[window_size]]))[0])))
+
+    # Forecast date = last date + 1 day
+    last_date     = pd.to_datetime(daily_counts['visit_date'].iloc[-1])
+    forecast_date = str((last_date + pd.Timedelta(days=1)).date())
+
+    return {
+        "labels"         : dates,
+        "actual"         : [int(v) for v in volumes],
+        "lr_line"        : lr_line,
+        "forecast_date"  : forecast_date,
+        "forecast_value" : forecast_val,
+        "slope"          : slope,
+        "trend"          : "increasing" if slope > 0 else "decreasing" if slope < 0 else "stable",
     }
 
 # ══════════════════════════════════════════════════════════════
@@ -257,8 +286,8 @@ def recommend_staff(
     if forecasted_patients <= 0:
         return {}
     lam     = forecasted_patients / (opd_hours * 60)
-    mu      = 1 / avg_service_time_min
-    c_min   = math.ceil(lam / (mu * target_utilization))
+    mu      = 1 / avg_service_time_min if avg_service_time_min > 0 else 1
+    c_min   = math.ceil(lam / (mu * target_utilization)) if lam > 0 else 1
     metrics = mmc_metrics(lam, mu, c_min)
 
     return {
@@ -292,5 +321,6 @@ def generate_report(
             "current_metrics"      : mmc_metrics(lam, mu, c=c_consultation)
         },
         "computational_forecasting": eval_data,
+        "lr_chart_data"            : get_lr_chart_data(df_clean),   # ← Seamless frontend integration
         "decision_support"         : recommend_staff(predicted_vol, opd_hours, avg_service_min)
     }

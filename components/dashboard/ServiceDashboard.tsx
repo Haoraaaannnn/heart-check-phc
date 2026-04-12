@@ -3,6 +3,9 @@
 import { useRouter } from 'next/navigation';
 import { useEffect, useState } from 'react';
 import { supabase } from '@/lib/supabase';
+import {
+  AreaChart, Area, XAxis, YAxis, CartesianGrid, Tooltip, ResponsiveContainer
+} from 'recharts';
 
 // --- PROPS DEFINITION ---
 interface ServiceDashboardProps {
@@ -43,6 +46,9 @@ export function ServiceDashboard({ title, serviceFilter, icon }: ServiceDashboar
     waitingList: [],
   });
 
+  // New state to hold our hourly trend data
+  const [hourlyTrend, setHourlyTrend] = useState<{ time: string; patients: number }[]>([]);
+
   useEffect(() => {
     setIsMounted(true);
     setCurrentTime(new Date());
@@ -60,7 +66,6 @@ export function ServiceDashboard({ title, serviceFilter, icon }: ServiceDashboar
       const startOfDay = new Date(now.getFullYear(), now.getMonth(), now.getDate()).toISOString();
       const endOfDay = new Date(now.getFullYear(), now.getMonth(), now.getDate() + 1).toISOString();
       
-      // Uses the prop to fetch specific service
       const { data, error } = await supabase
         .from('patients')
         .select('id, status, created_at, consult_start, patientNum, cubicleNum')
@@ -76,11 +81,18 @@ export function ServiceDashboard({ title, serviceFilter, icon }: ServiceDashboar
         
         const rooms = new Set<string>();
         const waitList: QueuedPatient[] = [];
+        
+        // Setup hourly buckets for the trend chart (e.g., 7 AM to 5 PM)
+        const hourCounts: Record<string, number> = {};
+        for (let i = 7; i <= 17; i++) {
+          hourCounts[`${i.toString().padStart(2, '0')}:00`] = 0;
+        }
 
         data.forEach((patient) => {
           const currentStatus = patient.status ? patient.status.toLowerCase().trim() : '';
           const joinedAtMs = new Date(patient.created_at).getTime();
 
+          // Tally metrics
           if (['pending', 'waiting'].includes(currentStatus)) {
             waitingCount++;
             if (patient.patientNum) {
@@ -100,8 +112,18 @@ export function ServiceDashboard({ title, serviceFilter, icon }: ServiceDashboar
               totalWaitMs += (servedAt - joinedAtMs);
             }
           }
+
+          // Group by hour for the trend chart
+          const patientHour = new Date(patient.created_at).getHours();
+          const hourLabel = `${patientHour.toString().padStart(2, '0')}:00`;
+          if (hourCounts[hourLabel] !== undefined) {
+            hourCounts[hourLabel]++;
+          } else {
+            hourCounts[hourLabel] = 1; 
+          }
         });
 
+        // Calculate Averages
         let avgMins = null;
         if (servedCount > 0 && totalWaitMs > 0) {
           avgMins = Math.round(totalWaitMs / servedCount / 60000);
@@ -114,6 +136,14 @@ export function ServiceDashboard({ title, serviceFilter, icon }: ServiceDashboar
            longestMins = Math.floor((new Date().getTime() - waitList[0].joinedAtMs) / 60000);
         }
 
+        // Format data for the Recharts AreaChart
+        const formattedHourlyData = Object.keys(hourCounts)
+          .sort()
+          .map(time => ({
+            time,
+            patients: hourCounts[time]
+          }));
+
         setStats({
           waiting: waitingCount,
           serving: servingCount,
@@ -123,6 +153,8 @@ export function ServiceDashboard({ title, serviceFilter, icon }: ServiceDashboar
           activeRooms: Array.from(rooms),
           waitingList: waitList,
         });
+        
+        setHourlyTrend(formattedHourlyData);
       }
     };
 
@@ -153,7 +185,7 @@ export function ServiceDashboard({ title, serviceFilter, icon }: ServiceDashboar
   const isServiceActive = stats.serving > 0;
 
   return (
-    <div className="px-8 py-6 flex flex-col gap-8 min-h-screen">
+    <div className="px-8 py-6 flex flex-col gap-8 min-h-screen max-w-7xl mx-auto w-full">
       
       {/* 1. Header uses Props */}
       <div className="flex justify-between items-center bg-white p-6 rounded-3xl shadow-sm border border-red-50">
@@ -270,6 +302,56 @@ export function ServiceDashboard({ title, serviceFilter, icon }: ServiceDashboar
         </div>
 
       </div>
+
+      {/* 5. NEW: Hourly Trend Area Chart */}
+      <div className="bg-white rounded-3xl shadow-sm border border-red-50 p-8 w-full mt-2">
+        <div className="mb-6">
+          <h2 className="text-xl font-extrabold text-gray-800">Service Demand Trend</h2>
+          <p className="text-sm text-gray-400 mt-1">Hourly patient arrivals for {title} today</p>
+        </div>
+        
+        <div style={{ width: '100%', height: 300, minHeight: 300 }}>
+          <ResponsiveContainer width="99%" height="100%">
+            <AreaChart data={hourlyTrend} margin={{ top: 10, right: 10, left: -20, bottom: 0 }}>
+              <defs>
+                <linearGradient id="colorPatients" x1="0" y1="0" x2="0" y2="1">
+                  <stop offset="5%" stopColor="#ef4444" stopOpacity={0.3}/>
+                  <stop offset="95%" stopColor="#ef4444" stopOpacity={0}/>
+                </linearGradient>
+              </defs>
+              <CartesianGrid strokeDasharray="3 3" vertical={false} stroke="#f0f0f0" />
+              <XAxis 
+                dataKey="time" 
+                tick={{ fontSize: 12, fill: '#9ca3af' }} 
+                axisLine={false} 
+                tickLine={false} 
+              />
+              <YAxis 
+                allowDecimals={false} 
+                tick={{ fontSize: 12, fill: '#9ca3af' }} 
+                axisLine={false} 
+                tickLine={false} 
+                domain={[0, (dataMax: number) => Math.max(dataMax, 4)]}
+              />
+              <Tooltip 
+                cursor={{ stroke: '#fca5a5', strokeWidth: 2, strokeDasharray: '3 3' }}
+                contentStyle={{ borderRadius: '8px', border: 'none', boxShadow: '0 4px 6px -1px rgb(0 0 0 / 0.1)' }}
+                formatter={((value: number) => [`${value} patients`, 'Arrivals']) as any}
+              />
+              <Area 
+                type="monotone" 
+                dataKey="patients" 
+                stroke="#ef4444" 
+                strokeWidth={3}
+                fillOpacity={1} 
+                fill="url(#colorPatients)" 
+                activeDot={{ r: 6, fill: '#ef4444', stroke: '#fff', strokeWidth: 2 }}
+              />
+            </AreaChart>
+          </ResponsiveContainer>
+        </div>
+      </div>
+
     </div>
   );
 }

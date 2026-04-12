@@ -139,8 +139,8 @@ def get_mock_data():
             }
         ],
         "hourly_pattern": [
-            {"hour": 8, "avg_patients": 5, "avg_wait_consultation": 10.5, "time_label": "08:00–09:00"},
-            {"hour": 9, "avg_patients": 8, "avg_wait_consultation": 14.2, "time_label": "09:00–10:00"},
+            {"hour": 8,  "avg_patients": 5, "avg_wait_consultation": 10.5, "time_label": "08:00–09:00"},
+            {"hour": 9,  "avg_patients": 8, "avg_wait_consultation": 14.2, "time_label": "09:00–10:00"},
             {"hour": 10, "avg_patients": 7, "avg_wait_consultation": 11.8, "time_label": "10:00–11:00"},
         ],
         "bottleneck_analysis": {
@@ -153,24 +153,39 @@ def get_mock_data():
             "arrival_rate_lambda": 5.6,
             "service_rate_mu": 0.08,
             "current_metrics": {
-                "traffic_intensity": 0.7,
-                "avg_patients_in_system": 2.3,
-                "avg_time_in_system": 41.0,
-                "probability_queue": 0.35
+                "servers_c": 1,
+                "utilization_rho": 0.7,
+                "probability_of_wait": 0.35,
+                "expected_wait_queue_min": 12.0
             }
         },
         "computational_forecasting": {
             "next_day_forecast": 52,
-            "best_algorithm": "ARIMA",
-            "algorithm_comparison": {
-                "ARIMA": 52,
-                "Linear": 48,
-                "Exponential": 50
+            "best_algorithm": "WMA",
+            "algorithmic_conclusion": "Based on historical backtesting, WMA yielded the lowest Mean Absolute Error.",
+            "evaluation_metrics": {
+                "SMA":                {"MAE": 4.2,  "RMSE": 5.1},
+                "WMA":                {"MAE": 3.8,  "RMSE": 4.7},
+                "EMA":                {"MAE": 4.0,  "RMSE": 4.9},
+                "Linear Regression":  {"MAE": 4.5,  "RMSE": 5.4},
             }
         },
+        # ← THIS was the missing key
+        "lr_chart_data": {
+            "labels": [
+                "2026-04-01", "2026-04-02", "2026-04-03",
+                "2026-04-07", "2026-04-08", "2026-04-09"
+            ],
+            "actual":        [42, 38, 55, 50, 61, 45],
+            "lr_line":       [40.0, 42.5, 45.0, 47.5, 50.0, 52.5],
+            "forecast_date": "2026-04-10",
+            "forecast_value": 52,
+            "slope":          2.3,
+            "trend":          "increasing"
+        },
         "decision_support": {
-            "recommended_doctors": 2,
-            "recommended_nurses": 3,
-            "message": "Current staffing is adequate. Monitor consultation wait times."
+            "forecasted_patients":  52,
+            "recommended_doctors":  2,
+            "expected_utilization": 0.72
         }
     }
