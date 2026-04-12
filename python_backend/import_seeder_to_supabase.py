@@ -3,6 +3,7 @@ import csv
 import json
 import os
 import urllib.request
+import urllib.error
 from dotenv import load_dotenv
 
 BASE_DIR = os.path.dirname(os.path.abspath(__file__))
@@ -26,11 +27,13 @@ def build_records(limit=None):
                 "service": row["purpose"],
                 "patientNum": f"seed-{row['queue_number']}",
                 "cubicleNum": None,
-                "status": "seeded",
+                # Grab the status from the CSV (which is now 'Finished'), fallback to 'seeded' just in case
+                "status": "finished", # to change later to avoid seeded data and show actual data
                 "reg_start": row["reg_start"],
                 "reg_end": row["reg_end"],
-                "consult_start": row["consult_start"],
-                "consult_end": row["consult_end"]
+                # Map the new CSV column names to your existing Supabase payload keys
+                "consult_start": row["service_start"], 
+                "consult_end": row["service_end"]
             })
     return records
 
@@ -49,8 +52,13 @@ def insert_records(records):
             "Prefer": "return=minimal"
         },
     )
-    with urllib.request.urlopen(req, timeout=60) as response:
-        return response.status, response.read().decode("utf-8")
+    try:
+        with urllib.request.urlopen(req, timeout=60) as response:
+            return response.status, response.read().decode("utf-8")
+    except urllib.error.HTTPError as e:
+        # This will catch the 400 error and read Supabase's detailed JSON response
+        error_body = e.read().decode("utf-8")
+        return e.code, f"Supabase rejected the payload.\nDetails: {error_body}"
 
 
 def main():

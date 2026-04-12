@@ -96,7 +96,7 @@ export default function AdminDashboard() {
     : "#f3f4f6";
 
   return (
-    <div className="bg-gray-50 min-h-screen w-full">
+    <div className="min-h-screen w-full">
       <div className="p-8 mx-auto max-w-7xl w-full">
         
         <div className="flex items-center justify-between mb-6">

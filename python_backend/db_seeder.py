@@ -1,7 +1,7 @@
 """
 db_seeder.py
 Stochastic Data Generator for Heart Check PHC
-Generates realistic M/M/1 queue timestamps and exports to CSV.
+Generates realistic multi-server queue timestamps and exports to CSV.
 """
 
 import random
@@ -9,10 +9,19 @@ import numpy as np
 import pandas as pd
 from datetime import datetime, timedelta
 
-def generate_fake_patients(num_days=30, patients_per_day=50, start_date="2026-04-10", output_filename="simulated_patients.csv"):
+def generate_fake_patients(num_days=30, patients_per_day=1000, start_date="2026-03-01", output_filename="simulated_patients.csv"):
     avg_inter_arrival = 5   
     avg_reg_time = 3        
-    avg_consult_time = 15   
+    
+    # Define distinct services, their dedicated resources, and specific average times
+    SERVICES = {
+        'Consultation': {'resource': 'Doctor', 'avg_time': 15},
+        'OPD Card': {'resource': 'Admin', 'avg_time': 5},
+        'Warfarin': {'resource': 'Nurse', 'avg_time': 10},
+        'Benzathine': {'resource': 'Nurse', 'avg_time': 12},
+        'ECG': {'resource': 'Technician', 'avg_time': 20},
+        'OPD Screening': {'resource': 'Triage', 'avg_time': 8}
+    }
     
     data = []
     base_date = datetime.strptime(start_date, "%Y-%m-%d")
@@ -26,31 +35,37 @@ def generate_fake_patients(num_days=30, patients_per_day=50, start_date="2026-04
             
         current_time = current_date.replace(hour=8, minute=0, second=0)
         reg_free_time = current_time
-        doctor_free_time = current_time
+        
+        # Track free times for each department/resource independently
+        resource_free_times = {res['resource']: current_time for res in SERVICES.values()}
 
         daily_volume = int(np.random.normal(patients_per_day, scale=8))
         if daily_volume < 10: daily_volume = 10 
 
         for i in range(1, daily_volume + 1):
-            # Arrival
+            # 1. Arrival
             inter_arrival = np.random.exponential(avg_inter_arrival)
             current_time += timedelta(minutes=inter_arrival)
             kiosk_time = current_time
 
-            # Registration
+            # 2. Registration
             reg_start = max(kiosk_time, reg_free_time)
             reg_duration = np.random.exponential(avg_reg_time)
             reg_end = reg_start + timedelta(minutes=reg_duration)
             reg_free_time = reg_end 
 
-            # Consultation
-            consult_start = max(reg_end, doctor_free_time)
-            consult_duration = np.random.exponential(avg_consult_time)
-            consult_end = consult_start + timedelta(minutes=consult_duration)
-            doctor_free_time = consult_end
+            # 3. Determine Purpose & Resource Needed
+            purpose = random.choice(list(SERVICES.keys()))
+            req_resource = SERVICES[purpose]['resource']
+            avg_service_time = SERVICES[purpose]['avg_time']
 
-            purposes = ['Consultation', 'OPD Card', 'Warfarin', 'Benzathine', 'ECG', 'OPD Screening']
-            purpose = random.choice(purposes)
+            # 4. Service Execution (Routes to the correct department)
+            service_start = max(reg_end, resource_free_times[req_resource])
+            service_duration = np.random.exponential(avg_service_time)
+            service_end = service_start + timedelta(minutes=service_duration)
+            
+            # Update the specific resource's free time
+            resource_free_times[req_resource] = service_end
 
             data.append({
                 'patient_id': f"{current_date.strftime('%Y%m%d')}-{i}",
@@ -59,9 +74,11 @@ def generate_fake_patients(num_days=30, patients_per_day=50, start_date="2026-04
                 'kiosk_time': kiosk_time.replace(microsecond=0).strftime("%Y-%m-%d %H:%M:%S"),
                 'reg_start': reg_start.replace(microsecond=0).strftime("%Y-%m-%d %H:%M:%S"),
                 'reg_end': reg_end.replace(microsecond=0).strftime("%Y-%m-%d %H:%M:%S"),
-                'consult_start': consult_start.replace(microsecond=0).strftime("%Y-%m-%d %H:%M:%S"),
-                'consult_end': consult_end.replace(microsecond=0).strftime("%Y-%m-%d %H:%M:%S"),
-                'purpose': purpose
+                'service_start': service_start.replace(microsecond=0).strftime("%Y-%m-%d %H:%M:%S"),
+                'service_end': service_end.replace(microsecond=0).strftime("%Y-%m-%d %H:%M:%S"),
+                'purpose': purpose,
+                'resource_used': req_resource,
+                'status': 'Finished' # Marks the patient's lifecycle as complete
             })
 
     df = pd.DataFrame(data)
