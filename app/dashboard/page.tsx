@@ -181,28 +181,28 @@ export default function DashboardPage() {
 
         {/* METRIC CARDS */}
         <div className="flex gap-5 flex-wrap">
-          <div className="rounded-3xl shadow-sm border border-red-50 p-6 w-64 h-36 flex flex-col justify-between bg-white">
+          <div className="rounded-xl shadow-sm border border-red-50 p-6 w-64 h-36 flex flex-col justify-between bg-white">
             <span className="text-gray-400 text-xs font-bold tracking-widest uppercase">Today Patients</span>
             <span className="text-[#cc3535] text-5xl font-extrabold self-end">
               {isMounted ? stats.todayCount : '--'}
             </span>
           </div>
 
-          <div className="rounded-3xl shadow-sm border border-red-50 p-6 w-64 h-36 flex flex-col justify-between bg-white">
+          <div className="rounded-xl shadow-sm border border-red-50 p-6 w-64 h-36 flex flex-col justify-between bg-white">
             <span className="text-gray-400 text-xs font-bold tracking-widest uppercase">On Queue</span>
             <span className="text-orange-500 text-5xl font-extrabold self-end">
               {isMounted ? stats.onQueue : '--'}
             </span>
           </div>
 
-          <div className="rounded-3xl shadow-sm border border-red-50 p-6 w-64 h-36 flex flex-col justify-between bg-white">
+          <div className="rounded-xl shadow-sm border border-red-50 p-6 w-64 h-36 flex flex-col justify-between bg-white">
             <span className="text-gray-400 text-xs font-bold tracking-widest uppercase">Served</span>
             <span className="text-green-500 text-5xl font-extrabold self-end">
               {isMounted ? stats.served : '--'}
             </span>
           </div>
 
-          <div className="rounded-3xl shadow-sm border border-red-50 p-6 w-64 h-36 flex flex-col justify-between bg-white">
+          <div className="rounded-xl shadow-sm border border-red-50 p-6 w-64 h-36 flex flex-col justify-between bg-white">
             <span className="text-gray-400 text-xs font-bold tracking-widest uppercase">Avg Waiting Time</span>
             <span className="text-[#cc3535] text-4xl font-extrabold self-end">
               {dynamicAvgWait} <span className="text-2xl font-bold">min</span>
@@ -213,7 +213,7 @@ export default function DashboardPage() {
         {/* TABLES AND STATS */}
         <div className="grid grid-cols-1 lg:grid-cols-3 gap-6">
           
-          <div className="bg-white rounded-3xl shadow-sm border border-red-50 p-8 lg:col-span-2">
+          <div className="bg-white rounded-xl shadow-sm border border-red-50 p-8 lg:col-span-2">
             <div className="flex justify-between items-center mb-6">
               <div>
                 <h2 className="text-xl font-extrabold text-gray-800 flex items-center gap-2">
@@ -260,7 +260,7 @@ export default function DashboardPage() {
             </table>
           </div>
 
-          <div className="bg-white rounded-3xl shadow-sm border border-red-50 p-8 flex flex-col gap-8">
+          <div className="bg-white rounded-xl shadow-sm border border-red-50 p-8 flex flex-col gap-8">
             
             <div>
               <h2 className="text-xl font-extrabold text-gray-800 flex items-center gap-2 mb-1">
@@ -335,7 +335,7 @@ export default function DashboardPage() {
         </div>
 
         {/* FIXED: HOURLY ARRIVALS BAR CHART */}
-        <div className="bg-white rounded-3xl shadow-sm border border-red-50 p-8 w-full mb-8">
+        <div className="bg-white rounded-xl shadow-sm border border-red-50 p-8 w-full mb-8">
           <div className="mb-6">
             <h2 className="text-xl font-extrabold text-gray-800">Hourly Patient Arrivals</h2>
             <p className="text-sm text-gray-400 mt-1">Number of patients registered per hour today</p>

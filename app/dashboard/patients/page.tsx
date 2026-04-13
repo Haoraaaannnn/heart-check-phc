@@ -291,7 +291,7 @@ export default function PatientsPage() {
 
         {/* Key Stats */}
         <div className="grid grid-cols-1 md:grid-cols-4 gap-4 mb-6">
-          <div className="bg-white p-4 rounded-lg border border-gray-200">
+          <div className="bg-white p-4 rounded-xl border border-gray-200 shadow-lg">
             <div className="flex items-center justify-between">
               <div>
                 <p className="text-sm text-gray-600">Total Today</p>
@@ -301,7 +301,7 @@ export default function PatientsPage() {
             </div>
           </div>
 
-          <div className="bg-white p-4 rounded-lg border border-gray-200">
+          <div className="bg-white p-4 rounded-xl border border-gray-200 shadow-lg">
             <div className="flex items-center justify-between">
               <div>
                 <p className="text-sm text-gray-600">In Queue</p>
@@ -311,7 +311,7 @@ export default function PatientsPage() {
             </div>
           </div>
 
-          <div className="bg-white p-4 rounded-lg border border-gray-200">
+          <div className="bg-white p-4 rounded-xl border border-gray-200 shadow-lg">
             <div className="flex items-center justify-between">
               <div>
                 <p className="text-sm text-gray-600">Served Today</p>
@@ -321,7 +321,7 @@ export default function PatientsPage() {
             </div>
           </div>
 
-          <div className="bg-white p-4 rounded-lg border border-gray-200">
+          <div className="bg-white p-4 rounded-xl border border-gray-200 shadow-lg">
             <div className="flex items-center justify-between">
               <div>
                 <p className="text-sm text-gray-600">Avg Wait Time</p>
@@ -334,7 +334,7 @@ export default function PatientsPage() {
 
         <div className="grid grid-cols-1 lg:grid-cols-2 gap-6 mb-6">
           {/* Service Distribution */}
-          <div className="bg-white p-4 rounded-lg border border-gray-200">
+          <div className="bg-white p-4 rounded-xl border border-gray-200 shadow-lg">
             <h2 className="text-lg font-semibold text-gray-800 mb-4">Service Distribution</h2>
             <ResponsiveContainer width="100%" height={300}>
               <PieChart>
@@ -358,7 +358,7 @@ export default function PatientsPage() {
           </div>
 
           {/* Hourly Patient Flow */}
-          <div className="bg-white p-4 rounded-lg border border-gray-200">
+          <div className="bg-white p-4 rounded-xl border border-gray-200 shadow-lg">
             <h2 className="text-lg font-semibold text-gray-800 mb-4">Hourly Patient Flow</h2>
             <ResponsiveContainer width="100%" height={300}>
               <LineChart data={hourlyData}>
@@ -373,7 +373,7 @@ export default function PatientsPage() {
         </div>
 
         {/* Recent Patients */}
-        <div className="bg-white rounded-lg border border-gray-200 p-4">
+        <div className="bg-white rounded-xl border border-gray-200 p-4 shadow-lg">
           <h2 className="text-lg font-semibold text-gray-800 mb-4">Recent Patients</h2>
           {recentPatients.length === 0 ? (
             <div className="text-center py-8">
@@ -415,7 +415,7 @@ export default function PatientsPage() {
         </div>
 
         {/* Quick Actions */}
-        <div className="mt-6 bg-white rounded-lg border border-gray-200 p-4">
+        <div className="mt-6 bg-white rounded-xl border border-gray-200 p-4 shadow-lg">
           <h2 className="text-lg font-semibold text-gray-800 mb-4">Quick Actions</h2>
           <div className="flex flex-wrap gap-4">
             <button className="px-4 py-2 bg-blue-600 text-white rounded-lg hover:bg-blue-700 transition-colors">

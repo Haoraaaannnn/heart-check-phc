@@ -9,7 +9,7 @@ import numpy as np
 import pandas as pd
 from datetime import datetime, timedelta
 
-def generate_fake_patients(num_days=30, patients_per_day=1000, start_date="2026-03-01", output_filename="simulated_patients.csv"):
+def generate_fake_patients(num_days=100, patients_per_day=118, start_date="2026-01-01", output_filename="simulated_patients.csv"):
     avg_inter_arrival = 5   
     avg_reg_time = 3        
     
@@ -26,7 +26,7 @@ def generate_fake_patients(num_days=30, patients_per_day=1000, start_date="2026-
     data = []
     base_date = datetime.strptime(start_date, "%Y-%m-%d")
 
-    print(f"⚙️ Generating data for {num_days} days starting from {start_date}...")
+    print(f"⚙️ Generating approximately 10,000 patients over {num_days} days...")
 
     for day in range(num_days):
         current_date = base_date + timedelta(days=day)
@@ -39,6 +39,7 @@ def generate_fake_patients(num_days=30, patients_per_day=1000, start_date="2026-
         # Track free times for each department/resource independently
         resource_free_times = {res['resource']: current_time for res in SERVICES.values()}
 
+        # Create a realistic daily volume with slight random fluctuations
         daily_volume = int(np.random.normal(patients_per_day, scale=8))
         if daily_volume < 10: daily_volume = 10 
 
@@ -86,5 +87,6 @@ def generate_fake_patients(num_days=30, patients_per_day=1000, start_date="2026-
     print(f"✅ Successfully generated {len(df)} fake patient records!")
     print(f"📁 Saved to: {output_filename}")
 
+# THE FIX: This is set to generate ~10,000 total patients
 if __name__ == "__main__":
-    generate_fake_patients(num_days=90, patients_per_day=60)
+    generate_fake_patients(num_days=110, patients_per_day=500)

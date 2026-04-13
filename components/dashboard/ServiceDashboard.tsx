@@ -188,9 +188,9 @@ export function ServiceDashboard({ title, serviceFilter, icon }: ServiceDashboar
     <div className="px-8 py-6 flex flex-col gap-8 min-h-screen max-w-7xl mx-auto w-full">
       
       {/* 1. Header uses Props */}
-      <div className="flex justify-between items-center bg-white p-6 rounded-3xl shadow-sm border border-red-50">
+      <div className="flex justify-between items-center bg-white p-6 rounded-xl shadow-sm border border-red-50">
         <div className="flex items-center gap-4">
-          <div className="w-16 h-16 bg-red-50 rounded-2xl flex items-center justify-center text-4xl">
+          <div className="w-16 h-16 bg-red-50 rounded-xl flex items-center justify-center text-4xl">
             {icon}
           </div>
           <div>
@@ -217,17 +217,17 @@ export function ServiceDashboard({ title, serviceFilter, icon }: ServiceDashboar
 
       {/* 2. Big Core Metrics */}
       <div className="flex flex-wrap gap-6">
-        <div className="bg-white rounded-3xl shadow-sm border border-red-50 p-6 flex flex-col justify-between h-36 w-64">
+        <div className="bg-white rounded-xl shadow-sm border border-red-50 p-6 flex flex-col justify-between h-36 w-64">
           <span className="text-gray-400 text-xs font-bold tracking-widest uppercase">Waiting</span>
           <span className="text-orange-500 text-5xl font-extrabold self-end">{stats.waiting}</span>
         </div>
         
-        <div className="bg-white rounded-3xl shadow-sm border border-red-50 p-6 flex flex-col justify-between h-36 w-64">
+        <div className="bg-white rounded-xl shadow-sm border border-red-50 p-6 flex flex-col justify-between h-36 w-64">
           <span className="text-gray-400 text-xs font-bold tracking-widest uppercase">Currently Serving</span>
           <span className="text-green-600 text-5xl font-extrabold self-end">{stats.serving}</span>
         </div>
         
-        <div className="bg-white rounded-3xl shadow-sm border border-red-50 p-6 flex flex-col justify-between h-36 w-64">
+        <div className="bg-white rounded-xl shadow-sm border border-red-50 p-6 flex flex-col justify-between h-36 w-64">
           <span className="text-gray-400 text-xs font-bold tracking-widest uppercase">Done Today</span>
           <span className="text-gray-800 text-5xl font-extrabold self-end">{stats.served}</span>
         </div>
@@ -236,7 +236,7 @@ export function ServiceDashboard({ title, serviceFilter, icon }: ServiceDashboar
       <div className="grid grid-cols-1 lg:grid-cols-3 gap-6">
         
         {/* 3. Detailed Up Next List */}
-        <div className="bg-white rounded-3xl shadow-sm border border-red-50 p-8 lg:col-span-2">
+        <div className="bg-white rounded-xl shadow-sm border border-red-50 p-8 lg:col-span-2">
           <h2 className="text-xl font-extrabold text-gray-800 mb-6 flex items-center gap-2">
             🎟️ Up Next Queue
           </h2>
@@ -275,7 +275,7 @@ export function ServiceDashboard({ title, serviceFilter, icon }: ServiceDashboar
 
         {/* 4. Service Time Stats */}
         <div className="flex flex-col gap-6">
-          <div className="bg-white rounded-3xl shadow-sm border border-red-50 p-8">
+          <div className="bg-white rounded-xl shadow-sm border border-red-50 p-8">
             <h3 className="text-sm font-bold text-gray-400 uppercase tracking-wider mb-6">Time Stats</h3>
             
             <div className="flex flex-col gap-6">
@@ -304,7 +304,7 @@ export function ServiceDashboard({ title, serviceFilter, icon }: ServiceDashboar
       </div>
 
       {/* 5. NEW: Hourly Trend Area Chart */}
-      <div className="bg-white rounded-3xl shadow-sm border border-red-50 p-8 w-full mt-2">
+      <div className="bg-white rounded-xl shadow-sm border border-red-50 p-8 w-full mt-2">
         <div className="mb-6">
           <h2 className="text-xl font-extrabold text-gray-800">Service Demand Trend</h2>
           <p className="text-sm text-gray-400 mt-1">Hourly patient arrivals for {title} today</p>
