@@ -11,7 +11,7 @@ export default function ConfirmationActions({ serviceId, serviceColor}: Props) {
   const router = useRouter();
 
   const handleContinue = () => {
-    // Simply redirect to SMS input page - patient creation will happen after SMS confirmation
+
     console.log(`${getTimestamp()} ✅ [CONFIRMATION ACCEPTED] Service confirmed - Redirecting to SMS input - ServiceId: ${serviceId}, ServiceColor: ${serviceColor}`);
     router.push(`/kiosk/sms-input?serviceId=${serviceId}`);
   };

@@ -50,7 +50,7 @@ export default function LoginPage() {
     if (data.role === 'admin') {
       router.push('/dashboard');
     } else {
-      router.push('/nurseDashboard');
+      router.push('/transfer');
     }
   };
 
