@@ -30,7 +30,7 @@ export default function CategoryMonitorPage() {
     speakingRef.current = true;
     try {
       const response = await fetch(
-        'https://api.deepgram.com/v1/speak?model=aura-2-atlas-en',
+        'https://api.deepgram.com/v1/speak?model=aura-2-amalthea-en',
         {
           method: 'POST',
           headers: {
