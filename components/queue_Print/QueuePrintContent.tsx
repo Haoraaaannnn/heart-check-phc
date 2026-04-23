@@ -8,9 +8,10 @@ import { supabase } from '@/lib/supabase';
 interface Props {
   service: Service;
   patientNum: string;
+  cubicleNum: string;
 }
 
-export default function QueuePrintContent({ service, patientNum }: Props) {
+export default function QueuePrintContent({ service, patientNum, cubicleNum }: Props) {
   const router = useRouter();
   
   // Guard to prevent React Strict Mode from double-printing
@@ -21,7 +22,7 @@ export default function QueuePrintContent({ service, patientNum }: Props) {
     hasFired.current = true;
 
     const serviceName = service?.label_en || 'Service';
-    /*const location = service?.label_fil || 'Waiting Area';*/
+    const location = cubicleNum || 'Waiting Area';
     
     // Fetch the patient record from database
     const fetchAndLogPatientRecord = async () => {
@@ -40,20 +41,20 @@ export default function QueuePrintContent({ service, patientNum }: Props) {
         
         if (error) throw error;
 
-        console.log(`${getTimestamp()} 📋 [QUEUE PRINT PAGE] Loaded:`, { id: patientRecord?.id, created_at: patientRecord?.created_at, patientNum: patientRecord?.patientNum, phoneNum: patientRecord?.phoneNum, service: patientRecord?.service });
+        console.log(`${getTimestamp()} [QUEUE PRINT PAGE] Loaded:`, { id: patientRecord?.id, created_at: patientRecord?.created_at, patientNum: patientRecord?.patientNum, phoneNum: patientRecord?.phoneNum, service: patientRecord?.service });
       } catch (err) {
         const errorMessage = err instanceof Error ? err.message : String(err);
-        console.log(`${getTimestamp()} 📋 [QUEUE PRINT PAGE] Loaded - PatientNum: ${patientNum}, Service: ${serviceName} (DB Fetch Note: ${errorMessage})`);
+        console.log(`${getTimestamp()} [QUEUE PRINT PAGE] Loaded - PatientNum: ${patientNum}, Service: ${serviceName} (DB Fetch Note: ${errorMessage})`);
       }
     };
 
     fetchAndLogPatientRecord();
-    console.log(`${getTimestamp()} 🞨 [PRINT JOB INITIATED] Preparing to send ticket to printer - Queue: ${patientNum}, Service: ${serviceName}, Cubicle: ${location}`);
+    console.log(`${getTimestamp()} [PRINT JOB INITIATED] Preparing to send ticket to printer - Queue: ${patientNum}, Service: ${serviceName}, Cubicle: ${location}`);
 
     // Call the print API
     const printTicket = async () => {
       try {
-        console.log(`${getTimestamp()} 📋 [PRINT API CALL] Sending print request - Queue: ${patientNum}`);
+        console.log(`${getTimestamp()} [PRINT API CALL] Sending print request - Queue: ${patientNum}`);
         const response = await fetch('/api/print-ticket', {
           method: 'POST',
           headers: { 'Content-Type': 'application/json' },
@@ -67,13 +68,13 @@ export default function QueuePrintContent({ service, patientNum }: Props) {
         const data = await response.json();
         
         if (response.ok) {
-          console.log(`${getTimestamp()} ✅ [PRINT SUCCESS] Ticket successfully printed - Queue: ${patientNum}`);
+          console.log(`${getTimestamp()} [PRINT SUCCESS] Ticket successfully printed - Queue: ${patientNum}`);
         } else {
-          console.warn(`${getTimestamp()} ⚠️ [PRINT WARNING] Print API returned error status - Status: ${response.status}, Message: ${data.error || 'Unknown error'}`);
+          console.warn(`${getTimestamp()} [PRINT WARNING] Print API returned error status - Status: ${response.status}, Message: ${data.error || 'Unknown error'}`);
         }
       } catch (error) {
         const errorMessage = error instanceof Error ? error.message : String(error);
-        console.error(`${getTimestamp()} ❌ [PRINT FETCH ERROR] Failed to call print API:`, errorMessage);
+        console.error(`${getTimestamp()} [PRINT FETCH ERROR] Failed to call print API:`, errorMessage);
       }
     };
 
@@ -87,18 +88,15 @@ export default function QueuePrintContent({ service, patientNum }: Props) {
   useEffect(() => {
     // Delay 5 seconds for user to see the queue number, then redirect
     const redirectTimer = setTimeout(() => {
-      console.log(`${getTimestamp()} ⏱️ [REDIRECT TIMER] 5 second timeout completed - Redirecting back to kiosk services.`);
+      console.log(`${getTimestamp()} [REDIRECT TIMER] 5 second timeout completed - Redirecting back to kiosk services.`);
       router.push('/kiosk/kiosk-services');
     }, 5000); 
 
-    // If Strict Mode unmounts, this clears the timer. 
-    // When it remounts, the timer will safely recreate itself!
     return () => clearTimeout(redirectTimer);
   }, [router]);
 
 
 return (
-    // Only the white card is returned! No outer background divs.
     <div className="w-full max-w-lg md:max-w-3xl lg:max-w-4xl bg-white rounded-[32px] sm:rounded-[40px] shadow-2xl p-6 md:p-10 flex flex-col items-center justify-center gap-4">
       
       {/* Service Information Section */}

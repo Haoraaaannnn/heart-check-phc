@@ -74,30 +74,28 @@ export async function POST(request: Request) {
       if (existsSync(path)) {
         try {
           await fs.writeFile(path, buffer);
-          console.log(`${getTimestamp()} ✅ [PRINT SUCCESS] Ticket printed to device - Queue: ${queueNumber}, Service: ${serviceName}, Device: ${path}, Size: ${buffer.length} bytes`);
+          console.log(`${getTimestamp()} [PRINT SUCCESS] Ticket printed to device - Queue: ${queueNumber}, Service: ${serviceName}, Device: ${path}, Size: ${buffer.length} bytes`);
           printedSuccessfully = true;
           break; 
         } catch (e: any) {
           lastError = `Access denied on ${path}.`;
-          console.warn(`${getTimestamp()} ⚠️ [PRINTER DEVICE ERROR] Failed to write to device - Path: ${path}, Queue: ${queueNumber}, Error: ${e.message}`);
+          console.warn(`${getTimestamp()} [PRINTER DEVICE ERROR] Failed to write to device - Path: ${path}, Queue: ${queueNumber}, Error: ${e.message}`);
         }
       }
     }
 
     if (!printedSuccessfully) {
-      console.error(`${getTimestamp()} ❌ [PRINT FAILURE] No printer device available - Queue: ${queueNumber}, Service: ${serviceName}, Attempted paths: ${printerPaths.join(', ')}`);
+      console.error(`${getTimestamp()} [PRINT FAILURE] No printer device available - Queue: ${queueNumber}, Service: ${serviceName}, Attempted paths: ${printerPaths.join(', ')}`);
       return NextResponse.json({ success: false, error: lastError || "No printer device found." }, { status: 500 });
     }
 
     return NextResponse.json({ success: true, data: { queueNumber, serviceName, cubicle, timestamp: new Date().toISOString() } });
 
   } catch (error: any) {
-    console.error(`${getTimestamp()} ❌ [PRINT SERVER ERROR] Unexpected error in print route - Error: ${error.message}, Stack: ${error.stack}`);
+    console.error(`${getTimestamp()} [PRINT SERVER ERROR] Unexpected error in print route - Error: ${error.message}, Stack: ${error.stack}`);
     return NextResponse.json({ success: false, error: error.message }, { status: 500 });
   } finally {
-    // 🔓 ALWAYS UNLOCK THE PRINTER WHEN DONE (even if it fails)
-    // Adding a 500ms delay ensures the hardware buffer clears completely
-    // before the next person in line can print.
+
     setTimeout(() => {
       isPrinterBusy = false;
     }, 500); 

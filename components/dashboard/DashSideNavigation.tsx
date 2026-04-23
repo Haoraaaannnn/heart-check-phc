@@ -48,12 +48,6 @@ const Sidebar = () => {
                   isActive ? 'bg-red-50 text-red-600 font-semibold' : 'text-gray-500 hover:bg-gray-50'
                 }`}
               >
-                <span className="text-sm">{item.label}</span>
-                {item.badge && (
-                  <span className="bg-red-500 text-white text-[10px] px-2 py-0.5 rounded-full">
-                    {item.badge}
-                  </span>
-                )}
               </Link>
             );
           })}

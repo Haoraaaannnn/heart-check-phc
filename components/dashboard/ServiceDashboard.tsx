@@ -133,7 +133,7 @@ export function ServiceDashboard({ title, serviceFilter, icon }: ServiceDashboar
 
         let longestMins = 0;
         if (waitList.length > 0) {
-           longestMins = Math.floor((new Date().getTime() - waitList[0].joinedAtMs) / 60000);
+          longestMins = Math.floor((new Date().getTime() - waitList[0].joinedAtMs) / 60000);
         }
 
         // Format data for the Recharts AreaChart
