@@ -41,7 +41,7 @@ const formatPhone = (raw: string) => {
       <div className="bg-white rounded-[45px] p-8 md:p-12 max-w-2xl w-full shadow-2xl">
         <h2 className="mb-4 text-center flex flex-col gap-1 mb-8">
           {/* Filipino Title: Larger, bolder, darker */}
-          <span className="text-xl md:text-4xl font-baloo font-bold text-black">
+          <span className="text-xl md:text-4xl font-bold text-black">
             {titleFil}
           </span>
           
@@ -57,14 +57,14 @@ const formatPhone = (raw: string) => {
         <p className="text-lg md:text-xl text-gray-600 mb-8 leading-relaxed text-center font-extralight">
           {messageEng}
         </p>
-        <p className="text-lg md:text-4xl text-black text-bold mb-8 leading-relaxed text-center">
+        <p className="text-lg md:text-4xl text-black font-bold mb-8 leading-relaxed text-center">
           {formatPhone(phone)}
         </p>
 
         <div className="flex gap-4 flex-col md:flex-row">
           <button
             onClick={onCancel}
-            className="flex-1 py-3 md:py-4 px-4 rounded-[25px] font-baloo font-bold text-xl md:text-xl
+            className="flex-1 py-3 md:py-4 px-4 rounded-[25px] font-bold text-xl md:text-xl
               bg-white border-gray-400 border-[3px] text-gray-400 transition-all active:scale-95"
           >
             {cancelText}
@@ -72,7 +72,7 @@ const formatPhone = (raw: string) => {
           
           <button
             onClick={onConfirm}
-            className={`flex-1 py-3 md:py-4 px-4 rounded-[25px] font-baloo font-bold text-xl md:text-xl text-white
+            className={`flex-1 py-3 md:py-4 px-4 rounded-[25px]  font-bold text-xl md:text-xl text-white
               transition-all active:scale-95 ${
               isDangerous
                 ? 'bg-red-500 hover:bg-red-600'

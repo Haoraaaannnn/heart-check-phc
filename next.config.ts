@@ -2,7 +2,8 @@ import type { NextConfig } from "next";
 
 const nextConfig: NextConfig = {
   /* config options here */
-  allowedDevOrigins: ['192.168.50.199']
+  //* insert the ip address from the npm run dev
+  allowedDevOrigins: ['198.168.92.168']
 };
 
 export default nextConfig;
