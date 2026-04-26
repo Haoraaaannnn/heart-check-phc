@@ -7,9 +7,8 @@ Connects to Supabase and serves the analytics payload to the frontend.
 import os
 import json
 import pandas as pd
-import urllib.request
-import urllib.parse
-from dotenv import load_dotenv  # <--- FIX 1: Add this exact import line
+import httpx
+from dotenv import load_dotenv
 from fastapi import FastAPI
 from fastapi.middleware.cors import CORSMiddleware
 from analytics import generate_report
@@ -36,27 +35,24 @@ app.add_middleware(
 # Set your Supabase credentials here (or in a .env file)
 SUPABASE_URL = os.environ.get("NEXT_PUBLIC_SUPABASE_URL")
 SUPABASE_KEY = os.environ.get("NEXT_PUBLIC_SUPABASE_ANON_KEY")
-SUPABASE_REST_BASE = f"{SUPABASE_URL}/rest/v1" if SUPABASE_URL else None
 
 
 def fetch_supabase_table(table_name: str, select: str = "*") -> list[dict]:
-    if not SUPABASE_REST_BASE or not SUPABASE_KEY:
+    if not SUPABASE_URL or not SUPABASE_KEY:
         raise RuntimeError("Supabase URL/key are not configured.")
 
-    query = urllib.parse.urlencode({"select": select})
-    url = f"{SUPABASE_REST_BASE}/{table_name}?{query}"
-    request = urllib.request.Request(
-        url,
-        headers={
-            "apikey": SUPABASE_KEY,
-            "Authorization": f"Bearer {SUPABASE_KEY}",
-            "Accept": "application/json",
-        },
-    )
-
-    with urllib.request.urlopen(request, timeout=20) as response:
-        payload = response.read().decode("utf-8")
-        return json.loads(payload)
+    url = f"{SUPABASE_URL}/rest/v1/{table_name}?select={select}"
+    
+    with httpx.Client(timeout=30.0) as client:
+        response = client.get(
+            url,
+            headers={
+                "apikey": SUPABASE_KEY,
+                "Authorization": f"Bearer {SUPABASE_KEY}",
+            },
+        )
+        response.raise_for_status()
+        return response.json()
 
 
 def safe_to_datetime(series: pd.Series) -> pd.Series:
@@ -94,21 +90,16 @@ def health_check():
 
 @app.get("/api/dashboard-data")
 def get_dashboard_data():
+    # Fetch directly from patients table - this is where kiosk inserts patient records
+    # Only select columns that actually exist in the database
     try:
-        data = fetch_supabase_table("queue_log")
-    except Exception as queue_error:
+        data = fetch_supabase_table(
+            "patients",
+            select="id,created_at,patientNum,service,status,consult_start,consult_end"
+        )
+    except Exception as patients_error:
         data = []
-        print(f"queue_log fetch error: {queue_error}")
-
-    if not data:
-        try:
-            data = fetch_supabase_table(
-                "patients",
-                select="id,created_at,patientNum,service,cubicleNum,status,updated_at,reg_start,reg_end,consult_start,consult_end"
-            )
-        except Exception as patients_error:
-            data = []
-            print(f"patients fetch error: {patients_error}")
+        print(f"patients fetch error: {patients_error}")
 
     if not data:
         return get_mock_data()

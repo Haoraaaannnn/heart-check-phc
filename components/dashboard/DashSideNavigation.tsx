@@ -48,6 +48,7 @@ const Sidebar = () => {
                   isActive ? 'bg-red-50 text-red-600 font-semibold' : 'text-gray-500 hover:bg-gray-50'
                 }`}
               >
+                {item.label}
               </Link>
             );
           })}

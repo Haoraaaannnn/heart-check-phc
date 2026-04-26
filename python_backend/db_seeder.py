@@ -9,9 +9,9 @@ import numpy as np
 import pandas as pd
 from datetime import datetime, timedelta
 
-def generate_fake_patients(num_days=100, patients_per_day=118, start_date="2026-01-01", output_filename="simulated_patients.csv"):
-    avg_inter_arrival = 5   
-    avg_reg_time = 3        
+def generate_fake_patients(num_days=30, patients_per_day=50, start_date="2026-04-01", output_filename="simulated_patients.csv"):
+    avg_inter_arrival = 5  #need to consult when presentation done
+    avg_reg_time = 3       #need to consult when presentation done 
     
     # Define distinct services, their dedicated resources, and specific average times
     SERVICES = {
@@ -84,9 +84,9 @@ def generate_fake_patients(num_days=100, patients_per_day=118, start_date="2026-
 
     df = pd.DataFrame(data)
     df.to_csv(output_filename, index=False)
-    print(f"✅ Successfully generated {len(df)} fake patient records!")
-    print(f"📁 Saved to: {output_filename}")
+    print(f"Successfully generated {len(df)} fake patient records!")
+    print(f"Saved to: {output_filename}")
 
 # THE FIX: This is set to generate ~10,000 total patients
 if __name__ == "__main__":
-    generate_fake_patients(num_days=110, patients_per_day=500)
+    generate_fake_patients(num_days=30, patients_per_day=50)

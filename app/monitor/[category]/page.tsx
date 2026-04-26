@@ -10,6 +10,7 @@ import { StartScreen } from '../components/StartScreen';
 import { useMonitorData } from '../hooks/useMonitorData';
 import { useRealtimeSubscription } from '../hooks/useRealtimeSubscription';
 
+
 export default function CategoryMonitorPage() {
   const router = useRouter();
   const params = useParams();

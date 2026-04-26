@@ -6,6 +6,7 @@ import { supabase } from '@/lib/supabase';
 
 export default function LoginPage() {
   const router = useRouter();
+
   const [email, setEmail] = useState('');
   const [password, setPassword] = useState('');
   const [error, setError] = useState('');
@@ -63,48 +64,71 @@ export default function LoginPage() {
   };
 
   return (
-    <div className="min-h-screen w-full flex justify-center items-center bg-gradient-to-br from-white via-red-50 to-red-100 px-5 font-sans">
-      
+    <div className="relative flex h-screen w-full items-center justify-center overflow-hidden bg-gradient-to-br from-[#fffdfd] via-[#fff5f5] to-[#ffeaea] px-5 font-sans">
+
+      {/* Background Glow Effects */}
+      <div className="pointer-events-none absolute inset-0 z-0">
+
+        <div className="absolute top-[-100px] right-[-100px] h-[450px] w-[450px] rounded-full bg-[#ff6b6b]/20 blur-[130px]" />
+
+        <div className="absolute bottom-[-120px] left-[-80px] h-[400px] w-[400px] rounded-full bg-[#ff8a8a]/20 blur-[130px]" />
+
+        <div className="absolute left-1/2 top-1/2 h-[600px] w-[600px] -translate-x-1/2 -translate-y-1/2 rounded-full bg-[#ffd4d4]/30 blur-[160px]" />
+      </div>
+
+      {/* Back Button */}
       <button
         onClick={() => router.push('/')}
-        className="fixed top-8 left-8 flex items-center gap-2 text-gray-500 hover:text-[#cc3535] transition group"
+        className="fixed left-8 top-8 z-20 flex items-center gap-2 rounded-xl border border-white/40 bg-white/40 px-4 py-2 text-gray-600 backdrop-blur-xl transition hover:bg-white/60 hover:text-[#cc3535]"
       >
-        <i className="bx bx-arrow-back text-xl group-hover:-translate-x-1 transition-transform"></i>
+        <i className="bx bx-arrow-back text-xl"></i>
         <span className="text-sm font-medium">Back to Home</span>
       </button>
 
-      <div className="bg-white rounded-3xl shadow-xl pt-10 px-10 pb-8 w-full max-w-md border-2 border-red-100">
-        
-        <h1 className="text-center text-gray-800 text-2xl font-bold mb-2">Staff Login</h1>
-        <p className="text-center text-gray-400 text-xs mb-8">Enter your credentials to access your account</p>
+      {/* Login Glass Card */}
+      <div className="relative z-10 w-full max-w-md rounded-[32px] border border-white/40 bg-white/35 px-10 pb-8 pt-10 shadow-[0_10px_50px_rgba(255,120,120,0.10)] backdrop-blur-2xl">
+
+        <h1 className="mb-2 text-center text-3xl font-bold text-gray-800">
+          Staff Login
+        </h1>
+
+        <p className="mb-8 text-center text-sm text-gray-500">
+          Enter your credentials to access your account
+        </p>
 
         <form onSubmit={handleSubmit}>
           <div className="mb-5">
-            <label className="block mb-2 text-gray-600 font-medium text-sm">Email Address</label>
+            <label className="mb-2 block text-sm font-medium text-gray-700">
+              Email Address
+            </label>
+
             <input
               type="email"
               value={email}
               onChange={(e) => setEmail(e.target.value)}
               required
-              className="w-full px-4 py-3 border-2 border-gray-100 rounded-xl text-sm text-black transition-all duration-300 focus:outline-none focus:border-[#cc3535] focus:shadow-md bg-gray-50"
+              className="w-full rounded-2xl border border-white/50 bg-white/60 px-4 py-3 text-sm text-black backdrop-blur-xl transition-all duration-300 focus:border-[#cc3535] focus:outline-none focus:ring-4 focus:ring-red-100"
             />
           </div>
 
           <div className="mb-6">
-            <label className="block mb-2 text-gray-600 font-medium text-sm">Password</label>
+            <label className="mb-2 block text-sm font-medium text-gray-700">
+              Password
+            </label>
+
             <input
               type="password"
               value={password}
               onChange={(e) => setPassword(e.target.value)}
               required
-              className="w-full px-4 py-3 border-2 border-gray-100 rounded-xl text-sm text-black transition-all duration-300 focus:outline-none focus:border-[#cc3535] focus:shadow-md bg-gray-50"
+              className="w-full rounded-2xl border border-white/50 bg-white/60 px-4 py-3 text-sm text-black backdrop-blur-xl transition-all duration-300 focus:border-[#cc3535] focus:outline-none focus:ring-4 focus:ring-red-100"
             />
           </div>
 
           <button
             type="submit"
             disabled={loading}
-            className="w-full py-3 bg-[#cc3535] hover:bg-red-700 text-white rounded-xl text-base font-semibold transition-all duration-300 disabled:opacity-60 shadow-md hover:shadow-lg active:scale-95"
+            className="w-full rounded-2xl bg-[#cc3535] py-3 text-base font-semibold text-white shadow-[0_10px_30px_rgba(204,53,53,0.20)] transition-all duration-300 hover:bg-red-700 hover:shadow-lg active:scale-95 disabled:opacity-60"
           >
             {loading ? (
               <span className="flex items-center justify-center gap-2">
@@ -118,15 +142,11 @@ export default function LoginPage() {
         </form>
 
         {error && (
-          <div className="mt-4 px-4 py-3 text-center text-[#dc3545] bg-[#f8d7da] border border-[#f5c6cb] rounded-xl text-sm">
+          <div className="mt-5 rounded-2xl border border-red-200 bg-red-50/80 px-4 py-3 text-center text-sm text-[#dc3545] backdrop-blur-md">
             <i className="bx bx-error-circle mr-2"></i>
             {error}
           </div>
         )}
-
-        <div className="mt-6 pt-4 border-t border-gray-100 text-center text-xs text-gray-400">
-
-        </div>
       </div>
     </div>
   );

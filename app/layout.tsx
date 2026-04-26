@@ -4,7 +4,6 @@
 import type { Metadata } from "next";
 import { Geist, Geist_Mono } from "next/font/google";
 import { tiltWarp, Baloo } from "@/fonts/fonts"; // 👈 add this (adjust path if needed)
-import { LanguageProvider } from "@/app/LanguageContext";
 import "@/app/globals.css";
 
 const geistSans = Geist({
@@ -33,9 +32,7 @@ export default function RootLayout({
         <link href='https://unpkg.com/boxicons@2.1.4/css/boxicons.min.css' rel='stylesheet' />
       </head>
       <body className={`${geistSans.variable} ${geistMono.variable} antialiased`}>
-        <LanguageProvider>
           {children}
-        </LanguageProvider>
       </body>
     </html>
   );

@@ -10,6 +10,6 @@ export const tiltWarp = Tilt_Warp({
 export const Baloo = Baloo_2({
     subsets: ['latin'],
     display: 'swap',
-    variable: '--font-baloo-2',      // ← was '--font', too generic
-    weight: ['400', '700', '800'], // ← add more weights
+    variable: '--font-baloo-2',
+    weight: ['400', '700', '800'],
 })
