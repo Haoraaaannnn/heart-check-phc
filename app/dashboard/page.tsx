@@ -177,32 +177,32 @@ export default function DashboardPage() {
 
   return (
     <div className=" min-h-screen w-full">
-      <div className="px-8 py-6 mx-auto max-w-7xl flex flex-col gap-6">
+      <div className="px-8 py-6 mx-auto max-w-10xl flex flex-col gap-6">
 
         {/* METRIC CARDS */}
-        <div className="flex gap-5 flex-wrap">
-          <div className="rounded-[28px] shadow-[0_10px_40px_rgba(255,120,120,0.06)] border border-white/40 bg-white/35 p-6 w-64 h-36 flex flex-col justify-between backdrop-blur-xl">
+        <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-5">
+          <div className="rounded-[28px] shadow-[0_10px_40px_rgba(255,120,120,0.06)] border border-white/40 bg-white/35 p-6 w-full h-36 flex flex-col justify-between backdrop-blur-xl">
             <span className="text-gray-400 text-xs font-bold tracking-widest uppercase">Today Patients</span>
             <span className="text-[#cc3535] text-5xl font-extrabold self-end">
               {isMounted ? stats.todayCount : '--'}
             </span>
           </div>
 
-          <div className="rounded-[28px] shadow-[0_10px_40px_rgba(255,120,120,0.06)] border border-white/40 bg-white/35 p-6 w-64 h-36 flex flex-col justify-between backdrop-blur-xl">
+          <div className="rounded-[28px] shadow-[0_10px_40px_rgba(255,120,120,0.06)] border border-white/40 bg-white/35 p-6 w-full h-36 flex flex-col justify-between backdrop-blur-xl">
             <span className="text-gray-400 text-xs font-bold tracking-widest uppercase">On Queue</span>
             <span className="text-orange-500 text-5xl font-extrabold self-end">
               {isMounted ? stats.onQueue : '--'}
             </span>
           </div>
 
-          <div className="rounded-[28px] shadow-[0_10px_40px_rgba(255,120,120,0.06)] border border-white/40 bg-white/35 p-6 w-64 h-36 flex flex-col justify-between backdrop-blur-xl">
+          <div className="rounded-[28px] shadow-[0_10px_40px_rgba(255,120,120,0.06)] border border-white/40 bg-white/35 p-6 w-full h-36 flex flex-col justify-between backdrop-blur-xl">
             <span className="text-gray-400 text-xs font-bold tracking-widest uppercase">Served</span>
             <span className="text-green-500 text-5xl font-extrabold self-end">
               {isMounted ? stats.served : '--'}
             </span>
           </div>
 
-          <div className="rounded-[28px] shadow-[0_10px_40px_rgba(255,120,120,0.06)] border border-white/40 bg-white/35 p-6 w-64 h-36 flex flex-col justify-between backdrop-blur-xl">
+          <div className="rounded-[28px] shadow-[0_10px_40px_rgba(255,120,120,0.06)] border border-white/40 bg-white/35 p-6 w-full h-36 flex flex-col justify-between backdrop-blur-xl">
             <span className="text-gray-400 text-xs font-bold tracking-widest uppercase">Avg Waiting Time</span>
             <span className="text-[#cc3535] text-4xl font-extrabold self-end">
               {dynamicAvgWait} <span className="text-2xl font-bold">min</span>

@@ -1,4 +1,4 @@
-import DashboardBG from "@/components/dashboard/DashBG";
+import DashboardBG from "@/components/backgrounds/DashboardBg";
 import Sidebar from "@/components/dashboard/DashSideNavigation";
 import DashboardHeader from "@/components/dashboard/DashboardHeader";
 

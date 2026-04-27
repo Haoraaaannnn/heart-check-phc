@@ -1,4 +1,4 @@
-"use client"; // Required for usePathname()
+"use client";
 
 import Link from 'next/link';
 import { usePathname } from 'next/navigation';
@@ -25,11 +25,15 @@ const Sidebar = () => {
   ];
 
   return (
-    <aside className="w-64 bg-white border-r border-gray-100 flex flex-col p-6 gap-8 h-screen sticky top-0">
+
+    <aside className="w-60 rounded-[28px] m-3 bg-white/35 border-r border-white/40 flex flex-col p-6 gap-8 h-[calc(100vh-24px)] sticky top-3 z-20 backdrop-blur-xl shadow-[0_10px_40px_rgba(255,120,120,0.06)]
+      dark:bg-gray-900/60 dark:border-gray-700/50 dark:shadow-black/20">
+      
       {/* Brand Header */}
       <div className="flex items-center gap-3">
         <div>
-          <h1 className="font-bold text-red-800 text-lg leading-tight">Heart Check PHC</h1>
+
+          <h1 className="font-bold text-red-800 dark:text-red-400 text-lg leading-tight">Heart Check PHC</h1>
           <p className="text-xs text-gray-400">Admin Dashboard</p>
         </div>
       </div>
@@ -44,8 +48,11 @@ const Sidebar = () => {
               <Link 
                 key={item.href} 
                 href={item.href} 
+
                 className={`flex items-center justify-between p-3 rounded-xl cursor-pointer mb-1 transition-colors ${
-                  isActive ? 'bg-red-50 text-red-600 font-semibold' : 'text-gray-500 hover:bg-gray-50'
+                  isActive 
+                    ? 'bg-red-50 text-red-600 font-semibold dark:bg-red-500/10 dark:text-red-400' 
+                    : 'text-gray-500 hover:bg-gray-50 dark:text-gray-400 dark:hover:bg-gray-800/50 dark:hover:text-gray-200'
                 }`}
               >
                 {item.label}
@@ -63,8 +70,11 @@ const Sidebar = () => {
               <Link 
                 key={dept.href} 
                 href={dept.href} 
+
                 className={`block p-3 text-sm rounded-xl cursor-pointer mb-1 transition-colors ${
-                  isActive ? 'bg-red-50 text-red-600 font-semibold' : 'text-gray-500 hover:bg-gray-50'
+                  isActive 
+                    ? 'bg-red-50 text-red-600 font-semibold dark:bg-red-500/10 dark:text-red-400' 
+                    : 'text-gray-500 hover:bg-gray-50 dark:text-gray-400 dark:hover:bg-gray-800/50 dark:hover:text-gray-200'
                 }`}
               >
                 {dept.name}

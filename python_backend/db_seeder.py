@@ -26,7 +26,7 @@ def generate_fake_patients(num_days=30, patients_per_day=50, start_date="2026-04
     data = []
     base_date = datetime.strptime(start_date, "%Y-%m-%d")
 
-    print(f"⚙️ Generating approximately 10,000 patients over {num_days} days...")
+    print(f" Generating patients over {num_days} days.")
 
     for day in range(num_days):
         current_date = base_date + timedelta(days=day)
