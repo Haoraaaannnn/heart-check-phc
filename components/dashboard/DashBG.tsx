@@ -1,6 +1,6 @@
 export default function DashboardBG({children}:{children?: React.ReactNode}){
     return(
-        <div className="flex h-screen bg-gradient-to-br from-[#fffdfd] via-[#fff5f5] to-[#ffeaea]">
+        <div className="flex min-h-screen bg-gradient-to-br from-[#fffdfd] via-[#fff5f5] to-[#ffeaea]">
             <div className="pointer-events-none absolute inset-0 z-0">
 
                 <div className="absolute top-[-100px] right-[-100px] h-[450px] w-[450px] rounded-full bg-[#ff6b6b]/20 blur-[130px]" />

@@ -100,14 +100,12 @@ export default function LandingPage() {
 
     {/* Footer */}
     <footer className="px-10 pb-8">
-      <div className="rounded-3xl px-8 py-5 ">
         <div className="flex flex-col items-center justify-between gap-4 md:flex-row">
           <span className="text-sm text-gray-600">
             Heart Check{" "}
             <span className="font-medium text-[#cc3535]">PHC</span>
           </span>
         </div>
-      </div>
     </footer>
   </DashboardBg>
 );
