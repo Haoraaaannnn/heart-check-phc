@@ -34,13 +34,21 @@ def generate_report(
         p_pedia   : proportion of consultation patients → pedia clinic
         p_consult : proportion of total patients routed to consultation
     """
+    # ── Handle empty database ────────────────────────────────
+    if df.empty:
+        return _empty_report()
+    
     df_clean = preprocess_queue_data(df)
+    
+    # ── Double-check after preprocessing ─────────────────────
+    if df_clean.empty:
+        return _empty_report()
 
     svc             = df_clean['service_consultation']
     avg_service_min = round(float(svc[svc > 0].mean()), 2) if not svc[svc > 0].empty else 15.0
 
     eval_data       = evaluate_forecasting_algorithms(df_clean)
-    predicted_vol   = eval_data.get("next_day_forecast", 50)
+    predicted_vol   = eval_data.get("next_day_forecast", 0)
 
     return {
         # ── Descriptive ───────────────────────────────────
@@ -74,4 +82,80 @@ def generate_report(
             p_pedia              = p_pedia,
             p_consultation       = p_consult,
         ),
+    }
+
+
+def _empty_report() -> dict:
+    """
+    Return zero-valued analytics when database is empty or has no data.
+    Prevents frontend crashes with missing data.
+    """
+    return {
+        "daily_summary": [],
+        "hourly_pattern": [],
+        "bottleneck_analysis": {
+            "bottleneck_stage": "N/A",
+            "avg_wait_registration_min": 0.0,
+            "avg_wait_consultation_min": 0.0,
+            "system_status": "No data",
+        },
+        "registration": {
+            "patients_served": 0,
+            "arrival_rate_lambda": 0.0,
+            "service_rate_mu": 0.0,
+            "metrics": {
+                "model": "M/M/1",
+                "utilization_rho": 0.0,
+                "avg_in_queue_Lq": 0.0,
+                "avg_wait_queue_Wq_min": 0.0,
+                "avg_time_system_W_min": 0.0,
+            },
+        },
+        "consultation": {
+            "adult": {
+                "clinic": "adult",
+                "active_cubicles": 0,
+                "max_cubicles": 20,
+                "per_cubicle": {},
+                "system_benchmark": {},
+                "balance_metrics": {},
+            },
+            "pedia": {
+                "clinic": "pedia",
+                "active_cubicles": 0,
+                "max_cubicles": 20,
+                "per_cubicle": {},
+                "system_benchmark": {},
+                "balance_metrics": {},
+            },
+        },
+        "specialized_services": {},
+        "system_time": {
+            "avg_wait_registration": 0.0,
+            "avg_service_registration": 0.0,
+            "avg_wait_consultation": 0.0,
+            "avg_service_consultation": 0.0,
+            "avg_total_time": 0.0,
+            "littles_law_check": {
+                "L_observed": 0.0,
+                "L_theoretical": 0.0,
+                "match_ratio": 0.0,
+                "status": "N/A",
+            },
+        },
+        "computational_forecasting": {
+            "status": "Insufficient data for forecasting.",
+            "next_day_forecast": 0,
+        },
+        "lr_chart_data": {
+            "labels": [],
+            "actual": [],
+            "lr_line": [],
+            "trend": "stable",
+            "slope": 0.0,
+            "r2": 0.0,
+            "forecast_date": "",
+            "forecast_value": 0.0,
+        },
+        "decision_support": {},
     }

@@ -49,7 +49,6 @@ const createPatientRecord = async (service: Service) => {
       status: 'On Progress', 
       phoneNum: null,
       cubicleNum: null,
-      started_at: new Date().toISOString(), 
     }).select().single();
 
     if (error) throw error;

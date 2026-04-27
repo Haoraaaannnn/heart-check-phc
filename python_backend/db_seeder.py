@@ -9,7 +9,7 @@ import numpy as np
 import pandas as pd
 from datetime import datetime, timedelta
 
-def generate_fake_patients(num_days=30, patients_per_day=50, start_date="2026-04-01", output_filename="simulated_patients.csv"):
+def generate_fake_patients(num_days=30, patients_per_day=50, start_date="2026-04-15", output_filename="simulated_patients.csv"):
     avg_inter_arrival = 5  #need to consult when presentation done
     avg_reg_time = 3       #need to consult when presentation done 
     
@@ -69,17 +69,16 @@ def generate_fake_patients(num_days=30, patients_per_day=50, start_date="2026-04
             resource_free_times[req_resource] = service_end
 
             data.append({
-                'patient_id': f"{current_date.strftime('%Y%m%d')}-{i}",
-                'queue_number': f"{purpose[0:3].upper()}-{i:03d}",
-                'visit_date': current_date.strftime("%Y-%m-%d"),
-                'kiosk_time': kiosk_time.replace(microsecond=0).strftime("%Y-%m-%d %H:%M:%S"),
+                'patientNum': f"{purpose[0:3].upper()}-{i:03d}",
+                'service': purpose,
+                'status': 'Done',
+                'phoneNum': None,
+                'cubicleNum': None,
+                'created_at': kiosk_time.replace(microsecond=0).strftime("%Y-%m-%d %H:%M:%S"),
                 'reg_start': reg_start.replace(microsecond=0).strftime("%Y-%m-%d %H:%M:%S"),
                 'reg_end': reg_end.replace(microsecond=0).strftime("%Y-%m-%d %H:%M:%S"),
-                'service_start': service_start.replace(microsecond=0).strftime("%Y-%m-%d %H:%M:%S"),
-                'service_end': service_end.replace(microsecond=0).strftime("%Y-%m-%d %H:%M:%S"),
-                'purpose': purpose,
-                'resource_used': req_resource,
-                'status': 'Finished' # Marks the patient's lifecycle as complete
+                'consult_start': service_start.replace(microsecond=0).strftime("%Y-%m-%d %H:%M:%S"),
+                'consult_end': service_end.replace(microsecond=0).strftime("%Y-%m-%d %H:%M:%S"),
             })
 
     df = pd.DataFrame(data)
@@ -89,4 +88,4 @@ def generate_fake_patients(num_days=30, patients_per_day=50, start_date="2026-04
 
 # THE FIX: This is set to generate ~10,000 total patients
 if __name__ == "__main__":
-    generate_fake_patients(num_days=30, patients_per_day=50)
+    generate_fake_patients(num_days=10, patients_per_day=50)

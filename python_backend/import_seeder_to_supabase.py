@@ -23,15 +23,15 @@ def build_records():
         for row in reader:
             records.append({
                 "phoneNum": None,
-                "service": row["purpose"],
-                "patientNum": f"seed-{row['queue_number']}",
+                "service": row["service"],
+                "patientNum": f"seed-{row['patientNum']}",
                 "cubicleNum": None,
-                "status": "Done", 
-                "created_at": row["kiosk_time"],
+                "status": row["status"],
+                "created_at": row["created_at"],
                 "reg_start": row["reg_start"],
                 "reg_end": row["reg_end"],
-                "consult_start": row["service_start"], 
-                "consult_end": row["service_end"]
+                "consult_start": row["consult_start"],
+                "consult_end": row["consult_end"]
             })
     return records
 

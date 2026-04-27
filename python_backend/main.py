@@ -95,7 +95,7 @@ def get_dashboard_data():
     try:
         data = fetch_supabase_table(
             "patients",
-            select="id,created_at,patientNum,service,status,consult_start,consult_end"
+            select="id,created_at,patientNum,service,status,reg_start,reg_end,consult_start,consult_end,cubicleNum"
         )
     except Exception as patients_error:
         data = []
@@ -111,7 +111,7 @@ def get_dashboard_data():
         return get_mock_data()
 
     try:
-        report = generate_report(df, c_consultation=1)
+        report = generate_report(df)
         return report
     except Exception as report_error:
         print(f"analytics report error: {report_error}")

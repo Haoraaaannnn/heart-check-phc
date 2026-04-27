@@ -41,13 +41,27 @@ def bottleneck_report(df: pd.DataFrame) -> dict:
     Identifies which stage has the highest average wait time.
     Flags system as Overwhelmed if any stage exceeds
     OVERWHELMED_MINUTES threshold.
+    Returns zero values if dataframe is empty.
     """
+    if df.empty:
+        return {
+            "bottleneck_stage": "N/A",
+            "avg_wait_registration_min": 0.0,
+            "avg_wait_consultation_min": 0.0,
+            "system_status": "No data",
+        }
+    
     wr = df['wait_registration'].mean()
     wc = df['wait_consultation'].mean()
+    
+    # Handle NaN values
+    wr = 0.0 if pd.isna(wr) else round(wr, 2)
+    wc = 0.0 if pd.isna(wc) else round(wc, 2)
+    
     return {
         "bottleneck_stage"          : "Registration" if wr > wc else "Consultation",
-        "avg_wait_registration_min" : round(wr, 2),
-        "avg_wait_consultation_min" : round(wc, 2),
+        "avg_wait_registration_min" : wr,
+        "avg_wait_consultation_min" : wc,
         "system_status"             : (
             "Overwhelmed" if max(wr, wc) > OVERWHELMED_MINUTES
             else "Normal"
