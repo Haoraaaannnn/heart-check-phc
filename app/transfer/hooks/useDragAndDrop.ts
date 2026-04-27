@@ -101,26 +101,26 @@ export function useDragAndDrop(
               ...draggedPatient, 
               cubicleNum: dragOverCubicle, 
               status: 'Assigned',
-              queue_start: now
+              reg_end: now
             }]
           }));
           
           await supabase.from('patients').update({ 
             cubicleNum: dragOverCubicle, 
             status: 'Assigned',
-            queue_start: now
+            reg_end: now
           }).eq('id', draggedPatient.id);
-        }
-
-        if (!dragSourceCubicle && draggedPatient.phoneNum) {
-          try {
-            await sendSMS(
-              String(draggedPatient.phoneNum),
-              draggedPatient.patientNum,
-              dragOverCubicle
-            );
-          } catch (err) {
-            console.error('SMS error:', err);
+          
+          if (draggedPatient.phoneNum) {
+            try {
+              await sendSMS(
+                String(draggedPatient.phoneNum),
+                draggedPatient.patientNum,
+                dragOverCubicle
+              );
+            } catch (err) {
+              console.error('SMS error:', err);
+            }
           }
         }
       }

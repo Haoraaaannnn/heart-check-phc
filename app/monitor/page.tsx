@@ -3,8 +3,15 @@ import { useRouter } from 'next/navigation';
 import { useState } from 'react';
 
 const CATEGORIES = [
-  'Consultation', 'OPD Card', 'Refill Prescription', 'ECG',
-  'Warfarin', 'OPD Reschedule', 'Benzathine', 'OPD Screening'
+  { name: 'Consultation', hasSubcategories: true },
+  { name: 'Registration', hasSubcategories: false },
+  { name: 'OPD Card', hasSubcategories: false },
+  { name: 'Refill Prescription', hasSubcategories: false },
+  { name: 'ECG', hasSubcategories: false },
+  { name: 'Warfarin', hasSubcategories: false },
+  { name: 'OPD Reschedule', hasSubcategories: false },
+  { name: 'Benzathine', hasSubcategories: false },
+  { name: 'OPD Screening', hasSubcategories: true }
 ];
 
 const SUB_CATEGORIES = ['Pedia', 'Adult'];
@@ -13,11 +20,11 @@ export default function MonitorIndexPage() {
   const router = useRouter();
   const [selectedCategory, setSelectedCategory] = useState<string | null>(null);
 
-  const handleCategoryClick = (cat: string) => {
-    if (cat === 'Consultation') {
-      setSelectedCategory(cat);
+  const handleCategoryClick = (cat: { name: string; hasSubcategories: boolean }) => {
+    if (cat.hasSubcategories) {
+      setSelectedCategory(cat.name);
     } else {
-      router.push(`/monitor/${encodeURIComponent(cat)}`);
+      router.push(`/monitor/${encodeURIComponent(cat.name)}`);
     }
   };
 
@@ -37,7 +44,7 @@ export default function MonitorIndexPage() {
           <i className="bx bx-arrow-back text-xl group-hover:-translate-x-1 transition-transform"></i>
           <span className="text-sm font-medium">Back to Categories</span>
         </button>
-        <h1 className="text-3xl font-bold text-gray-700">Select Consultation Type</h1>
+        <h1 className="text-3xl font-bold text-gray-700">Select {selectedCategory} Type</h1>
         <div className="grid grid-cols-2 gap-4 w-full max-w-md">
           {SUB_CATEGORIES.map(sub => (
             <button
@@ -66,11 +73,11 @@ export default function MonitorIndexPage() {
       <div className="grid grid-cols-3 gap-4 w-full max-w-2xl">
         {CATEGORIES.map(cat => (
           <button
-            key={cat}
+            key={cat.name}
             onClick={() => handleCategoryClick(cat)}
             className="bg-white border-2 border-gray-100 hover:border-[#cc3535] hover:text-[#cc3535] rounded-3xl p-6 text-gray-700 font-semibold text-sm shadow-sm transition text-left"
           >
-            {cat}
+            {cat.name}
           </button>
         ))}
       </div>

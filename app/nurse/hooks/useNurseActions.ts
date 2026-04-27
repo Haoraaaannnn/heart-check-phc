@@ -12,25 +12,25 @@ export function useNurseActions(
     
     await supabase.from('patients').update({ 
       status: 'With Doctor',
-      with_doctor_since: now
+      consult_start: now
     }).eq('id', patient.id);
     
     setAssignedPatients(prev => prev.filter(p => p.id !== patient.id));
     setWithDoctorPatients(prev => [...prev, { 
       ...patient, 
       status: 'With Doctor',
-      with_doctor_since: now
+      consult_start: now
     }]);
   };
 
   const handleMoveBackFromDoctor = async (patient: Patient) => {
     await supabase.from('patients').update({ 
       status: 'Assigned',
-      with_doctor_since: null
+      consult_start: null
     }).eq('id', patient.id);
     
     setWithDoctorPatients(prev => prev.filter(p => p.id !== patient.id));
-    setAssignedPatients(prev => [...prev, { ...patient, status: 'Assigned', with_doctor_since: undefined }]);
+    setAssignedPatients(prev => [...prev, { ...patient, status: 'Assigned', consult_start: undefined }]);
   };
 
   const handleFinish = async (patient: Patient) => {
@@ -38,7 +38,7 @@ export function useNurseActions(
     
     await supabase.from('patients').update({ 
       status: 'Done',
-      finished_time: now
+      consult_end: now
     }).eq('id', patient.id);
     
     setAssignedPatients(prev => prev.filter(p => p.id !== patient.id));

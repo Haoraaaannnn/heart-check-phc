@@ -1,6 +1,6 @@
 'use client';
+import { useState, useEffect, useCallback } from 'react';
 import { useRouter } from 'next/navigation';
-import { useState, useEffect } from 'react';
 import { supabase } from '@/lib/supabase';
 import { Sidebar } from './components/Sidebar';
 import { BreadcrumbNav } from './components/BreadcrumbNav';
@@ -12,6 +12,9 @@ import { useCubicleData } from './hooks/useCubicleData';
 import { useAutoAssign } from './hooks/useAutoAssign';
 import { useDragAndDrop } from './hooks/useDragAndDrop';
 import { useRealtimeSubscription } from './hooks/useRealtimeSubscription';
+import { RegistrationCounterSection } from './components/RegistrationCounterSection';
+import { useRegistrationDragAndDrop } from './hooks/useRegistrationDragAndDrop';
+import { Patient } from './types';
 
 export default function TransferPage() {
   const router = useRouter();
@@ -20,31 +23,59 @@ export default function TransferPage() {
   const [selectedRoom, setSelectedRoom] = useState<number | null>(null);
   const [speaking, setSpeaking] = useState<number | null>(null);
   const [sidebarOpen, setSidebarOpen] = useState(true);
+  const [registrationPatients, setRegistrationPatients] = useState<Patient[]>([]);
 
+  const { regDraggedPatient, dragOverCounter, handleRegDragStart } = useRegistrationDragAndDrop(
+    registrationPatients, setRegistrationPatients
+  );
   const { onProgressPatients, assignedPatients, setOnProgressPatients, setAssignedPatients, fetchData } = usePatientData();
   const { cubicles, fetchCubicles } = useCubicleData();
   const { draggedPatient, dragOverCubicle, handleDragStartFromQueue, handleDragStartFromCubicle, handleMoveBackToProgress, setupGlobalDragHandlers } = useDragAndDrop(
     assignedPatients, setOnProgressPatients, setAssignedPatients
   );
 
+  const fetchRegistrationPatients = useCallback(async () => {
+    const today = new Date();
+    today.setHours(0, 0, 0, 0);
+    const tomorrow = new Date(today);
+    tomorrow.setDate(today.getDate() + 1);
+
+    const { data, error } = await supabase
+      .from('patients')
+      .select('*')
+      .in('service', ['Consultation', 'OPD Screening'])
+      .in('status', ['On Progress', 'Waiting'])
+      .gte('created_at', today.toISOString())
+      .lt('created_at', tomorrow.toISOString())
+      .order('counter', { ascending: true, nullsFirst: false })
+      .order('created_at', { ascending: true });
+
+    if (!error && data) setRegistrationPatients(data);
+  }, []);
+
+  const handleRealtimeUpdate = useCallback(async () => {
+    await fetchData();
+    await fetchRegistrationPatients();
+  }, [fetchData, fetchRegistrationPatients]);
+
   useAutoAssign(selectedCategory, onProgressPatients, assignedPatients, cubicles, setOnProgressPatients, setAssignedPatients);
-  useRealtimeSubscription('all', fetchData);
+  useRealtimeSubscription(handleRealtimeUpdate);
 
   useEffect(() => {
-    const checkSession = async () => {
+    const init = async () => {
       const { data } = await supabase.auth.getSession();
       if (!data.session) { router.replace('/login'); return; }
+      await fetchData();               
+      await fetchRegistrationPatients(); 
+      fetchCubicles();
     };
-    checkSession();
-    fetchData();
-    fetchCubicles();
+    init();
   }, []);
 
   const isConsultation = selectedCategory === 'Consultation';
   const isOPScreening = selectedCategory === 'OPD Screening';
   const isDragEnabled = isConsultation || isOPScreening;
 
-  // Set up drag handlers
   useEffect(() => {
     const cleanup = setupGlobalDragHandlers(isDragEnabled);
     return cleanup;
@@ -54,7 +85,7 @@ export default function TransferPage() {
     setSpeaking(patientId);
     try {
       const response = await fetch(
-        'https://api.deepgram.com/v1/speak?model=aura-2-amalthea-en',
+        'https://api.deepgram.com/v1/speak?model=aura-2-atlas-en',
         {
           method: 'POST',
           headers: {
@@ -81,26 +112,32 @@ export default function TransferPage() {
 
   const getAvailableRooms = () => {
     if (!selectedCategory) return [];
-    
     if (isConsultation && selectedSubcategory) {
-      return [...new Set(cubicles.filter(c => 
+      const filteredCubicles = cubicles.filter(c =>
         c.category === selectedCategory && c.subcategory === selectedSubcategory
-      ).map(c => c.room))].sort();
+      );
+      return [...new Set(filteredCubicles.map(c => c.room))].sort();
     } else if (isOPScreening) {
-      return [...new Set(cubicles.filter(c => c.category === selectedCategory).map(c => c.room))].sort();
+      const filteredCubicles = cubicles.filter(c => c.category === selectedCategory);
+      return [...new Set(filteredCubicles.map(c => c.room))].sort();
     } else if (!isConsultation && !isOPScreening && selectedCategory) {
-      return [...new Set(cubicles.filter(c => c.category === selectedCategory).map(c => c.room))].sort();
+      const filteredCubicles = cubicles.filter(c => c.category === selectedCategory);
+      return [...new Set(filteredCubicles.map(c => c.room))].sort();
     }
     return [];
   };
 
   const getVisibleCubicles = () => {
     if (isConsultation && selectedSubcategory && selectedRoom) {
-      return cubicles.filter(c => 
-        c.category === selectedCategory && c.subcategory === selectedSubcategory && c.room === selectedRoom
+      return cubicles.filter(c =>
+        c.category === selectedCategory &&
+        c.subcategory === selectedSubcategory &&
+        c.room === selectedRoom
       );
     } else if (isOPScreening && selectedRoom) {
-      return cubicles.filter(c => c.category === selectedCategory && c.room === selectedRoom);
+      return cubicles.filter(c =>
+        c.category === selectedCategory && c.room === selectedRoom
+      );
     } else if (!isConsultation && !isOPScreening && selectedCategory) {
       return cubicles.filter(c => c.category === selectedCategory);
     }
@@ -108,7 +145,8 @@ export default function TransferPage() {
   };
 
   const visibleCubicles = getVisibleCubicles();
-  
+  const rooms = getAvailableRooms();
+
   const visibleOnProgress = onProgressPatients.filter(p => {
     if (!selectedCategory) return true;
     if (isConsultation) return p.service === 'Consultation';
@@ -116,7 +154,6 @@ export default function TransferPage() {
     return p.service === selectedCategory;
   });
 
-  const rooms = getAvailableRooms();
   const queueCounts = {
     'Consultation': onProgressPatients.filter(p => p.service === 'Consultation').length,
     'OPD Screening': onProgressPatients.filter(p => p.service === 'OPD Screening').length,
@@ -159,6 +196,10 @@ export default function TransferPage() {
           onSpeak={speak}
           onMoveBackToProgress={handleMoveBackToProgress}
           isDragEnabled={isDragEnabled}
+          registrationPatients={registrationPatients}
+          regDraggedPatient={regDraggedPatient}
+          dragOverCounter={dragOverCounter}
+          onRegDragStart={handleRegDragStart}
         />
       );
     }
@@ -180,6 +221,10 @@ export default function TransferPage() {
           onSpeak={speak}
           onMoveBackToProgress={handleMoveBackToProgress}
           isDragEnabled={isDragEnabled}
+          registrationPatients={registrationPatients}
+          regDraggedPatient={regDraggedPatient}
+          dragOverCounter={dragOverCounter}
+          onRegDragStart={handleRegDragStart}
         />
       );
     }

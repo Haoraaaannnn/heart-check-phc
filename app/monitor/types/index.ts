@@ -5,7 +5,7 @@ export type Patient = {
   cubicleNum?: string;
   service?: string;
   phoneNum?: number;
-  started_at?: string;
+  counter?: number;
   with_doctor_since?: string;
   created_at?: string;
   updated_at?: string;

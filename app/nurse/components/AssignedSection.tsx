@@ -28,11 +28,6 @@ export function AssignedSection({ patients, speakingId, onCall, onMoveToWithDoct
                 <span className="text-xs text-gray-500">{p.cubicleNum}</span>
               </div>
               <span className="text-gray-500 text-xs font-medium">{p.service}</span>
-              {p.queue_start && (
-                <div className="text-xs text-gray-400">
-                  Queue: <ElapsedTimer startedAt={p.queue_start} />
-                </div>
-              )}
               <div className="flex items-center gap-1 mt-1">
                 <button
                   onClick={() => onCall(p)}

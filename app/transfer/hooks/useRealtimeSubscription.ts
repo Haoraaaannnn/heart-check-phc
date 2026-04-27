@@ -1,16 +1,22 @@
 'use client';
-import { useEffect } from 'react';
+import { useEffect, useRef } from 'react';
 import { supabase } from '@/lib/supabase';
 
-export function useRealtimeSubscription(categoryParam: string, onFetch: () => void) {
+export function useRealtimeSubscription(onFetch: () => void) {
+  const onFetchRef = useRef(onFetch);
+
   useEffect(() => {
-    const channel = supabase
-      .channel(`patients-queue-${categoryParam}`)
+    onFetchRef.current = onFetch;
+  }, [onFetch]);
+
+  useEffect(() => {
+    const channel = supabase.channel('patients-queue')
       .on('postgres_changes', { event: '*', schema: 'public', table: 'patients' }, () => {
-        onFetch();
+        console.log('Real-time update detected, refreshing data...');
+        onFetchRef.current();
       })
       .subscribe();
 
     return () => { supabase.removeChannel(channel); };
-  }, [categoryParam, onFetch]);
+  }, []); 
 }

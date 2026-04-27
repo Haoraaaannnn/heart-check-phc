@@ -18,7 +18,7 @@ export const CONSULTATION_SUBCATEGORIES = ['Pedia', 'Adult'];
 
 export const AUTO_ASSIGN_SERVICES = [
   'OPD Card', 'Refill Prescription', 'ECG',
-  'Warfarin', 'OPD Reschedule', 'Benzathine', 'OPD Screening'
+  'Warfarin', 'OPD Reschedule', 'Benzathine'
 ];
 
 export const MAX_PATIENTS_PER_CUBICLE = 5;

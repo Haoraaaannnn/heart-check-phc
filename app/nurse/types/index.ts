@@ -4,10 +4,19 @@ export type Patient = {
   status?: string;
   cubicleNum?: string;
   service?: string;
+  phoneNum?: number;
+  reg_start?: string;
+  reg_end?: string;
+  consult_start?: string;
+  consult_end?: string;
   created_at?: string;
   updated_at?: string;
-  phoneNum?: number;
-  queue_start?: string;
-  with_doctor_since?: string;
-  finished_time?: string;
+};
+
+export type Cubicle = {
+  id: number;
+  cubicleNum: string;
+  category: string;
+  room: number;
+  subcategory?: string;
 };
