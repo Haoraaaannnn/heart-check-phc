@@ -5,7 +5,7 @@ export default function LandingPage() {
   const router = useRouter();
 
   return (
-  <div className="relative h-screen overflow-hidden bg-gradient-to-br from-[#fffdfd] via-[#fff5f5] to-[#ffeaea] font-sans">
+  <div className="relative min-h-screen overflow-hidden bg-gradient-to-br from-[#fffdfd] via-[#fff5f5] to-[#ffeaea] font-sans">
     {/* Soft Ambient Background */}
       <div className="absolute inset-0 z-0 pointer-events-none">
         {/* Top Right Large Glow */}
