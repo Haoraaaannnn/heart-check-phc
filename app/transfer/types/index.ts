@@ -7,9 +7,11 @@ export type Patient = {
   created_at?: string;
   updated_at?: string;
   phoneNum?: number;
-  started_at?: string;
-  queue_start?: string;
-  with_doctor_since?: string;
+  reg_start?: string;
+  reg_end?: string;
+  consult_start?: string;
+  consult_end?: string;
+  counter?: number;
 };
 
 export type Cubicle = {

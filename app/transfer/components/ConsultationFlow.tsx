@@ -3,6 +3,7 @@ import { Cubicle } from '../types';
 import { CubicleCard } from './CubicleCard';
 import { OnProgressSection } from './OnProgressSection';
 import { CONSULTATION_SUBCATEGORIES } from '../lib/constants';
+import { RegistrationCounterSection } from './RegistrationCounterSection';
 
 type ConsultationFlowProps = {
   selectedSubcategory: string | null;
@@ -14,6 +15,10 @@ type ConsultationFlowProps = {
   draggedPatient: any;
   dragOverCubicle: string | null;
   speaking: number | null;
+  registrationPatients: any[];
+  regDraggedPatient: any;
+  dragOverCounter: number | null;
+  onRegDragStart: (e: React.MouseEvent, patient: any) => void;
   onSelectSubcategory: (sub: string) => void;
   onSelectRoom: (room: number) => void;
   onDragStartFromQueue: (e: React.MouseEvent, patient: any) => void;
@@ -33,6 +38,10 @@ export function ConsultationFlow({
   draggedPatient,
   dragOverCubicle,
   speaking,
+  registrationPatients,
+  regDraggedPatient,
+  dragOverCounter,
+  onRegDragStart,
   onSelectSubcategory,
   onSelectRoom,
   onDragStartFromQueue,
@@ -106,6 +115,13 @@ export function ConsultationFlow({
           />
         ))}
       </div>
+
+      <RegistrationCounterSection
+      patients={registrationPatients}
+      draggedPatient={regDraggedPatient}
+      dragOverCounter={dragOverCounter}
+      onDragStart={onRegDragStart}
+      />
     </>
   );
 }

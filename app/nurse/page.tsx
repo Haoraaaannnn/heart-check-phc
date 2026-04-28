@@ -1,6 +1,6 @@
 'use client';
-import { useRouter } from 'next/navigation';
 import { useState, useEffect } from 'react';
+import { useRouter } from 'next/navigation';
 import { supabase } from '@/lib/supabase';
 import { Sidebar } from './components/Sidebar';
 import { AssignedSection } from './components/AssignedSection';
@@ -21,7 +21,7 @@ export default function NursePage() {
     setAssignedPatients, setWithDoctorPatients, fetchFinished
   );
 
-  useRealtimeSubscription('nurse', () => {
+  useRealtimeSubscription(() => {
     fetchData();
     fetchFinished();
   });
@@ -40,7 +40,7 @@ export default function NursePage() {
     setSpeaking(patientId);
     try {
       const response = await fetch(
-        'https://api.deepgram.com/v1/speak?model=aura-2-amalthea-en',
+        'https://api.deepgram.com/v1/speak?model=aura-2-atlas-en',
         {
           method: 'POST',
           headers: {
@@ -84,8 +84,8 @@ export default function NursePage() {
 
   const getCounts = () => {
     const counts: Record<string, number> = {};
-    const allCategories = ['Consultation', 'OPD Card', 'Refill Prescription', 'ECG', 'Warfarin', 'OPD Reschedule', 'Benzathine', 'OPD Screening'];
-    allCategories.forEach(cat => {
+    const categories = ['Consultation', 'OPD Card', 'Refill Prescription', 'ECG', 'Warfarin', 'OPD Reschedule', 'Benzathine', 'OPD Screening'];
+    categories.forEach(cat => {
       counts[cat] = assignedPatients.filter(p => p.service === cat).length +
                     withDoctorPatients.filter(p => p.service === cat).length;
     });

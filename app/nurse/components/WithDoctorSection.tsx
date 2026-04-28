@@ -24,7 +24,7 @@ export function WithDoctorSection({ patients, onMoveBack, onFinish }: WithDoctor
             <div key={p.id} className="border border-purple-100 rounded-2xl p-3 flex flex-col gap-2 bg-purple-50">
               <div className="flex items-center justify-between">
                 <span className="text-[#cc3535] font-black text-lg">{p.patientNum}</span>
-                <ElapsedTimer startedAt={p.with_doctor_since} />
+                <ElapsedTimer startedAt={p.consult_start} />
               </div>
               <span className="text-gray-500 text-xs font-medium">{p.service}</span>
               <div className="flex items-center gap-1 mt-1">

@@ -1,11 +1,12 @@
 'use client';
-import { useState, useEffect, useRef } from 'react';
+import { useState, useRef } from 'react';
 import { supabase } from '@/lib/supabase';
 import { Patient, Cubicle } from '../types';
 
-export function useMonitorData(category: string, subcategory: string | null, categoryParam: string) {
+export function useMonitorData(category: string, subcategory: string | null, categoryParam: string, isRegistration: boolean = false) {
   const [assignedPatients, setAssignedPatients] = useState<Patient[]>([]);
   const [cubicles, setCubicles] = useState<Cubicle[]>([]);
+  const [registrationPatients, setRegistrationPatients] = useState<Patient[]>([]);
   const [currentTime, setCurrentTime] = useState(new Date());
 
   const announcementQueue = useRef<{ patient: Patient; message: string }[]>([]);
@@ -219,14 +220,57 @@ export function useMonitorData(category: string, subcategory: string | null, cat
     }
   };
 
+  const fetchRegistrationPatients = async () => {
+    const today = new Date();
+    today.setHours(0, 0, 0, 0);
+    const tomorrow = new Date(today);
+    tomorrow.setDate(today.getDate() + 1);
+
+    const { data, error } = await supabase
+      .from('patients')
+      .select('*')
+      .in('service', ['Consultation', 'OPD Screening'])
+      .in('status', ['On Progress', 'Waiting'])   
+      .not('counter', 'is', null)
+      .gte('created_at', today.toISOString())
+      .lt('created_at', tomorrow.toISOString())
+      .order('counter', { ascending: true })
+      .order('created_at', { ascending: true });  
+
+    if (!error && data) {
+      setRegistrationPatients(data);
+    }
+  };
+
+  const setupRegistrationSubscription = (onUpdate: () => void) => {
+    const channel = supabase
+      .channel('registration-monitor')
+      .on('postgres_changes', { 
+        event: '*', 
+        schema: 'public', 
+        table: 'patients',
+        filter: `service=in.("Consultation","OPD Screening")`
+      }, () => {
+        onUpdate();
+      })
+      .subscribe();
+
+    return () => {
+      supabase.removeChannel(channel);
+    };
+  };
+
   return {
     assignedPatients,
     cubicles,
+    registrationPatients,
     currentTime,
     setCurrentTime,
     fetchCubicles,
     fetchPatients,
+    fetchRegistrationPatients,
     formatCubicleDisplay,
     isTableLayoutService,
+    setupRegistrationSubscription,
   };
 }

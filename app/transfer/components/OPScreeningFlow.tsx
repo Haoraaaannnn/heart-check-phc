@@ -1,7 +1,8 @@
 'use client';
-import { Cubicle } from '../types';
+import { Cubicle, Patient } from '../types';
 import { CubicleCard } from './CubicleCard';
 import { OnProgressSection } from './OnProgressSection';
+import { RegistrationCounterSection } from './RegistrationCounterSection';
 
 type OPScreeningFlowProps = {
   selectedRoom: number | null;
@@ -18,6 +19,10 @@ type OPScreeningFlowProps = {
   onSpeak: (text: string, patientId: number) => void;
   onMoveBackToProgress: (patient: any, cubicleNum: string) => void;
   isDragEnabled: boolean;
+  registrationPatients: Patient[];
+  regDraggedPatient: Patient | null;
+  dragOverCounter: number | null;
+  onRegDragStart: (e: React.MouseEvent, patient: Patient) => void;
 };
 
 export function OPScreeningFlow({
@@ -35,7 +40,12 @@ export function OPScreeningFlow({
   onSpeak,
   onMoveBackToProgress,
   isDragEnabled,
+  registrationPatients,
+  regDraggedPatient,
+  dragOverCounter,
+  onRegDragStart,
 }: OPScreeningFlowProps) {
+
   if (!selectedRoom) {
     if (rooms.length === 0) {
       return (
@@ -46,12 +56,12 @@ export function OPScreeningFlow({
         </div>
       );
     }
-    
+
     return (
       <div className="grid grid-cols-3 gap-3">
         {rooms.map(room => {
           const roomCubicles = visibleCubicles.filter(c => c.room === room);
-          const totalAssigned = roomCubicles.reduce((sum, c) => sum + (assignedPatients[c.cubicleNum]?.length || 0), 0);
+          const totalAssigned = roomCubicles.reduce((sum, c) => sum + (assignedPatients[c.cubicleNum]?.length ?? 0), 0);
           return (
             <button key={room} onClick={() => onSelectRoom(room)}
               className="bg-white border-2 border-gray-100 hover:border-red-200 rounded-3xl p-6 flex flex-col gap-2 shadow-sm transition text-left">
@@ -95,6 +105,12 @@ export function OPScreeningFlow({
           />
         ))}
       </div>
+      <RegistrationCounterSection
+        patients={registrationPatients}
+        draggedPatient={regDraggedPatient}
+        dragOverCounter={dragOverCounter}
+        onDragStart={onRegDragStart}
+      />
     </>
   );
 }

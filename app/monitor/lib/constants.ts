@@ -1,5 +1,5 @@
 export const CATEGORIES = [
-  'Consultation', 'OPD Card', 'Refill Prescription', 'ECG',
+  'Consultation', 'Registration', 'OPD Card', 'Refill Prescription', 'ECG',
   'Warfarin', 'OPD Reschedule', 'Benzathine', 'OPD Screening'
 ];
 

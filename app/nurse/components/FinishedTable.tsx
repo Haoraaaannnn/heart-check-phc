@@ -28,7 +28,7 @@ export function FinishedTable({ patients }: FinishedTableProps) {
                   <td className="py-2 font-semibold text-[#cc3535]">{p.patientNum}</td>
                   <td className="py-2 text-gray-600">{p.service}</td>
                   <td className="py-2 text-gray-600">{p.cubicleNum || '-'}</td>
-                  <td className="py-2 text-gray-400">{p.finished_time ? new Date(p.finished_time).toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' }) : '-'}</td>
+                  <td className="py-2 text-gray-400">{p.consult_end ? new Date(p.consult_end).toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' }) : '-'}</td>
                 </tr>
               ))}
             </tbody>

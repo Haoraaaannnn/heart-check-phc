@@ -52,14 +52,14 @@ export function useAutoAssign(
           ...patientToAssign, 
           cubicleNum: targetCubicle.cubicleNum, 
           status: 'Assigned',
-          queue_start: now
+          reg_end: now
         }]
       }));
       
       await supabase.from('patients').update({ 
         cubicleNum: targetCubicle.cubicleNum, 
         status: 'Assigned',
-        queue_start: now
+        reg_end: now
       }).eq('id', patientToAssign.id);
 
       if (patientToAssign.phoneNum) {
