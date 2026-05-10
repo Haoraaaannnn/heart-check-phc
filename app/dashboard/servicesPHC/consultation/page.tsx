@@ -5,7 +5,6 @@ export default function ConsultationDashboard() {
     <ServiceDashboard
       title="Consultation Dashboard"
       serviceFilter="%consultation%"
-        icon="🩺"
     />
   );
 }

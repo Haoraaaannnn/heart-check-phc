@@ -5,7 +5,6 @@ export default function ConsultationDashboard() {
     <ServiceDashboard
       title="OPD Reschedule Dashboard"
       serviceFilter="%opd reschedule%"
-        icon="📅"
     />
   );
 }

@@ -5,7 +5,6 @@ export default function ConsultationDashboard() {
     <ServiceDashboard
       title="Benzathine Dashboard"
       serviceFilter="%benzathine%"
-        icon="💉"
     />
   );
 }

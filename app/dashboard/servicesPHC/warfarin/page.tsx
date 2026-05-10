@@ -5,7 +5,6 @@ export default function ConsultationDashboard() {
     <ServiceDashboard
       title="Warfarin Dashboard"
       serviceFilter="%warfarin%"
-        icon="💊"
     />
   );
 }

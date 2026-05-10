@@ -25,7 +25,7 @@ export default function RootLayout({
   children: React.ReactNode;
 }>) {
   return (
-    <html lang="en" className={`${tiltWarp.variable} ${Baloo.variable}`}>
+    <html lang="en" className={`${tiltWarp.variable} ${Baloo.variable}`} suppressHydrationWarning>
       <head>
         <link href='https://unpkg.com/boxicons@2.1.4/css/boxicons.min.css' rel='stylesheet' />
       </head>

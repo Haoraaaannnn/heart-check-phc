@@ -5,7 +5,6 @@ export default function ConsultationDashboard() {
     <ServiceDashboard
       title="Refill Prescription Dashboard"
       serviceFilter="%refill prescription%"
-        icon="📄"
     />
   );
 }

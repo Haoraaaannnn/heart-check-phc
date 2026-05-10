@@ -5,7 +5,6 @@ export default function ConsultationDashboard() {
     <ServiceDashboard
       title="OPD Screening Dashboard"
       serviceFilter="%opd screening%"
-        icon="📋"
     />
   );
 }

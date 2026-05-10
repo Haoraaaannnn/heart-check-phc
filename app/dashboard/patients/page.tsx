@@ -3,10 +3,14 @@
 import { useState, useEffect } from 'react';
 import { supabase } from '@/lib/supabase';
 import DashboardHeader from '@/components/dashboard/DashboardHeader';
+import PatientMetricCard from '@/components/reusables/patientMetricCard';
+import PatientHeaderCard from '@/components/reusables/patientHeaderCard';
+import AnalyticsMetricCards from '@/components/reusables/analyticsMetricCards';
 import {
   BarChart, Bar, XAxis, YAxis, CartesianGrid, Tooltip, ResponsiveContainer,
   LineChart, Line, PieChart, Pie, Cell
 } from 'recharts';
+import { textDark, textLight } from '@/constants/themes';
 
 interface PatientStats {
   totalToday: number;
@@ -22,6 +26,10 @@ interface RecentPatient {
   status: string;
   createdAt: string;
   waitTime?: number;
+}
+
+interface AllRecentPatient extends RecentPatient {
+  createdAtDate: Date;
 }
 
 interface AnalyticsData {
@@ -47,6 +55,7 @@ interface AnalyticsData {
 }
 
 const COLORS = ['#0088FE', '#00C49F', '#FFBB28', '#FF8042', '#8884D8'];
+const PATIENTS_PER_PAGE = 20;
 
 export default function PatientsPage() {
   const [stats, setStats] = useState<PatientStats>({
@@ -57,6 +66,8 @@ export default function PatientsPage() {
   });
 
   const [recentPatients, setRecentPatients] = useState<RecentPatient[]>([]);
+  const [allRecentPatients, setAllRecentPatients] = useState<AllRecentPatient[]>([]);
+  const [currentPage, setCurrentPage] = useState(1);
   const [serviceDistribution, setServiceDistribution] = useState<{ name: string; value: number }[]>([]);
   const [hourlyData, setHourlyData] = useState<{ hour: string; patients: number }[]>([]);
   const [loading, setLoading] = useState(true);
@@ -129,12 +140,12 @@ export default function PatientsPage() {
     try {
       setError(null);
 
-      // Fetch today's patients
+      // Fetch today's patients for stats
       const now = new Date();
       const startOfDay = new Date(now.getFullYear(), now.getMonth(), now.getDate()).toISOString();
       const endOfDay = new Date(now.getFullYear(), now.getMonth(), now.getDate() + 1).toISOString();
 
-      const { data: patientData, error: patientError } = await supabase
+      const { data: todayPatientData, error: todayError } = await supabase
         .from('patients')
         .select('id, patientNum, service, status, created_at, consult_start')
         .gte('created_at', startOfDay)
@@ -142,18 +153,27 @@ export default function PatientsPage() {
         .order('created_at', { ascending: false })
         .limit(20);
 
-      if (patientError) {
-        throw patientError;
+      // Fetch all recent patients (last 30 days) for the recent patients table
+      const thirtyDaysAgo = new Date(now.getTime() - 30 * 24 * 60 * 60 * 1000).toISOString();
+
+      const { data: allPatientData, error: allError } = await supabase
+        .from('patients')
+        .select('id, patientNum, service, status, created_at, consult_start')
+        .gte('created_at', thirtyDaysAgo)
+        .order('created_at', { ascending: false });
+
+      if (todayError) {
+        throw todayError;
       }
 
-      // Process patient data
+      // Process today's patients for stats
       let inQueueCount = 0;
       let servedCount = 0;
       const serviceCount: Record<string, number> = {};
       const recentPatientsList: RecentPatient[] = [];
 
-      if (patientData) {
-        patientData.forEach((patient) => {
+      if (todayPatientData) {
+        todayPatientData.forEach((patient) => {
           const currentStatus = patient.status ? patient.status.toLowerCase().trim() : '';
 
           // Count queue and served
@@ -167,7 +187,7 @@ export default function PatientsPage() {
           const serviceName = patient.service || 'General';
           serviceCount[serviceName] = (serviceCount[serviceName] || 0) + 1;
 
-          // Add to recent patients
+          // Add to recent patients for display
           recentPatientsList.push({
             id: patient.id.toString(),
             patientNum: patient.patientNum,
@@ -210,6 +230,28 @@ export default function PatientsPage() {
         setRecentPatients([]);
       }
 
+      // Process all recent patients for the paginated table
+      if (allPatientData && allPatientData.length > 0) {
+        const allPatientsList: AllRecentPatient[] = allPatientData.map((patient) => {
+          const serviceName = patient.service || 'General';
+          return {
+            id: patient.id.toString(),
+            patientNum: patient.patientNum,
+            service: serviceName,
+            status: patient.status || 'Unknown',
+            createdAt: new Date(patient.created_at).toLocaleString(),
+            createdAtDate: new Date(patient.created_at),
+            waitTime: patient.consult_start ?
+              Math.round((new Date(patient.consult_start).getTime() - new Date(patient.created_at).getTime()) / 60000) :
+              undefined,
+          };
+        });
+        setAllRecentPatients(allPatientsList);
+        setCurrentPage(1);
+      } else {
+        setAllRecentPatients([]);
+      }
+
     } catch (err) {
       console.error('Error fetching patient data:', err);
       setError('Failed to load patient data');
@@ -222,6 +264,7 @@ export default function PatientsPage() {
       });
       setServiceDistribution([{ name: 'No Data', value: 1 }]);
       setRecentPatients([]);
+      setAllRecentPatients([]);
     }
   };
 
@@ -264,8 +307,8 @@ export default function PatientsPage() {
 
   if (loading) {
     return (
-      <div className="min-h-screen bg-gray-50">
-        <div className="p-6">
+      <div className="min-h-screen">
+        <div className="px-8 py-6">
           <div className="flex items-center justify-center h-64">
             <div className="text-center">
               <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-red-600 mx-auto mb-4"></div>
@@ -277,65 +320,52 @@ export default function PatientsPage() {
     );
   }
 
+  // Pagination calculations
+  const totalPages = Math.ceil(allRecentPatients.length / PATIENTS_PER_PAGE);
+  const startIdx = (currentPage - 1) * PATIENTS_PER_PAGE;
+  const endIdx = startIdx + PATIENTS_PER_PAGE;
+  const paginatedPatients = allRecentPatients.slice(startIdx, endIdx);
+
   return (
     <div className="min-h-screen">
 
-      <div className="p-6">
-        <div className="mb-6">
-          <h1 className="text-2xl font-bold text-gray-800 mb-2">Patient Dashboard</h1>
-          <p className="text-gray-600">Patient statistics and queue management overview</p>
+      <div className="px-8 py-6 mx-auto max-w-10xl flex flex-col gap-6">
+        <div className="mb-2">
+          <h1 className={`text-3xl font-bold text-gray-800 dark:text-gray-200`}>Patient Dashboard</h1>
+          <p className="text-sm text-gray-400 mt-1">Patient statistics and queue management overview</p>
           {error && (
             <p className="text-sm text-red-600 mt-2">⚠️ {error}</p>
           )}
         </div>
 
         {/* Key Stats */}
-        <div className="grid grid-cols-1 md:grid-cols-4 gap-4 mb-6">
-          <div className="bg-white p-4 rounded-xl border border-gray-200 shadow-lg">
-            <div className="flex items-center justify-between">
-              <div>
-                <p className="text-sm text-gray-600">Total Today</p>
-                <p className="text-2xl font-bold text-blue-600">{stats.totalToday}</p>
-              </div>
-              <div className="text-2xl">👥</div>
-            </div>
-          </div>
+        <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-5">
+          <PatientMetricCard>
+            <PatientHeaderCard>Total Today</PatientHeaderCard>
+            <span className="text-5xl font-extrabold text-blue-600 self-end">{stats.totalToday}</span>
+          </PatientMetricCard>
 
-          <div className="bg-white p-4 rounded-xl border border-gray-200 shadow-lg">
-            <div className="flex items-center justify-between">
-              <div>
-                <p className="text-sm text-gray-600">In Queue</p>
-                <p className="text-2xl font-bold text-yellow-600">{stats.inQueue}</p>
-              </div>
-              <div className="text-2xl">⏳</div>
-            </div>
-          </div>
+          <PatientMetricCard>
+            <PatientHeaderCard>In Queue</PatientHeaderCard>
+            <span className="text-5xl font-extrabold text-yellow-600 self-end">{stats.inQueue}</span>
+          </PatientMetricCard>
 
-          <div className="bg-white p-4 rounded-xl border border-gray-200 shadow-lg">
-            <div className="flex items-center justify-between">
-              <div>
-                <p className="text-sm text-gray-600">Served Today</p>
-                <p className="text-2xl font-bold text-green-600">{stats.servedToday}</p>
-              </div>
-              <div className="text-2xl">✅</div>
-            </div>
-          </div>
+          <PatientMetricCard>
+            <PatientHeaderCard>Served Today</PatientHeaderCard>
+            <span className="text-5xl font-extrabold text-green-600 self-end">{stats.servedToday}</span>
+          </PatientMetricCard>
 
-          <div className="bg-white p-4 rounded-xl border border-gray-200 shadow-lg">
-            <div className="flex items-center justify-between">
-              <div>
-                <p className="text-sm text-gray-600">Avg Wait Time</p>
-                <p className="text-2xl font-bold text-red-600">{stats.avgWaitTime}m</p>
-              </div>
-              <div className="text-2xl">⏱️</div>
-            </div>
-          </div>
+          <PatientMetricCard>
+            <PatientHeaderCard>Avg Wait Time</PatientHeaderCard>
+            <span className="text-4xl font-extrabold text-red-600 self-end">{stats.avgWaitTime}m</span>
+          </PatientMetricCard>
         </div>
 
-        <div className="grid grid-cols-1 lg:grid-cols-2 gap-6 mb-6">
+        <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
+          
           {/* Service Distribution */}
-          <div className="bg-white p-4 rounded-xl border border-gray-200 shadow-lg">
-            <h2 className="text-lg font-semibold text-gray-800 mb-4">Service Distribution</h2>
+          <AnalyticsMetricCards>
+            <h2 className={`text-xl font-extrabold mb-6 text-gray-800 dark:text-gray-200`}>Service Distribution</h2>
             <ResponsiveContainer width="100%" height={300}>
               <PieChart>
                 <Pie
@@ -355,83 +385,120 @@ export default function PatientsPage() {
                 <Tooltip />
               </PieChart>
             </ResponsiveContainer>
-          </div>
+          </AnalyticsMetricCards>
 
           {/* Hourly Patient Flow */}
-          <div className="bg-white p-4 rounded-xl border border-gray-200 shadow-lg">
-            <h2 className="text-lg font-semibold text-gray-800 mb-4">Hourly Patient Flow</h2>
+          <AnalyticsMetricCards>
+            <h2 className={`text-xl font-extrabold mb-6 text-gray-800 dark:text-gray-200`}>Hourly Patient Flow</h2>
             <ResponsiveContainer width="100%" height={300}>
               <LineChart data={hourlyData}>
                 <CartesianGrid strokeDasharray="3 3" />
-                <XAxis dataKey="hour" />
-                <YAxis />
+                <XAxis dataKey="hour" tick={{ fontSize: 11 }} />
+                <YAxis tick={{ fontSize: 11 }} allowDecimals={false} />
                 <Tooltip />
-                <Line type="monotone" dataKey="patients" stroke="#8884d8" strokeWidth={2} />
+                <Line type="monotone" dataKey="patients" stroke="#8884d8" strokeWidth={2} dot={{ r: 3 }} />
               </LineChart>
             </ResponsiveContainer>
-          </div>
+          </AnalyticsMetricCards>
         </div>
 
-        {/* Recent Patients */}
-        <div className="bg-white rounded-xl border border-gray-200 p-4 shadow-lg">
-          <h2 className="text-lg font-semibold text-gray-800 mb-4">Recent Patients</h2>
-          {recentPatients.length === 0 ? (
+        {/* Recent Patients with Pagination */}
+        <AnalyticsMetricCards>
+          <div className="flex items-center justify-between mb-4">
+            <div>
+              <h2 className={`text-xl font-extrabold text-gray-800 dark:text-gray-200`}>All Recent Patients</h2>
+              <p className="text-sm text-gray-400 mt-1">Patients from the last 30 days</p>
+            </div>
+            <div className="text-xs text-gray-400 font-semibold">
+              {allRecentPatients.length > 0 && (
+                <span>Showing <span className="text-gray-700 dark:text-gray-300">{startIdx + 1}</span> to <span className="text-gray-700 dark:text-gray-300">{Math.min(endIdx, allRecentPatients.length)}</span> of <span className="text-gray-700 dark:text-gray-300">{allRecentPatients.length}</span> patients</span>
+              )}
+            </div>
+          </div>
+
+          {allRecentPatients.length === 0 ? (
             <div className="text-center py-8">
-              <p className="text-gray-500">No patients registered today.</p>
+              <p className="text-gray-500">No recent patients found.</p>
               <p className="text-sm text-gray-400 mt-2">Patient data will appear here as registrations occur.</p>
             </div>
           ) : (
-            <div className="overflow-x-auto">
-              <table className="w-full text-sm">
-                <thead>
-                  <tr className="border-b border-gray-200">
-                    <th className="text-left py-2 px-4 font-medium text-gray-700">Patient #</th>
-                    <th className="text-left py-2 px-4 font-medium text-gray-700">Service</th>
-                    <th className="text-left py-2 px-4 font-medium text-gray-700">Status</th>
-                    <th className="text-left py-2 px-4 font-medium text-gray-700">Time</th>
-                    <th className="text-left py-2 px-4 font-medium text-gray-700">Wait Time</th>
-                  </tr>
-                </thead>
-                <tbody>
-                  {recentPatients.map((patient) => (
-                    <tr key={patient.id} className="border-b border-gray-100">
-                      <td className="py-2 px-4 font-medium">{patient.patientNum}</td>
-                      <td className="py-2 px-4">{patient.service}</td>
-                      <td className="py-2 px-4">
-                        <span className={`px-2 py-1 rounded-full text-xs font-medium ${getStatusColor(patient.status)}`}>
-                          {patient.status}
-                        </span>
-                      </td>
-                      <td className="py-2 px-4 text-gray-600">{patient.createdAt}</td>
-                      <td className="py-2 px-4">
-                        {patient.waitTime !== undefined ? `${patient.waitTime}m` : '-'}
-                      </td>
+            <>
+              <div className="overflow-x-auto">
+                <table className="w-full text-left">
+                  <thead>
+                    <tr className="border-b border-gray-100">
+                      <th className="pb-4 px-4 text-xs font-bold text-gray-400 tracking-wider uppercase">Patient #</th>
+                      <th className="pb-4 px-4 text-xs font-bold text-gray-400 tracking-wider uppercase">Service</th>
+                      <th className="pb-4 px-4 text-xs font-bold text-gray-400 tracking-wider uppercase">Status</th>
+                      <th className="pb-4 px-4 text-xs font-bold text-gray-400 tracking-wider uppercase">Time</th>
+                      <th className="pb-4 px-4 text-xs font-bold text-gray-400 tracking-wider uppercase">Wait Time</th>
                     </tr>
-                  ))}
-                </tbody>
-              </table>
-            </div>
-          )}
-        </div>
+                  </thead>
+                  <tbody>
+                    {paginatedPatients.map((patient) => (
+                      <tr key={patient.id} className="border-b border-gray-50 last:border-0 hover:bg-gray-50/50 dark:hover:bg-gray-800/50 transition">
+                        <td className="py-4 px-4">
+                          <span className="bg-red-50 dark:bg-red-900/30 text-red-700 dark:text-red-400 font-extrabold px-3 py-1 rounded-lg text-sm">
+                            {patient.patientNum || '---'}
+                          </span>
+                        </td>
+                        <td className="py-4 px-4 text-sm font-semibold text-gray-500 dark:text-gray-400">
+                          {patient.service}
+                        </td>
+                        <td className="py-4 px-4">
+                          <span className={`px-3 py-1 rounded-full text-xs font-bold ${getStatusColor(patient.status)}`}>
+                            {patient.status}
+                          </span>
+                        </td>
+                        <td className="py-4 px-4 text-sm text-gray-500 dark:text-gray-400">
+                          {patient.createdAt}
+                        </td>
+                        <td className="py-4 px-4 text-sm font-semibold text-gray-500 dark:text-gray-400">
+                          {patient.waitTime !== undefined ? `${patient.waitTime}m` : '-'}
+                        </td>
+                      </tr>
+                    ))}
+                  </tbody>
+                </table>
+              </div>
 
-        {/* Quick Actions */}
-        <div className="mt-6 bg-white rounded-xl border border-gray-200 p-4 shadow-lg">
-          <h2 className="text-lg font-semibold text-gray-800 mb-4">Quick Actions</h2>
-          <div className="flex flex-wrap gap-4">
-            <button className="px-4 py-2 bg-blue-600 text-white rounded-lg hover:bg-blue-700 transition-colors">
-              Add New Patient
-            </button>
-            <button className="px-4 py-2 bg-green-600 text-white rounded-lg hover:bg-green-700 transition-colors">
-              Export Report
-            </button>
-            <button className="px-4 py-2 bg-yellow-600 text-white rounded-lg hover:bg-yellow-700 transition-colors">
-              Manage Queue
-            </button>
-            <button className="px-4 py-2 bg-purple-600 text-white rounded-lg hover:bg-purple-700 transition-colors">
-              View Analytics
-            </button>
-          </div>
-        </div>
+              {/* Pagination Controls */}
+              <div className="flex items-center justify-between mt-6 pt-4 border-t border-gray-100">
+                <button
+                  onClick={() => setCurrentPage(Math.max(1, currentPage - 1))}
+                  disabled={currentPage === 1}
+                  className="px-4 py-2 text-xs font-bold rounded-lg border border-gray-300 dark:border-gray-600 text-gray-700 dark:text-gray-300 hover:bg-gray-50 dark:hover:bg-gray-800 disabled:opacity-50 disabled:cursor-not-allowed transition"
+                >
+                  ← Previous
+                </button>
+
+                <div className="flex items-center gap-2">
+                  {Array.from({ length: totalPages }, (_, i) => i + 1).map((page) => (
+                    <button
+                      key={page}
+                      onClick={() => setCurrentPage(page)}
+                      className={`px-3 py-2 text-xs font-bold rounded-lg transition ${
+                        currentPage === page
+                          ? 'bg-red-600 text-white'
+                          : 'border border-gray-300 dark:border-gray-600 text-gray-700 dark:text-gray-300 hover:bg-gray-50 dark:hover:bg-gray-800'
+                      }`}
+                    >
+                      {page}
+                    </button>
+                  ))}
+                </div>
+
+                <button
+                  onClick={() => setCurrentPage(Math.min(totalPages, currentPage + 1))}
+                  disabled={currentPage === totalPages}
+                  className="px-4 py-2 text-xs font-bold rounded-lg border border-gray-300 dark:border-gray-600 text-gray-700 dark:text-gray-300 hover:bg-gray-50 dark:hover:bg-gray-800 disabled:opacity-50 disabled:cursor-not-allowed transition"
+                >
+                  Next →
+                </button>
+              </div>
+            </>
+          )}
+        </AnalyticsMetricCards>
       </div>
     </div>
   );

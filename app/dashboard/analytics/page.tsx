@@ -5,6 +5,11 @@ import {
   ComposedChart, Scatter, Line, XAxis, YAxis, CartesianGrid,
   Tooltip, ResponsiveContainer, ReferenceDot, LineChart
 } from "recharts";
+import AnalyticsMetricCards from "@/components/reusables/analyticsMetricCards";
+import AnalyticsMetricHeader from "@/components/reusables/analyticsMetricHeader";
+import AnalyticsMetricPara from "@/components/reusables/analyticsMetricPara";
+import { textLight, textDark } from "@/constants/themes";
+import { darkTheme, lightTheme } from "@/constants/themes";
 
 export default function AdminDashboard() {
   const [data, setData]       = useState<any>(null);
@@ -104,66 +109,64 @@ export default function AdminDashboard() {
 
   return (
     <div className="min-h-screen w-full">
-      <div className="p-8 mx-auto max-w-7xl w-full">
+      <div className="px-8 py-6 mx-auto max-w-10xl flex flex-col gap-6">
 
-        {/* ── HEADER ─────────────────────────────────────────────── */}
-        <div className="flex items-center justify-between mb-6">
-          <h1 className="text-3xl font-bold text-gray-800">
+        {/* HEADER */}
+        <div className="mb-2">
+          <h1 className="text-3xl font-bold text-gray-800 dark:text-gray-200">
             OPD Queue Analytics Dashboard
           </h1>
-          <div className="flex items-center gap-2 text-sm text-green-600 font-semibold bg-green-50 px-3 py-1 rounded-full border border-green-200 shadow-sm">
-            <span className="w-2 h-2 rounded-full bg-green-500 animate-pulse" />
-            Live Updates
-          </div>
+          <p className="text-sm text-gray-400 mt-1">Advanced forecasting and bottleneck analysis</p>
         </div>
 
-        {/* ── METRIC CARDS ───────────────────────────────────────── */}
-        <div className="grid grid-cols-1 md:grid-cols-4 gap-4 mb-8">
-          <div className={`p-6 rounded-lg shadow-md text-white transition-colors duration-500 ${
+        {/* METRIC CARDS */}
+        <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-5">
+          <div className={`p-6 rounded-[28px] shadow-[0_10px_40px_rgba(255,120,120,0.06)] backdrop-blur-xl
+          text-white transition-colors duration-500 ${
             data.bottleneck_analysis?.system_status === "Overwhelmed"
               ? "bg-red-500" : "bg-green-500"
           }`}>
-            <h2 className="text-sm font-semibold uppercase opacity-90">System Status</h2>
-            <p className="text-3xl font-bold mt-2">
+            <h2 className="text-xs font-bold uppercase tracking-widest">System Status</h2>
+            <p className="text-4xl font-extrabold mt-3">
               {data.bottleneck_analysis?.system_status || "Normal"}
             </p>
-            <p className="text-sm mt-1">
+            <p className="text-xs mt-2 font-semibold">
               Bottleneck: {data.bottleneck_analysis?.bottleneck_stage || "None"}
             </p>
           </div>
 
-          <div className="p-6 bg-white rounded-lg shadow-md border-b-4 border-gray-100">
-            <h2 className="text-sm font-semibold text-gray-500 uppercase">Avg Consult Wait</h2>
-            <p className="text-3xl font-bold text-gray-800 mt-2">
+          <AnalyticsMetricCards>
+            <AnalyticsMetricHeader>Average Consult Wait</AnalyticsMetricHeader>
+            <div className="text-4xl font-extrabold text-blue-600 mt-2">
               {data.bottleneck_analysis?.avg_wait_consultation_min ?? 0}{" "}
-              <span className="text-lg">mins</span>
-            </p>
-          </div>
+              <span className="text-xl text-gray-400">mins</span>
+            </div>
+          </AnalyticsMetricCards>
 
-          <div className="p-6 bg-white rounded-lg shadow-md border-b-4 border-blue-100">
-            <h2 className="text-sm font-semibold text-blue-500 uppercase">Tomorrow's Forecast</h2>
-            <p className="text-3xl font-bold text-gray-800 mt-2">
+          <AnalyticsMetricCards>
+            <AnalyticsMetricHeader>Tomorrow's Forecast</AnalyticsMetricHeader>
+            <div className="text-4xl font-extrabold text-orange-600 mt-2">
               {data.computational_forecasting?.next_day_forecast ?? 0}{" "}
-              <span className="text-lg">patients</span>
-            </p>
-            <p className="text-xs text-gray-400 mt-1 italic">
+              <span className="text-xl text-gray-400">patients</span>
+            </div>
+            <p className="text-xs text-gray-400 mt-1">
               Using {data.computational_forecasting?.best_algorithm ?? "N/A"}
             </p>
-          </div>
+          </AnalyticsMetricCards>
 
-          <div className="p-6 bg-white rounded-lg shadow-md border-l-4 border-blue-500">
-            <h2 className="text-sm font-semibold text-gray-500 uppercase">Recommended Staff</h2>
-            <p className="text-3xl font-bold text-gray-800 mt-2">
+          <AnalyticsMetricCards >
+            <AnalyticsMetricHeader>Recommended Staff</AnalyticsMetricHeader>
+            <div className="text-4xl font-extrabold text-green-600 mt-2">
               {data.decision_support?.recommended_doctors ?? 1}{" "}
-              <span className="text-lg">Doctors</span>
-            </p>
-          </div>
+              <span className="text-xl text-gray-400">Doctors</span>
+            </div>
+          </AnalyticsMetricCards>
         </div>
 
         {/* ── TOP TWO CHARTS ─────────────────────────────────────── */}
-        <div className="grid grid-cols-1 lg:grid-cols-2 gap-8 mb-8">
-          <div className="bg-white p-6 rounded-lg shadow-md">
-            <h2 className="text-lg font-bold text-gray-800 mb-4">
+        <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
+          <AnalyticsMetricCards>
+            <h2 className={`text-xl font-extrabold mb-6 text-gray-800 dark:text-gray-200`}>
               Patient Volume Trend (Past 5 Days)
             </h2>
             <div className="h-64">
@@ -180,10 +183,10 @@ export default function AdminDashboard() {
                 </LineChart>
               </ResponsiveContainer>
             </div>
-          </div>
+          </AnalyticsMetricCards>
 
-          <div className="bg-white p-6 rounded-lg shadow-md">
-            <h2 className="text-lg font-bold text-gray-800 mb-4">
+          <AnalyticsMetricCards>
+            <h2 className={`text-xl font-extrabold mb-6 text-gray-800 dark:text-gray-200`}>
               Hourly Wait Time Distribution
             </h2>
             <div className="h-64">
@@ -200,39 +203,39 @@ export default function AdminDashboard() {
                 </LineChart>
               </ResponsiveContainer>
             </div>
-          </div>
+          </AnalyticsMetricCards>
         </div>
 
         {/* ── LINEAR REGRESSION BLOCK ────────────────────────────── */}
-        <div className="bg-white p-6 rounded-lg shadow-md mb-8">
-          <div className="flex items-center justify-between mb-1 flex-wrap gap-2">
-            <h2 className="text-lg font-bold text-gray-800">Linear Regression Forecast</h2>
+        <AnalyticsMetricCards>
+          <div className="flex items-center justify-between mb-3 flex-wrap gap-2">
+            <h2 className={`text-xl font-extrabold text-gray-800 dark:text-gray-200`}>Linear Regression Forecast</h2>
             <div className="flex items-center gap-3">
               <span className="text-xs font-bold px-3 py-1 rounded-full uppercase"
                 style={{ background: trendBg, color: trendColor }}>
                 {lrRaw.trend}
               </span>
-              <span className="text-sm text-gray-500 bg-gray-50 px-2 py-1 rounded">
-                slope: <span className="font-semibold text-gray-600">{lrRaw.slope?.toFixed(2)} pts/day</span>
+              <span className={`text-sm px-2 py-1 text-gray-600 dark:text-gray-400`}>
+                slope: <span className={`font-semibold text-gray-800 dark:text-gray-200`}>{lrRaw.slope?.toFixed(2)} patients/day</span>
               </span>
             </div>
           </div>
 
-          <p className="text-xs text-gray-400 mb-4">
-            Forecast for <span className="font-semibold text-gray-600">{lrRaw.forecast_date}</span>:{" "}
+          <p className="text-xs text-gray-400 mb-6">
+            Forecast for <span className={`font-semibold text-gray-600 dark:text-gray-300`}>{lrRaw.forecast_date}</span>:{" "}
             <span className="font-semibold text-green-600">{lrRaw.forecast_value} patients</span>
           </p>
 
           <div className="grid grid-cols-2 md:grid-cols-4 gap-3 mb-6">
             {[
-              { label: "Forecast", value: `${lrRaw.forecast_value} pts` },
+              { label: "Forecast", value: `${lrRaw.forecast_value} patients` },
               { label: "Slope",    value: lrRaw.slope?.toFixed(2) },
               { label: "Trend",    value: lrRaw.trend, color: trendColor },
               { label: "R² score", value: lrRaw.r2 ?? "—" },
             ].map(({ label, value, color }) => (
-              <div key={label} className="bg-gray-50 rounded-lg p-4 text-center">
-                <p className="text-xs text-gray-400 mb-1 uppercase font-bold">{label}</p>
-                <p className="text-2xl font-bold uppercase" style={{ color: color || "#1f2937" }}>
+              <div key={label} className="p-4 text-center border border-gray-100 dark:border-gray-700 rounded-lg">
+                <p className="text-xs text-gray-400 mb-2 uppercase font-bold">{label}</p>
+                <p className="text-2xl font-bold" style={{ color: color || "#1f2937" }}>
                   {value}
                 </p>
               </div>
@@ -241,7 +244,7 @@ export default function AdminDashboard() {
 
           <div className="flex flex-col xl:flex-row gap-6">
             <div className="flex-1 min-w-0">
-              <div className="flex gap-5 mb-4 text-[10px] font-bold text-gray-400 uppercase tracking-widest">
+              <div className="flex gap-5 mb-4 text-[10px] font-bold uppercase tracking-widest">
                 <span className="flex items-center gap-2">
                   <span className="w-2.5 h-2.5 rounded-full bg-blue-500" /> Actual
                 </span>
@@ -283,14 +286,15 @@ export default function AdminDashboard() {
             </div>
 
             <div className="xl:w-80 shrink-0 flex flex-col gap-6">
-              {/* Algorithm comparison */}
+
+              {/* Algorithm comparison - Combined LR & ARIMA */}
               <div>
                 <p className="text-[10px] font-bold text-gray-400 uppercase tracking-widest mb-3">
                   Algorithm Comparison
                 </p>
-                <div className="border border-gray-100 rounded-lg overflow-hidden shadow-sm">
+                <div className={`${darkTheme} ${lightTheme} overflow-hidden`}>
                   <table className="w-full text-xs">
-                    <thead className="bg-gray-50 text-gray-400 font-bold uppercase text-[9px]">
+                    <thead className={`font-bold uppercase text-[9px] text-gray-400`}>
                       <tr>
                         <th className="px-3 py-2 text-left">Algorithm</th>
                         <th className="px-3 py-2 text-right">MAE</th>
@@ -302,18 +306,28 @@ export default function AdminDashboard() {
                         Object.entries(data.computational_forecasting.evaluation_metrics)
                           .map(([algo, m]: any) => (
                             <tr key={algo}
-                              className={`border-t border-gray-50 ${
+                              className={`border-t border-gray-100 dark:border-gray-700 ${
                                 algo === data.computational_forecasting.best_algorithm
-                                  ? "bg-blue-50 font-bold" : ""
+                                  ? "bg-red-50 dark:bg-red-900/20" : ""
                               }`}>
-                              <td className="px-3 py-2 text-gray-700">
+                              <td className={`px-3 py-2 text-gray-600 dark:text-gray-400`}>
                                 {algo}
                                 {algo === data.computational_forecasting.best_algorithm && " ✓"}
                               </td>
-                              <td className="px-3 py-2 text-right text-gray-500">{m.MAE.toFixed(4)}</td>
-                              <td className="px-3 py-2 text-right text-gray-500">{m.RMSE.toFixed(4)}</td>
+                              <td className="px-3 py-2 text-right text-gray-500 font-mono">{m.MAE.toFixed(2)}</td>
+                              <td className="px-3 py-2 text-right text-gray-500 font-mono">{m.RMSE.toFixed(2)}</td>
                             </tr>
                           ))}
+                      {/* Add ARIMA row */}
+                      {arimaRaw.aic !== null && (
+                        <tr className="border-t border-gray-100 dark:border-gray-700 bg-purple-50 dark:bg-purple-900/20">
+                          <td className="px-3 py-2 text-purple-700 dark:text-purple-400 font-semibold">ARIMA</td>
+                          <td className="px-3 py-2 text-right text-gray-500 font-mono">—</td>
+                          <td className="px-3 py-2 text-right text-purple-600 dark:text-purple-400 font-mono font-bold">
+                            AIC: {arimaRaw.aic?.toFixed(1)}
+                          </td>
+                        </tr>
+                      )}
                     </tbody>
                   </table>
                 </div>
@@ -324,9 +338,9 @@ export default function AdminDashboard() {
                 <p className="text-[10px] font-bold text-gray-400 uppercase tracking-widest mb-3">
                   Historical vs Fit
                 </p>
-                <div className="border border-gray-100 rounded-lg overflow-hidden shadow-sm max-h-64 overflow-y-auto">
+                <div className={`${darkTheme} ${lightTheme} overflow-hidden max-h-64 overflow-y-auto rounded-lg border border-gray-100 dark:border-gray-700`}>
                   <table className="w-full text-xs">
-                    <thead className="bg-gray-50 text-gray-400 uppercase sticky top-0 font-bold text-[9px]">
+                    <thead className={`font-bold uppercase text-[9px] text-gray-400 sticky top-0 bg-gray-50 dark:bg-gray-800`}>
                       <tr>
                         <th className="px-3 py-2 text-left">Date</th>
                         <th className="px-3 py-2 text-right">Actual</th>
@@ -335,10 +349,10 @@ export default function AdminDashboard() {
                     </thead>
                     <tbody>
                       {lrRaw.labels.map((date: string, i: number) => (
-                        <tr key={date} className="border-t border-gray-50">
-                          <td className="px-3 py-1.5 text-gray-400 text-[10px]">{date}</td>
-                          <td className="px-3 py-1.5 text-right font-bold text-gray-700">{lrRaw.actual[i]}</td>
-                          <td className="px-3 py-1.5 text-right text-orange-500 font-mono">
+                        <tr key={date} className="border-t border-gray-100 dark:border-gray-700">
+                          <td className={`px-3 py-2 text-gray-500 dark:text-gray-400 text-[10px]`}>{date}</td>
+                          <td className={`px-3 py-2 text-right font-bold text-gray-700 dark:text-gray-300`}>{lrRaw.actual[i]}</td>
+                          <td className="px-3 py-2 text-right text-orange-600 dark:text-orange-400 font-mono font-semibold">
                             {lrRaw.lr_line[i]?.toFixed(1)}
                           </td>
                         </tr>
@@ -349,48 +363,48 @@ export default function AdminDashboard() {
               </div>
             </div>
           </div>
-        </div>
+        </AnalyticsMetricCards>
 
         {/* ── ARIMA BLOCK ────────────────────────────────────────── */}
-        <div className="bg-white p-6 rounded-lg shadow-md mb-8">
-          <div className="flex items-center justify-between mb-1 flex-wrap gap-2">
-            <h2 className="text-lg font-bold text-gray-800">ARIMA Forecast</h2>
+        <AnalyticsMetricCards>
+          <div className="flex items-center justify-between mb-3 flex-wrap gap-2">
+            <h2 className={`text-xl font-extrabold text-gray-800 dark:text-gray-200`}>ARIMA Forecast</h2>
             <div className="flex items-center gap-3">
               {arimaRaw.aic !== null && (
-                <span className="text-sm text-gray-500 bg-gray-50 px-2 py-1 rounded">
-                  AIC: <span className="font-semibold text-gray-600">{arimaRaw.aic}</span>
+                <span className="text-sm text-gray-600 dark:text-gray-400 bg-gray-100 dark:bg-gray-800 px-3 py-1 rounded-lg">
+                  AIC: <span className="font-semibold text-gray-800 dark:text-gray-200">{arimaRaw.aic.toFixed(1)}</span>
                 </span>
               )}
-              <span className="text-xs font-bold px-3 py-1 rounded-full uppercase bg-purple-50 text-purple-600">
+              <span className="text-xs font-bold px-3 py-1 rounded-full uppercase text-purple-600 bg-purple-100 dark:bg-purple-900/30 dark:text-purple-400">
                 ARIMA (1,1,1)
               </span>
             </div>
           </div>
 
-          <p className="text-xs text-gray-400 mb-4">
+          <p className="text-xs text-gray-400 mb-6">
             Forecast for{" "}
-            <span className="font-semibold text-gray-600">{arimaRaw.forecast_date}</span>:{" "}
-            <span className="font-semibold text-purple-600">{arimaRaw.forecast_value} patients</span>
+            <span className="font-semibold text-gray-600 dark:text-gray-300">{arimaRaw.forecast_date}</span>:{" "}
+            <span className="font-semibold text-purple-600 dark:text-purple-400">{arimaRaw.forecast_value} patients</span>
           </p>
 
           {/* ARIMA stat cards */}
           <div className="grid grid-cols-2 md:grid-cols-3 gap-3 mb-6">
-            <div className="bg-gray-50 rounded-lg p-4 text-center">
-              <p className="text-xs text-gray-400 mb-1 uppercase font-bold">Forecast</p>
-              <p className="text-2xl font-bold text-gray-800">
+            <div className="p-4 text-center border border-gray-100 dark:border-gray-700 rounded-lg">
+              <p className="text-xs text-gray-400 mb-2 uppercase font-bold">Forecast</p>
+              <p className="text-2xl font-bold text-gray-800 dark:text-gray-200">
                 {arimaRaw.forecast_value}{" "}
-                <span className="text-sm font-normal text-gray-400">pts</span>
+                <span className="text-sm font-normal text-gray-400">patients</span>
               </p>
             </div>
-            <div className="bg-gray-50 rounded-lg p-4 text-center">
-              <p className="text-xs text-gray-400 mb-1 uppercase font-bold">AIC Score</p>
-              <p className="text-2xl font-bold text-gray-800">
-                {arimaRaw.aic ?? "—"}
+            <div className="p-4 text-center border border-gray-100 dark:border-gray-700 rounded-lg">
+              <p className="text-xs text-gray-400 mb-2 uppercase font-bold">AIC Score</p>
+              <p className="text-2xl font-bold text-gray-800 dark:text-gray-200">
+                {arimaRaw.aic?.toFixed(1) ?? "—"}
               </p>
             </div>
-            <div className="bg-gray-50 rounded-lg p-4 text-center">
-              <p className="text-xs text-gray-400 mb-1 uppercase font-bold">Model</p>
-              <p className="text-2xl font-bold text-purple-600">ARIMA</p>
+            <div className="p-4 text-center border border-gray-100 dark:border-gray-700 rounded-lg">
+              <p className="text-xs text-gray-400 mb-2 uppercase font-bold">Model</p>
+              <p className="text-2xl font-bold text-purple-600 dark:text-purple-400">ARIMA</p>
             </div>
           </div>
 
@@ -410,7 +424,7 @@ export default function AdminDashboard() {
               </div>
 
               {/* ARIMA chart */}
-              <div className="h-80 w-full mb-4">
+              <div className="h-80 w-full mb-1">
                 <ResponsiveContainer width="100%" height="100%">
                   <ComposedChart
                     data={arimaChartData}
@@ -470,9 +484,9 @@ export default function AdminDashboard() {
               <p className="text-[10px] font-bold text-gray-400 uppercase tracking-widest mb-3">
                 Historical vs ARIMA Fit
               </p>
-              <div className="border border-gray-100 rounded-lg overflow-hidden shadow-sm max-h-96 overflow-y-auto">
+              <div className={`${darkTheme} ${lightTheme} overflow-hidden max-h-64 overflow-y-auto rounded-lg border border-gray-100 dark:border-gray-700`}>
                 <table className="w-full text-xs">
-                  <thead className="bg-gray-50 text-gray-400 uppercase sticky top-0 font-bold text-[9px]">
+                  <thead className="text-gray-400 uppercase sticky top-0 font-bold text-[9px] bg-gray-50 dark:bg-gray-800">
                     <tr>
                       <th className="px-3 py-2 text-left">Date</th>
                       <th className="px-3 py-2 text-right">Actual</th>
@@ -488,35 +502,35 @@ export default function AdminDashboard() {
                         ? Math.abs(actual - fitted).toFixed(1)
                         : "—";
                       return (
-                        <tr key={date} className="border-t border-gray-50">
-                          <td className="px-3 py-1.5 text-gray-400 text-[10px]">{date}</td>
-                          <td className="px-3 py-1.5 text-right font-bold text-gray-700">{actual}</td>
-                          <td className="px-3 py-1.5 text-right text-purple-500 font-mono">
+                        <tr key={date} className="border-t border-gray-100 dark:border-gray-700">
+                          <td className="px-3 py-2 text-gray-500 dark:text-gray-400 text-[10px]">{date}</td>
+                          <td className="px-3 py-2 text-right font-bold text-gray-700 dark:text-gray-300">{actual}</td>
+                          <td className="px-3 py-2 text-right text-purple-600 dark:text-purple-400 font-mono font-semibold">
                             {fitted?.toFixed(1)}
                           </td>
-                          <td className="px-3 py-1.5 text-right text-gray-400 font-mono text-[10px]">
+                          <td className="px-3 py-2 text-right text-gray-500 dark:text-gray-400 font-mono text-[10px]">
                             {error}
                           </td>
                         </tr>
                       );
                     })}
                     {/* Forecast row */}
-                    <tr className="border-t-2 border-purple-100 bg-purple-50">
-                      <td className="px-3 py-1.5 text-purple-700 text-[10px] font-bold">
+                    <tr className="border-t-2 border-purple-200 dark:border-purple-800 bg-purple-50 dark:bg-purple-900/20">
+                      <td className="px-3 py-2 text-purple-700 dark:text-purple-400 text-[10px] font-bold">
                         {arimaRaw.forecast_date} ★
                       </td>
-                      <td className="px-3 py-1.5 text-right text-gray-400 text-[10px]">—</td>
-                      <td className="px-3 py-1.5 text-right font-bold text-purple-600">
+                      <td className="px-3 py-2 text-right text-gray-500 dark:text-gray-400 text-[10px]">—</td>
+                      <td className="px-3 py-2 text-right font-bold text-purple-700 dark:text-purple-400">
                         {arimaRaw.forecast_value}
                       </td>
-                      <td className="px-3 py-1.5 text-right text-gray-400 text-[10px]">—</td>
+                      <td className="px-3 py-2 text-right text-gray-500 dark:text-gray-400 text-[10px]">—</td>
                     </tr>
                   </tbody>
                 </table>
               </div>
             </div>
           </div>
-        </div>
+        </AnalyticsMetricCards>
 
       </div>
     </div>
