@@ -1,0 +1,1 @@
+export const darkTheme = "dark:bg-gray-900/60 dark:border-gray-700/50 dark:shadow-black/20";

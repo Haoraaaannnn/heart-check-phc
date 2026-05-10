@@ -1,6 +1,3 @@
-//! DO NOT DELETE THIS FILE! This is the root layout for the application.
-//! This will serve as the instruction before using kiosk
-
 import type { Metadata } from "next";
 import { Geist, Geist_Mono } from "next/font/google";
 import { tiltWarp, Baloo } from "@/fonts/fonts"; // 👈 add this (adjust path if needed)

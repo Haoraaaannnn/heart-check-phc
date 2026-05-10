@@ -6,6 +6,7 @@ import { supabase } from '@/lib/supabase';
 import {
   BarChart, Bar, XAxis, YAxis, CartesianGrid, Tooltip, ResponsiveContainer
 } from 'recharts';
+import MetricCards from '@/components/reusables/metricCards';
 
 interface DashboardStats {
   todayCount: number;
@@ -181,42 +182,43 @@ export default function DashboardPage() {
 
         {/* METRIC CARDS */}
         <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-5">
-          <div className="rounded-[28px] shadow-[0_10px_40px_rgba(255,120,120,0.06)] border border-white/40 bg-white/35 p-6 w-full h-36 flex flex-col justify-between backdrop-blur-xl">
+          <MetricCards>
             <span className="text-gray-400 text-xs font-bold tracking-widest uppercase">Today Patients</span>
             <span className="text-[#cc3535] text-5xl font-extrabold self-end">
               {isMounted ? stats.todayCount : '--'}
             </span>
-          </div>
+          </MetricCards>
 
-          <div className="rounded-[28px] shadow-[0_10px_40px_rgba(255,120,120,0.06)] border border-white/40 bg-white/35 p-6 w-full h-36 flex flex-col justify-between backdrop-blur-xl">
+          <MetricCards>
             <span className="text-gray-400 text-xs font-bold tracking-widest uppercase">On Queue</span>
             <span className="text-orange-500 text-5xl font-extrabold self-end">
               {isMounted ? stats.onQueue : '--'}
             </span>
-          </div>
+          </MetricCards>
 
-          <div className="rounded-[28px] shadow-[0_10px_40px_rgba(255,120,120,0.06)] border border-white/40 bg-white/35 p-6 w-full h-36 flex flex-col justify-between backdrop-blur-xl">
+          <MetricCards>
             <span className="text-gray-400 text-xs font-bold tracking-widest uppercase">Served</span>
             <span className="text-green-500 text-5xl font-extrabold self-end">
               {isMounted ? stats.served : '--'}
             </span>
-          </div>
+          </MetricCards>
 
-          <div className="rounded-[28px] shadow-[0_10px_40px_rgba(255,120,120,0.06)] border border-white/40 bg-white/35 p-6 w-full h-36 flex flex-col justify-between backdrop-blur-xl">
+          <MetricCards  >
             <span className="text-gray-400 text-xs font-bold tracking-widest uppercase">Avg Waiting Time</span>
             <span className="text-[#cc3535] text-4xl font-extrabold self-end">
               {dynamicAvgWait} <span className="text-2xl font-bold">min</span>
             </span>
-          </div>
+          </MetricCards>
         </div>
 
         {/* TABLES AND STATS */}
         <div className="grid grid-cols-1 lg:grid-cols-3 gap-6">
           
-          <div className="bg-white rounded-xl shadow-sm border border-red-50 p-8 lg:col-span-2">
+          <div className="bg-white/35 rounded-[28px] shadow-[0_10px_40px_rgba(255,120,120,0.06)] border border-white/40 p-8 backdrop-blur-xl lg:col-span-2
+            dark:bg-gray-900/60 dark:border-gray-700/50 dark:shadow-black/20">
             <div className="flex justify-between items-center mb-6">
               <div>
-                <h2 className="text-xl font-extrabold text-gray-800 flex items-center gap-2">
+                <h2 className="text-xl font-extrabold text-gray-800 flex items-center gap-2 dark:text-gray-200">
                   Live Queue
                 </h2>
                 <p className="text-sm text-gray-400 mt-1">Real-time patient ticket status</p>
@@ -260,10 +262,11 @@ export default function DashboardPage() {
             </table>
           </div>
 
-          <div className="bg-white rounded-xl shadow-sm border border-red-50 p-8 flex flex-col gap-8">
+          <div className="bg-white/35 rounded-[28px] shadow-[0_10px_40px_rgba(255,120,120,0.06)] border border-white/40 p-8 backdrop-blur-xl flex flex-col gap-8
+            dark:bg-gray-900/60 dark:border-gray-700/50 dark:shadow-black/20">
             
             <div>
-              <h2 className="text-xl font-extrabold text-gray-800 flex items-center gap-2 mb-1">
+              <h2 className="text-xl font-extrabold text-gray-800 flex items-center gap-2 mb-1 dark:text-gray-200">
                 By Service
               </h2>
               <p className="text-sm text-gray-400 mb-6">Patients in queue right now</p>
@@ -298,7 +301,7 @@ export default function DashboardPage() {
             <hr className="border-gray-100" />
 
             <div>
-              <h3 className="text-sm font-bold text-gray-800 mb-4">Ticket Status Breakdown</h3>
+              <h3 className="text-sm font-bold text-gray-800 mb-4 dark:text-gra">Ticket Status Breakdown</h3>
               <div className="flex items-center gap-6">
                 
                 <div 
@@ -334,10 +337,11 @@ export default function DashboardPage() {
           </div>
         </div>
 
-        {/* FIXED: HOURLY ARRIVALS BAR CHART */}
-        <div className="bg-white rounded-xl shadow-sm border border-red-50 p-8 w-full mb-8">
+        {/* HOURLY ARRIVALS BAR CHART */}
+        <div className="bg-white/35 rounded-[28px] shadow-[0_10px_40px_rgba(255,120,120,0.06)] border border-red-50 backdrop-blur-xl p-8 w-full mb-8
+        dark:bg-gray-900/60 dark:border-gray-700/50 dark:shadow-black/20">
           <div className="mb-6">
-            <h2 className="text-xl font-extrabold text-gray-800">Hourly Patient Arrivals</h2>
+            <h2 className="text-xl font-extrabold text-gray-800 dark:text-gray-200">Hourly Patient Arrivals</h2>
             <p className="text-sm text-gray-400 mt-1">Number of patients registered per hour today</p>
           </div>
           
