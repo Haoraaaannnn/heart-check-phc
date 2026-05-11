@@ -180,6 +180,15 @@ def get_empty_data():
             "trend": "stable",
             "r2": 0
         },
+        "arima_chart_data": {
+            "labels": [],
+            "actual": [],
+            "fitted": [],
+            "forecast_date": "",
+            "forecast_value": 0,
+            "aic": None,
+            "status": "No data"
+        },
         "decision_support": {
             "forecasted_patients": 0,
             "recommended_doctors": 1,

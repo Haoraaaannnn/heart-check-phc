@@ -14,7 +14,7 @@ from .queue_metrics  import (
     specialized_metrics,
     system_time_report,
 )
-from .forecasting    import evaluate_forecasting_algorithms, get_lr_chart_data
+from .forecasting    import evaluate_forecasting_algorithms, get_lr_chart_data, get_arima_chart_data
 from .staffing       import recommend_staff
 
 
@@ -90,6 +90,7 @@ def generate_report(
         # ── Forecasting ───────────────────────────────────
         "computational_forecasting" : eval_data,
         "lr_chart_data"             : get_lr_chart_data(df_clean),
+        "arima_chart_data"          : get_arima_chart_data(df_clean),
 
         # ── Staffing recommendation ───────────────────────
         "decision_support" : recommend_staff(
@@ -176,6 +177,15 @@ def _empty_report() -> dict:
             "r2": 0.0,
             "forecast_date": "",
             "forecast_value": 0.0,
+        },
+        "arima_chart_data": {
+            "labels": [],
+            "actual": [],
+            "fitted": [],
+            "forecast_date": "",
+            "forecast_value": 0,
+            "aic": None,
+            "status": "No data",
         },
         "decision_support": {},
     }

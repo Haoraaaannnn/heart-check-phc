@@ -28,8 +28,8 @@ def build_records():
                 "cubicleNum": None,
                 "status": row["status"],
                 "created_at": row["created_at"],
-                "reg_start": row["reg_start"],
-                "reg_end": row["reg_end"],
+                "reg_start": row["reg_start"] if row["reg_start"].strip() else None,
+                "reg_end": row["reg_end"] if row["reg_end"].strip() else None,
                 "consult_start": row["consult_start"],
                 "consult_end": row["consult_end"]
             })

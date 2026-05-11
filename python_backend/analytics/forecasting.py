@@ -37,8 +37,8 @@ def _fit_arima(series: np.ndarray) -> float:
             warnings.simplefilter("ignore")
             model  = ARIMA(series, order=ARIMA_ORDER)
             result = model.fit()
-            # forecast() returns a Series — take the first value
-            forecast = float(result.forecast(steps=1).iloc[0])
+            # result.forecast() returns numpy array, use [0] not .iloc[0]
+            forecast = float(result.forecast(steps=1)[0])
             return max(0.0, forecast)
     except Exception:
         # ARIMA can fail on short or flat series — fall back to mean
@@ -250,12 +250,14 @@ def get_arima_chart_data(df: pd.DataFrame, window_size: int = WINDOW_SIZE) -> di
             model   = _ARIMA(volumes, order=ARIMA_ORDER)
             result  = model.fit()
             fitted  = [round(max(0.0, float(v)), 1) for v in result.fittedvalues]
-            forecast_val = round(max(0.0, float(result.forecast(steps=1).iloc[0])))
+            # result.forecast() returns numpy array, use [0] not .iloc[0]
+            forecast_val = round(max(0.0, float(result.forecast(steps=1)[0])))
             aic     = round(float(result.aic), 2)
-    except Exception:
+    except Exception as e:
         fitted       = [round(float(v), 1) for v in volumes]
         forecast_val = round(float(np.mean(volumes[-window_size:])))
         aic          = None
+        print(f"Warning: ARIMA model failed to fit: {e}")
 
     last_date     = pd.to_datetime(daily['visit_date'].iloc[-1])
     forecast_date = str((last_date + pd.Timedelta(days=1)).date())

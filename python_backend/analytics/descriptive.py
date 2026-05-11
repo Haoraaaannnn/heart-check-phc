@@ -35,35 +35,21 @@ def hourly_pattern(df: pd.DataFrame) -> pd.DataFrame:
         .round(2)
     )
 
-
 def bottleneck_report(df: pd.DataFrame) -> dict:
-    """
-    Identifies which stage has the highest average wait time.
-    Flags system as Overwhelmed if any stage exceeds
-    OVERWHELMED_MINUTES threshold.
-    Returns zero values if dataframe is empty.
-    """
-    if df.empty:
-        return {
-            "bottleneck_stage": "N/A",
-            "avg_wait_registration_min": 0.0,
-            "avg_wait_consultation_min": 0.0,
-            "system_status": "No data",
-        }
-    
-    wr = df['wait_registration'].mean()
-    wc = df['wait_consultation'].mean()
-    
-    # Handle NaN values
-    wr = 0.0 if pd.isna(wr) else round(wr, 2)
-    wc = 0.0 if pd.isna(wc) else round(wc, 2)
-    
+    # Only use registration wait for services that have it
+    reg_df   = df[df['reg_start'].notna()]
+    avg_wait_reg     = reg_df['wait_registration'].mean() if not reg_df.empty else 0.0
+    avg_wait_consult = df['wait_consultation'].mean()
+
+    bottleneck = "Registration" if avg_wait_reg > avg_wait_consult else "Consultation"
+
     return {
-        "bottleneck_stage"          : "Registration" if wr > wc else "Consultation",
-        "avg_wait_registration_min" : wr,
-        "avg_wait_consultation_min" : wc,
+        "bottleneck_stage"          : bottleneck,
+        "avg_wait_registration_min" : round(avg_wait_reg, 2),
+        "avg_wait_consultation_min" : round(avg_wait_consult, 2),
         "system_status"             : (
-            "Overwhelmed" if max(wr, wc) > OVERWHELMED_MINUTES
+            "Overwhelmed"
+            if max(avg_wait_reg, avg_wait_consult) > OVERWHELMED_MINUTES
             else "Normal"
         ),
     }
