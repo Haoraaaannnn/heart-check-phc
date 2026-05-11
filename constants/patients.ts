@@ -1,5 +1,5 @@
 export const COLORS = ['#0088FE', '#00C49F', '#FFBB28', '#FF8042', '#8884D8'];
-export const PATIENTS_PER_PAGE = 20;
+export const PATIENTS_PER_PAGE = 50;
 
 export const DEFAULT_HOURLY_DATA = [
   { hour: '08:00', patients: 0 },

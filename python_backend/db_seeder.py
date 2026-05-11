@@ -9,7 +9,7 @@ import numpy as np
 import pandas as pd
 from datetime import datetime, timedelta
 
-def generate_fake_patients(num_days=30, patients_per_day=50, start_date="2026-04-15", output_filename="simulated_patients.csv"):
+def generate_fake_patients(num_days=30, patients_per_day=50, start_date="2026-05-01", output_filename="simulated_patients.csv"):
     avg_inter_arrival = 5  #need to consult when presentation done
     avg_reg_time = 3       #need to consult when presentation done 
     
@@ -86,6 +86,7 @@ def generate_fake_patients(num_days=30, patients_per_day=50, start_date="2026-04
     print(f"Successfully generated {len(df)} fake patient records!")
     print(f"Saved to: {output_filename}")
 
-# THE FIX: This is set to generate ~10,000 total patients
+# THE FIX: This generates ~20 working days (excludes Sundays)
+# with realistic patient volume for better analytics
 if __name__ == "__main__":
-    generate_fake_patients(num_days=10, patients_per_day=50)
+    generate_fake_patients(num_days=30, patients_per_day=80, start_date="2026-04-21")

@@ -58,8 +58,17 @@ def evaluate_forecasting_algorithms(
         .values
     )
 
+    # Adaptively use available data if insufficient for full evaluation
     if len(volumes) < window_size + 2:
-        return {"status": "Insufficient data for algorithmic comparison."}
+        # With limited data, use simple average forecast
+        avg_forecast = float(np.mean(volumes))
+        return {
+            "status": "Limited data — using average forecast.",
+            "best_algorithm": "Average",
+            "next_day_forecast": max(0, int(round(avg_forecast))),
+            "algorithmic_conclusion": f"Only {len(volumes)} days available; using historical average forecast.",
+            "evaluation_metrics": {}
+        }
 
     actuals                               = []
     sma_p, wma_p, ema_p, lr_p, arima_p   = [], [], [], [], []
@@ -118,13 +127,16 @@ def evaluate_forecasting_algorithms(
         "ARIMA"            : _fit_arima(volumes),
     }
 
+    next_day = forecasts[best]
     return {
+        "status"                : "Forecast computed",
         "evaluation_metrics"    : results,
         "algorithmic_conclusion": (
-            f"Based on historical backtesting, {best} yielded the lowest MAE."
+            f"Based on historical backtesting, {best} yielded the lowest MAE. "
+            f"Next-day forecast: {int(round(next_day))} patients."
         ),
         "best_algorithm"        : best,
-        "next_day_forecast"     : round(forecasts[best]),
+        "next_day_forecast"     : max(0, int(round(next_day))),
     }
 
 
@@ -171,11 +183,15 @@ def get_lr_chart_data(df: pd.DataFrame, window_size: int = WINDOW_SIZE) -> dict:
     ss_tot  = float(np.sum((volumes - volumes.mean()) ** 2))
     r2      = round(1 - ss_res / ss_tot, 4) if ss_tot > 0 else 0.0
 
-    latest   = volumes[-window_size:]
+    # Adjust window size to not exceed available data
+    actual_window = min(window_size, n)
+    latest   = volumes[-actual_window:]
+    X_window = np.arange(actual_window).reshape(-1, 1)
+    
     forecast = max(0.0, float(
         LinearRegression()
-        .fit(np.arange(window_size).reshape(-1, 1), latest)
-        .predict([[window_size]])[0]
+        .fit(X_window, latest)
+        .predict([[actual_window]])[0]
     ))
 
     return {

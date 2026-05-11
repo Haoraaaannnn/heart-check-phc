@@ -41,18 +41,44 @@ def fetch_supabase_table(table_name: str, select: str = "*") -> list[dict]:
     if not SUPABASE_URL or not SUPABASE_KEY:
         raise RuntimeError("Supabase URL/key are not configured.")
 
-    url = f"{SUPABASE_URL}/rest/v1/{table_name}?select={select}"
+    # Fetch all records with pagination (1000 at a time)
+    all_data = []
+    page = 0
+    page_size = 1000
     
-    with httpx.Client(timeout=30.0) as client:
-        response = client.get(
-            url,
-            headers={
-                "apikey": SUPABASE_KEY,
-                "Authorization": f"Bearer {SUPABASE_KEY}",
-            },
-        )
-        response.raise_for_status()
-        return response.json()
+    while True:
+        start = page * page_size
+        end = start + page_size - 1
+        
+        url = f"{SUPABASE_URL}/rest/v1/{table_name}?select={select}&order=created_at.asc"
+        
+        with httpx.Client(timeout=30.0) as client:
+            response = client.get(
+                url,
+                headers={
+                    "apikey": SUPABASE_KEY,
+                    "Authorization": f"Bearer {SUPABASE_KEY}",
+                    "Range": f"{start}-{end}"
+                },
+            )
+            
+            if response.status_code == 416:  # Range Not Satisfiable - we've fetched everything
+                break
+                
+            response.raise_for_status()
+            data = response.json()
+            
+            if not data:  # Empty page
+                break
+                
+            all_data.extend(data)
+            
+            if len(data) < page_size:  # Last partial page
+                break
+                
+            page += 1
+    
+    return all_data
 
 
 def safe_to_datetime(series: pd.Series) -> pd.Series:

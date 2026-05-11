@@ -29,7 +29,7 @@ def hourly_pattern(df: pd.DataFrame) -> pd.DataFrame:
             avg_wait_consultation = ('wait_consultation', 'mean'),
         )
         .reset_index()
-        .assign(time_label=lambda d: d['hour'].apply(
+        .assign(time_label=lambda d: d['hour'].astype(int).apply(
             lambda h: f"{h:02d}:00–{h+1:02d}:00"
         ))
         .round(2)

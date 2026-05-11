@@ -5,6 +5,7 @@ into the single payload served to the admin dashboard.
 """
 
 import pandas as pd
+import numpy as np
 from .preprocessing  import preprocess_queue_data
 from .descriptive    import daily_summary, hourly_pattern, bottleneck_report
 from .queue_metrics  import (
@@ -15,6 +16,23 @@ from .queue_metrics  import (
 )
 from .forecasting    import evaluate_forecasting_algorithms, get_lr_chart_data
 from .staffing       import recommend_staff
+
+
+def convert_to_native(obj):
+    """Recursively convert numpy types to Python native types for JSON serialization."""
+    if isinstance(obj, dict):
+        return {key: convert_to_native(val) for key, val in obj.items()}
+    elif isinstance(obj, (list, tuple)):
+        return [convert_to_native(item) for item in obj]
+    elif isinstance(obj, (np.integer, np.int64, np.int32)):
+        return int(obj)
+    elif isinstance(obj, (np.floating, np.float64, np.float32)):
+        return float(obj)
+    elif isinstance(obj, np.bool_):
+        return bool(obj)
+    elif isinstance(obj, (np.ndarray, pd.Series)):
+        return convert_to_native(obj.tolist())
+    return obj
 
 
 def generate_report(
@@ -50,7 +68,7 @@ def generate_report(
     eval_data       = evaluate_forecasting_algorithms(df_clean)
     predicted_vol   = eval_data.get("next_day_forecast", 0)
 
-    return {
+    report = {
         # ── Descriptive ───────────────────────────────────
         "daily_summary"   : daily_summary(df_clean).tail(5).to_dict(orient='records'),
         "hourly_pattern"  : hourly_pattern(df_clean).to_dict(orient='records'),
@@ -83,6 +101,8 @@ def generate_report(
             p_consultation       = p_consult,
         ),
     }
+    
+    return convert_to_native(report)
 
 
 def _empty_report() -> dict:

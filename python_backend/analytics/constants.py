@@ -14,7 +14,7 @@ OVERWHELMED_MINUTES = 30    # per-stage alert threshold
 
 # ── Forecasting defaults ──────────────────────────────────────
 EMA_ALPHA    = 0.3
-WINDOW_SIZE  = 7
+WINDOW_SIZE  = 2  # Minimum 2 days for moving averages
 
 # ── Service categories ────────────────────────────────────────
 CONSULTATION_SERVICE   = 'consultation'
