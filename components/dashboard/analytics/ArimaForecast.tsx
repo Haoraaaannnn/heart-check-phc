@@ -6,6 +6,7 @@ import {
 } from "recharts";
 import AnalyticsMetricCards from "@/components/reusables/analyticsMetricCards";
 import { darkTheme, lightTheme } from "@/constants/themes";
+import { textLight, textDark } from "@/constants/themes";
 
 interface Props {
   arimaRaw: any;
@@ -45,14 +46,14 @@ export default function ArimaForecast({ arimaRaw, arimaChartData }: Props) {
       <div className="grid grid-cols-2 md:grid-cols-3 gap-3 mb-6">
         <div className="p-4 text-center border border-gray-100 dark:border-gray-700 rounded-lg">
           <p className="text-xs text-gray-400 mb-2 uppercase font-bold">Forecast</p>
-          <p className="text-2xl font-bold text-gray-800 dark:text-gray-200">
+          <p className={`text-2xl font-bold ${textLight} ${textDark}`}>
             {arimaRaw.forecast_value}{" "}
             <span className="text-sm font-normal text-gray-400">patients</span>
           </p>
         </div>
         <div className="p-4 text-center border border-gray-100 dark:border-gray-700 rounded-lg">
           <p className="text-xs text-gray-400 mb-2 uppercase font-bold">AIC Score</p>
-          <p className="text-2xl font-bold text-gray-800 dark:text-gray-200">
+          <p className={`text-2xl font-bold ${textLight} ${textDark}`}>
             {arimaRaw.aic?.toFixed(1) ?? "—"}
           </p>
         </div>

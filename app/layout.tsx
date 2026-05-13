@@ -1,8 +1,9 @@
 import type { Metadata } from "next";
 import { Geist, Geist_Mono } from "next/font/google";
-import { tiltWarp, Baloo } from "@/fonts/fonts"; // 👈 add this (adjust path if needed)
+import { tiltWarp, Baloo } from "@/fonts/fonts";
 import "@/app/globals.css";
 import { ThemeProvider } from "./provider";
+
 
 const geistSans = Geist({
   variable: "--font-geist-sans",

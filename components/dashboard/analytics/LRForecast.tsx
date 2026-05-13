@@ -6,7 +6,7 @@ import {
 } from "recharts";
 import AnalyticsMetricCards from "@/components/reusables/analyticsMetricCards";
 import AlgorithmComparisonTable from "./AlgorithmComparisonTable";
-import { darkTheme, lightTheme } from "@/constants/themes";
+import { darkTheme, lightTheme, textDark, textLight } from "@/constants/themes";
 
 interface Props {
   lrRaw: any;
@@ -63,8 +63,8 @@ export default function LRForecast({
           { label: "R² score", value: lrRaw.r2 ?? "—" },
         ].map(({ label, value, color }) => (
           <div key={label} className="p-4 text-center border border-gray-100 dark:border-gray-700 rounded-lg">
-            <p className="text-xs text-gray-400 mb-2 uppercase font-bold">{label}</p>
-            <p className="text-2xl font-bold" style={{ color: color || "#1f2937" }}>
+            <p className="text-xs mb-2 uppercase font-bold text-gray-400">{label}</p>
+            <p className={`text-2xl font-bold ${textLight} ${textDark}`}>
               {value}
             </p>
           </div>

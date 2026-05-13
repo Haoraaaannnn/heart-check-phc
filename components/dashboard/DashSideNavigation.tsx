@@ -2,26 +2,27 @@
 
 import Link from 'next/link';
 import { usePathname } from 'next/navigation';
+import 'boxicons/css/boxicons.min.css';
 
 const Sidebar = () => {
   const pathname = usePathname();
 
   const menuItems = [
-    { label: 'Overview', href: '/dashboard' },
-    { label: 'Analytics', href: '/dashboard/analytics' },
-    { label: 'Cubicles', href: '/dashboard/cubicles' },
-    { label: 'Patients', href: '/dashboard/patients' },
+    { label: 'Overview', href: '/dashboard', icon: 'bxs-dashboard'},
+    { label: 'Analytics', href: '/dashboard/analytics', icon: 'bxs-objects-vertical-bottom' },
+    /*{ label: 'Cubicles', href: '/dashboard/cubicles' },*/
+    { label: 'Patients', href: '/dashboard/patients', icon: 'bx-male-female' },
   ];
 
   const departments = [
-    { name: 'Consultation', href: '/dashboard/servicesPHC/consultation' },
-    { name: 'OPD Card', href: '/dashboard/servicesPHC/opdCard' },
-    { name: 'Refill Prescription', href: '/dashboard/servicesPHC/refillPrescription' },
-    { name: 'ECG', href: '/dashboard/servicesPHC/ecg' },
-    { name: 'Warfarin', href: '/dashboard/servicesPHC/warfarin' },
-    { name: 'OPD Reschedule', href: '/dashboard/servicesPHC/opdReschedule' },
-    { name: 'Benzathine', href: '/dashboard/servicesPHC/benzathine' },
-    { name: 'OPD Screening', href: '/dashboard/servicesPHC/opdScreening' }
+    { name: 'Consultation', href: '/dashboard/servicesPHC/consultation', icon: 'bx-chat' },
+    { name: 'OPD Card', href: '/dashboard/servicesPHC/opdCard', icon:'bx-id-card' },
+    { name: 'Refill Prescription', href: '/dashboard/servicesPHC/refillPrescription', icon:'bx-capsule' },
+    { name: 'ECG', href: '/dashboard/servicesPHC/ecg', icon:'bx-heart' },
+    { name: 'Warfarin', href: '/dashboard/servicesPHC/warfarin', icon:'bxs-capsule' },
+    { name: 'OPD Reschedule', href: '/dashboard/servicesPHC/opdReschedule', icon:'bx-calendar' },
+    { name: 'Benzathine', href: '/dashboard/servicesPHC/benzathine', icon:'bx-injection' },
+    { name: 'OPD Screening', href: '/dashboard/servicesPHC/opdScreening', icon:'bx-search-alt-2' }
   ];
 
   return (
@@ -49,12 +50,13 @@ const Sidebar = () => {
                 key={item.href} 
                 href={item.href} 
 
-                className={`flex items-center justify-between p-3 rounded-xl cursor-pointer mb-1 transition-colors ${
+                className={`flex items-center text-sm p-3 gap-3 rounded-xl cursor-pointer mb-1 transition-colors ${
                   isActive 
                     ? 'bg-red-50 text-red-600 font-semibold dark:bg-red-500/10 dark:text-red-400' 
                     : 'text-gray-500 hover:bg-gray-50 dark:text-gray-400 dark:hover:bg-gray-800/50 dark:hover:text-gray-200'
                 }`}
               >
+                <i className={`bx ${item.icon}`}></i>
                 {item.label}
               </Link>
             );
@@ -71,12 +73,13 @@ const Sidebar = () => {
                 key={dept.href} 
                 href={dept.href} 
 
-                className={`block p-3 text-sm rounded-xl cursor-pointer mb-1 transition-colors ${
+                className={`flex items-center text-sm p-3 gap-3 rounded-xl cursor-pointer mb-1 transition-colors ${
                   isActive 
                     ? 'bg-red-50 text-red-600 font-semibold dark:bg-red-500/10 dark:text-red-400' 
                     : 'text-gray-500 hover:bg-gray-50 dark:text-gray-400 dark:hover:bg-gray-800/50 dark:hover:text-gray-200'
                 }`}
               >
+              <i className={`bx ${dept.icon}`}></i>
                 {dept.name}
               </Link>
             );
