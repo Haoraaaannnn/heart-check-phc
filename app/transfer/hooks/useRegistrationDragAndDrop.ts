@@ -1,7 +1,7 @@
 'use client';
 import { useState, useRef, useEffect } from 'react';
 import { supabase } from '@/lib/supabase';
-import { Patient } from '../types';
+import { Patient } from '@/types/Types';
 
 export function useRegistrationDragAndDrop(
   registrationPatients: Patient[],

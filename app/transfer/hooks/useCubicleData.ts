@@ -1,7 +1,7 @@
 'use client';
 import { useState } from 'react';
 import { supabase } from '@/lib/supabase';
-import { Cubicle } from '../types';
+import { Cubicle } from '@/types/Types';
 
 export function useCubicleData() {
   const [cubicles, setCubicles] = useState<Cubicle[]>([]);

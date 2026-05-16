@@ -1,5 +1,5 @@
 'use client';
-import { Patient } from '../types';
+import { Patient } from '@/types/Types';
 
 type RegistrationCounterSectionProps = {
   patients: Patient[];
@@ -8,7 +8,8 @@ type RegistrationCounterSectionProps = {
   onDragStart: (e: React.MouseEvent, patient: Patient) => void;
 };
 
-const COUNTERS = [1, 2, 3, 4, 5];
+
+const DEFAULT_COUNTERS = [1, 2, 3, 4, 5];
 
 export function RegistrationCounterSection({
   patients,
@@ -16,15 +17,18 @@ export function RegistrationCounterSection({
   dragOverCounter,
   onDragStart,
 }: RegistrationCounterSectionProps) {
+
+  const counters = DEFAULT_COUNTERS;
+
   return (
-    <div className="bg-white border-2 border-blue-100 rounded-3xl shadow-sm p-5 mt-4">
+    <div className="bg-white border-2 border-blue-100 rounded-3xl shadow-sm p-5 mt-4 overflow-x-auto">
       <h2 className="text-blue-500 font-semibold text-xs mb-3 tracking-widest uppercase flex items-center gap-2">
         <span className="w-2 h-2 rounded-full bg-blue-400 animate-pulse inline-block"></span>
         Registration Counters
         <span className="text-xs text-gray-400 font-normal ml-2">(Drag to reassign counter)</span>
       </h2>
-      <div className="grid grid-cols-5 gap-3">
-        {COUNTERS.map(counterNum => {
+      <div className="grid grid-cols-5 gap-3 min-w-[600px]">
+        {counters.map(counterNum => {
           const counterPatients = patients
             .filter(p => p.counter === counterNum)
             .sort((a, b) =>

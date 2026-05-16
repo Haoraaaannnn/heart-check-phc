@@ -1,7 +1,7 @@
 'use client';
 import { useState, useRef } from 'react';
 import { supabase } from '@/lib/supabase';
-import { Patient, Cubicle } from '../types';
+import { Patient, Cubicle } from '@/types/Types';
 
 export function useMonitorData(category: string, subcategory: string | null, categoryParam: string, isRegistration: boolean = false) {
   const [assignedPatients, setAssignedPatients] = useState<Patient[]>([]);

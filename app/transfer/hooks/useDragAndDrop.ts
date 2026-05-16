@@ -2,7 +2,7 @@
 import { useState, useRef } from 'react';
 import { sendSMS } from '@/app/actions/sendSMS';
 import { supabase } from '@/lib/supabase';
-import { Patient } from '../types';
+import { Patient } from '@/types/Types';
 import { MAX_PATIENTS_PER_CUBICLE } from '../lib/constants';
 
 export function useDragAndDrop(

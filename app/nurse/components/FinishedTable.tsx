@@ -1,5 +1,5 @@
 'use client';
-import { Patient } from '../types';
+import { Patient } from '@/types/Types';
 
 type FinishedTableProps = {
   patients: Patient[];

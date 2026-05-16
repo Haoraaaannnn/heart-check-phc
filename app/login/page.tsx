@@ -48,7 +48,11 @@ export default function LoginPage() {
       return;
     }
 
+  
     switch (data.role) {
+      case 'superadmin':
+        router.push('/superadmin');
+        break;
       case 'admin':
         router.push('/dashboard');
         break;
@@ -68,11 +72,8 @@ export default function LoginPage() {
 
       {/* Background Glow Effects */}
       <div className="pointer-events-none absolute inset-0 z-0">
-
         <div className="absolute top-[-100px] right-[-100px] h-[450px] w-[450px] rounded-full bg-[#ff6b6b]/20 blur-[130px]" />
-
         <div className="absolute bottom-[-120px] left-[-80px] h-[400px] w-[400px] rounded-full bg-[#ff8a8a]/20 blur-[130px]" />
-
         <div className="absolute left-1/2 top-1/2 h-[600px] w-[600px] -translate-x-1/2 -translate-y-1/2 rounded-full bg-[#ffd4d4]/30 blur-[160px]" />
       </div>
 
@@ -101,7 +102,6 @@ export default function LoginPage() {
             <label className="mb-2 block text-sm font-medium text-gray-700">
               Email Address
             </label>
-
             <input
               type="email"
               value={email}
@@ -115,7 +115,6 @@ export default function LoginPage() {
             <label className="mb-2 block text-sm font-medium text-gray-700">
               Password
             </label>
-
             <input
               type="password"
               value={password}

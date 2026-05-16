@@ -1,5 +1,5 @@
 'use client';
-import { Patient, Cubicle } from '../types';
+import { Patient, Cubicle } from '@/types/Types';
 import { MAX_PATIENTS_PER_CUBICLE } from '../lib/constants';
 
 type CubicleCardProps = {

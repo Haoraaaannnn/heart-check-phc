@@ -1,6 +1,6 @@
 'use client';
 import { supabase } from '@/lib/supabase';
-import { Patient } from '../types';
+import { Patient } from '@/types/Types';
 
 export function useNurseActions(
   setAssignedPatients: React.Dispatch<React.SetStateAction<Patient[]>>,

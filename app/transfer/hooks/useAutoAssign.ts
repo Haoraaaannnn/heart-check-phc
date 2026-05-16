@@ -2,7 +2,7 @@
 import { useEffect, useRef } from 'react';
 import { sendSMS } from '@/app/actions/sendSMS';
 import { supabase } from '@/lib/supabase';
-import { Patient, Cubicle } from '../types';
+import { Patient, Cubicle } from '@/types/Types';
 import { AUTO_ASSIGN_SERVICES, MAX_PATIENTS_PER_CUBICLE } from '../lib/constants';
 
 export function useAutoAssign(

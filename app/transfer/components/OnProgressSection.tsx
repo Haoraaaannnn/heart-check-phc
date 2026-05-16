@@ -1,5 +1,5 @@
 'use client';
-import { Patient } from '../types';
+import { Patient } from '@/types/Types';
 import { ElapsedTimer } from './ElapsedTimer';
 import { MAX_PATIENTS_PER_CUBICLE } from '../lib/constants';
 

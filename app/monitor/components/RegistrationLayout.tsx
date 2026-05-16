@@ -1,6 +1,6 @@
 'use client';
 
-import { Patient } from '../types';
+import { Patient } from '@/types/Types';
 import { useEffect, useRef, useState } from 'react';
 
 type RegistrationLayoutProps = {
@@ -101,64 +101,138 @@ export function RegistrationLayout({ patients }: RegistrationLayoutProps) {
   }, [patients]);
 
   return (
-    <div className="p-12">
-      <div className="overflow-x-auto">
-        <table className="w-full border-collapse">
-          <thead>
-            <tr className="bg-gray-100 border-b-2 border-gray-400">
-              <th className="px-6 py-5 text-left text-gray-600 text-xl font-semibold uppercase tracking-wider">
-                Registration Counters
-              </th>
-              {registrationCounters.map((counter) => (
-                <th key={counter} className="px-6 py-5 text-center text-gray-600 text-xl font-semibold uppercase tracking-wider border-l border-gray-200">
-                  {counter}
-                </th>
-              ))}
-            </tr>
-          </thead>
-          <tbody>
-            <tr className="border-b border-gray-400">
-              <td className="px-6 py-8 font-bold text-gray-700 text-2xl bg-gray-50">
-                Queue Numbers
-              </td>
-              {registrationCounters.map((counter, index) => {
-                const counterNum = index + 1;
-                const counterPatients = patients.filter(p => p.counter === counterNum);
-
-                return (
-                  <td key={counter} className="px-6 py-8 text-center border-l border-gray-400 align-top">
-                    <div className="space-y-3">
-                      {counterPatients.length > 0 ? (
-                        counterPatients.map((patient, i) => (
-                          <div
-                            key={patient.id}
-                            className={`bg-white rounded-2xl p-6 shadow-sm border-2 ${
-                              i === 0 ? 'border-[#cc3535]' : 'border-gray-200'
-                            }`}
-                          >
-                            <span className={`font-black text-5xl tabular-nums block ${
-                              i === 0 ? 'text-[#cc3535]' : 'text-gray-400'
-                            }`}>
-                              {patient.patientNum}
-                            </span>
-                            <div className={`w-3 h-3 rounded-full mx-auto mt-4 ${
-                              i === 0 ? 'bg-green-400 animate-pulse' : 'bg-gray-200'
-                            }`} />
-                          </div>
-                        ))
-                      ) : (
-                        <div className="bg-white rounded-2xl p-6 shadow-sm border border-gray-100">
-                          <span className="text-gray-300 text-3xl">—</span>
-                        </div>
-                      )}
-                    </div>
-                  </td>
-                );
-              })}
-            </tr>
-          </tbody>
-        </table>
-      </div>
+    <div className="p-12 overflow-x-auto">
+      <table className="w-full border-collapse">
+        <thead>
+          <tr className="bg-gray-100 border-b-2 border-gray-400">
+            <th className="px-6 py-5 text-left text-gray-600 text-xl font-semibold uppercase tracking-wider sticky left-0 bg-gray-100">
+              Registration Counters
+            </th>
+      
+            <th className="px-6 py-5 text-center text-gray-600 text-xl font-semibold uppercase tracking-wider border-l border-gray-200">
+              Counter 1
+            </th>
+      
+            <th className="px-6 py-5 text-center text-gray-600 text-xl font-semibold uppercase tracking-wider border-l border-gray-200">
+              Counter 2
+            </th>
+          
+            <th className="px-6 py-5 text-center text-gray-600 text-xl font-semibold uppercase tracking-wider border-l border-gray-200 max-sm:hidden">
+              Counter 3
+            </th>
+        
+            <th className="px-6 py-5 text-center text-gray-600 text-xl font-semibold uppercase tracking-wider border-l border-gray-200 max-md:hidden">
+              Counter 4
+            </th>
+           
+            <th className="px-6 py-5 text-center text-gray-600 text-xl font-semibold uppercase tracking-wider border-l border-gray-200 max-lg:hidden">
+              Counter 5
+            </th>
+          </tr>
+        </thead>
+        <tbody>
+          <tr className="border-b border-gray-400">
+            <td className="px-6 py-8 font-bold text-gray-700 text-2xl bg-gray-50 sticky left-0 bg-gray-50">
+              Queue Numbers
+             </td>
+            
+     
+            <td className="px-6 py-8 text-center border-l border-gray-400 align-top">
+              <div className="space-y-3">
+                {patients.filter(p => p.counter === 1).map((patient, i) => (
+                  <div key={patient.id} className={`bg-white rounded-2xl p-6 shadow-sm border-2 ${i === 0 ? 'border-[#cc3535]' : 'border-gray-200'}`}>
+                    <span className={`font-black text-5xl tabular-nums block ${i === 0 ? 'text-[#cc3535]' : 'text-gray-400'}`}>
+                      {patient.patientNum}
+                    </span>
+                    <div className={`w-3 h-3 rounded-full mx-auto mt-4 ${i === 0 ? 'bg-green-400 animate-pulse' : 'bg-gray-200'}`} />
+                  </div>
+                ))}
+                {patients.filter(p => p.counter === 1).length === 0 && (
+                  <div className="bg-white rounded-2xl p-6 shadow-sm border border-gray-100">
+                    <span className="text-gray-300 text-3xl">—</span>
+                  </div>
+                )}
+              </div>
+             </td>
+            
+           
+            <td className="px-6 py-8 text-center border-l border-gray-400 align-top">
+              <div className="space-y-3">
+                {patients.filter(p => p.counter === 2).map((patient, i) => (
+                  <div key={patient.id} className={`bg-white rounded-2xl p-6 shadow-sm border-2 ${i === 0 ? 'border-[#cc3535]' : 'border-gray-200'}`}>
+                    <span className={`font-black text-5xl tabular-nums block ${i === 0 ? 'text-[#cc3535]' : 'text-gray-400'}`}>
+                      {patient.patientNum}
+                    </span>
+                    <div className={`w-3 h-3 rounded-full mx-auto mt-4 ${i === 0 ? 'bg-green-400 animate-pulse' : 'bg-gray-200'}`} />
+                  </div>
+                ))}
+                {patients.filter(p => p.counter === 2).length === 0 && (
+                  <div className="bg-white rounded-2xl p-6 shadow-sm border border-gray-100">
+                    <span className="text-gray-300 text-3xl">—</span>
+                  </div>
+                )}
+              </div>
+             </td>
+            
+          
+            <td className="px-6 py-8 text-center border-l border-gray-400 align-top max-sm:hidden">
+              <div className="space-y-3">
+                {patients.filter(p => p.counter === 3).map((patient, i) => (
+                  <div key={patient.id} className={`bg-white rounded-2xl p-6 shadow-sm border-2 ${i === 0 ? 'border-[#cc3535]' : 'border-gray-200'}`}>
+                    <span className={`font-black text-5xl tabular-nums block ${i === 0 ? 'text-[#cc3535]' : 'text-gray-400'}`}>
+                      {patient.patientNum}
+                    </span>
+                    <div className={`w-3 h-3 rounded-full mx-auto mt-4 ${i === 0 ? 'bg-green-400 animate-pulse' : 'bg-gray-200'}`} />
+                  </div>
+                ))}
+                {patients.filter(p => p.counter === 3).length === 0 && (
+                  <div className="bg-white rounded-2xl p-6 shadow-sm border border-gray-100">
+                    <span className="text-gray-300 text-3xl">—</span>
+                  </div>
+                )}
+              </div>
+             </td>
+            
+         
+            <td className="px-6 py-8 text-center border-l border-gray-400 align-top max-md:hidden">
+              <div className="space-y-3">
+                {patients.filter(p => p.counter === 4).map((patient, i) => (
+                  <div key={patient.id} className={`bg-white rounded-2xl p-6 shadow-sm border-2 ${i === 0 ? 'border-[#cc3535]' : 'border-gray-200'}`}>
+                    <span className={`font-black text-5xl tabular-nums block ${i === 0 ? 'text-[#cc3535]' : 'text-gray-400'}`}>
+                      {patient.patientNum}
+                    </span>
+                    <div className={`w-3 h-3 rounded-full mx-auto mt-4 ${i === 0 ? 'bg-green-400 animate-pulse' : 'bg-gray-200'}`} />
+                  </div>
+                ))}
+                {patients.filter(p => p.counter === 4).length === 0 && (
+                  <div className="bg-white rounded-2xl p-6 shadow-sm border border-gray-100">
+                    <span className="text-gray-300 text-3xl">—</span>
+                  </div>
+                )}
+              </div>
+             </td>
+            
+          
+            <td className="px-6 py-8 text-center border-l border-gray-400 align-top max-lg:hidden">
+              <div className="space-y-3">
+                {patients.filter(p => p.counter === 5).map((patient, i) => (
+                  <div key={patient.id} className={`bg-white rounded-2xl p-6 shadow-sm border-2 ${i === 0 ? 'border-[#cc3535]' : 'border-gray-200'}`}>
+                    <span className={`font-black text-5xl tabular-nums block ${i === 0 ? 'text-[#cc3535]' : 'text-gray-400'}`}>
+                      {patient.patientNum}
+                    </span>
+                    <div className={`w-3 h-3 rounded-full mx-auto mt-4 ${i === 0 ? 'bg-green-400 animate-pulse' : 'bg-gray-200'}`} />
+                  </div>
+                ))}
+                {patients.filter(p => p.counter === 5).length === 0 && (
+                  <div className="bg-white rounded-2xl p-6 shadow-sm border border-gray-100">
+                    <span className="text-gray-300 text-3xl">—</span>
+                  </div>
+                )}
+              </div>
+             </td>
+           </tr>
+        </tbody>
+      </table>
     </div>
   );
 }

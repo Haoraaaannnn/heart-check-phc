@@ -14,7 +14,7 @@ import { useDragAndDrop } from './hooks/useDragAndDrop';
 import { useRealtimeSubscription } from './hooks/useRealtimeSubscription';
 import { RegistrationCounterSection } from './components/RegistrationCounterSection';
 import { useRegistrationDragAndDrop } from './hooks/useRegistrationDragAndDrop';
-import { Patient } from './types';
+import { Patient } from '@/types/Types';
 
 export default function TransferPage() {
   const router = useRouter();
@@ -24,6 +24,10 @@ export default function TransferPage() {
   const [speaking, setSpeaking] = useState<number | null>(null);
   const [sidebarOpen, setSidebarOpen] = useState(true);
   const [registrationPatients, setRegistrationPatients] = useState<Patient[]>([]);
+  
+
+  const [isLoading, setIsLoading] = useState(true);
+  const [isSyncing, setIsSyncing] = useState(false);
 
   const { regDraggedPatient, dragOverCounter, handleRegDragStart } = useRegistrationDragAndDrop(
     registrationPatients, setRegistrationPatients
@@ -54,8 +58,13 @@ export default function TransferPage() {
   }, []);
 
   const handleRealtimeUpdate = useCallback(async () => {
-    await fetchData();
-    await fetchRegistrationPatients();
+    setIsSyncing(true);
+    try {
+      await fetchData();
+      await fetchRegistrationPatients();
+    } finally {
+      setIsSyncing(false);
+    }
   }, [fetchData, fetchRegistrationPatients]);
 
   useAutoAssign(selectedCategory, onProgressPatients, assignedPatients, cubicles, setOnProgressPatients, setAssignedPatients);
@@ -63,11 +72,24 @@ export default function TransferPage() {
 
   useEffect(() => {
     const init = async () => {
-      const { data } = await supabase.auth.getSession();
-      if (!data.session) { router.replace('/login'); return; }
-      await fetchData();               
-      await fetchRegistrationPatients(); 
-      fetchCubicles();
+      setIsLoading(true);
+      try {
+        const { data } = await supabase.auth.getSession();
+        if (!data.session) { 
+          router.replace('/login'); 
+          return; 
+        }
+        
+        await Promise.all([
+          fetchData(),
+          fetchRegistrationPatients(),
+          fetchCubicles()
+        ]);
+      } catch (error) {
+        console.error('Initialization error:', error);
+      } finally {
+        setIsLoading(false);
+      }
     };
     init();
   }, []);
@@ -85,7 +107,7 @@ export default function TransferPage() {
     setSpeaking(patientId);
     try {
       const response = await fetch(
-        'https://api.deepgram.com/v1/speak?model=aura-2-atlas-en',
+        'https://api.deepgram.com/v1/speak?model=aura-2-amalthea-en',
         {
           method: 'POST',
           headers: {
@@ -164,6 +186,19 @@ export default function TransferPage() {
     'OPD Reschedule': onProgressPatients.filter(p => p.service === 'OPD Reschedule').length,
     'Benzathine': onProgressPatients.filter(p => p.service === 'Benzathine').length,
   };
+
+
+  if (isLoading) {
+    return (
+      <div className="flex min-h-screen items-center justify-center bg-linear-to-br from-white via-red-50 to-red-100">
+        <div className="text-center">
+          <div className="w-16 h-16 border-4 border-red-200 border-t-red-500 rounded-full animate-spin mx-auto mb-4"></div>
+          <p className="text-gray-600 font-medium">Loading dashboard...</p>
+          <p className="text-gray-400 text-sm mt-2">Please wait</p>
+        </div>
+      </div>
+    );
+  }
 
   const renderContent = () => {
     if (!selectedCategory) {
@@ -268,6 +303,13 @@ export default function TransferPage() {
             <span className="text-gray-500 text-sm">Patient Transfer</span>
           </div>
           <div className="flex items-center gap-2">
+         
+            {isSyncing && (
+              <div className="flex items-center gap-2 px-3 py-1 bg-blue-50 rounded-full">
+                <div className="w-3 h-3 border-2 border-blue-400 border-t-transparent rounded-full animate-spin"></div>
+                <span className="text-xs text-blue-600">Syncing...</span>
+              </div>
+            )}
             <button className="w-10 h-10 bg-gray-100 rounded-full flex items-center justify-center hover:bg-red-50 transition">
               <i className="bx bxs-bell text-lg text-gray-500"></i>
             </button>

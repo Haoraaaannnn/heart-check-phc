@@ -1,7 +1,7 @@
 'use client';
 import { useState } from 'react';
 import { supabase } from '@/lib/supabase';
-import { Patient } from '../types';
+import { Patient } from '@/types/Types';
 
 export function useNurseData() {
   const [assignedPatients, setAssignedPatients] = useState<Patient[]>([]);

@@ -1,5 +1,5 @@
 'use client';
-import { Patient, Cubicle } from '../types';
+import { Patient, Cubicle } from '@/types/Types';
 
 type TableLayoutProps = {
   title: string;

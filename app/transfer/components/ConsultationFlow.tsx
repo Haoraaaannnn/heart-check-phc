@@ -1,5 +1,5 @@
 'use client';
-import { Cubicle } from '../types';
+import { Cubicle } from '@/types/Types';
 import { CubicleCard } from './CubicleCard';
 import { OnProgressSection } from './OnProgressSection';
 import { CONSULTATION_SUBCATEGORIES } from '../lib/constants';

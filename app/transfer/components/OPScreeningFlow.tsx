@@ -1,5 +1,5 @@
 'use client';
-import { Cubicle, Patient } from '../types';
+import { Cubicle, Patient } from '@/types/Types';
 import { CubicleCard } from './CubicleCard';
 import { OnProgressSection } from './OnProgressSection';
 import { RegistrationCounterSection } from './RegistrationCounterSection';

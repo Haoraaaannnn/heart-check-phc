@@ -2,7 +2,7 @@
 import { useState } from 'react';
 import { supabase } from '@/lib/supabase';
 import { useCallback } from 'react';
-import { Patient } from '../types';
+import { Patient } from '@/types/Types';
 
 const getNextCounter = async (): Promise<number> => {
   const today = new Date();

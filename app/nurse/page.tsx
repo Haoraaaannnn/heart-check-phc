@@ -15,32 +15,56 @@ export default function NursePage() {
   const [selectedCategory, setSelectedCategory] = useState<string | null>(null);
   const [speaking, setSpeaking] = useState<number | null>(null);
   const [sidebarOpen, setSidebarOpen] = useState(true);
+  
+
+  const [isLoading, setIsLoading] = useState(true);
+  const [isSyncing, setIsSyncing] = useState(false);
 
   const { assignedPatients, withDoctorPatients, finishedPatients, setAssignedPatients, setWithDoctorPatients, fetchData, fetchFinished } = useNurseData();
   const { handleMoveToWithDoctor, handleMoveBackFromDoctor, handleFinish } = useNurseActions(
     setAssignedPatients, setWithDoctorPatients, fetchFinished
   );
 
-  useRealtimeSubscription(() => {
-    fetchData();
-    fetchFinished();
-  });
+  const handleRealtimeUpdate = async () => {
+    setIsSyncing(true);
+    try {
+      await fetchData();
+      await fetchFinished();
+    } finally {
+      setIsSyncing(false);
+    }
+  };
+
+  useRealtimeSubscription(handleRealtimeUpdate);
 
   useEffect(() => {
-    const checkSession = async () => {
-      const { data } = await supabase.auth.getSession();
-      if (!data.session) { router.replace('/login'); return; }
+    const init = async () => {
+      setIsLoading(true);
+      try {
+        const { data } = await supabase.auth.getSession();
+        if (!data.session) { 
+          router.replace('/login'); 
+          return; 
+        }
+        
+        await Promise.all([
+          fetchData(),
+          fetchFinished()
+        ]);
+      } catch (error) {
+        console.error('Initialization error:', error);
+      } finally {
+        setIsLoading(false);
+      }
     };
-    checkSession();
-    fetchData();
-    fetchFinished();
+    init();
   }, []);
 
   const speak = async (text: string, patientId: number, times: number = 3) => {
     setSpeaking(patientId);
     try {
       const response = await fetch(
-        'https://api.deepgram.com/v1/speak?model=aura-2-atlas-en',
+        'https://api.deepgram.com/v1/speak?model=aura-2-amalthea-en',
         {
           method: 'POST',
           headers: {
@@ -92,6 +116,19 @@ export default function NursePage() {
     return counts;
   };
 
+
+  if (isLoading) {
+    return (
+      <div className="flex min-h-screen items-center justify-center bg-linear-to-br from-white via-red-50 to-red-100">
+        <div className="text-center">
+          <div className="w-16 h-16 border-4 border-red-200 border-t-red-500 rounded-full animate-spin mx-auto mb-4"></div>
+          <p className="text-gray-600 font-medium">Loading nurse dashboard...</p>
+          <p className="text-gray-400 text-sm mt-2">Please wait</p>
+        </div>
+      </div>
+    );
+  }
+
   return (
     <div className="flex min-h-screen bg-linear-to-br from-white via-red-50 to-red-100 font-sans">
       <Sidebar
@@ -109,6 +146,13 @@ export default function NursePage() {
             <span className="text-gray-500 text-sm">Patient Management</span>
           </div>
           <div className="flex items-center gap-2">
+          
+            {isSyncing && (
+              <div className="flex items-center gap-2 px-3 py-1 bg-blue-50 rounded-full">
+                <div className="w-3 h-3 border-2 border-blue-400 border-t-transparent rounded-full animate-spin"></div>
+                <span className="text-xs text-blue-600">Syncing...</span>
+              </div>
+            )}
             <button className="w-10 h-10 bg-gray-100 rounded-full flex items-center justify-center hover:bg-red-50 transition">
               <i className="bx bxs-bell text-lg text-gray-500"></i>
             </button>
@@ -130,6 +174,15 @@ export default function NursePage() {
               </span>
             )}
           </div>
+
+          {isSyncing && (
+            <div className="mb-4 p-3 bg-blue-50 rounded-lg border border-blue-200">
+              <div className="flex items-center gap-2 text-blue-600">
+                <div className="w-4 h-4 border-2 border-blue-400 border-t-transparent rounded-full animate-spin"></div>
+                <span className="text-sm">Updating patient data...</span>
+              </div>
+            </div>
+          )}
 
           <div className="flex flex-col gap-6">
             <AssignedSection
