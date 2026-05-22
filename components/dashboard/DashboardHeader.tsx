@@ -5,6 +5,8 @@ import { supabase } from '@/lib/supabase';
 // 1. Import the theme tools
 import { useTheme } from 'next-themes';
 import { useEffect, useState } from 'react';
+import NotificationDropdown from './NotificationDropdown';
+import { useBottleneckNotifications } from '@/hooks/useBottleneckNotifications';
 
 export default function DashboardHeader() {
   const router = useRouter();
@@ -12,6 +14,16 @@ export default function DashboardHeader() {
   // 2. Setup theme state
   const { theme, setTheme } = useTheme();
   const [mounted, setMounted] = useState(false);
+
+  // Setup bottleneck notifications
+  const {
+    notifications,
+    unreadCount,
+    markAsRead,
+    markAllAsRead,
+    dismissNotification,
+    clearAll,
+  } = useBottleneckNotifications();
 
   // Prevent hydration mismatch by only rendering the toggle after mount
   useEffect(() => setMounted(true), []);
@@ -46,11 +58,27 @@ export default function DashboardHeader() {
         {mounted && (
           <button
             onClick={() => setTheme(theme === 'dark' ? 'light' : 'dark')}
-            className="p-2 rounded-full bg-white dark:bg-gray-800 text-gray-600 dark:text-gray-300 hover:bg-gray-100 dark:hover:bg-gray-700 transition shadow-sm border border-gray-200 dark:border-gray-700"
+            className="w-10 h-10 flex items-center justify-center rounded-full bg-white dark:bg-gray-800 text-gray-600 dark:text-gray-300 hover:bg-gray-100 dark:hover:bg-gray-700 transition shadow-sm border border-gray-200 dark:border-gray-700"
             aria-label="Toggle Dark Mode"
           >
-            {theme === 'dark' ? '☀️' : '🌙'}
+            {theme === 'dark' ? (
+              <i className="bx bx-sun text-2xl leading-none" />
+            ) : (
+              <i className="bx bx-moon text-2xl leading-none" />
+            )}
           </button>
+        )}
+
+        {/* Notification Dropdown */}
+        {mounted && (
+          <NotificationDropdown
+            notifications={notifications}
+            unreadCount={unreadCount}
+            onMarkAsRead={markAsRead}
+            onMarkAllAsRead={markAllAsRead}
+            onDismiss={dismissNotification}
+            onClearAll={clearAll}
+          />
         )}
 
         <div className="text-right">
