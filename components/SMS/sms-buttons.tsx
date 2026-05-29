@@ -1,0 +1,73 @@
+"use client";
+
+import Link from "next/link";
+import { Service } from "@/types/Services";
+import ConfirmationModal from "@/components/ui/ConfirmationModal";
+
+interface Props {
+  service: Service; 
+  disabled: boolean; 
+  onContinue: () => void; 
+  onSkip: () => void; 
+  phone: string;
+  showContinueModal: boolean; 
+  showSkipModal: boolean; 
+  onContinueConfirm: () => void; 
+  onSkipConfirm: () => void;
+  onContinueCancel: () => void; 
+  onSkipCancel: () => void;
+}
+
+export default function ContinueButton({ 
+  disabled, onContinue, onSkip, service, phone, showContinueModal, showSkipModal, onContinueConfirm, onSkipConfirm, onContinueCancel, onSkipCancel 
+}: Props) {
+  return (
+    <div className="w-full flex flex-col gap-[1vh]">
+      <button 
+        // 1. Logical Guard: Completely removes the function if disabled
+        onClick={disabled ? undefined : onContinue} 
+        disabled={disabled} 
+        // 2. Visual Guard: Added disabled:pointer-events-none to stop the hover/active shrinking
+        className="w-full font-bold text-white disabled:opacity-50 disabled:pointer-events-none py-[2vh] rounded-[2vh] text-[min(3.8vh,45px)] active:scale-[0.98] transition-all" 
+        style={{ background: service.bg_color }}
+      >
+        Magpatuloy - Continue
+      </button>
+      
+      <div className="flex gap-[2vw]">
+        <Link href="/kiosk/kiosk-services" className="flex-1 text-center py-[1.2vh] border-[0.3vh] border-gray-300 text-gray-400 font-bold rounded-[2vh] text-[min(2.2vh,28px)] active:scale-95 transition-all">
+          Bumalik - Cancel
+        </Link>
+        <button onClick={onSkip} className="flex-1 text-center py-[1.2vh] border-[0.3vh] border-gray-300 text-gray-400 font-bold rounded-[2vh] text-[min(2.2vh,28px)] active:scale-95 transition-all">
+          Laktawan-Skip
+        </button>
+      </div>
+
+      <ConfirmationModal 
+        isOpen={showContinueModal} 
+        titleFil="Magpatuloy?" 
+        titleEng="Continue?" 
+        messageFil="Tama ba ang inyong numero?" 
+        messageEng="Is this your correct phone number?" 
+        confirmText="Oo, Tama - Yes, Correct" 
+        cancelText="Hindi, Baguhin - No, Change" 
+        phone={phone} 
+        onConfirm={onContinueConfirm} 
+        onCancel={onContinueCancel} 
+      />
+      <ConfirmationModal 
+        isOpen={showSkipModal} 
+        titleFil="Walang Notipikasyon" 
+        titleEng="No Notification" 
+        messageFil="Kung laktawan ninyo ang numero, hindi kayo makakatanggap ng SMS notipikasyon. Magpatuloy pa rin?" 
+        messageEng="If you skip the number, you will not receive SMS notifications. Continue anyway?" 
+        phone={phone} 
+        confirmText="Oo, Magpatuloy - Yes, Continue" 
+        cancelText="Bumalik - Go Back" 
+        onConfirm={onSkipConfirm} 
+        onCancel={onSkipCancel} 
+        isDangerous={true} 
+      />
+    </div>
+  );
+}
