@@ -26,31 +26,32 @@ from .constants import WINDOW_SIZE, EMA_ALPHA
 # Can be tuned once real data is available.
 ARIMA_ORDER = (1, 1, 1)
 
-
+# Defines the private helper function that takes an array of numbers and returns a single decimal number 
 def _fit_arima(series: np.ndarray) -> float:
     """
     Fit ARIMA on a series and return one-step-ahead forecast.
     Returns 0.0 on failure so it never crashes the pipeline.
     """
-    try:
-        with warnings.catch_warnings():
+    
+    try: # safety block if the math crashes it doesn't break the whole analytics
+        with warnings.catch_warnings(): # just to mute console warnings from ARIMA fitting, which can be noisy on small datasets
             warnings.simplefilter("ignore")
-            model  = ARIMA(series, order=ARIMA_ORDER)
-            result = model.fit()
+            model  = ARIMA(series, order=ARIMA_ORDER)# initializes ARIMA model with historical data
+            result = model.fit() # this executes the complex math (also trains the model)
             # result.forecast() returns numpy array, use [0] not .iloc[0]
-            forecast = float(result.forecast(steps=1)[0])
-            return max(0.0, forecast)
+            forecast = float(result.forecast(steps=1)[0]) # get the result of the forecast for the next time step (next day)
+            return max(0.0, forecast) # just return 0 if it predicts negative
     except Exception:
         # ARIMA can fail on short or flat series — fall back to mean
         return float(np.mean(series))
 
-
+# defines the main function that evaluates the forecasting algorithms using backtesting (EMA RMSe) and returns a dictionary with the results
 def evaluate_forecasting_algorithms(
     df          : pd.DataFrame,
     window_size : int   = WINDOW_SIZE,
     alpha       : float = EMA_ALPHA,
 ) -> dict:
-
+    # this table groups the raw data by visit by date, order(newest to oldest), and turns the result in clean list
     volumes = (
         df.groupby('visit_date')['patient_id']
         .count()
@@ -59,6 +60,7 @@ def evaluate_forecasting_algorithms(
     )
 
     # Adaptively use available data if insufficient for full evaluation
+    # safety net if it has enough historical data to do the backtesting
     if len(volumes) < window_size + 2:
         # With limited data, use simple average forecast
         avg_forecast = float(np.mean(volumes))
@@ -70,12 +72,14 @@ def evaluate_forecasting_algorithms(
             "evaluation_metrics": {}
         }
 
+    # creates empty lists to store the actual values and the predictions from each algorithm
     actuals                               = []
     sma_p, wma_p, ema_p, lr_p, arima_p   = [], [], [], [], []
-
+    # creates an array of multiplier weights for the WMA algorithm, where more recent days have higher weights.
     weights     = np.arange(1, window_size + 1, dtype=float)
     current_ema = float(np.mean(volumes[:window_size]))
 
+    # backtesting loop 
     for i in range(window_size, len(volumes)):
         w           = volumes[i - window_size:i]
         ema         = alpha * volumes[i - 1] + (1 - alpha) * current_ema
