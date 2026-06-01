@@ -134,7 +134,7 @@ export default function SuperAdminPage() {
       const response = await fetch('/api/superadmin/delete-user', {
         method: 'DELETE',
         headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({ authId: user.auth_id }),
+        body: JSON.stringify({ authId: user.auth_id }), // wag gawing string dapat naka hash
       })
       const data = await response.json()
       if (!response.ok) throw new Error(data.error)

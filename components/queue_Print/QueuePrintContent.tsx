@@ -81,10 +81,7 @@ export default function QueuePrintContent({ service, patientNum, cubicleNum }: P
     printTicket();
   }, [patientNum, service?.label_en, service?.label_fil]); // Removed router from dependencies here
 
-
-  // ==========================================
-  // EFFECT 2: UI REDIRECT (Handles Strict Mode safely)
-  // ==========================================
+  // UI REDIRECT (Handles Strict Mode safely)
   useEffect(() => {
     // Delay 5 seconds for user to see the queue number, then redirect
     const redirectTimer = setTimeout(() => {
@@ -121,10 +118,6 @@ return (
           Your Queue Number
         </div>
         
-        {/* 
-          Using clamp(min, viewport-size, max) to ensure the text shrinks dynamically
-          if the screen isn't tall enough, but maxes out at 180px on large displays.
-        */}
         <div className="text-[clamp(60px,15vh,120px)] font-baloo font-black text-[#1a2530] leading-[0.85] tracking-tight text-center py-2 shrink-0">
           {patientNum}
         </div>

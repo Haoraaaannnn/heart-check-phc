@@ -52,13 +52,13 @@ def generate_report(
         p_pedia   : proportion of consultation patients → pedia clinic
         p_consult : proportion of total patients routed to consultation
     """
-    # ── Handle empty database ────────────────────────────────
+    #  Handle empty database
     if df.empty:
         return _empty_report()
     
     df_clean = preprocess_queue_data(df)
     
-    # ── Double-check after preprocessing ─────────────────────
+    # Double-check after preprocessing 
     if df_clean.empty:
         return _empty_report()
 
@@ -69,14 +69,14 @@ def generate_report(
     predicted_vol   = eval_data.get("next_day_forecast", 0)
 
     report = {
-        # ── Descriptive ───────────────────────────────────
+        # Descriptive 
         "daily_summary"   : daily_summary(df_clean).tail(5).to_dict(orient='records'),
         "hourly_pattern"  : hourly_pattern(df_clean).to_dict(orient='records'),
 
-        # ── Bottleneck ────────────────────────────────────
+        # Bottleneck
         "bottleneck_analysis" : bottleneck_report(df_clean),
 
-        # ── Queue metrics ─────────────────────────────────
+        # Queue metrics
         "registration"    : registration_metrics(df_clean),
         "consultation"    : {
             "adult": per_cubicle_metrics(df_clean, clinic='adult'),
@@ -84,15 +84,15 @@ def generate_report(
         },
         "specialized_services" : specialized_metrics(df_clean),
 
-        # ── System time & Little's Law ────────────────────
+        # System time & Little's Law
         "system_time"     : system_time_report(df_clean),
 
-        # ── Forecasting ───────────────────────────────────
+        # Forecasting
         "computational_forecasting" : eval_data,
         "lr_chart_data"             : get_lr_chart_data(df_clean),
         "arima_chart_data"          : get_arima_chart_data(df_clean),
 
-        # ── Staffing recommendation ───────────────────────
+        # Staffing recommendation 
         "decision_support" : recommend_staff(
             forecasted_patients  = predicted_vol,
             opd_hours            = opd_hours,

@@ -1,5 +1,3 @@
-//* Adjust fonts alongside with the font style
-
 "use client";
 
 import { useEffect, useState } from "react";

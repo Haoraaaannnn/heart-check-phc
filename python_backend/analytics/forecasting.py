@@ -81,10 +81,11 @@ def evaluate_forecasting_algorithms(
 
     # backtesting loop 
     for i in range(window_size, len(volumes)):
-        w           = volumes[i - window_size:i]
-        ema         = alpha * volumes[i - 1] + (1 - alpha) * current_ema
-        current_ema = ema
+        w           = volumes[i - window_size:i] # the window of historical data for this iteration
+        ema         = alpha * volumes[i - 1] + (1 - alpha) * current_ema # calculates the EMA forecast 
+        current_ema = ema # then it updates the current EMA with the new value for the next iteration
 
+        # creates lr model, also ensure it can't predict negative 
         lr = max(0.0, float(
             LinearRegression()
             .fit(np.arange(window_size).reshape(-1, 1), w)
@@ -95,6 +96,12 @@ def evaluate_forecasting_algorithms(
         # so it can detect longer patterns beyond the window
         arima = _fit_arima(volumes[:i])
 
+        # records the actual patient count for day i
+        # records sma prediction
+        # records wma prediction (window multiplied by weights, divided by sum of weights)
+        # saves the pre calculated ema prediction
+        # saves the lr prediction
+        # saves the arima prediction
         actuals.append(volumes[i])
         sma_p.append(float(np.mean(w)))
         wma_p.append(float(np.dot(w, weights) / weights.sum()))
@@ -102,6 +109,8 @@ def evaluate_forecasting_algorithms(
         lr_p.append(lr)
         arima_p.append(arima)
 
+    # just matches the algorithms to their predictions in a dictionary
+    # and compare the prediction to the actuals using MAE and RMSE
     results = {
         name: {
             "MAE" : round(mean_absolute_error(actuals, preds), 4),
@@ -116,9 +125,12 @@ def evaluate_forecasting_algorithms(
         }.items()
     }
 
-    best   = min(results, key=lambda k: results[k]["MAE"])
-    latest = volumes[-window_size:]
+    
+    best   = min(results, key=lambda k: results[k]["MAE"]) # finds the algorithm with the lowest MAE
+    latest = volumes[-window_size:] # the most recent window of data to use for the next-day forecast
 
+
+    # runs all five algorithms one last time for predicting tomorrow based on latest data
     forecasts = {
         "SMA"              : float(np.mean(latest)),
         "WMA"              : float(np.dot(latest, weights) / weights.sum()),
@@ -131,6 +143,7 @@ def evaluate_forecasting_algorithms(
         "ARIMA"            : _fit_arima(volumes),
     }
 
+    # just grabs the forecast from the best algorithm to report as the next-day forecast, and returns all the results in a dictionary
     next_day = forecasts[best]
     return {
         "status"                : "Forecast computed",
@@ -143,7 +156,7 @@ def evaluate_forecasting_algorithms(
         "next_day_forecast"     : max(0, int(round(next_day))),
     }
 
-
+# just visualization data preparation functions for the dashboard chart
 def get_lr_chart_data(df: pd.DataFrame, window_size: int = WINDOW_SIZE) -> dict:
     """
     Returns chart-ready data for the Linear Regression

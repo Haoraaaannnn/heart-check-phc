@@ -3,10 +3,17 @@ descriptive.py
 Daily summaries, hourly patterns, and bottleneck detection.
 """
 
+# This files handle all the descriptive analytics functions, 
+# #which are used to generate the data for the dashboard and reports. #
+# This includes daily summaries, hourly patterns, and bottleneck detection.
+# This file is basically the overview and data processing of the analytics module, 
+# while the other files are more focused on specific types of \
+# analysis (e.g. forecasting, queue metrics, staffing recommendations).
+
 import pandas as pd
 from .constants import OVERWHELMED_MINUTES
 
-
+# Calculate daily summaries such as patient counts and average wait times per day
 def daily_summary(df: pd.DataFrame) -> pd.DataFrame:
     """Daily aggregation — last 5 days shown on dashboard."""
     return (
@@ -20,7 +27,8 @@ def daily_summary(df: pd.DataFrame) -> pd.DataFrame:
         .round(2)
     )
 
-
+# Shows which are the busiest hours of the day, and how wait times vary by hour. 
+# This can help identify peak times and potential staffing needs.
 def hourly_pattern(df: pd.DataFrame) -> pd.DataFrame:
     """Average patients and wait time per hour of day."""
     return (
@@ -35,6 +43,9 @@ def hourly_pattern(df: pd.DataFrame) -> pd.DataFrame:
         .round(2)
     )
 
+# Identifies whether registration or consultation is the bottleneck 
+# stage based on average wait times, and flags if the system 
+# is overwhelmed (if either stage exceeds the overwhelmed threshold).
 def bottleneck_report(df: pd.DataFrame) -> dict:
     # Only use registration wait for services that have it
     reg_df   = df[df['reg_start'].notna()]

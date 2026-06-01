@@ -2,7 +2,6 @@
 
 import { useRouter } from 'next/navigation';
 import { supabase } from '@/lib/supabase';
-// 1. Import the theme tools
 import { useTheme } from 'next-themes';
 import { useEffect, useState } from 'react';
 import NotificationDropdown from './NotificationDropdown';
@@ -11,11 +10,9 @@ import { useBottleneckNotifications } from '@/hooks/useBottleneckNotifications';
 export default function DashboardHeader() {
   const router = useRouter();
   
-  // 2. Setup theme state
   const { theme, setTheme } = useTheme();
   const [mounted, setMounted] = useState(false);
 
-  // Setup bottleneck notifications
   const {
     notifications,
     unreadCount,
@@ -25,7 +22,6 @@ export default function DashboardHeader() {
     clearAll,
   } = useBottleneckNotifications();
 
-  // Prevent hydration mismatch by only rendering the toggle after mount
   useEffect(() => setMounted(true), []);
 
   const handleLogout = async () => {

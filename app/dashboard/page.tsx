@@ -28,7 +28,6 @@ export default function DashboardPage() {
     };
     checkSession();
 
-    // Ticks every minute to keep wait times dynamic
     const timer = setInterval(() => setCurrentTime(new Date()), 60000);
     return () => clearInterval(timer);
   }, [router]);

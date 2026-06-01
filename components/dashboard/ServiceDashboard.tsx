@@ -9,7 +9,6 @@ import {
 import { textDark, textLight } from '@/constants/themes';
 import ServiceMetricCard from '../reusables/serviceMetricCard';
 
-// --- PROPS DEFINITION ---
 interface ServiceDashboardProps {
   title: string;
   serviceFilter: string;
@@ -188,7 +187,7 @@ export function ServiceDashboard({ title, serviceFilter,}: ServiceDashboardProps
   return (
     <div className="px-8 py-6 flex flex-col gap-6 min-h-screen mx-auto max-w-10xl w-full">
       
-      {/* 1. Header uses Props */}
+      {/* Header uses Props */}
       <div className="flex justify-between items-center mb-2">
         <div className="flex items-center gap-4">
           <div>
@@ -213,7 +212,7 @@ export function ServiceDashboard({ title, serviceFilter,}: ServiceDashboardProps
         </div>
       </div>
 
-      {/* 2. Big Core Metrics */}
+      {/* Big Core Metrics */}
       <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-5">
         <ServiceMetricCard className='h-40'>
           <span className="text-gray-400 dark:text-gray-500 text-xs font-bold tracking-widest uppercase">Waiting</span>
@@ -233,7 +232,7 @@ export function ServiceDashboard({ title, serviceFilter,}: ServiceDashboardProps
 
       <div className="grid grid-cols-1 lg:grid-cols-3 gap-6">
         
-        {/* 3. Detailed Up Next List */}
+        {/* Detailed Up Next List */}
         <ServiceMetricCard className='lg:col-span-2'>
           <h2 className="text-xl font-extrabold text-gray-800 dark:text-gray-200 mb-6 flex items-center gap-2">
             Up Next Queue
@@ -271,7 +270,7 @@ export function ServiceDashboard({ title, serviceFilter,}: ServiceDashboardProps
           </div>
         </ServiceMetricCard>
 
-        {/* 4. Service Time Stats */}
+        {/* Service Time Stats */}
         <div className="flex flex-col gap-6">
           <ServiceMetricCard>
             <h3 className={`text-sm font-bold uppercase tracking-wider mb-6 ${textLight} ${textDark}`}>Time Stats</h3>
@@ -301,7 +300,7 @@ export function ServiceDashboard({ title, serviceFilter,}: ServiceDashboardProps
 
       </div>
 
-      {/* 5. NEW: Hourly Trend Area Chart */}
+      {/* NEW: Hourly Trend Area Chart */}
       <ServiceMetricCard>
         <div className="mb-6">
           <h2 className="text-xl font-extrabold text-gray-800 dark:text-gray-200">Service Demand Trend</h2>

@@ -1,7 +1,3 @@
-/**
- * Utility function to get formatted timestamp
- * Format: YYYY-MM-DD HH:MM:SS.mmm
- */
 export const getTimestamp = (): string => {
   const now = new Date();
   const year = now.getFullYear();

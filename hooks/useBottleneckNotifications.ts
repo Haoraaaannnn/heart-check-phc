@@ -14,7 +14,6 @@ export function useBottleneckNotifications() {
   const [notifications, setNotifications] = useState<Notification[]>([]);
   const [unreadCount, setUnreadCount] = useState(0);
 
-  // Check for bottleneck conditions
   const checkBottleneck = useCallback(async () => {
     try {
       const now = new Date();

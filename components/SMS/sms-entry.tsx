@@ -52,10 +52,10 @@ const createPatientRecord = async (service: Service) => {
     }).select().single();
 
     if (error) throw error;
-    console.log(`${getTimestamp()} ✅ [DB INSERT] New Patient Created with On Progress status:`, { id: data?.id, created_at: data?.created_at, patientNum: data?.patientNum, phoneNum: data?.phoneNum, service: data?.service });
+    console.log(`${getTimestamp()} [DB INSERT] New Patient Created with On Progress status:`, { id: data?.id, created_at: data?.created_at, patientNum: data?.patientNum, phoneNum: data?.phoneNum, service: data?.service });
     return patientNum;
   } catch (err) {
-    console.error(`${getTimestamp()} ❌ [DB INSERT ERROR] Failed to create patient record for service "${service.label_en}":`, err);
+    console.error(`${getTimestamp()} [DB INSERT ERROR] Failed to create patient record for service "${service.label_en}":`, err);
     throw err;
   }
 };
@@ -89,11 +89,11 @@ export default function KioskPhoneEntry({ service, patientNum: initialPatientNum
 
       if (error) throw error;
 
-      console.log(`${getTimestamp()} ✅ [DB UPDATE] Phone Number Added:`, { id: data?.id, patientNum: data?.patientNum, phoneNum: data?.phoneNum });
+      console.log(`${getTimestamp()} [DB UPDATE] Phone Number Added:`, { id: data?.id, patientNum: data?.patientNum, phoneNum: data?.phoneNum });
 
       router.push(`/kiosk/queue-print?patientNum=${finalPatientNum}&serviceId=${service.id}`);
     } catch (e) {
-      console.error(`${getTimestamp()} ❌ [SMS CONTINUE ERROR]`, e);
+      console.error(`${getTimestamp()} [SMS CONTINUE ERROR]`, e);
     }
   };
 
@@ -115,10 +115,10 @@ export default function KioskPhoneEntry({ service, patientNum: initialPatientNum
         .limit(1)
         .single();
 
-      console.log(`${getTimestamp()} ✅ [SMS SKIP] Phone SMS skipped:`, { id: data?.id, created_at: data?.created_at, patientNum: data?.patientNum, phoneNum: data?.phoneNum, service: data?.service });
+      console.log(`${getTimestamp()} [SMS SKIP] Phone SMS skipped:`, { id: data?.id, created_at: data?.created_at, patientNum: data?.patientNum, phoneNum: data?.phoneNum, service: data?.service });
       router.push(`/kiosk/queue-print?patientNum=${finalPatientNum}&serviceId=${service.id}`);
     } catch (e) {
-      console.error(`${getTimestamp()} ❌ [SMS SKIP ERROR] Failed to skip SMS for service "${service.label_en}":`, e);
+      console.error(`${getTimestamp()} [SMS SKIP ERROR] Failed to skip SMS for service "${service.label_en}":`, e);
     }
   };
 

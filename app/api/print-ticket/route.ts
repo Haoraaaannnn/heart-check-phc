@@ -4,25 +4,21 @@ import { existsSync } from 'fs';
 import { getTimestamp } from '@/lib/logger';
 import { supabase } from '@/lib/supabase';
 
-// 🔒 GLOBAL HARDWARE LOCK
-// Prevents the server from trying to write to the USB port twice simultaneously.
 let isPrinterBusy = false; 
 
 export async function POST(request: Request) {
-  // Guard clause: Reject overlapping requests cleanly
   if (isPrinterBusy) {
     console.warn(`${getTimestamp()} ⚠️ [PRINTER BUSY] Duplicate print request received - Queue: pending, rejecting to prevent hardware conflict.`);
     return NextResponse.json({ success: true, message: "Printer busy, skipped." });
   }
 
-  isPrinterBusy = true; // Lock the printer
+  isPrinterBusy = true;
 
   try {
     const body = await request.json();
     const { queueNumber, serviceName, cubicle } = body;
-
-    // Fetch patient record from database
     const { data: patientRecord } = await supabase.from('patients').select().eq('patientNum', queueNumber).single();
+
     console.log(`${getTimestamp()} 📋 [PRINT REQUEST] Received print job:`, { id: patientRecord?.id, created_at: patientRecord?.created_at, patientNum: patientRecord?.patientNum, phoneNum: patientRecord?.phoneNum, service: patientRecord?.service });
 
     if (!queueNumber) {
@@ -45,7 +41,6 @@ export async function POST(request: Request) {
     const NORMAL_FONT = GS + '!' + '\x00';
     const CUT = GS + 'V' + '\x00';
 
-    // Construct the actual ticket layout
     const ticketData = 
       RESET + 
       CENTER + BOLD_ON + 'HEART CHECK PHC' + BOLD_OFF + '\n' +
@@ -62,10 +57,10 @@ export async function POST(request: Request) {
       '\n\n\n\n\n' + 
       CUT;    
 
-    // Convert string to printer buffer
+
     const buffer = Buffer.from(ticketData, 'latin1');
     
-    // Printer paths - Checking lp2 first
+    // Add the printer (linux)
     const printerPaths = ['/dev/usb/lp2', '/dev/usb/lp0', '/dev/usb/lp1'];
     let printedSuccessfully = false;
     let lastError = "";

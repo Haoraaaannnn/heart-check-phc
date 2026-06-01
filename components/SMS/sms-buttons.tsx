@@ -24,10 +24,8 @@ export default function ContinueButton({
   return (
     <div className="w-full flex flex-col gap-[1vh]">
       <button 
-        // 1. Logical Guard: Completely removes the function if disabled
         onClick={disabled ? undefined : onContinue} 
         disabled={disabled} 
-        // 2. Visual Guard: Added disabled:pointer-events-none to stop the hover/active shrinking
         className="w-full font-bold text-white disabled:opacity-50 disabled:pointer-events-none py-[2vh] rounded-[2vh] text-[min(3.8vh,45px)] active:scale-[0.98] transition-all" 
         style={{ background: service.bg_color }}
       >

@@ -40,15 +40,15 @@ ${CENTER}Please wait for your number.
       // Send directly to the Xprinter on Ubuntu
       exec(`echo -e "${ticket}" > /dev/usb/lp2`, (error) => {
           if (error) {
-              console.error(`${getTimestamp()} ❌ [EXEC PRINT ERROR] Failed to execute print command:`, { id: patientRecord?.id, created_at: patientRecord?.created_at, patientNum: patientRecord?.patientNum, phoneNum: patientRecord?.phoneNum, service: patientRecord?.service, error: error.message });
+              console.error(`${getTimestamp()} [EXEC PRINT ERROR] Failed to execute print command:`, { id: patientRecord?.id, created_at: patientRecord?.created_at, patientNum: patientRecord?.patientNum, phoneNum: patientRecord?.phoneNum, service: patientRecord?.service, error: error.message });
               reject(error);
           } else {
-              console.log(`${getTimestamp()} ✅ [EXEC PRINT SUCCESS] Print command executed:`, { id: patientRecord?.id, created_at: patientRecord?.created_at, patientNum: patientRecord?.patientNum, phoneNum: patientRecord?.phoneNum, service: patientRecord?.service });
+              console.log(`${getTimestamp()} [EXEC PRINT SUCCESS] Print command executed:`, { id: patientRecord?.id, created_at: patientRecord?.created_at, patientNum: patientRecord?.patientNum, phoneNum: patientRecord?.phoneNum, service: patientRecord?.service });
               resolve(true);
           }
       });
     } catch (err) {
-      console.error(`${getTimestamp()} ❌ [EXEC PRINT ERROR] Failed to fetch patient record - PatientNum: ${patientNum}, Error:`, err);
+      console.error(`${getTimestamp()} [EXEC PRINT ERROR] Failed to fetch patient record - PatientNum: ${patientNum}, Error:`, err);
       reject(err);
     }
   });
