@@ -1,12 +1,12 @@
 'use client';
 
 import { useEffect } from 'react';
-import { usePatientsAnalyticsData } from '@/hooks/dashboard/usePatientsAnalyticsData';
-import { usePatientData } from '@/hooks/dashboard/usePatientsData';
-import PatientStatsGrid from '@/components/dashboard/patients/PatientStatGrid';
-import ServiceDistributionChart from '@/components/dashboard/patients/ServiceDistributionChart';
-import HourlyPatientFlowChart from '@/components/dashboard/patients/HourlyPatientFlowChart';
-import RecentPatientsTable from '@/components/dashboard/patients/RecentPatientTable';
+import { usePatientsAnalyticsData } from '@/app/dashboard/patients/hooks/usePatientsAnalyticsData';
+import { usePatientData } from '@/app/dashboard/patients/hooks/usePatientsData';
+import PatientStatsGrid from '@/app/dashboard/patients/components/PatientStatGrid';
+import ServiceDistributionChart from '@/app/dashboard/patients/components/ServiceDistributionChart';
+import HourlyPatientFlowChart from '@/app/dashboard/patients/components/HourlyPatientFlowChart';
+import RecentPatientsTable from '@/app/dashboard/patients/components/RecentPatientTable';
 
 export default function PatientsPage() {
   const { stats, setStats, hourlyData, fetchAnalyticsData } = usePatientsAnalyticsData();

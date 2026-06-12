@@ -1,8 +1,8 @@
 "use client";
 
 import UnviBackground from "@/components/backgrounds/Univbackground";
-import PrintHeader from "@/components/queue_Print/PrintHeader";
-import PrintFooter from "@/components/queue_Print/PrintFooter";
+import PrintHeader from "@/app/kiosk/queue-print/components/PrintHeader";
+import PrintFooter from "@/app/kiosk/queue-print/components/PrintFooter";
 
 export default function KioskLayout({
   children,

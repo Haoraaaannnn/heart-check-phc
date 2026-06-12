@@ -4,8 +4,8 @@ import { useRouter } from 'next/navigation';
 import { supabase } from '@/lib/supabase';
 import { useTheme } from 'next-themes';
 import { useEffect, useState } from 'react';
-import NotificationDropdown from './NotificationDropdown';
-import { useBottleneckNotifications } from '@/hooks/useBottleneckNotifications';
+import { useBottleneckNotifications } from '@/app/dashboard/hooks/useBottleneckNotifications';
+import NotificationDropdown from '../NotificationDropdown';
 
 export default function DashboardHeader() {
   const router = useRouter();

@@ -1,6 +1,6 @@
 import { useState } from 'react';
 import { PatientStats, AnalyticsData } from '@/types/Types';
-import { DEFAULT_HOURLY_DATA } from '@/constants/patients';
+import { DEFAULT_HOURLY_DATA } from '@/app/dashboard/patients/constants/patients';
 
 export function usePatientsAnalyticsData() {
   const [stats, setStats] = useState<PatientStats>({

@@ -1,4 +1,4 @@
-import { PatientRecord } from '@/hooks/dashboard/useOverviewData';
+import { PatientRecord } from '@/app/dashboard/hooks/useOverviewData';
 
 const FREEZE_STATUSES = ['completed', 'done', 'served', 'on progress', 'serving', 'consulting'];
 

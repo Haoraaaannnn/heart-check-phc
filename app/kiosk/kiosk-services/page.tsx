@@ -1,5 +1,5 @@
 import { createClient } from "@/lib/supabase/server";
-import ServiceCard from "@/components/kiosk/KioskServicesCard";
+import ServiceCard from "@/app/kiosk/kiosk-services/components/KioskServicesCard";
 import { Service } from "@/types/Services"
 
 export default async function KioskPage() {

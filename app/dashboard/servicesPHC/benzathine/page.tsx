@@ -1,4 +1,4 @@
-import { ServiceDashboard }from "@/components/dashboard/ServiceDashboard";
+import { ServiceDashboard }from "@/app/dashboard/servicesPHC/components/ServiceDashboard";
 
 export default function ConsultationDashboard() {
   return (
