@@ -6,7 +6,6 @@ export default function LandingPage() {
 
   return (
   <div className="relative min-h-screen overflow-hidden bg-gradient-to-br from-[#fffdfd] via-[#fff5f5] to-[#ffeaea] font-sans">
-      // Background Blobs
       <div className="absolute inset-0 z-0 pointer-events-none">
         <div className="absolute top-[-120px] right-[-100px] h-[520px] w-[520px] rounded-full bg-[#ff6b6b]/25 blur-[140px]" />
         <div className="absolute top-[30%] left-1/2 h-[700px] w-[700px] -translate-x-1/2 -translate-y-1/2 rounded-full bg-[#ff8a8a]/20 blur-[160px]" />
