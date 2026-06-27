@@ -15,7 +15,6 @@ export default function NursePage() {
   const [selectedCategory, setSelectedCategory] = useState<string | null>(null);
   const [speaking, setSpeaking] = useState<number | null>(null);
   const [sidebarOpen, setSidebarOpen] = useState(true);
-  
 
   const [isLoading, setIsLoading] = useState(true);
   const [isSyncing, setIsSyncing] = useState(false);
@@ -116,7 +115,6 @@ export default function NursePage() {
     return counts;
   };
 
-
   if (isLoading) {
     return (
       <div className="flex min-h-screen items-center justify-center bg-linear-to-br from-white via-red-50 to-red-100">
@@ -130,7 +128,7 @@ export default function NursePage() {
   }
 
   return (
-    <div className="flex min-h-screen bg-linear-to-br from-white via-red-50 to-red-100 font-sans">
+    <div className="flex min-h-screen bg-linear-to-br from-white via-red-50 to-red-100 font-sans relative">
       <Sidebar
         sidebarOpen={sidebarOpen}
         selectedCategory={selectedCategory}
@@ -145,12 +143,11 @@ export default function NursePage() {
             <i className="bx bx-user-plus text-gray-400 text-lg"></i>
             <span className="text-gray-500 text-sm">Patient Management</span>
           </div>
-          <div className="flex items-center gap-2">
-          
+          <div className="flex items-center gap-3">
             {isSyncing && (
-              <div className="flex items-center gap-2 px-3 py-1 bg-blue-50 rounded-full">
-                <div className="w-3 h-3 border-2 border-blue-400 border-t-transparent rounded-full animate-spin"></div>
-                <span className="text-xs text-blue-600">Syncing...</span>
+              <div className="flex items-center gap-2 px-3 py-1.5 bg-blue-50 rounded-lg">
+                <div className="w-3.5 h-3.5 border-2 border-blue-400 border-t-transparent rounded-full animate-spin"></div>
+                <span className="text-xs text-blue-600 font-medium">Syncing...</span>
               </div>
             )}
             <button className="w-10 h-10 bg-gray-100 rounded-full flex items-center justify-center hover:bg-red-50 transition">
@@ -174,15 +171,6 @@ export default function NursePage() {
               </span>
             )}
           </div>
-
-          {isSyncing && (
-            <div className="mb-4 p-3 bg-blue-50 rounded-lg border border-blue-200">
-              <div className="flex items-center gap-2 text-blue-600">
-                <div className="w-4 h-4 border-2 border-blue-400 border-t-transparent rounded-full animate-spin"></div>
-                <span className="text-sm">Updating patient data...</span>
-              </div>
-            </div>
-          )}
 
           <div className="flex flex-col gap-6">
             <AssignedSection
