@@ -1,6 +1,6 @@
 'use client';
 
-import { useState, useEffect } from 'react';
+import { useState, useEffect, useRef } from 'react';
 import { useRouter } from 'next/navigation';
 import { supabase } from '@/lib/supabase';
 
@@ -11,6 +11,10 @@ export default function LoginPage() {
   const [password, setPassword] = useState('');
   const [error, setError] = useState('');
   const [loading, setLoading] = useState(false);
+  const [showPassword, setShowPassword] = useState(false);
+  
+  const passwordInputRef = useRef<HTMLInputElement>(null);
+  const emailInputRef = useRef<HTMLInputElement>(null);
 
   useEffect(() => {
     if (!error) return;
@@ -18,53 +22,94 @@ export default function LoginPage() {
     return () => clearTimeout(timer);
   }, [error]);
 
+  useEffect(() => {
+    return () => {
+      setPassword('');
+      if (passwordInputRef.current) {
+        passwordInputRef.current.value = '';
+      }
+    };
+  }, []);
+
   const handleSubmit = async (e: React.FormEvent<HTMLFormElement>) => {
     e.preventDefault();
     setError('');
     setLoading(true);
 
-    const { error: authError } = await supabase.auth.signInWithPassword({
-      email: email.trim(),
-      password,
-    });
+    const emailValue = email.trim();
+    const passwordValue = password;
 
-    if (authError) {
-      setError('Invalid email or password');
+    try {
+      const { error: authError } = await supabase.auth.signInWithPassword({
+        email: emailValue,
+        password: passwordValue,
+      });
+
       setPassword('');
+      if (passwordInputRef.current) {
+        passwordInputRef.current.value = '';
+      }
+
+      const clearPassword = (str: string) => {
+        for (let i = 0; i < str.length; i++) {
+          str = str.substring(0, i) + ' ' + str.substring(i + 1);
+        }
+      };
+      clearPassword(passwordValue);
+
+      if (authError) {
+        setError('Invalid email or password');
+        setLoading(false);
+        return;
+      }
+
+      const { data, error: dbError } = await supabase
+        .from('users')
+        .select('role')
+        .eq('email', emailValue)
+        .single();
+
       setLoading(false);
-      return;
+
+      if (dbError || !data) {
+        setError('User role not found');
+        return;
+      }
+
+      setEmail('');
+
+      switch (data.role) {
+        case 'superadmin':
+          router.push('/superadmin');
+          break;
+        case 'admin':
+          router.push('/dashboard');
+          break;
+        case 'registration':
+          router.push('/transfer');
+          break;
+        case 'nurse':
+          router.push('/nurse');
+          break;
+        default:
+          router.push('/transfer');
+      }
+    } catch (error) {
+      setPassword('');
+      if (passwordInputRef.current) {
+        passwordInputRef.current.value = '';
+      }
+      setLoading(false);
+      setError('An error occurred during login');
+      console.error('Login error:', error);
     }
+  };
 
-    const { data, error: dbError } = await supabase
-      .from('users')
-      .select('role')
-      .eq('email', email.trim())
-      .single();
-
-    setLoading(false);
-
-    if (dbError || !data) {
-      setError('User role not found');
-      return;
-    }
-
-  
-    switch (data.role) {
-      case 'superadmin':
-        router.push('/superadmin');
-        break;
-      case 'admin':
-        router.push('/dashboard');
-        break;
-      case 'registration':
-        router.push('/transfer');
-        break;
-      case 'nurse':
-        router.push('/nurse');
-        break;
-      default:
-        router.push('/transfer');
-    }
+  const togglePasswordVisibility = () => {
+    setShowPassword(!showPassword);
+    setTimeout(() => {
+      passwordInputRef.current?.focus();
+    }, 0);
   };
 
   return (
@@ -81,6 +126,7 @@ export default function LoginPage() {
       <button
         onClick={() => router.push('/')}
         className="fixed left-8 top-8 z-20 flex items-center gap-2 rounded-xl border border-white/40 bg-white/40 px-4 py-2 text-gray-600 backdrop-blur-xl transition hover:bg-white/60 hover:text-[#cc3535]"
+        aria-label="Back to Home"
       >
         <i className="bx bx-arrow-back text-xl"></i>
         <span className="text-sm font-medium">Back to Home</span>
@@ -97,37 +143,56 @@ export default function LoginPage() {
           Enter your credentials to access your account
         </p>
 
-        <form onSubmit={handleSubmit}>
+        <form onSubmit={handleSubmit} noValidate>
           <div className="mb-5">
-            <label className="mb-2 block text-sm font-medium text-gray-700">
+            <label htmlFor="email" className="mb-2 block text-sm font-medium text-gray-700">
               Email Address
             </label>
             <input
+              id="email"
+              ref={emailInputRef}
               type="email"
               value={email}
               onChange={(e) => setEmail(e.target.value)}
               required
+              autoComplete="username"
               className="w-full rounded-2xl border border-white/50 bg-white/60 px-4 py-3 text-sm text-black backdrop-blur-xl transition-all duration-300 focus:border-[#cc3535] focus:outline-none focus:ring-4 focus:ring-red-100"
+              placeholder="your@email.com"
             />
           </div>
 
           <div className="mb-6">
-            <label className="mb-2 block text-sm font-medium text-gray-700">
+            <label htmlFor="password" className="mb-2 block text-sm font-medium text-gray-700">
               Password
             </label>
-            <input
-              type="password"
-              value={password}
-              onChange={(e) => setPassword(e.target.value)}
-              required
-              className="w-full rounded-2xl border border-white/50 bg-white/60 px-4 py-3 text-sm text-black backdrop-blur-xl transition-all duration-300 focus:border-[#cc3535] focus:outline-none focus:ring-4 focus:ring-red-100"
-            />
+            <div className="relative">
+              <input
+                id="password"
+                ref={passwordInputRef}
+                type={showPassword ? 'text' : 'password'}
+                value={password}
+                onChange={(e) => setPassword(e.target.value)}
+                required
+                autoComplete="current-password"
+                className="w-full rounded-2xl border border-white/50 bg-white/60 px-4 py-3 pr-12 text-sm text-black backdrop-blur-xl transition-all duration-300 focus:border-[#cc3535] focus:outline-none focus:ring-4 focus:ring-red-100"
+                placeholder="Enter your password"
+              />
+              <button
+                type="button"
+                onClick={togglePasswordVisibility}
+                className="absolute right-3 top-1/2 -translate-y-1/2 text-gray-500 hover:text-[#cc3535] transition-colors focus:outline-none"
+                aria-label={showPassword ? 'Hide password' : 'Show password'}
+              >
+                <i className={`bx ${showPassword ? 'bx-hide' : 'bx-show'} text-xl`}></i>
+              </button>
+            </div>
           </div>
 
           <button
             type="submit"
             disabled={loading}
-            className="w-full rounded-2xl bg-[#cc3535] py-3 text-base font-semibold text-white shadow-[0_10px_30px_rgba(204,53,53,0.20)] transition-all duration-300 hover:bg-red-700 hover:shadow-lg active:scale-95 disabled:opacity-60"
+            className="w-full rounded-2xl bg-[#cc3535] py-3 text-base font-semibold text-white shadow-[0_10px_30px_rgba(204,53,53,0.20)] transition-all duration-300 hover:bg-red-700 hover:shadow-lg active:scale-95 disabled:opacity-60 disabled:cursor-not-allowed"
+            aria-label="Login to your account"
           >
             {loading ? (
               <span className="flex items-center justify-center gap-2">
@@ -141,7 +206,11 @@ export default function LoginPage() {
         </form>
 
         {error && (
-          <div className="mt-5 rounded-2xl border border-red-200 bg-red-50/80 px-4 py-3 text-center text-sm text-[#dc3545] backdrop-blur-md">
+          <div 
+            className="mt-5 rounded-2xl border border-red-200 bg-red-50/80 px-4 py-3 text-center text-sm text-[#dc3545] backdrop-blur-md"
+            role="alert"
+            aria-live="polite"
+          >
             <i className="bx bx-error-circle mr-2"></i>
             {error}
           </div>
