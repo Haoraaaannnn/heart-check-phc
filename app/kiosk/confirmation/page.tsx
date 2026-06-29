@@ -1,7 +1,7 @@
 import { createClient } from "@/lib/supabase/server";
-import ServiceBanner from "@/components/confirmation/ConfirmationBanner";
-import ConfirmationActions from "@/components/confirmation/ConfirmationButton";
-import ConfirmationDescriptions from "@/components/confirmation/ConfimationDescription";
+import ServiceBanner from "@/app/kiosk/confirmation/components/ConfirmationBanner";
+import ConfirmationActions from "@/app/kiosk/confirmation/components/ConfirmationButton";
+import ConfirmationDescriptions from "@/app/kiosk/confirmation/components/ConfimationDescription";
 import type { Service } from "@/types/Services";
 
 interface Props {

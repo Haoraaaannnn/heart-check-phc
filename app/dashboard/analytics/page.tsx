@@ -1,11 +1,11 @@
 "use client";
 
-import { useAnalyticsData } from "@/hooks/dashboard/useAnalyticsData";
+import { useAnalyticsData } from "@/app/dashboard/analytics/hooks/useAnalyticsData";
 import { getLRRaw, getARIMARaw, prepareLRChartData, prepareARIMAChartData, getTrendColor, getTrendBg } from "@/utils/chartDataPrep";
-import MetricCardsRow from "@/components/dashboard/analytics/MetricCardShow";
-import VolumeAndWaitCharts from "@/components/dashboard/analytics/VolumeAndWaitCharts";
-import LRForecast from "@/components/dashboard/analytics/LRForecast";
-import ArimaForecast from "@/components/dashboard/analytics/ArimaForecast";
+import MetricCardsRow from "@/app/dashboard/analytics/components/MetricCardShow";
+import VolumeAndWaitCharts from "@/app/dashboard/analytics/components/VolumeAndWaitCharts";
+import LRForecast from "@/app/dashboard/analytics/components/LRForecast";
+import ArimaForecast from "@/app/dashboard/analytics/components/ArimaForecast";
 
 export default function AdminDashboard() {
   const { data, loading, error } = useAnalyticsData();

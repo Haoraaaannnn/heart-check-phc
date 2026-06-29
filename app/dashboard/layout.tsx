@@ -1,6 +1,6 @@
 import DashboardBG from "@/components/backgrounds/DashboardBg";
-import Sidebar from "@/components/dashboard/DashSideNavigation";
-import DashboardHeader from "@/components/dashboard/DashboardHeader";
+import Sidebar from "@/app/dashboard/components/navigation/DashSideNavigation";
+import DashboardHeader from "@/app/dashboard/components/navigation/DashboardHeader";
 
 export default function DashboardLayout({ children }: { children: React.ReactNode }) {
   return (

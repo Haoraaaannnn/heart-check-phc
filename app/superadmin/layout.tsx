@@ -1,6 +1,6 @@
 'use client'
 
-import SuperAdminNav from "@/components/superadmin/SuperAdminNav"
+import SuperAdminNav from "@/app/superadmin/components/SuperAdminNav"
 import { useRouter } from "next/navigation"
 import { useEffect, useState } from "react"
 import { supabase } from "@/lib/supabase"

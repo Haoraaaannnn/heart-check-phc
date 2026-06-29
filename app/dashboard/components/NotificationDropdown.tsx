@@ -1,7 +1,7 @@
 'use client';
 
 import { useState, useRef, useEffect } from 'react';
-import { Notification } from '@/hooks/useBottleneckNotifications';
+import { Notification } from '@/app/dashboard/hooks/useBottleneckNotifications';
 
 interface NotificationDropdownProps {
   notifications: Notification[];

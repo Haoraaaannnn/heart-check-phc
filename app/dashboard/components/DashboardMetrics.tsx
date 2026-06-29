@@ -1,5 +1,5 @@
 import MetricCards from '@/components/reusables/metricCards';
-import { DashboardStats } from '@/hooks/dashboard/useOverviewData';
+import { DashboardStats } from '@/app/dashboard/hooks/useOverviewData';
 
 interface DashboardMetricsProps {
   stats: DashboardStats;

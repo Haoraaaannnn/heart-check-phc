@@ -7,7 +7,7 @@ import {
   AreaChart, Area, XAxis, YAxis, CartesianGrid, Tooltip, ResponsiveContainer
 } from 'recharts';
 import { textDark, textLight } from '@/constants/themes';
-import ServiceMetricCard from '../reusables/serviceMetricCard';
+import ServiceMetricCard from '../../../../components/reusables/serviceMetricCard';
 
 interface ServiceDashboardProps {
   title: string;

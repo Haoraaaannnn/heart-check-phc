@@ -3,13 +3,12 @@
 import { useRouter } from 'next/navigation';
 import { useEffect, useState } from 'react';
 import { supabase } from '@/lib/supabase';
-
-import { useOverviewData } from '@/hooks/dashboard/useOverviewData';
+import { useOverviewData } from '@/app/dashboard/hooks/useOverviewData';
 import { calcAvgWaitTime } from '@/utils/waitTime';
-import DashboardMetrics from '@/components/dashboard/overview/DashboardMetrics';
-import LiveQueueTable from '@/components/dashboard/overview/LiveQueueTable';
-import ServiceStats from '@/components/dashboard/overview/ServiceStats';
-import HourlyArrivalsChart from '@/components/dashboard/overview/HourlyArrivalChart';
+import DashboardMetrics from '@/app/dashboard/components/DashboardMetrics';
+import LiveQueueTable from '@/app/dashboard/components/LiveQueueTable';
+import ServiceStats from '@/app/dashboard/components/ServiceStats';
+import HourlyArrivalsChart from '@/app/dashboard/components/HourlyArrivalChart';
 
 export default function DashboardPage() {
   const router = useRouter();

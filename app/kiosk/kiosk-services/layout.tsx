@@ -1,9 +1,9 @@
 "use client";
 
 import { useEffect, useState } from "react";
-import KioskBackground from "@/components/kiosk/KioskBackground";
-import KioskHeader from "@/components/kiosk/KioskHeader";
-import KioskBanner from "@/components/kiosk/KioskBanner";
+import KioskBackground from "@/app/kiosk/kiosk-services/components/KioskBackground";
+import KioskHeader from "@/app/kiosk/kiosk-services/components/KioskHeader";
+import KioskBanner from "@/app/kiosk/kiosk-services/components/KioskBanner";
 
 export default function KioskLayout({ children }: { children: React.ReactNode }) {
   const [scale, setScale] = useState(1);

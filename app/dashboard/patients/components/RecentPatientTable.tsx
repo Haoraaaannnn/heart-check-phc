@@ -1,7 +1,7 @@
 import { useState } from 'react';
 import AnalyticsMetricCards from '@/components/reusables/analyticsMetricCards';
 import { AllRecentPatient } from '@/types/Types';
-import { PATIENTS_PER_PAGE } from '@/constants/patients';
+import { PATIENTS_PER_PAGE } from '@/app/dashboard/patients/constants/patients';
 
 const getStatusColor = (status: string) => {
   switch (status.toLowerCase()) {

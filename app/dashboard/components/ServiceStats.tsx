@@ -1,4 +1,4 @@
-import { DashboardStats } from '@/hooks/dashboard/useOverviewData';
+import { DashboardStats } from '@/app/dashboard/hooks/useOverviewData';
 
 interface ServiceStatsProps {
   deptStats: Record<string, number>;

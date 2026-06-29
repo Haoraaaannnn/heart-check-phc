@@ -1,6 +1,6 @@
 import { PieChart, Pie, Cell, Tooltip, ResponsiveContainer } from 'recharts';
 import AnalyticsMetricCards from '@/components/reusables/analyticsMetricCards';
-import { COLORS } from '@/constants/patients';
+import { COLORS } from '@/app/dashboard/patients/constants/patients';
 
 interface Props {
   data: { name: string; value: number }[];
