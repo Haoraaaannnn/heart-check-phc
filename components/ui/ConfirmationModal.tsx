@@ -38,7 +38,7 @@ const formatPhone = (raw: string) => {
 
   return (
     <div className="fixed inset-0 bg-black/50 flex items-center justify-center z-50 p-4">
-      <div className="bg-white rounded-[45px] p-8 md:p-12 max-w-2xl w-full shadow-2xl">
+      <div className="bg-white rounded-[16px] p-8 md:p-12 max-w-2xl w-full shadow-2xl">
         <h2 className="mb-4 text-center flex flex-col gap-1 mb-8">
           {/* Filipino Title: Larger, bolder, darker */}
           <span className="text-xl md:text-4xl font-bold text-black">
@@ -64,7 +64,7 @@ const formatPhone = (raw: string) => {
         <div className="flex gap-4 flex-col md:flex-row">
           <button
             onClick={onCancel}
-            className="flex-1 py-3 md:py-4 px-4 rounded-[25px] font-bold text-xl md:text-xl
+            className="flex-1 py-3 md:py-4 px-4 rounded-[16px] font-bold text-xl md:text-xl
               bg-white border-gray-400 border-[3px] text-gray-400 transition-all active:scale-95"
           >
             {cancelText}
@@ -72,10 +72,10 @@ const formatPhone = (raw: string) => {
           
           <button
             onClick={onConfirm}
-            className={`flex-1 py-3 md:py-4 px-4 rounded-[25px]  font-bold text-xl md:text-xl text-white
+            className={`flex-1 py-3 md:py-4 px-4 rounded-[16px]  font-bold text-xl md:text-xl text-white
               transition-all active:scale-95 ${
               isDangerous
-                ? 'bg-red-500 hover:bg-red-600'
+                ? 'bg-[#7f0407] hover:bg-red-600'
                 : 'bg-blue-500 hover:bg-blue-600'
             }`}
           >

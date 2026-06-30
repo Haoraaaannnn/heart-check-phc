@@ -8,7 +8,7 @@ interface Props{
 
 export default function SMSBanner({service}: Props ){
     return(
-        <div className="relative z-10 w-full px-4 md:px-6 lg:px-8 py-3 md:py-4 lg:py-5 landscape:py-2 landscape:lg:py-3 bg-[#7f0407]"
+        <div className="relative z-10 w-full px-4 md:px-6 lg:px-8 py-[2vh] landscape:py-[2vh] bg-[#7f0407]"
         >
             <div className="relative z-10 flex flex-col items-center text-center">
                 {/* Main Label */}
