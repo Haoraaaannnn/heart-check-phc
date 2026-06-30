@@ -1,7 +1,6 @@
 "use client";
 
 import { useEffect, useState } from "react";
-import KioskBackground from "@/app/kiosk/kiosk-services/components/KioskBackground";
 import KioskHeader from "@/app/kiosk/kiosk-services/components/KioskHeader";
 import KioskBanner from "@/app/kiosk/kiosk-services/components/KioskBanner";
 
@@ -33,19 +32,8 @@ export default function KioskLayout({ children }: { children: React.ReactNode })
 
 
   return (
-    <div 
-      className={`w-screen h-screen overflow-hidden flex items-center justify-center bg-[#FFE4E6] relative transition-opacity duration-300 ${mounted ? 'opacity-100' : 'opacity-0'}`}
+    <div className={`w-screen h-screen overflow-hidden flex items-center justify-center bg-white relative transition-opacity duration-300 ${mounted ? 'opacity-100' : 'opacity-0'}`}
     >
-      
-      <div 
-        className="absolute inset-0 z-0 pointer-events-none"
-        style={{
-            backgroundImage: `radial-gradient(circle, #c4a0a0 3px, transparent 1px)`,
-            backgroundSize: "64px 64px",
-            opacity: 0.3
-        }}
-      />
-
       <div
         className="flex-shrink-0 z-10 transition-transform duration-300 ease-in-out"
         style={{
@@ -55,15 +43,14 @@ export default function KioskLayout({ children }: { children: React.ReactNode })
           transformOrigin: "center center"
         }}
       >
-        <KioskBackground>
           <div className="relative z-10 flex flex-col h-full w-full">
             <KioskHeader />
             <KioskBanner />
-            <main className="flex-grow">{children}</main>
+              <main className="flex-grow">
+                {children}
+              </main>
           </div>
-        </KioskBackground>
       </div>
-
     </div>
   );
 }

@@ -6,11 +6,9 @@ export default function ServiceCard({service}: {service: Service}){
     return(
         <Link
         href={`/kiosk/confirmation?serviceId=${service.id}`}
-        className="relative flex items-center h-[250px] gap-6 pl-8 pr-12 py-8 rounded-[45px] transition-all active:scale-95 overflow-hidden"
+        className="relative flex items-center h-[250px] gap-2 pl-8 pr-12 py-6 rounded-[16px] transition-all active:scale-95 overflow-hidden"
         style={{ background: service.bg_color, boxShadow: `0 4px 30px ${service.shadow_color}`}}
         >
-            <span className="absolute -top-6 -right-6 w-35 h-35 rounded-full opacity-20 bg-white pointer-events-none" />
-            <span className="absolute -bottom-6 -left-3 w-50 h-50 rounded-full opacity-20 bg-white pointer-events-none" />
 
             <Image
                 src={service.icon_src}
