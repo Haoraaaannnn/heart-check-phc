@@ -3,3 +3,7 @@
 ## TODO:
 
 - rounded corner = 16px
+
+# To install
+
+- npm install @tabler/icons-react
