@@ -14,7 +14,7 @@ export default function ConfirmationDescriptions({service, descColor}: Props){
                 Ano ito? — What is this?
             </span>
             
-            <p className="mt-2 text-[45px] text-left text-gray-700 leading-tight font-baloo font-black">
+            <p className="mt-2 text-[45px] text-left text-gray-700 leading-tight font-black">
                 {service.description_fil}
             </p>
             

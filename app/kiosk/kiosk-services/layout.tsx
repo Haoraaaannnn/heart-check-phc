@@ -20,14 +20,23 @@ export default function KioskLayout({ children }: { children: React.ReactNode })
       const scaleX = window.innerWidth / virtualWidth;
       const scaleY = window.innerHeight / virtualHeight;
       
-      setScale(Math.min(scaleX, scaleY));
+      setScale(Math.min(scaleX, scaleY) || 1);
       
-      setMounted(true); 
+      setMounted(true);
     };
 
-    updateScale();
+    const initialUpdate = () => {
+      requestAnimationFrame(updateScale);
+      setTimeout(updateScale, 50);
+    };
+
+    initialUpdate();
     window.addEventListener("resize", updateScale);
-    return () => window.removeEventListener("resize", updateScale);
+    window.addEventListener("orientationchange", updateScale);
+    return () => {
+      window.removeEventListener("resize", updateScale);
+      window.removeEventListener("orientationchange", updateScale);
+    };
   }, []);
 
 

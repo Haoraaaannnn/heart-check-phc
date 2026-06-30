@@ -15,7 +15,7 @@ export default function ConfirmationLayout({children}: {children: React.ReactNod
 
       const scaleX = window.innerWidth / virtualWidth;
       const scaleY = window.innerHeight / virtualHeight;
-      const finalScale = Math.min(scaleX, scaleY);
+      const finalScale = Math.min(scaleX, scaleY) || 1;
       
       setScale(finalScale);
 
@@ -27,9 +27,18 @@ export default function ConfirmationLayout({children}: {children: React.ReactNod
       setMounted(true);
     };
 
-    updateScale();
+    const initialUpdate = () => {
+      requestAnimationFrame(updateScale);
+      setTimeout(updateScale, 50);
+    };
+
+    initialUpdate();
     window.addEventListener("resize", updateScale);
-    return () => window.removeEventListener("resize", updateScale);
+    window.addEventListener("orientationchange", updateScale);
+    return () => {
+      window.removeEventListener("resize", updateScale);
+      window.removeEventListener("orientationchange", updateScale);
+    };
   }, []);
 
   return (
