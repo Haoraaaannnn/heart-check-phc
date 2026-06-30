@@ -18,20 +18,16 @@ export default function KioskHeader(){
     }, []);
 
     return (
-        <header className="relative z-10 mx-4 mt-4  px-6 py-4 flex items-center justify-between">
+        <header className="relative z-10 px-8 py-8 flex items-center justify-between bg-[#7f0407]">
             <div className="flex items-center gap-3">
                 <span 
-                    className="text-gray-800 font-black text-[50px] tracking-wide"
-                    style={{ WebkitTextStroke: '1px #1f2937' }}
-                >Heart Check</span>
+                    className="text-white font-black text-[50px] ">Heart Check</span>
                 <span 
-                    className="text-[#cc3535] font-black text-[50px] tracking-wide"
-                    style={{ WebkitTextStroke: '1px #cc3535' }}
-                >PHC</span>
+                    className="text-[#ebb7b7] font-black text-[50px] ">PHC</span>
             </div>
             <div className="text-right">
-                <p className="text-2xl font-baloo font-black text-[68px] text-gray-800">{time}</p>
-                <div className="bg-white drop-shadow-2xl rounded-[45px] px-3 py-1 w-fit ml-auto font-baloo font-black text-[28px] text-black">{date}</div>
+                <p className="text-2xl text-[50px] text-white">{time}</p>
+                <div className=" font-black text-[28px] text-white">{date}</div>
             </div>
         </header>
     );
