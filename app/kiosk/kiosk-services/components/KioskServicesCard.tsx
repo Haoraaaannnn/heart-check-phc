@@ -7,14 +7,14 @@ export default function ServiceCard({service}: {service: Service}){
     return(
         <Link
         href={`/kiosk/confirmation?serviceId=${service.id}`}
-        className="relative flex items-center h-[150px] gap-2 pl-8 pr-12 py-6 rounded-[24px] transition-all active:scale-95 overflow-hidden bg-white border-2 border-gray-300"
+        className="relative flex items-center h-[158px] gap-2 pl-8 pr-12 py-6 rounded-[24px] transition-all active:scale-95 overflow-hidden bg-white border-2 border-gray-300"
         >
             <div className="w-20 h-20 bg-[#7f0407] py-4 px-4 rounded-[16px] flex items-center justify-center">
                 <Icon size={72} stroke={1.5} color="#ffffff" />
             </div>
             <div className="relative z-10 flex flex-col flex-1 min-w-0 pl-6 text-black">
-                <span className="font-black text-[40px]">{service.label_fil}</span>
-                <span className="w-fit inline-block bg-red-300/20 border border-red-500/35 text-black text-[25px] font-bold px-4 py-1 rounded-full">{service.label_en}</span>
+                <span className="font-black text-[30px]">{service.label_fil}</span>
+                <span className="w-fit inline-block bg-red-300/20 border border-red-500/35 text-black text-[20px] font-bold px-4 py-1 rounded-full">{service.label_en}</span>
             </div>
             <TablerIcons.IconArrowNarrowRight size={36} stroke={2} color="#D7D6D6" />
         </Link>

@@ -1,5 +1,3 @@
-import Image from "next/image";
-
 export default function KioskBanner(){
     return(
         <div className="relative z-10 landscape:mt-2 mt-4 landscape:mx-4 px-6 landscape:px-4 py-2 landscape:py-2">

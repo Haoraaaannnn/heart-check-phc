@@ -3,6 +3,7 @@
 import { useEffect, useState } from "react";
 import KioskHeader from "@/app/kiosk/kiosk-services/components/KioskHeader";
 import KioskBanner from "@/app/kiosk/kiosk-services/components/KioskBanner";
+import KioskTitle from "@/app/kiosk/kiosk-services/components/KioskTitle";
 
 export default function KioskLayout({ children }: { children: React.ReactNode }) {
   const [scale, setScale] = useState(1);
@@ -53,11 +54,12 @@ export default function KioskLayout({ children }: { children: React.ReactNode })
         }}
       >
           <div className="relative z-10 flex flex-col h-full w-full">
-            <KioskHeader />
+            <KioskTitle />
             <KioskBanner />
               <main className="flex-grow">
                 {children}
               </main>
+            <KioskHeader />
           </div>
       </div>
     </div>
