@@ -54,11 +54,17 @@ export default function KioskLayout({ children }: { children: React.ReactNode })
         }}
       >
           <div className="relative z-10 flex flex-col h-full w-full">
-            <KioskTitle />
-            <KioskBanner />
-              <main className="flex-grow">
-                {children}
-              </main>
+            <div className={`flex flex-1 min-h-0 ${isLandscape ? "flex-row" : "flex-col"}`}>
+              <section className={isLandscape ? "w-[45%] flex-shrink-0 overflow-hidden" : "w-full"}>
+                <KioskTitle isLandscape={isLandscape} />
+              </section>
+              <section className={isLandscape ? "w-[55%] flex flex-col min-h-0" : "w-full flex flex-col"}>
+                <KioskBanner />
+                <main className={`flex-1 ${isLandscape ? "overflow-hidden" : ""}`}>
+                  {children}
+                </main>
+              </section>
+            </div>
             <KioskHeader />
           </div>
       </div>

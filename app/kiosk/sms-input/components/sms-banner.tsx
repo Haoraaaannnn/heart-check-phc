@@ -12,7 +12,7 @@ export default function SMSBanner({service}: Props ){
         >
             <div className="relative z-10 flex flex-col items-center text-center">
                 {/* Main Label */}
-                <span className="font-black text-2xl sm:text-4xl md:text-5xl lg:text-[65px] portrait:lg:text-[70px] landscape:text-xl landscape:lg:text-[35px] leading-none mb-1 text-white">
+                <span className="font-black text-[40px] sm:text-[40px] md:text-[40px] lg:text-[45px] portrait:lg:text-[40px] landscape:text-xl landscape:lg:text-[35px] leading-none mb-1 text-white">
                     {service.label_fil}
                 </span>
                 

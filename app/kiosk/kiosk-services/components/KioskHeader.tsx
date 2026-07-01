@@ -18,15 +18,15 @@ export default function KioskHeader(){
     }, []);
 
     return (
-        <header className="relative z-10 px-8 py-8 flex items-center justify-between bg-[#7f0407]">
+        <header className="relative z-10 px-4 py-4 flex items-center justify-between bg-[#7f0407]">
             <div className="flex items-center gap-3">
                 <span 
-                    className="text-white font-black text-[50px] ">Heart Check</span>
+                    className="text-white font-black text-[34px] ">Heart Check</span>
                 <span 
-                    className="text-[#ebb7b7] font-black text-[50px] ">PHC</span>
+                    className="text-[#ebb7b7] font-black text-[34px] ">PHC</span>
             </div>
             <div className="text-right">
-                <p className="text-2xl text-[50px] text-white">{time}</p>
+                <p className="text-2xl text-[34px] text-white">{time}</p>
                 <div className=" font-black text-[28px] text-white">{date}</div>
             </div>
         </header>

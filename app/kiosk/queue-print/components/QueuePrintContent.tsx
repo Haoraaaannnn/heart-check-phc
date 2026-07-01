@@ -104,7 +104,7 @@ return (
           </div>
         )}
         
-        <div className="text-sm sm:text-base md:text-lg font-bold text-gray-600 px-6 py-2 bg-gray-50 rounded-xl md:rounded-2xl border border-gray-100 shrink-0">
+        <div className="text-sm sm:text-base md:text-lg font-bold text-white px-6 py-2 bg-[#7f0407] rounded-xl md:rounded-2xl border border-gray-100 shrink-0">
           {service?.label_en || 'Consultation'}
         </div>
       </div>

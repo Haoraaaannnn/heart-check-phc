@@ -32,11 +32,11 @@ export default function ContinueButton({
       </button>
 
       <div className="flex gap-[2vw]">
-        <Link href="/kiosk/kiosk-services" className="flex-1 text-center py-[1vh] border-[0.3vh] border-gray-300 text-gray-400 font-bold rounded-[16px] text-[min(2vh,40px)] active:scale-95 transition-all">
+        <Link href="/kiosk/kiosk-services" className="flex-1 text-center py-[1vh] border-[0.3vh] border-gray-400 text-gray-500 font-bold rounded-[16px] text-[min(2vh,40px)] active:scale-95 transition-all">
           Bumalik - Cancel
         </Link>
 
-        <button onClick={onSkip} className="flex-1 text-center py-[1vh] border-[0.3vh] border-gray-300 text-gray-400 font-bold rounded-[16px] text-[min(2vh,40px)] active:scale-95 transition-all">
+        <button onClick={onSkip} className="flex-1 text-center py-[1vh] border-[0.3vh] border-gray-400 text-gray-500 font-bold rounded-[16px] text-[min(2vh,40px)] active:scale-95 transition-all">
           Laktawan-Skip
         </button>
       </div>

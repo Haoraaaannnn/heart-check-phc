@@ -1,6 +1,7 @@
 import { createClient } from "@/lib/supabase/client";
 import SMSBanner from "@/app/kiosk/sms-input/components/sms-banner";
 import KioskPhoneEntry from "@/app/kiosk/sms-input/components/sms-entry";
+import ServiceBanner from "@/app/kiosk/sms-input/components/sms-banner";
 import { notFound } from "next/navigation";
 
 interface Props {
