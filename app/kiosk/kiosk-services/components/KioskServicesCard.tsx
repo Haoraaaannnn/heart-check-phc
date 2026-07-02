@@ -1,28 +1,22 @@
 import Link from "next/link";
-import Image from "next/image";
+import * as TablerIcons from "@tabler/icons-react";
 import { Service } from "@/types/Services";
 
 export default function ServiceCard({service}: {service: Service}){
+    const Icon = (TablerIcons as Record<string, any>)[service.icon_src] ?? TablerIcons.IconCircleDashed;
     return(
         <Link
         href={`/kiosk/confirmation?serviceId=${service.id}`}
-        className="relative flex items-center h-[250px] gap-6 pl-8 pr-12 py-8 rounded-[45px] transition-all active:scale-95 overflow-hidden"
-        style={{ background: service.bg_color, boxShadow: `0 4px 30px ${service.shadow_color}`}}
+        className="relative flex items-center h-[164px] gap-2 pl-8 pr-12 py-6 rounded-[16px] transition-all active:scale-95 overflow-hidden bg-white border-2 border-gray-300"
         >
-            <span className="absolute -top-6 -right-6 w-35 h-35 rounded-full opacity-20 bg-white pointer-events-none" />
-            <span className="absolute -bottom-6 -left-3 w-50 h-50 rounded-full opacity-20 bg-white pointer-events-none" />
-
-            <Image
-                src={service.icon_src}
-                alt={service.label_en}
-                width={120}
-                height={120}
-                className="w-30 h-30 drop-shadow-md"
-            />
-            <div className="relative z-10 flex flex-col flex-1 min-w-0   text-white">
-                <span className="font-baloo font-black text-[40px]">{service.label_fil}</span>
-                <span className="w-fit inline-block bg-white/20 border border-white/35 text-white text-[25px] font-bold px-4 py-1 rounded-full">{service.label_en}</span>
+            <div className="w-22 h-22 bg-[#7f0407] py-4 px-4 rounded-[16px] flex items-center justify-center">
+                <Icon size={76} stroke={1.5} color="#ffffff" />
             </div>
+            <div className="relative z-10 flex flex-col flex-1 min-w-0 pl-6 text-black">
+                <span className="font-black text-[30px]">{service.label_fil}</span>
+                <span className="w-fit inline-block bg-red-300/20 border border-red-500/35 text-black text-[20px]  px-4 py-1 rounded-full">{service.label_en}</span>
+            </div>
+            <TablerIcons.IconArrowNarrowRight size={36} stroke={2} color="#D7D6D6" />
         </Link>
     );
 }

@@ -1,9 +1,9 @@
 "use client";
 
 import { useEffect, useState } from "react";
-import KioskBackground from "@/app/kiosk/kiosk-services/components/KioskBackground";
 import KioskHeader from "@/app/kiosk/kiosk-services/components/KioskHeader";
 import KioskBanner from "@/app/kiosk/kiosk-services/components/KioskBanner";
+import KioskTitle from "@/app/kiosk/kiosk-services/components/KioskTitle";
 
 export default function KioskLayout({ children }: { children: React.ReactNode }) {
   const [scale, setScale] = useState(1);
@@ -21,31 +21,29 @@ export default function KioskLayout({ children }: { children: React.ReactNode })
       const scaleX = window.innerWidth / virtualWidth;
       const scaleY = window.innerHeight / virtualHeight;
       
-      setScale(Math.min(scaleX, scaleY));
+      setScale(Math.min(scaleX, scaleY) || 1);
       
-      setMounted(true); 
+      setMounted(true);
     };
 
-    updateScale();
+    const initialUpdate = () => {
+      requestAnimationFrame(updateScale);
+      setTimeout(updateScale, 50);
+    };
+
+    initialUpdate();
     window.addEventListener("resize", updateScale);
-    return () => window.removeEventListener("resize", updateScale);
+    window.addEventListener("orientationchange", updateScale);
+    return () => {
+      window.removeEventListener("resize", updateScale);
+      window.removeEventListener("orientationchange", updateScale);
+    };
   }, []);
 
 
   return (
-    <div 
-      className={`w-screen h-screen overflow-hidden flex items-center justify-center bg-[#FFE4E6] relative transition-opacity duration-300 ${mounted ? 'opacity-100' : 'opacity-0'}`}
+    <div className={`w-screen h-screen overflow-hidden flex items-center justify-center bg-white relative transition-opacity duration-300 ${mounted ? 'opacity-100' : 'opacity-0'}`}
     >
-      
-      <div 
-        className="absolute inset-0 z-0 pointer-events-none"
-        style={{
-            backgroundImage: `radial-gradient(circle, #c4a0a0 3px, transparent 1px)`,
-            backgroundSize: "64px 64px",
-            opacity: 0.3
-        }}
-      />
-
       <div
         className="flex-shrink-0 z-10 transition-transform duration-300 ease-in-out"
         style={{
@@ -55,15 +53,21 @@ export default function KioskLayout({ children }: { children: React.ReactNode })
           transformOrigin: "center center"
         }}
       >
-        <KioskBackground>
           <div className="relative z-10 flex flex-col h-full w-full">
+            <div className={`flex flex-1 min-h-0 ${isLandscape ? "flex-row" : "flex-col"}`}>
+              <section className={isLandscape ? "w-[45%] flex-shrink-0 overflow-hidden" : "w-full"}>
+                <KioskTitle isLandscape={isLandscape} />
+              </section>
+              <section className={isLandscape ? "w-[55%] flex flex-col min-h-0" : "w-full flex flex-col"}>
+                <KioskBanner />
+                <main className={`flex-1 ${isLandscape ? "overflow-hidden" : ""}`}>
+                  {children}
+                </main>
+              </section>
+            </div>
             <KioskHeader />
-            <KioskBanner />
-            <main className="flex-grow">{children}</main>
           </div>
-        </KioskBackground>
       </div>
-
     </div>
   );
 }

@@ -17,6 +17,14 @@ export default async function ConfirmationPage({ searchParams }: Props) {
     .eq("id", parseInt(serviceId ?? "0", 10))
     .single();
 
+  if (!data) {
+    return (
+      <div className="h-full flex items-center justify-center bg-white text-gray-500 text-xl">
+        No service selected.
+      </div>
+    );
+  }
+
   const service: Service = data;
 
   return (

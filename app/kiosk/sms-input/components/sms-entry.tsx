@@ -123,29 +123,29 @@ export default function KioskPhoneEntry({ service, patientNum: initialPatientNum
   };
 
   return (
-    <div className="h-dvh w-full flex flex-col p-[2vh] pb-[1vh] overflow-hidden bg-white landscape:grid landscape:grid-cols-[1.2fr_1fr] landscape:gap-x-12">
+    <div className="h-full min-h-0 w-full grid grid-cols-1 grid-rows-[auto_minmax(0,1fr)_auto] gap-3 sm:gap-4 md:gap-6 p-[2vh] overflow-hidden bg-white landscape:grid-cols-[1.2fr_1fr] landscape:grid-rows-[auto_minmax(0,1fr)_auto] landscape:gap-x-12 landscape:gap-y-6">
 
-      <div className="flex flex-col gap-[1.5vh] flex-none">
-        <SMSInstruction service={service}/>
-        <PhoneInput phone={phone} onDelete={deleteLast} service={service}/>
+      <div className="flex w-full flex-col gap-[1.5vh] landscape:col-start-1 landscape:row-start-1 landscape:row-span-2 landscape:justify-center landscape:items-start">
+        <SMSInstruction service={service} />
+        <PhoneInput phone={phone} onDelete={deleteLast} service={service} />
       </div>
 
-      <div className="flex-1 min-h-0 w-full flex items-center justify-center py-[1vh] landscape:row-span-2 landscape:h-full">
+      <div className="flex h-full w-full items-center justify-center portrait:pt-[6vh] portrait:pb-[4vh] landscape:items-center landscape:justify-end landscape:pt-[8vh] landscape:pb-[4vh] landscape:col-start-2 landscape:row-start-1 landscape:row-span-2 landscape:px-4 lg:landscape:px-8">
         <NumPad onDigit={addDigit} />
       </div>
 
-      <div className="flex-none mt-auto landscape:mt-0 landscape:self-end">
-        <ContinueButton 
-          disabled={phone.length !== MAX} 
-          onContinue={() => setShowContinueModal(true)} 
-          onSkip={() => setShowSkipModal(true)} 
-          service={service} 
-          phone={phone} 
-          showContinueModal={showContinueModal} 
+      <div className="flex-none w-full landscape:col-start-1 landscape:col-end-3 landscape:row-start-3">
+        <ContinueButton
+          disabled={phone.length !== MAX}
+          onContinue={() => setShowContinueModal(true)}
+          onSkip={() => setShowSkipModal(true)}
+          service={service}
+          phone={phone}
+          showContinueModal={showContinueModal}
           showSkipModal={showSkipModal}
-          onContinueConfirm={handleContinueConfirm} 
+          onContinueConfirm={handleContinueConfirm}
           onSkipConfirm={handleSkipConfirm}
-          onContinueCancel={() => setShowContinueModal(false)} 
+          onContinueCancel={() => setShowContinueModal(false)}
           onSkipCancel={() => setShowSkipModal(false)}
         />
       </div>

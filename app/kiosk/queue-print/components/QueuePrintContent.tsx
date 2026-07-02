@@ -99,12 +99,12 @@ return (
       {/* Service Information Section */}
       <div className="flex flex-col items-center justify-center gap-2 text-center">
         {service?.label_fil && (
-          <div className="text-3xl sm:text-4xl md:text-5xl font-baloo font-black text-[#1a2530] leading-tight shrink-0">
+          <div className="text-3xl sm:text-4xl md:text-5xl font-black text-[#1a2530] leading-tight shrink-0">
             {service.label_fil}
           </div>
         )}
         
-        <div className="text-sm sm:text-base md:text-lg font-baloo font-bold text-gray-600 px-6 py-2 bg-gray-50 rounded-xl md:rounded-2xl border border-gray-100 shrink-0">
+        <div className="text-sm sm:text-base md:text-lg font-bold text-white px-6 py-2 bg-[#7f0407] rounded-xl md:rounded-2xl border border-gray-100 shrink-0">
           {service?.label_en || 'Consultation'}
         </div>
       </div>
@@ -114,11 +114,11 @@ return (
 
       {/* Queue Number Section */}
       <div className="flex flex-col items-center justify-center w-full">
-        <div className="text-sm sm:text-base md:text-lg font-baloo font-bold text-gray-500 mb-2 shrink-0">
+        <div className="text-sm sm:text-base md:text-lg font-bold text-gray-500 mb-2 shrink-0">
           Your Queue Number
         </div>
         
-        <div className="text-[clamp(60px,15vh,120px)] font-baloo font-black text-[#1a2530] leading-[0.85] tracking-tight text-center py-2 shrink-0">
+        <div className="text-[clamp(60px,15vh,120px)] font-black text-[#1a2530] leading-[0.85] tracking-tight text-center py-2 shrink-0">
           {patientNum}
         </div>
       </div>

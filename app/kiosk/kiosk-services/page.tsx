@@ -11,7 +11,7 @@ export default async function KioskPage() {
     .order("display_order", { ascending: true });
 
   return (
-    <div className="grid grid-cols-2 landscape:grid-cols-4 h-full content-evenly gap-x-8 gap-y-6 px-8 pb-12 pt-4">
+    <div className="grid grid-cols-2 w-full max-w-full landscape:grid-cols-2 content-evenly gap-x-8 gap-y-8 px-8 py-8">
       {services?.map((service: Service) => (
         <ServiceCard key={service.id} service={service} />
       ))}

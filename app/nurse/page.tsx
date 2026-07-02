@@ -9,6 +9,8 @@ import { FinishedTable } from './components/FinishedTable';
 import { useNurseData } from './hooks/useNurseData';
 import { useNurseActions } from './hooks/useNurseActions';
 import { useRealtimeSubscription } from './hooks/useRealtimeSubscription';
+import { useBottleneckNotifications } from '@/app/dashboard/hooks/useBottleneckNotifications';
+import NotificationDropdown from '@/app/dashboard/components/NotificationDropdown';
 
 export default function NursePage() {
   const router = useRouter();
@@ -23,6 +25,15 @@ export default function NursePage() {
   const { handleMoveToWithDoctor, handleMoveBackFromDoctor, handleFinish } = useNurseActions(
     setAssignedPatients, setWithDoctorPatients, fetchFinished
   );
+
+  const {
+    notifications,
+    unreadCount,
+    markAsRead,
+    markAllAsRead,
+    dismissNotification,
+    clearAll,
+  } = useBottleneckNotifications();
 
   const handleRealtimeUpdate = async () => {
     setIsSyncing(true);
@@ -150,9 +161,14 @@ export default function NursePage() {
                 <span className="text-xs text-blue-600 font-medium">Syncing...</span>
               </div>
             )}
-            <button className="w-10 h-10 bg-gray-100 rounded-full flex items-center justify-center hover:bg-red-50 transition">
-              <i className="bx bxs-bell text-lg text-gray-500"></i>
-            </button>
+            <NotificationDropdown
+              notifications={notifications}
+              unreadCount={unreadCount}
+              onMarkAsRead={markAsRead}
+              onMarkAllAsRead={markAllAsRead}
+              onDismiss={dismissNotification}
+              onClearAll={clearAll}
+            />
           </div>
         </div>
 
