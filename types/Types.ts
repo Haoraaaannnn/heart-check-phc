@@ -43,7 +43,7 @@ export type Patient = {
   id: number;
   patientNum: string;
   status?: string;
-  cubicleNum?: string;
+  cubicleNum?: string | null;
   service?: string;
   created_at?: string;
   updated_at?: string;

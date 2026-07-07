@@ -13,6 +13,7 @@ export function useDragAndDrop(
   const [draggedPatient, setDraggedPatient] = useState<Patient | null>(null);
   const [dragSourceCubicle, setDragSourceCubicle] = useState<string | null>(null);
   const [dragOverCubicle, setDragOverCubicle] = useState<string | null>(null);
+  const [pendingUpdates, setPendingUpdates] = useState<Patient[]>([]);
   const dragStartPos = useRef<{ x: number; y: number } | null>(null);
 
   const resetDrag = () => {
@@ -37,17 +38,34 @@ export function useDragAndDrop(
     setDragSourceCubicle(cubicleNum);
   };
 
-  const handleMoveBackToProgress = async (patient: Patient, oldCubicleNum: string) => {
+  const handleMoveBackToProgress = (
+    patient: Patient,
+    oldCubicleNum: string
+  ) => {
     setAssignedPatients(prev => ({
       ...prev,
-      [oldCubicleNum]: (prev[oldCubicleNum] || []).filter(p => p.id !== patient.id)
+      [oldCubicleNum]: (prev[oldCubicleNum] || []).filter(
+        p => p.id !== patient.id
+      )
     }));
-    setOnProgressPatients(prev => [...prev, { ...patient, cubicleNum: undefined, status: 'On Progress' }]);
-    
-    await supabase.from('patients').update({ 
-      cubicleNum: null, 
-      status: 'On Progress'
-    }).eq('id', patient.id);
+
+    setOnProgressPatients(prev => [
+      ...prev,
+      {
+        ...patient,
+        cubicleNum: null,
+        status: "On Progress"
+      }
+    ]);
+
+    setPendingUpdates(prev => [
+      ...prev.filter(p => p.id !== patient.id),
+      {
+        ...patient,
+        cubicleNum: null,
+        status: "On Progress"
+      }
+    ]);
   };
 
   const setupGlobalDragHandlers = (isDragEnabled: boolean) => {
@@ -86,13 +104,27 @@ export function useDragAndDrop(
         if (dragSourceCubicle) {
           setAssignedPatients(prev => ({
             ...prev,
-            [dragSourceCubicle]: (prev[dragSourceCubicle] || []).filter(p => p.id !== draggedPatient.id),
-            [dragOverCubicle]: [...(prev[dragOverCubicle] || []), { ...draggedPatient, cubicleNum: dragOverCubicle, status: 'Assigned' }]
+            [dragSourceCubicle]: (prev[dragSourceCubicle] || []).filter(
+              p => p.id !== draggedPatient.id
+            ),
+            [dragOverCubicle]: [
+              ...(prev[dragOverCubicle] || []),
+              {
+                ...draggedPatient,
+                cubicleNum: dragOverCubicle,
+                status: "Assigned"
+              }
+            ]
           }));
-          await supabase.from('patients').update({ 
-            cubicleNum: dragOverCubicle, 
-            status: 'Assigned'
-          }).eq('id', draggedPatient.id);
+
+          setPendingUpdates(prev => [
+            ...prev.filter(p => p.id !== draggedPatient.id),
+            {
+              ...draggedPatient,
+              cubicleNum: dragOverCubicle,
+              status: "Assigned"
+            }
+          ]);
         } else {
           setOnProgressPatients(prev => prev.filter(p => p.id !== draggedPatient.id));
           setAssignedPatients(prev => ({
@@ -105,23 +137,16 @@ export function useDragAndDrop(
             }]
           }));
           
-          await supabase.from('patients').update({ 
-            cubicleNum: dragOverCubicle, 
-            status: 'Assigned',
-            reg_end: now
-          }).eq('id', draggedPatient.id);
+            setPendingUpdates(prev => [
+                ...prev.filter(p => p.id !== draggedPatient.id),
+                {
+                    ...draggedPatient,
+                    cubicleNum: dragOverCubicle,
+                    status: "Assigned",
+                    reg_end: now
+                }
+            ]);
           
-          if (draggedPatient.phoneNum) {
-            try {
-              await sendSMS(
-                String(draggedPatient.phoneNum),
-                draggedPatient.patientNum,
-                dragOverCubicle
-              );
-            } catch (err) {
-              console.error('SMS error:', err);
-            }
-          }
         }
       }
       
@@ -140,12 +165,14 @@ export function useDragAndDrop(
   };
 
   return {
-    draggedPatient,
-    dragOverCubicle,
-    handleDragStartFromQueue,
-    handleDragStartFromCubicle,
-    handleMoveBackToProgress,
-    setupGlobalDragHandlers,
-    resetDrag,
+  draggedPatient,
+  dragOverCubicle,
+  handleDragStartFromQueue,
+  handleDragStartFromCubicle,
+  handleMoveBackToProgress,
+  setupGlobalDragHandlers,
+  resetDrag,
+  pendingUpdates,
+  setPendingUpdates,
   };
 }

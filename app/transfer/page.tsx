@@ -1,5 +1,5 @@
 'use client';
-import { useState, useEffect, useCallback } from 'react';
+import { useState, useEffect, useCallback, useRef } from 'react';
 import { useRouter } from 'next/navigation';
 import { supabase } from '@/lib/supabase';
 import { Sidebar } from './components/Sidebar';
@@ -12,6 +12,7 @@ import { useCubicleData } from './hooks/useCubicleData';
 import { useAutoAssign } from './hooks/useAutoAssign';
 import { useDragAndDrop } from './hooks/useDragAndDrop';
 import { useRealtimeSubscription } from './hooks/useRealtimeSubscription';
+import { sendSMS } from "@/app/actions/sendSMS";
 import { RegistrationCounterSection } from './components/RegistrationCounterSection';
 import { useRegistrationDragAndDrop } from './hooks/useRegistrationDragAndDrop';
 import { Patient } from '@/types/Types';
@@ -24,6 +25,7 @@ export default function TransferPage() {
   const [speaking, setSpeaking] = useState<number | null>(null);
   const [sidebarOpen, setSidebarOpen] = useState(true);
   const [registrationPatients, setRegistrationPatients] = useState<Patient[]>([]);
+  const pendingUpdatesRef = useRef<Patient[]>([]);
   
 
   const [isLoading, setIsLoading] = useState(true);
@@ -34,8 +36,19 @@ export default function TransferPage() {
   );
   const { onProgressPatients, assignedPatients, setOnProgressPatients, setAssignedPatients, fetchData } = usePatientData();
   const { cubicles, fetchCubicles } = useCubicleData();
-  const { draggedPatient, dragOverCubicle, handleDragStartFromQueue, handleDragStartFromCubicle, handleMoveBackToProgress, setupGlobalDragHandlers } = useDragAndDrop(
-    assignedPatients, setOnProgressPatients, setAssignedPatients
+  const {
+    draggedPatient,
+    dragOverCubicle,
+    handleDragStartFromQueue,
+    handleDragStartFromCubicle,
+    handleMoveBackToProgress,
+    setupGlobalDragHandlers,
+    pendingUpdates,
+    setPendingUpdates,
+  } = useDragAndDrop(
+    assignedPatients,
+    setOnProgressPatients,
+    setAssignedPatients
   );
 
   const fetchRegistrationPatients = useCallback(async () => {
@@ -57,17 +70,45 @@ export default function TransferPage() {
     if (!error && data) setRegistrationPatients(data);
   }, []);
 
-  const handleRealtimeUpdate = useCallback(async () => {
-    setIsSyncing(true);
-    try {
-      await fetchData();
-      await fetchRegistrationPatients();
-    } finally {
-      setIsSyncing(false);
-    }
-  }, [fetchData, fetchRegistrationPatients]);
+    const syncing = useRef(false);
 
-  useAutoAssign(selectedCategory, onProgressPatients, assignedPatients, cubicles, setOnProgressPatients, setAssignedPatients);
+    const handleRealtimeUpdate = async () => {
+      if (syncing.current) return;
+
+      await fetchData();
+
+      setAssignedPatients(prev => {
+          const merged = {...prev};
+
+          pendingUpdates.forEach(patient => {
+          });
+
+          return merged;
+      });
+      
+      syncing.current = true;
+      setIsSyncing(true);
+
+      try {
+        await Promise.all([
+          fetchData(),
+          fetchRegistrationPatients(),
+        ]);
+      } finally {
+        setIsSyncing(false);
+        syncing.current = false;
+      }
+    };
+
+  useAutoAssign(
+    selectedCategory,
+    onProgressPatients,
+    assignedPatients,
+    cubicles,
+    setPendingUpdates,
+    setOnProgressPatients,
+    setAssignedPatients
+  );
   useRealtimeSubscription(handleRealtimeUpdate);
 
   useEffect(() => {
@@ -93,6 +134,10 @@ export default function TransferPage() {
     };
     init();
   }, []);
+
+  useEffect(() => {
+  pendingUpdatesRef.current = pendingUpdates;
+  }, [pendingUpdates]);
 
   const isConsultation = selectedCategory === 'Consultation';
   const isOPScreening = selectedCategory === 'OPD Screening';
@@ -130,6 +175,52 @@ export default function TransferPage() {
       };
       await playOnce();
     } catch { setSpeaking(null); }
+  };
+
+    const handleConfirm = async () => {
+    if (pendingUpdates.length === 0) return;
+
+    setIsSyncing(true);
+
+    try {
+      await Promise.all(
+        pendingUpdates.map(async (patient) => {
+          await supabase
+            .from("patients")
+            .update({
+              cubicleNum: patient.cubicleNum,
+              status: patient.status,
+              reg_end: patient.reg_end,
+            })
+            .eq("id", patient.id);
+
+          if (
+            patient.phoneNum &&
+            patient.status === "Assigned" &&
+            patient.cubicleNum
+          ) {
+            await sendSMS(
+              String(patient.phoneNum),
+              patient.patientNum,
+              patient.cubicleNum
+            );
+          }
+        })
+      );
+
+      setPendingUpdates([]);
+      pendingUpdatesRef.current = [];
+
+      await Promise.all([
+        fetchData(),
+        fetchRegistrationPatients(),
+      ]);
+
+    } catch (err) {
+      console.error(err);
+    } finally {
+      setIsSyncing(false);
+    }
   };
 
   const getAvailableRooms = () => {
@@ -303,17 +394,28 @@ export default function TransferPage() {
             <span className="text-gray-500 text-sm">Patient Transfer</span>
           </div>
           <div className="flex items-center gap-2">
-         
+
             {isSyncing && (
               <div className="flex items-center gap-2 px-3 py-1 bg-blue-50 rounded-full">
                 <div className="w-3 h-3 border-2 border-blue-400 border-t-transparent rounded-full animate-spin"></div>
                 <span className="text-xs text-blue-600">Syncing...</span>
               </div>
             )}
+
+            {pendingUpdates.length > 0 && (
+              <button
+                onClick={handleConfirm}
+                className="bg-gray-600 hover:bg-gray-700 text-white px-4 py-2 rounded-lg font-medium"
+              >
+                Save Changes ({pendingUpdates.length})
+              </button>
+            )}
+
             <button className="w-10 h-10 bg-gray-100 rounded-full flex items-center justify-center hover:bg-red-50 transition">
               <i className="bx bxs-bell text-lg text-gray-500"></i>
             </button>
-          </div>
+
+            </div>
         </div>
 
         <div className="px-8 py-6 h-[calc(100vh-73px)] overflow-y-auto">
@@ -333,6 +435,7 @@ export default function TransferPage() {
             }}
             onResetToSubcategory={() => setSelectedRoom(null)}
           />
+
           {renderContent()}
         </div>
       </div>

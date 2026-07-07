@@ -73,28 +73,30 @@ export default function KioskPhoneEntry({ service, patientNum: initialPatientNum
   const handleContinueConfirm = async () => {
     setShowContinueModal(false);
     try {
-      let finalPatientNum = patientNum;
-      if (!finalPatientNum) finalPatientNum = await createPatientRecord(service);
+    let finalPatientNum = patientNum;
+    if (!finalPatientNum)
+      finalPatientNum = await createPatientRecord(service);
 
-      const now = new Date();
-      const startOfDay = new Date(now.getFullYear(), now.getMonth(), now.getDate()).toISOString();
-
-      const { data, error } = await supabase
-        .from('patients')
-        .update({ phoneNum: parseInt(phone, 10) })
-        .eq('patientNum', finalPatientNum)
-        .gte('created_at', startOfDay)
-        .select()
-        .single();
-
-      if (error) throw error;
-
-      console.log(`${getTimestamp()} [DB UPDATE] Phone Number Added:`, { id: data?.id, patientNum: data?.patientNum, phoneNum: data?.phoneNum });
-
-      router.push(`/kiosk/queue-print?patientNum=${finalPatientNum}&serviceId=${service.id}`);
+    await supabase
+      .from("patients")
+      .update({
+        phoneNum: parseInt(phone, 10),
+      })
+      .eq("patientNum", finalPatientNum);
+      
+    router.push(`/kiosk/queue-print?patientNum=${finalPatientNum}&serviceId=${service.id}`);
     } catch (e) {
-      console.error(`${getTimestamp()} [SMS CONTINUE ERROR]`, e);
-    }
+  alert(JSON.stringify(e));
+
+  console.log("ERROR:", e);
+
+  if (e instanceof Error) {
+    console.log("Message:", e.message);
+    console.log("Stack:", e.stack);
+  } else {
+    console.log("Unknown error:", e);
+  }
+}
   };
 
   const handleSkipConfirm = async () => {
