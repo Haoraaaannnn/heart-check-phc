@@ -192,6 +192,20 @@ def get_empty_data():
         "decision_support": {
             "forecasted_patients": 0,
             "recommended_doctors": 1,
-            "expected_utilization": 0
+            "expected_utilization": 0,
+            "adult_clinic": {
+                "recommended_doctors": 1,
+                "max_cubicles": 5,
+                "capacity_sufficient": True,
+                "expected_utilization": 0,
+                "warning": None,
+            },
+            "pedia_clinic": {
+                "recommended_doctors": 1,
+                "max_cubicles": 5,
+                "capacity_sufficient": True,
+                "expected_utilization": 0,
+                "warning": None,
+            }
         }
     }

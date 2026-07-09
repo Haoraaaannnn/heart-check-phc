@@ -52,9 +52,17 @@ def recommend_staff(
             ),
         }
 
+    adult_recommendation = _clinic_recommendation(lam_con * p_adult, MAX_ADULT_CUBICLES)
+    pedia_recommendation = _clinic_recommendation(lam_con * p_pedia, MAX_PEDIA_CUBICLES)
+    recommended_doctors = max(
+        adult_recommendation["recommended_doctors"],
+        pedia_recommendation["recommended_doctors"],
+    )
+
     return {
         "forecasted_patients"    : forecasted_patients,
         "consultation_proportion": p_consultation,
-        "adult_clinic"           : _clinic_recommendation(lam_con * p_adult, MAX_ADULT_CUBICLES),
-        "pedia_clinic"           : _clinic_recommendation(lam_con * p_pedia, MAX_PEDIA_CUBICLES),
+        "recommended_doctors"    : recommended_doctors,
+        "adult_clinic"           : adult_recommendation,
+        "pedia_clinic"           : pedia_recommendation,
     }

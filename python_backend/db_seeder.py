@@ -157,6 +157,7 @@ def generate_fake_patients(
                 return dt.replace(microsecond=0).strftime("%Y-%m-%d %H:%M:%S")
 
             data.append({
+                'id'           : f"{purpose[:3].upper()}-{i:03d}",
                 'patientNum'   : f"{purpose[:3].upper()}-{i:03d}",
                 'service'      : purpose,
                 'cubicleNum'   : cubicle,
@@ -202,7 +203,7 @@ def generate_fake_patients(
 if __name__ == "__main__":
     generate_fake_patients(
         num_days         = 30,
-        patients_per_day = 80,
-        start_date       = "2026-04-21",
+        patients_per_day = 120,
+        start_date       = "2026-05-01",
         output_filename  = "simulated_patients.csv"
     )
