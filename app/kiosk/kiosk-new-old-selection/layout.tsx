@@ -1,6 +1,7 @@
 "use client";
 
 import { useEffect, useState } from "react";
+import KioskHeader from "@/app/kiosk/kiosk-services/components/KioskHeader";
 
 export default function KioskNewOldSelectionLayout({ children }: { children: React.ReactNode }) {
     const [scale, setScale] = useState(1);
@@ -49,7 +50,10 @@ export default function KioskNewOldSelectionLayout({ children }: { children: Rea
             }}
             >
                 <div className="relative z-10 flex flex-col h-full w-full">
-                    {children}
+                    <main className={`flex-1 ${isLandscape ? "overflow-hidden" : ""} flex items-center justify-center`}>
+                        {children}
+                    </main>
+                    <KioskHeader />
                 </div>
             </div>
         </div>

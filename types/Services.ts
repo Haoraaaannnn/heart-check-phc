@@ -8,4 +8,5 @@ export type Service = {
     display_order: number;
     description_en: string;
     description_fil: string
+    patient_type: "new" | "old" | "both";
 };
