@@ -5,11 +5,11 @@ import ConfirmationDescriptions from "@/app/kiosk/confirmation/components/Confim
 import type { Service } from "@/types/Services";
 
 interface Props {
-  searchParams?: { serviceId?: string };
+  searchParams?: { serviceId?: string; type?: string };
 }
 
 export default async function ConfirmationPage({ searchParams }: Props) {
-  const { serviceId } = await searchParams ?? {};
+  const { serviceId, type } = await searchParams ?? {};
   const supabase = await createClient();
   const { data } = await supabase
     .from("services")
@@ -26,24 +26,21 @@ export default async function ConfirmationPage({ searchParams }: Props) {
   }
 
   const service: Service = data;
+  const patientType = type === "new" || type === "old" ? type : undefined;
 
   return (
-
     <div className="h-full flex flex-col w-full bg-white overflow-hidden">
-      
       <div className="shrink-0">
         <ServiceBanner service={service} />
       </div>
 
-      
       <div className="flex-1 flex flex-col justify-center px-10 py-6 min-h-0 overflow-hidden">
         <ConfirmationDescriptions service={service} descColor={service.bg_color} />
       </div>
 
       <div className="shrink-0 px-10 pb-12 pt-4 w-full">
-        <ConfirmationActions serviceId={service.id} serviceColor={service.bg_color}/>
+        <ConfirmationActions service={service} patientType={patientType} />
       </div>
-      
     </div>
   );
 }
