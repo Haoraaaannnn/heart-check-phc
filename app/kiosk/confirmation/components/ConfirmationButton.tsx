@@ -1,19 +1,24 @@
 'use client';
 import { useRouter } from 'next/navigation';
 import { getTimestamp } from '@/lib/logger';
+import { Service } from '@/types/Services';
 
-interface Props {
-  serviceId: number;
-  serviceColor: string;
-}
-
-export default function ConfirmationActions({ serviceId, serviceColor}: Props) {
+export default function ConfirmationActions({
+  service,
+  patientType,
+}: {
+  service: Service;
+  patientType?: "new" | "old";
+}) {
   const router = useRouter();
 
   const handleContinue = () => {
+    console.log(`${getTimestamp()} [CONFIRMATION ACCEPTED] Service confirmed - Redirecting to SMS input - ServiceId: ${service.id}`);
+    router.push(`/kiosk/sms-input?serviceId=${service.id}`);
+  };
 
-    console.log(`${getTimestamp()} [CONFIRMATION ACCEPTED] Service confirmed - Redirecting to SMS input - ServiceId: ${serviceId}, ServiceColor: ${serviceColor}`);
-    router.push(`/kiosk/sms-input?serviceId=${serviceId}`);
+  const handleCancel = () => {
+    router.push(patientType ? `/kiosk/kiosk-services?type=${patientType}` : '/kiosk/kiosk-services');
   };
 
   return (
@@ -24,9 +29,8 @@ export default function ConfirmationActions({ serviceId, serviceColor}: Props) {
         Magpatuloy - Continue
       </button>
       <button
-        onClick={() => router.push('/kiosk/kiosk-services')}
-        className="w-full py-[15px] border-gray-400 border-[0.3vh] text-center rounded-[16px] font-black text-gray-500 text-[40px] transition-all active:scale-95 bg-white"
-        style={{borderColor: serviceColor}}>
+        onClick={handleCancel}
+        className="w-full py-[15px] border-gray-400 border-[0.3vh] text-center rounded-[16px] font-black text-gray-500 text-[40px] transition-all active:scale-95 bg-white">
         Bumalik - Cancel
       </button>
     </div>

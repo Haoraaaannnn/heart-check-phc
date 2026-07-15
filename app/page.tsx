@@ -61,7 +61,7 @@ export default function LandingPage() {
           </button>
 
           <button
-            onClick={() => router.push("/kiosk/kiosk-services")}
+            onClick={() => router.push("/kiosk/kiosk-new-old-selection")}
             className="rounded-full border border-white/50 bg-white/50 px-10 py-4 text-base font-bold text-[#cc3535] backdrop-blur-xl transition hover:bg-white/70 active:scale-95"
           >
             Patient Kiosk

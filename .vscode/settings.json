@@ -1,0 +1,7 @@
+{
+    "editor.cursorBlinking": "smooth",
+    "editor.cursorSmoothCaretAnimation": "on",
+    "editor.fontFamily": "'JetBrains Mono','Droid Sans Mono', monospace",
+    "editor.formatOnSave": true,
+    "editor.formatOnPaste": true
+}
