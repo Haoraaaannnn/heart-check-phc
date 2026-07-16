@@ -1,6 +1,7 @@
 'use client';
 import { Patient, Cubicle } from '@/types/Types';
 import { MAX_PATIENTS_PER_CUBICLE } from '../lib/constants';
+import { ElapsedTimer } from './ElapsedTimer';
 
 type CubicleCardProps = {
   cubicle: Cubicle;
@@ -44,19 +45,20 @@ export function CubicleCard({
       {assigned.length === 0 && <p className="text-gray-300 text-xs">Drop patient here</p>}
       {isFull && <p className="text-red-400 text-xs">Full - No more patients can be assigned</p>}
       <div className="flex flex-col gap-1">
-        {assigned.map(p => (
-          <div key={p.id} className="flex items-center gap-1">
-            <span
-              onMouseDown={isDraggable ? (e) => onDragStart(e, p, cubicle.cubicleNum) : undefined}
-              className={`px-2 py-1 bg-[#cc3535] text-white rounded-full text-xs font-medium select-none ${
-                isDraggable ? (draggedPatientId === p.id ? 'opacity-40 cursor-grabbing' : 'cursor-grab') : ''
-              }`}
-              style={{ userSelect: 'none', WebkitUserSelect: 'none' }}
-            >
-              {p.patientNum}
-            </span>
-            <button
-              onClick={() => {
+      {assigned.map(p => (
+        <div key={p.id} className="flex items-center gap-1">
+          <span
+            onMouseDown={isDraggable ? (e) => onDragStart(e, p, cubicle.cubicleNum) : undefined}
+            className={`px-2 py-1 bg-[#cc3535] text-white rounded-full text-xs font-medium select-none ${
+              isDraggable ? (draggedPatientId === p.id ? 'opacity-40 cursor-grabbing' : 'cursor-grab') : ''
+            }`}
+            style={{ userSelect: 'none', WebkitUserSelect: 'none' }}
+          >
+            {p.patientNum}
+          </span>
+          <ElapsedTimer startedAt={p.called_at} />
+          <button
+            onClick={() => {
                 const num = p.patientNum;
                 const letter = num.charAt(0);
                 const digits = parseInt(num.slice(1), 10).toString();

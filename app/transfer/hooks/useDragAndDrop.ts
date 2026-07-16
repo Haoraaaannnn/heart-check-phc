@@ -5,10 +5,13 @@ import { supabase } from '@/lib/supabase';
 import { Patient } from '@/types/Types';
 import { MAX_PATIENTS_PER_CUBICLE } from '../lib/constants';
 
+const MANUAL_SERVICES = ['Consultation', 'OPD Screening'];
+
 export function useDragAndDrop(
   assignedPatients: Record<string, Patient[]>,
   setOnProgressPatients: React.Dispatch<React.SetStateAction<Patient[]>>,
-  setAssignedPatients: React.Dispatch<React.SetStateAction<Record<string, Patient[]>>>
+  setAssignedPatients: React.Dispatch<React.SetStateAction<Record<string, Patient[]>>>,
+  fetchData: () => Promise<void>
 ) {
   const [draggedPatient, setDraggedPatient] = useState<Patient | null>(null);
   const [dragSourceCubicle, setDragSourceCubicle] = useState<string | null>(null);
@@ -38,34 +41,63 @@ export function useDragAndDrop(
     setDragSourceCubicle(cubicleNum);
   };
 
-  const handleMoveBackToProgress = (
+  const handleMoveBackToProgress = async (
     patient: Patient,
     oldCubicleNum: string
   ) => {
-    setAssignedPatients(prev => ({
-      ...prev,
-      [oldCubicleNum]: (prev[oldCubicleNum] || []).filter(
-        p => p.id !== patient.id
-      )
-    }));
+    const isManual = !!patient.service && MANUAL_SERVICES.includes(patient.service);
 
-    setOnProgressPatients(prev => [
-      ...prev,
-      {
-        ...patient,
-        cubicleNum: null,
-        status: "On Progress"
-      }
-    ]);
+    if (isManual) {
+      // Existing staged behavior — goes through Save Changes.
+      setAssignedPatients(prev => ({
+        ...prev,
+        [oldCubicleNum]: (prev[oldCubicleNum] || []).filter(
+          p => p.id !== patient.id
+        )
+      }));
 
-    setPendingUpdates(prev => [
-      ...prev.filter(p => p.id !== patient.id),
-      {
-        ...patient,
+      setOnProgressPatients(prev => [
+        ...prev,
+        {
+          ...patient,
+          cubicleNum: null,
+          status: "On Progress"
+        }
+      ]);
+
+      setPendingUpdates(prev => [
+        ...prev.filter(p => p.id !== patient.id),
+        {
+          ...patient,
+          cubicleNum: null,
+          status: "On Progress"
+        }
+      ]);
+      return;
+    }
+
+    // Auto-assign services: write straight to Supabase, no staging, no lag.
+    const { data: minRow } = await supabase
+      .from('patients')
+      .select('queue_position')
+      .order('queue_position', { ascending: true })
+      .limit(1)
+      .single();
+
+    const frontPosition = (minRow?.queue_position ?? 1) - 1;
+
+    await supabase
+      .from('patients')
+      .update({
         cubicleNum: null,
-        status: "On Progress"
-      }
-    ]);
+        status: 'Waiting',
+        called_at: null,
+        progress_started_at: null,
+        queue_position: frontPosition,
+      })
+      .eq('id', patient.id);
+
+    await fetchData();
   };
 
   const setupGlobalDragHandlers = (isDragEnabled: boolean) => {

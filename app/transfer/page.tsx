@@ -16,6 +16,7 @@ import { sendSMS } from "@/app/actions/sendSMS";
 import { RegistrationCounterSection } from './components/RegistrationCounterSection';
 import { useRegistrationDragAndDrop } from './hooks/useRegistrationDragAndDrop';
 import { Patient } from '@/types/Types';
+import { useAutoRotate } from './hooks/useAutoRotate';
 
 export default function TransferPage() {
   const router = useRouter();
@@ -48,7 +49,8 @@ export default function TransferPage() {
   } = useDragAndDrop(
     assignedPatients,
     setOnProgressPatients,
-    setAssignedPatients
+    setAssignedPatients,
+    fetchData
   );
 
   const fetchRegistrationPatients = useCallback(async () => {
@@ -74,17 +76,6 @@ export default function TransferPage() {
 
     const handleRealtimeUpdate = async () => {
       if (syncing.current) return;
-
-      await fetchData();
-
-      setAssignedPatients(prev => {
-          const merged = {...prev};
-
-          pendingUpdates.forEach(patient => {
-          });
-
-          return merged;
-      });
       
       syncing.current = true;
       setIsSyncing(true);
@@ -109,31 +100,8 @@ export default function TransferPage() {
     setOnProgressPatients,
     setAssignedPatients
   );
+  useAutoRotate(onProgressPatients, assignedPatients, fetchData);
   useRealtimeSubscription(handleRealtimeUpdate);
-
-  useEffect(() => {
-    const init = async () => {
-      setIsLoading(true);
-      try {
-        const { data } = await supabase.auth.getSession();
-        if (!data.session) { 
-          router.replace('/login'); 
-          return; 
-        }
-        
-        await Promise.all([
-          fetchData(),
-          fetchRegistrationPatients(),
-          fetchCubicles()
-        ]);
-      } catch (error) {
-        console.error('Initialization error:', error);
-      } finally {
-        setIsLoading(false);
-      }
-    };
-    init();
-  }, []);
 
   useEffect(() => {
   pendingUpdatesRef.current = pendingUpdates;
@@ -186,13 +154,26 @@ export default function TransferPage() {
       await Promise.all(
         pendingUpdates.map(async (patient) => {
           await supabase
-            .from("patients")
-            .update({
+          .from("patients")
+          .update({
               cubicleNum: patient.cubicleNum,
               status: patient.status,
               reg_end: patient.reg_end,
-            })
-            .eq("id", patient.id);
+
+          called_at:
+              patient.called_at ??
+              (patient.status === "Assigned"
+                  ? new Date().toISOString()
+                  : null),
+          })
+          .eq("id", patient.id);
+
+                await supabase
+                  .from("patients")
+                  .update({
+                      queue_position: 9999
+                  })
+                  .eq("id", patient.id);
 
           if (
             patient.phoneNum &&
@@ -208,7 +189,23 @@ export default function TransferPage() {
         })
       );
 
-      setPendingUpdates([]);
+      const { data: queue } = await supabase
+      .from("patients")
+      .select("id")
+      .neq("status", "Assigned")
+      .order("queue_position");
+
+      if (queue) {
+        for (let i = 0; i < queue.length; i++) {
+          await supabase
+            .from("patients")
+            .update({
+              queue_position: i + 1,
+            })
+            .eq("id", queue[i].id);
+        }
+      }
+
       pendingUpdatesRef.current = [];
 
       await Promise.all([
@@ -277,6 +274,22 @@ export default function TransferPage() {
     'OPD Reschedule': onProgressPatients.filter(p => p.service === 'OPD Reschedule').length,
     'Benzathine': onProgressPatients.filter(p => p.service === 'Benzathine').length,
   };
+
+  useEffect(() => {
+    const initialize = async () => {
+      try {
+        await Promise.all([
+          fetchData(),
+          fetchCubicles(),
+          fetchRegistrationPatients(),
+        ]);
+      } finally {
+        setIsLoading(false);
+      }
+    };
+
+    initialize();
+  }, []);
 
 
   if (isLoading) {

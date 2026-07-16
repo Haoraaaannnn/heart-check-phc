@@ -53,7 +53,7 @@ export function OnProgressSection({
               >
                 <div className="flex items-center justify-between">
                   <span className="text-[#cc3535] font-black text-lg">{p.patientNum}</span>
-                  <ElapsedTimer startedAt={p.created_at} />
+                  <ElapsedTimer startedAt={p.progress_started_at} />
                 </div>
                 <span className="text-gray-500 text-xs font-medium">{p.service}</span>
                 <div className="text-xs">

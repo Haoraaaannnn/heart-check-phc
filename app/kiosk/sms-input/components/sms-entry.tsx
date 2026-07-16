@@ -43,13 +43,27 @@ const createPatientRecord = async (service: Service) => {
 
     const patientNum = `${prefix}${String(nextNum).padStart(3, '0')}`;
 
-    const { data, error } = await supabase.from('patients').insert({
-      patientNum,
-      service: serviceName,
-      status: 'On Progress', 
-      phoneNum: null,
-      cubicleNum: null,
-    }).select().single();
+    const { data: lastQueue } = await supabase
+      .from("patients")
+      .select("queue_position")
+      .order("queue_position", { ascending: false })
+      .limit(1);
+
+    const nextQueuePosition =
+      (lastQueue?.[0]?.queue_position ?? 0) + 1;
+
+    const { data, error } = await supabase
+      .from("patients")
+      .insert({
+        patientNum,
+        service: serviceName,
+        status: "On Progress",
+        phoneNum: null,
+        cubicleNum: null,
+        queue_position: nextQueuePosition,
+      })
+      .select()
+      .single();
 
     if (error) throw error;
     console.log(`${getTimestamp()} [DB INSERT] New Patient Created with On Progress status:`, { id: data?.id, created_at: data?.created_at, patientNum: data?.patientNum, phoneNum: data?.phoneNum, service: data?.service });

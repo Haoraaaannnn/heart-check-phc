@@ -2,6 +2,7 @@
 import { useEffect, useRef } from 'react';
 import { Patient, Cubicle } from '@/types/Types';
 import { AUTO_ASSIGN_SERVICES, MAX_PATIENTS_PER_CUBICLE } from '../lib/constants';
+import { supabase } from "@/lib/supabase";
 
 export function useAutoAssign(
   selectedCategory: string | null,
@@ -15,18 +16,21 @@ export function useAutoAssign(
   const autoAssigning = useRef(false);
 
   const autoAssignPatients = async () => {
-    if (!selectedCategory) return;
-    if (!AUTO_ASSIGN_SERVICES.includes(selectedCategory)) return;
     if (autoAssigning.current) return;
 
     autoAssigning.current = true;
 
     try {
-      const availableCubicles = cubicles.filter(c => c.category === selectedCategory);
-      if (availableCubicles.length === 0) return;
+      
+      for (const service of AUTO_ASSIGN_SERVICES) {
 
-      const waitingPatients = onProgressPatients.filter(p => p.service === selectedCategory);
-      if (waitingPatients.length === 0) return;
+          const availableCubicles = cubicles.filter(
+              c => c.category === service
+          );
+
+          const waitingPatients = onProgressPatients.filter(
+              p => p.service === service
+          );
 
       const availableSpots: { cubicle: Cubicle; currentCount: number }[] = [];
       
@@ -37,49 +41,86 @@ export function useAutoAssign(
         }
       }
 
-      if (availableSpots.length === 0) return;
+      if (availableSpots.length === 0) continue;
+      if (waitingPatients.length === 0) continue;
 
       availableSpots.sort((a, b) => a.currentCount - b.currentCount);
-      const targetCubicle = availableSpots[0].cubicle;
-      const patientToAssign = waitingPatients[0];
       const now = new Date().toISOString();
-      
-      setPendingUpdates(prev => [
-          ...prev.filter(p => p.id !== patientToAssign.id),
-          {
-              ...patientToAssign,
-              cubicleNum: targetCubicle.cubicleNum,
+
+      let patientIndex = 0;
+
+      const assignedIds: number[] = [];
+
+      for (const spot of availableSpots) {
+          if (patientIndex >= waitingPatients.length) break;
+
+          const patient = waitingPatients[patientIndex++];
+          assignedIds.push(patient.id);
+
+          const now = new Date().toISOString();
+
+          const updatedPatient = {
+              ...patient,
+              cubicleNum: spot.cubicle.cubicleNum,
               status: "Assigned",
-              reg_end: now
+              reg_end: now,
+              called_at: now,
+          };
+
+          if (
+              patient.service === "Consultation" ||
+              patient.service === "OPD Screening"
+          ) {
+              setPendingUpdates(prev => [
+                  ...prev.filter(p => p.id !== patient.id),
+                  updatedPatient,
+              ]);
+          } else {
+              await supabase
+                  .from("patients")
+                  .update({
+                      cubicleNum: updatedPatient.cubicleNum,
+                      status: "Assigned",
+                      reg_end: now,
+                      called_at: now,
+                      queue_position: 9999,
+                  })
+                  .eq("id", patient.id);
           }
-      ]);
 
-    setOnProgressPatients(prev =>
-      prev.filter(p => p.id !== patientToAssign.id)
-    );
+          setAssignedPatients(prev => ({
+              ...prev,
+              [updatedPatient.cubicleNum!]: [
+                  ...(prev[updatedPatient.cubicleNum!] || []),
+                  updatedPatient,
+              ],
+          }));
+      } // <-- THIS is where the closing brace belongs
 
-    setAssignedPatients(prev => ({
-      ...prev,
-      [targetCubicle.cubicleNum]: [
-        ...(prev[targetCubicle.cubicleNum] || []),
-        {
-          ...patientToAssign,
-          cubicleNum: targetCubicle.cubicleNum,
-          status: "Assigned",
-          reg_end: now,
-        },
-      ],
-    }));
+      // Remove all assigned patients from On Progress
+      setOnProgressPatients(prev =>
+          prev.filter(p => !assignedIds.includes(p.id))
+      );
 
-    setPendingUpdates(prev => [
-      ...prev.filter(p => p.id !== patientToAssign.id),
-      {
-        ...patientToAssign,
-        cubicleNum: targetCubicle.cubicleNum,
-        status: "Assigned",
-        reg_end: now,
-      },
-    ]);
+      // Reorder the queue ONCE
+      const { data: queue } = await supabase
+          .from("patients")
+          .select("id")
+          .neq("status", "Assigned")
+          .order("queue_position");
+
+      if (queue) {
+          for (let i = 0; i < queue.length; i++) {
+              await supabase
+                  .from("patients")
+                  .update({
+                      queue_position: i + 1,
+                  })
+                  .eq("id", queue[i].id);
+          }
+      }
+    }
+
 
     } catch (error) {
       console.error('Auto-assign error:', error);
@@ -89,8 +130,6 @@ export function useAutoAssign(
   };
 
   useEffect(() => {
-    if (selectedCategory && AUTO_ASSIGN_SERVICES.includes(selectedCategory)) {
       autoAssignPatients();
-    }
-  }, [onProgressPatients, selectedCategory, cubicles, assignedPatients]);
+  }, [onProgressPatients, cubicles]);
 }
