@@ -48,7 +48,7 @@ export function useDragAndDrop(
     const isManual = !!patient.service && MANUAL_SERVICES.includes(patient.service);
 
     if (isManual) {
-      // Existing staged behavior — goes through Save Changes.
+      
       setAssignedPatients(prev => ({
         ...prev,
         [oldCubicleNum]: (prev[oldCubicleNum] || []).filter(
@@ -76,7 +76,6 @@ export function useDragAndDrop(
       return;
     }
 
-    // Auto-assign services: write straight to Supabase, no staging, no lag.
     const { data: minRow } = await supabase
       .from('patients')
       .select('queue_position')

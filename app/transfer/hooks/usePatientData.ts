@@ -52,7 +52,6 @@ export function usePatientData() {
       const onProgress = processedQueue.slice(0, 5);
       const waiting = processedQueue.slice(5);
 
-      // Only rewrite queue_position for rows whose position is actually wrong.
       const reorderUpdates = queue
         .map((p, i) => ({ id: p.id, queue_position: i + 1, current: p.queue_position }))
         .filter(u => u.current !== u.queue_position)
@@ -62,7 +61,6 @@ export function usePatientData() {
         await supabase.from('patients').upsert(reorderUpdates, { onConflict: 'id' });
       }
 
-      // Batch the on-progress status/timestamp corrections.
       const onProgressUpdates: any[] = [];
       for (const patient of onProgress) {
         const updates: any = { id: patient.id };
@@ -91,7 +89,6 @@ export function usePatientData() {
         }
       }
 
-      // Batch the waiting status/timestamp corrections.
       const waitingUpdates: any[] = [];
       for (const patient of waiting) {
         const updates: any = { id: patient.id };
