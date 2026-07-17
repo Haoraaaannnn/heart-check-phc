@@ -31,7 +31,7 @@ export function usePatientData() {
   const fetchData = useCallback(async () => {
     const today = new Date(); today.setHours(0, 0, 0, 0);
     const tomorrow = new Date(today); tomorrow.setDate(today.getDate() + 1);
-    
+
     const { data, error } = await supabase
       .from('patients')
       .select('*')
@@ -39,86 +39,107 @@ export function usePatientData() {
       .gte('created_at', today.toISOString())
       .lt('created_at', tomorrow.toISOString())
       .order('queue_position', {
-      ascending: true,
-      nullsFirst: false,
-    });
+        ascending: true,
+        nullsFirst: false,
+      });
 
     if (!error && data) {
       const queue = data
-        .filter(
-          p =>
-            !p.cubicleNum &&
-            p.status !== "Assigned"
-        )
+        .filter(p => !p.cubicleNum && p.status !== "Assigned")
         .sort((a, b) => (a.queue_position ?? 0) - (b.queue_position ?? 0));
 
       const processedQueue = [...queue];
-
       const onProgress = processedQueue.slice(0, 5);
       const waiting = processedQueue.slice(5);
 
+      // Only rewrite queue_position for rows whose position is actually wrong.
+      const reorderUpdates = queue
+        .map((p, i) => ({ id: p.id, queue_position: i + 1, current: p.queue_position }))
+        .filter(u => u.current !== u.queue_position)
+        .map(({ id, queue_position }) => ({ id, queue_position }));
+
+      if (reorderUpdates.length > 0) {
+        await supabase.from('patients').upsert(reorderUpdates, { onConflict: 'id' });
+      }
+
+      // Batch the on-progress status/timestamp corrections.
+      const onProgressUpdates: any[] = [];
       for (const patient of onProgress) {
-        const updates: any = {};
+        const updates: any = { id: patient.id };
+        let changed = false;
 
         if (patient.status !== "On Progress") {
           updates.status = "On Progress";
+          changed = true;
         }
-
         if (!patient.progress_started_at) {
           updates.progress_started_at = new Date().toISOString();
+          changed = true;
         }
-
         if (
-          (patient.service === "Consultation" ||
-            patient.service === "OPD Screening") &&
+          (patient.service === "Consultation" || patient.service === "OPD Screening") &&
           !patient.reg_start
         ) {
           updates.reg_start = new Date().toISOString();
           updates.counter = patient.counter ?? await getNextCounter();
+          changed = true;
         }
 
-        if (Object.keys(updates).length > 0) {
-          await supabase.from("patients").update(updates).eq("id", patient.id);
+        if (changed) {
+          onProgressUpdates.push(updates);
           Object.assign(patient, updates);
         }
       }
 
+      // Batch the waiting status/timestamp corrections.
+      const waitingUpdates: any[] = [];
       for (const patient of waiting) {
-        const updates: any = {};
+        const updates: any = { id: patient.id };
+        let changed = false;
 
         if (patient.status !== "Waiting") {
           updates.status = "Waiting";
+          changed = true;
         }
         if (patient.progress_started_at) {
           updates.progress_started_at = null;
+          changed = true;
         }
 
-        if (Object.keys(updates).length > 0) {
-          await supabase.from("patients").update(updates).eq("id", patient.id);
+        if (changed) {
+          waitingUpdates.push(updates);
           Object.assign(patient, updates);
         }
       }
 
-          const assigned = data.filter((p: Patient) =>
-            p.status === 'Assigned' && p.cubicleNum
-          );
+      if (onProgressUpdates.length > 0) {
+        await supabase.from('patients').upsert(onProgressUpdates, { onConflict: 'id' });
+      }
+      if (waitingUpdates.length > 0) {
+        await supabase.from('patients').upsert(waitingUpdates, { onConflict: 'id' });
+      }
 
-          assigned.sort((a, b) => {
-          return (a.queue_position ?? 0) - (b.queue_position ?? 0);
-          });
+      const assigned = data.filter((p: Patient) =>
+        p.status === 'Assigned' && p.cubicleNum
+      );
 
-          const grouped: Record<string, Patient[]> = {};
+      assigned.sort((a, b) => {
+        const aTime = a.called_at ? new Date(a.called_at).getTime() : 0;
+        const bTime = b.called_at ? new Date(b.called_at).getTime() : 0;
+        return aTime - bTime;
+      });
 
-          assigned.forEach((p: Patient) => {
-            if (p.cubicleNum) {
-              if (!grouped[p.cubicleNum]) grouped[p.cubicleNum] = [];
-              grouped[p.cubicleNum].push(p);
-            }
-          });
-
-    setOnProgressPatients(onProgress);
-    setAssignedPatients(grouped);
+      const grouped: Record<string, Patient[]> = {};
+      assigned.forEach((p: Patient) => {
+        if (p.cubicleNum) {
+          if (!grouped[p.cubicleNum]) grouped[p.cubicleNum] = [];
+          grouped[p.cubicleNum].push(p);
         }
+      });
+
+      setOnProgressPatients(onProgress);
+      setAssignedPatients(grouped);
+    }
   }, []);
 
   return { onProgressPatients, assignedPatients, setOnProgressPatients, setAssignedPatients, fetchData };

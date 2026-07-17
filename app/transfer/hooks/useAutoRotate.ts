@@ -19,19 +19,18 @@ export function useAutoRotate(
 
       const now = Date.now();
 
-      const isTimedOut = (p: Patient, startField: string | null) => {
+      const isTimedOut = (p: Patient, startField: string | null | undefined) => {
         if (!p.service || MANUAL_SERVICES.includes(p.service)) return false;
         if (!startField) return false;
         return now - new Date(startField).getTime() >= ROTATE_TIMEOUT_MS;
       };
 
       const timedOutOnProgress = onProgressPatients.filter(p =>
-        isTimedOut(p, p.progress_started_at ?? null)
+        isTimedOut(p, p.progress_started_at)
       );
-
       const assignedFlat = Object.values(assignedPatients).flat();
       const timedOutAssigned = assignedFlat.filter(p =>
-        isTimedOut(p, p.called_at ?? null)
+        isTimedOut(p, p.called_at)
       );
 
       if (timedOutOnProgress.length === 0 && timedOutAssigned.length === 0) return;
@@ -47,28 +46,25 @@ export function useAutoRotate(
 
         let nextPosition = (maxRow?.queue_position ?? 0) + 1;
 
-        for (const patient of timedOutOnProgress) {
-          await supabase
-            .from('patients')
-            .update({
-              queue_position: nextPosition++,
-              status: 'Waiting',
-              progress_started_at: null,
-            })
-            .eq('id', patient.id);
-        }
+        const updates = [
+          ...timedOutOnProgress.map(p => ({
+            id: p.id,
+            queue_position: nextPosition++,
+            status: 'Waiting',
+            progress_started_at: null,
+          })),
+          ...timedOutAssigned.map(p => ({
+            id: p.id,
+            queue_position: nextPosition++,
+            status: 'Waiting',
+            cubicleNum: null,
+            called_at: null,
+            progress_started_at: null,
+          })),
+        ];
 
-        for (const patient of timedOutAssigned) {
-          await supabase
-            .from('patients')
-            .update({
-              queue_position: nextPosition++,
-              status: 'Waiting',
-              cubicleNum: null,
-              called_at: null,
-              progress_started_at: null,
-            })
-            .eq('id', patient.id);
+        if (updates.length > 0) {
+          await supabase.from('patients').upsert(updates, { onConflict: 'id' });
         }
 
         await fetchData();

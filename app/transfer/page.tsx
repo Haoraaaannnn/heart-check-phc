@@ -72,24 +72,54 @@ export default function TransferPage() {
     if (!error && data) setRegistrationPatients(data);
   }, []);
 
+    const debounceRef = useRef<NodeJS.Timeout | null>(null);
     const syncing = useRef(false);
 
-    const handleRealtimeUpdate = async () => {
-      if (syncing.current) return;
-      
-      syncing.current = true;
-      setIsSyncing(true);
+    const handleRealtimeUpdate = () => {
+      if (debounceRef.current) clearTimeout(debounceRef.current);
 
-      try {
-        await Promise.all([
-          fetchData(),
-          fetchRegistrationPatients(),
-        ]);
-      } finally {
-        setIsSyncing(false);
-        syncing.current = false;
-      }
+      debounceRef.current = setTimeout(async () => {
+        if (syncing.current) return;
+
+        syncing.current = true;
+        setIsSyncing(true);
+
+        try {
+          await Promise.all([
+            fetchData(),
+            fetchRegistrationPatients(),
+          ]);
+          reapplyPendingUpdates(pendingUpdatesRef.current);
+        } finally {
+          setIsSyncing(false);
+          syncing.current = false;
+        }
+      }, 400);
     };
+    const reapplyPendingUpdates = useCallback((pending: Patient[]) => {
+  if (pending.length === 0) return;
+  const pendingIds = pending.map(p => p.id);
+
+  setOnProgressPatients(prev => {
+    const withoutPending = prev.filter(p => !pendingIds.includes(p.id));
+    const onProgressPending = pending.filter(p => p.status === 'On Progress');
+    return [...withoutPending, ...onProgressPending];
+  });
+
+  setAssignedPatients(prev => {
+    const cleaned: Record<string, Patient[]> = {};
+    for (const [cubicle, patients] of Object.entries(prev)) {
+      cleaned[cubicle] = patients.filter(p => !pendingIds.includes(p.id));
+    }
+    const assignedPending = pending.filter(p => p.status === 'Assigned' && p.cubicleNum);
+    for (const p of assignedPending) {
+      cleaned[p.cubicleNum!] = [...(cleaned[p.cubicleNum!] || []), p];
+    }
+    return cleaned;
+  });
+}, [setOnProgressPatients, setAssignedPatients]);
+
+  const autoOpsBusy = useRef(false);
 
   useAutoAssign(
     selectedCategory,
@@ -98,9 +128,10 @@ export default function TransferPage() {
     cubicles,
     setPendingUpdates,
     setOnProgressPatients,
-    setAssignedPatients
+    setAssignedPatients,
+    autoOpsBusy
   );
-  useAutoRotate(onProgressPatients, assignedPatients, fetchData);
+  useAutoRotate(onProgressPatients, assignedPatients, fetchData, autoOpsBusy);
   useRealtimeSubscription(handleRealtimeUpdate);
 
   useEffect(() => {
@@ -146,79 +177,57 @@ export default function TransferPage() {
   };
 
     const handleConfirm = async () => {
-    if (pendingUpdates.length === 0) return;
+      if (pendingUpdates.length === 0) return;
 
-    setIsSyncing(true);
+      setIsSyncing(true);
 
-    try {
-      await Promise.all(
-        pendingUpdates.map(async (patient) => {
-          await supabase
-          .from("patients")
-          .update({
-              cubicleNum: patient.cubicleNum,
-              status: patient.status,
-              reg_end: patient.reg_end,
+      try {
+        const now = new Date().toISOString();
 
+        const patientUpdates = pendingUpdates.map((patient) => ({
+          id: patient.id,
+          cubicleNum: patient.cubicleNum,
+          status: patient.status,
+          reg_end: patient.reg_end,
           called_at:
-              patient.called_at ??
-              (patient.status === "Assigned"
-                  ? new Date().toISOString()
-                  : null),
-          })
-          .eq("id", patient.id);
+            patient.called_at ??
+            (patient.status === "Assigned" ? now : null),
+          queue_position: 9999,
+        }));
 
-                await supabase
-                  .from("patients")
-                  .update({
-                      queue_position: 9999
-                  })
-                  .eq("id", patient.id);
+        await supabase.from("patients").upsert(patientUpdates, { onConflict: "id" });
 
-          if (
-            patient.phoneNum &&
-            patient.status === "Assigned" &&
-            patient.cubicleNum
-          ) {
-            await sendSMS(
-              String(patient.phoneNum),
-              patient.patientNum,
-              patient.cubicleNum
-            );
-          }
-        })
-      );
+        await Promise.all(
+          pendingUpdates
+            .filter(p => p.phoneNum && p.status === "Assigned" && p.cubicleNum)
+            .map(p => sendSMS(String(p.phoneNum), p.patientNum, p.cubicleNum!))
+        );
 
-      const { data: queue } = await supabase
-      .from("patients")
-      .select("id")
-      .neq("status", "Assigned")
-      .order("queue_position");
+        const { data: queue } = await supabase
+          .from("patients")
+          .select("id")
+          .neq("status", "Assigned")
+          .order("queue_position");
 
-      if (queue) {
-        for (let i = 0; i < queue.length; i++) {
-          await supabase
-            .from("patients")
-            .update({
-              queue_position: i + 1,
-            })
-            .eq("id", queue[i].id);
+        if (queue && queue.length > 0) {
+          const reorder = queue.map((row, i) => ({ id: row.id, queue_position: i + 1 }));
+          await supabase.from("patients").upsert(reorder, { onConflict: "id" });
         }
+
+        setPendingUpdates([]);
+        pendingUpdatesRef.current = [];
+
+        await Promise.all([
+          fetchData(),
+          fetchRegistrationPatients(),
+        ]);
+
+      } catch (err) {
+        console.error(err);
+      } finally {
+        setIsSyncing(false);
       }
-
-      pendingUpdatesRef.current = [];
-
-      await Promise.all([
-        fetchData(),
-        fetchRegistrationPatients(),
-      ]);
-
-    } catch (err) {
-      console.error(err);
-    } finally {
-      setIsSyncing(false);
-    }
-  };
+    };
 
   const getAvailableRooms = () => {
     if (!selectedCategory) return [];
