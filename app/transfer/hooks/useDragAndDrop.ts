@@ -92,6 +92,7 @@ export function useDragAndDrop(
         status: 'Waiting',
         called_at: null,
         progress_started_at: null,
+        cubicle_top_started_at: null,
         queue_position: frontPosition,
       })
       .eq('id', patient.id);

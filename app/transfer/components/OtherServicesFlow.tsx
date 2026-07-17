@@ -16,6 +16,7 @@ type OtherServicesFlowProps = {
   onSpeak: (text: string, patientId: number) => void;
   onMoveBackToProgress: (patient: any, cubicleNum: string) => void;
   isDragEnabled: boolean;
+  rotateTimeoutMs: number;
 };
 
 export function OtherServicesFlow({
@@ -31,6 +32,7 @@ export function OtherServicesFlow({
   onSpeak,
   onMoveBackToProgress,
   isDragEnabled,
+  rotateTimeoutMs,
 }: OtherServicesFlowProps) {
   return (
     <>
@@ -42,6 +44,7 @@ export function OtherServicesFlow({
         onDragStart={onDragStartFromQueue}
         onSpeak={onSpeak}
         speakingId={speaking}
+        warnAfterSeconds={rotateTimeoutMs / 1000}
       />
       <div className={`grid ${visibleCubicles.length === 5 ? 'grid-cols-5' : 'grid-cols-3'} gap-3 mt-4`}>
         {visibleCubicles.map(cubicle => (
@@ -57,6 +60,7 @@ export function OtherServicesFlow({
             onMoveBack={onMoveBackToProgress}
             draggedPatientId={draggedPatient?.id}
             speakingId={speaking}
+            warnAfterSeconds={rotateTimeoutMs / 1000}
           />
         ))}
       </div>

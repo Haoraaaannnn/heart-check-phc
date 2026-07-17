@@ -14,6 +14,7 @@ type CubicleCardProps = {
   onMoveBack: (patient: Patient, cubicleNum: string) => void;
   draggedPatientId?: number;
   speakingId?: number | null;
+  warnAfterSeconds?: number;
 };
 
 export function CubicleCard({
@@ -27,6 +28,7 @@ export function CubicleCard({
   onMoveBack,
   draggedPatientId,
   speakingId,
+  warnAfterSeconds,
 }: CubicleCardProps) {
   return (
     <div
@@ -45,7 +47,7 @@ export function CubicleCard({
       {assigned.length === 0 && <p className="text-gray-300 text-xs">Drop patient here</p>}
       {isFull && <p className="text-red-400 text-xs">Full - No more patients can be assigned</p>}
       <div className="flex flex-col gap-1">
-      {assigned.map(p => (
+      {assigned.map((p, index) => (
         <div key={p.id} className="flex items-center gap-1">
           <span
             onMouseDown={isDraggable ? (e) => onDragStart(e, p, cubicle.cubicleNum) : undefined}
@@ -56,30 +58,32 @@ export function CubicleCard({
           >
             {p.patientNum}
           </span>
-          <ElapsedTimer startedAt={p.called_at} />
+          {index === 0 && (
+            <ElapsedTimer startedAt={p.cubicle_top_started_at} warnAfterSeconds={warnAfterSeconds} />
+          )}
           <button
             onClick={() => {
-                const num = p.patientNum;
-                const letter = num.charAt(0);
-                const digits = parseInt(num.slice(1), 10).toString();
-                onSpeak(`Number ${letter} ${digits}, Number ${letter} ${digits}, go to ${cubicle.cubicleNum}`, p.id);
-              }}
-              disabled={speakingId === p.id}
-              className={`w-5 h-5 rounded-full flex items-center justify-center transition shrink-0 ${
-                speakingId === p.id ? 'bg-blue-300 text-white cursor-not-allowed' : 'bg-blue-100 hover:bg-blue-200 text-blue-500'
-              }`}
-            >
-              <i className={`bx ${speakingId === p.id ? 'bx-loader-alt animate-spin' : 'bxs-volume-full'} text-xs`}></i>
-            </button>
-            <button
-              onClick={() => onMoveBack(p, cubicle.cubicleNum)}
-              title="Move back to queue"
-              className="w-5 h-5 bg-yellow-100 hover:bg-yellow-200 text-yellow-600 rounded-full flex items-center justify-center transition shrink-0"
-            >
-              <i className="bx bx-undo text-xs"></i>
-            </button>
-          </div>
-        ))}
+              const num = p.patientNum;
+              const letter = num.charAt(0);
+              const digits = parseInt(num.slice(1), 10).toString();
+              onSpeak(`Number ${letter} ${digits}, Number ${letter} ${digits}, go to ${cubicle.cubicleNum}`, p.id);
+            }}
+            disabled={speakingId === p.id}
+            className={`w-5 h-5 rounded-full flex items-center justify-center transition shrink-0 ${
+              speakingId === p.id ? 'bg-blue-300 text-white cursor-not-allowed' : 'bg-blue-100 hover:bg-blue-200 text-blue-500'
+            }`}
+          >
+            <i className={`bx ${speakingId === p.id ? 'bx-loader-alt animate-spin' : 'bxs-volume-full'} text-xs`}></i>
+          </button>
+          <button
+            onClick={() => onMoveBack(p, cubicle.cubicleNum)}
+            title="Move back to queue"
+            className="w-5 h-5 bg-yellow-100 hover:bg-yellow-200 text-yellow-600 rounded-full flex items-center justify-center transition shrink-0"
+          >
+            <i className="bx bx-undo text-xs"></i>
+          </button>
+        </div>
+      ))}
       </div>
     </div>
   );

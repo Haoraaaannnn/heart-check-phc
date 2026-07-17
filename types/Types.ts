@@ -57,6 +57,7 @@ export type Patient = {
   timeout_seconds?: number;
   queue_position?: number;
   progress_started_at?: string | null;
+  cubicle_top_started_at?: string | null;
 };
 
 export type Cubicle = {

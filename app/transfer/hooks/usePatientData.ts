@@ -134,9 +134,24 @@ export function usePatientData() {
         }
       });
 
+      const topStartUpdates: { id: number; cubicle_top_started_at: string }[] = [];
+      const now = new Date().toISOString();
+
+      for (const cubicleNum in grouped) {
+        const top = grouped[cubicleNum][0];
+        if (top && !top.cubicle_top_started_at) {
+          topStartUpdates.push({ id: top.id, cubicle_top_started_at: now });
+          top.cubicle_top_started_at = now;
+        }
+      }
+
+      if (topStartUpdates.length > 0) {
+        await supabase.from('patients').upsert(topStartUpdates, { onConflict: 'id' });
+      }
+
       setOnProgressPatients(onProgress);
       setAssignedPatients(grouped);
-    }
+          }
   }, []);
 
   return { onProgressPatients, assignedPatients, setOnProgressPatients, setAssignedPatients, fetchData };

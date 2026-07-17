@@ -17,6 +17,7 @@ import { RegistrationCounterSection } from './components/RegistrationCounterSect
 import { useRegistrationDragAndDrop } from './hooks/useRegistrationDragAndDrop';
 import { Patient } from '@/types/Types';
 import { useAutoRotate } from './hooks/useAutoRotate';
+import { useRotateTimeout } from './hooks/useRotateTimeout';
 
 export default function TransferPage() {
   const router = useRouter();
@@ -52,6 +53,7 @@ export default function TransferPage() {
     setAssignedPatients,
     fetchData
   );
+  const rotateTimeoutMs = useRotateTimeout();
 
   const fetchRegistrationPatients = useCallback(async () => {
     const today = new Date();
@@ -131,7 +133,7 @@ export default function TransferPage() {
     setAssignedPatients,
     autoOpsBusy
   );
-  useAutoRotate(onProgressPatients, assignedPatients, fetchData, autoOpsBusy);
+  useAutoRotate(onProgressPatients, assignedPatients, fetchData, autoOpsBusy, rotateTimeoutMs);
   useRealtimeSubscription(handleRealtimeUpdate);
 
   useEffect(() => {
@@ -379,19 +381,20 @@ export default function TransferPage() {
 
     return (
       <OtherServicesFlow
-        visibleCubicles={visibleCubicles}
-        visibleOnProgress={visibleOnProgress}
-        assignedPatients={assignedPatients}
-        draggedPatient={draggedPatient}
-        dragOverCubicle={dragOverCubicle}
-        speaking={speaking}
-        selectedCategory={selectedCategory}
-        onDragStartFromQueue={handleDragStartFromQueue}
-        onDragStartFromCubicle={handleDragStartFromCubicle}
-        onSpeak={speak}
-        onMoveBackToProgress={handleMoveBackToProgress}
-        isDragEnabled={isDragEnabled}
-      />
+      visibleCubicles={visibleCubicles}
+      visibleOnProgress={visibleOnProgress}
+      assignedPatients={assignedPatients}
+      draggedPatient={draggedPatient}
+      dragOverCubicle={dragOverCubicle}
+      speaking={speaking}
+      selectedCategory={selectedCategory}
+      onDragStartFromQueue={handleDragStartFromQueue}
+      onDragStartFromCubicle={handleDragStartFromCubicle}
+      onSpeak={speak}
+      onMoveBackToProgress={handleMoveBackToProgress}
+      isDragEnabled={isDragEnabled}
+      rotateTimeoutMs={rotateTimeoutMs}
+    />
     );
   };
 
