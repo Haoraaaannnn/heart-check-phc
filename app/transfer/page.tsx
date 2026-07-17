@@ -1,5 +1,5 @@
 'use client';
-import { useState, useEffect, useCallback } from 'react';
+import { useState, useEffect, useCallback, useRef } from 'react';
 import { useRouter } from 'next/navigation';
 import { supabase } from '@/lib/supabase';
 import { Sidebar } from './components/Sidebar';
@@ -12,9 +12,12 @@ import { useCubicleData } from './hooks/useCubicleData';
 import { useAutoAssign } from './hooks/useAutoAssign';
 import { useDragAndDrop } from './hooks/useDragAndDrop';
 import { useRealtimeSubscription } from './hooks/useRealtimeSubscription';
+import { sendSMS } from "@/app/actions/sendSMS";
 import { RegistrationCounterSection } from './components/RegistrationCounterSection';
 import { useRegistrationDragAndDrop } from './hooks/useRegistrationDragAndDrop';
 import { Patient } from '@/types/Types';
+import { useAutoRotate } from './hooks/useAutoRotate';
+import { useRotateTimeout } from './hooks/useRotateTimeout';
 
 export default function TransferPage() {
   const router = useRouter();
@@ -24,6 +27,7 @@ export default function TransferPage() {
   const [speaking, setSpeaking] = useState<number | null>(null);
   const [sidebarOpen, setSidebarOpen] = useState(true);
   const [registrationPatients, setRegistrationPatients] = useState<Patient[]>([]);
+  const pendingUpdatesRef = useRef<Patient[]>([]);
   
 
   const [isLoading, setIsLoading] = useState(true);
@@ -34,9 +38,22 @@ export default function TransferPage() {
   );
   const { onProgressPatients, assignedPatients, setOnProgressPatients, setAssignedPatients, fetchData } = usePatientData();
   const { cubicles, fetchCubicles } = useCubicleData();
-  const { draggedPatient, dragOverCubicle, handleDragStartFromQueue, handleDragStartFromCubicle, handleMoveBackToProgress, setupGlobalDragHandlers } = useDragAndDrop(
-    assignedPatients, setOnProgressPatients, setAssignedPatients
+  const {
+    draggedPatient,
+    dragOverCubicle,
+    handleDragStartFromQueue,
+    handleDragStartFromCubicle,
+    handleMoveBackToProgress,
+    setupGlobalDragHandlers,
+    pendingUpdates,
+    setPendingUpdates,
+  } = useDragAndDrop(
+    assignedPatients,
+    setOnProgressPatients,
+    setAssignedPatients,
+    fetchData
   );
+  const rotateTimeoutMs = useRotateTimeout();
 
   const fetchRegistrationPatients = useCallback(async () => {
     const today = new Date();
@@ -57,42 +74,71 @@ export default function TransferPage() {
     if (!error && data) setRegistrationPatients(data);
   }, []);
 
-  const handleRealtimeUpdate = useCallback(async () => {
-    setIsSyncing(true);
-    try {
-      await fetchData();
-      await fetchRegistrationPatients();
-    } finally {
-      setIsSyncing(false);
-    }
-  }, [fetchData, fetchRegistrationPatients]);
+    const debounceRef = useRef<NodeJS.Timeout | null>(null);
+    const syncing = useRef(false);
 
-  useAutoAssign(selectedCategory, onProgressPatients, assignedPatients, cubicles, setOnProgressPatients, setAssignedPatients);
+    const handleRealtimeUpdate = () => {
+      if (debounceRef.current) clearTimeout(debounceRef.current);
+
+      debounceRef.current = setTimeout(async () => {
+        if (syncing.current) return;
+
+        syncing.current = true;
+        setIsSyncing(true);
+
+        try {
+          await Promise.all([
+            fetchData(),
+            fetchRegistrationPatients(),
+          ]);
+          reapplyPendingUpdates(pendingUpdatesRef.current);
+        } finally {
+          setIsSyncing(false);
+          syncing.current = false;
+        }
+      }, 400);
+    };
+    const reapplyPendingUpdates = useCallback((pending: Patient[]) => {
+  if (pending.length === 0) return;
+  const pendingIds = pending.map(p => p.id);
+
+  setOnProgressPatients(prev => {
+    const withoutPending = prev.filter(p => !pendingIds.includes(p.id));
+    const onProgressPending = pending.filter(p => p.status === 'On Progress');
+    return [...withoutPending, ...onProgressPending];
+  });
+
+  setAssignedPatients(prev => {
+    const cleaned: Record<string, Patient[]> = {};
+    for (const [cubicle, patients] of Object.entries(prev)) {
+      cleaned[cubicle] = patients.filter(p => !pendingIds.includes(p.id));
+    }
+    const assignedPending = pending.filter(p => p.status === 'Assigned' && p.cubicleNum);
+    for (const p of assignedPending) {
+      cleaned[p.cubicleNum!] = [...(cleaned[p.cubicleNum!] || []), p];
+    }
+    return cleaned;
+  });
+}, [setOnProgressPatients, setAssignedPatients]);
+
+  const autoOpsBusy = useRef(false);
+
+  useAutoAssign(
+    selectedCategory,
+    onProgressPatients,
+    assignedPatients,
+    cubicles,
+    setPendingUpdates,
+    setOnProgressPatients,
+    setAssignedPatients,
+    autoOpsBusy
+  );
+  useAutoRotate(onProgressPatients, assignedPatients, fetchData, autoOpsBusy, rotateTimeoutMs);
   useRealtimeSubscription(handleRealtimeUpdate);
 
   useEffect(() => {
-    const init = async () => {
-      setIsLoading(true);
-      try {
-        const { data } = await supabase.auth.getSession();
-        if (!data.session) { 
-          router.replace('/login'); 
-          return; 
-        }
-        
-        await Promise.all([
-          fetchData(),
-          fetchRegistrationPatients(),
-          fetchCubicles()
-        ]);
-      } catch (error) {
-        console.error('Initialization error:', error);
-      } finally {
-        setIsLoading(false);
-      }
-    };
-    init();
-  }, []);
+  pendingUpdatesRef.current = pendingUpdates;
+  }, [pendingUpdates]);
 
   const isConsultation = selectedCategory === 'Consultation';
   const isOPScreening = selectedCategory === 'OPD Screening';
@@ -131,6 +177,59 @@ export default function TransferPage() {
       await playOnce();
     } catch { setSpeaking(null); }
   };
+
+    const handleConfirm = async () => {
+      if (pendingUpdates.length === 0) return;
+
+      setIsSyncing(true);
+
+      try {
+        const now = new Date().toISOString();
+
+        const patientUpdates = pendingUpdates.map((patient) => ({
+          id: patient.id,
+          cubicleNum: patient.cubicleNum,
+          status: patient.status,
+          reg_end: patient.reg_end,
+          called_at:
+            patient.called_at ??
+            (patient.status === "Assigned" ? now : null),
+          queue_position: 9999,
+        }));
+
+        await supabase.from("patients").upsert(patientUpdates, { onConflict: "id" });
+
+        await Promise.all(
+          pendingUpdates
+            .filter(p => p.phoneNum && p.status === "Assigned" && p.cubicleNum)
+            .map(p => sendSMS(String(p.phoneNum), p.patientNum, p.cubicleNum!))
+        );
+
+        const { data: queue } = await supabase
+          .from("patients")
+          .select("id")
+          .neq("status", "Assigned")
+          .order("queue_position");
+
+        if (queue && queue.length > 0) {
+          const reorder = queue.map((row, i) => ({ id: row.id, queue_position: i + 1 }));
+          await supabase.from("patients").upsert(reorder, { onConflict: "id" });
+        }
+
+        setPendingUpdates([]);
+        pendingUpdatesRef.current = [];
+
+        await Promise.all([
+          fetchData(),
+          fetchRegistrationPatients(),
+        ]);
+
+      } catch (err) {
+        console.error(err);
+      } finally {
+        setIsSyncing(false);
+      }
+    };
 
   const getAvailableRooms = () => {
     if (!selectedCategory) return [];
@@ -186,6 +285,22 @@ export default function TransferPage() {
     'OPD Reschedule': onProgressPatients.filter(p => p.service === 'OPD Reschedule').length,
     'Benzathine': onProgressPatients.filter(p => p.service === 'Benzathine').length,
   };
+
+  useEffect(() => {
+    const initialize = async () => {
+      try {
+        await Promise.all([
+          fetchData(),
+          fetchCubicles(),
+          fetchRegistrationPatients(),
+        ]);
+      } finally {
+        setIsLoading(false);
+      }
+    };
+
+    initialize();
+  }, []);
 
 
   if (isLoading) {
@@ -266,19 +381,20 @@ export default function TransferPage() {
 
     return (
       <OtherServicesFlow
-        visibleCubicles={visibleCubicles}
-        visibleOnProgress={visibleOnProgress}
-        assignedPatients={assignedPatients}
-        draggedPatient={draggedPatient}
-        dragOverCubicle={dragOverCubicle}
-        speaking={speaking}
-        selectedCategory={selectedCategory}
-        onDragStartFromQueue={handleDragStartFromQueue}
-        onDragStartFromCubicle={handleDragStartFromCubicle}
-        onSpeak={speak}
-        onMoveBackToProgress={handleMoveBackToProgress}
-        isDragEnabled={isDragEnabled}
-      />
+      visibleCubicles={visibleCubicles}
+      visibleOnProgress={visibleOnProgress}
+      assignedPatients={assignedPatients}
+      draggedPatient={draggedPatient}
+      dragOverCubicle={dragOverCubicle}
+      speaking={speaking}
+      selectedCategory={selectedCategory}
+      onDragStartFromQueue={handleDragStartFromQueue}
+      onDragStartFromCubicle={handleDragStartFromCubicle}
+      onSpeak={speak}
+      onMoveBackToProgress={handleMoveBackToProgress}
+      isDragEnabled={isDragEnabled}
+      rotateTimeoutMs={rotateTimeoutMs}
+    />
     );
   };
 
@@ -303,17 +419,28 @@ export default function TransferPage() {
             <span className="text-gray-500 text-sm">Patient Transfer</span>
           </div>
           <div className="flex items-center gap-2">
-         
+
             {isSyncing && (
               <div className="flex items-center gap-2 px-3 py-1 bg-blue-50 rounded-full">
                 <div className="w-3 h-3 border-2 border-blue-400 border-t-transparent rounded-full animate-spin"></div>
                 <span className="text-xs text-blue-600">Syncing...</span>
               </div>
             )}
+
+            {pendingUpdates.length > 0 && (
+              <button
+                onClick={handleConfirm}
+                className="bg-gray-600 hover:bg-gray-700 text-white px-4 py-2 rounded-lg font-medium"
+              >
+                Save Changes ({pendingUpdates.length})
+              </button>
+            )}
+
             <button className="w-10 h-10 bg-gray-100 rounded-full flex items-center justify-center hover:bg-red-50 transition">
               <i className="bx bxs-bell text-lg text-gray-500"></i>
             </button>
-          </div>
+
+            </div>
         </div>
 
         <div className="px-8 py-6 h-[calc(100vh-73px)] overflow-y-auto">
@@ -333,6 +460,7 @@ export default function TransferPage() {
             }}
             onResetToSubcategory={() => setSelectedRoom(null)}
           />
+
           {renderContent()}
         </div>
       </div>

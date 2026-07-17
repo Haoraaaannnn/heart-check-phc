@@ -43,7 +43,7 @@ export type Patient = {
   id: number;
   patientNum: string;
   status?: string;
-  cubicleNum?: string;
+  cubicleNum?: string | null;
   service?: string;
   created_at?: string;
   updated_at?: string;
@@ -53,6 +53,11 @@ export type Patient = {
   consult_start?: string;
   consult_end?: string;
   counter?: number;
+  called_at?: string;
+  timeout_seconds?: number;
+  queue_position?: number;
+  progress_started_at?: string | null;
+  cubicle_top_started_at?: string | null;
 };
 
 export type Cubicle = {

@@ -145,14 +145,14 @@ export function useMonitorData(category: string, subcategory: string | null, cat
     tomorrow.setDate(today.getDate() + 1);
 
     const { data, error } = await supabase
-      .from('patients')
-      .select('*')
-      .eq('service', category)
-      .eq('status', 'Assigned')
-      .not('cubicleNum', 'is', null)
-      .gte('created_at', today.toISOString())
-      .lt('created_at', tomorrow.toISOString())
-      .order('created_at', { ascending: true });
+    .from('patients')
+    .select('*')
+    .eq('service', category)
+    .eq('status', 'Assigned')
+    .not('cubicleNum', 'is', null)
+    .gte('created_at', today.toISOString())
+    .lt('created_at', tomorrow.toISOString())
+    .order('called_at', { ascending: true });
 
     if (!error && data) {
       setAssignedPatients(data);
@@ -169,9 +169,9 @@ export function useMonitorData(category: string, subcategory: string | null, cat
         }
         
         for (const [cubicleNum, patients] of patientsByCubicle) {
-          const sortedPatients = [...patients].sort((a, b) => 
-            new Date(a.created_at || 0).getTime() - new Date(b.created_at || 0).getTime()
-          );
+          const sortedPatients = [...patients].sort((a, b) =>
+          new Date(a.called_at || 0).getTime() - new Date(b.called_at || 0).getTime()
+        );
           const topPatient = sortedPatients[0];
           if (topPatient) {
             queueAnnouncement(topPatient, cubicleNum);

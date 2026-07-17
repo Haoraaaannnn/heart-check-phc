@@ -4,7 +4,13 @@ export async function sendSMS(phoneNum: string, patientNum: string, cubicleNum: 
   let formatted = String(phoneNum);
   if (formatted.startsWith('0')) {
     formatted = '+63' + formatted.slice(1);
+    console.log("sendSMS called");
+    console.log(phoneNum);
+    console.log(patientNum);
+    console.log(cubicleNum);  
   }
+  console.log("Recipient:", formatted);
+  console.log("Patient:", patientNum);
 
   const roomMatch = cubicleNum.match(/R(\d+)/);
   const cubicleMatch = cubicleNum.match(/C(\d+)$/);
@@ -21,25 +27,27 @@ export async function sendSMS(phoneNum: string, patientNum: string, cubicleNum: 
 
   const credentials = Buffer.from(`${process.env.UNISMS_API_KEY}:`).toString('base64');
 
-  const response = await fetch('https://unismsapi.com/api/sms', {
-    method: 'POST',
-    headers: {
-      'Authorization': `Basic ${credentials}`,
-      'Content-Type': 'application/json',
-    },
-    body: JSON.stringify({
-      recipient: formatted,
-      content: message,
-    }),
+  const response = await fetch("https://unismsapi.com/api/sms", {
+      method: "POST",
+      headers: {
+          Authorization: `Basic ${credentials}`,
+          "Content-Type": "application/json",
+      },
+      body: JSON.stringify({
+          recipient: formatted,
+          content: message,
+          sender_id: process.env.UNISMS_SENDER_ID,
+      }),
   });
 
+  console.log("Status:", response.status);
+
+  const body = await response.text();
+  console.log("Body:", body);
+
   if (!response.ok) {
-    const err = await response.text();
-    console.error('UniSMS error:', err);
-    return { error: err };
+      return { error: body };
   }
 
-  const data = await response.json();
-  console.log('SMS sent:', data);
-  return data;
+  return JSON.parse(body);
 }

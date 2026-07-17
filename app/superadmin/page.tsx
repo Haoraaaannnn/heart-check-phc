@@ -2,6 +2,7 @@
 
 import { supabase } from "@/lib/supabase"
 import { useEffect, useState } from "react"
+import { SettingsPanel } from './components/SettingsPannel';
 
 interface User {
   auth_id: string
@@ -31,6 +32,7 @@ export default function SuperAdminPage() {
   const [formLoading, setFormLoading] = useState(false)
   const [formError, setFormError] = useState('')
   const [formSuccess, setFormSuccess] = useState('')
+  const [activeTab, setActiveTab] = useState<'users' | 'settings'>('users')
 
 
   const fetchUsers = async (page: number) => {
@@ -178,21 +180,45 @@ export default function SuperAdminPage() {
     setShowAddModal(true)
   }
 
-  return (
-    <div className="p-8 bg-gray-50 min-h-screen">
-      <div className="flex justify-between items-center mb-8">
-        <div>
-          <h1 className="text-3xl font-bold text-gray-900">User Management</h1>
-          <p className="text-gray-600 mt-1">Manage users and their roles</p>
-        </div>
-        <button 
-          onClick={handleAddClick} 
+return (
+  <div className="p-8 bg-gray-50 min-h-screen">
+    <div className="flex justify-between items-center mb-8">
+      <div>
+        <h1 className="text-3xl font-bold text-gray-900">Admin</h1>
+        <p className="text-gray-600 mt-1">Manage users and system settings</p>
+      </div>
+      {activeTab === 'users' && (
+        <button
+          onClick={handleAddClick}
           className="px-4 py-2 bg-blue-600 text-white rounded-lg hover:bg-blue-700 transition cursor-pointer"
         >
           + Add User
         </button>
-      </div>
+      )}
+    </div>
 
+    <div className="flex gap-2 mb-6">
+      <button
+        onClick={() => setActiveTab('users')}
+        className={`px-4 py-2 rounded-lg text-sm font-medium transition cursor-pointer ${
+          activeTab === 'users' ? 'bg-blue-600 text-white' : 'bg-white text-gray-600 hover:bg-gray-100'
+        }`}
+      >
+        Users
+      </button>
+      <button
+        onClick={() => setActiveTab('settings')}
+        className={`px-4 py-2 rounded-lg text-sm font-medium transition cursor-pointer ${
+          activeTab === 'settings' ? 'bg-blue-600 text-white' : 'bg-white text-gray-600 hover:bg-gray-100'
+        }`}
+      >
+        Settings
+      </button>
+    </div>
+
+    {activeTab === 'settings' && <SettingsPanel />}
+
+    {activeTab === 'users' && (
       <div className="bg-white rounded-lg shadow overflow-hidden">
         {loading ? (
           <div className="text-center py-12">
@@ -285,11 +311,12 @@ export default function SuperAdminPage() {
                 </div>
               </div>
             )}
-          </>
+</>
         )}
       </div>
+    )}
 
-      {showAddModal && (
+    {showAddModal && (
         <div className="fixed inset-0 bg-opacity-50 flex items-center justify-center z-50 bg-black/70">
           <div className="bg-white rounded-lg p-6 w-full max-w-md">
             <h2 className="text-xl font-bold text-gray-900 mb-4">
