@@ -1,5 +1,5 @@
 'use client';
-import { useEffect, useRef } from 'react';
+import { useEffect } from 'react';
 import { Patient } from '@/types/Types';
 import { supabase } from '@/lib/supabase';
 import { ROTATE_TIMEOUT_MS } from '../lib/constants';
@@ -9,13 +9,12 @@ const MANUAL_SERVICES = ['Consultation', 'OPD Screening'];
 export function useAutoRotate(
   onProgressPatients: Patient[],
   assignedPatients: Record<string, Patient[]>,
-  fetchData: () => Promise<void>
+  fetchData: () => Promise<void>,
+  busyRef: React.MutableRefObject<boolean>
 ) {
-  const rotating = useRef(false);
-
   useEffect(() => {
     const interval = setInterval(async () => {
-      if (rotating.current) return;
+      if (busyRef.current) return;
 
       const now = Date.now();
 
@@ -35,7 +34,7 @@ export function useAutoRotate(
 
       if (timedOutOnProgress.length === 0 && timedOutAssigned.length === 0) return;
 
-      rotating.current = true;
+      busyRef.current = true;
       try {
         const { data: maxRow } = await supabase
           .from('patients')
@@ -46,35 +45,37 @@ export function useAutoRotate(
 
         let nextPosition = (maxRow?.queue_position ?? 0) + 1;
 
-        const updates = [
-          ...timedOutOnProgress.map(p => ({
-            id: p.id,
-            queue_position: nextPosition++,
-            status: 'Waiting',
-            progress_started_at: null,
-          })),
-          ...timedOutAssigned.map(p => ({
-            id: p.id,
-            queue_position: nextPosition++,
-            status: 'Waiting',
-            cubicleNum: null,
-            called_at: null,
-            progress_started_at: null,
-          })),
-        ];
+        const onProgressUpdates = timedOutOnProgress.map(p => ({
+          id: p.id,
+          queue_position: nextPosition++,
+          status: 'Waiting',
+          progress_started_at: null,
+        }));
 
-        if (updates.length > 0) {
-          await supabase.from('patients').upsert(updates, { onConflict: 'id' });
+        const assignedUpdates = timedOutAssigned.map(p => ({
+          id: p.id,
+          queue_position: nextPosition++,
+          status: 'Waiting',
+          cubicleNum: null,
+          called_at: null,
+          progress_started_at: null,
+        }));
+
+        if (onProgressUpdates.length > 0) {
+          await supabase.from('patients').upsert(onProgressUpdates, { onConflict: 'id' });
+        }
+        if (assignedUpdates.length > 0) {
+          await supabase.from('patients').upsert(assignedUpdates, { onConflict: 'id' });
         }
 
         await fetchData();
       } catch (err) {
         console.error('Auto-rotate error:', err);
       } finally {
-        rotating.current = false;
+        busyRef.current = false;
       }
     }, 5000);
 
     return () => clearInterval(interval);
-  }, [onProgressPatients, assignedPatients, fetchData]);
+  }, [onProgressPatients, assignedPatients, fetchData, busyRef]);
 }
