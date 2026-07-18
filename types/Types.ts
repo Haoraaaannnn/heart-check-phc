@@ -66,4 +66,15 @@ export type Cubicle = {
   category: string;
   room: number;
   subcategory?: string;
+  doctorId?: string | null;
+};
+
+export type Doctor = {
+  id: string;
+  full_name: string;
+  specialty?: string | null;
+  email?: string | null;
+  auth_id?: string | null;
+  active: boolean;
+  created_at?: string;
 };

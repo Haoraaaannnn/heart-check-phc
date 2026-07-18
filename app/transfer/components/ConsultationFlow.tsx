@@ -26,6 +26,7 @@ type ConsultationFlowProps = {
   onSpeak: (text: string, patientId: number) => void;
   onMoveBackToProgress: (patient: any, cubicleNum: string) => void;
   isDragEnabled: boolean;
+  cubicleDoctorMap?: Record<string, string>;
 };
 
 export function ConsultationFlow({
@@ -49,6 +50,7 @@ export function ConsultationFlow({
   onSpeak,
   onMoveBackToProgress,
   isDragEnabled,
+  cubicleDoctorMap = {},
 }: ConsultationFlowProps) {
   if (!selectedSubcategory) {
     return (
@@ -100,19 +102,20 @@ export function ConsultationFlow({
       />
       <div className="grid grid-cols-5 gap-3 mt-4">
         {visibleCubicles.map(cubicle => (
-          <CubicleCard
-            key={cubicle.id}
-            cubicle={cubicle}
-            assigned={assignedPatients[cubicle.cubicleNum] || []}
-            isOver={dragOverCubicle === cubicle.cubicleNum}
-            isDraggable={isDragEnabled}
-            isFull={(assignedPatients[cubicle.cubicleNum]?.length || 0) >= 5}
-            onDragStart={onDragStartFromCubicle}
-            onSpeak={onSpeak}
-            onMoveBack={onMoveBackToProgress}
-            draggedPatientId={draggedPatient?.id}
-            speakingId={speaking}
-          />
+        <CubicleCard
+          key={cubicle.id}
+          cubicle={cubicle}
+          assigned={assignedPatients[cubicle.cubicleNum] || []}
+          isOver={dragOverCubicle === cubicle.cubicleNum}
+          isDraggable={isDragEnabled}
+          isFull={(assignedPatients[cubicle.cubicleNum]?.length || 0) >= 5}
+          onDragStart={onDragStartFromCubicle}
+          onSpeak={onSpeak}
+          onMoveBack={onMoveBackToProgress}
+          draggedPatientId={draggedPatient?.id}
+          speakingId={speaking}
+          doctorName={cubicleDoctorMap[cubicle.cubicleNum]}
+        />
         ))}
       </div>
 

@@ -6,9 +6,15 @@ type TableLayoutProps = {
   cubicles: Cubicle[];
   assignedPatients: Patient[];
   formatCubicleDisplay: (cubicleNum: string) => string;
+  cubicleDoctorMap?: Record<string, string>;
 };
 
-export function TableLayout({ title, cubicles, assignedPatients, formatCubicleDisplay }: TableLayoutProps) {
+const formatCubicleOnly = (cubicleNum: string): string => {
+  const cubicleMatch = cubicleNum.match(/C(\d+)$/);
+  return cubicleMatch ? `Cubicle ${cubicleMatch[1]}` : cubicleNum;
+};
+
+export function TableLayout({ title, cubicles, assignedPatients, formatCubicleDisplay, cubicleDoctorMap = {} }: TableLayoutProps) {
   const uniqueRooms = [...new Set(cubicles.map(c => c.room))].sort((a, b) => a - b);
 
   return (
@@ -26,10 +32,16 @@ export function TableLayout({ title, cubicles, assignedPatients, formatCubicleDi
                   Room / Cubicle
                 </th>
                 {cubicles.map((cubicle) => {
-                  const displayName = formatCubicleDisplay(cubicle.cubicleNum);
+                  const displayName = formatCubicleOnly(cubicle.cubicleNum);
+                  const doctorName = cubicleDoctorMap[cubicle.cubicleNum];
                   return (
                     <th key={cubicle.id} className="px-6 py-5 text-center text-gray-600 text-xl font-semibold uppercase tracking-wider border-l border-gray-200">
-                      {displayName}
+                      <div>{displayName}</div>
+                      {doctorName && (
+                        <div className="text-sm font-normal normal-case text-gray-400 mt-1">
+                          Dr. {doctorName}
+                        </div>
+                      )}
                     </th>
                   );
                 })}
@@ -45,8 +57,8 @@ export function TableLayout({ title, cubicles, assignedPatients, formatCubicleDi
                     </td>
                     {roomCubicles.map((cubicle) => {
                       const patientsInCubicle = assignedPatients.filter(p => p.cubicleNum === cubicle.cubicleNum);
-                      const sortedPatients = [...patientsInCubicle].sort((a, b) => 
-                        new Date(a.created_at || 0).getTime() - new Date(b.created_at || 0).getTime()
+                      const sortedPatients = [...patientsInCubicle].sort((a, b) =>
+                        new Date(a.called_at || 0).getTime() - new Date(b.called_at || 0).getTime()
                       );
                       return (
                         <td key={cubicle.id} className="px-6 py-8 text-center border-l border-gray-100 align-top">
@@ -75,9 +87,9 @@ export function TableLayout({ title, cubicles, assignedPatients, formatCubicleDi
                       );
                     })}
                   </tr>
-                  );
-                })}
-              </tbody>
+                );
+              })}
+            </tbody>
           </table>
         </div>
       )}

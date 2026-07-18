@@ -23,6 +23,7 @@ type OPScreeningFlowProps = {
   regDraggedPatient: Patient | null;
   dragOverCounter: number | null;
   onRegDragStart: (e: React.MouseEvent, patient: Patient) => void;
+  cubicleDoctorMap?: Record<string, string>;
 };
 
 export function OPScreeningFlow({
@@ -44,6 +45,7 @@ export function OPScreeningFlow({
   regDraggedPatient,
   dragOverCounter,
   onRegDragStart,
+  cubicleDoctorMap = {},
 }: OPScreeningFlowProps) {
 
   if (!selectedRoom) {
@@ -91,18 +93,19 @@ export function OPScreeningFlow({
       <div className="grid grid-cols-5 gap-3 mt-4">
         {visibleCubicles.map(cubicle => (
           <CubicleCard
-            key={cubicle.id}
-            cubicle={cubicle}
-            assigned={assignedPatients[cubicle.cubicleNum] || []}
-            isOver={dragOverCubicle === cubicle.cubicleNum}
-            isDraggable={isDragEnabled}
-            isFull={(assignedPatients[cubicle.cubicleNum]?.length || 0) >= 5}
-            onDragStart={onDragStartFromCubicle}
-            onSpeak={onSpeak}
-            onMoveBack={onMoveBackToProgress}
-            draggedPatientId={draggedPatient?.id}
-            speakingId={speaking}
-          />
+          key={cubicle.id}
+          cubicle={cubicle}
+          assigned={assignedPatients[cubicle.cubicleNum] || []}
+          isOver={dragOverCubicle === cubicle.cubicleNum}
+          isDraggable={isDragEnabled}
+          isFull={(assignedPatients[cubicle.cubicleNum]?.length || 0) >= 5}
+          onDragStart={onDragStartFromCubicle}
+          onSpeak={onSpeak}
+          onMoveBack={onMoveBackToProgress}
+          draggedPatientId={draggedPatient?.id}
+          speakingId={speaking}
+          doctorName={cubicleDoctorMap[cubicle.cubicleNum]}
+        />
         ))}
       </div>
       <RegistrationCounterSection

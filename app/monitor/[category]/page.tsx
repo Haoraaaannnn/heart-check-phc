@@ -37,6 +37,7 @@ export default function CategoryMonitorPage() {
     formatCubicleDisplay,
     isTableLayoutService,
     setupRegistrationSubscription,
+    cubicleDoctorMap,
   } = useMonitorData(category, subcategory, categoryParam, isRegistration);
 
   useRealtimeSubscription(`monitor-${categoryParam}`, category, () => {
@@ -120,6 +121,7 @@ export default function CategoryMonitorPage() {
           title={displayTitle}
           pairedData={getPairedData()}
           formatCubicleDisplay={formatCubicleDisplay}
+          cubicleDoctorMap={cubicleDoctorMap}
         />
         <Footer />
       </div>
@@ -134,6 +136,7 @@ export default function CategoryMonitorPage() {
         cubicles={cubicles}
         assignedPatients={assignedPatients}
         formatCubicleDisplay={formatCubicleDisplay}
+        cubicleDoctorMap={cubicleDoctorMap}
       />
       <Footer />
     </div>

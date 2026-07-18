@@ -1,5 +1,6 @@
 import { NextResponse } from 'next/server'
 import { createClient } from '@supabase/supabase-js'
+import { requireSuperadmin } from '@/lib/supabase/superadminGuard'
 
 const supabaseAdmin = createClient(
   process.env.NEXT_PUBLIC_SUPABASE_URL!,
@@ -8,6 +9,9 @@ const supabaseAdmin = createClient(
 
 export async function PUT(request: Request) {
   try {
+    const guard = await requireSuperadmin(request)
+    if (!guard.authorized) return guard.response
+
     const { authId, email, username, role } = await request.json()
 
     if (!authId) {
@@ -17,13 +21,19 @@ export async function PUT(request: Request) {
       )
     }
 
-   
+    if (authId === guard.user.id && role && role !== 'superadmin') {
+      return NextResponse.json(
+        { error: 'You cannot change your own role away from superadmin' },
+        { status: 400 }
+      )
+    }
+
     const { error: dbError } = await supabaseAdmin
       .from('users')
-      .update({ 
+      .update({
         email: email,
         username: username,
-        role: role 
+        role: role
       })
       .eq('auth_id', authId)
 
@@ -31,7 +41,6 @@ export async function PUT(request: Request) {
       return NextResponse.json({ error: dbError.message }, { status: 400 })
     }
 
-    
     if (email) {
       const { error: authError } = await supabaseAdmin.auth.admin.updateUserById(
         authId,
@@ -39,7 +48,6 @@ export async function PUT(request: Request) {
       )
       if (authError) {
         console.error('Error updating auth email:', authError)
-        
       }
     }
 
