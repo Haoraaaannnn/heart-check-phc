@@ -15,6 +15,7 @@ type CubicleCardProps = {
   draggedPatientId?: number;
   speakingId?: number | null;
   warnAfterSeconds?: number;
+  doctorName?: string;
 };
 
 export function CubicleCard({
@@ -29,12 +30,13 @@ export function CubicleCard({
   draggedPatientId,
   speakingId,
   warnAfterSeconds,
+  doctorName,
 }: CubicleCardProps) {
   return (
     <div
       data-cubicle={cubicle.cubicleNum}
       className={`bg-white border-2 rounded-3xl p-4 flex flex-col gap-2 min-h-36 shadow-sm transition-all duration-150 ${
-        isOver && isDraggable ? 'border-[#cc3535] bg-red-50 scale-105' : 
+        isOver && isDraggable ? 'border-[#cc3535] bg-red-50 scale-105' :
         isFull ? 'border-red-300 bg-red-50/30' : 'border-gray-100 hover:border-red-200'
       }`}
     >
@@ -44,6 +46,9 @@ export function CubicleCard({
           {assigned.length}/{MAX_PATIENTS_PER_CUBICLE}
         </span>
       </div>
+      {doctorName && (
+        <span className="text-gray-700 text-[11px] font-semibold -mt-1">Dr. {doctorName}</span>
+      )}
       {assigned.length === 0 && <p className="text-gray-300 text-xs">Drop patient here</p>}
       {isFull && <p className="text-red-400 text-xs">Full - No more patients can be assigned</p>}
       <div className="flex flex-col gap-1">

@@ -37,7 +37,7 @@ export default function TransferPage() {
     registrationPatients, setRegistrationPatients
   );
   const { onProgressPatients, assignedPatients, setOnProgressPatients, setAssignedPatients, fetchData } = usePatientData();
-  const { cubicles, fetchCubicles } = useCubicleData();
+  const { cubicles, fetchCubicles, cubicleDoctorMap } = useCubicleData();
   const {
     draggedPatient,
     dragOverCubicle,
@@ -350,6 +350,7 @@ export default function TransferPage() {
           regDraggedPatient={regDraggedPatient}
           dragOverCounter={dragOverCounter}
           onRegDragStart={handleRegDragStart}
+          cubicleDoctorMap={cubicleDoctorMap}
         />
       );
     }

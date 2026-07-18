@@ -8,6 +8,7 @@ export function useMonitorData(category: string, subcategory: string | null, cat
   const [cubicles, setCubicles] = useState<Cubicle[]>([]);
   const [registrationPatients, setRegistrationPatients] = useState<Patient[]>([]);
   const [currentTime, setCurrentTime] = useState(new Date());
+  const [cubicleDoctorMap, setCubicleDoctorMap] = useState<Record<string, string>>({});
 
   const announcementQueue = useRef<{ patient: Patient; message: string }[]>([]);
   const isPlayingRef = useRef(false);
@@ -124,17 +125,38 @@ export function useMonitorData(category: string, subcategory: string | null, cat
       .from('cubicle')
       .select('*')
       .eq('category', category);
-    
+
     if (subcategory) {
       query = query.eq('subcategory', subcategory);
     }
-    
+
     const { data, error } = await query
       .order('room', { ascending: true })
       .order('cubicleNum', { ascending: true });
-    
+
     if (!error && data) {
       setCubicles(data);
+
+      const doctorIds = [...new Set(data.map((c: Cubicle) => c.doctorId).filter(Boolean))] as string[];
+
+      if (doctorIds.length === 0) {
+        setCubicleDoctorMap({});
+        return;
+      }
+
+      const { data: doctorsData } = await supabase
+        .from('doctors')
+        .select('id, full_name')
+        .in('id', doctorIds);
+
+      const nameById = new Map((doctorsData || []).map((d: any) => [d.id, d.full_name]));
+      const map: Record<string, string> = {};
+      data.forEach((c: Cubicle) => {
+        if (c.doctorId && nameById.has(c.doctorId)) {
+          map[c.cubicleNum] = nameById.get(c.doctorId)!;
+        }
+      });
+      setCubicleDoctorMap(map);
     }
   };
 
@@ -272,5 +294,6 @@ export function useMonitorData(category: string, subcategory: string | null, cat
     formatCubicleDisplay,
     isTableLayoutService,
     setupRegistrationSubscription,
+    cubicleDoctorMap,
   };
 }
