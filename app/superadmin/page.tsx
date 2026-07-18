@@ -68,78 +68,88 @@ export default function SuperAdminPage() {
 
 
   const handleSubmit = async (e: React.FormEvent) => {
-    e.preventDefault()
-    setFormLoading(true)
-    setFormError('')
-    setFormSuccess('')
+      e.preventDefault()
+      setFormLoading(true)
+      setFormError('')
+      setFormSuccess('')
 
-    try {
-      if (editingUser) {
-       
-        const response = await fetch('/api/superadmin/update-user', {
-          method: 'PUT',
-          headers: { 'Content-Type': 'application/json' },
-          body: JSON.stringify({ 
-            authId: editingUser.auth_id, 
-            email: formEmail,
-            username: formUsername,
-            role: formRole 
-          }),
-        })
-        const data = await response.json()
-        if (!response.ok) throw new Error(data.error)
-        setFormSuccess(`User ${formEmail} updated successfully!`)
-        
-        setTimeout(() => {
-          setShowAddModal(false)
-          setEditingUser(null)
-          setFormSuccess('')
-          fetchUsers(currentPage)
-        }, 1500)
-      } else {
-  
-        const response = await fetch('/api/superadmin/create-user', {
-          method: 'POST',
-          headers: { 'Content-Type': 'application/json' },
-          body: JSON.stringify({ 
-            email: formEmail, 
-            password: formPassword, 
-            username: formUsername,
-            role: formRole 
-          }),
-        })
-        const data = await response.json()
-        if (!response.ok) throw new Error(data.error)
-        setFormSuccess(`User ${formEmail} created!`)
-        
-        setTimeout(() => {
-          setShowAddModal(false)
-          setFormSuccess('')
-          setFormEmail('')
-          setFormUsername('')
-          setFormPassword('')
-          fetchUsers(currentPage)
-        }, 1500)
+      try {
+        const { data: { session } } = await supabase.auth.getSession()
+
+        if (editingUser) {
+          const response = await fetch('/api/superadmin/update-user', {
+            method: 'PUT',
+            headers: {
+              'Content-Type': 'application/json',
+              'Authorization': `Bearer ${session?.access_token}`,
+            },
+            body: JSON.stringify({
+              authId: editingUser.auth_id,
+              email: formEmail,
+              username: formUsername,
+              role: formRole
+            }),
+          })
+          const data = await response.json()
+          if (!response.ok) throw new Error(data.error)
+          setFormSuccess(`User ${formEmail} updated successfully!`)
+
+          setTimeout(() => {
+            setShowAddModal(false)
+            setEditingUser(null)
+            setFormSuccess('')
+            fetchUsers(currentPage)
+          }, 1500)
+        } else {
+          const response = await fetch('/api/superadmin/create-user', {
+            method: 'POST',
+            headers: {
+              'Content-Type': 'application/json',
+              'Authorization': `Bearer ${session?.access_token}`,
+            },
+            body: JSON.stringify({
+              email: formEmail,
+              password: formPassword,
+              username: formUsername,
+              role: formRole
+            }),
+          })
+          const data = await response.json()
+          if (!response.ok) throw new Error(data.error)
+          setFormSuccess(`User ${formEmail} created!`)
+
+          setTimeout(() => {
+            setShowAddModal(false)
+            setFormSuccess('')
+            setFormEmail('')
+            setFormUsername('')
+            setFormPassword('')
+            fetchUsers(currentPage)
+          }, 1500)
+        }
+      } catch (err: any) {
+        setFormError(err.message)
+      } finally {
+        setFormLoading(false)
       }
-    } catch (err: any) {
-      setFormError(err.message)
-    } finally {
-      setFormLoading(false)
     }
-  }
 
+    const handleDelete = async (user: User) => {
+      setFormLoading(true)
+      setFormError('')
+      try {
+        const { data: { session } } = await supabase.auth.getSession()
 
-  const handleDelete = async (user: User) => {
-    setFormLoading(true)
-    setFormError('')
-    try {
-      const response = await fetch('/api/superadmin/delete-user', {
-        method: 'DELETE',
-        headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({ authId: user.auth_id }), // wag gawing string dapat naka hash
-      })
-      const data = await response.json()
-      if (!response.ok) throw new Error(data.error)
+        const response = await fetch('/api/superadmin/delete-user', {
+          method: 'DELETE',
+          headers: {
+            'Content-Type': 'application/json',
+            'Authorization': `Bearer ${session?.access_token}`,
+          },
+          body: JSON.stringify({ authId: user.auth_id }),
+        })
+        const data = await response.json()
+        if (!response.ok) throw new Error(data.error)
 
       setFormSuccess(`User ${user.email} deleted!`)
       setTimeout(() => {
