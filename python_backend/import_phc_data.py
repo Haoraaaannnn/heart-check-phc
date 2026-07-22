@@ -7,7 +7,13 @@ BASE_DIR = os.path.dirname(os.path.abspath(__file__))
 env_path = os.path.join(BASE_DIR, "..", ".env.local")
 load_dotenv(env_path)
 
-EXCEL_PATH   = "/home/jensen/Github-Repositories/Heart_Check_PHC/python_backend/data_entries/NOV.ROOM6-2025_416e4b79-e9bc-4f65-9f91-733b8df90139.xls"
+# Add every source file here. Mix of 2024/2025, room-based or date-based —
+# doesn't matter, they all go through the same pipeline.
+EXCEL_PATHS = [
+    "/home/jensen/Github-Repositories/Heart_Check_PHC/python_backend/data_entries/NOV.ROOM6-2025_416e4b79-e9bc-4f65-9f91-733b8df90139.xls",
+    "/home/jensen/Github-Repositories/Heart_Check_PHC/python_backend/data_entries/TMAF jan2024.xls"
+]
+
 SUPABASE_URL = os.environ.get("NEXT_PUBLIC_SUPABASE_URL")
 SUPABASE_KEY = os.environ.get("NEXT_PUBLIC_SUPABASE_ANON_KEY")
 BATCH_SIZE   = 500
@@ -82,10 +88,10 @@ def load_all_sheets(path, skip_sheets=None):
             print(f"{sheet}: {len(df)} rows")
 
     if not all_dfs:
-        raise ValueError("No data extracted from any sheet.")
+        raise ValueError(f"No data extracted from any sheet in {path}.")
 
     combined = pd.concat(all_dfs, ignore_index=True)
-    print(f"\nTotal combined: {len(combined)} rows from {len(all_dfs)} sheets")
+    print(f"Subtotal: {len(combined)} rows from {len(all_dfs)} sheets in {os.path.basename(path)}")
     return combined
 
 
@@ -96,42 +102,43 @@ def combine_date_and_time(df):
         # Handle nulls and invalid types
         if pd.isna(t) or not hasattr(t, "strftime"):
             return None
-        
+
         hour = t.hour
-        
-        # HEURISTIC FIX: 
-        # If Excel gave us a time between 1:00 AM and 7:00 AM, 
-        # it almost certainly meant 1:00 PM - 7:00 PM. 
+
+        # HEURISTIC FIX:
+        # If Excel gave us a time between 1:00 AM and 7:00 AM,
+        # it almost certainly meant 1:00 PM - 7:00 PM.
         if 1 <= hour <= 7:
             hour += 12
-            
+
         # Reconstruct the time string with the corrected 24-hour integer
         return f"{hour:02d}:{t.minute:02d}:{t.second:02d}"
 
     for col in ["reg_start", "reg_end", "consult_start", "consult_end"]:
         # Apply the fix function instead of a simple lambda
         time_str = df[col].apply(fix_am_pm)
-        
+
         # Combine date and corrected time
         combined = pd.to_datetime(date_part + " " + time_str, errors="coerce")
-        
+
         # Localize to Manila, then convert to UTC for Supabase
         df[col] = (
             combined
             .dt.tz_localize("Asia/Manila", ambiguous="NaT", nonexistent="NaT")
             .dt.tz_convert("UTC")
         )
-        
+
     return df
 
 
-def validate_and_drop(df):
+def validate_and_drop(df, source_label=""):
     required = ["reg_start", "reg_end", "consult_start", "consult_end"]
     before = len(df)
     bad = df[df[required].isna().any(axis=1)]
     if len(bad) > 0:
-        bad.to_csv("dropped_rows_full.csv", index=False)
-        print(f"Saved {len(bad)} dropped rows to dropped_rows_full.csv")
+        fname = f"dropped_rows_{source_label}.csv" if source_label else "dropped_rows_full.csv"
+        bad.to_csv(fname, index=False)
+        print(f"Saved {len(bad)} dropped rows to {fname}")
     df = df.dropna(subset=required)
     print(f"Kept {len(df)} of {before} rows total")
     return df
@@ -164,25 +171,43 @@ def insert_in_batches(records, batch_size=BATCH_SIZE):
         print(f"Inserted rows {i} to {i + len(batch)} of {total}")
 
 
-if __name__ == "__main__":
-    # December 15 was already inserted during testing — skip it here
-    # to avoid duplicating those 20 rows. Remove from this list once
-    # you've deleted the test rows from Supabase, if you'd rather
-    # re-import it fresh as part of the full batch instead.
-    # ALREADY_IMPORTED = ["DECEMBER 15, 2025"]
+def process_file(path):
+    """Run one source file through the full pipeline and return its records."""
+    label = os.path.splitext(os.path.basename(path))[0]
+    print(f"\n=== Processing {os.path.basename(path)} ===")
 
-    df = load_all_sheets(EXCEL_PATH)
+    df = load_all_sheets(path)
     df = combine_date_and_time(df)
-    df = validate_and_drop(df)
+    df = validate_and_drop(df, source_label=label)
     df = add_schema_columns(df)
 
     records = to_supabase_records(df)
-    print(f"\nReady to insert {len(records)} total records into 'patients'.")
-    print("Sample record:", records[0])
+    print(f"{os.path.basename(path)}: {len(records)} records ready")
+    return records
+
+
+if __name__ == "__main__":
+    # If you need to skip specific sheets across all files (e.g. already-imported
+    # test data), handle that inside load_all_sheets calls per-file instead of here,
+    # since skip_sheets is sheet-name-based and different files may reuse names.
+
+    all_records = []
+    for path in EXCEL_PATHS:
+        try:
+            all_records.extend(process_file(path))
+        except ValueError as e:
+            print(f"SKIPPING FILE: {e}")
+            continue
+
+    if not all_records:
+        raise SystemExit("No records extracted from any file. Nothing to insert.")
+
+    print(f"\nReady to insert {len(all_records)} total records into 'patients'.")
+    print("Sample record:", all_records[0])
 
     confirm = input("\nType 'y' to insert ALL records into 'patients': ")
     if confirm.strip().lower() == "y":
-        insert_in_batches(records)
+        insert_in_batches(all_records)
         print("Done.")
     else:
         print("Skipped insert.")
