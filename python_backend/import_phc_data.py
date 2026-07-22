@@ -5,15 +5,12 @@ from supabase import create_client
 
 BASE_DIR = os.path.dirname(os.path.abspath(__file__))
 env_path = os.path.join(BASE_DIR, "..", ".env.local")
-print("Looking for env at:", os.path.abspath(env_path))
-print("File exists?", os.path.exists(env_path))
 load_dotenv(env_path)
-print("URL loaded:", os.environ.get("NEXT_PUBLIC_SUPABASE_URL"))
 
 EXCEL_PATH   = "/home/jensen/Github-Repositories/Heart_Check_PHC/python_backend/data_entries/NOV.ROOM6-2025_416e4b79-e9bc-4f65-9f91-733b8df90139.xls"
 SUPABASE_URL = os.environ.get("NEXT_PUBLIC_SUPABASE_URL")
 SUPABASE_KEY = os.environ.get("NEXT_PUBLIC_SUPABASE_ANON_KEY")
-TEST_SHEET   = "DECEMBER 15, 2025"
+BATCH_SIZE   = 500
 
 supabase = create_client(SUPABASE_URL, SUPABASE_KEY)
 
@@ -47,15 +44,21 @@ def extract_sheet_data(path, sheet_name):
     rows = []
     for r in range(data_start, len(raw)):
         hosp_num = raw.iloc[r, hosp_col]
-        if pd.isna(hosp_num) or not str(hosp_num).strip().replace(".0", "").isdigit():
+        hosp_str = str(hosp_num).strip().replace(".0", "")
+        # Stop at first blank/template row: NaN, non-numeric, or placeholder "0"
+        if pd.isna(hosp_num) or not hosp_str.isdigit() or hosp_str == "0":
             break
         rows.append({
-            "patientNum":    str(hosp_num).strip(),
+            "patientNum":    hosp_str,   # kept in df for reference only, not inserted
             "reg_start":     raw.iloc[r, hosp_col + 1],
             "reg_end":       raw.iloc[r, hosp_col + 2],
             "consult_start": raw.iloc[r, hosp_col + 3],
             "consult_end":   raw.iloc[r, hosp_col + 4],
         })
+
+    if not rows:
+        print(f"WARNING: no patient rows found in sheet '{sheet_name}'")
+        return None
 
     df = pd.DataFrame(rows)
     df["sheet_date"] = date_val
@@ -63,22 +66,62 @@ def extract_sheet_data(path, sheet_name):
     return df
 
 
+def load_all_sheets(path, skip_sheets=None):
+    skip_sheets = skip_sheets or []
+    xls = pd.ExcelFile(path, engine="xlrd")
+    all_dfs = []
+
+    for sheet in xls.sheet_names:
+        if sheet in skip_sheets:
+            print(f"Skipping '{sheet}' (already imported)")
+            continue
+
+        df = extract_sheet_data(path, sheet)
+        if df is not None and len(df) > 0:
+            all_dfs.append(df)
+            print(f"{sheet}: {len(df)} rows")
+
+    if not all_dfs:
+        raise ValueError("No data extracted from any sheet.")
+
+    combined = pd.concat(all_dfs, ignore_index=True)
+    print(f"\nTotal combined: {len(combined)} rows from {len(all_dfs)} sheets")
+    return combined
+
+
 def combine_date_and_time(df):
     date_part = pd.to_datetime(df["sheet_date"]).dt.date.astype(str)
 
+    def fix_am_pm(t):
+        # Handle nulls and invalid types
+        if pd.isna(t) or not hasattr(t, "strftime"):
+            return None
+        
+        hour = t.hour
+        
+        # HEURISTIC FIX: 
+        # If Excel gave us a time between 1:00 AM and 7:00 AM, 
+        # it almost certainly meant 1:00 PM - 7:00 PM. 
+        if 1 <= hour <= 7:
+            hour += 12
+            
+        # Reconstruct the time string with the corrected 24-hour integer
+        return f"{hour:02d}:{t.minute:02d}:{t.second:02d}"
+
     for col in ["reg_start", "reg_end", "consult_start", "consult_end"]:
-        # Convert datetime.time objects to "HH:MM:SS" strings first
-        time_str = df[col].apply(
-            lambda t: t.strftime("%H:%M:%S") if pd.notna(t) and hasattr(t, "strftime") else None
-        )
-
+        # Apply the fix function instead of a simple lambda
+        time_str = df[col].apply(fix_am_pm)
+        
+        # Combine date and corrected time
         combined = pd.to_datetime(date_part + " " + time_str, errors="coerce")
-
+        
+        # Localize to Manila, then convert to UTC for Supabase
         df[col] = (
             combined
             .dt.tz_localize("Asia/Manila", ambiguous="NaT", nonexistent="NaT")
             .dt.tz_convert("UTC")
         )
+        
     return df
 
 
@@ -87,10 +130,10 @@ def validate_and_drop(df):
     before = len(df)
     bad = df[df[required].isna().any(axis=1)]
     if len(bad) > 0:
-        bad.to_csv("dropped_rows_test.csv", index=False)
-        print(f"Saved {len(bad)} dropped rows to dropped_rows_test.csv")
+        bad.to_csv("dropped_rows_full.csv", index=False)
+        print(f"Saved {len(bad)} dropped rows to dropped_rows_full.csv")
     df = df.dropna(subset=required)
-    print(f"Kept {len(df)} of {before} rows")
+    print(f"Kept {len(df)} of {before} rows total")
     return df
 
 
@@ -113,24 +156,33 @@ def to_supabase_records(df):
     return out.to_dict(orient="records")
 
 
-if __name__ == "__main__":
-    df = extract_sheet_data(EXCEL_PATH, TEST_SHEET)
-    print(f"Extracted {len(df)} rows from '{TEST_SHEET}'")
+def insert_in_batches(records, batch_size=BATCH_SIZE):
+    total = len(records)
+    for i in range(0, total, batch_size):
+        batch = records[i:i + batch_size]
+        supabase.table("patients").insert(batch).execute()
+        print(f"Inserted rows {i} to {i + len(batch)} of {total}")
 
+
+if __name__ == "__main__":
+    # December 15 was already inserted during testing — skip it here
+    # to avoid duplicating those 20 rows. Remove from this list once
+    # you've deleted the test rows from Supabase, if you'd rather
+    # re-import it fresh as part of the full batch instead.
+    # ALREADY_IMPORTED = ["DECEMBER 15, 2025"]
+
+    df = load_all_sheets(EXCEL_PATH)
     df = combine_date_and_time(df)
     df = validate_and_drop(df)
     df = add_schema_columns(df)
 
-    print(df[["patientNum", "created_at", "reg_start", "reg_end",
-               "consult_start", "consult_end"]].to_string())
-
     records = to_supabase_records(df)
-    print(f"\nReady to insert {len(records)} records into queue_table_staging.")
+    print(f"\nReady to insert {len(records)} total records into 'patients'.")
     print("Sample record:", records[0])
 
-    confirm = input("\nType 'yes' to insert into queue_table_staging: ")
-    if confirm.strip().lower() == "yes":
-        result = supabase.table("patients").insert(records).execute()
-        print(f"Inserted {len(records)} rows.")
+    confirm = input("\nType 'y' to insert ALL records into 'patients': ")
+    if confirm.strip().lower() == "y":
+        insert_in_batches(records)
+        print("Done.")
     else:
         print("Skipped insert.")

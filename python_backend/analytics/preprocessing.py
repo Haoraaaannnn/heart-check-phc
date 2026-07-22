@@ -44,6 +44,7 @@ def preprocess_queue_data(df: pd.DataFrame) -> pd.DataFrame:
     df['service_registration'] = (df['reg_end']        - df['reg_start']).dt.total_seconds() / 60
     df['wait_consultation']    = (df['consult_start']  - df['reg_end']).dt.total_seconds() / 60
     df['service_consultation'] = (df['consult_end']    - df['consult_start']).dt.total_seconds() / 60
+    
     df['total_time']           = (df['consult_end']    - df['kiosk_time']).dt.total_seconds() / 60
 
     # Time grouping 

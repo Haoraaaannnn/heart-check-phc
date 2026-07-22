@@ -6,6 +6,7 @@ Connects to Supabase and serves the analytics payload to the frontend.
 
 import os
 import json
+import traceback
 import pandas as pd
 import httpx
 from dotenv import load_dotenv
@@ -90,11 +91,11 @@ def safe_to_datetime(series: pd.Series) -> pd.Series:
 
 
 def normalize_dataframe(df: pd.DataFrame) -> pd.DataFrame:
-    if "patientNum" in df.columns and "patient_id" not in df.columns:
-        df = df.rename(columns={"patientNum": "patient_id"})
-    elif "id" in df.columns and "patient_id" not in df.columns:
+    if "id" in df.columns and "patient_id" not in df.columns:
         df["patient_id"] = df["id"]
         df = df.drop(columns=["id"])
+    elif "patientNum" in df.columns and "patient_id" not in df.columns:
+        df = df.rename(columns={"patientNum": "patient_id"})
 
     if "kiosk_time" not in df.columns and "created_at" in df.columns:
         df["kiosk_time"] = df["created_at"]
@@ -140,7 +141,10 @@ def get_dashboard_data():
         report = generate_report(df)
         return report
     except Exception as report_error:
-        print(f"analytics report error: {report_error}")
+        print("=" * 60)
+        print("ANALYTICS REPORT ERROR - FULL TRACEBACK:")
+        traceback.print_exc()
+        print("=" * 60)
         return get_empty_data()
 
 def get_empty_data():

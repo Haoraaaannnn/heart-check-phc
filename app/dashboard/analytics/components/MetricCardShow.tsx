@@ -10,6 +10,8 @@ interface Props {
 export default function MetricCardsRow({ data }: Props) {
   return (
     <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-5">
+
+      {/* */}
       <div className={`p-6 rounded-[28px] shadow-[0_10px_40px_rgba(255,120,120,0.06)] backdrop-blur-xl
         text-white transition-colors duration-500 ${
           data.bottleneck_analysis?.system_status === "Overwhelmed"
@@ -25,11 +27,18 @@ export default function MetricCardsRow({ data }: Props) {
       </div>
 
       <AnalyticsMetricCards>
-        <AnalyticsMetricHeader>Average Consult Wait</AnalyticsMetricHeader>
-        <div className="text-4xl font-extrabold text-blue-600 mt-2">
-          {data.bottleneck_analysis?.avg_wait_consultation_min ?? 0}{" "}
-          <span className="text-xl text-gray-400">mins</span>
+        <AnalyticsMetricHeader>Avg. Total Patient Time</AnalyticsMetricHeader>
+        <div className="text-4xl font-extrabold text-purple-600 mt-2">
+          {(() => {
+            const totalMins = data.daily_summary?.[data.daily_summary.length - 1]?.avg_total_time ?? 0;
+            const hrs = Math.floor(totalMins / 60);
+            const mins = Math.round(totalMins % 60);
+            return `${hrs}h ${mins}m`;
+          })()}
         </div>
+        <p className="text-xs text-gray-400 mt-1">
+          Queuing to Doctor Completed
+        </p>
       </AnalyticsMetricCards>
 
       <AnalyticsMetricCards>
