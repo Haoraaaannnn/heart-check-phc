@@ -38,10 +38,10 @@ Running list of known follow-ups that aren't urgent enough to block progress, bu
 
 _Add new items as they surface. Move resolved items to a "Resolved" section below with the date, rather than deleting them — useful for Chapter 4 documentation of the security work done._
 
-## Resolved
+## Not Resolved
 
-- [x] `patients` RLS wide open (all policies `true`) — fixed with `is_historical`-scoped policies
-- [x] `services` table — anon could INSERT/DELETE the kiosk service menu — fixed, superadmin-only writes
-- [x] `users` table — public (no-login) read access to accounts — fixed, self-read + superadmin-all
-- [x] No route-level middleware existed — `middleware.ts` added
-- [x] Import script used anon key and never marked rows historical — fixed
+- [ ] `patients` RLS wide open (all policies `true`) — fixed with `is_historical`-scoped policies
+- [ ] `services` table — anon could INSERT/DELETE the kiosk service menu — fixed, superadmin-only writes
+- [ ] `users` table — public (no-login) read access to accounts — fixed, self-read + superadmin-all
+- [ ] No route-level middleware existed — `middleware.ts` added
+- [ ] Import script used anon key and never marked rows historical — fixed
