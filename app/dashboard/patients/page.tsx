@@ -3,6 +3,7 @@
 import { useEffect } from 'react';
 import { usePatientsAnalyticsData } from '@/app/dashboard/patients/hooks/usePatientsAnalyticsData';
 import { usePatientData } from '@/app/dashboard/patients/hooks/usePatientsData';
+import { useHistoricalSummary } from '@/app/dashboard/context/HistoricalSummaryContext';
 import PatientStatsGrid from '@/app/dashboard/patients/components/PatientStatGrid';
 import ServiceDistributionChart from '@/app/dashboard/patients/components/ServiceDistributionChart';
 import HourlyPatientFlowChart from '@/app/dashboard/patients/components/HourlyPatientFlowChart';
@@ -12,6 +13,7 @@ export default function PatientsPage() {
   const { stats, setStats, hourlyData, fetchAnalyticsData } = usePatientsAnalyticsData();
   const { allRecentPatients, serviceDistribution, error, fetchPatientData } =
     usePatientData(setStats);
+  const { historicalData } = useHistoricalSummary();
 
   useEffect(() => {
     const loadData = async () => {
@@ -21,6 +23,13 @@ export default function PatientsPage() {
     const timer = setInterval(fetchPatientData, 30000);
     return () => clearInterval(timer);
   }, []);
+
+  const historicalServiceMix = (historicalData?.service_distribution ?? []).map(
+    (row: { service: string; total_patients: number }) => ({
+      name: row.service,
+      value: row.total_patients,
+    })
+  );
 
   return (
     <div className="min-h-screen">
@@ -34,7 +43,10 @@ export default function PatientsPage() {
         <PatientStatsGrid stats={stats} />
 
         <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
-          <ServiceDistributionChart data={serviceDistribution} />
+          <ServiceDistributionChart
+            data={serviceDistribution}
+            historicalFallback={historicalServiceMix}
+          />
           <HourlyPatientFlowChart data={hourlyData} />
         </div>
 

@@ -35,6 +35,7 @@ export function usePatientData(
       if (todayError) throw todayError;
 
       let inQueueCount = 0;
+      let inServiceCount = 0;
       let servedCount = 0;
       const serviceCount: Record<string, number> = {};
       const recentPatientsList: RecentPatient[] = [];
@@ -42,8 +43,14 @@ export function usePatientData(
       if (todayPatientData) {
         todayPatientData.forEach((patient) => {
           const currentStatus = patient.status?.toLowerCase().trim() ?? '';
-          if (['pending', 'waiting', 'assigned'].includes(currentStatus)) inQueueCount++;
-          else if (['completed', 'done', 'served'].includes(currentStatus)) servedCount++;
+
+          if (['pending', 'waiting', 'assigned'].includes(currentStatus)) {
+            inQueueCount++;
+          } else if (['on progress', 'serving', 'consulting'].includes(currentStatus)) {
+            inServiceCount++;
+          } else if (['completed', 'done', 'served'].includes(currentStatus)) {
+            servedCount++;
+          }
 
           const serviceName = patient.service || 'General';
           serviceCount[serviceName] = (serviceCount[serviceName] || 0) + 1;
@@ -65,16 +72,17 @@ export function usePatientData(
         setStats((prev) => ({
           ...prev,
           inQueue: inQueueCount,
+          inService: inServiceCount,
           servedToday: servedCount,
-          totalToday: inQueueCount + servedCount,
+          totalToday: inQueueCount + inServiceCount + servedCount,
         }));
 
         const serviceDist = Object.entries(serviceCount).map(([name, value]) => ({ name, value }));
-        setServiceDistribution(serviceDist.length > 0 ? serviceDist : [{ name: 'No Data', value: 1 }]);
+        setServiceDistribution(serviceDist);
         setRecentPatients(recentPatientsList);
       } else {
-        setStats((prev) => ({ ...prev, inQueue: 0, servedToday: 0, totalToday: 0 }));
-        setServiceDistribution([{ name: 'No Data', value: 1 }]);
+        setStats((prev) => ({ ...prev, inQueue: 0, inService: 0, servedToday: 0, totalToday: 0 }));
+        setServiceDistribution([]);
         setRecentPatients([]);
       }
 
@@ -100,8 +108,8 @@ export function usePatientData(
     } catch (err) {
       console.error('Error fetching patient data:', err);
       setError('Failed to load patient data');
-      setStats({ totalToday: 0, inQueue: 0, servedToday: 0, avgWaitTime: 0 });
-      setServiceDistribution([{ name: 'No Data', value: 1 }]);
+      setStats({ totalToday: 0, inQueue: 0, inService: 0, servedToday: 0, avgWaitTime: 0 });
+      setServiceDistribution([]);
       setRecentPatients([]);
       setAllRecentPatients([]);
     }

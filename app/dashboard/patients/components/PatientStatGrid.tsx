@@ -4,7 +4,7 @@ import { PatientStats } from '@/types/Types';
 
 export default function PatientStatsGrid({ stats }: { stats: PatientStats }) {
   return (
-    <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-5">
+    <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-5 gap-5">
       <PatientMetricCard>
         <PatientHeaderCard>Total Today</PatientHeaderCard>
         <span className="text-5xl font-extrabold text-blue-600 self-end">{stats.totalToday}</span>
@@ -12,6 +12,10 @@ export default function PatientStatsGrid({ stats }: { stats: PatientStats }) {
       <PatientMetricCard>
         <PatientHeaderCard>In Queue</PatientHeaderCard>
         <span className="text-5xl font-extrabold text-yellow-600 self-end">{stats.inQueue}</span>
+      </PatientMetricCard>
+      <PatientMetricCard>
+        <PatientHeaderCard>In Service</PatientHeaderCard>
+        <span className="text-5xl font-extrabold text-blue-400 self-end">{stats.inService}</span>
       </PatientMetricCard>
       <PatientMetricCard>
         <PatientHeaderCard>Served Today</PatientHeaderCard>

@@ -1,6 +1,7 @@
 export interface PatientStats {
   totalToday: number;
   inQueue: number;
+  inService: number;
   servedToday: number;
   avgWaitTime: number;
 }

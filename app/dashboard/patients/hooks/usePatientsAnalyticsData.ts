@@ -6,6 +6,7 @@ export function usePatientsAnalyticsData() {
   const [stats, setStats] = useState<PatientStats>({
     totalToday: 0,
     inQueue: 0,
+    inService: 0,
     servedToday: 0,
     avgWaitTime: 0,
   });
@@ -16,19 +17,6 @@ export function usePatientsAnalyticsData() {
       const response = await fetch('http://localhost:8000/api/dashboard-data');
       if (!response.ok) throw new Error(`Analytics API error: ${response.status}`);
       const analyticsData: AnalyticsData = await response.json();
-
-      if (analyticsData.daily_summary?.length) {
-        const todayData = analyticsData.daily_summary[analyticsData.daily_summary.length - 1];
-        setStats({
-          totalToday: todayData.total_patients || 0,
-          inQueue: 0,
-          servedToday: todayData.total_patients || 0,
-          avgWaitTime:
-            Math.round(
-              (todayData.avg_wait_registration + todayData.avg_wait_consultation) / 2
-            ) || 0,
-        });
-      }
 
       if (analyticsData.hourly_pattern?.length) {
         setHourlyData(
@@ -42,7 +30,6 @@ export function usePatientsAnalyticsData() {
       }
     } catch (err) {
       console.warn('Analytics API not available, using fallback data:', err);
-      setStats({ totalToday: 0, inQueue: 0, servedToday: 0, avgWaitTime: 0 });
       setHourlyData(DEFAULT_HOURLY_DATA);
     }
   };

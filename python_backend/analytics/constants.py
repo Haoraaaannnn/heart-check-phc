@@ -7,8 +7,8 @@ Change these here and every module picks them up automatically.
 # This file stores the fixed values used across the analytics module, such as thresholds, limits, and service categories.
 
 # PHC-specific constants
-MAX_ADULT_CUBICLES  = 20    # 4 rooms × 5 cubicles
-MAX_PEDIA_CUBICLES  = 20    # 4 rooms × 5 cubicles
+MAX_ADULT_CUBICLES  = 5    # 1 room × 5 cubicles (default)
+MAX_PEDIA_CUBICLES  = 5    # 1 room × 5 cubicles (default)
 
 # OPD time targets (from scope of study)
 OPD_TARGET_MINUTES  = 150   # 2 hrs 30 min total stay target
@@ -17,6 +17,10 @@ OVERWHELMED_MINUTES = 30    # per-stage alert threshold
 # Forecasting defaults
 EMA_ALPHA    = 0.3
 WINDOW_SIZE  = 2  # Minimum 2 days for moving averages
+
+# Backtesting — how often ARIMA re-estimates its parameters during
+# evaluation, vs. reusing the existing fit and just feeding it new data.
+ARIMA_REFIT_INTERVAL = 7  # days
 
 # Service categories
 CONSULTATION_SERVICE   = 'consultation'

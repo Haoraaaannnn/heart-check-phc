@@ -11,11 +11,23 @@ load_dotenv(env_path)
 # doesn't matter, they all go through the same pipeline.
 EXCEL_PATHS = [
     "/home/jensen/Github-Repositories/Heart_Check_PHC/python_backend/data_entries/NOV.ROOM6-2025_416e4b79-e9bc-4f65-9f91-733b8df90139.xls",
-    "/home/jensen/Github-Repositories/Heart_Check_PHC/python_backend/data_entries/TMAF jan2024.xls"
+    "/home/jensen/Github-Repositories/Heart_Check_PHC/python_backend/data_entries/2024_JAN.xls",
+    "/home/jensen/Github-Repositories/Heart_Check_PHC/python_backend/data_entries/2024_FEB.xls",
+    "/home/jensen/Github-Repositories/Heart_Check_PHC/python_backend/data_entries/2024_MARCH.xls",
+    "/home/jensen/Github-Repositories/Heart_Check_PHC/python_backend/data_entries/2024_APRIL.xls",
+    "/home/jensen/Github-Repositories/Heart_Check_PHC/python_backend/data_entries/2024_MAY.xls",
+    "/home/jensen/Github-Repositories/Heart_Check_PHC/python_backend/data_entries/2024_JUNE.xls",
+    "/home/jensen/Github-Repositories/Heart_Check_PHC/python_backend/data_entries/2024_JULY.xls",
+    "/home/jensen/Github-Repositories/Heart_Check_PHC/python_backend/data_entries/2024_AUGUST.xls",
+    "/home/jensen/Github-Repositories/Heart_Check_PHC/python_backend/data_entries/2024_SEPT.xls",
+    "/home/jensen/Github-Repositories/Heart_Check_PHC/python_backend/data_entries/2024_OCT.xls",
+    "/home/jensen/Github-Repositories/Heart_Check_PHC/python_backend/data_entries/2024_NOV.xls",
+    "/home/jensen/Github-Repositories/Heart_Check_PHC/python_backend/data_entries/2024_DEC.xls"
+    
 ]
 
 SUPABASE_URL = os.environ.get("NEXT_PUBLIC_SUPABASE_URL")
-SUPABASE_KEY = os.environ.get("NEXT_PUBLIC_SUPABASE_ANON_KEY")
+SUPABASE_KEY = os.environ.get("SUPABASE_SERVICE_ROLE_KEY")
 BATCH_SIZE   = 500
 
 supabase = create_client(SUPABASE_URL, SUPABASE_KEY)
