@@ -18,6 +18,13 @@ export default {
         // Large landscape (desktop, large landscape tablets)
         'landscape:2xl': { 'raw': '(min-width: 1280px) and (orientation: landscape)' },
       },
+      colors: {
+        brand: {
+          DEFAULT: '#7f0407',
+          light: '#ebb7b7',
+          accent: '#cc3535',
+        },
+      },
     },
   },
   plugins: [],
