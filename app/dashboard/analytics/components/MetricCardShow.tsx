@@ -42,13 +42,14 @@ export default function MetricCardsRow({ data }: Props) {
       </AnalyticsMetricCards>
 
       <AnalyticsMetricCards>
-        <AnalyticsMetricHeader>Tomorrow's Forecast</AnalyticsMetricHeader>
+        <AnalyticsMetricHeader>Next-Day Forecast</AnalyticsMetricHeader>
         <div className="text-4xl font-extrabold text-orange-600 mt-2">
           {data.computational_forecasting?.next_day_forecast ?? 0}{" "}
           <span className="text-xl text-gray-400">patients</span>
         </div>
         <p className="text-xs text-gray-400 mt-1">
-          Using {data.computational_forecasting?.best_algorithm ?? "N/A"}
+          For {data.lr_chart_data?.forecast_date || "next recorded day"} · via{" "}
+          {data.computational_forecasting?.best_algorithm ?? "N/A"}
         </p>
       </AnalyticsMetricCards>
 

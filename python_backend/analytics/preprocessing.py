@@ -47,10 +47,18 @@ def preprocess_queue_data(df: pd.DataFrame) -> pd.DataFrame:
     
     df['total_time']           = (df['consult_end']    - df['kiosk_time']).dt.total_seconds() / 60
 
-    # Time grouping 
-    df['visit_date']  = df['kiosk_time'].dt.date
-    df['hour']        = df['kiosk_time'].dt.hour
-    df['day_of_week'] = df['kiosk_time'].dt.day_name()
+    # Time grouping — computed in Asia/Manila local time, not UTC.
+    # kiosk_time is stored in UTC (correct for duration math above),
+    # but hour-of-day / calendar-date / day-of-week are meant to
+    # describe the actual PHC business day as staff experience it.
+    # Grouping by raw UTC hour here previously shifted every local
+    # timestamp back 8 hours, making afternoon patients look like
+    # early-morning ones and clipping the Hourly Wait Time chart
+    # around local noon.
+    manila_time        = df['kiosk_time'].dt.tz_convert('Asia/Manila')
+    df['visit_date']   = manila_time.dt.date
+    df['hour']         = manila_time.dt.hour
+    df['day_of_week']  = manila_time.dt.day_name()
 
     # Normalize purpose to lowercase
     if 'purpose' in df.columns:

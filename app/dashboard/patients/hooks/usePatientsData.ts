@@ -39,6 +39,7 @@ export function usePatientData(
       let servedCount = 0;
       const serviceCount: Record<string, number> = {};
       const recentPatientsList: RecentPatient[] = [];
+      const waitTimesForAvg: number[] = [];
 
       if (todayPatientData) {
         todayPatientData.forEach((patient) => {
@@ -55,19 +56,29 @@ export function usePatientData(
           const serviceName = patient.service || 'General';
           serviceCount[serviceName] = (serviceCount[serviceName] || 0) + 1;
 
+          const waitMin = patient.consult_start
+            ? Math.round(
+                (new Date(patient.consult_start).getTime() - new Date(patient.created_at).getTime()) / 60000
+              )
+            : undefined;
+
+          if (waitMin !== undefined && waitMin >= 0) {
+            waitTimesForAvg.push(waitMin);
+          }
+
           recentPatientsList.push({
             id: patient.id.toString(),
             patientNum: patient.patientNum,
             service: serviceName,
             status: patient.status || 'Unknown',
             createdAt: new Date(patient.created_at).toLocaleString(),
-            waitTime: patient.consult_start
-              ? Math.round(
-                  (new Date(patient.consult_start).getTime() - new Date(patient.created_at).getTime()) / 60000
-                )
-              : undefined,
+            waitTime: waitMin,
           });
         });
+
+        const avgWaitTime = waitTimesForAvg.length > 0
+          ? Math.round(waitTimesForAvg.reduce((sum, w) => sum + w, 0) / waitTimesForAvg.length)
+          : 0;
 
         setStats((prev) => ({
           ...prev,
@@ -75,13 +86,14 @@ export function usePatientData(
           inService: inServiceCount,
           servedToday: servedCount,
           totalToday: inQueueCount + inServiceCount + servedCount,
+          avgWaitTime,
         }));
 
         const serviceDist = Object.entries(serviceCount).map(([name, value]) => ({ name, value }));
         setServiceDistribution(serviceDist);
         setRecentPatients(recentPatientsList);
       } else {
-        setStats((prev) => ({ ...prev, inQueue: 0, inService: 0, servedToday: 0, totalToday: 0 }));
+        setStats((prev) => ({ ...prev, inQueue: 0, inService: 0, servedToday: 0, totalToday: 0, avgWaitTime: 0 }));
         setServiceDistribution([]);
         setRecentPatients([]);
       }

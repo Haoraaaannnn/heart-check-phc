@@ -69,7 +69,7 @@ def generate_report(
 
     report = {
         # Descriptive 
-        "daily_summary"        : daily_summary(df_clean).tail(5).to_dict(orient='records'),
+        "daily_summary" : daily_summary(df_clean).to_dict(orient='records'),
         "hourly_pattern"       : hourly_pattern(df_clean).to_dict(orient='records'),
         "service_distribution" : service_distribution(df_clean).to_dict(orient='records'),
 
