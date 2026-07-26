@@ -1,14 +1,30 @@
 "use client";
 
+import { useState, useEffect } from "react";
 import {
   ComposedChart, Line, XAxis, YAxis,
-  CartesianGrid, Tooltip, ResponsiveContainer, Legend,
+  CartesianGrid, Tooltip, ResponsiveContainer,
 } from "recharts";
 import AnalyticsMetricCards from "@/components/reusables/analyticsMetricCards";
 
 interface Props {
   dailySummary: any[];
   hourlyPattern: any[];
+}
+
+function useIsDarkMode() {
+  const [isDark, setIsDark] = useState(false);
+
+  useEffect(() => {
+    const check = () => setIsDark(document.documentElement.classList.contains('dark'));
+    check();
+
+    const observer = new MutationObserver(check);
+    observer.observe(document.documentElement, { attributes: true, attributeFilter: ['class'] });
+    return () => observer.disconnect();
+  }, []);
+
+  return isDark;
 }
 
 // Adds a trailing N-day moving average alongside the raw daily line —
@@ -25,11 +41,22 @@ function withMovingAverage(data: any[], windowSize: number) {
 }
 
 export default function VolumeAndWaitCharts({ dailySummary, hourlyPattern }: Props) {
+  const isDark = useIsDarkMode();
   const volumeData = withMovingAverage(dailySummary, 7);
 
   // Keeps x-axis tick spacing even regardless of how many points are
   // plotted — avoids Recharts clustering ticks unevenly on long ranges.
   const tickInterval = Math.max(0, Math.floor(volumeData.length / 8) - 1);
+
+  const tooltipCursor = { fill: isDark ? 'rgba(255,255,255,0.06)' : '#f3f4f6' };
+  const tooltipContentStyle = {
+    borderRadius: '8px',
+    border: 'none',
+    boxShadow: '0 4px 6px -1px rgb(0 0 0 / 0.1)',
+    backgroundColor: isDark ? '#1f2937' : '#ffffff',
+    color: isDark ? '#e5e7eb' : '#111827',
+  };
+  const gridStroke = isDark ? '#374151' : '#e5e7eb';
 
   return (
     <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
@@ -50,7 +77,7 @@ export default function VolumeAndWaitCharts({ dailySummary, hourlyPattern }: Pro
         <div className="h-64">
           <ResponsiveContainer width="100%" height="100%">
             <ComposedChart data={volumeData}>
-              <CartesianGrid strokeDasharray="3 3" vertical={false} />
+              <CartesianGrid strokeDasharray="3 3" vertical={false} stroke={gridStroke} />
               <XAxis
                 dataKey="visit_date"
                 tick={{ fontSize: 10 }}
@@ -60,7 +87,7 @@ export default function VolumeAndWaitCharts({ dailySummary, hourlyPattern }: Pro
                 height={40}
               />
               <YAxis tick={{ fontSize: 11 }} allowDecimals={false} />
-              <Tooltip />
+              <Tooltip cursor={tooltipCursor} contentStyle={tooltipContentStyle} />
               <Line
                 type="monotone" dataKey="total_patients"
                 stroke="#93c5fd" strokeWidth={1} dot={false}
@@ -83,10 +110,10 @@ export default function VolumeAndWaitCharts({ dailySummary, hourlyPattern }: Pro
         <div className="h-64">
           <ResponsiveContainer width="100%" height="100%">
             <ComposedChart data={hourlyPattern}>
-              <CartesianGrid strokeDasharray="3 3" vertical={false} />
+              <CartesianGrid strokeDasharray="3 3" vertical={false} stroke={gridStroke} />
               <XAxis dataKey="time_label" tick={{ fontSize: 10 }} angle={-35} textAnchor="end" height={48} />
               <YAxis tick={{ fontSize: 11 }} />
-              <Tooltip />
+              <Tooltip cursor={tooltipCursor} contentStyle={tooltipContentStyle} />
               <Line
                 type="monotone" dataKey="avg_wait_consultation"
                 stroke="#ef4444" strokeWidth={3} dot={{ r: 4 }}

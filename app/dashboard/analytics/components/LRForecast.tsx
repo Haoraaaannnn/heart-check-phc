@@ -1,5 +1,6 @@
 "use client";
 
+import { useState, useEffect } from "react";
 import {
   ComposedChart, Scatter, Line, XAxis, YAxis,
   CartesianGrid, Tooltip, ResponsiveContainer, ReferenceDot,
@@ -17,6 +18,21 @@ interface Props {
   arimaAic: number | null;
 }
 
+function useIsDarkMode() {
+  const [isDark, setIsDark] = useState(false);
+
+  useEffect(() => {
+    const check = () => setIsDark(document.documentElement.classList.contains('dark'));
+    check();
+
+    const observer = new MutationObserver(check);
+    observer.observe(document.documentElement, { attributes: true, attributeFilter: ['class'] });
+    return () => observer.disconnect();
+  }, []);
+
+  return isDark;
+}
+
 export default function LRForecast({
   lrRaw,
   lrChartData,
@@ -25,6 +41,8 @@ export default function LRForecast({
   computationalForecasting,
   arimaAic,
 }: Props) {
+  const isDark = useIsDarkMode();
+
   return (
     <AnalyticsMetricCards>
       {/* Header */}
@@ -89,10 +107,19 @@ export default function LRForecast({
           <div className="h-80 w-full mb-4">
             <ResponsiveContainer width="100%" height="100%">
               <ComposedChart data={lrChartData} margin={{ top: 10, right: 10, left: -20, bottom: 20 }}>
-                <CartesianGrid strokeDasharray="3 3" stroke="#f3f4f6" vertical={false} />
+                <CartesianGrid strokeDasharray="3 3" stroke={isDark ? '#374151' : '#f3f4f6'} vertical={false} />
                 <XAxis dataKey="date" tick={{ fontSize: 10 }} angle={-45} textAnchor="end" height={60} />
                 <YAxis tick={{ fontSize: 10 }} allowDecimals={false} />
-                <Tooltip />
+                <Tooltip
+                  cursor={{ fill: isDark ? 'rgba(255,255,255,0.06)' : '#f3f4f6' }}
+                  contentStyle={{
+                    borderRadius: '8px',
+                    border: 'none',
+                    boxShadow: '0 4px 6px -1px rgb(0 0 0 / 0.1)',
+                    backgroundColor: isDark ? '#1f2937' : '#ffffff',
+                    color: isDark ? '#e5e7eb' : '#111827',
+                  }}
+                />
                 <Scatter name="actual" dataKey="actual" fill="#3b82f6" />
                 <Line
                   type="monotone" dataKey="lr_line"

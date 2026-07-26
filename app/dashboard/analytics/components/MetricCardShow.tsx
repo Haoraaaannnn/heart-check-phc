@@ -30,7 +30,7 @@ export default function MetricCardsRow({ data }: Props) {
         <AnalyticsMetricHeader>Avg. Total Patient Time</AnalyticsMetricHeader>
         <div className="text-4xl font-extrabold text-purple-600 mt-2">
           {(() => {
-            const totalMins = data.daily_summary?.[data.daily_summary.length - 1]?.avg_total_time ?? 0;
+            const totalMins = data.system_time?.avg_total_time ?? 0;
             const hrs = Math.floor(totalMins / 60);
             const mins = Math.round(totalMins % 60);
             return `${hrs}h ${mins}m`;
