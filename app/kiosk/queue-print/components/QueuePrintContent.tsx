@@ -86,7 +86,7 @@ export default function QueuePrintContent({ service, patientNum, cubicleNum }: P
     // Delay 5 seconds for user to see the queue number, then redirect
     const redirectTimer = setTimeout(() => {
       console.log(`${getTimestamp()} [REDIRECT TIMER] 5 second timeout completed - Redirecting back to kiosk services.`);
-      router.push('/kiosk/kiosk-services');
+      router.push('/kiosk/kiosk-new-old-selection');
     }, 5000); 
 
     return () => clearTimeout(redirectTimer);
