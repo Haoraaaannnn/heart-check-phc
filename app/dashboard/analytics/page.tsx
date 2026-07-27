@@ -9,7 +9,7 @@ import ArimaForecast from "@/app/dashboard/analytics/components/ArimaForecast";
 import DateRangeSelector from "@/app/dashboard/analytics/components/DateRangeSelector";
 
 export default function AdminDashboard() {
-  const { data, loading, error, range, setRange } = useAnalyticsData();
+  const { data, loading, isRefreshing, error, range, setRange } = useAnalyticsData();
 
   if (loading && !data) return (
     <div className="p-10 text-center text-xl text-gray-500 font-bold">
@@ -46,7 +46,17 @@ export default function AdminDashboard() {
             </h1>
             <p className="text-sm text-gray-400 mt-1">Advanced forecasting and bottleneck analysis</p>
           </div>
-          <DateRangeSelector value={range} onChange={setRange} />
+
+          <div className="flex items-center gap-3">
+            <DateRangeSelector value={range} onChange={setRange} isLoading={loading} />
+
+            {isRefreshing && (
+              <span className="text-xs text-gray-400 flex items-center gap-1">
+                <span className="w-1.5 h-1.5 rounded-full bg-blue-400 animate-pulse" />
+                Refreshing…
+              </span>
+            )}
+          </div>
         </div>
 
         <MetricCardsRow data={data} />

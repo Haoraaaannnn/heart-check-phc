@@ -15,17 +15,20 @@ const POLL_INTERVAL_MS: Record<AnalyticsRange, number> = {
 };
 
 export function useAnalyticsData() {
-  const [data, setData]       = useState<any>(null);
-  const [loading, setLoading] = useState(true);
-  const [error, setError]     = useState<string | null>(null);
-  const [range, setRange]     = useState<AnalyticsRange>("90d");
+  const [data, setData]             = useState<any>(null);
+  const [loading, setLoading]       = useState(true);      // initial load + range change
+  const [isRefreshing, setIsRefreshing] = useState(false); // background polls
+  const [error, setError]           = useState<string | null>(null);
+  const [range, setRange]           = useState<AnalyticsRange>("90d");
 
   // Tracks whether a fetch was missed while the tab was hidden, so we
   // can catch up immediately when the tab regains focus instead of
   // waiting for the next interval tick.
   const missedWhileHidden = useRef(false);
 
-  const fetchAnalytics = useCallback(() => {
+  const fetchAnalytics = useCallback((isBackground = false) => {
+    if (isBackground) setIsRefreshing(true);
+
     fetch(`http://localhost:8000/api/dashboard-data?range=${range}`)
       .then((res) => {
         if (!res.ok) throw new Error(`Server error: ${res.status}`);
@@ -34,17 +37,19 @@ export function useAnalyticsData() {
       .then((json) => {
         setData(json);
         setLoading(false);
+        setIsRefreshing(false);
         setError(null);
       })
       .catch((err) => {
         setError(err.message);
         setLoading(false);
+        setIsRefreshing(false);
       });
   }, [range]);
 
   useEffect(() => {
     setLoading(true);
-    fetchAnalytics();
+    fetchAnalytics(false);
 
     let interval: ReturnType<typeof setInterval> | null = null;
 
@@ -52,7 +57,7 @@ export function useAnalyticsData() {
       if (interval) return;
       interval = setInterval(() => {
         if (document.visibilityState === "visible") {
-          fetchAnalytics();
+          fetchAnalytics(true);
         } else {
           // Tab is hidden — skip this tick, but note it so we can
           // refresh immediately once the tab is visible again.
@@ -71,7 +76,7 @@ export function useAnalyticsData() {
     const handleVisibilityChange = () => {
       if (document.visibilityState === "visible" && missedWhileHidden.current) {
         missedWhileHidden.current = false;
-        fetchAnalytics();
+        fetchAnalytics(true);
       }
     };
 
@@ -84,5 +89,5 @@ export function useAnalyticsData() {
     };
   }, [fetchAnalytics, range]);
 
-  return { data, loading, error, range, setRange };
+  return { data, loading, isRefreshing, error, range, setRange };
 }
