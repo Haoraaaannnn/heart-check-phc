@@ -6,11 +6,11 @@ import { Service } from '@/types/Services';
 import QueuePrintContent from '@/app/kiosk/queue-print/components/QueuePrintContent';
 
 interface Props {
-  searchParams: Promise<{ patientNum?: string; serviceId?: string }>;
+  searchParams: Promise<{ patientNum?: string; serviceId?: string; cubicleNum?:string }>;
 }
 
 export default async function QueuePrintPage({ searchParams }: Props) {
-  const { patientNum = '---', serviceId } = await searchParams;
+  const { patientNum = '---', serviceId, cubicleNum = '---' } = await searchParams;
   const supabase = await createClient();
 
   let service: Service | null = null;
@@ -26,5 +26,5 @@ export default async function QueuePrintPage({ searchParams }: Props) {
 
   if (!service) notFound();
 
-  return <QueuePrintContent service={service} patientNum={patientNum} />;
+  return <QueuePrintContent service={service} patientNum={patientNum} cubicleNum={cubicleNum}/>;
 }
