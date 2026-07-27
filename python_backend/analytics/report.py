@@ -7,7 +7,7 @@ into the single payload served to the admin dashboard.
 import pandas as pd
 import numpy as np
 from .preprocessing  import preprocess_queue_data
-from .descriptive    import daily_summary, hourly_pattern, bottleneck_report
+from .descriptive    import daily_summary, hourly_pattern, bottleneck_report, service_distribution
 from .queue_metrics  import (
     registration_metrics,
     per_cubicle_metrics,
@@ -16,7 +16,6 @@ from .queue_metrics  import (
 )
 from .forecasting    import evaluate_forecasting_algorithms, get_lr_chart_data, get_arima_chart_data
 from .staffing       import recommend_staff
-
 
 def convert_to_native(obj):
     """Recursively convert numpy types to Python native types for JSON serialization."""
@@ -70,8 +69,10 @@ def generate_report(
 
     report = {
         # Descriptive 
-        "daily_summary"   : daily_summary(df_clean).tail(5).to_dict(orient='records'),
-        "hourly_pattern"  : hourly_pattern(df_clean).to_dict(orient='records'),
+        "daily_summary" : daily_summary(df_clean).to_dict(orient='records'),
+        "hourly_pattern"       : hourly_pattern(df_clean).to_dict(orient='records'),
+        "service_distribution" : service_distribution(df_clean).to_dict(orient='records'),
+
 
         # Bottleneck
         "bottleneck_analysis" : bottleneck_report(df_clean),
@@ -114,6 +115,7 @@ def _empty_report() -> dict:
     return {
         "daily_summary": [],
         "hourly_pattern": [],
+        "service_distribution" : [],
         "bottleneck_analysis": {
             "bottleneck_stage": "N/A",
             "avg_wait_registration_min": 0.0,

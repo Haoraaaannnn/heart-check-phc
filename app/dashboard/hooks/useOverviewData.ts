@@ -6,6 +6,7 @@ import { supabase } from '@/lib/supabase';
 export interface DashboardStats {
   todayCount: number;
   onQueue: number;
+  inService: number;
   served: number;
 }
 
@@ -20,7 +21,7 @@ export interface PatientRecord {
 }
 
 export function useOverviewData() {
-  const [stats, setStats] = useState<DashboardStats>({ todayCount: 0, onQueue: 0, served: 0 });
+  const [stats, setStats] = useState<DashboardStats>({ todayCount: 0, onQueue: 0, inService: 0, served: 0 });
   const [patientsList, setPatientsList] = useState<PatientRecord[]>([]);
   const [deptStats, setDeptStats] = useState<Record<string, number>>({});
   const [hourlyData, setHourlyData] = useState<{ time: string; patients: number }[]>([]);
@@ -39,6 +40,7 @@ export function useOverviewData() {
 
     if (!error && data) {
       let queueCount = 0;
+      let inServiceCount = 0;
       let servedCount = 0;
       const departments: Record<string, number> = {};
 
@@ -54,9 +56,10 @@ export function useOverviewData() {
         if (['pending', 'waiting', 'assigned'].includes(currentStatus)) {
           queueCount++;
           departments[serviceName] = (departments[serviceName] || 0) + 1;
-        }
-
-        if (['completed', 'done', 'served'].includes(currentStatus)) {
+        } else if (['on progress', 'serving', 'consulting'].includes(currentStatus)) {
+          inServiceCount++;
+          departments[serviceName] = (departments[serviceName] || 0) + 1;
+        } else if (['completed', 'done', 'served'].includes(currentStatus)) {
           servedCount++;
         }
 
@@ -73,7 +76,7 @@ export function useOverviewData() {
         .sort()
         .map((time) => ({ time, patients: hourCounts[time] }));
 
-      setStats({ todayCount: data.length, onQueue: queueCount, served: servedCount });
+      setStats({ todayCount: data.length, onQueue: queueCount, inService: inServiceCount, served: servedCount });
       setPatientsList(data as PatientRecord[]);
       setDeptStats(departments);
       setHourlyData(formattedHourlyData);

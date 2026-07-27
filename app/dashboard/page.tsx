@@ -4,8 +4,10 @@ import { useRouter } from 'next/navigation';
 import { useEffect, useState } from 'react';
 import { supabase } from '@/lib/supabase';
 import { useOverviewData } from '@/app/dashboard/hooks/useOverviewData';
+import { useHistoricalSummary } from '@/app/dashboard/context/HistoricalSummaryContext';
 import { calcAvgWaitTime } from '@/utils/waitTime';
 import DashboardMetrics from '@/app/dashboard/components/DashboardMetrics';
+import HistoricalContextBanner from '@/app/dashboard/components/HistoricalContextBanner';
 import LiveQueueTable from '@/app/dashboard/components/LiveQueueTable';
 import ServiceStats from '@/app/dashboard/components/ServiceStats';
 import HourlyArrivalsChart from '@/app/dashboard/components/HourlyArrivalChart';
@@ -16,6 +18,7 @@ export default function DashboardPage() {
   const [currentTime, setCurrentTime] = useState<Date | null>(null);
 
   const { stats, patientsList, deptStats, hourlyData } = useOverviewData();
+  const { historicalData, historicalLoading } = useHistoricalSummary();
 
   useEffect(() => {
     setIsMounted(true);
@@ -34,6 +37,8 @@ export default function DashboardPage() {
   const avgWaitTime =
     isMounted && currentTime ? calcAvgWaitTime(patientsList, currentTime) : '--';
 
+  const showHistoricalBanner = isMounted && stats.todayCount === 0;
+
   return (
     <div className="min-h-screen w-full">
       <div className="px-8 py-6 mx-auto max-w-10xl flex flex-col gap-6">
@@ -43,6 +48,13 @@ export default function DashboardPage() {
           avgWaitTime={avgWaitTime}
           isMounted={isMounted}
         />
+
+        {showHistoricalBanner && (
+          <HistoricalContextBanner
+            historicalData={historicalData}
+            historicalLoading={historicalLoading}
+          />
+        )}
 
         <div className="grid grid-cols-1 lg:grid-cols-3 gap-6">
           <LiveQueueTable

@@ -43,4 +43,6 @@ next-env.d.ts
 # Python Backend
 python_backend/venv/
 python_backend/__pycache__/
+python_backend/data_entries/
+python_backend/testers/
 *.pyc

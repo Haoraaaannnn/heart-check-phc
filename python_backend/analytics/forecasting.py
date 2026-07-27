@@ -18,7 +18,7 @@ import pandas as pd
 from sklearn.linear_model    import LinearRegression
 from sklearn.metrics         import mean_absolute_error, mean_squared_error
 from statsmodels.tsa.arima.model import ARIMA
-from .constants import WINDOW_SIZE, EMA_ALPHA
+from .constants import WINDOW_SIZE, EMA_ALPHA, ARIMA_REFIT_INTERVAL
 
 # ARIMA order — (p, d, q)
 # p=1 autoregressive, d=1 differencing, q=1 moving average
@@ -26,32 +26,75 @@ from .constants import WINDOW_SIZE, EMA_ALPHA
 # Can be tuned once real data is available.
 ARIMA_ORDER = (1, 1, 1)
 
-# Defines the private helper function that takes an array of numbers and returns a single decimal number 
+
 def _fit_arima(series: np.ndarray) -> float:
     """
     Fit ARIMA on a series and return one-step-ahead forecast.
     Returns 0.0 on failure so it never crashes the pipeline.
+    Used for the final one-off forecasts (cheap — runs once, not in a loop).
     """
-    
-    try: # safety block if the math crashes it doesn't break the whole analytics
-        with warnings.catch_warnings(): # just to mute console warnings from ARIMA fitting, which can be noisy on small datasets
+    try:
+        with warnings.catch_warnings():
             warnings.simplefilter("ignore")
-            model  = ARIMA(series, order=ARIMA_ORDER)# initializes ARIMA model with historical data
-            result = model.fit() # this executes the complex math (also trains the model)
-            # result.forecast() returns numpy array, use [0] not .iloc[0]
-            forecast = float(result.forecast(steps=1)[0]) # get the result of the forecast for the next time step (next day)
-            return max(0.0, forecast) # just return 0 if it predicts negative
+            model  = ARIMA(series, order=ARIMA_ORDER)
+            result = model.fit()
+            forecast = float(result.forecast(steps=1)[0])
+            return max(0.0, forecast)
     except Exception:
-        # ARIMA can fail on short or flat series — fall back to mean
         return float(np.mean(series))
 
-# defines the main function that evaluates the forecasting algorithms using backtesting (EMA RMSe) and returns a dictionary with the results
+
+def _backtest_arima(volumes: np.ndarray, window_size: int, refit_interval: int = ARIMA_REFIT_INTERVAL) -> list:
+    """
+    Efficient ARIMA backtest for the evaluation loop.
+
+    The original version fit a brand-new ARIMA model on every single
+    iteration (e.g. ~700 fits for 2 years of data — the source of the
+    dashboard slowdown). This version re-estimates parameters only every
+    `refit_interval` days; on the days in between, it reuses the existing
+    fit and appends the newest observation via `.append(..., refit=False)`,
+    which updates the model's state with new data WITHOUT re-running the
+    expensive optimization.
+
+    This keeps the worst case (e.g. "All Time" — 700+ days selected)
+    bounded to roughly len(volumes)/refit_interval fits, instead of
+    scaling 1:1 with history length.
+    """
+    preds = []
+    result = None
+    steps_since_refit = 0
+
+    for i in range(window_size, len(volumes)):
+        history = volumes[:i]
+        need_refit = result is None or steps_since_refit >= refit_interval
+
+        try:
+            with warnings.catch_warnings():
+                warnings.simplefilter("ignore")
+                if need_refit:
+                    result = ARIMA(history, order=ARIMA_ORDER).fit()
+                    steps_since_refit = 0
+                else:
+                    result = result.append([history[-1]], refit=False)
+                    steps_since_refit += 1
+
+            forecast = float(result.forecast(steps=1)[0])
+            preds.append(max(0.0, forecast))
+        except Exception:
+            # Fall back to mean for this step, and force a fresh fit
+            # next iteration since `result`'s state may be inconsistent.
+            preds.append(float(np.mean(history)))
+            result = None
+            steps_since_refit = 0
+
+    return preds
+
+
 def evaluate_forecasting_algorithms(
     df          : pd.DataFrame,
     window_size : int   = WINDOW_SIZE,
     alpha       : float = EMA_ALPHA,
 ) -> dict:
-    # this table groups the raw data by visit by date, order(newest to oldest), and turns the result in clean list
     volumes = (
         df.groupby('visit_date')['patient_id']
         .count()
@@ -59,10 +102,7 @@ def evaluate_forecasting_algorithms(
         .values
     )
 
-    # Adaptively use available data if insufficient for full evaluation
-    # safety net if it has enough historical data to do the backtesting
     if len(volumes) < window_size + 2:
-        # With limited data, use simple average forecast
         avg_forecast = float(np.mean(volumes))
         return {
             "status": "Limited data — using average forecast.",
@@ -72,45 +112,34 @@ def evaluate_forecasting_algorithms(
             "evaluation_metrics": {}
         }
 
-    # creates empty lists to store the actual values and the predictions from each algorithm
-    actuals                               = []
-    sma_p, wma_p, ema_p, lr_p, arima_p   = [], [], [], [], []
-    # creates an array of multiplier weights for the WMA algorithm, where more recent days have higher weights.
+    actuals                      = []
+    sma_p, wma_p, ema_p, lr_p    = [], [], [], []
     weights     = np.arange(1, window_size + 1, dtype=float)
     current_ema = float(np.mean(volumes[:window_size]))
 
-    # backtesting loop 
+    # SMA / WMA / EMA / LR are cheap — evaluate them per-iteration as before.
     for i in range(window_size, len(volumes)):
-        w           = volumes[i - window_size:i] # the window of historical data for this iteration
-        ema         = alpha * volumes[i - 1] + (1 - alpha) * current_ema # calculates the EMA forecast 
-        current_ema = ema # then it updates the current EMA with the new value for the next iteration
+        w           = volumes[i - window_size:i]
+        ema         = alpha * volumes[i - 1] + (1 - alpha) * current_ema
+        current_ema = ema
 
-        # creates lr model, also ensure it can't predict negative 
         lr = max(0.0, float(
             LinearRegression()
             .fit(np.arange(window_size).reshape(-1, 1), w)
             .predict([[window_size]])[0]
         ))
 
-        # ARIMA fits on the full history up to this point
-        # so it can detect longer patterns beyond the window
-        arima = _fit_arima(volumes[:i])
-
-        # records the actual patient count for day i
-        # records sma prediction
-        # records wma prediction (window multiplied by weights, divided by sum of weights)
-        # saves the pre calculated ema prediction
-        # saves the lr prediction
-        # saves the arima prediction
         actuals.append(volumes[i])
         sma_p.append(float(np.mean(w)))
         wma_p.append(float(np.dot(w, weights) / weights.sum()))
         ema_p.append(ema)
         lr_p.append(lr)
-        arima_p.append(arima)
 
-    # just matches the algorithms to their predictions in a dictionary
-    # and compare the prediction to the actuals using MAE and RMSE
+    # ARIMA is expensive — evaluated separately with the refit-every-N-days
+    # strategy. Same index range (window_size .. len(volumes)-1) so it lines
+    # up with `actuals` one-to-one.
+    arima_p = _backtest_arima(volumes, window_size)
+
     results = {
         name: {
             "MAE" : round(mean_absolute_error(actuals, preds), 4),
@@ -125,12 +154,9 @@ def evaluate_forecasting_algorithms(
         }.items()
     }
 
-    
-    best   = min(results, key=lambda k: results[k]["MAE"]) # finds the algorithm with the lowest MAE
-    latest = volumes[-window_size:] # the most recent window of data to use for the next-day forecast
+    best   = min(results, key=lambda k: results[k]["MAE"])
+    latest = volumes[-window_size:]
 
-
-    # runs all five algorithms one last time for predicting tomorrow based on latest data
     forecasts = {
         "SMA"              : float(np.mean(latest)),
         "WMA"              : float(np.dot(latest, weights) / weights.sum()),
@@ -140,10 +166,9 @@ def evaluate_forecasting_algorithms(
             .fit(np.arange(window_size).reshape(-1, 1), latest)
             .predict([[window_size]])[0]
         )),
-        "ARIMA"            : _fit_arima(volumes),
+        "ARIMA"            : _fit_arima(volumes),  # one-off fit, cheap
     }
 
-    # just grabs the forecast from the best algorithm to report as the next-day forecast, and returns all the results in a dictionary
     next_day = forecasts[best]
     return {
         "status"                : "Forecast computed",
@@ -156,13 +181,9 @@ def evaluate_forecasting_algorithms(
         "next_day_forecast"     : max(0, int(round(next_day))),
     }
 
-# just visualization data preparation functions for the dashboard chart
+
 def get_lr_chart_data(df: pd.DataFrame, window_size: int = WINDOW_SIZE) -> dict:
-    """
-    Returns chart-ready data for the Linear Regression
-    forecast visualization on the admin dashboard.
-    Unchanged — LR chart data is independent of ARIMA.
-    """
+    """Unchanged — LR chart data is independent of ARIMA and already cheap."""
     daily = (
         df.groupby('visit_date')['patient_id']
         .count()
@@ -200,11 +221,10 @@ def get_lr_chart_data(df: pd.DataFrame, window_size: int = WINDOW_SIZE) -> dict:
     ss_tot  = float(np.sum((volumes - volumes.mean()) ** 2))
     r2      = round(1 - ss_res / ss_tot, 4) if ss_tot > 0 else 0.0
 
-    # Adjust window size to not exceed available data
     actual_window = min(window_size, n)
     latest   = volumes[-actual_window:]
     X_window = np.arange(actual_window).reshape(-1, 1)
-    
+
     forecast = max(0.0, float(
         LinearRegression()
         .fit(X_window, latest)
@@ -224,12 +244,16 @@ def get_lr_chart_data(df: pd.DataFrame, window_size: int = WINDOW_SIZE) -> dict:
         "trend"          : "increasing" if slope > 0 else "decreasing" if slope < 0 else "stable",
         "r2"             : r2,
     }
-    
+
 
 def get_arima_chart_data(df: pd.DataFrame, window_size: int = WINDOW_SIZE) -> dict:
     """
-    Returns chart-ready data for the ARIMA forecast visualization.
-    Shows actual counts, ARIMA fitted values, and next-day forecast.
+    Unchanged in structure — still a single ARIMA fit on the full range.
+    Now that the backtest loop is fixed, this one extra fit is negligible
+    (previously it was fit #701 out of 701; now it's fit #14 out of 14
+    roughly, depending on refit interval and range length), so it's not
+    worth the added complexity of threading the backtest's final fitted
+    model through just to save one fit.
     """
     import warnings
 
@@ -267,7 +291,6 @@ def get_arima_chart_data(df: pd.DataFrame, window_size: int = WINDOW_SIZE) -> di
             model   = _ARIMA(volumes, order=ARIMA_ORDER)
             result  = model.fit()
             fitted  = [round(max(0.0, float(v)), 1) for v in result.fittedvalues]
-            # result.forecast() returns numpy array, use [0] not .iloc[0]
             forecast_val = round(max(0.0, float(result.forecast(steps=1)[0])))
             aic     = round(float(result.aic), 2)
     except Exception as e:

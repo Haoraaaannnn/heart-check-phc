@@ -6,9 +6,10 @@ import MetricCardsRow from "@/app/dashboard/analytics/components/MetricCardShow"
 import VolumeAndWaitCharts from "@/app/dashboard/analytics/components/VolumeAndWaitCharts";
 import LRForecast from "@/app/dashboard/analytics/components/LRForecast";
 import ArimaForecast from "@/app/dashboard/analytics/components/ArimaForecast";
+import DateRangeSelector from "@/app/dashboard/analytics/components/DateRangeSelector";
 
 export default function AdminDashboard() {
-  const { data, loading, error } = useAnalyticsData();
+  const { data, loading, error, range, setRange } = useAnalyticsData();
 
   if (loading && !data) return (
     <div className="p-10 text-center text-xl text-gray-500 font-bold">
@@ -26,6 +27,7 @@ export default function AdminDashboard() {
     </div>
   );
 
+
   const lrRaw        = getLRRaw(data);
   const arimaRaw     = getARIMARaw(data);
   const lrChartData  = prepareLRChartData(lrRaw);
@@ -37,11 +39,14 @@ export default function AdminDashboard() {
     <div className="min-h-screen w-full">
       <div className="px-8 py-6 mx-auto max-w-10xl flex flex-col gap-6">
 
-        <div className="mb-2">
-          <h1 className="text-3xl font-bold text-gray-800 dark:text-gray-200">
-            OPD Queue Analytics Dashboard
-          </h1>
-          <p className="text-sm text-gray-400 mt-1">Advanced forecasting and bottleneck analysis</p>
+        <div className="mb-2 flex items-start justify-between flex-wrap gap-4">
+          <div>
+            <h1 className="text-3xl font-bold text-gray-800 dark:text-gray-200">
+              OPD Queue Analytics Dashboard
+            </h1>
+            <p className="text-sm text-gray-400 mt-1">Advanced forecasting and bottleneck analysis</p>
+          </div>
+          <DateRangeSelector value={range} onChange={setRange} />
         </div>
 
         <MetricCardsRow data={data} />
