@@ -40,30 +40,42 @@ export default function LoginPage() {
     const passwordValue = password;
 
     try {
-      const { error: authError } = await supabase.auth.signInWithPassword({
-        email: emailValue,
-        password: passwordValue,
+      const response = await fetch('/api/auth/login', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ email: emailValue, password: passwordValue }),
       });
+      const data = await response.json();
 
       setPassword('');
       if (passwordInputRef.current) {
         passwordInputRef.current.value = '';
       }
 
-      const clearPassword = (str: string) => {
-        for (let i = 0; i < str.length; i++) {
-          str = str.substring(0, i) + ' ' + str.substring(i + 1);
+      if (!response.ok) {
+        if (response.status === 429) {
+          const mins = Math.floor(data.secondsRemaining / 60);
+          const secs = data.secondsRemaining % 60;
+          setError(`Too many failed attempts. Try again in ${mins}m ${secs}s.`);
+        } else {
+          setError(data.error || 'Invalid email or password');
         }
-      };
-      clearPassword(passwordValue);
-
-      if (authError) {
-        setError('Invalid email or password');
         setLoading(false);
         return;
       }
 
-      const { data, error: dbError } = await supabase
+      const { error: setSessionError } = await supabase.auth.setSession({
+        access_token: data.session.access_token,
+        refresh_token: data.session.refresh_token,
+      });
+
+      if (setSessionError) {
+        setError('Failed to establish session. Please try again.');
+        setLoading(false);
+        return;
+      }
+
+      const { data: roleData, error: dbError } = await supabase
         .from('users')
         .select('role')
         .eq('email', emailValue)
@@ -71,14 +83,14 @@ export default function LoginPage() {
 
       setLoading(false);
 
-      if (dbError || !data) {
+      if (dbError || !roleData) {
         setError('User role not found');
         return;
       }
 
       setEmail('');
 
-      switch (data.role) {
+      switch (roleData.role) {
         case 'superadmin':
           router.push('/superadmin');
           break;
@@ -115,14 +127,12 @@ export default function LoginPage() {
   return (
     <div className="relative flex h-screen w-full items-center justify-center overflow-hidden bg-gradient-to-br from-[#fffdfd] via-[#fff5f5] to-[#ffeaea] px-5 font-sans">
 
-      {/* Background Glow Effects */}
       <div className="pointer-events-none absolute inset-0 z-0">
         <div className="absolute top-[-100px] right-[-100px] h-[450px] w-[450px] rounded-full bg-[#ff6b6b]/20 blur-[130px]" />
         <div className="absolute bottom-[-120px] left-[-80px] h-[400px] w-[400px] rounded-full bg-[#ff8a8a]/20 blur-[130px]" />
         <div className="absolute left-1/2 top-1/2 h-[600px] w-[600px] -translate-x-1/2 -translate-y-1/2 rounded-full bg-[#ffd4d4]/30 blur-[160px]" />
       </div>
 
-      {/* Back Button */}
       <button
         onClick={() => router.push('/')}
         className="fixed left-8 top-8 z-20 flex items-center gap-2 rounded-xl border border-white/40 bg-white/40 px-4 py-2 text-gray-600 backdrop-blur-xl transition hover:bg-white/60 hover:text-[#cc3535]"
@@ -132,7 +142,6 @@ export default function LoginPage() {
         <span className="text-sm font-medium">Back to Home</span>
       </button>
 
-      {/* Login Glass Card */}
       <div className="relative z-10 w-full max-w-md rounded-[32px] border border-white/40 bg-white/35 px-10 pb-8 pt-10 shadow-[0_10px_50px_rgba(255,120,120,0.10)] backdrop-blur-2xl">
 
         <h1 className="mb-2 text-center text-3xl font-bold text-gray-800">
