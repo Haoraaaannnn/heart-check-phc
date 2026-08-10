@@ -3,7 +3,6 @@
 import { supabase } from "@/lib/supabase"
 import { useEffect, useState } from "react"
 import { SettingsPanel } from './components/SettingsPannel';
-import { DoctorsPanel } from './components/DoctorsPanel';
 
 interface User {
   auth_id: string
@@ -34,7 +33,7 @@ export default function SuperAdminPage() {
   const [formLoading, setFormLoading] = useState(false)
   const [formError, setFormError] = useState('')
   const [formSuccess, setFormSuccess] = useState('')
-  const [activeTab, setActiveTab] = useState<'users' | 'settings' | 'doctors'>('users')
+  const [activeTab, setActiveTab] = useState<'users' | 'settings' >('users')
 
 
   const fetchUsers = async (page: number) => {
@@ -227,19 +226,9 @@ return (
         Settings
       </button>
 
-
-    <button
-      onClick={() => setActiveTab('doctors')}
-      className={`px-4 py-2 rounded-lg text-sm font-medium transition cursor-pointer ${
-        activeTab === 'doctors' ? 'bg-blue-600 text-white' : 'bg-white text-gray-600 hover:bg-gray-100'
-      }`}
-    >
-      Doctors
-    </button>
     </div>
 
     {activeTab === 'settings' && <SettingsPanel />}
-    {activeTab === 'doctors' && <DoctorsPanel />}
 
     {activeTab === 'users' && (
       <div className="bg-white rounded-lg shadow overflow-hidden">

@@ -18,6 +18,7 @@ import { useRegistrationDragAndDrop } from './hooks/useRegistrationDragAndDrop';
 import { Patient } from '@/types/Types';
 import { useAutoRotate } from './hooks/useAutoRotate';
 import { useRotateTimeout } from './hooks/useRotateTimeout';
+import { DoctorsModal } from './components/DoctorsModal';
 
 export default function TransferPage() {
   const router = useRouter();
@@ -28,7 +29,7 @@ export default function TransferPage() {
   const [sidebarOpen, setSidebarOpen] = useState(true);
   const [registrationPatients, setRegistrationPatients] = useState<Patient[]>([]);
   const pendingUpdatesRef = useRef<Patient[]>([]);
-  
+  const [showDoctorsModal, setShowDoctorsModal] = useState(false);
 
   const [isLoading, setIsLoading] = useState(true);
   const [isSyncing, setIsSyncing] = useState(false);
@@ -441,6 +442,14 @@ export default function TransferPage() {
               <i className="bx bxs-bell text-lg text-gray-500"></i>
             </button>
 
+            <button
+            onClick={() => setShowDoctorsModal(true)}
+            className="w-10 h-10 bg-gray-100 rounded-full flex items-center justify-center hover:bg-red-50 transition"
+            title="Manage Doctors"
+          >
+            <i className="bx bx-plus-medical text-lg text-gray-500"></i>
+          </button>
+
             </div>
         </div>
 
@@ -465,6 +474,7 @@ export default function TransferPage() {
           {renderContent()}
         </div>
       </div>
+      {showDoctorsModal && <DoctorsModal onClose={() => setShowDoctorsModal(false)} />}
     </div>
   );
 }
