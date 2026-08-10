@@ -65,7 +65,6 @@ export default function KioskLayout({ children }: { children: React.ReactNode })
                 </main>
               </section>
             </div>
-            <KioskHeader />
           </div>
       </div>
     </div>

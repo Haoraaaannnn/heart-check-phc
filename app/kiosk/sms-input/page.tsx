@@ -16,7 +16,7 @@ export default async function SMSPage({ searchParams }: Props) {
         .from("services")
         .select("*")
         .eq("id", parseInt(serviceId ?? "0", 10))
-        .single();
+        .single();  
 
     if (!service || error) notFound();
 

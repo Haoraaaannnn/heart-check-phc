@@ -12,9 +12,6 @@
   --color-brand-accent: #cc3535;
 }
 
-/* Removed the :root and @media dark blocks. 
-  Now, your body tag in layout.tsx (with dark:bg-gray-900) will do all the work! 
-*/
 body {
   font-family: Arial, Helvetica, sans-serif;
 }

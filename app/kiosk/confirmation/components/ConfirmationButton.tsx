@@ -13,6 +13,14 @@ export default function ConfirmationActions({
   const router = useRouter();
 
   const handleContinue = () => {
+    const isConsultation = service.label_en?.toLowerCase() === "consultation";
+
+    if (isConsultation) {
+      console.log(`${getTimestamp()} [CONFIRMATION ACCEPTED] Consultation service - Redirecting to cubicle selection - ServiceId: ${service.id}`);
+      router.push(`/kiosk/kiosk-cubicle-selection?serviceId=${service.id}${patientType ? `&type=${patientType}` : ""}`);
+      return;
+    }
+
     console.log(`${getTimestamp()} [CONFIRMATION ACCEPTED] Service confirmed - Redirecting to SMS input - ServiceId: ${service.id}`);
     router.push(`/kiosk/sms-input?serviceId=${service.id}`);
   };
