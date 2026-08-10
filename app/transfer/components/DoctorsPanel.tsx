@@ -101,25 +101,25 @@ export function DoctorsPanel() {
     }
   };
 
-    const handleAssign = async (cubicleId: number, cubicleNum: string, doctorId: string) => {
+  const handleAssign = async (cubicleId: number, cubicleNum: string, doctorId: string) => {
     setAssignSaving(cubicleNum);
     try {
-        const { error } = await supabase
+      const { error } = await supabase
         .from('cubicle')
         .update({ doctorId: doctorId || null })
         .eq('id', cubicleId);
 
-        if (error) {
+      if (error) {
         console.error('Failed to assign doctor:', error);
         alert(`Failed to assign doctor: ${error.message}`);
         return;
-        }
+      }
 
-        await fetchAll();
+      await fetchAll();
     } finally {
-        setAssignSaving(null);
+      setAssignSaving(null);
     }
-    };
+  };
 
   if (loading) {
     return <p className="text-gray-400 text-sm">Loading...</p>;
@@ -127,7 +127,7 @@ export function DoctorsPanel() {
 
   return (
     <div className="flex flex-col gap-8">
-      {/* Doctor list */}
+
       <div className="bg-white rounded-lg shadow overflow-hidden">
         <div className="flex justify-between items-center px-6 py-4 border-b border-gray-100">
           <h2 className="text-lg font-bold text-gray-900">Doctors</h2>
@@ -164,7 +164,7 @@ export function DoctorsPanel() {
         </table>
       </div>
 
-      {/* Cubicle assignment */}
+
       <div className="bg-white rounded-lg shadow overflow-hidden">
         <div className="px-6 py-4 border-b border-gray-100">
           <h2 className="text-lg font-bold text-gray-900">Cubicle Assignments</h2>
@@ -202,7 +202,7 @@ export function DoctorsPanel() {
         </table>
       </div>
 
-      {/* Add/Edit modal */}
+
       {showModal && (
         <div className="fixed inset-0 bg-black/70 flex items-center justify-center z-50">
           <div className="bg-white rounded-lg p-6 w-full max-w-md">
@@ -259,7 +259,7 @@ export function DoctorsPanel() {
         </div>
       )}
 
-      {/* Delete confirm */}
+
       {showDeleteConfirm && (
         <div className="fixed inset-0 bg-black/70 flex items-center justify-center z-50">
           <div className="bg-white rounded-lg p-6 w-full max-w-md">
