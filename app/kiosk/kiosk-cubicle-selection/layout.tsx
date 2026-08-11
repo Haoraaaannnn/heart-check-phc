@@ -52,10 +52,9 @@ export default function KioskNewOldSelectionLayout({ children }: { children: Rea
             >
                 <div className="relative z-10 flex flex-col h-full w-full">
                     <CubicleHeader />
-                    <main className={`flex-1 ${isLandscape ? "overflow-hidden" : ""} flex items-center justify-center`}>
+                    <main className="flex-1 min-h-0 overflow-hidden flex items-center justify-center">
                         {children}
                     </main>
-                    <KioskHeader />
                 </div>
             </div>
         </div>

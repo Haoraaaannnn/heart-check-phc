@@ -60,7 +60,7 @@ export default function KioskLayout({ children }: { children: React.ReactNode })
               </section>
               <section className={isLandscape ? "w-[55%] flex flex-col min-h-0" : "w-full flex flex-col"}>
                 <KioskBanner />
-                <main className={`flex-1 ${isLandscape ? "overflow-hidden" : ""}`}>
+                <main className="flex-1 min-h-0 overflow-hidden flex items-center justify-center">
                   {children}
                 </main>
               </section>

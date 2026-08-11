@@ -3,7 +3,7 @@
 import { useEffect, useState } from "react";
 import KioskHeader from "@/app/kiosk/kiosk-services/components/KioskHeader";
 
-export default function KioskNewOldSelectionLayout({
+export default function MainKioskLayout({
     children,
 }: {
     children: React.ReactNode;

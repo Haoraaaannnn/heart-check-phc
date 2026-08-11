@@ -1,7 +1,6 @@
 import { createClient } from "@/lib/supabase/client";
-import SMSBanner from "@/app/kiosk/sms-input/components/sms-banner";
-import KioskPhoneEntry from "@/app/kiosk/sms-input/components/sms-entry";
-import ServiceBanner from "@/app/kiosk/sms-input/components/sms-banner";
+import SMSBanner from "@/app/kiosk/sms-input/components/SMSBanner";
+import KioskPhoneEntry from "@/app/kiosk/sms-input/components/KioskPhoneEntry";
 import { notFound } from "next/navigation";
 
 interface Props {
@@ -16,12 +15,12 @@ export default async function SMSPage({ searchParams }: Props) {
         .from("services")
         .select("*")
         .eq("id", parseInt(serviceId ?? "0", 10))
-        .single();  
+        .single();
 
     if (!service || error) notFound();
 
     return (
-        <div className="h-screen w-full flex flex-col overflow-hidden bg-white p-0">
+        <div className="h-full w-full flex flex-col overflow-hidden bg-white p-0">
             <div className="flex flex-col w-full h-full gap-2 md:gap-4 lg:gap-6 portrait:lg:gap-8 landscape:lg:gap-3 landscape:2xl:gap-8 overflow-hidden">
                 
                 <div className="flex-none">
