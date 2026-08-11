@@ -23,7 +23,6 @@ export default function CubicleCard({
         const params = new URLSearchParams();
         params.set("cubicleNum", cubicleSelector.cubicle_name);
         if (serviceId) params.set("serviceId", serviceId);
-        if (serviceColor) params.set("serviceColor", serviceColor);
         if (patientNum) params.set("patientNum", patientNum);
 
         router.push(`/kiosk/sms-input?${params.toString()}`);

@@ -14,25 +14,24 @@ export default function MainKioskLayout({
 
     useEffect(() => {
         const updateScale = () => {
-            const landscape = window.innerWidth > window.innerHeight;
+            const width = window.innerWidth;
+            const height = window.innerHeight;
+
+            const landscape = width > height;
+
             setIsLandscape(landscape);
 
             const virtualWidth = landscape ? 1920 : 1080;
             const virtualHeight = landscape ? 1080 : 1920;
 
-            const scaleX = window.innerWidth / virtualWidth;
-            const scaleY = window.innerHeight / virtualHeight;
+            const scaleX = width / virtualWidth;
+            const scaleY = height / virtualHeight;
 
-            setScale(Math.min(scaleX, scaleY) || 1);
+            setScale(Math.min(scaleX, scaleY));
             setMounted(true);
         };
 
-        const initialUpdate = () => {
-            requestAnimationFrame(updateScale);
-            setTimeout(updateScale, 50);
-        };
-
-        initialUpdate();
+        updateScale();
 
         window.addEventListener("resize", updateScale);
         window.addEventListener("orientationchange", updateScale);
@@ -43,27 +42,36 @@ export default function MainKioskLayout({
         };
     }, []);
 
+    const virtualWidth = isLandscape ? 1920 : 1080;
+    const virtualHeight = isLandscape ? 1080 : 1920;
+
     return (
         <div
-            className={`w-screen h-screen overflow-hidden flex items-center justify-center bg-white relative transition-opacity duration-300 ${
+            className={`fixed inset-0 overflow-hidden bg-white flex items-center justify-center transition-opacity duration-300 ${
                 mounted ? "opacity-100" : "opacity-0"
             }`}
         >
             <div
-                className="flex-shrink-0 z-10 transition-transform duration-300 ease-in-out"
+                className="relative flex-shrink-0 overflow-hidden"
                 style={{
-                    width: isLandscape ? "1920px" : "1080px",
-                    height: isLandscape ? "1080px" : "1920px",
+                    width: `${virtualWidth}px`,
+                    height: `${virtualHeight}px`,
                     transform: `scale(${scale})`,
                     transformOrigin: "center center",
                 }}
             >
-                <div className="relative z-10 flex flex-col h-full w-full">
-                    <main className="flex-1 min-h-0 overflow-hidden flex items-center justify-center">
+                <div className="relative flex h-full w-full flex-col overflow-hidden">
+
+                    {/* Main content */}
+                    <main className="flex min-h-0 flex-1 flex-col overflow-hidden">
                         {children}
                     </main>
 
-                    <KioskHeader />
+                    {/* Bottom header/footer */}
+                    <div className="flex-shrink-0">
+                        <KioskHeader />
+                    </div>
+
                 </div>
             </div>
         </div>

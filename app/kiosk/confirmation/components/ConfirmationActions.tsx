@@ -3,16 +3,24 @@ import { useRouter } from 'next/navigation';
 import { getTimestamp } from '@/lib/logger';
 import { Service } from '@/types/Services';
 
+interface Props {
+  service: Service;
+  patientType?: "new" | "old";
+  onCancel?: () => void;
+  onContinue?: () => void;
+}
+
 export default function ConfirmationActions({
   service,
   patientType,
-}: {
-  service: Service;
-  patientType?: "new" | "old";
-}) {
+  onCancel,
+  onContinue,
+}: Props) {
   const router = useRouter();
 
   const handleContinue = () => {
+    onContinue?.();
+
     const isConsultation = service.label_en?.toLowerCase() === "consultation";
 
     if (isConsultation) {
@@ -26,19 +34,23 @@ export default function ConfirmationActions({
   };
 
   const handleCancel = () => {
+    if (onCancel) {
+      onCancel();
+      return;
+    }
     router.push(patientType ? `/kiosk/kiosk-services?type=${patientType}` : '/kiosk/kiosk-services');
   };
 
   return (
-    <div className="flex flex-col justify-center px-8 w-full mt-4 mb-6 gap-4">
+    <div className="flex flex-col justify-center w-full mt-2 gap-3">
       <button
         onClick={handleContinue}
-        className="w-full py-[15px] text-white text-center text-[40px] font-black rounded-[16px] transition-all active:scale-95 shadow-md bg-[#7f0407]">
+        className="w-full py-[15px] text-white text-center text-2xl font-black rounded-[16px] transition-all active:scale-95 shadow-md bg-[#7f0407]">
         Magpatuloy - Continue
       </button>
       <button
         onClick={handleCancel}
-        className="w-full py-[15px] border-gray-400 border-[0.3vh] text-center rounded-[16px] font-black text-gray-500 text-[40px] transition-all active:scale-95 bg-white">
+        className="w-full py-[15px] border-gray-400 border-[0.3vh] text-center rounded-[16px] font-black text-gray-500 text-2xl transition-all active:scale-95 bg-white">
         Bumalik - Cancel
       </button>
     </div>
