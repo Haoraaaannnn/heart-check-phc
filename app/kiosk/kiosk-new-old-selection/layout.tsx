@@ -4,11 +4,7 @@ import { useEffect, useState } from "react";
 import KioskTitle from "@/app/kiosk/kiosk-new-old-selection/components/KioskTitle";
 import PatientTypeBanner from "@/app/kiosk/kiosk-new-old-selection/components/PatientTypeBanner";
 
-export default function KioskNewOldSelectionLayout({
-    children,
-}: {
-    children: React.ReactNode;
-}) {
+export default function KioskNewOldSelectionLayout({children,}: {children:React.ReactNode;}) {
     const [scale, setScale] = useState(1);
     const [isLandscape, setIsLandscape] = useState(false);
     const [mounted, setMounted] = useState(false);
