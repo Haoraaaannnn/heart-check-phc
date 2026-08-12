@@ -1,6 +1,6 @@
 import { createClient } from "@/lib/supabase/server";
 import PatientTypeCard from "@/app/kiosk/kiosk-new-old-selection/components/PatientTypeCards";
-import { PatientCategory } from "@/app/kiosk/kiosk-new-old-selection/Types/PatientType";
+import { PatientCategory } from "@/app/kiosk/kiosk-new-old-selection/types/PatientType";
 
 export default async function KioskNewOldSelectionPage() {
     const supabase = await createClient();

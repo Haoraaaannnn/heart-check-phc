@@ -6,10 +6,10 @@ import { supabase } from "@/lib/supabase";
 import { getTimestamp } from "@/lib/logger";
 import { Service } from "@/types/Services";
 import { sendSMS } from '@/app/actions/sendSMS';
-import PhoneInput from "./sms-input";
-import NumPad from "./sms-numpad";
-import ContinueButton from "./sms-buttons";
-import SMSInstruction from "./sms-instruction";
+import PhoneInput from "./PhoneInput";
+import NumPad from "./NumPad";
+import ContinueButton from "./ContinueButton";
+import SMSInstruction from "./SMSInstruction";
 
 interface Props {
   service: Service;
