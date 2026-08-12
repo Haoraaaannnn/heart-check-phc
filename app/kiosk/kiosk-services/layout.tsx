@@ -1,7 +1,6 @@
 "use client";
 
 import { useEffect, useState } from "react";
-import { usePathname } from "next/navigation";
 import KioskBanner from "@/app/kiosk/kiosk-services/components/KioskBanner";
 import KioskBackButton from "./components/KioskBackButton";
 
@@ -13,7 +12,6 @@ export default function KioskLayout({children,}: {children: React.ReactNode;}) {
     const [scale, setScale] = useState(1);
     const [isLandscape, setIsLandscape] = useState(false);
     const [mounted, setMounted] = useState(false);
-    const pathname = usePathname();
 
     useEffect(() => {
         const updateScale = () => {
@@ -45,7 +43,6 @@ export default function KioskLayout({children,}: {children: React.ReactNode;}) {
         };
     }, []);
 
-    const backHref = backRoute[pathname] ?? "/kiosk/kiosk-new-old-selection";
     return (
         <div
             className={`fixed inset-0 flex items-center justify-center overflow-hidden bg-white transition-opacity duration-300 ${
@@ -84,8 +81,6 @@ export default function KioskLayout({children,}: {children: React.ReactNode;}) {
                                     : "flex w-full flex-col items-center justify-center"
                             }
                         >
-                            {/* Backbutton */}
-                            <KioskBackButton href={backHref} />
                             
                             {/* Banner */}
                             <KioskBanner />
