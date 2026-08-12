@@ -1,14 +1,9 @@
 "use client";
 
 import { useEffect, useState } from "react";
-import { usePathname } from "next/navigation";
+import { usePathname, useSearchParams } from "next/navigation";
 import KioskHeader from "@/app/kiosk/kiosk-services/components/KioskHeader";
 import KioskBackButton from "@/app/kiosk/kiosk-services/components/KioskBackButton";
-
-const backRoute: Record<string, string> = {
-    "/kiosk/kiosk-services": "/kiosk/kiosk-new-old-selection",
-    "/kiosk/kiosk-cubicle-selection": "/kiosk/kiosk-services"
-};
 
 export default function MainKioskLayout({
     children,
@@ -20,6 +15,10 @@ export default function MainKioskLayout({
     const [mounted, setMounted] = useState(false);
 
     const pathname = usePathname();
+    const searchParams = useSearchParams();
+
+    // Get the selected patient type from the URL
+    const patientType = searchParams.get("type");
 
     useEffect(() => {
         const updateScale = () => {
@@ -54,11 +53,39 @@ export default function MainKioskLayout({
     const virtualWidth = isLandscape ? 1920 : 1080;
     const virtualHeight = isLandscape ? 1080 : 1920;
 
-    const backHref = backRoute[pathname] ?? "null";
+    /*
+     * Back button is ONLY allowed on these two pages:
+     *
+     * /kiosk/kiosk-services
+     * /kiosk/kiosk-cubicle-selection
+     */
+    const shouldShowBackButton =
+        pathname === "/kiosk/kiosk-services" ||
+        pathname === "/kiosk/kiosk-cubicle-selection";
+
+    /*
+     * Determine where the back button should go.
+     * Preserve the patient type when going backward.
+     */
+    let backHref: string | undefined = undefined;
+
+    if (pathname === "/kiosk/kiosk-services") {
+        backHref = patientType
+            ? `/kiosk/kiosk-new-old-selection?type=${encodeURIComponent(
+                  patientType
+              )}`
+            : "/kiosk/kiosk-new-old-selection";
+    }
+
+    if (pathname === "/kiosk/kiosk-cubicle-selection") {
+        backHref = patientType
+            ? `/kiosk/kiosk-services?type=${encodeURIComponent(patientType)}`
+            : "/kiosk/kiosk-services";
+    }
 
     return (
         <div
-            className={`fixed inset-0 overflow-hidden bg-white flex items-center justify-center transition-opacity duration-300 ${
+            className={`fixed inset-0 flex items-center justify-center overflow-hidden bg-white transition-opacity duration-300 ${
                 mounted ? "opacity-100" : "opacity-0"
             }`}
         >
@@ -73,17 +100,17 @@ export default function MainKioskLayout({
             >
                 <div className="relative flex h-full w-full flex-col overflow-hidden">
 
-                    {/* Backbutton */}
-                    {backRoute[pathname] && (
-                        <KioskBackButton href={backRoute[pathname]} />
+                    {/* Back Button */}
+                    {shouldShowBackButton && backHref && (
+                        <KioskBackButton href={backHref} />
                     )}
 
-                    {/* Main content */}
+                    {/* Main Content */}
                     <main className="flex min-h-0 flex-1 flex-col overflow-hidden">
                         {children}
                     </main>
 
-                    {/* Bottom header/footer */}
+                    {/* Bottom Header / Footer */}
                     <div className="flex-shrink-0">
                         <KioskHeader />
                     </div>
