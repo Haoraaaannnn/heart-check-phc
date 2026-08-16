@@ -6,10 +6,10 @@ import { supabase } from "@/lib/supabase";
 import { getTimestamp } from "@/lib/logger";
 import { Service } from "@/types/Services";
 import { sendSMS } from '@/app/actions/sendSMS';
-import PhoneInput from "./sms-input";
-import NumPad from "./sms-numpad";
-import ContinueButton from "./sms-buttons";
-import SMSInstruction from "./sms-instruction";
+import PhoneInput from "./PhoneInput";
+import NumPad from "./NumPad";
+import ContinueButton from "./ContinueButton";
+import SMSInstruction from "./SMSInstruction";
 
 interface Props {
   service: Service;
@@ -43,13 +43,27 @@ const createPatientRecord = async (service: Service) => {
 
     const patientNum = `${prefix}${String(nextNum).padStart(3, '0')}`;
 
-    const { data, error } = await supabase.from('patients').insert({
-      patientNum,
-      service: serviceName,
-      status: 'On Progress', 
-      phoneNum: null,
-      cubicleNum: null,
-    }).select().single();
+    const { data: lastQueue } = await supabase
+      .from("patients")
+      .select("queue_position")
+      .order("queue_position", { ascending: false })
+      .limit(1);
+
+    const nextQueuePosition =
+      (lastQueue?.[0]?.queue_position ?? 0) + 1;
+
+    const { data, error } = await supabase
+      .from("patients")
+      .insert({
+        patientNum,
+        service: serviceName,
+        status: "On Progress",
+        phoneNum: null,
+        cubicleNum: null,
+        queue_position: nextQueuePosition,
+      })
+      .select()
+      .single();
 
     if (error) throw error;
     console.log(`${getTimestamp()} [DB INSERT] New Patient Created with On Progress status:`, { id: data?.id, created_at: data?.created_at, patientNum: data?.patientNum, phoneNum: data?.phoneNum, service: data?.service });
@@ -73,28 +87,30 @@ export default function KioskPhoneEntry({ service, patientNum: initialPatientNum
   const handleContinueConfirm = async () => {
     setShowContinueModal(false);
     try {
-      let finalPatientNum = patientNum;
-      if (!finalPatientNum) finalPatientNum = await createPatientRecord(service);
+    let finalPatientNum = patientNum;
+    if (!finalPatientNum)
+      finalPatientNum = await createPatientRecord(service);
 
-      const now = new Date();
-      const startOfDay = new Date(now.getFullYear(), now.getMonth(), now.getDate()).toISOString();
-
-      const { data, error } = await supabase
-        .from('patients')
-        .update({ phoneNum: parseInt(phone, 10) })
-        .eq('patientNum', finalPatientNum)
-        .gte('created_at', startOfDay)
-        .select()
-        .single();
-
-      if (error) throw error;
-
-      console.log(`${getTimestamp()} [DB UPDATE] Phone Number Added:`, { id: data?.id, patientNum: data?.patientNum, phoneNum: data?.phoneNum });
-
-      router.push(`/kiosk/queue-print?patientNum=${finalPatientNum}&serviceId=${service.id}`);
+    await supabase
+      .from("patients")
+      .update({
+        phoneNum: parseInt(phone, 10),
+      })
+      .eq("patientNum", finalPatientNum);
+      
+    router.push(`/kiosk/queue-print?patientNum=${finalPatientNum}&serviceId=${service.id}`);
     } catch (e) {
-      console.error(`${getTimestamp()} [SMS CONTINUE ERROR]`, e);
-    }
+  alert(JSON.stringify(e));
+
+  console.log("ERROR:", e);
+
+  if (e instanceof Error) {
+    console.log("Message:", e.message);
+    console.log("Stack:", e.stack);
+  } else {
+    console.log("Unknown error:", e);
+  }
+}
   };
 
   const handleSkipConfirm = async () => {

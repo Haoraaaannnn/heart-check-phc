@@ -54,7 +54,7 @@ export function useBottleneckNotifications() {
               const newNotification: Notification = {
                 id: `bottleneck-${patient.id}-${Date.now()}`,
                 type: 'bottleneck',
-                title: '⚠️ Extended Consultation Time',
+                title: 'Extended Consultation Time',
                 message: `Patient ${patient.patientNum}${cubicleInfo} has been with doctor for ${consultationDurationMins} minutes (exceeds 15 min threshold).`,
                 timestamp: new Date(),
                 read: false,

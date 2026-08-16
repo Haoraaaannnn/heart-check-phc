@@ -1,7 +1,7 @@
 "use client";
 
 import { useRouter } from "next/navigation";
-import { PatientCategory } from "@/app/kiosk/kiosk-new-old-selection/Types/PatientType";
+import { PatientCategory } from "@/app/kiosk/kiosk-new-old-selection/types/PatientType";
 import * as TablerIcons from "@tabler/icons-react";
 
 export default function KioskNewOldSelectionPage({patientCategory}: {patientCategory: PatientCategory}) {

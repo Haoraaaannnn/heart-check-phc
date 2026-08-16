@@ -1,6 +1,7 @@
 export interface PatientStats {
   totalToday: number;
   inQueue: number;
+  inService: number;
   servedToday: number;
   avgWaitTime: number;
 }
@@ -43,7 +44,7 @@ export type Patient = {
   id: number;
   patientNum: string;
   status?: string;
-  cubicleNum?: string;
+  cubicleNum?: string | null;
   service?: string;
   created_at?: string;
   updated_at?: string;
@@ -53,6 +54,11 @@ export type Patient = {
   consult_start?: string;
   consult_end?: string;
   counter?: number;
+  called_at?: string;
+  timeout_seconds?: number;
+  queue_position?: number;
+  progress_started_at?: string | null;
+  cubicle_top_started_at?: string | null;
 };
 
 export type Cubicle = {
@@ -61,4 +67,15 @@ export type Cubicle = {
   category: string;
   room: number;
   subcategory?: string;
+  doctorId?: string | null;
+};
+
+export type Doctor = {
+  id: string;
+  full_name: string;
+  specialty?: string | null;
+  email?: string | null;
+  auth_id?: string | null;
+  active: boolean;
+  created_at?: string;
 };

@@ -14,6 +14,8 @@ export const CATEGORY_ICONS: Record<string, string> = {
   'OPD Screening': 'bx-search-alt-2'
 };
 
+export const ROTATE_TIMEOUT_MS = 2 * 60 * 1000;
+
 export const CONSULTATION_SUBCATEGORIES = ['Pedia', 'Adult'];
 
 export const AUTO_ASSIGN_SERVICES = [

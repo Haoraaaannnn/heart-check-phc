@@ -1,5 +1,6 @@
 'use client';
 
+import { useEffect, useState } from 'react';
 import {
   BarChart, Bar, XAxis, YAxis, CartesianGrid, Tooltip, ResponsiveContainer,
 } from 'recharts';
@@ -9,7 +10,27 @@ interface HourlyArrivalsChartProps {
   isMounted: boolean;
 }
 
+// Watches document.documentElement's class list so Recharts (which
+// needs literal color strings, not Tailwind `dark:` classes) can
+// theme its SVG fill / tooltip colors to match the current mode.
+function useIsDarkMode() {
+  const [isDark, setIsDark] = useState(false);
+
+  useEffect(() => {
+    const check = () => setIsDark(document.documentElement.classList.contains('dark'));
+    check();
+
+    const observer = new MutationObserver(check);
+    observer.observe(document.documentElement, { attributes: true, attributeFilter: ['class'] });
+    return () => observer.disconnect();
+  }, []);
+
+  return isDark;
+}
+
 export default function HourlyArrivalsChart({ hourlyData, isMounted }: HourlyArrivalsChartProps) {
+  const isDark = useIsDarkMode();
+
   return (
     <div className="bg-white/35 rounded-[28px] shadow-[0_10px_40px_rgba(255,120,120,0.06)] border border-red-50 backdrop-blur-xl p-8 w-full mb-8
       dark:bg-gray-900/60 dark:border-gray-700/50 dark:shadow-black/20">
@@ -22,7 +43,7 @@ export default function HourlyArrivalsChart({ hourlyData, isMounted }: HourlyArr
         {isMounted ? (
           <ResponsiveContainer width="99%" height="100%">
             <BarChart data={hourlyData} margin={{ top: 10, right: 10, left: -20, bottom: 0 }}>
-              <CartesianGrid strokeDasharray="3 3" vertical={false} stroke="#f0f0f0" />
+              <CartesianGrid strokeDasharray="3 3" vertical={false} stroke={isDark ? '#374151' : '#f0f0f0'} />
               <XAxis
                 dataKey="time"
                 tick={{ fontSize: 12, fill: '#9ca3af' }}
@@ -37,8 +58,14 @@ export default function HourlyArrivalsChart({ hourlyData, isMounted }: HourlyArr
                 domain={[0, (dataMax: number) => Math.max(dataMax, 4)]}
               />
               <Tooltip
-                cursor={{ fill: '#f3f4f6' }}
-                contentStyle={{ borderRadius: '8px', border: 'none', boxShadow: '0 4px 6px -1px rgb(0 0 0 / 0.1)' }}
+                cursor={{ fill: isDark ? 'rgba(255,255,255,0.06)' : '#f3f4f6' }}
+                contentStyle={{
+                  borderRadius: '8px',
+                  border: 'none',
+                  boxShadow: '0 4px 6px -1px rgb(0 0 0 / 0.1)',
+                  backgroundColor: isDark ? '#1f2937' : '#ffffff',
+                  color: isDark ? '#e5e7eb' : '#111827',
+                }}
                 formatter={((value: number) => [`${value} patients`, 'Arrivals']) as any}
               />
               <Bar dataKey="patients" fill="#cc3535" radius={[4, 4, 0, 0]} maxBarSize={50} />

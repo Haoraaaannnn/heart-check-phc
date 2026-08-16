@@ -64,3 +64,18 @@ def bottleneck_report(df: pd.DataFrame) -> dict:
             else "Normal"
         ),
     }
+    
+# Aggregates patient volume by service type across the full dataset —
+# used as the historical baseline for the Service Distribution chart
+# when there's no live "today" data to show.
+def service_distribution(df: pd.DataFrame) -> pd.DataFrame:
+    """Total patient count per service, across the full date range in df."""
+    return (
+        df.groupby('purpose').agg(
+            total_patients = ('patient_id', 'count'),
+        )
+        .reset_index()
+        .rename(columns={'purpose': 'service'})
+        .sort_values('total_patients', ascending=False)
+        .round(2)
+    )

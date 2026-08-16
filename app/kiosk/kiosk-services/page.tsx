@@ -1,7 +1,6 @@
 import { createClient } from "@/lib/supabase/server";
-import ServiceCard from "@/app/kiosk/kiosk-services/components/KioskServicesCard";
+import KioskServicesGrid from "@/app/kiosk/kiosk-services/components/KioskServicesGrid";
 import { Service } from "@/types/Services"
-
 
 export default async function KioskPage({searchParams,}: {searchParams: Promise<{type?:string}>;}) {
   const supabase = await createClient();
@@ -13,19 +12,16 @@ export default async function KioskPage({searchParams,}: {searchParams: Promise<
     .select("*")
     .order("display_order", { ascending: true });
 
-  // created a variable where in it filters the services based on the type of patient
+  // filter services based on the type of patient
   const visibleServices = services?.filter((service: Service) => {
     if (type === "new") return service.patient_type === "new" || service.patient_type === "both";
     if (type === "old") return service.patient_type === "old" || service.patient_type === "both";
     return true;
-  });
+  }) ?? [];
 
-  // render the services in a grid
+  const patientType = type === "new" || type === "old" ? type : undefined;
+
   return (
-    <div className="grid grid-cols-2 w-full max-w-full landscape:grid-cols-2 content-evenly gap-x-8 gap-y-8 px-8 py-8">
-      {visibleServices?.map((service: Service) => (
-        <ServiceCard key={service.id} service={service} patientType={type} />
-      ))}
-    </div>
+    <KioskServicesGrid services={visibleServices} patientType={patientType} />
   );
 }

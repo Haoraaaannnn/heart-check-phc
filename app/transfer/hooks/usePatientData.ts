@@ -31,63 +31,100 @@ export function usePatientData() {
   const fetchData = useCallback(async () => {
     const today = new Date(); today.setHours(0, 0, 0, 0);
     const tomorrow = new Date(today); tomorrow.setDate(today.getDate() + 1);
-    
+
     const { data, error } = await supabase
       .from('patients')
       .select('*')
       .neq('status', 'Done')
       .gte('created_at', today.toISOString())
       .lt('created_at', tomorrow.toISOString())
-      .order('created_at', { ascending: true });
+      .order('queue_position', {
+        ascending: true,
+        nullsFirst: false,
+      });
 
     if (!error && data) {
-      const allWaiting = data.filter((p: Patient) =>
-        (p.status === 'On Progress' || p.status === 'Waiting') && !p.cubicleNum
-      );
+      const queue = data
+        .filter(p => !p.cubicleNum && p.status !== "Assigned")
+        .sort((a, b) => (a.queue_position ?? 0) - (b.queue_position ?? 0));
 
-      const processedQueue = [...allWaiting];
+      const processedQueue = [...queue];
+      const onProgress = processedQueue.slice(0, 5);
+      const waiting = processedQueue.slice(5);
 
-      for (let index = 0; index < processedQueue.length; index++) {
-        const patient = processedQueue[index];
-        const newStatus = index < 5 ? 'On Progress' : 'Waiting';
+      const reorderUpdates = queue
+        .map((p, i) => ({ id: p.id, queue_position: i + 1, current: p.queue_position }))
+        .filter(u => u.current !== u.queue_position)
+        .map(({ id, queue_position }) => ({ id, queue_position }));
 
-        if ((patient.service === 'Consultation' || patient.service === 'OPD Screening')) {
-          if (patient.status !== 'On Progress' || !patient.reg_start) {
-            const now = new Date().toISOString();
-            const counter = patient.counter ?? await getNextCounter();
+      if (reorderUpdates.length > 0) {
+        await supabase.from('patients').upsert(reorderUpdates, { onConflict: 'id' });
+      }
 
-            const { error: updateError } = await supabase
-              .from('patients')
-              .update({
-                status: newStatus,
-                reg_start: now,
-                counter,
-              })
-              .eq('id', patient.id);
+      const onProgressUpdates: any[] = [];
+      for (const patient of onProgress) {
+        const updates: any = { id: patient.id };
+        let changed = false;
 
-            if (!updateError) {
-              patient.status = newStatus;
-              patient.reg_start = now;
-              patient.counter = counter;
-            }
-          }
-        } else if (patient.status !== newStatus) {
-          const { error: updateError } = await supabase
-            .from('patients')
-            .update({ status: newStatus })
-            .eq('id', patient.id);
-
-          if (!updateError) {
-            patient.status = newStatus;
-          }
+        if (patient.status !== "On Progress") {
+          updates.status = "On Progress";
+          changed = true;
         }
+        if (!patient.progress_started_at) {
+          updates.progress_started_at = new Date().toISOString();
+          changed = true;
+        }
+        if (
+          (patient.service === "Consultation" || patient.service === "OPD Screening") &&
+          !patient.reg_start
+        ) {
+          updates.reg_start = new Date().toISOString();
+          updates.counter = patient.counter ?? await getNextCounter();
+          changed = true;
+        }
+
+        if (changed) {
+          onProgressUpdates.push(updates);
+          Object.assign(patient, updates);
+        }
+      }
+
+      const waitingUpdates: any[] = [];
+      for (const patient of waiting) {
+        const updates: any = { id: patient.id };
+        let changed = false;
+
+        if (patient.status !== "Waiting") {
+          updates.status = "Waiting";
+          changed = true;
+        }
+        if (patient.progress_started_at) {
+          updates.progress_started_at = null;
+          changed = true;
+        }
+
+        if (changed) {
+          waitingUpdates.push(updates);
+          Object.assign(patient, updates);
+        }
+      }
+
+      if (onProgressUpdates.length > 0) {
+        await supabase.from('patients').upsert(onProgressUpdates, { onConflict: 'id' });
+      }
+      if (waitingUpdates.length > 0) {
+        await supabase.from('patients').upsert(waitingUpdates, { onConflict: 'id' });
       }
 
       const assigned = data.filter((p: Patient) =>
         p.status === 'Assigned' && p.cubicleNum
       );
 
-      setOnProgressPatients(processedQueue);
+      assigned.sort((a, b) => {
+        const aTime = a.called_at ? new Date(a.called_at).getTime() : 0;
+        const bTime = b.called_at ? new Date(b.called_at).getTime() : 0;
+        return aTime - bTime;
+      });
 
       const grouped: Record<string, Patient[]> = {};
       assigned.forEach((p: Patient) => {
@@ -96,8 +133,25 @@ export function usePatientData() {
           grouped[p.cubicleNum].push(p);
         }
       });
+
+      const topStartUpdates: { id: number; cubicle_top_started_at: string }[] = [];
+      const now = new Date().toISOString();
+
+      for (const cubicleNum in grouped) {
+        const top = grouped[cubicleNum][0];
+        if (top && !top.cubicle_top_started_at) {
+          topStartUpdates.push({ id: top.id, cubicle_top_started_at: now });
+          top.cubicle_top_started_at = now;
+        }
+      }
+
+      if (topStartUpdates.length > 0) {
+        await supabase.from('patients').upsert(topStartUpdates, { onConflict: 'id' });
+      }
+
+      setOnProgressPatients(onProgress);
       setAssignedPatients(grouped);
-    }
+          }
   }, []);
 
   return { onProgressPatients, assignedPatients, setOnProgressPatients, setAssignedPatients, fetchData };

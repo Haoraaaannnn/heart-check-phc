@@ -5,7 +5,8 @@ Connects to Supabase and serves the analytics payload to the frontend.
 """
 
 import os
-import json
+import traceback
+from datetime import date, timedelta
 import pandas as pd
 import httpx
 from dotenv import load_dotenv
@@ -18,7 +19,6 @@ env_path = os.path.join(BASE_DIR, "..", ".env.local")
 load_dotenv(env_path)
 app = FastAPI()
 
-# Allow Next.js frontend to communicate with this API
 app.add_middleware(
     CORSMiddleware,
     allow_origins=[
@@ -32,57 +32,77 @@ app.add_middleware(
     allow_headers=["*"],
 )
 
-# Set your Supabase credentials here (or in a .env file)
 SUPABASE_URL = os.environ.get("NEXT_PUBLIC_SUPABASE_URL")
 SUPABASE_KEY = os.environ.get("NEXT_PUBLIC_SUPABASE_ANON_KEY")
 
+# Maps the frontend's range selector to a day count.
+# "all" is handled separately below (skips filtering entirely).
+RANGE_DAYS = {
+    "90d":  90,
+    "180d": 180,
+    "365d": 365,
+}
+DEFAULT_RANGE = "90d"
 
-def fetch_supabase_table(table_name: str, select: str = "*") -> list[dict]:
+
+def fetch_supabase_table(
+    table_name: str,
+    select: str = "*",
+    start_date: str | None = None,
+    end_date: str | None = None,
+) -> list[dict]:
     if not SUPABASE_URL or not SUPABASE_KEY:
         raise RuntimeError("Supabase URL/key are not configured.")
 
-    # Fetch all records with pagination (1000 at a time)
+    date_filter = ""
+    if start_date:
+        date_filter += f"&created_at=gte.{start_date}"
+    if end_date:
+        date_filter += f"&created_at=lt.{end_date}"
+
     all_data = []
     page = 0
     page_size = 1000
-    
+
     while True:
         start = page * page_size
         end = start + page_size - 1
-        
-        url = f"{SUPABASE_URL}/rest/v1/{table_name}?select={select}&order=created_at.asc"
-        
+
+        url = (
+            f"{SUPABASE_URL}/rest/v1/{table_name}"
+            f"?select={select}{date_filter}&order=created_at.asc"
+        )
+
         with httpx.Client(timeout=30.0) as client:
             response = client.get(
                 url,
                 headers={
                     "apikey": SUPABASE_KEY,
                     "Authorization": f"Bearer {SUPABASE_KEY}",
-                    "Range": f"{start}-{end}"
+                    "Range": f"{start}-{end}",
                 },
             )
-            
-            if response.status_code == 416:  # Range Not Satisfiable - we've fetched everything
+
+            if response.status_code == 416:
                 break
-                
+
             response.raise_for_status()
             data = response.json()
-            
-            if not data:  # Empty page
+
+            if not data:
                 break
-                
+
             all_data.extend(data)
-            
-            if len(data) < page_size:  # Last partial page
+
+            if len(data) < page_size:
                 break
-                
+
             page += 1
-    
+
     return all_data
 
 
 def safe_to_datetime(series: pd.Series) -> pd.Series:
-    """Convert values to UTC-aware datetime while handling both naive and timezone-aware inputs."""
     series = pd.to_datetime(series, errors="coerce")
     if series.dt.tz is None:
         return series.dt.tz_localize('UTC')
@@ -90,11 +110,11 @@ def safe_to_datetime(series: pd.Series) -> pd.Series:
 
 
 def normalize_dataframe(df: pd.DataFrame) -> pd.DataFrame:
-    if "patientNum" in df.columns and "patient_id" not in df.columns:
-        df = df.rename(columns={"patientNum": "patient_id"})
-    elif "id" in df.columns and "patient_id" not in df.columns:
+    if "id" in df.columns and "patient_id" not in df.columns:
         df["patient_id"] = df["id"]
         df = df.drop(columns=["id"])
+    elif "patientNum" in df.columns and "patient_id" not in df.columns:
+        df = df.rename(columns={"patientNum": "patient_id"})
 
     if "kiosk_time" not in df.columns and "created_at" in df.columns:
         df["kiosk_time"] = df["created_at"]
@@ -109,19 +129,38 @@ def normalize_dataframe(df: pd.DataFrame) -> pd.DataFrame:
 
     return df
 
+
+def resolve_date_range(range_param: str) -> tuple[str | None, str | None]:
+    """
+    Converts the frontend's `range` selector into concrete start/end
+    ISO date strings used to filter the Supabase query.
+    "all" returns (None, None), which skips filtering entirely.
+    """
+    if range_param == "all":
+        return None, None
+
+    days = RANGE_DAYS.get(range_param, RANGE_DAYS[DEFAULT_RANGE])
+    end_exclusive = date.today() + timedelta(days=1)  # include all of today
+    start = date.today() - timedelta(days=days)
+    return start.isoformat(), end_exclusive.isoformat()
+
+
 @app.get("/health")
 def health_check():
     """Health check endpoint"""
     return {"status": "ok", "message": "Analytics backend is running"}
 
+
 @app.get("/api/dashboard-data")
-def get_dashboard_data():
-    # Fetch directly from patients table - this is where kiosk inserts patient records
-    # Only select columns that actually exist in the database
+def get_dashboard_data(range: str = DEFAULT_RANGE):
+    start_date, end_date = resolve_date_range(range)
+
     try:
         data = fetch_supabase_table(
             "patients",
-            select="id,created_at,patientNum,service,status,reg_start,reg_end,consult_start,consult_end,cubicleNum"
+            select="id,created_at,patientNum,service,status,reg_start,reg_end,consult_start,consult_end,cubicleNum",
+            start_date=start_date,
+            end_date=end_date,
         )
     except Exception as patients_error:
         data = []
@@ -139,15 +178,23 @@ def get_dashboard_data():
     try:
         report = generate_report(df)
         return report
-    except Exception as report_error:
-        print(f"analytics report error: {report_error}")
-        return get_empty_data()
+    except Exception:
+        print("=" * 60)
+        print("ANALYTICS REPORT ERROR - FULL TRACEBACK:")
+        traceback.print_exc()
+        print("=" * 60)
+        fallback = get_empty_data()
+        fallback["bottleneck_analysis"]["system_status"] = "Error"
+        fallback["_debug_error"] = True  # remove before thesis defense / production
+        return fallback
+
 
 def get_empty_data():
     """Return empty state data when database has no patient records"""
     return {
         "daily_summary": [],
         "hourly_pattern": [],
+        "service_distribution": [],
         "bottleneck_analysis": {
             "bottleneck_stage": None,
             "avg_wait_registration_min": 0,
