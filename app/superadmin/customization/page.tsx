@@ -151,13 +151,14 @@ export default function AdminServicePage() {
     const isEditing = editingId !== null;
 
     return (
+        //Header
     <div className="max-w-3xl mx-auto p-6">
       <div className="flex items-center justify-between mb-6">
-        <h1 className="text-2xl font-semibold">Manage Services</h1>
+        <h1 className="text-2xl text-black font-semibold">Manage Services</h1>
         {!isEditing && (
           <button
             onClick={startCreate}
-            className="px-4 py-2 rounded-md bg-blue-600 text-white text-sm font-medium hover:bg-blue-700"
+            className="px-4 py-2 rounded-md bg-red-600 text-white text-sm font-medium hover:bg-red-700"
           >
             + Add Service
           </button>
@@ -171,15 +172,15 @@ export default function AdminServicePage() {
       )}
 
       {isEditing && (
-        <div className="mb-8 border rounded-lg p-5 bg-black">
+        <div className="mb-8 border rounded-lg p-5 bg-white text-black">
           <h2 className="font-medium mb-4">
             {editingId === "new" ? "New Service" : "Edit Service"}
-          </h2>
+          </h2> 
 
           <div className="space-y-4">
             <div className="grid grid-cols-2 gap-3">
               <div>
-                <label className="block text-sm font-medium mb-1">
+                <label className="block text-sm font-medium mb-1 text-black">
                   Label (English)
                 </label>
                 <input
@@ -188,12 +189,12 @@ export default function AdminServicePage() {
                   onChange={(e) =>
                     setForm({ ...form, label_en: e.target.value })
                   }
-                  className="w-full border rounded-md px-3 py-2 text-sm"
+                  className="w-full border rounded-md px-3 py-2 text-sm border-gray-300 text-gray-500"
                   placeholder="e.g. Consultation"
                 />
               </div>
               <div>
-                <label className="block text-sm font-medium mb-1">
+                <label className="block text-sm font-medium mb-1 text-black">
                   Label (Filipino)
                 </label>
                 <input
@@ -202,7 +203,7 @@ export default function AdminServicePage() {
                   onChange={(e) =>
                     setForm({ ...form, label_fil: e.target.value })
                   }
-                  className="w-full border rounded-md px-3 py-2 text-sm"
+                  className="w-full border rounded-md px-3 py-2 text-sm border-gray-300 text-gray-500"
                   placeholder="e.g. Konsultasyon"
                 />
               </div>
@@ -210,7 +211,7 @@ export default function AdminServicePage() {
 
             <div className="grid grid-cols-2 gap-3">
               <div>
-                <label className="block text-sm font-medium mb-1">
+                <label className="block text-sm font-medium mb-1 text-black">
                   Description (English)
                 </label>
                 <textarea
@@ -218,12 +219,12 @@ export default function AdminServicePage() {
                   onChange={(e) =>
                     setForm({ ...form, description_en: e.target.value })
                   }
-                  className="w-full border rounded-md px-3 py-2 text-sm"
+                  className="w-full border rounded-md px-3 py-2 text-sm border-gray-300"
                   rows={2}
                 />
               </div>
               <div>
-                <label className="block text-sm font-medium mb-1">
+                <label className="block text-sm font-medium mb-1 text-black">
                   Description (Filipino)
                 </label>
                 <textarea
@@ -231,15 +232,16 @@ export default function AdminServicePage() {
                   onChange={(e) =>
                     setForm({ ...form, description_fil: e.target.value })
                   }
-                  className="w-full border rounded-md px-3 py-2 text-sm"
+                  className="w-full border rounded-md px-3 py-2 text-sm border-gray-300"
                   rows={2}
                 />
               </div>
             </div>
 
+            {/* Patient Type and buttons*/}      
             <div className="grid grid-cols-3 gap-3">
               <div>
-                <label className="block text-sm font-medium mb-1">
+                <label className="block text-sm font-medium mb-1 text-black">
                   Patient Type
                 </label>
                 <select
@@ -250,7 +252,7 @@ export default function AdminServicePage() {
                       patient_type: e.target.value as PatientType,
                     })
                   }
-                  className="w-full border rounded-md px-3 py-2 text-sm bg-white"
+                  className="w-full border rounded-md px-3 py-2 text-sm bg-white text-black border-gray-300"
                 >
                   <option value="new">New Patient only</option>
                   <option value="old">Old Patient only</option>
@@ -258,7 +260,7 @@ export default function AdminServicePage() {
                 </select>
               </div>
               <div>
-                <label className="block text-sm font-medium mb-1">
+                <label className="block text-sm font-medium mb-1 text-black">
                   Display Order
                 </label>
                 <input
@@ -270,14 +272,14 @@ export default function AdminServicePage() {
                       display_order: Number(e.target.value),
                     })
                   }
-                  className="w-full border rounded-md px-3 py-2 text-sm"
+                  className="w-full border rounded-md px-3 py-2 text-sm border-gray-300 text-black"
                 />
               </div>
             </div>
 
-
+                {/* Icon selection with search */}
             <div>
-              <label className="block text-sm font-medium mb-1">Icon</label>
+              <label className="block text-sm font-medium mb-1 text-black">Icon</label>
               <div className="flex items-center gap-3">
                 <input
                   type="text"
@@ -286,13 +288,13 @@ export default function AdminServicePage() {
                     setIconQuery(e.target.value);
                     setForm({ ...form, icon_src: e.target.value });
                   }}
-                  className="flex-1 border rounded-md px-3 py-2 text-sm"
+                  className="flex-1 border rounded-md px-3 py-2 text-sm text-gray-500 border-gray-300"
                   placeholder="Search Tabler icon name, e.g. IconStethoscope"
                 />
               </div>
 
               {iconQuery && filteredIconNames.length > 0 && (
-                <div className="mt-2 border rounded-md bg-white max-h-40 overflow-y-auto">
+                <div className="mt-2 border rounded-md bg-white max-h-40 overflow-y-auto text-black border-gray-300">
                   {filteredIconNames.map((name) => {
                     const Icon = resolveIcon(name);
                     return (
@@ -315,6 +317,7 @@ export default function AdminServicePage() {
             </div>
           </div>
 
+        {/* Save and Cancel buttons */}
           <div className="flex gap-2 mt-5">
             <button
               onClick={handleSave}
@@ -325,7 +328,7 @@ export default function AdminServicePage() {
             </button>
             <button
               onClick={cancelEdit}
-              className="px-4 py-2 rounded-md border text-sm font-medium hover:bg-gray-100"
+              className="px-4 py-2 rounded-md border text-sm font-medium hover:bg-gray-100 bg-gray-600"
             >
               Cancel
             </button>
@@ -338,7 +341,7 @@ export default function AdminServicePage() {
       ) : (
         <div className="border rounded-lg overflow-hidden">
           <table className="w-full text-sm">
-            <thead className="bg-gray-100 text-left">
+            <thead className="bg-gray-100 text-left text-black">
               <tr>
                 <th className="px-4 py-2">Icon</th>
                 <th className="px-4 py-2">Label (EN / FIL)</th>
@@ -352,13 +355,15 @@ export default function AdminServicePage() {
                 const Icon = resolveIcon(service.icon_src);
                 return (
                   <tr key={service.id} className="border-t">
-                    <td className="px-4 py-2">
+                    <td className="px-4 py-2 text-black">
                       {service.label_en} / {service.label_fil}
                     </td>
-                    <td className="px-4 py-2 capitalize">
+                    <td className="px-4 py-2 capitalize text-black">
                       {service.patient_type}
                     </td>
-                    <td className="px-4 py-2">{service.display_order}</td>
+                    <td className="px-4 py-2 text-black">
+                      {service.display_order}
+                    </td>
                     <td className="px-4 py-2 text-right space-x-2">
                       <button
                         onClick={() => startEdit(service)}
