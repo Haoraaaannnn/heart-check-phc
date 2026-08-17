@@ -29,6 +29,14 @@ export function FinishedTable({ patients }: FinishedTableProps) {
                   <td className="py-2 text-gray-600">{p.service}</td>
                   <td className="py-2 text-gray-600">{p.cubicleNum || '-'}</td>
                   <td className="py-2 text-gray-400">{p.consult_end ? new Date(p.consult_end).toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' }) : '-'}</td>
+                  <td className="py-2 text-gray-400">
+                  {p.carryout_end
+                    ? new Date(p.carryout_end).toLocaleTimeString([], {
+                        hour: '2-digit',
+                        minute: '2-digit',
+                      })
+                    : '-'}
+                </td>
                 </tr>
               ))}
             </tbody>

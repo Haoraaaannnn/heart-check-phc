@@ -23,10 +23,10 @@ export default function ConsultationCategoryPage() {
     <div className="flex h-full w-full flex-col items-center justify-center gap-10 px-8">
       <div className="text-center">
         <p className="text-black font-black text-[40px]">
-          Piliin ang kategorya:
+          Piliin ang naaayon sa iyong edad:(notfinaldesign)
         </p>
         <p className="text-gray-600 text-[28px]">
-          Select the patient category
+          Select based on your age
         </p>
       </div>
 
@@ -37,6 +37,8 @@ export default function ConsultationCategoryPage() {
           className="rounded-[16px] border-2 border-gray-300 bg-white px-8 py-16 text-[38px] font-black text-black transition-all active:scale-95"
         >
           Adult
+          <br />
+          (19 Pataas)
         </button>
 
         <button
@@ -45,6 +47,8 @@ export default function ConsultationCategoryPage() {
           className="rounded-[16px] border-2 border-gray-300 bg-white px-8 py-16 text-[38px] font-black text-black transition-all active:scale-95"
         >
           Pedia
+          <br />
+          (18 Pababa)
         </button>
       </div>
     </div>
