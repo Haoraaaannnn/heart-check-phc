@@ -14,6 +14,8 @@ import SMSInstruction from "./SMSInstruction";
 interface Props {
   service: Service;
   patientNum?: string;
+  preferredCubicleNums?: string;
+  subcategory?: string;
 }
 
 const MAX = 11;
@@ -23,8 +25,12 @@ const SERVICE_PREFIXES: Record<string, string> = {
   'Warfarin': 'W', 'OPD Reschedule': 'S', 'Benzathine': 'B', 'OPD Screening': 'P',
 };
 
-const createPatientRecord = async (service: Service) => {
-  try {
+const createPatientRecord = async (
+  service: Service,
+  subcategory?: string,
+  preferredCubicleNums?: string[] | null
+) => {
+try {
     const now = new Date();
     const startOfDay = new Date(now.getFullYear(), now.getMonth(), now.getDate()).toISOString();
     const endOfDay = new Date(now.getFullYear(), now.getMonth(), now.getDate() + 1).toISOString();
@@ -61,6 +67,8 @@ const createPatientRecord = async (service: Service) => {
         phoneNum: null,
         cubicleNum: null,
         queue_position: nextQueuePosition,
+        subcategory: subcategory ?? null,
+        preferredCubicleNums,
       })
       .select()
       .single();
@@ -74,7 +82,13 @@ const createPatientRecord = async (service: Service) => {
   }
 };
 
-export default function KioskPhoneEntry({ service, patientNum: initialPatientNum }: Props) {
+export default function KioskPhoneEntry({
+  service,
+  patientNum: initialPatientNum,
+  preferredCubicleNums,
+  subcategory,
+}: Props) {
+  const preferredList = preferredCubicleNums ? preferredCubicleNums.split(",") : null;
   const [phone, setPhone] = useState("");
   const [showContinueModal, setShowContinueModal] = useState(false);
   const [showSkipModal, setShowSkipModal] = useState(false);
@@ -84,40 +98,62 @@ export default function KioskPhoneEntry({ service, patientNum: initialPatientNum
   const addDigit = (digit: string) => { if (phone.length < MAX) setPhone((p) => p + digit); };
   const deleteLast = () => setPhone((p) => p.slice(0, -1));
 
-  const handleContinueConfirm = async () => {
-    setShowContinueModal(false);
-    try {
+    const handleContinueConfirm = async () => {
+      setShowContinueModal(false);
+      try {
+        let finalPatientNum = patientNum;
+        if (!finalPatientNum)
+      finalPatientNum = await createPatientRecord(
+        service,
+        subcategory,
+        preferredList
+      );
+
+      await supabase
+        .from("patients")
+        .update({
+          phoneNum: parseInt(phone, 10),
+          preferredCubicleNums: preferredList,
+          subcategory: subcategory ?? null,
+        })
+        .eq("patientNum", finalPatientNum);
+
+        router.push(`/kiosk/queue-print?patientNum=${finalPatientNum}&serviceId=${service.id}`);
+       } catch (e) {
+      alert(JSON.stringify(e));
+
+      console.log("ERROR:", e);
+
+      if (e instanceof Error) {
+        console.log("Message:", e.message);
+        console.log("Stack:", e.stack);
+      } else {
+        console.log("Unknown error:", e);
+      }
+    }
+      };
+
+const handleSkipConfirm = async () => {
+  setShowSkipModal(false);
+
+  try {
     let finalPatientNum = patientNum;
-    if (!finalPatientNum)
-      finalPatientNum = await createPatientRecord(service);
+
+    if (!finalPatientNum) {
+      finalPatientNum = await createPatientRecord(
+        service,
+        subcategory,
+        preferredList
+      );
+    }
 
     await supabase
       .from("patients")
       .update({
-        phoneNum: parseInt(phone, 10),
+        subcategory: subcategory ?? null,
+        preferredCubicleNums: preferredList,
       })
       .eq("patientNum", finalPatientNum);
-      
-    router.push(`/kiosk/queue-print?patientNum=${finalPatientNum}&serviceId=${service.id}`);
-    } catch (e) {
-  alert(JSON.stringify(e));
-
-  console.log("ERROR:", e);
-
-  if (e instanceof Error) {
-    console.log("Message:", e.message);
-    console.log("Stack:", e.stack);
-  } else {
-    console.log("Unknown error:", e);
-  }
-}
-  };
-
-  const handleSkipConfirm = async () => {
-    setShowSkipModal(false);
-    try {
-      let finalPatientNum = patientNum;
-      if (!finalPatientNum) finalPatientNum = await createPatientRecord(service);
 
       const now = new Date();
       const startOfDay = new Date(now.getFullYear(), now.getMonth(), now.getDate()).toISOString();

@@ -25,7 +25,10 @@ export default function ConfirmationActions({
 
     if (isConsultation) {
       console.log(`${getTimestamp()} [CONFIRMATION ACCEPTED] Consultation service - Redirecting to cubicle selection - ServiceId: ${service.id}`);
-      router.push(`/kiosk/kiosk-cubicle-selection?serviceId=${service.id}${patientType ? `&type=${patientType}` : ""}`);
+      router.push(
+        `/kiosk/consultation-category?serviceId=${service.id}${
+          patientType ? `&type=${patientType}` : ""
+        }`);
       return;
     }
 

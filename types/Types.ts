@@ -59,6 +59,8 @@ export type Patient = {
   queue_position?: number;
   progress_started_at?: string | null;
   cubicle_top_started_at?: string | null;
+  preferredCubicleNums?: string[] | null;
+  subcategory?: string | null;
 };
 
 export type Cubicle = {
@@ -78,4 +80,11 @@ export type Doctor = {
   auth_id?: string | null;
   active: boolean;
   created_at?: string;
+};
+export type CubicleSelectorType = {
+  id: number;
+  cubicle_name: string;
+  cubicle_order: number;
+  cubicle_id: number | null;
+  cubicle?: { cubicleNum: string } | null; 
 };

@@ -4,11 +4,18 @@ import KioskPhoneEntry from "@/app/kiosk/sms-input/components/KioskPhoneEntry";
 import { notFound } from "next/navigation";
 
 interface Props {
-    searchParams: Promise<{ serviceId?: string; patientNum?: string; serviceColor?: string }>;
+  searchParams: Promise<{
+    serviceId?: string;
+    patientNum?: string;
+    serviceColor?: string;
+    preferredCubicleNums?: string;
+    subcategory?: string;
+  }>;
 }
 
 export default async function SMSPage({ searchParams }: Props) {
-    const { serviceId, patientNum, serviceColor } = await searchParams;
+    const { serviceId, patientNum, preferredCubicleNums, subcategory } =
+    await searchParams;
     const supabase = await createClient();
 
     const { data: service, error } = await supabase
@@ -28,7 +35,12 @@ export default async function SMSPage({ searchParams }: Props) {
                 </div>
 
                 <div className="flex-1 min-h-0 h-full flex flex-col overflow-hidden">
-                    <KioskPhoneEntry service={service} patientNum={patientNum} />
+                <KioskPhoneEntry
+                service={service}
+                patientNum={patientNum}
+                preferredCubicleNums={preferredCubicleNums}
+                subcategory={subcategory}
+                />
                 </div>
 
             </div>

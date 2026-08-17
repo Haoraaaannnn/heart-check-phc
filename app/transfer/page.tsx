@@ -29,6 +29,7 @@ export default function TransferPage() {
   const [sidebarOpen, setSidebarOpen] = useState(true);
   const [registrationPatients, setRegistrationPatients] = useState<Patient[]>([]);
   const pendingUpdatesRef = useRef<Patient[]>([]);
+  const dragInProgressRef = useRef(false);
   const [showDoctorsModal, setShowDoctorsModal] = useState(false);
 
   const [isLoading, setIsLoading] = useState(true);
@@ -54,7 +55,12 @@ export default function TransferPage() {
     setAssignedPatients,
     fetchData
   );
+  useEffect(() => {
+    dragInProgressRef.current = Boolean(draggedPatient);
+  }, [draggedPatient]);
+
   const rotateTimeoutMs = useRotateTimeout();
+  const savingPendingUpdates = useRef(false);
 
   const fetchRegistrationPatients = useCallback(async () => {
     const today = new Date();
@@ -79,10 +85,11 @@ export default function TransferPage() {
     const syncing = useRef(false);
 
     const handleRealtimeUpdate = () => {
+      if (dragInProgressRef.current) return;
       if (debounceRef.current) clearTimeout(debounceRef.current);
 
       debounceRef.current = setTimeout(async () => {
-        if (syncing.current) return;
+        if (dragInProgressRef.current || syncing.current) return;
 
         syncing.current = true;
         setIsSyncing(true);
@@ -179,11 +186,11 @@ export default function TransferPage() {
     } catch { setSpeaking(null); }
   };
 
-    const handleConfirm = async () => {
-      if (pendingUpdates.length === 0) return;
+      const handleConfirm = async () => {
+        if (pendingUpdates.length === 0 || savingPendingUpdates.current) return;
 
-      setIsSyncing(true);
-
+        savingPendingUpdates.current = true;
+        setIsSyncing(true);
       try {
         const now = new Date().toISOString();
 
@@ -228,9 +235,27 @@ export default function TransferPage() {
       } catch (err) {
         console.error(err);
       } finally {
+        savingPendingUpdates.current = false;
         setIsSyncing(false);
       }
     };
+
+    useEffect(() => {
+      if (
+        pendingUpdates.length === 0 ||
+        draggedPatient ||
+        isSyncing ||
+        savingPendingUpdates.current
+      ) {
+        return;
+      }
+
+      const timer = window.setTimeout(() => {
+        void handleConfirm();
+      }, 1800);
+
+      return () => window.clearTimeout(timer);
+    }, [pendingUpdates, draggedPatient, isSyncing, handleConfirm]);
 
   const getAvailableRooms = () => {
     if (!selectedCategory) return [];
@@ -427,15 +452,6 @@ export default function TransferPage() {
                 <div className="w-3 h-3 border-2 border-blue-400 border-t-transparent rounded-full animate-spin"></div>
                 <span className="text-xs text-blue-600">Syncing...</span>
               </div>
-            )}
-
-            {pendingUpdates.length > 0 && (
-              <button
-                onClick={handleConfirm}
-                className="bg-gray-600 hover:bg-gray-700 text-white px-4 py-2 rounded-lg font-medium"
-              >
-                Save Changes ({pendingUpdates.length})
-              </button>
             )}
 
             <button className="w-10 h-10 bg-gray-100 rounded-full flex items-center justify-center hover:bg-red-50 transition">
