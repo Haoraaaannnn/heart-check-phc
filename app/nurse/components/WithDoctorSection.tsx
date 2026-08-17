@@ -5,10 +5,14 @@ import { ElapsedTimer } from './ElapsedTimer';
 type WithDoctorSectionProps = {
   patients: Patient[];
   onMoveBack: (patient: Patient) => void;
-  onFinish: (patient: Patient) => void;
+  onMoveToCarryout: (patient: Patient) => void;
 };
 
-export function WithDoctorSection({ patients, onMoveBack, onFinish }: WithDoctorSectionProps) {
+export function WithDoctorSection({
+  patients,
+  onMoveBack,
+  onMoveToCarryout,
+}: WithDoctorSectionProps) {
   return (
     <div className="bg-white border-2 border-purple-100 rounded-3xl shadow-sm p-5">
       <h2 className="text-purple-500 font-semibold text-xs mb-3 tracking-widest uppercase flex items-center gap-2">
@@ -36,11 +40,11 @@ export function WithDoctorSection({ patients, onMoveBack, onFinish }: WithDoctor
                   <span>Back</span>
                 </button>
                 <button
-                  onClick={() => onFinish(p)}
-                  className="flex-1 flex items-center justify-center gap-1 py-1 rounded-xl text-xs font-medium bg-green-50 hover:bg-green-100 text-green-500 transition"
+                  onClick={() => onMoveToCarryout(p)}
+                  className="flex-1 flex items-center justify-center gap-1 py-1 rounded-xl text-xs font-medium bg-orange-50 hover:bg-orange-100 text-orange-600 transition"
                 >
-                  <i className="bx bx-check text-sm"></i>
-                  <span>Done</span>
+                  <i className="bx bx-transfer-alt text-sm" />
+                  <span>Carryout</span>
                 </button>
               </div>
             </div>

@@ -61,6 +61,8 @@ export type Patient = {
   cubicle_top_started_at?: string | null;
   preferredCubicleNums?: string[] | null;
   subcategory?: string | null;
+  carryout_start?: string | null;
+  carryout_end?: string | null;
 };
 
 export type Cubicle = {

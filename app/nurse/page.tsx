@@ -11,6 +11,7 @@ import { useNurseActions } from './hooks/useNurseActions';
 import { useRealtimeSubscription } from './hooks/useRealtimeSubscription';
 import { useBottleneckNotifications } from '@/app/dashboard/hooks/useBottleneckNotifications';
 import NotificationDropdown from '@/app/dashboard/components/NotificationDropdown';
+import { CarryoutSection } from './components/CarryoutSection';
 
 export default function NursePage() {
   const router = useRouter();
@@ -21,9 +22,28 @@ export default function NursePage() {
   const [isLoading, setIsLoading] = useState(true);
   const [isSyncing, setIsSyncing] = useState(false);
 
-  const { assignedPatients, withDoctorPatients, finishedPatients, setAssignedPatients, setWithDoctorPatients, fetchData, fetchFinished } = useNurseData();
-  const { handleMoveToWithDoctor, handleMoveBackFromDoctor, handleFinish } = useNurseActions(
-    setAssignedPatients, setWithDoctorPatients, fetchFinished
+  const {
+    assignedPatients,
+    withDoctorPatients,
+    carryoutPatients,
+    finishedPatients,
+    setAssignedPatients,
+    setWithDoctorPatients,
+    setCarryoutPatients,
+    fetchData,
+    fetchFinished,
+  } = useNurseData();
+  const {
+    handleMoveToWithDoctor,
+    handleMoveBackFromDoctor,
+    handleMoveToCarryout,
+    handleMoveBackFromCarryout,
+    handleFinish,
+  } = useNurseActions(
+    setAssignedPatients,
+    setWithDoctorPatients,
+    setCarryoutPatients,
+    fetchFinished
   );
 
   const {
@@ -116,12 +136,19 @@ export default function NursePage() {
     return p.service === selectedCategory;
   });
 
+  const visibleCarryout = carryoutPatients.filter((patient) => {
+    if (!selectedCategory) return true;
+    return patient.service === selectedCategory;
+  });
+
   const getCounts = () => {
     const counts: Record<string, number> = {};
     const categories = ['Consultation', 'OPD Card', 'Refill Prescription', 'ECG', 'Warfarin', 'OPD Reschedule', 'Benzathine', 'OPD Screening'];
     categories.forEach(cat => {
-      counts[cat] = assignedPatients.filter(p => p.service === cat).length +
-                    withDoctorPatients.filter(p => p.service === cat).length;
+      counts[cat] =
+      assignedPatients.filter((p) => p.service === cat).length +
+      withDoctorPatients.filter((p) => p.service === cat).length +
+      carryoutPatients.filter((p) => p.service === cat).length;
     });
     return counts;
   };
@@ -195,12 +222,19 @@ export default function NursePage() {
               onCall={handleCall}
               onMoveToWithDoctor={handleMoveToWithDoctor}
             />
-            <WithDoctorSection
-              patients={visibleWithDoctor}
-              onMoveBack={handleMoveBackFromDoctor}
-              onFinish={handleFinish}
-            />
-            <FinishedTable patients={finishedPatients} />
+              <WithDoctorSection
+                patients={visibleWithDoctor}
+                onMoveBack={handleMoveBackFromDoctor}
+                onMoveToCarryout={handleMoveToCarryout}
+              />
+
+              <CarryoutSection
+                patients={visibleCarryout}
+                onMoveBack={handleMoveBackFromCarryout}
+                onFinish={handleFinish}
+              />
+
+              <FinishedTable patients={finishedPatients} />
           </div>
         </div>
       </div>
