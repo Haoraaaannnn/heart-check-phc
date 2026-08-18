@@ -6,8 +6,8 @@ const supabaseAdmin = createClient(
   process.env.SUPABASE_SERVICE_ROLE_KEY!
 )
 
-const MAX_ATTEMPTS = 10
-const LOCKOUT_MS = 3 * 60 * 1000
+const MAX_ATTEMPTS = 3
+const LOCKOUT_MS = 30 * 1000
 
 export async function POST(request: Request) {
   try {
@@ -50,8 +50,8 @@ export async function POST(request: Request) {
       if (newCount >= MAX_ATTEMPTS) {
         await supabaseAdmin.from('login_attempts').upsert({
           email: normalizedEmail,
-          attempt_count: 0,
-          locked_until: new Date(now + LOCKOUT_MS).toISOString(),
+          attempt_count: newCount,
+          locked_until: null,
           updated_at: new Date().toISOString(),
         })
         return NextResponse.json(
@@ -62,20 +62,20 @@ export async function POST(request: Request) {
 
       await supabaseAdmin.from('login_attempts').upsert({
         email: normalizedEmail,
-        attempt_count: newCount,
-        locked_until: null,
+        attempt_count: 0,
+        locked_until: new Date(now + LOCKOUT_MS).toISOString(),
         updated_at: new Date().toISOString(),
       })
 
       return NextResponse.json({ error: 'Invalid email or password' }, { status: 401 })
     }
 
-    await supabaseAdmin.from('login_attempts').upsert({
-      email: normalizedEmail,
-      attempt_count: 0,
-      locked_until: null,
-      updated_at: new Date().toISOString(),
-    })
+      await supabaseAdmin.from('login_attempts').upsert({
+        email: normalizedEmail,
+        attempt_count: 0,
+        locked_until: null,
+        updated_at: new Date().toISOString(),
+      })
 
     return NextResponse.json({
       session: signInData.session,
