@@ -6,6 +6,7 @@ into the single payload served to the admin dashboard.
 
 import pandas as pd
 import numpy as np
+import math
 from .preprocessing  import preprocess_queue_data
 from .descriptive    import daily_summary, hourly_pattern, bottleneck_report, service_distribution
 from .queue_metrics  import (
@@ -18,7 +19,17 @@ from .forecasting    import evaluate_forecasting_algorithms, get_lr_chart_data, 
 from .staffing       import recommend_staff
 
 def convert_to_native(obj):
-    """Recursively convert numpy types to Python native types for JSON serialization."""
+    """
+    Recursively convert numpy types to Python native types for JSON serialization.
+
+    Also sanitizes NaN/Infinity floats to None. Standard JSON has no
+    representation for NaN — Python's json.dumps will happily emit the
+    literal token `NaN` by default, but that's not valid JSON and browsers'
+    fetch()/JSON.parse() reject it outright, surfacing as a generic
+    "Failed to fetch" on the frontend with no indication that the actual
+    cause was a NaN deep in the payload (e.g. a stage average computed
+    from a subset of patients who are all still in-progress).
+    """
     if isinstance(obj, dict):
         return {key: convert_to_native(val) for key, val in obj.items()}
     elif isinstance(obj, (list, tuple)):
@@ -26,9 +37,14 @@ def convert_to_native(obj):
     elif isinstance(obj, (np.integer, np.int64, np.int32)):
         return int(obj)
     elif isinstance(obj, (np.floating, np.float64, np.float32)):
-        return float(obj)
+        val = float(obj)
+        return None if math.isnan(val) or math.isinf(val) else val
+    elif isinstance(obj, float):
+        return None if math.isnan(obj) or math.isinf(obj) else obj
     elif isinstance(obj, np.bool_):
         return bool(obj)
+    elif obj is pd.NA:
+        return None
     elif isinstance(obj, (np.ndarray, pd.Series)):
         return convert_to_native(obj.tolist())
     return obj
@@ -117,10 +133,12 @@ def _empty_report() -> dict:
         "hourly_pattern": [],
         "service_distribution" : [],
         "bottleneck_analysis": {
+            "stages": [],
+            "primary_bottleneck": None,
+            "system_status": "No data",
             "bottleneck_stage": "N/A",
             "avg_wait_registration_min": 0.0,
             "avg_wait_consultation_min": 0.0,
-            "system_status": "No data",
         },
         "registration": {
             "patients_served": 0,

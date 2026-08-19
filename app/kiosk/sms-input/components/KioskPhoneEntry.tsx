@@ -1,3 +1,5 @@
+// this file is where the data insertion to the database happens
+
 "use client";
 
 import { useState } from "react";
@@ -69,6 +71,7 @@ try {
         queue_position: nextQueuePosition,
         subcategory: subcategory ?? null,
         preferredCubicleNums,
+        is_historical: false, // live kiosk row — explicit, not relying on column default
       })
       .select()
       .single();

@@ -34,6 +34,8 @@ export default function ContinueButton({
         Magpatuloy - Continue
       </button>
 
+
+      {/* back button on new patient doesn't go back to the new patient kiosk service selection */}
       <div className="flex gap-[2vw]">
         <Link 
           href={href} 
