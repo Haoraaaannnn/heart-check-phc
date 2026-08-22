@@ -19,8 +19,12 @@ import { Patient } from '@/types/Types';
 import { useAutoRotate } from './hooks/useAutoRotate';
 import { useRotateTimeout } from './hooks/useRotateTimeout';
 import { DoctorsModal } from './components/DoctorsModal';
+import { useIdleTimeout } from './hooks/useIdleTimeout';
+import { useRequireAuth } from './hooks/useRequireAuth'; 
 
 export default function TransferPage() {
+  const checking = useRequireAuth();
+  useIdleTimeout();
   const router = useRouter();
   const [selectedCategory, setSelectedCategory] = useState<string | null>(null);
   const [selectedSubcategory, setSelectedSubcategory] = useState<string | null>(null);
@@ -327,6 +331,14 @@ export default function TransferPage() {
 
     initialize();
   }, []);
+
+  if (checking) {
+    return (
+      <div className="flex min-h-screen items-center justify-center">
+        <div className="w-10 h-10 border-4 border-red-200 border-t-red-500 rounded-full animate-spin" />
+      </div>
+    );
+  }
 
 
   if (isLoading) {
