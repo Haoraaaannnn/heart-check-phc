@@ -17,9 +17,8 @@ from analytics import generate_report
 from analytics.preprocessing import preprocess_queue_data
 from analytics.descriptive import monthly_breakdown
 
-from fastapi import HTTPException
 from fastapi.responses import StreamingResponse
-from analytics.export import build_phc_excel
+from analytics.export import build_phc_workbook
 
 BASE_DIR = os.path.dirname(os.path.abspath(__file__))
 env_path = os.path.join(BASE_DIR, "..", ".env.local")
@@ -34,7 +33,7 @@ app.add_middleware(
         "http://localhost:3001",
         "http://127.0.0.1:3001",
     ],
-    allow_credentials=False,
+    allow_credentials=True,
     allow_methods=["*"],
     allow_headers=["*"],
 )
@@ -404,26 +403,57 @@ def get_empty_data():
     }
     
 @app.get("/api/export-excel")
-def export_excel(range: str = "90d", service: str | None = None, status: str | None = None):
+def export_excel(range: str = "90d", service: str | None = None):
     """
-    Exports raw `patients` rows as .xlsx in PHC's own tracking-sheet format.
-    Reuses the same `range` param convention as the dashboard endpoints.
+    Raw patient rows in PHC's own Time and Motion Analysis format —
+    one sheet per day, matching the source .xls structure.
+
+    Gate this behind an admin/superadmin check (mirror is_staff()/is_superadmin())
+    before it ships — it returns raw patient-identifying data, same sensitivity
+    as the patients table itself under RLS.
     """
-    # Pull raw (not preprocessed/renamed) rows — reuse your existing
-    # paginated Supabase fetch helper, just skip preprocessing.py's
-    # service->purpose rename step for this one.
-    df = fetch_patients_raw(range=range)  # <- your existing httpx-paginated fetch, pre-rename
+    start_date, end_date = resolve_date_range(range)
+
+    try:
+        data = fetch_supabase_table(
+            "patients",
+            select=(
+                "id,created_at,patientNum,service,status,"
+                "reg_start,reg_end,consult_start,consult_end,"
+                "carryout_start,carryout_end,cubicleNum,is_historical"
+            ),
+            start_date=start_date,
+            end_date=end_date,
+        )
+    except Exception as e:
+        print(f"export-excel fetch error: {e}")
+        raise HTTPException(status_code=502, detail="Failed to fetch patient data.")
+
+    if not data:
+        raise HTTPException(status_code=404, detail="No patient records found for this range.")
+
+    df = pd.DataFrame(data)
+    df = normalize_dataframe(df)
 
     if service:
         df = df[df["service"] == service]
-    if status:
-        df = df[df["status"] == status]
 
     if df.empty:
         raise HTTPException(status_code=404, detail="No patient records found for this range.")
 
-    buffer = build_phc_excel(df, sheet_title=f"PHC Export {range}")
-    filename = f"phc_patients_export_{range}.xlsx"
+    clinic_label = service or "OPD"
+    try:
+        buffer = build_phc_workbook(df, clinic_label=clinic_label)
+    except ValueError as e:
+        raise HTTPException(status_code=404, detail=str(e))
+    except Exception:
+        print("=" * 60)
+        print("EXPORT-EXCEL BUILD ERROR - FULL TRACEBACK:")
+        traceback.print_exc()
+        print("=" * 60)
+        raise HTTPException(status_code=500, detail="Failed to build the export.")
+
+    filename = f"phc_time_motion_export_{range}.xlsx"
 
     return StreamingResponse(
         buffer,
