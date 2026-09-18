@@ -12,7 +12,7 @@ export async function PUT(request: Request) {
     const guard = await requireSuperadmin(request)
     if (!guard.authorized) return guard.response
 
-    const { authId, email, username, role } = await request.json()
+    const { authId, email, username, role, cubicleIds } = await request.json()
 
     if (!authId) {
       return NextResponse.json(
@@ -28,7 +28,7 @@ export async function PUT(request: Request) {
       )
     }
 
-    const { error: dbError } = await supabaseAdmin
+    const { data: userRow, error: dbError } = await supabaseAdmin
       .from('users')
       .update({
         email: email,
@@ -36,6 +36,8 @@ export async function PUT(request: Request) {
         role: role
       })
       .eq('auth_id', authId)
+      .select('id')
+      .single()
 
     if (dbError) {
       return NextResponse.json({ error: dbError.message }, { status: 400 })
@@ -48,6 +50,37 @@ export async function PUT(request: Request) {
       )
       if (authError) {
         console.error('Error updating auth email:', authError)
+      }
+    }
+
+    if (cubicleIds !== undefined) {
+      const { error: clearError } = await supabaseAdmin
+        .from('user_cubicles')
+        .delete()
+        .eq('user_id', userRow.id)
+
+      if (clearError) {
+        return NextResponse.json(
+          { success: true, message: 'User updated, but cubicle assignment failed to reset', warning: clearError.message },
+          { status: 200 }
+        )
+      }
+
+      if (Array.isArray(cubicleIds) && cubicleIds.length > 0 && (role === 'nurse' || role === 'staff')) {
+        const rows = cubicleIds.map((cubicle_id: number) => ({
+          user_id: userRow.id,
+          cubicle_id,
+        }))
+        const { error: insertError } = await supabaseAdmin
+          .from('user_cubicles')
+          .insert(rows)
+
+        if (insertError) {
+          return NextResponse.json(
+            { success: true, message: 'User updated, but cubicle assignment failed', warning: insertError.message },
+            { status: 200 }
+          )
+        }
       }
     }
 
