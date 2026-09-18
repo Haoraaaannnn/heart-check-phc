@@ -23,6 +23,7 @@ export default function NursePage() {
   const [selectedCategory, setSelectedCategory] = useState<string | null>(null);
   const [speaking, setSpeaking] = useState<number | null>(null);
   const [sidebarOpen, setSidebarOpen] = useState(true);
+  const [selectedCubicleNum, setSelectedCubicleNum] = useState<string | null>(null);
 
   const [isLoading, setIsLoading] = useState(true);
   const [isSyncing, setIsSyncing] = useState(false);
@@ -37,6 +38,8 @@ export default function NursePage() {
     setCarryoutPatients,
     fetchData,
     fetchFinished,
+    assignmentStatus,
+    assignedCubicles, 
   } = useNurseData();
   const {
     handleMoveToWithDoctor,
@@ -131,30 +134,64 @@ export default function NursePage() {
     speak(`Number ${letter} ${digits}, Number ${letter} ${digits}, please proceed to the doctor`, patient.id);
   };
 
-  const visibleAssigned = assignedPatients.filter(p => {
-    if (!selectedCategory) return true;
-    return p.service === selectedCategory;
+  const visibleAssigned = assignedPatients.filter((patient) => {
+    const matchesService =
+      !selectedCategory || patient.service === selectedCategory;
+
+    const matchesCubicle =
+      !selectedCubicleNum ||
+      patient.cubicleNum === selectedCubicleNum;
+
+    return matchesService && matchesCubicle;
   });
 
-  const visibleWithDoctor = withDoctorPatients.filter(p => {
-    if (!selectedCategory) return true;
-    return p.service === selectedCategory;
+  const visibleWithDoctor = withDoctorPatients.filter((patient) => {
+    const matchesService =
+      !selectedCategory || patient.service === selectedCategory;
+
+    const matchesCubicle =
+      !selectedCubicleNum ||
+      patient.cubicleNum === selectedCubicleNum;
+
+    return matchesService && matchesCubicle;
   });
 
   const visibleCarryout = carryoutPatients.filter((patient) => {
-    if (!selectedCategory) return true;
-    return patient.service === selectedCategory;
+    const matchesService =
+      !selectedCategory || patient.service === selectedCategory;
+
+    const matchesCubicle =
+      !selectedCubicleNum ||
+      patient.cubicleNum === selectedCubicleNum;
+
+    return matchesService && matchesCubicle;
+  });
+
+    const visibleFinished = finishedPatients.filter((patient) => {
+    const matchesService =
+      !selectedCategory || patient.service === selectedCategory;
+
+    const matchesCubicle =
+      !selectedCubicleNum ||
+      patient.cubicleNum === selectedCubicleNum;
+
+    return matchesService && matchesCubicle;
   });
 
   const getCounts = () => {
     const counts: Record<string, number> = {};
-    const categories = ['Consultation', 'OPD Card', 'Refill Prescription', 'ECG', 'Warfarin', 'OPD Reschedule', 'Benzathine', 'OPD Screening'];
-    categories.forEach(cat => {
-      counts[cat] =
-      assignedPatients.filter((p) => p.service === cat).length +
-      withDoctorPatients.filter((p) => p.service === cat).length +
-      carryoutPatients.filter((p) => p.service === cat).length;
+
+    const assignedCategories = [
+      ...new Set(assignedCubicles.map((cubicle) => cubicle.category)),
+    ];
+
+    assignedCategories.forEach((category) => {
+      counts[category] =
+        assignedPatients.filter((patient) => patient.service === category).length +
+        withDoctorPatients.filter((patient) => patient.service === category).length +
+        carryoutPatients.filter((patient) => patient.service === category).length;
     });
+
     return counts;
   };
 
@@ -183,12 +220,28 @@ export default function NursePage() {
       <Sidebar
         sidebarOpen={sidebarOpen}
         selectedCategory={selectedCategory}
+        selectedCubicleNum={selectedCubicleNum}
         categoryCounts={getCounts()}
-        onSelectCategory={setSelectedCategory}
+        assignedCubicles={assignedCubicles}
+        onSelectCategory={(category) => {
+          setSelectedCategory(category);
+          setSelectedCubicleNum(null);
+        }}
+        onSelectCubicle={(cubicleNum) => {
+          const cubicle = assignedCubicles.find(
+            (item) => item.cubicleNum === cubicleNum
+          );
+
+          setSelectedCategory(cubicle?.category ?? null);
+          setSelectedCubicleNum(cubicleNum);
+        }}
         onToggleSidebar={() => setSidebarOpen(!sidebarOpen)}
       />
 
-      <div className={`flex-1 transition-all duration-300 ${sidebarOpen ? 'ml-64' : 'ml-16'}`}>
+        <div
+          className="flex-1 transition-all duration-300"
+          style={{ marginLeft: sidebarOpen ? '280px' : '64px' }}
+        >
         <div className="flex items-center justify-between px-8 py-4 bg-white/80 backdrop-blur-sm border-b border-blue-100 shadow-sm">
           <div className="flex items-center gap-2">
             <i className="bx bx-user-plus text-gray-400 text-lg"></i>
@@ -219,7 +272,10 @@ export default function NursePage() {
               <span className="text-sm text-gray-500 bg-gray-100 px-3 py-1 rounded-full">
                 Filtered by: {selectedCategory}
                 <button
-                  onClick={() => setSelectedCategory(null)}
+                  onClick={() => {
+                    setSelectedCategory(null);
+                    setSelectedCubicleNum(null);
+                  }}
                   className="ml-2 text-gray-400 hover:text-[#cc3535]"
                 >
                   <i className="bx bx-x"></i>
@@ -228,13 +284,30 @@ export default function NursePage() {
             )}
           </div>
 
-          <div className="flex flex-col gap-6">
-            <AssignedSection
-              patients={visibleAssigned}
-              speakingId={speaking}
-              onCall={handleCall}
-              onMoveToWithDoctor={handleMoveToWithDoctor}
-            />
+          {assignmentStatus === 'unassigned' ? (
+            <div className="rounded-2xl border border-amber-200 bg-amber-50 p-8 text-center shadow-sm">
+              <div className="mx-auto mb-4 flex h-14 w-14 items-center justify-center rounded-full bg-amber-100 text-2xl text-amber-700">
+                !
+              </div>
+
+              <h2 className="text-lg font-semibold text-gray-900">
+                No cubicles assigned
+              </h2>
+
+              <p className="mx-auto mt-2 max-w-md text-sm text-gray-600">
+                Your account does not have any cubicles yet. Ask a Super Admin to assign
+                your room before managing patients.
+              </p>
+            </div>
+          ) : (
+            <div className="flex flex-col gap-6">
+              <AssignedSection
+                patients={visibleAssigned}
+                speakingId={speaking}
+                onCall={handleCall}
+                onMoveToWithDoctor={handleMoveToWithDoctor}
+              />
+
               <WithDoctorSection
                 patients={visibleWithDoctor}
                 onMoveBack={handleMoveBackFromDoctor}
@@ -247,8 +320,9 @@ export default function NursePage() {
                 onFinish={handleFinish}
               />
 
-              <FinishedTable patients={finishedPatients} />
-          </div>
+              <FinishedTable patients={visibleFinished} />
+            </div>
+          )}
         </div>
       </div>
     </div>

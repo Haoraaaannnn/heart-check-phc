@@ -9,16 +9,35 @@ export function useNurseActions(
   setCarryoutPatients: React.Dispatch<React.SetStateAction<Patient[]>>,
   fetchFinished: () => Promise<void>
 ) {
+  const savePatient = async (
+    patientId: number,
+    updates: Record<string, string | null>
+  ) => {
+    const { error } = await supabase
+      .from('patients')
+      .update(updates)
+      .eq('id', patientId);
+
+    if (error) {
+      console.error('NURSE UPDATE ERROR:', error.message);
+      alert('Unable to update this patient. You may not be assigned to this cubicle.');
+      return false;
+    }
+
+    return true;
+  };
+
   const handleMoveToWithDoctor = async (patient: Patient) => {
     const now = new Date().toISOString();
 
-    await supabase
-      .from('patients')
-      .update({
+    if (
+      !(await savePatient(patient.id, {
         status: 'With Doctor',
         consult_start: now,
-      })
-      .eq('id', patient.id);
+      }))
+    ) {
+      return;
+    }
 
     setAssignedPatients((previous) =>
       previous.filter((item) => item.id !== patient.id)
@@ -31,13 +50,14 @@ export function useNurseActions(
   };
 
   const handleMoveBackFromDoctor = async (patient: Patient) => {
-    await supabase
-      .from('patients')
-      .update({
+    if (
+      !(await savePatient(patient.id, {
         status: 'Assigned',
         consult_start: null,
-      })
-      .eq('id', patient.id);
+      }))
+    ) {
+      return;
+    }
 
     setWithDoctorPatients((previous) =>
       previous.filter((item) => item.id !== patient.id)
@@ -52,28 +72,16 @@ export function useNurseActions(
   const handleMoveToCarryout = async (patient: Patient) => {
     const now = new Date().toISOString();
 
-    const { data, error } = await supabase
-      .from('patients')
-      .update({
+    if (
+      !(await savePatient(patient.id, {
         status: 'Carryout',
         consult_end: now,
         carryout_start: now,
         carryout_end: null,
-      })
-      .eq('id', patient.id)
-      .select()
-      .single();
-
-  if (error) {
-    console.error('MOVE TO CARRYOUT ERROR MESSAGE:', error.message);
-    console.error('MOVE TO CARRYOUT ERROR DETAILS:', error.details);
-    console.error('MOVE TO CARRYOUT ERROR HINT:', error.hint);
-    console.error('MOVE TO CARRYOUT ERROR CODE:', error.code);
-    console.error('FULL ERROR:', JSON.stringify(error, null, 2));
-    return;
-  }
-
-    console.log('MOVE TO CARRYOUT SUCCESS:', data);
+      }))
+    ) {
+      return;
+    }
 
     setWithDoctorPatients((previous) =>
       previous.filter((item) => item.id !== patient.id)
@@ -92,15 +100,16 @@ export function useNurseActions(
   };
 
   const handleMoveBackFromCarryout = async (patient: Patient) => {
-    await supabase
-      .from('patients')
-      .update({
+    if (
+      !(await savePatient(patient.id, {
         status: 'With Doctor',
         consult_end: null,
         carryout_start: null,
         carryout_end: null,
-      })
-      .eq('id', patient.id);
+      }))
+    ) {
+      return;
+    }
 
     setCarryoutPatients((previous) =>
       previous.filter((item) => item.id !== patient.id)
@@ -121,13 +130,14 @@ export function useNurseActions(
   const handleFinish = async (patient: Patient) => {
     const now = new Date().toISOString();
 
-    await supabase
-      .from('patients')
-      .update({
+    if (
+      !(await savePatient(patient.id, {
         status: 'Done',
         carryout_end: now,
-      })
-      .eq('id', patient.id);
+      }))
+    ) {
+      return;
+    }
 
     setCarryoutPatients((previous) =>
       previous.filter((item) => item.id !== patient.id)

@@ -48,7 +48,7 @@ export async function POST(request: Request) {
       return NextResponse.json({ error: dbError.message }, { status: 400 })
     }
 
-    if (Array.isArray(cubicleIds) && cubicleIds.length > 0 && (role === 'nurse' || role === 'staff')) {
+    if (Array.isArray(cubicleIds) && cubicleIds.length > 0 && (role === 'nurse' || role === 'staff' || role === 'doctor')) {
       const rows = cubicleIds.map((cubicle_id: number) => ({
         user_id: userRow.id,
         cubicle_id,

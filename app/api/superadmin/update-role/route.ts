@@ -66,7 +66,7 @@ export async function PUT(request: Request) {
         )
       }
 
-      if (Array.isArray(cubicleIds) && cubicleIds.length > 0 && (role === 'nurse' || role === 'staff')) {
+      if (Array.isArray(cubicleIds) && cubicleIds.length > 0 && (role === 'nurse' || role === 'staff' || role === 'doctor')) {
         const rows = cubicleIds.map((cubicle_id: number) => ({
           user_id: userRow.id,
           cubicle_id,

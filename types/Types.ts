@@ -71,7 +71,7 @@ export type Cubicle = {
   cubicleNum: string;
   category: string;
   room: number;
-  subcategory?: string;
+  subcategory?: string | null;
   doctorId?: string | null;
 };
 
