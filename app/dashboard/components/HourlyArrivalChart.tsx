@@ -66,7 +66,7 @@ export default function HourlyArrivalsChart({ hourlyData, isMounted }: HourlyArr
                   backgroundColor: isDark ? '#1f2937' : '#ffffff',
                   color: isDark ? '#e5e7eb' : '#111827',
                 }}
-                formatter={((value: number) => [`${value} patients`, 'Arrivals']) as any}
+                formatter={(value) => [`${value} patients`, 'Arrivals']}
               />
               <Bar dataKey="patients" fill="#cc3535" radius={[4, 4, 0, 0]} maxBarSize={50} />
             </BarChart>
