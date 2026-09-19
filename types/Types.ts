@@ -64,6 +64,11 @@ export type Patient = {
   carryout_start?: string | null;
   carryout_end?: string | null;
   cooldown_until?: string | null;
+  rotation_count?: number;
+  counter_rejoin_at?: string | null;
+  counter_top_started_at?: string | null;
+  idle_at?: string | null;
+  removed_at?: string | null;
 };
 
 export type Cubicle = {
@@ -71,7 +76,7 @@ export type Cubicle = {
   cubicleNum: string;
   category: string;
   room: number;
-  subcategory?: string;
+  subcategory?: string | null;
   doctorId?: string | null;
 };
 

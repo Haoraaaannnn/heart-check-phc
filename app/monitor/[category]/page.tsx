@@ -58,12 +58,6 @@ export default function CategoryMonitorPage() {
   }, [isRegistration]);
 
   useEffect(() => {
-    const checkSession = async () => {
-      const { data } = await supabase.auth.getSession();
-      if (!data.session) { router.replace('/login'); return; }
-    };
-    checkSession();
-    
     if (isRegistration) {
       fetchRegistrationPatients();
 

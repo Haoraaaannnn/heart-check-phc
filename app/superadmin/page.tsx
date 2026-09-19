@@ -14,6 +14,14 @@ interface User {
   created_at: string
 }
 
+interface Cubicle {
+  id: number;
+  cubicleNum: string;
+  category: string;
+  room: number;
+  subcategory?: string | null;
+}
+
 export default function SuperAdminPage() {
   const checking = useRequireAuth();
   useIdleTimeout();
@@ -38,6 +46,11 @@ export default function SuperAdminPage() {
   const [formError, setFormError] = useState('')
   const [formSuccess, setFormSuccess] = useState('')
   const [activeTab, setActiveTab] = useState<'users' | 'settings' >('users')
+
+  const CLINICAL_ROLES = ['nurse', 'staff', 'doctor'];
+
+  const [cubicles, setCubicles] = useState<Cubicle[]>([]);
+  const [selectedCubicleIds, setSelectedCubicleIds] = useState<number[]>([]);
 
 
   const fetchUsers = async (page: number) => {
@@ -71,6 +84,39 @@ export default function SuperAdminPage() {
 
   const totalPages = Math.ceil(totalUsers / usersPerPage)
 
+    const loadCubicles = async (authId?: string) => {
+    const {
+      data: { session },
+    } = await supabase.auth.getSession();
+
+    const query = authId
+      ? `?authId=${encodeURIComponent(authId)}`
+      : '';
+
+    const response = await fetch(`/api/superadmin/cubicles${query}`, {
+      headers: {
+        Authorization: `Bearer ${session?.access_token}`,
+      },
+    });
+
+    const data = await response.json();
+
+    if (!response.ok) {
+      throw new Error(data.error || 'Unable to load cubicles');
+    }
+
+    setCubicles(data.cubicles ?? []);
+    setSelectedCubicleIds(data.assignedCubicleIds ?? []);
+  };
+
+  const toggleCubicle = (cubicleId: number) => {
+    setSelectedCubicleIds((previous) =>
+      previous.includes(cubicleId)
+        ? previous.filter((id) => id !== cubicleId)
+        : [...previous, cubicleId]
+    );
+  };
+
 
   const handleSubmit = async (e: React.FormEvent) => {
       e.preventDefault()
@@ -82,18 +128,21 @@ export default function SuperAdminPage() {
         const { data: { session } } = await supabase.auth.getSession()
 
         if (editingUser) {
-          const response = await fetch('/api/superadmin/update-user', {
+          const response = await fetch('/api/superadmin/update-role', {
             method: 'PUT',
             headers: {
               'Content-Type': 'application/json',
               'Authorization': `Bearer ${session?.access_token}`,
             },
-            body: JSON.stringify({
-              authId: editingUser.auth_id,
-              email: formEmail,
-              username: formUsername,
-              role: formRole
-            }),
+              body: JSON.stringify({
+                authId: editingUser.auth_id,
+                email: formEmail,
+                username: formUsername,
+                role: formRole,
+                cubicleIds: CLINICAL_ROLES.includes(formRole)
+                  ? selectedCubicleIds
+                  : [],
+              }),
           })
           const data = await response.json()
           if (!response.ok) throw new Error(data.error)
@@ -116,7 +165,10 @@ export default function SuperAdminPage() {
               email: formEmail,
               password: formPassword,
               username: formUsername,
-              role: formRole
+              role: formRole,
+              cubicleIds: CLINICAL_ROLES.includes(formRole)
+              ? selectedCubicleIds
+              : [],
             }),
           })
           const data = await response.json()
@@ -182,26 +234,39 @@ export default function SuperAdminPage() {
     );
   }
 
-  const handleEdit = (user: User) => {
-    setEditingUser(user)
-    setFormEmail(user.email)
-    setFormUsername(user.username)
-    setFormRole(user.role)
-    setFormError('')
-    setFormSuccess('')
-    setShowAddModal(true)
-  }
+  const handleEdit = async (user: User) => {
+    setEditingUser(user);
+    setFormEmail(user.email);
+    setFormUsername(user.username);
+    setFormRole(user.role);
+    setFormError('');
+    setFormSuccess('');
+    setShowAddModal(true);
 
-  const handleAddClick = () => {
-    setEditingUser(null)
-    setFormEmail('')
-    setFormUsername('')
-    setFormPassword('')
-    setFormRole('registration')
-    setFormError('')
-    setFormSuccess('')
-    setShowAddModal(true)
-  }
+    try {
+      await loadCubicles(user.auth_id);
+    } catch (error: any) {
+      setFormError(error.message);
+    }
+  };
+
+  const handleAddClick = async () => {
+    setEditingUser(null);
+    setFormEmail('');
+    setFormUsername('');
+    setFormPassword('');
+    setFormRole('registration');
+    setSelectedCubicleIds([]);
+    setFormError('');
+    setFormSuccess('');
+    setShowAddModal(true);
+
+    try {
+      await loadCubicles();
+    } catch (error: any) {
+      setFormError(error.message);
+    }
+  };
 
 return (
   <div className="p-8 bg-gray-50 min-h-screen">
@@ -341,8 +406,8 @@ return (
     )}
 
     {showAddModal && (
-        <div className="fixed inset-0 bg-opacity-50 flex items-center justify-center z-50 bg-black/70">
-          <div className="bg-white rounded-lg p-6 w-full max-w-md">
+            <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/60 p-4">
+            <div className="max-h-[90vh] w-full max-w-3xl overflow-y-auto rounded-2xl bg-white p-6 shadow-2xl">
             <h2 className="text-xl font-bold text-gray-900 mb-4">
               {editingUser ? 'Edit User' : 'Add User'}
             </h2>
@@ -396,9 +461,92 @@ return (
               >
                 <option value="registration">Registration</option>
                 <option value="nurse">Nurse</option>
+                <option value="doctor">Doctor</option>
                 <option value="admin">Admin</option>
                 <option value="superadmin">Super Admin</option>
               </select>
+
+              {CLINICAL_ROLES.includes(formRole) && (
+                <div className="mt-5 border-t border-slate-200 pt-5">
+                  <div className="mb-3 flex items-center justify-between">
+                    <div>
+                      <label className="block text-sm font-semibold text-slate-800">
+                        Assigned cubicles
+                      </label>
+                      <p className="mt-1 text-xs text-slate-500">
+                        Choose the cubicles this user can manage.
+                      </p>
+                    </div>
+
+                    <span className="rounded-full bg-blue-100 px-3 py-1 text-xs font-semibold text-blue-700">
+                      {selectedCubicleIds.length} selected
+                    </span>
+                  </div>
+
+                  <div className="max-h-72 space-y-4 overflow-y-auto rounded-xl border border-gray-200 bg-gray-50 p-3">
+                    {Object.entries(
+                      cubicles.reduce<Record<string, Cubicle[]>>((groups, cubicle) => {
+                        const groupName = cubicle.category || "Other";
+                        groups[groupName] ??= [];
+                        groups[groupName].push(cubicle);
+                        return groups;
+                      }, {})
+                    ).map(([category, categoryCubicles]) => (
+                      <div key={category}>
+                      <div className="mb-2 rounded-md border border-gray-200 bg-gray-100 px-3 py-2 text-xs font-bold uppercase tracking-wide text-gray-900">
+                        {category}
+                      </div>
+
+                        <div className="grid grid-cols-1 gap-2 sm:grid-cols-2">
+                          {categoryCubicles.map((cubicle) => {
+                            const isSelected = selectedCubicleIds.includes(cubicle.id);
+
+                            return (
+                              <button
+                                key={cubicle.id}
+                                type="button"
+                                onClick={() => toggleCubicle(cubicle.id)}
+                                className={`rounded-lg border p-3 text-left transition ${
+                                  isSelected
+                                    ? "border-blue-500 bg-blue-50 text-blue-900 shadow-sm"
+                                    : "border-gray-200 bg-white text-gray-700 hover:border-blue-300 hover:bg-blue-50"
+                                }`}
+                              >
+                                <div className="flex items-start justify-between gap-2">
+                                  <div>
+                                    <p className="text-sm font-semibold">
+                                      {cubicle.cubicleNum}
+                                    </p>
+
+                                    <p
+                                      className={`mt-1 text-xs ${
+                                        isSelected ? "text-blue-700" : "text-slate-500"
+                                      }`}
+                                    >
+                                      Room {cubicle.room}
+                                      {cubicle.subcategory ? ` · ${cubicle.subcategory}` : ""}
+                                    </p>
+                                  </div>
+
+                                  <span
+                                    className={`flex h-5 w-5 shrink-0 items-center justify-center rounded-full border text-xs font-bold ${
+                                      isSelected
+                                        ? "border-blue-600 bg-blue-600 text-white"
+                                        : "border-slate-300 text-transparent"
+                                    }`}
+                                  >
+                                    ✓
+                                  </span>
+                                </div>
+                              </button>
+                            );
+                          })}
+                        </div>
+                      </div>
+                    ))}
+                  </div>
+                </div>
+              )}
               
               <div className="flex justify-end gap-2">
                 <button 

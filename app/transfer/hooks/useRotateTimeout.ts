@@ -14,8 +14,11 @@ export function useRotateTimeout() {
       .eq('key', 'rotate_timeout_seconds')
       .single();
 
+    console.log('[rotate-timeout] fetched:', { data, error });
+
     if (!error && data) {
       const seconds = parseInt(data.value, 10);
+      console.log('[rotate-timeout] parsed seconds:', seconds, '→ ms:', seconds * 1000);
       if (!isNaN(seconds) && seconds > 0) {
         setRotateTimeoutMs(seconds * 1000);
       }
@@ -30,7 +33,10 @@ export function useRotateTimeout() {
       .on(
         'postgres_changes',
         { event: '*', schema: 'public', table: 'app_settings', filter: 'key=eq.rotate_timeout_seconds' },
-        () => fetchTimeout()
+        () => {
+          console.log('[rotate-timeout] realtime change detected, refetching...');
+          fetchTimeout();
+        }
       )
       .subscribe();
 

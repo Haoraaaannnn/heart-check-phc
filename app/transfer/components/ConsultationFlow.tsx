@@ -1,9 +1,9 @@
 'use client';
 import { Cubicle, Patient } from '@/types/Types';
 import { CubicleCard } from './CubicleCard';
-import { OnProgressSection } from './OnProgressSection';
 import { CONSULTATION_SUBCATEGORIES } from '../lib/constants';
 import { RegistrationCounterSection } from './RegistrationCounterSection';
+import { QueueAndIdleLayout } from './QueueAndIdleLayout';
 
 type ConsultationFlowProps = {
   selectedSubcategory: string | null;
@@ -29,6 +29,9 @@ type ConsultationFlowProps = {
   cubicleDoctorMap?: Record<string, string>;
   onReleaseFromCounter: (patient: Patient) => void;
   onAssignNow: (patient: Patient) => void;
+  idlePatients: Patient[];
+  onActivateIdle: (patient: Patient) => void;
+  onRemoveIdle: (patient: Patient) => void;
 };
 
 export function ConsultationFlow({
@@ -55,6 +58,9 @@ export function ConsultationFlow({
   cubicleDoctorMap = {},
   onReleaseFromCounter,
   onAssignNow,
+  idlePatients,
+  onActivateIdle,
+  onRemoveIdle,
 }: ConsultationFlowProps) {
   if (!selectedSubcategory) {
     return (
@@ -103,8 +109,9 @@ export function ConsultationFlow({
         onRelease={onReleaseFromCounter}
       />
       <div className="mt-4">
-        <OnProgressSection
-          patients={visibleOnProgress}
+        <QueueAndIdleLayout
+          onProgressPatients={visibleOnProgress}
+          idlePatients={idlePatients}
           isDraggable={isDragEnabled}
           selectedCategory="Consultation"
           draggedPatientId={draggedPatient?.id}
@@ -112,6 +119,8 @@ export function ConsultationFlow({
           onSpeak={onSpeak}
           onAssignNow={onAssignNow}
           speakingId={speaking}
+          onActivateIdle={onActivateIdle}
+          onRemoveIdle={onRemoveIdle}
         />
       </div>
       <div className="grid grid-cols-5 gap-3 mt-4">

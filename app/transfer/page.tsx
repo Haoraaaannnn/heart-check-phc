@@ -13,23 +13,27 @@ import { useAutoAssign } from './hooks/useAutoAssign';
 import { useDragAndDrop } from './hooks/useDragAndDrop';
 import { useRealtimeSubscription } from './hooks/useRealtimeSubscription';
 import { sendSMS } from "@/app/actions/sendSMS";
-import { RegistrationCounterSection } from './components/RegistrationCounterSection';
+import { useMaxRotations } from './hooks/useMaxRotations';
+
 import { useRegistrationDragAndDrop } from './hooks/useRegistrationDragAndDrop';
-import { Patient } from '@/types/Types';
+import { Patient, Cubicle } from '@/types/Types';
 import { useAutoRotate } from './hooks/useAutoRotate';
 import { useRotateTimeout } from './hooks/useRotateTimeout';
 import { DoctorsModal } from './components/DoctorsModal';
 import { useIdleTimeout } from './hooks/useIdleTimeout';
-import { useRequireAuth } from './hooks/useRequireAuth'; 
+import { useRequireAuth } from './hooks/useRequireAuth';
 import { MAX_PATIENTS_PER_CUBICLE } from './lib/constants';
+import { useIdlePatients } from './hooks/useIdlePatients';
+import { useRegistrationRotate } from './hooks/useRegistrationRotate';
 
 export default function TransferPage() {
   const checking = useRequireAuth();
   useIdleTimeout();
   const router = useRouter();
+
   const [selectedCategory, setSelectedCategory] = useState<string | null>(null);
   const [selectedSubcategory, setSelectedSubcategory] = useState<string | null>(null);
-const [selectedOPSubcategory, setSelectedOPSubcategory] = useState<string | null>(null);
+  const [selectedOPSubcategory, setSelectedOPSubcategory] = useState<string | null>(null);
   const [selectedRoom, setSelectedRoom] = useState<number | null>(null);
   const [speaking, setSpeaking] = useState<number | null>(null);
   const [sidebarOpen, setSidebarOpen] = useState(true);
@@ -40,6 +44,12 @@ const [selectedOPSubcategory, setSelectedOPSubcategory] = useState<string | null
 
   const [isLoading, setIsLoading] = useState(true);
   const [isSyncing, setIsSyncing] = useState(false);
+
+  const rotateTimeoutMs = useRotateTimeout();
+  const maxRotations = useMaxRotations();
+
+  const { idlePatients, fetchIdlePatients, activatePatient, removePatient } = useIdlePatients();
+  const registrationRotateBusy = useRef(false);
 
   const { regDraggedPatient, dragOverCounter, handleRegDragStart } = useRegistrationDragAndDrop(
     registrationPatients, setRegistrationPatients
@@ -53,6 +63,7 @@ const [selectedOPSubcategory, setSelectedOPSubcategory] = useState<string | null
     handleDragStartFromCubicle,
     handleMoveBackToProgress,
     setupGlobalDragHandlers,
+    resetDrag,
     pendingUpdates,
     setPendingUpdates,
   } = useDragAndDrop(
@@ -61,11 +72,21 @@ const [selectedOPSubcategory, setSelectedOPSubcategory] = useState<string | null
     setAssignedPatients,
     fetchData
   );
+
   useEffect(() => {
     dragInProgressRef.current = Boolean(draggedPatient);
   }, [draggedPatient]);
 
-  const rotateTimeoutMs = useRotateTimeout();
+  // Safety: if a drag ever gets stuck, force-clear it after 30s
+  useEffect(() => {
+    if (!draggedPatient) return;
+    const timer = setTimeout(() => {
+      console.warn('[drag] stuck for 30s — force resetting');
+      resetDrag();
+    }, 30000);
+    return () => clearTimeout(timer);
+  }, [draggedPatient, resetDrag]);
+
   const savingPendingUpdates = useRef(false);
 
   const fetchRegistrationPatients = useCallback(async () => {
@@ -81,63 +102,128 @@ const [selectedOPSubcategory, setSelectedOPSubcategory] = useState<string | null
       .not('counter', 'is', null)
       .is('reg_end', null)
       .neq('status', 'Assigned')
+      .neq('status', 'Idle')
+      .neq('status', 'Removed')
       .gte('created_at', today.toISOString())
       .lt('created_at', tomorrow.toISOString())
       .order('counter', { ascending: true, nullsFirst: false })
       .order('created_at', { ascending: true });
 
-    if (!error && data) setRegistrationPatients(data);
+    if (!error && data) {
+      const sortKey = (p: Patient) =>
+        new Date(p.counter_rejoin_at || p.created_at || 0).getTime();
+
+      const byCounter = new Map<number, Patient[]>();
+      for (const p of data as Patient[]) {
+        if (!p.counter) continue;
+        if (!byCounter.has(p.counter)) byCounter.set(p.counter, []);
+        byCounter.get(p.counter)!.push(p);
+      }
+
+      const startUpdates: { id: number; counter_top_started_at: string }[] = [];
+      const clearUpdates: { id: number; counter_top_started_at: null }[] = [];
+      const now = new Date().toISOString();
+
+      for (const [, patients] of byCounter) {
+        const sorted = [...patients].sort((a, b) => sortKey(a) - sortKey(b));
+        const [top, ...rest] = sorted;
+        if (top && !top.counter_top_started_at) {
+          startUpdates.push({ id: top.id, counter_top_started_at: now });
+          top.counter_top_started_at = now;
+        }
+        for (const p of rest) {
+          if (p.counter_top_started_at) {
+            clearUpdates.push({ id: p.id, counter_top_started_at: null });
+            p.counter_top_started_at = null;
+          }
+        }
+      }
+
+      if (startUpdates.length > 0) {
+        await supabase.from('patients').upsert(startUpdates, { onConflict: 'id' });
+      }
+      if (clearUpdates.length > 0) {
+        await supabase.from('patients').upsert(clearUpdates, { onConflict: 'id' });
+      }
+
+      setRegistrationPatients(data);
+    }
   }, []);
 
-    const debounceRef = useRef<NodeJS.Timeout | null>(null);
-    const syncing = useRef(false);
+  const reapplyPendingUpdates = useCallback((pending: Patient[]) => {
+    if (pending.length === 0) return;
+    const pendingIds = pending.map(p => p.id);
 
-    const handleRealtimeUpdate = () => {
-      if (dragInProgressRef.current) return;
-      if (debounceRef.current) clearTimeout(debounceRef.current);
+    setOnProgressPatients(prev => {
+      const withoutPending = prev.filter(p => !pendingIds.includes(p.id));
+      const onProgressPending = pending.filter(p => p.status === 'On Progress');
+      return [...withoutPending, ...onProgressPending];
+    });
 
-      debounceRef.current = setTimeout(async () => {
-        if (dragInProgressRef.current || syncing.current) return;
+    setAssignedPatients(prev => {
+      const cleaned: Record<string, Patient[]> = {};
+      for (const [cubicle, patients] of Object.entries(prev)) {
+        cleaned[cubicle] = patients.filter(p => !pendingIds.includes(p.id));
+      }
+      const assignedPending = pending.filter(p => p.status === 'Assigned' && p.cubicleNum);
+      for (const p of assignedPending) {
+        cleaned[p.cubicleNum!] = [...(cleaned[p.cubicleNum!] || []), p];
+      }
+      return cleaned;
+    });
+  }, [setOnProgressPatients, setAssignedPatients]);
 
-        syncing.current = true;
-        setIsSyncing(true);
+  // ── Single sync coordinator ──────────────────────────────────────────────
+  // Every trigger (poll, realtime, post-write refresh) goes through this,
+  // instead of calling fetchData()/fetchRegistrationPatients()/fetchIdlePatients()
+  // directly. If a sync is already running, we just flag that another pass
+  // is needed once it finishes, rather than firing a second parallel fetch.
+  const globalSyncRef = useRef(false);
+  const fetchQueuedRef = useRef(false);
 
-        try {
-          await Promise.all([
-            fetchData(),
-            fetchRegistrationPatients(),
-          ]);
-          reapplyPendingUpdates(pendingUpdatesRef.current);
-        } finally {
-          setIsSyncing(false);
-          syncing.current = false;
-        }
-      }, 400);
-    };
-    const reapplyPendingUpdates = useCallback((pending: Patient[]) => {
-  if (pending.length === 0) return;
-  const pendingIds = pending.map(p => p.id);
+  const syncNow = useCallback(async () => {
+    if (dragInProgressRef.current) return;
 
-  setOnProgressPatients(prev => {
-    const withoutPending = prev.filter(p => !pendingIds.includes(p.id));
-    const onProgressPending = pending.filter(p => p.status === 'On Progress');
-    return [...withoutPending, ...onProgressPending];
-  });
-
-  setAssignedPatients(prev => {
-    const cleaned: Record<string, Patient[]> = {};
-    for (const [cubicle, patients] of Object.entries(prev)) {
-      cleaned[cubicle] = patients.filter(p => !pendingIds.includes(p.id));
+    if (globalSyncRef.current) {
+      fetchQueuedRef.current = true;
+      return;
     }
-    const assignedPending = pending.filter(p => p.status === 'Assigned' && p.cubicleNum);
-    for (const p of assignedPending) {
-      cleaned[p.cubicleNum!] = [...(cleaned[p.cubicleNum!] || []), p];
-    }
-    return cleaned;
-  });
-}, [setOnProgressPatients, setAssignedPatients]);
 
-  const autoOpsBusy = useRef(false);
+    globalSyncRef.current = true;
+    setIsSyncing(true);
+    try {
+      do {
+        fetchQueuedRef.current = false;
+        await Promise.all([
+          fetchData(),
+          fetchRegistrationPatients(),
+          fetchIdlePatients(),
+        ]);
+      } while (fetchQueuedRef.current && !dragInProgressRef.current);
+
+      reapplyPendingUpdates(pendingUpdatesRef.current);
+    } finally {
+      setIsSyncing(false);
+      globalSyncRef.current = false;
+    }
+  }, [fetchData, fetchRegistrationPatients, fetchIdlePatients, reapplyPendingUpdates]);
+
+  // ── Realtime ──────────────────────────────────────────────────────────────
+  const debounceRef = useRef<NodeJS.Timeout | null>(null);
+
+  const handleRealtimeUpdate = useCallback(() => {
+    if (dragInProgressRef.current) return;
+    if (debounceRef.current) clearTimeout(debounceRef.current);
+
+    debounceRef.current = setTimeout(() => {
+      void syncNow();
+    }, 400);
+  }, [syncNow]);
+
+  useRealtimeSubscription(handleRealtimeUpdate);
+
+  const autoAssignBusy = useRef(false);
+  const autoRotateBusy = useRef(false);
 
   useAutoAssign(
     selectedCategory,
@@ -147,13 +233,13 @@ const [selectedOPSubcategory, setSelectedOPSubcategory] = useState<string | null
     setPendingUpdates,
     setOnProgressPatients,
     setAssignedPatients,
-    autoOpsBusy
+    autoAssignBusy
   );
-  useAutoRotate(onProgressPatients, assignedPatients, fetchData, autoOpsBusy, rotateTimeoutMs);
-  useRealtimeSubscription(handleRealtimeUpdate);
+  useAutoRotate(onProgressPatients, assignedPatients, syncNow, autoRotateBusy, rotateTimeoutMs, maxRotations);
+  useRegistrationRotate(registrationPatients, fetchRegistrationPatients, registrationRotateBusy, rotateTimeoutMs, maxRotations);
 
   useEffect(() => {
-  pendingUpdatesRef.current = pendingUpdates;
+    pendingUpdatesRef.current = pendingUpdates;
   }, [pendingUpdates]);
 
   const isConsultation = selectedCategory === 'Consultation';
@@ -194,26 +280,31 @@ const [selectedOPSubcategory, setSelectedOPSubcategory] = useState<string | null
     } catch { setSpeaking(null); }
   };
 
-    const handleAssignNow = (patient: Patient) => {
+  const handleAssignNow = (patient: Patient) => {
     if (!patient.service) return;
 
     const serviceCubicles = cubicles.filter(c => c.category === patient.service);
 
-    let bestCubicle: typeof serviceCubicles[number] | null = null;
-    let bestCount = Infinity;
+    const preferred = (patient.preferredCubicleNums ?? [])
+      .map(num => serviceCubicles.find(c => c.cubicleNum === num))
+      .filter((c): c is Cubicle => !!c)
+      .filter(c => (assignedPatients[c.cubicleNum]?.length ?? 0) < MAX_PATIENTS_PER_CUBICLE);
 
-    for (const cubicle of serviceCubicles) {
-      const count = assignedPatients[cubicle.cubicleNum]?.length || 0;
-      if (count < MAX_PATIENTS_PER_CUBICLE && count < bestCount) {
-        bestCubicle = cubicle;
-        bestCount = count;
-      }
-    }
+    const candidates = preferred.length > 0
+      ? preferred
+      : serviceCubicles.filter(c =>
+          (assignedPatients[c.cubicleNum]?.length ?? 0) < MAX_PATIENTS_PER_CUBICLE
+        );
 
-    if (!bestCubicle) {
+    if (candidates.length === 0) {
       console.warn('No available cubicle to assign this patient right now.');
       return;
     }
+
+    const bestCubicle = candidates.reduce((best, c) =>
+      (assignedPatients[c.cubicleNum]?.length ?? 0) <
+      (assignedPatients[best.cubicleNum]?.length ?? 0) ? c : best
+    );
 
     const now = new Date().toISOString();
 
@@ -221,112 +312,126 @@ const [selectedOPSubcategory, setSelectedOPSubcategory] = useState<string | null
 
     setAssignedPatients(prev => ({
       ...prev,
-      [bestCubicle!.cubicleNum]: [
-        ...(prev[bestCubicle!.cubicleNum] || []),
-        { ...patient, cubicleNum: bestCubicle!.cubicleNum, status: 'Assigned', called_at: now },
+      [bestCubicle.cubicleNum]: [
+        ...(prev[bestCubicle.cubicleNum] || []),
+        { ...patient, cubicleNum: bestCubicle.cubicleNum, status: 'Assigned', called_at: now },
       ],
     }));
 
     setPendingUpdates(prev => [
       ...prev.filter(p => p.id !== patient.id),
-      { ...patient, cubicleNum: bestCubicle!.cubicleNum, status: 'Assigned', called_at: now },
+      { ...patient, cubicleNum: bestCubicle.cubicleNum, status: 'Assigned', called_at: now },
     ]);
   };
 
   const handleReleaseFromCounter = async (patient: Patient) => {
-        const now = new Date().toISOString();
+    const now = new Date().toISOString();
 
-        setRegistrationPatients(prev => prev.filter(p => p.id !== patient.id));
+    try {
+      const { error } = await supabase
+        .from('patients')
+        .update({ reg_end: now })
+        .eq('id', patient.id);
 
-        const { error } = await supabase
-          .from('patients')
-          .update({ reg_end: now })
-          .eq('id', patient.id);
-
-        if (error) {
-          console.error('Failed to release patient from counter:', error);
-
-          fetchRegistrationPatients();
-          return;
-        }
-
-        setOnProgressPatients(prev =>
-          prev.map(p => (p.id === patient.id ? { ...p, reg_end: now } : p))
-        );
-      };
-
-      const handleConfirm = async () => {
-        if (pendingUpdates.length === 0 || savingPendingUpdates.current) return;
-
-        savingPendingUpdates.current = true;
-        setIsSyncing(true);
-
-      try {
-        const now = new Date().toISOString();
-
-        const patientUpdates = pendingUpdates.map((patient) => ({
-          id: patient.id,
-          cubicleNum: patient.cubicleNum,
-          status: patient.status,
-          reg_end: patient.reg_end,
-          called_at:
-            patient.called_at ??
-            (patient.status === "Assigned" ? now : null),
-          queue_position: 9999,
-          cooldown_until: patient.cooldown_until ?? null,
-        }));
-
-        await supabase.from("patients").upsert(patientUpdates, { onConflict: "id" });
-
-        await Promise.all(
-          pendingUpdates
-            .filter(p => p.phoneNum && p.status === "Assigned" && p.cubicleNum)
-            .map(p => sendSMS(String(p.phoneNum), p.patientNum, p.cubicleNum!))
-        );
-
-        const { data: queue } = await supabase
-          .from("patients")
-          .select("id")
-          .neq("status", "Assigned")
-          .order("queue_position");
-
-        if (queue && queue.length > 0) {
-          const reorder = queue.map((row, i) => ({ id: row.id, queue_position: i + 1 }));
-          await supabase.from("patients").upsert(reorder, { onConflict: "id" });
-        }
-
-        setPendingUpdates([]);
-        pendingUpdatesRef.current = [];
-
-        await Promise.all([
-          fetchData(),
-          fetchRegistrationPatients(),
-        ]);
-
-      } catch (err) {
-        console.error(err);
-      } finally {
-        savingPendingUpdates.current = false;
-        setIsSyncing(false);
-      }
-    };
-
-    useEffect(() => {
-      if (
-        pendingUpdates.length === 0 ||
-        draggedPatient ||
-        isSyncing ||
-        savingPendingUpdates.current
-      ) {
+      if (error) {
+        console.error('Failed to release patient from counter:', {
+          message: error.message,
+          details: error.details,
+          hint: error.hint,
+          code: error.code,
+        });
         return;
       }
 
-      const timer = window.setTimeout(() => {
-        void handleConfirm();
-      }, 1800);
+      setRegistrationPatients(prev => prev.filter(p => p.id !== patient.id));
+      setOnProgressPatients(prev =>
+        prev.map(p => (p.id === patient.id ? { ...p, reg_end: now } : p))
+      );
+    } catch (err: any) {
+      console.error('Network error releasing patient from counter:', err?.message ?? err);
+      void syncNow();
+    }
+  };
 
-      return () => window.clearTimeout(timer);
-    }, [pendingUpdates, draggedPatient, isSyncing, handleConfirm]);
+  const handleActivateIdle = async (patient: Patient) => {
+    await activatePatient(patient);
+    await syncNow();
+  };
+
+  const handleRemoveIdle = async (patient: Patient) => {
+    await removePatient(patient);
+    await syncNow();
+  };
+
+  const handleConfirm = useCallback(async () => {
+    if (pendingUpdates.length === 0 || savingPendingUpdates.current) return;
+
+    savingPendingUpdates.current = true;
+    setIsSyncing(true);
+
+    try {
+      const now = new Date().toISOString();
+
+      const patientUpdates = pendingUpdates.map((patient) => ({
+        id: patient.id,
+        cubicleNum: patient.cubicleNum,
+        status: patient.status,
+        reg_end: patient.reg_end,
+        called_at:
+          patient.called_at ??
+          (patient.status === "Assigned" ? now : null),
+        queue_position: 9999,
+        cooldown_until: patient.cooldown_until ?? null,
+        progress_started_at: patient.progress_started_at ?? null, 
+      }));
+
+      await supabase.from("patients").upsert(patientUpdates, { onConflict: "id" });
+
+      await Promise.all(
+        pendingUpdates
+          .filter(p => p.phoneNum && p.status === "Assigned" && p.cubicleNum)
+          .map(p => sendSMS(String(p.phoneNum), p.patientNum, p.cubicleNum!))
+      );
+
+      const { data: queue } = await supabase
+        .from("patients")
+        .select("id")
+        .neq("status", "Assigned")
+        .order("queue_position");
+
+      if (queue && queue.length > 0) {
+        const reorder = queue.map((row, i) => ({ id: row.id, queue_position: i + 1 }));
+        await supabase.from("patients").upsert(reorder, { onConflict: "id" });
+      }
+
+      setPendingUpdates([]);
+      pendingUpdatesRef.current = [];
+
+      await syncNow();
+    } catch (err) {
+      console.error(err);
+    } finally {
+      savingPendingUpdates.current = false;
+      setIsSyncing(false);
+    }
+  }, [pendingUpdates, setPendingUpdates, syncNow]);
+
+  useEffect(() => {
+    if (
+      pendingUpdates.length === 0 ||
+      draggedPatient ||
+      isSyncing ||
+      savingPendingUpdates.current
+    ) {
+      return;
+    }
+
+    const timer = window.setTimeout(() => {
+      void handleConfirm();
+    }, 1800);
+
+    return () => window.clearTimeout(timer);
+  }, [pendingUpdates, draggedPatient, isSyncing, handleConfirm]);
 
   const getAvailableRooms = () => {
     if (!selectedCategory) return [];
@@ -366,39 +471,38 @@ const [selectedOPSubcategory, setSelectedOPSubcategory] = useState<string | null
     return [];
   };
 
-    const visibleCubicles = getVisibleCubicles();
-    const rooms = getAvailableRooms();
+  const visibleCubicles = getVisibleCubicles();
+  const rooms = getAvailableRooms();
 
-    const visibleOnProgress = onProgressPatients.filter(p => {
-      if (!selectedCategory) return true;
-      if (isConsultation) {
-        if (p.service !== 'Consultation') return false;
-        if (selectedSubcategory) return p.subcategory === selectedSubcategory;
-        return true;
-      }
-      if (isOPScreening) {
-        if (p.service !== 'OPD Screening') return false;
-        if (selectedOPSubcategory) return p.subcategory === selectedOPSubcategory;
-        return true;
-      }
-      return p.service === selectedCategory;
-    });
-
-    const visibleRegistrationPatients = registrationPatients.filter(p => {
-      if (isConsultation) {
-        if (p.service !== 'Consultation') return false;
-        if (selectedSubcategory) return p.subcategory === selectedSubcategory;
-        return true;
-      }
-      if (isOPScreening) {
-        if (p.service !== 'OPD Screening') return false;
-        if (selectedOPSubcategory) return p.subcategory === selectedOPSubcategory;
-        return true;
-      }
+  const visibleOnProgress = onProgressPatients.filter(p => {
+    if (!selectedCategory) return true;
+    if (isConsultation) {
+      if (p.service !== 'Consultation') return false;
+      if (selectedSubcategory) return p.subcategory === selectedSubcategory;
       return true;
-    });
+    }
+    if (isOPScreening) {
+      if (p.service !== 'OPD Screening') return false;
+      if (selectedOPSubcategory) return p.subcategory === selectedOPSubcategory;
+      return true;
+    }
+    return p.service === selectedCategory;
+  });
 
-    
+  const visibleRegistrationPatients = registrationPatients.filter(p => {
+    if (isConsultation) {
+      if (p.service !== 'Consultation') return false;
+      if (selectedSubcategory) return p.subcategory === selectedSubcategory;
+      return true;
+    }
+    if (isOPScreening) {
+      if (p.service !== 'OPD Screening') return false;
+      if (selectedOPSubcategory) return p.subcategory === selectedOPSubcategory;
+      return true;
+    }
+    return true;
+  });
+
   const queueCounts = {
     'Consultation': onProgressPatients.filter(p => p.service === 'Consultation').length,
     'OPD Screening': onProgressPatients.filter(p => p.service === 'OPD Screening').length,
@@ -417,6 +521,7 @@ const [selectedOPSubcategory, setSelectedOPSubcategory] = useState<string | null
           fetchData(),
           fetchCubicles(),
           fetchRegistrationPatients(),
+          fetchIdlePatients(),
         ]);
       } finally {
         setIsLoading(false);
@@ -424,6 +529,14 @@ const [selectedOPSubcategory, setSelectedOPSubcategory] = useState<string | null
     };
 
     initialize();
+
+    // Fallback safety net only — realtime handles the normal case now.
+    const interval = setInterval(() => {
+      void syncNow();
+    }, 15000);
+
+    return () => clearInterval(interval);
+    // eslint-disable-next-line react-hooks/exhaustive-deps
   }, []);
 
   if (checking) {
@@ -433,7 +546,6 @@ const [selectedOPSubcategory, setSelectedOPSubcategory] = useState<string | null
       </div>
     );
   }
-
 
   if (isLoading) {
     return (
@@ -485,55 +597,64 @@ const [selectedOPSubcategory, setSelectedOPSubcategory] = useState<string | null
           cubicleDoctorMap={cubicleDoctorMap}
           onReleaseFromCounter={handleReleaseFromCounter}
           onAssignNow={handleAssignNow}
+          idlePatients={idlePatients}
+          onActivateIdle={handleActivateIdle}
+          onRemoveIdle={handleRemoveIdle}
         />
       );
     }
 
-  if (isOPScreening) {
+    if (isOPScreening) {
+      return (
+        <OPScreeningFlow
+          selectedSubcategory={selectedOPSubcategory}
+          onSelectSubcategory={setSelectedOPSubcategory}
+          selectedRoom={selectedRoom}
+          rooms={rooms}
+          visibleCubicles={visibleCubicles}
+          visibleOnProgress={visibleOnProgress}
+          assignedPatients={assignedPatients}
+          draggedPatient={draggedPatient}
+          dragOverCubicle={dragOverCubicle}
+          speaking={speaking}
+          onSelectRoom={setSelectedRoom}
+          onDragStartFromQueue={handleDragStartFromQueue}
+          onDragStartFromCubicle={handleDragStartFromCubicle}
+          onSpeak={speak}
+          onMoveBackToProgress={handleMoveBackToProgress}
+          isDragEnabled={isDragEnabled}
+          registrationPatients={visibleRegistrationPatients}
+          regDraggedPatient={regDraggedPatient}
+          dragOverCounter={dragOverCounter}
+          onRegDragStart={handleRegDragStart}
+          onReleaseFromCounter={handleReleaseFromCounter}
+          onAssignNow={handleAssignNow}
+          idlePatients={idlePatients}
+          onActivateIdle={handleActivateIdle}
+          onRemoveIdle={handleRemoveIdle}
+        />
+      );
+    }
+
     return (
-      <OPScreeningFlow
-        selectedSubcategory={selectedOPSubcategory}
-        onSelectSubcategory={setSelectedOPSubcategory}
-        selectedRoom={selectedRoom}
-        rooms={rooms}
+      <OtherServicesFlow
         visibleCubicles={visibleCubicles}
         visibleOnProgress={visibleOnProgress}
         assignedPatients={assignedPatients}
         draggedPatient={draggedPatient}
         dragOverCubicle={dragOverCubicle}
         speaking={speaking}
-        onSelectRoom={setSelectedRoom}
+        selectedCategory={selectedCategory}
         onDragStartFromQueue={handleDragStartFromQueue}
         onDragStartFromCubicle={handleDragStartFromCubicle}
         onSpeak={speak}
         onMoveBackToProgress={handleMoveBackToProgress}
         isDragEnabled={isDragEnabled}
-        registrationPatients={visibleRegistrationPatients}
-        regDraggedPatient={regDraggedPatient}
-        dragOverCounter={dragOverCounter}
-        onRegDragStart={handleRegDragStart}
-        onReleaseFromCounter={handleReleaseFromCounter}
-        onAssignNow={handleAssignNow}
+        rotateTimeoutMs={rotateTimeoutMs}
+        idlePatients={idlePatients}
+        onActivateIdle={handleActivateIdle}
+        onRemoveIdle={handleRemoveIdle}
       />
-    );
-  }
-
-    return (
-      <OtherServicesFlow
-      visibleCubicles={visibleCubicles}
-      visibleOnProgress={visibleOnProgress}
-      assignedPatients={assignedPatients}
-      draggedPatient={draggedPatient}
-      dragOverCubicle={dragOverCubicle}
-      speaking={speaking}
-      selectedCategory={selectedCategory}
-      onDragStartFromQueue={handleDragStartFromQueue}
-      onDragStartFromCubicle={handleDragStartFromCubicle}
-      onSpeak={speak}
-      onMoveBackToProgress={handleMoveBackToProgress}
-      isDragEnabled={isDragEnabled}
-      rotateTimeoutMs={rotateTimeoutMs}
-    />
     );
   };
 
@@ -572,14 +693,14 @@ const [selectedOPSubcategory, setSelectedOPSubcategory] = useState<string | null
             </button>
 
             <button
-            onClick={() => setShowDoctorsModal(true)}
-            className="w-10 h-10 bg-gray-100 rounded-full flex items-center justify-center hover:bg-red-50 transition"
-            title="Manage Doctors"
-          >
-            <i className="bx bx-plus-medical text-lg text-gray-500"></i>
-          </button>
+              onClick={() => setShowDoctorsModal(true)}
+              className="w-10 h-10 bg-gray-100 rounded-full flex items-center justify-center hover:bg-red-50 transition"
+              title="Manage Doctors"
+            >
+              <i className="bx bx-plus-medical text-lg text-gray-500"></i>
+            </button>
 
-            </div>
+          </div>
         </div>
 
         <div className="px-8 py-6 h-[calc(100vh-73px)] overflow-y-auto">
