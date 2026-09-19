@@ -1,16 +1,26 @@
-import { useState } from 'react';
+import { useCallback, useRef, useState } from 'react';
 import { supabase } from '@/lib/supabase';
 import { PatientStats, RecentPatient, AllRecentPatient } from '@/types/Types';
 
+const RECENT_LIST_SIZE = 20;
+const PATIENT_COLUMNS = 'id, patientNum, service, status, created_at, consult_start';
+
 export function usePatientData(
-  setStats: React.Dispatch<React.SetStateAction<PatientStats>>
+  setStats: React.Dispatch<React.SetStateAction<PatientStats>>,
+  service: string | null = null // null = All Services
 ) {
   const [recentPatients, setRecentPatients] = useState<RecentPatient[]>([]);
   const [allRecentPatients, setAllRecentPatients] = useState<AllRecentPatient[]>([]);
   const [serviceDistribution, setServiceDistribution] = useState<{ name: string; value: number }[]>([]);
   const [error, setError] = useState<string | null>(null);
 
-  const fetchPatientData = async () => {
+  // Guards against a slow response for the previous chip overwriting the current one
+  const requestIdRef = useRef(0);
+
+  const fetchPatientData = useCallback(async () => {
+    const requestId = ++requestIdRef.current;
+    const isStale = () => requestId !== requestIdRef.current;
+
     try {
       setError(null);
       const now = new Date();
@@ -18,20 +28,32 @@ export function usePatientData(
       const endOfDay = new Date(now.getFullYear(), now.getMonth(), now.getDate() + 1).toISOString();
       const thirtyDaysAgo = new Date(now.getTime() - 30 * 24 * 60 * 60 * 1000).toISOString();
 
-      const { data: todayPatientData, error: todayError } = await supabase
+      // No .limit() here: the stat cards are computed from these rows,
+      // so capping at 20 undercounted any day with more than 20 patients
+      let todayQuery = supabase
         .from('patients')
-        .select('id, patientNum, service, status, created_at, consult_start')
+        .select(PATIENT_COLUMNS)
         .gte('created_at', startOfDay)
         .lt('created_at', endOfDay)
-        .order('created_at', { ascending: false })
-        .limit(20);
+        .order('created_at', { ascending: false });
 
-      const { data: allPatientData } = await supabase
+      let allQuery = supabase
         .from('patients')
-        .select('id, patientNum, service, status, created_at, consult_start')
+        .select(PATIENT_COLUMNS)
         .gte('created_at', thirtyDaysAgo)
         .order('created_at', { ascending: false });
 
+      if (service) {
+        todayQuery = todayQuery.ilike('service', service);
+        allQuery = allQuery.ilike('service', service);
+      }
+
+      const [
+        { data: todayPatientData, error: todayError },
+        { data: allPatientData },
+      ] = await Promise.all([todayQuery, allQuery]);
+
+      if (isStale()) return;
       if (todayError) throw todayError;
 
       let inQueueCount = 0;
@@ -76,9 +98,10 @@ export function usePatientData(
           });
         });
 
-        const avgWaitTime = waitTimesForAvg.length > 0
-          ? Math.round(waitTimesForAvg.reduce((sum, w) => sum + w, 0) / waitTimesForAvg.length)
-          : 0;
+        const avgWaitTime =
+          waitTimesForAvg.length > 0
+            ? Math.round(waitTimesForAvg.reduce((sum, w) => sum + w, 0) / waitTimesForAvg.length)
+            : 0;
 
         setStats((prev) => ({
           ...prev,
@@ -91,7 +114,7 @@ export function usePatientData(
 
         const serviceDist = Object.entries(serviceCount).map(([name, value]) => ({ name, value }));
         setServiceDistribution(serviceDist);
-        setRecentPatients(recentPatientsList);
+        setRecentPatients(recentPatientsList.slice(0, RECENT_LIST_SIZE));
       } else {
         setStats((prev) => ({ ...prev, inQueue: 0, inService: 0, servedToday: 0, totalToday: 0, avgWaitTime: 0 }));
         setServiceDistribution([]);
@@ -118,6 +141,7 @@ export function usePatientData(
         setAllRecentPatients([]);
       }
     } catch (err) {
+      if (isStale()) return;
       console.error('Error fetching patient data:', err);
       setError('Failed to load patient data');
       setStats({ totalToday: 0, inQueue: 0, inService: 0, servedToday: 0, avgWaitTime: 0 });
@@ -125,7 +149,7 @@ export function usePatientData(
       setRecentPatients([]);
       setAllRecentPatients([]);
     }
-  };
+  }, [service, setStats]);
 
   return { recentPatients, allRecentPatients, serviceDistribution, error, fetchPatientData };
 }

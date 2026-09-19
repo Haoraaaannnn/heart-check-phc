@@ -3,10 +3,13 @@
 import { useAnalyticsData } from "@/app/dashboard/analytics/hooks/useAnalyticsData";
 import { getLRRaw, getARIMARaw, prepareLRChartData, prepareARIMAChartData, getTrendColor, getTrendBg } from "@/utils/chartDataPrep";
 import MetricCardsRow from "@/app/dashboard/analytics/components/MetricCardShow";
+import BottleneckStageTable from "@/app/dashboard/analytics/components/BottleneckStageTable";
 import VolumeAndWaitCharts from "@/app/dashboard/analytics/components/VolumeAndWaitCharts";
+import PHCComplianceSummary from "@/app/dashboard/analytics/components/PHCComplianceSummary";
 import LRForecast from "@/app/dashboard/analytics/components/LRForecast";
 import ArimaForecast from "@/app/dashboard/analytics/components/ArimaForecast";
 import DateRangeSelector from "@/app/dashboard/analytics/components/DateRangeSelector";
+import ExportExcelButton from "@/app/dashboard/analytics/components/ExportExcelButton";
 
 export default function AdminDashboard() {
   const { data, loading, isRefreshing, error, range, setRange } = useAnalyticsData();
@@ -57,14 +60,19 @@ export default function AdminDashboard() {
               </span>
             )}
           </div>
+          <ExportExcelButton range={range} />
         </div>
 
         <MetricCardsRow data={data} />
+
+        <BottleneckStageTable stages={data.bottleneck_analysis?.stages || []} />
 
         <VolumeAndWaitCharts
           dailySummary={data.daily_summary || []}
           hourlyPattern={data.hourly_pattern || []}
         />
+
+        <PHCComplianceSummary data={data.phc_compliance} />
 
         <LRForecast
           lrRaw={lrRaw}
