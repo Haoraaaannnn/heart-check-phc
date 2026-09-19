@@ -5,7 +5,6 @@ import { useRouter } from "next/navigation";
 import { supabase } from "@/lib/supabase";
 import { getTimestamp } from "@/lib/logger";
 import { Service } from "@/types/Services";
-import { sendSMS } from '@/app/actions/sendSMS';
 import PhoneInput from "./PhoneInput";
 import NumPad from "./NumPad";
 import ContinueButton from "./ContinueButton";
@@ -38,77 +37,14 @@ const NUMERIC_PREFIX_RULES: PrefixRule[] = [
   { match: (s) => s === 'ECG', prefix: '5', groupBySubcategory: false },
 ];
 
-const createPatientRecord = async (
-  service: Service,
-  subcategory?: string,
-  preferredCubicleNums?: string[] | null
-) => {
-try {
-    const now = new Date();
-    const startOfDay = new Date(now.getFullYear(), now.getMonth(), now.getDate()).toISOString();
-    const endOfDay = new Date(now.getFullYear(), now.getMonth(), now.getDate() + 1).toISOString();
-    const serviceName = service.label_en;
-
-    const rule = NUMERIC_PREFIX_RULES.find(r => r.match(serviceName, subcategory));
-    const prefix = rule ? rule.prefix : (SERVICE_PREFIXES[serviceName] ?? 'C');
-
-    let query = supabase
-      .from('patients')
-      .select('patientNum')
-      .eq('service', serviceName)
-      .gte('created_at', startOfDay)
-      .lt('created_at', endOfDay);
-
-    if (rule?.groupBySubcategory) {
-      query = query.eq('subcategory', subcategory ?? null);
-    }
-
-    const { data: lastPatient } = await query
-      .order('created_at', { ascending: false })
-      .limit(1)
-      .maybeSingle();
-
-    let nextNum = 1;
-    if (lastPatient?.patientNum) {
-      const counterPart = lastPatient.patientNum.slice(prefix.length);
-      const lastNum = parseInt(counterPart, 10);
-      if (!isNaN(lastNum)) nextNum = lastNum + 1;
-    }
-
-    const patientNum = `${prefix}${String(nextNum).padStart(3, '0')}`;
-
-    const { data: lastQueue } = await supabase
-      .from("patients")
-      .select("queue_position")
-      .order("queue_position", { ascending: false })
-      .limit(1);
-
-    const nextQueuePosition =
-      (lastQueue?.[0]?.queue_position ?? 0) + 1;
-
-    const { data, error } = await supabase
-      .from("patients")
-      .insert({
-        patientNum,
-        service: serviceName,
-        status: "On Progress",
-        phoneNum: null,
-        cubicleNum: null,
-        queue_position: nextQueuePosition,
-        subcategory: subcategory ?? null,
-        preferredCubicleNums,
-      })
-      .select()
-      .single();
-
-    if (error) throw error;
-    console.log(`${getTimestamp()} [DB INSERT] New Patient Created with On Progress status:`, { id: data?.id, created_at: data?.created_at, patientNum: data?.patientNum, phoneNum: data?.phoneNum, service: data?.service });
-    return patientNum;
-  } catch (err) {
-    console.error(`${getTimestamp()} [DB INSERT ERROR] Failed to create patient record for service "${service.label_en}":`, err);
-    throw err;
+function getPrefixInfo(service: Service, subcategory?: string) {
+  const name = service.label_en;
+  const rule = NUMERIC_PREFIX_RULES.find(r => r.match(name, subcategory));
+  if (rule) {
+    return { prefix: rule.prefix, groupBySubcategory: rule.groupBySubcategory };
   }
-};
+  return { prefix: SERVICE_PREFIXES[name] ?? 'C', groupBySubcategory: false };
+}
 
 export default function KioskPhoneEntry({
   service,
@@ -126,79 +62,66 @@ export default function KioskPhoneEntry({
   const addDigit = (digit: string) => { if (phone.length < MAX) setPhone((p) => p + digit); };
   const deleteLast = () => setPhone((p) => p.slice(0, -1));
 
-    const handleContinueConfirm = async () => {
-      setShowContinueModal(false);
-      try {
-        let finalPatientNum = patientNum;
-        if (!finalPatientNum)
-      finalPatientNum = await createPatientRecord(
-        service,
-        subcategory,
-        preferredList
-      );
+  // One RPC call does everything: creates the patient row with the phone,
+  // the preferred cubicles, the subcategory, the queue position, and the number.
+  const createPatient = async (phoneToSave: string | null): Promise<string> => {
+    const { prefix, groupBySubcategory } = getPrefixInfo(service, subcategory);
 
-      await supabase
-        .from("patients")
-        .update({
-          phoneNum: parseInt(phone, 10),
-          preferredCubicleNums: preferredList,
-          subcategory: subcategory ?? null,
-        })
-        .eq("patientNum", finalPatientNum);
+    const t0 = performance.now();
+    const { data, error } = await supabase.rpc('create_patient', {
+      p_service: service.label_en,
+      p_subcategory: subcategory ?? null,
+      p_preferred_cubicles: preferredList,
+      p_prefix: prefix,
+      p_group_by_subcategory: groupBySubcategory,
+      p_phone: phoneToSave,
+    });
+    const elapsed = Math.round(performance.now() - t0);
 
-        router.push(`/kiosk/queue-print?patientNum=${finalPatientNum}&serviceId=${service.id}`);
-       } catch (e) {
-      alert(JSON.stringify(e));
+    if (error) throw error;
+    if (!data || data.length === 0) throw new Error('RPC returned no row');
 
-      console.log("ERROR:", e);
+    const row = data[0];
+    console.log(`${getTimestamp()} [DB INSERT] New Patient Created in ${elapsed}ms:`, {
+      id: row.id,
+      patientNum: row.patientNum,
+      queue_position: row.queue_position,
+      service: service.label_en,
+    });
+    return row.patientNum;
+  };
 
-      if (e instanceof Error) {
-        console.log("Message:", e.message);
-        console.log("Stack:", e.stack);
-      } else {
-        console.log("Unknown error:", e);
-      }
-    }
-      };
-
-const handleSkipConfirm = async () => {
-  setShowSkipModal(false);
-
-  try {
-    let finalPatientNum = patientNum;
-
-    if (!finalPatientNum) {
-      finalPatientNum = await createPatientRecord(
-        service,
-        subcategory,
-        preferredList
-      );
-    }
-
-    await supabase
-      .from("patients")
-      .update({
-        subcategory: subcategory ?? null,
-        preferredCubicleNums: preferredList,
-      })
-      .eq("patientNum", finalPatientNum);
-
-      const now = new Date();
-      const startOfDay = new Date(now.getFullYear(), now.getMonth(), now.getDate()).toISOString();
-
-      const { data } = await supabase
-        .from('patients')
-        .select()
-        .eq('patientNum', finalPatientNum)
-        .gte('created_at', startOfDay)
-        .order('created_at', { ascending: false })
-        .limit(1)
-        .single();
-
-      console.log(`${getTimestamp()} [SMS SKIP] Phone SMS skipped:`, { id: data?.id, created_at: data?.created_at, patientNum: data?.patientNum, phoneNum: data?.phoneNum, service: data?.service });
+  const handleContinueConfirm = async () => {
+    setShowContinueModal(false);
+    try {
+      const finalPatientNum = patientNum ?? await createPatient(phone);
+      setPatientNum(finalPatientNum);
       router.push(`/kiosk/queue-print?patientNum=${finalPatientNum}&serviceId=${service.id}`);
     } catch (e) {
-      console.error(`${getTimestamp()} [SMS SKIP ERROR] Failed to skip SMS for service "${service.label_en}":`, e);
+      console.error(`${getTimestamp()} [SMS SKIP ERROR]`, {
+        message: e instanceof Error ? e.message : String(e),
+        details: e,
+        stack: e instanceof Error ? e.stack : undefined,
+      });
+    }
+  };
+
+  const handleSkipConfirm = async () => {
+    setShowSkipModal(false);
+    try {
+      const finalPatientNum = patientNum ?? await createPatient(null);
+      setPatientNum(finalPatientNum);
+      console.log(`${getTimestamp()} [SMS SKIP] Patient created without phone:`, {
+        patientNum: finalPatientNum,
+        service: service.label_en,
+      });
+      router.push(`/kiosk/queue-print?patientNum=${finalPatientNum}&serviceId=${service.id}`);
+        } catch (e) {
+      console.error(`${getTimestamp()} [SMS SKIP ERROR]`, {
+        message: e instanceof Error ? e.message : String(e),
+        details: e,
+        stack: e instanceof Error ? e.stack : undefined,
+      });
     }
   };
 

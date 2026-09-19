@@ -15,6 +15,7 @@ export const CATEGORY_ICONS: Record<string, string> = {
 };
 
 export const ROTATE_TIMEOUT_MS = 2 * 60 * 1000;
+export const MAX_ROTATIONS_BEFORE_IDLE = 5;
 
 export const CONSULTATION_SUBCATEGORIES = ['Pedia', 'Adult'];
 

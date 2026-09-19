@@ -1,8 +1,8 @@
 'use client';
 import { Cubicle, Patient } from '@/types/Types';
 import { CubicleCard } from './CubicleCard';
-import { OnProgressSection } from './OnProgressSection';
 import { RegistrationCounterSection } from './RegistrationCounterSection';
+import { QueueAndIdleLayout } from './QueueAndIdleLayout';
 
 type OPScreeningFlowProps = {
   selectedSubcategory: string | null;
@@ -28,6 +28,9 @@ type OPScreeningFlowProps = {
   cubicleDoctorMap?: Record<string, string>;
   onReleaseFromCounter: (patient: Patient) => void;
   onAssignNow: (patient: Patient) => void;
+  idlePatients: Patient[];
+  onActivateIdle: (patient: Patient) => void;
+  onRemoveIdle: (patient: Patient) => void;
 };
 
 export function OPScreeningFlow({
@@ -54,8 +57,10 @@ export function OPScreeningFlow({
   cubicleDoctorMap = {},
   onReleaseFromCounter,
   onAssignNow,
+  idlePatients,
+  onActivateIdle,
+  onRemoveIdle,
 }: OPScreeningFlowProps) {
-
   if (!selectedSubcategory) {
     return (
       <div className="grid grid-cols-2 gap-3 max-w-md mx-auto mt-8">
@@ -118,8 +123,9 @@ export function OPScreeningFlow({
         onRelease={onReleaseFromCounter}
       />
       <div className="mt-4">
-        <OnProgressSection
-          patients={visibleOnProgress}
+        <QueueAndIdleLayout
+          onProgressPatients={visibleOnProgress}
+          idlePatients={idlePatients}
           isDraggable={isDragEnabled}
           selectedCategory="OPD Screening"
           draggedPatientId={draggedPatient?.id}
@@ -127,6 +133,8 @@ export function OPScreeningFlow({
           onSpeak={onSpeak}
           onAssignNow={onAssignNow}
           speakingId={speaking}
+          onActivateIdle={onActivateIdle}
+          onRemoveIdle={onRemoveIdle}
         />
       </div>
       <div className="grid grid-cols-5 gap-3 mt-4">

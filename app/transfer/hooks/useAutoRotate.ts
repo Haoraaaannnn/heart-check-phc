@@ -1,7 +1,8 @@
 'use client';
-import { useEffect } from 'react';
+import { useEffect, useRef } from 'react';
 import { Patient } from '@/types/Types';
 import { supabase } from '@/lib/supabase';
+import { MAX_ROTATIONS_BEFORE_IDLE } from '../lib/constants';
 
 const MANUAL_SERVICES = ['Consultation', 'OPD Screening'];
 
@@ -12,10 +13,15 @@ export function useAutoRotate(
   busyRef: React.MutableRefObject<boolean>,
   rotateTimeoutMs: number
 ) {
+  const onProgressRef = useRef(onProgressPatients);
+  const assignedRef = useRef(assignedPatients);
+
+  useEffect(() => { onProgressRef.current = onProgressPatients; }, [onProgressPatients]);
+  useEffect(() => { assignedRef.current = assignedPatients; }, [assignedPatients]);
+
   useEffect(() => {
     const interval = setInterval(async () => {
       if (busyRef.current) return;
-
       const now = Date.now();
 
       const isTimedOut = (p: Patient, startField: string | null | undefined) => {
@@ -24,18 +30,24 @@ export function useAutoRotate(
         return now - new Date(startField).getTime() >= rotateTimeoutMs;
       };
 
-      const timedOutOnProgress = onProgressPatients.filter(p =>
+      const timedOutOnProgress = onProgressRef.current.filter(p =>
         isTimedOut(p, p.progress_started_at)
       );
-      const topPatientsPerCubicle = Object.values(assignedPatients)
+      const topPatientsPerCubicle = Object.values(assignedRef.current)
         .map(patients => patients[0])
         .filter((p): p is Patient => !!p);
-
       const timedOutAssigned = topPatientsPerCubicle.filter(p =>
         isTimedOut(p, p.cubicle_top_started_at)
       );
 
+      console.log('[rotate] check result', {
+        timedOutOnProgress: timedOutOnProgress.map(p => p.patientNum),
+        timedOutAssigned: timedOutAssigned.map(p => p.patientNum),
+      });
+
       if (timedOutOnProgress.length === 0 && timedOutAssigned.length === 0) return;
+
+      console.log('[rotate] FIRING — rotating', timedOutOnProgress.length + timedOutAssigned.length, 'patients');
 
       busyRef.current = true;
       try {
@@ -47,39 +59,60 @@ export function useAutoRotate(
           .single();
 
         let nextPosition = (maxRow?.queue_position ?? 0) + 1;
+        const nowIso = new Date().toISOString();
 
-        const onProgressUpdates = timedOutOnProgress.map(p => ({
-          id: p.id,
-          queue_position: nextPosition++,
-          status: 'Waiting',
-          progress_started_at: null,
+        const buildUpdate = (p: Patient, extra: Record<string, any>) => {
+          const nextCount = (p.rotation_count ?? 0) + 1;
+          if (nextCount >= MAX_ROTATIONS_BEFORE_IDLE) {
+            return {
+              id: p.id,
+              status: 'Idle',
+              rotation_count: nextCount,
+              idle_at: nowIso,
+              queue_position: null,
+              cubicleNum: null,
+              called_at: null,
+              progress_started_at: null,
+              cubicle_top_started_at: null,
+            };
+          }
+          return {
+            id: p.id,
+            status: 'Waiting',
+            rotation_count: nextCount,
+            queue_position: nextPosition++,
+            progress_started_at: null,
+            ...extra,
+          };
+        };
+
+        const onProgressUpdates = timedOutOnProgress.map(p => buildUpdate(p, {}));
+        const assignedUpdates = timedOutAssigned.map(p => buildUpdate(p, {
+          cubicleNum: null,
+          called_at: null,
+          cubicle_top_started_at: null,
         }));
 
-      const assignedUpdates = timedOutAssigned.map(p => ({
-        id: p.id,
-        queue_position: nextPosition++,
-        status: 'Waiting',
-        cubicleNum: null,
-        called_at: null,
-        progress_started_at: null,
-        cubicle_top_started_at: null,
-      }));
+        console.log('[rotate] DB updates to write:', { onProgressUpdates, assignedUpdates });
 
         if (onProgressUpdates.length > 0) {
-          await supabase.from('patients').upsert(onProgressUpdates, { onConflict: 'id' });
+          const { error } = await supabase.from('patients').upsert(onProgressUpdates, { onConflict: 'id' });
+          if (error) console.error('[rotate] onProgress upsert failed:', error);
         }
         if (assignedUpdates.length > 0) {
-          await supabase.from('patients').upsert(assignedUpdates, { onConflict: 'id' });
+          const { error } = await supabase.from('patients').upsert(assignedUpdates, { onConflict: 'id' });
+          if (error) console.error('[rotate] assigned upsert failed:', error);
         }
 
         await fetchData();
+        console.log('[rotate] rotation complete');
       } catch (err) {
-        console.error('Auto-rotate error:', err);
+        console.error('[rotate] error:', err);
       } finally {
         busyRef.current = false;
       }
     }, 5000);
 
     return () => clearInterval(interval);
-  }, [onProgressPatients, assignedPatients, fetchData, busyRef]);
+  }, [fetchData, busyRef, rotateTimeoutMs]);
 }

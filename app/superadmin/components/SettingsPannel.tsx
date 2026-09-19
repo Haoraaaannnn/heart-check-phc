@@ -59,7 +59,7 @@ export function SettingsPanel() {
       <h2 className="text-xl font-bold text-gray-900 mb-1">Auto-Rotation Timeout</h2>
       <p className="text-gray-600 text-sm mb-4">
         How long a patient can sit on-progress or in a cubicle before automatically rotating back to the queue.
-        Applies to all auto-assign services (not Consultation / OPD Screening).
+        Applies to all services, including Consultation and OPD Screening.
       </p>
 
       {loading ? (

@@ -1,5 +1,5 @@
 'use client';
-import { useState, useRef } from 'react';
+import { useState, useRef, useEffect } from 'react';
 import { sendSMS } from '@/app/actions/sendSMS';
 import { supabase } from '@/lib/supabase';
 import { Patient } from '@/types/Types';
@@ -26,6 +26,12 @@ export function useDragAndDrop(
     dragStartPos.current = null;
   };
 
+  useEffect(() => {
+    const onBlur = () => resetDrag();
+    window.addEventListener('blur', onBlur);
+    return () => window.removeEventListener('blur', onBlur);
+  }, []);
+
   const handleDragStartFromQueue = (e: React.MouseEvent, patient: Patient) => {
     e.preventDefault();
     dragStartPos.current = { x: e.clientX, y: e.clientY };
@@ -40,67 +46,72 @@ export function useDragAndDrop(
     setDraggedPatient(patient);
     setDragSourceCubicle(cubicleNum);
   };
+  const movingBackIds = useRef<Set<number>>(new Set());
 
-  const handleMoveBackToProgress = async (
-    patient: Patient,
-    oldCubicleNum: string
-  ) => {
-    const isManual = !!patient.service && MANUAL_SERVICES.includes(patient.service);
+  const handleMoveBackToProgress = async (patient: Patient, oldCubicleNum: string) => {
+    if (movingBackIds.current.has(patient.id)) return;
+    movingBackIds.current.add(patient.id);
 
-    if (isManual) {
-      const cooldownUntil = new Date(Date.now() + 60 * 1000).toISOString(); 
-      
+    try {
+      const isManual = !!patient.service && MANUAL_SERVICES.includes(patient.service);
+
+      if (isManual) {
+        const cooldownUntil = new Date(Date.now() + 60 * 1000).toISOString();
+
+        setAssignedPatients(prev => ({
+          ...prev,
+          [oldCubicleNum]: (prev[oldCubicleNum] || []).filter(p => p.id !== patient.id),
+        }));
+
+        setOnProgressPatients(prev => [
+          ...prev,
+          { ...patient, cubicleNum: null, status: 'On Progress', cooldown_until: cooldownUntil },
+        ]);
+
+        setPendingUpdates(prev => [
+          ...prev.filter(p => p.id !== patient.id),
+          { ...patient, cubicleNum: null, status: 'On Progress', cooldown_until: cooldownUntil },
+        ]);
+        return; // finally still runs, lock still releases
+      }
+
+      const { data: minRow } = await supabase
+        .from('patients')
+        .select('queue_position')
+        .order('queue_position', { ascending: true })
+        .limit(1)
+        .single();
+
+      const frontPosition = (minRow?.queue_position ?? 1) - 1;
+
       setAssignedPatients(prev => ({
         ...prev,
-        [oldCubicleNum]: (prev[oldCubicleNum] || []).filter(
-          p => p.id !== patient.id
-        )
+        [oldCubicleNum]: (prev[oldCubicleNum] || []).filter(p => p.id !== patient.id),
       }));
-
       setOnProgressPatients(prev => [
         ...prev,
-        {
-          ...patient,
-          cubicleNum: null,
-          status: "On Progress",
-          cooldown_until: cooldownUntil,
-        }
+        { ...patient, cubicleNum: null, status: 'Waiting', queue_position: frontPosition },
       ]);
 
-      setPendingUpdates(prev => [
-        ...prev.filter(p => p.id !== patient.id),
-        {
-          ...patient,
+      await supabase
+        .from('patients')
+        .update({
           cubicleNum: null,
-          status: "On Progress",
-          cooldown_until: cooldownUntil,
-        }
-      ]);
-      return;
+          status: 'Waiting',
+          called_at: null,
+          progress_started_at: null,
+          cubicle_top_started_at: null,
+          queue_position: frontPosition,
+        })
+        .eq('id', patient.id);
+
+      await fetchData();
+    } catch (err) {
+      console.error('Failed to move patient back to progress:', err);
+      fetchData(); // reconcile UI with the server if something went wrong
+    } finally {
+      movingBackIds.current.delete(patient.id); // always release, no matter what happened above
     }
-
-    const { data: minRow } = await supabase
-      .from('patients')
-      .select('queue_position')
-      .order('queue_position', { ascending: true })
-      .limit(1)
-      .single();
-
-    const frontPosition = (minRow?.queue_position ?? 1) - 1;
-
-    await supabase
-      .from('patients')
-      .update({
-        cubicleNum: null,
-        status: 'Waiting',
-        called_at: null,
-        progress_started_at: null,
-        cubicle_top_started_at: null,
-        queue_position: frontPosition,
-      })
-      .eq('id', patient.id);
-
-    await fetchData();
   };
 
   const setupGlobalDragHandlers = (isDragEnabled: boolean) => {

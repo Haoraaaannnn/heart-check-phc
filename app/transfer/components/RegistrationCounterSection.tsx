@@ -1,5 +1,6 @@
 'use client';
 import { Patient } from '@/types/Types';
+import { ElapsedTimer } from './ElapsedTimer';
 
 type RegistrationCounterSectionProps = {
   patients: Patient[];
@@ -33,7 +34,8 @@ export function RegistrationCounterSection({
           const counterPatients = patients
             .filter(p => p.counter === counterNum)
             .sort((a, b) =>
-              new Date(a.created_at || 0).getTime() - new Date(b.created_at || 0).getTime()
+              new Date(a.counter_rejoin_at || a.created_at || 0).getTime() -
+              new Date(b.counter_rejoin_at || b.created_at || 0).getTime()
             );
           const isOver = dragOverCounter === counterNum;
 
@@ -76,6 +78,10 @@ export function RegistrationCounterSection({
                     {p.subcategory && ` · ${p.subcategory}`}
                   </span>
                   <div className={`w-2 h-2 rounded-full ${i === 0 ? 'bg-green-400' : 'bg-gray-200'}`} />
+
+                  {i === 0 && (
+                    <ElapsedTimer startedAt={p.counter_top_started_at ?? undefined} />
+                  )}
 
                   {i === 0 && (
                     <button

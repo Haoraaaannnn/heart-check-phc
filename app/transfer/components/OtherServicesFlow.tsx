@@ -1,7 +1,7 @@
 'use client';
-import { Cubicle } from '@/types/Types';
+import { Cubicle, Patient } from '@/types/Types';
 import { CubicleCard } from './CubicleCard';
-import { OnProgressSection } from './OnProgressSection';
+import { QueueAndIdleLayout } from './QueueAndIdleLayout';
 
 type OtherServicesFlowProps = {
   visibleCubicles: Cubicle[];
@@ -17,6 +17,9 @@ type OtherServicesFlowProps = {
   onMoveBackToProgress: (patient: any, cubicleNum: string) => void;
   isDragEnabled: boolean;
   rotateTimeoutMs: number;
+  idlePatients: Patient[];
+  onActivateIdle: (patient: Patient) => void;
+  onRemoveIdle: (patient: Patient) => void;
 };
 
 export function OtherServicesFlow({
@@ -33,11 +36,15 @@ export function OtherServicesFlow({
   onMoveBackToProgress,
   isDragEnabled,
   rotateTimeoutMs,
+  idlePatients,
+  onActivateIdle,
+  onRemoveIdle,
 }: OtherServicesFlowProps) {
   return (
     <>
-      <OnProgressSection
-        patients={visibleOnProgress}
+      <QueueAndIdleLayout
+        onProgressPatients={visibleOnProgress}
+        idlePatients={idlePatients}
         isDraggable={isDragEnabled}
         selectedCategory={selectedCategory}
         draggedPatientId={draggedPatient?.id}
@@ -45,6 +52,9 @@ export function OtherServicesFlow({
         onSpeak={onSpeak}
         speakingId={speaking}
         warnAfterSeconds={rotateTimeoutMs / 1000}
+        onActivateIdle={onActivateIdle}
+        onRemoveIdle={onRemoveIdle}
+        // ← no onAssignNow passed, which is fine now
       />
       <div className={`grid ${visibleCubicles.length === 5 ? 'grid-cols-5' : 'grid-cols-3'} gap-3 mt-4`}>
         {visibleCubicles.map(cubicle => (
