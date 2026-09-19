@@ -25,6 +25,8 @@ Directory structure:
     │   │   └── superadmin/
     │   │       ├── create-user/
     │   │       │   └── route.ts
+    │   │       ├── cubicles/
+    │   │       │   └── route.ts
     │   │       ├── delete-user/
     │   │       │   └── route.ts
     │   │       ├── sync-users/
@@ -41,6 +43,7 @@ Directory structure:
     │   │   │   │   ├── ArimaForecast.tsx
     │   │   │   │   ├── BottleneckStageTable.tsx
     │   │   │   │   ├── DateRangeSelector.tsx
+    │   │   │   │   ├── ExportExcelButton.tsx
     │   │   │   │   ├── LRForecast.tsx
     │   │   │   │   ├── MetricCardShow.tsx
     │   │   │   │   ├── PHCComplianceSummary.tsx
@@ -66,37 +69,21 @@ Directory structure:
     │   │   │   ├── useBottleneckNotifications.ts
     │   │   │   ├── useIdleTimeout.ts
     │   │   │   └── useOverviewData.ts
-    │   │   ├── patients/
-    │   │   │   ├── page.tsx
-    │   │   │   ├── components/
-    │   │   │   │   ├── HourlyPatientFlowChart.tsx
-    │   │   │   │   ├── PatientStatGrid.tsx
-    │   │   │   │   ├── RecentPatientTable.tsx
-    │   │   │   │   └── ServiceDistributionChart.tsx
-    │   │   │   ├── constants/
-    │   │   │   │   └── patients.ts
-    │   │   │   └── hooks/
-    │   │   │       ├── usePatientsAnalyticsData.ts
-    │   │   │       └── usePatientsData.ts
-    │   │   └── servicesPHC/
-    │   │       ├── benzathine/
-    │   │       │   └── page.tsx
+    │   │   └── patients/
+    │   │       ├── page.tsx
     │   │       ├── components/
-    │   │       │   └── ServiceDashboard.tsx
-    │   │       ├── consultation/
-    │   │       │   └── page.tsx
-    │   │       ├── ecg/
-    │   │       │   └── page.tsx
-    │   │       ├── opdCard/
-    │   │       │   └── page.tsx
-    │   │       ├── opdReschedule/
-    │   │       │   └── page.tsx
-    │   │       ├── opdScreening/
-    │   │       │   └── page.tsx
-    │   │       ├── refillPrescription/
-    │   │       │   └── page.tsx
-    │   │       └── warfarin/
-    │   │           └── page.tsx
+    │   │       │   ├── HourlyPatientFlowChart.tsx
+    │   │       │   ├── PatientStatGrid.tsx
+    │   │       │   ├── RecentPatientTable.tsx
+    │   │       │   ├── ServiceDistributionChart.tsx
+    │   │       │   ├── ServiceFilterBar.tsx
+    │   │       │   └── ServiceQueuePanel.tsx
+    │   │       ├── constants/
+    │   │       │   └── patients.ts
+    │   │       └── hooks/
+    │   │           ├── usePatientsAnalyticsData.ts
+    │   │           ├── usePatientsData.ts
+    │   │           └── useServiceQueue.ts
     │   ├── kiosk/
     │   │   ├── layout.tsx
     │   │   ├── confirmation/
@@ -134,6 +121,8 @@ Directory structure:
     │   │   │       ├── KioskHeader.tsx
     │   │   │       ├── KioskServicesCard.tsx
     │   │   │       └── KioskServicesGrid.tsx
+    │   │   ├── opd-screening-category/
+    │   │   │   └── page.tsx
     │   │   ├── queue-print/
     │   │   │   ├── layout.tsx
     │   │   │   ├── page.tsx
@@ -207,9 +196,11 @@ Directory structure:
     │       │   ├── DoctorsModal.tsx
     │       │   ├── DoctorsPanel.tsx
     │       │   ├── ElapsedTimer.tsx
+    │       │   ├── IdleNumbersSection.tsx
     │       │   ├── OnProgressSection.tsx
     │       │   ├── OPScreeningFlow.tsx
     │       │   ├── OtherServicesFlow.tsx
+    │       │   ├── QueueAndIdleLayout.tsx
     │       │   ├── RegistrationCounterSection.tsx
     │       │   └── Sidebar.tsx
     │       ├── hooks/
@@ -217,10 +208,13 @@ Directory structure:
     │       │   ├── useAutoRotate.ts
     │       │   ├── useCubicleData.ts
     │       │   ├── useDragAndDrop.ts
+    │       │   ├── useIdlePatients.ts
     │       │   ├── useIdleTimeout.ts
+    │       │   ├── useMaxRotations.ts
     │       │   ├── usePatientData.ts
     │       │   ├── useRealtimeSubscription.ts
     │       │   ├── useRegistrationDragAndDrop.ts
+    │       │   ├── useRegistrationRotate.ts
     │       │   ├── useRequireAuth.ts
     │       │   └── useRotateTimeout.ts
     │       └── lib/
@@ -251,8 +245,7 @@ Directory structure:
     │   ├── PRD.md
     │   ├── SCHEMA_REFERENCE.md
     │   ├── SECURITY.md
-    │   ├── SETUP_AND_SEEDING.md
-    │   └── TASKS.md
+    │   └── SETUP_AND_SEEDING.md
     ├── fonts/
     │   └── fonts.ts
     ├── lib/
@@ -276,10 +269,12 @@ Directory structure:
     │   ├── main.py
     │   ├── requirements.txt
     │   ├── run.py
+    │   ├── simulated_patients.csv
     │   ├── analytics/
     │   │   ├── __init__.py
     │   │   ├── constants.py
     │   │   ├── descriptive.py
+    │   │   ├── export.py
     │   │   ├── forecasting.py
     │   │   ├── helpers.py
     │   │   ├── preprocessing.py
@@ -299,4 +294,5 @@ Directory structure:
         ├── chartDataPrep.ts
         ├── formatMinutesToHMS.ts
         └── waitTime.ts
+
 ```
