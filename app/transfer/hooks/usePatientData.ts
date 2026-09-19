@@ -52,8 +52,8 @@ export function usePatientData() {
       .sort((a, b) => (a.queue_position ?? 0) - (b.queue_position ?? 0));
 
     const processedQueue = [...queue];
-    const onProgress = processedQueue.slice(0, 5);
-    const waiting = processedQueue.slice(5);
+    const onProgress = processedQueue;
+    const waiting: Patient[] = [];
 
     const reorderUpdates = queue
       .map((p, i) => ({ id: p.id, queue_position: i + 1, current: p.queue_position }))

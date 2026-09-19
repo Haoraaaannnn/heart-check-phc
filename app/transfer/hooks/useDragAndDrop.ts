@@ -55,25 +55,25 @@ export function useDragAndDrop(
     try {
       const isManual = !!patient.service && MANUAL_SERVICES.includes(patient.service);
 
-      if (isManual) {
-        const cooldownUntil = new Date(Date.now() + 60 * 1000).toISOString();
+    if (isManual) {
+      const cooldownUntil = new Date(Date.now() + 60 * 1000).toISOString();
 
-        setAssignedPatients(prev => ({
-          ...prev,
-          [oldCubicleNum]: (prev[oldCubicleNum] || []).filter(p => p.id !== patient.id),
-        }));
+      setAssignedPatients(prev => ({
+        ...prev,
+        [oldCubicleNum]: (prev[oldCubicleNum] || []).filter(p => p.id !== patient.id),
+      }));
 
-        setOnProgressPatients(prev => [
-          ...prev,
-          { ...patient, cubicleNum: null, status: 'On Progress', cooldown_until: cooldownUntil },
-        ]);
+      setOnProgressPatients(prev => [
+        ...prev,
+        { ...patient, cubicleNum: null, status: 'On Progress', progress_started_at: null, cooldown_until: cooldownUntil },
+      ]);
 
-        setPendingUpdates(prev => [
-          ...prev.filter(p => p.id !== patient.id),
-          { ...patient, cubicleNum: null, status: 'On Progress', cooldown_until: cooldownUntil },
-        ]);
-        return;
-      }
+      setPendingUpdates(prev => [
+        ...prev.filter(p => p.id !== patient.id),
+        { ...patient, cubicleNum: null, status: 'On Progress', progress_started_at: null, cooldown_until: cooldownUntil },
+      ]);
+      return;
+    }
 
       const { data: minRow } = await supabase
         .from('patients')

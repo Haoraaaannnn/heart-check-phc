@@ -2,7 +2,6 @@
 import { useEffect, useRef } from 'react';
 import { Patient } from '@/types/Types';
 import { supabase } from '@/lib/supabase';
-import { MAX_ROTATIONS_BEFORE_IDLE } from '../lib/constants';
 
 const MANUAL_SERVICES: string[] = [];
 
@@ -11,7 +10,8 @@ export function useAutoRotate(
   assignedPatients: Record<string, Patient[]>,
   fetchData: () => Promise<void>,
   busyRef: React.MutableRefObject<boolean>,
-  rotateTimeoutMs: number
+  rotateTimeoutMs: number,
+  maxRotations: number
 ) {
   const onProgressRef = useRef(onProgressPatients);
   const assignedRef = useRef(assignedPatients);
@@ -64,7 +64,7 @@ export function useAutoRotate(
         const buildUpdate = (p: Patient, extra: Record<string, any>) => {
           const nextCount = (p.rotation_count ?? 0) + 1;
 
-          if (nextCount >= MAX_ROTATIONS_BEFORE_IDLE) {
+          if (nextCount >= maxRotations) { 
             return {
               id: p.id,
               status: 'Idle',
@@ -85,6 +85,8 @@ export function useAutoRotate(
               id: p.id,
               status: 'On Progress',
               rotation_count: nextCount,
+              queue_position: nextPosition++,
+              progress_started_at: null,
               cooldown_until: new Date(Date.now() + 60 * 1000).toISOString(),
               ...extra,
             };
@@ -140,5 +142,5 @@ export function useAutoRotate(
     }, 5000);
 
     return () => clearInterval(interval);
-  }, [fetchData, busyRef, rotateTimeoutMs]);
+  }, [fetchData, busyRef, rotateTimeoutMs, maxRotations]);
 }

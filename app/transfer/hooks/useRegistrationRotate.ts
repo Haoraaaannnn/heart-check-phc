@@ -8,7 +8,8 @@ export function useRegistrationRotate(
   registrationPatients: Patient[],
   fetchRegistrationPatients: () => Promise<void>,
   busyRef: React.MutableRefObject<boolean>,
-  rotateTimeoutMs: number
+  rotateTimeoutMs: number,
+  maxRotations: number
 ) {
   useEffect(() => {
     const interval = setInterval(async () => {
@@ -44,7 +45,7 @@ export function useRegistrationRotate(
 
         const updates = timedOutTops.map((p) => {
           const nextCount = (p.rotation_count ?? 0) + 1;
-          if (nextCount >= MAX_ROTATIONS_BEFORE_IDLE) {
+          if (nextCount >= maxRotations) {
             return {
               id: p.id,
               status: 'Idle',
@@ -73,5 +74,5 @@ export function useRegistrationRotate(
     }, 5000);
 
     return () => clearInterval(interval);
-  }, [registrationPatients, fetchRegistrationPatients, busyRef, rotateTimeoutMs]);
+  }, [registrationPatients, fetchRegistrationPatients, busyRef, rotateTimeoutMs, maxRotations]); 
 }

@@ -40,15 +40,15 @@ export function RegistrationCounterSection({
           const isOver = dragOverCounter === counterNum;
 
           return (
-            <div
-              key={counterNum}
-              data-counter={counterNum}
-              className={`min-h-24 rounded-2xl border-2 p-3 flex flex-col gap-2 transition ${
-                isOver
-                  ? 'border-blue-400 bg-blue-50'
-                  : 'border-gray-100 bg-gray-50'
-              }`}
-            >
+              <div
+                key={counterNum}
+                data-counter={counterNum}
+                className={`min-h-24 max-h-[420px] overflow-y-auto rounded-2xl border-2 p-3 flex flex-col gap-2 transition ${
+                  isOver
+                    ? 'border-blue-400 bg-blue-50'
+                    : 'border-gray-100 bg-gray-50'
+                }`}
+              >
               <span className="text-xs font-semibold text-gray-500 uppercase tracking-wider text-center">
                 Counter {counterNum}
               </span>

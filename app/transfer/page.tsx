@@ -13,6 +13,7 @@ import { useAutoAssign } from './hooks/useAutoAssign';
 import { useDragAndDrop } from './hooks/useDragAndDrop';
 import { useRealtimeSubscription } from './hooks/useRealtimeSubscription';
 import { sendSMS } from "@/app/actions/sendSMS";
+import { useMaxRotations } from './hooks/useMaxRotations';
 
 import { useRegistrationDragAndDrop } from './hooks/useRegistrationDragAndDrop';
 import { Patient, Cubicle } from '@/types/Types';
@@ -45,6 +46,7 @@ export default function TransferPage() {
   const [isSyncing, setIsSyncing] = useState(false);
 
   const rotateTimeoutMs = useRotateTimeout();
+  const maxRotations = useMaxRotations();
 
   const { idlePatients, fetchIdlePatients, activatePatient, removePatient } = useIdlePatients();
   const registrationRotateBusy = useRef(false);
@@ -240,7 +242,8 @@ export default function TransferPage() {
     setAssignedPatients,
     autoAssignBusy
   );
-  useAutoRotate(onProgressPatients, assignedPatients, syncNow, autoRotateBusy, rotateTimeoutMs);
+  useAutoRotate(onProgressPatients, assignedPatients, syncNow, autoRotateBusy, rotateTimeoutMs, maxRotations);
+  useRegistrationRotate(registrationPatients, fetchRegistrationPatients, registrationRotateBusy, rotateTimeoutMs, maxRotations);
 
   useEffect(() => {
     pendingUpdatesRef.current = pendingUpdates;
@@ -386,6 +389,7 @@ export default function TransferPage() {
           (patient.status === "Assigned" ? now : null),
         queue_position: 9999,
         cooldown_until: patient.cooldown_until ?? null,
+        progress_started_at: patient.progress_started_at ?? null, 
       }));
 
       await supabase.from("patients").upsert(patientUpdates, { onConflict: "id" });
