@@ -150,13 +150,6 @@ export default function TransferPage() {
     }
   }, []);
 
-  useRegistrationRotate(
-    registrationPatients,
-    fetchRegistrationPatients,
-    registrationRotateBusy,
-    rotateTimeoutMs
-  );
-
   const reapplyPendingUpdates = useCallback((pending: Patient[]) => {
     if (pending.length === 0) return;
     const pendingIds = pending.map(p => p.id);
