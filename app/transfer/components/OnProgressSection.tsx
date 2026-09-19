@@ -10,7 +10,7 @@ type OnProgressSectionProps = {
   draggedPatientId?: number;
   onDragStart: (e: React.MouseEvent, patient: Patient) => void;
   onSpeak: (text: string, patientId: number) => void;
-  onAssignNow?: (patient: Patient) => void; // ← made optional
+  onAssignNow?: (patient: Patient) => void;
   speakingId?: number | null;
   warnAfterSeconds?: number;
   compact?: boolean;

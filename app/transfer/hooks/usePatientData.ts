@@ -27,8 +27,6 @@ export function usePatientData() {
   const [onProgressPatients, setOnProgressPatients] = useState<Patient[]>([]);
   const [assignedPatients, setAssignedPatients] = useState<Record<string, Patient[]>>({});
 
-  // Guards against out-of-order responses: only the most recent fetchData() call
-  // is allowed to apply its results to state.
   const fetchIdRef = useRef(0);
 
   const fetchData = useCallback(async () => {
@@ -165,7 +163,6 @@ export function usePatientData() {
       }
     }
 
-    // NOTE: this upsert used to run twice in a row (duplicate bug) — now runs once.
     if (topStartUpdates.length > 0) {
       await supabase.from('patients').upsert(topStartUpdates, { onConflict: 'id' });
     }
@@ -173,7 +170,6 @@ export function usePatientData() {
       await supabase.from('patients').upsert(clearUpdates, { onConflict: 'id' });
     }
 
-    // Discard this result if a newer fetchData() call has started since we began.
     if (requestId !== fetchIdRef.current) return;
 
     setOnProgressPatients(onProgress);

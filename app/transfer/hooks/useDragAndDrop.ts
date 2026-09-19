@@ -72,7 +72,7 @@ export function useDragAndDrop(
           ...prev.filter(p => p.id !== patient.id),
           { ...patient, cubicleNum: null, status: 'On Progress', cooldown_until: cooldownUntil },
         ]);
-        return; // finally still runs, lock still releases
+        return;
       }
 
       const { data: minRow } = await supabase
@@ -108,9 +108,9 @@ export function useDragAndDrop(
       await fetchData();
     } catch (err) {
       console.error('Failed to move patient back to progress:', err);
-      fetchData(); // reconcile UI with the server if something went wrong
+      fetchData();
     } finally {
-      movingBackIds.current.delete(patient.id); // always release, no matter what happened above
+      movingBackIds.current.delete(patient.id);
     }
   };
 

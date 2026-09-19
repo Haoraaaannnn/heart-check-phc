@@ -4,7 +4,7 @@ import { Patient } from '@/types/Types';
 import { supabase } from '@/lib/supabase';
 import { MAX_ROTATIONS_BEFORE_IDLE } from '../lib/constants';
 
-const MANUAL_SERVICES = ['Consultation', 'OPD Screening'];
+const MANUAL_SERVICES: string[] = [];
 
 export function useAutoRotate(
   onProgressPatients: Patient[],
@@ -63,6 +63,7 @@ export function useAutoRotate(
 
         const buildUpdate = (p: Patient, extra: Record<string, any>) => {
           const nextCount = (p.rotation_count ?? 0) + 1;
+
           if (nextCount >= MAX_ROTATIONS_BEFORE_IDLE) {
             return {
               id: p.id,
@@ -76,6 +77,19 @@ export function useAutoRotate(
               cubicle_top_started_at: null,
             };
           }
+
+          const alreadyRegistered = p.service === 'Consultation' || p.service === 'OPD Screening';
+
+          if (alreadyRegistered) {
+            return {
+              id: p.id,
+              status: 'On Progress',
+              rotation_count: nextCount,
+              cooldown_until: new Date(Date.now() + 60 * 1000).toISOString(),
+              ...extra,
+            };
+          }
+
           return {
             id: p.id,
             status: 'Waiting',
@@ -95,14 +109,26 @@ export function useAutoRotate(
 
         console.log('[rotate] DB updates to write:', { onProgressUpdates, assignedUpdates });
 
-        if (onProgressUpdates.length > 0) {
-          const { error } = await supabase.from('patients').upsert(onProgressUpdates, { onConflict: 'id' });
-          if (error) console.error('[rotate] onProgress upsert failed:', error);
+      if (onProgressUpdates.length > 0) {
+        const { error } = await supabase.from('patients').upsert(onProgressUpdates, { onConflict: 'id' });
+        if (error) {
+          console.error('[rotate] onProgress upsert failed:', {
+            message: error.message,
+            details: error.details,
+            hint: error.hint,
+            code: error.code,
+          });
         }
-        if (assignedUpdates.length > 0) {
-          const { error } = await supabase.from('patients').upsert(assignedUpdates, { onConflict: 'id' });
-          if (error) console.error('[rotate] assigned upsert failed:', error);
+      }
+      if (assignedUpdates.length > 0) {
+        const { error } = await supabase.from('patients').upsert(assignedUpdates, { onConflict: 'id' });
+        if (error) {
+          console.error('[rotate] assigned upsert failed — raw:', error);
+          console.error('[rotate] assigned upsert failed — stringified:', JSON.stringify(error));
+          console.error('[rotate] assigned upsert failed — keys:', Object.keys(error));
+          console.error('[rotate] payload that failed:', JSON.stringify(assignedUpdates));
         }
+      }
 
         await fetchData();
         console.log('[rotate] rotation complete');

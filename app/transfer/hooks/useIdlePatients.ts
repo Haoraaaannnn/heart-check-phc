@@ -55,13 +55,24 @@ export function useIdlePatients() {
       .eq('id', patient.id);
   }, []);
 
-  const removePatient = useCallback(async (patient: Patient) => {
+    const removePatient = useCallback(async (patient: Patient) => {
     setIdlePatients(prev => prev.filter(p => p.id !== patient.id));
-    await supabase
-      .from('patients')
-      .update({ status: 'Removed', removed_at: new Date().toISOString() })
-      .eq('id', patient.id);
-  }, []);
+
+    const { error } = await supabase
+        .from('patients')
+        .update({ status: 'Removed', removed_at: new Date().toISOString() })
+        .eq('id', patient.id);
+
+    if (error) {
+        console.error('Failed to remove idle patient:', {
+        message: error.message,
+        details: error.details,
+        hint: error.hint,
+        code: error.code,
+        });
+        setIdlePatients(prev => [...prev, patient]);
+    }
+    }, []);
 
   return { idlePatients, fetchIdlePatients, activatePatient, removePatient };
 }

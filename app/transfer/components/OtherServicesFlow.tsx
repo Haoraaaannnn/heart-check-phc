@@ -54,7 +54,6 @@ export function OtherServicesFlow({
         warnAfterSeconds={rotateTimeoutMs / 1000}
         onActivateIdle={onActivateIdle}
         onRemoveIdle={onRemoveIdle}
-        // ← no onAssignNow passed, which is fine now
       />
       <div className={`grid ${visibleCubicles.length === 5 ? 'grid-cols-5' : 'grid-cols-3'} gap-3 mt-4`}>
         {visibleCubicles.map(cubicle => (

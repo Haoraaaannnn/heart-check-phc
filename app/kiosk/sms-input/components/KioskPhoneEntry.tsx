@@ -62,8 +62,6 @@ export default function KioskPhoneEntry({
   const addDigit = (digit: string) => { if (phone.length < MAX) setPhone((p) => p + digit); };
   const deleteLast = () => setPhone((p) => p.slice(0, -1));
 
-  // One RPC call does everything: creates the patient row with the phone,
-  // the preferred cubicles, the subcategory, the queue position, and the number.
   const createPatient = async (phoneToSave: string | null): Promise<string> => {
     const { prefix, groupBySubcategory } = getPrefixInfo(service, subcategory);
 
