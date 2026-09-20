@@ -248,6 +248,9 @@ Directory structure:
     │   └── SETUP_AND_SEEDING.md
     ├── fonts/
     │   └── fonts.ts
+    ├── hooks/
+    │   ├── useIsLandscape.ts
+    │   └── useIsMounted.ts
     ├── lib/
     │   ├── logger.ts
     │   ├── printer.ts
