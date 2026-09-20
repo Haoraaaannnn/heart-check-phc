@@ -2,6 +2,7 @@
 import { useEffect, useRef } from 'react';
 import { Patient } from '@/types/Types';
 import { supabase } from '@/lib/supabase';
+import { callRotateApi } from '../lib/rotateApi';
 
 const MANUAL_SERVICES: string[] = [];
 
@@ -111,27 +112,15 @@ export function useAutoRotate(
 
         console.log('[rotate] DB updates to write:', { onProgressUpdates, assignedUpdates });
 
-      if (onProgressUpdates.length > 0) {
-        const { error } = await supabase.from('patients').upsert(onProgressUpdates, { onConflict: 'id' });
-        if (error) {
-          console.error('[rotate] onProgress upsert failed:', {
-            message: error.message,
-            details: error.details,
-            hint: error.hint,
-            code: error.code,
-          });
+        if (onProgressUpdates.length > 0) {
+          await callRotateApi(onProgressUpdates);
         }
-      }
-      if (assignedUpdates.length > 0) {
-        const { error } = await supabase.from('patients').upsert(assignedUpdates, { onConflict: 'id' });
-        if (error) {
-          console.error('[rotate] assigned upsert failed — raw:', error);
-          console.error('[rotate] assigned upsert failed — stringified:', JSON.stringify(error));
-          console.error('[rotate] assigned upsert failed — keys:', Object.keys(error));
-          console.error('[rotate] payload that failed:', JSON.stringify(assignedUpdates));
+        if (assignedUpdates.length > 0) {
+          await callRotateApi(assignedUpdates);
         }
-      }
 
+        await fetchData();
+        console.log('[rotate] rotation complete');
         await fetchData();
         console.log('[rotate] rotation complete');
       } catch (err) {
