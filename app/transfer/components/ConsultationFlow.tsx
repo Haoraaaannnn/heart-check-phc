@@ -63,17 +63,43 @@ export function ConsultationFlow({
   onRemoveIdle,
 }: ConsultationFlowProps) {
   if (!selectedSubcategory) {
+    const countFor = (sub: string) => ({
+      queue: visibleOnProgress.filter(p => p.subcategory === sub).length,
+      idle: idlePatients.filter(p => p.subcategory === sub).length,
+      registration: registrationPatients.filter(p => p.subcategory === sub).length,
+    });
+
     return (
       <div className="grid grid-cols-2 gap-3 max-w-md mx-auto mt-8">
-        {CONSULTATION_SUBCATEGORIES.map(sub => (
-          <button key={sub} onClick={() => onSelectSubcategory(sub)}
-            className="bg-white border-2 border-gray-100 hover:border-red-200 rounded-3xl p-6 flex flex-col gap-2 shadow-sm transition text-left">
-            <div className="w-10 h-10 bg-red-50 rounded-2xl flex items-center justify-center">
-              <i className={`bx ${sub === 'Pedia' ? 'bx-child' : 'bx-male'} text-xl text-[#cc3535]`}></i>
-            </div>
-            <span className="text-gray-700 font-semibold text-sm">{sub}</span>
-          </button>
-        ))}
+        {CONSULTATION_SUBCATEGORIES.map(sub => {
+          const counts = countFor(sub);
+          const total = counts.queue + counts.idle + counts.registration;
+          return (
+            <button key={sub} onClick={() => onSelectSubcategory(sub)}
+              className="bg-white border-2 border-gray-100 hover:border-red-200 rounded-3xl p-6 flex flex-col gap-2 shadow-sm transition text-left">
+              <div className="flex items-start justify-between gap-2">
+                <div className="w-10 h-10 bg-red-50 rounded-2xl flex items-center justify-center">
+                  <i className={`bx ${sub === 'Pedia' ? 'bx-child' : 'bx-male'} text-xl text-[#cc3535]`}></i>
+                </div>
+                {total > 0 && (
+                  <span className="text-[11px] font-bold px-2 py-0.5 rounded-full bg-red-100 text-[#cc3535]">
+                    {total}
+                  </span>
+                )}
+              </div>
+              <span className="text-gray-700 font-semibold text-sm">{sub}</span>
+              {total > 0 && (
+                <span className="text-[11px] text-gray-400">
+                  {counts.queue > 0 && `${counts.queue} in queue`}
+                  {counts.queue > 0 && (counts.registration > 0 || counts.idle > 0) && ' · '}
+                  {counts.registration > 0 && `${counts.registration} at counter`}
+                  {counts.registration > 0 && counts.idle > 0 && ' · '}
+                  {counts.idle > 0 && `${counts.idle} idle`}
+                </span>
+              )}
+            </button>
+          );
+        })}
       </div>
     );
   }

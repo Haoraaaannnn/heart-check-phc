@@ -2,6 +2,7 @@
 import { useEffect, useRef } from 'react';
 import { Patient } from '@/types/Types';
 import { supabase } from '@/lib/supabase';
+import { callRotateApi } from '../lib/rotateApi';
 
 const MANUAL_SERVICES: string[] = [];
 
@@ -11,7 +12,9 @@ export function useAutoRotate(
   fetchData: () => Promise<void>,
   busyRef: React.MutableRefObject<boolean>,
   rotateTimeoutMs: number,
-  maxRotations: number
+  maxRotations: number,
+  pendingIdsRef: React.MutableRefObject<Set<number>>,
+  confirmingRef?: React.MutableRefObject<boolean>
 ) {
   const onProgressRef = useRef(onProgressPatients);
   const assignedRef = useRef(assignedPatients);
@@ -22,10 +25,15 @@ export function useAutoRotate(
   useEffect(() => {
     const interval = setInterval(async () => {
       if (busyRef.current) return;
+
+      if (confirmingRef?.current) return;
       const now = Date.now();
+      const pendingIds = pendingIdsRef.current;
 
       const isTimedOut = (p: Patient, startField: string | null | undefined) => {
         if (!p.service || MANUAL_SERVICES.includes(p.service)) return false;
+
+        if (pendingIds.has(p.id)) return false;
         if (!startField) return false;
         return now - new Date(startField).getTime() >= rotateTimeoutMs;
       };
@@ -33,8 +41,9 @@ export function useAutoRotate(
       const timedOutOnProgress = onProgressRef.current.filter(p =>
         isTimedOut(p, p.progress_started_at)
       );
+
       const topPatientsPerCubicle = Object.values(assignedRef.current)
-        .map(patients => patients[0])
+        .map(patients => patients.filter(p => !pendingIds.has(p.id))[0])
         .filter((p): p is Patient => !!p);
       const timedOutAssigned = topPatientsPerCubicle.filter(p =>
         isTimedOut(p, p.cubicle_top_started_at)
@@ -111,26 +120,12 @@ export function useAutoRotate(
 
         console.log('[rotate] DB updates to write:', { onProgressUpdates, assignedUpdates });
 
-      if (onProgressUpdates.length > 0) {
-        const { error } = await supabase.from('patients').upsert(onProgressUpdates, { onConflict: 'id' });
-        if (error) {
-          console.error('[rotate] onProgress upsert failed:', {
-            message: error.message,
-            details: error.details,
-            hint: error.hint,
-            code: error.code,
-          });
+        if (onProgressUpdates.length > 0) {
+          await callRotateApi(onProgressUpdates);
         }
-      }
-      if (assignedUpdates.length > 0) {
-        const { error } = await supabase.from('patients').upsert(assignedUpdates, { onConflict: 'id' });
-        if (error) {
-          console.error('[rotate] assigned upsert failed — raw:', error);
-          console.error('[rotate] assigned upsert failed — stringified:', JSON.stringify(error));
-          console.error('[rotate] assigned upsert failed — keys:', Object.keys(error));
-          console.error('[rotate] payload that failed:', JSON.stringify(assignedUpdates));
+        if (assignedUpdates.length > 0) {
+          await callRotateApi(assignedUpdates);
         }
-      }
 
         await fetchData();
         console.log('[rotate] rotation complete');
@@ -142,5 +137,5 @@ export function useAutoRotate(
     }, 5000);
 
     return () => clearInterval(interval);
-  }, [fetchData, busyRef, rotateTimeoutMs, maxRotations]);
+  }, [fetchData, busyRef, rotateTimeoutMs, maxRotations, pendingIdsRef, confirmingRef]);
 }
