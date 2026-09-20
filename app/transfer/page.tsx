@@ -41,15 +41,19 @@ export default function TransferPage() {
   const pendingUpdatesRef = useRef<Patient[]>([]);
   const dragInProgressRef = useRef(false);
   const [showDoctorsModal, setShowDoctorsModal] = useState(false);
+  const [showUnassignedMenu, setShowUnassignedMenu] = useState(false);
 
   const [isLoading, setIsLoading] = useState(true);
   const [isSyncing, setIsSyncing] = useState(false);
+  const [isConfirming, setIsConfirming] = useState(false);
+  const confirmingRef = useRef(false);
 
   const rotateTimeoutMs = useRotateTimeout();
   const maxRotations = useMaxRotations();
 
   const { idlePatients, fetchIdlePatients, activatePatient, removePatient } = useIdlePatients();
   const registrationRotateBusy = useRef(false);
+  const pendingAutoRotateIdsRef = useRef<Set<number>>(new Set());
 
   const { regDraggedPatient, dragOverCounter, handleRegDragStart } = useRegistrationDragAndDrop(
     registrationPatients, setRegistrationPatients
@@ -77,7 +81,6 @@ export default function TransferPage() {
     dragInProgressRef.current = Boolean(draggedPatient);
   }, [draggedPatient]);
 
-  // Safety: if a drag ever gets stuck, force-clear it after 30s
   useEffect(() => {
     if (!draggedPatient) return;
     const timer = setTimeout(() => {
@@ -173,11 +176,7 @@ export default function TransferPage() {
     });
   }, [setOnProgressPatients, setAssignedPatients]);
 
-  // ── Single sync coordinator ──────────────────────────────────────────────
-  // Every trigger (poll, realtime, post-write refresh) goes through this,
-  // instead of calling fetchData()/fetchRegistrationPatients()/fetchIdlePatients()
-  // directly. If a sync is already running, we just flag that another pass
-  // is needed once it finishes, rather than firing a second parallel fetch.
+
   const globalSyncRef = useRef(false);
   const fetchQueuedRef = useRef(false);
 
@@ -208,7 +207,6 @@ export default function TransferPage() {
     }
   }, [fetchData, fetchRegistrationPatients, fetchIdlePatients, reapplyPendingUpdates]);
 
-  // ── Realtime ──────────────────────────────────────────────────────────────
   const debounceRef = useRef<NodeJS.Timeout | null>(null);
 
   const handleRealtimeUpdate = useCallback(() => {
@@ -235,11 +233,21 @@ export default function TransferPage() {
     setAssignedPatients,
     autoAssignBusy
   );
-  useAutoRotate(onProgressPatients, assignedPatients, syncNow, autoRotateBusy, rotateTimeoutMs, maxRotations);
+  useAutoRotate(
+    onProgressPatients,
+    assignedPatients,
+    syncNow,
+    autoRotateBusy,
+    rotateTimeoutMs,
+    maxRotations,
+    pendingAutoRotateIdsRef,
+    confirmingRef
+  );
   useRegistrationRotate(registrationPatients, fetchRegistrationPatients, registrationRotateBusy, rotateTimeoutMs, maxRotations);
 
   useEffect(() => {
     pendingUpdatesRef.current = pendingUpdates;
+    pendingAutoRotateIdsRef.current = new Set(pendingUpdates.map(p => p.id));
   }, [pendingUpdates]);
 
   const isConsultation = selectedCategory === 'Consultation';
@@ -366,13 +374,15 @@ export default function TransferPage() {
   const handleConfirm = useCallback(async () => {
     if (pendingUpdates.length === 0 || savingPendingUpdates.current) return;
 
+    const snapshot = [...pendingUpdates];
     savingPendingUpdates.current = true;
-    setIsSyncing(true);
+    confirmingRef.current = true;
+    setIsConfirming(true);
 
     try {
       const now = new Date().toISOString();
 
-      const patientUpdates = pendingUpdates.map((patient) => ({
+      const patientUpdates = snapshot.map((patient) => ({
         id: patient.id,
         cubicleNum: patient.cubicleNum,
         status: patient.status,
@@ -382,13 +392,13 @@ export default function TransferPage() {
           (patient.status === "Assigned" ? now : null),
         queue_position: 9999,
         cooldown_until: patient.cooldown_until ?? null,
-        progress_started_at: patient.progress_started_at ?? null, 
+        progress_started_at: patient.progress_started_at ?? null,
       }));
 
       await supabase.from("patients").upsert(patientUpdates, { onConflict: "id" });
 
       await Promise.all(
-        pendingUpdates
+        snapshot
           .filter(p => p.phoneNum && p.status === "Assigned" && p.cubicleNum)
           .map(p => sendSMS(String(p.phoneNum), p.patientNum, p.cubicleNum!))
       );
@@ -406,32 +416,18 @@ export default function TransferPage() {
 
       setPendingUpdates([]);
       pendingUpdatesRef.current = [];
+      pendingAutoRotateIdsRef.current = new Set();
 
       await syncNow();
     } catch (err) {
       console.error(err);
     } finally {
       savingPendingUpdates.current = false;
-      setIsSyncing(false);
+      confirmingRef.current = false;
+      setIsConfirming(false);
     }
   }, [pendingUpdates, setPendingUpdates, syncNow]);
 
-  useEffect(() => {
-    if (
-      pendingUpdates.length === 0 ||
-      draggedPatient ||
-      isSyncing ||
-      savingPendingUpdates.current
-    ) {
-      return;
-    }
-
-    const timer = window.setTimeout(() => {
-      void handleConfirm();
-    }, 1800);
-
-    return () => window.clearTimeout(timer);
-  }, [pendingUpdates, draggedPatient, isSyncing, handleConfirm]);
 
   const getAvailableRooms = () => {
     if (!selectedCategory) return [];
@@ -474,20 +470,23 @@ export default function TransferPage() {
   const visibleCubicles = getVisibleCubicles();
   const rooms = getAvailableRooms();
 
-  const visibleOnProgress = onProgressPatients.filter(p => {
+  const matchesSelectedService = (p: Patient, requireSubcategory: boolean) => {
     if (!selectedCategory) return true;
     if (isConsultation) {
       if (p.service !== 'Consultation') return false;
-      if (selectedSubcategory) return p.subcategory === selectedSubcategory;
+      if (requireSubcategory && selectedSubcategory) return p.subcategory === selectedSubcategory;
       return true;
     }
     if (isOPScreening) {
       if (p.service !== 'OPD Screening') return false;
-      if (selectedOPSubcategory) return p.subcategory === selectedOPSubcategory;
+      if (requireSubcategory && selectedOPSubcategory) return p.subcategory === selectedOPSubcategory;
       return true;
     }
     return p.service === selectedCategory;
-  });
+  };
+
+  const visibleOnProgress = onProgressPatients.filter(p => matchesSelectedService(p, true));
+  const visibleIdlePatients = idlePatients.filter(p => matchesSelectedService(p, true));
 
   const visibleRegistrationPatients = registrationPatients.filter(p => {
     if (isConsultation) {
@@ -514,6 +513,28 @@ export default function TransferPage() {
     'Benzathine': onProgressPatients.filter(p => p.service === 'Benzathine').length,
   };
 
+  const idleCounts: Record<string, number> = {
+    'Consultation': idlePatients.filter(p => p.service === 'Consultation').length,
+    'OPD Screening': idlePatients.filter(p => p.service === 'OPD Screening').length,
+    'OPD Card': idlePatients.filter(p => p.service === 'OPD Card').length,
+    'Refill Prescription': idlePatients.filter(p => p.service === 'Refill Prescription').length,
+    'ECG': idlePatients.filter(p => p.service === 'ECG').length,
+    'Warfarin': idlePatients.filter(p => p.service === 'Warfarin').length,
+    'OPD Reschedule': idlePatients.filter(p => p.service === 'OPD Reschedule').length,
+    'Benzathine': idlePatients.filter(p => p.service === 'Benzathine').length,
+  };
+
+  const totalUnassigned = Object.values(queueCounts).reduce((sum, n) => sum + n, 0);
+
+  const jumpToCategory = (category: string) => {
+    setSelectedCategory(category);
+    setSelectedSubcategory(null);
+    setSelectedOPSubcategory(null);
+    setSelectedRoom(null);
+    setSidebarOpen(true);
+    setShowUnassignedMenu(false);
+  };
+
   useEffect(() => {
     const initialize = async () => {
       try {
@@ -530,13 +551,11 @@ export default function TransferPage() {
 
     initialize();
 
-    // Fallback safety net only — realtime handles the normal case now.
     const interval = setInterval(() => {
       void syncNow();
     }, 15000);
 
     return () => clearInterval(interval);
-    // eslint-disable-next-line react-hooks/exhaustive-deps
   }, []);
 
   if (checking) {
@@ -597,7 +616,7 @@ export default function TransferPage() {
           cubicleDoctorMap={cubicleDoctorMap}
           onReleaseFromCounter={handleReleaseFromCounter}
           onAssignNow={handleAssignNow}
-          idlePatients={idlePatients}
+          idlePatients={visibleIdlePatients}
           onActivateIdle={handleActivateIdle}
           onRemoveIdle={handleRemoveIdle}
         />
@@ -629,7 +648,7 @@ export default function TransferPage() {
           onRegDragStart={handleRegDragStart}
           onReleaseFromCounter={handleReleaseFromCounter}
           onAssignNow={handleAssignNow}
-          idlePatients={idlePatients}
+          idlePatients={visibleIdlePatients}
           onActivateIdle={handleActivateIdle}
           onRemoveIdle={handleRemoveIdle}
         />
@@ -651,12 +670,14 @@ export default function TransferPage() {
         onMoveBackToProgress={handleMoveBackToProgress}
         isDragEnabled={isDragEnabled}
         rotateTimeoutMs={rotateTimeoutMs}
-        idlePatients={idlePatients}
+        idlePatients={visibleIdlePatients}
         onActivateIdle={handleActivateIdle}
         onRemoveIdle={handleRemoveIdle}
       />
     );
   };
+
+  const showConfirmButton = (isConsultation || isOPScreening) && pendingUpdates.length > 0;
 
   return (
     <div className="flex min-h-screen bg-linear-to-br from-white via-red-50 to-red-100 font-sans">
@@ -664,6 +685,7 @@ export default function TransferPage() {
         sidebarOpen={sidebarOpen}
         selectedCategory={selectedCategory}
         queueCounts={queueCounts}
+        idleCounts={idleCounts}
         onSelectCategory={(cat) => {
           setSelectedCategory(cat);
           setSelectedSubcategory(null);
@@ -681,14 +703,83 @@ export default function TransferPage() {
           </div>
           <div className="flex items-center gap-2">
 
-            {isSyncing && (
+            {/* Global "needs attention" indicator — clickable from anywhere,
+                independent of whether the sidebar is open or collapsed. */}
+            <div className="relative">
+              <button
+                onClick={() => setShowUnassignedMenu(v => !v)}
+                className={`flex items-center gap-2 px-3 py-1.5 rounded-full border text-xs font-semibold transition ${
+                  totalUnassigned > 0
+                    ? 'bg-red-50 border-red-200 text-[#cc3535] hover:bg-red-100'
+                    : 'bg-gray-50 border-gray-200 text-gray-400'
+                }`}
+                title="Patients waiting to be assigned"
+              >
+                <i className="bx bx-user-voice text-base"></i>
+                {totalUnassigned} Unassigned
+                <i className={`bx bx-chevron-down text-sm transition-transform ${showUnassignedMenu ? 'rotate-180' : ''}`}></i>
+              </button>
+
+              {showUnassignedMenu && (
+                <>
+                  <div className="fixed inset-0 z-30" onClick={() => setShowUnassignedMenu(false)} />
+                  <div className="absolute right-0 mt-2 w-72 bg-white rounded-xl shadow-xl border border-gray-100 z-40 overflow-hidden">
+                    <div className="px-4 py-2.5 border-b border-gray-100 text-xs font-semibold text-gray-500 uppercase tracking-wide">
+                      Needs Attention
+                    </div>
+                    <div className="max-h-72 overflow-y-auto">
+                      {Object.entries(queueCounts).filter(([, n]) => n > 0).length === 0 && (
+                        <p className="px-4 py-4 text-sm text-gray-400 text-center">All caught up — nobody waiting.</p>
+                      )}
+                      {Object.entries(queueCounts)
+                        .filter(([, n]) => n > 0)
+                        .sort((a, b) => b[1] - a[1])
+                        .map(([cat, n]) => (
+                          <button
+                            key={cat}
+                            onClick={() => jumpToCategory(cat)}
+                            className="w-full flex items-center justify-between px-4 py-2.5 text-sm hover:bg-red-50 transition text-left"
+                          >
+                            <span className="text-gray-700">{cat}</span>
+                            <span className="text-[#cc3535] font-bold bg-red-100 rounded-full px-2 py-0.5 text-xs">{n}</span>
+                          </button>
+                        ))}
+                    </div>
+                  </div>
+                </>
+              )}
+            </div>
+
+            {/* Manual confirm — replaces the old 1.8s auto-commit timer for
+                Consultation / OPD Screening assignments. */}
+            {showConfirmButton && (
+              <button
+                onClick={() => void handleConfirm()}
+                disabled={isConfirming}
+                className="flex items-center gap-2 px-4 py-1.5 rounded-full bg-[#cc3535] text-white text-xs font-semibold shadow-sm hover:bg-red-700 transition disabled:opacity-50"
+              >
+                {isConfirming ? (
+                  <>
+                    <div className="w-3 h-3 border-2 border-white/40 border-t-white rounded-full animate-spin"></div>
+                    Saving...
+                  </>
+                ) : (
+                  <>
+                    <i className="bx bx-check-circle text-sm"></i>
+                    Confirm {pendingUpdates.length} Assignment{pendingUpdates.length > 1 ? 's' : ''}
+                  </>
+                )}
+              </button>
+            )}
+
+            {isSyncing && !isConfirming && (
               <div className="flex items-center gap-2 px-3 py-1 bg-blue-50 rounded-full">
                 <div className="w-3 h-3 border-2 border-blue-400 border-t-transparent rounded-full animate-spin"></div>
                 <span className="text-xs text-blue-600">Syncing...</span>
               </div>
             )}
 
-            <button className="w-10 h-10 bg-gray-100 rounded-full flex items-center justify-center hover:bg-red-50 transition">
+            <button className="w-10 h-10 bg-gray-100 rounded-full flex items-center justify-center hover:bg-red-50 transition" title="Notifications">
               <i className="bx bxs-bell text-lg text-gray-500"></i>
             </button>
 

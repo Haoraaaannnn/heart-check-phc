@@ -12,7 +12,9 @@ export function useAutoRotate(
   fetchData: () => Promise<void>,
   busyRef: React.MutableRefObject<boolean>,
   rotateTimeoutMs: number,
-  maxRotations: number
+  maxRotations: number,
+  pendingIdsRef: React.MutableRefObject<Set<number>>,
+  confirmingRef?: React.MutableRefObject<boolean>
 ) {
   const onProgressRef = useRef(onProgressPatients);
   const assignedRef = useRef(assignedPatients);
@@ -23,10 +25,15 @@ export function useAutoRotate(
   useEffect(() => {
     const interval = setInterval(async () => {
       if (busyRef.current) return;
+
+      if (confirmingRef?.current) return;
       const now = Date.now();
+      const pendingIds = pendingIdsRef.current;
 
       const isTimedOut = (p: Patient, startField: string | null | undefined) => {
         if (!p.service || MANUAL_SERVICES.includes(p.service)) return false;
+
+        if (pendingIds.has(p.id)) return false;
         if (!startField) return false;
         return now - new Date(startField).getTime() >= rotateTimeoutMs;
       };
@@ -34,8 +41,9 @@ export function useAutoRotate(
       const timedOutOnProgress = onProgressRef.current.filter(p =>
         isTimedOut(p, p.progress_started_at)
       );
+
       const topPatientsPerCubicle = Object.values(assignedRef.current)
-        .map(patients => patients[0])
+        .map(patients => patients.filter(p => !pendingIds.has(p.id))[0])
         .filter((p): p is Patient => !!p);
       const timedOutAssigned = topPatientsPerCubicle.filter(p =>
         isTimedOut(p, p.cubicle_top_started_at)
@@ -121,8 +129,6 @@ export function useAutoRotate(
 
         await fetchData();
         console.log('[rotate] rotation complete');
-        await fetchData();
-        console.log('[rotate] rotation complete');
       } catch (err) {
         console.error('[rotate] error:', err);
       } finally {
@@ -131,5 +137,5 @@ export function useAutoRotate(
     }, 5000);
 
     return () => clearInterval(interval);
-  }, [fetchData, busyRef, rotateTimeoutMs, maxRotations]);
+  }, [fetchData, busyRef, rotateTimeoutMs, maxRotations, pendingIdsRef, confirmingRef]);
 }

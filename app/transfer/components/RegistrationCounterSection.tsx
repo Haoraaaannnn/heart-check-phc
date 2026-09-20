@@ -27,7 +27,10 @@ export function RegistrationCounterSection({
       <h2 className="text-blue-500 font-semibold text-xs mb-3 tracking-widest uppercase flex items-center gap-2">
         <span className="w-2 h-2 rounded-full bg-blue-400 animate-pulse inline-block"></span>
         Registration Counters
-        <span className="text-xs text-gray-400 font-normal ml-2">(Drag to reassign counter)</span>
+        <span className="text-[10px] font-bold px-1.5 py-0.5 rounded-full bg-blue-100 text-blue-700 normal-case tracking-normal">
+          {patients.length}
+        </span>
+        <span className="text-xs text-gray-400 font-normal ml-1">(Drag to reassign counter)</span>
       </h2>
       <div className="grid grid-cols-5 gap-3 min-w-[600px]">
         {counters.map(counterNum => {
@@ -49,8 +52,13 @@ export function RegistrationCounterSection({
                     : 'border-gray-100 bg-gray-50'
                 }`}
               >
-              <span className="text-xs font-semibold text-gray-500 uppercase tracking-wider text-center">
+              <span className="text-xs font-semibold text-gray-500 uppercase tracking-wider text-center flex items-center justify-center gap-1">
                 Counter {counterNum}
+                {counterPatients.length > 0 && (
+                  <span className="text-[10px] font-bold px-1.5 py-0.5 rounded-full bg-blue-100 text-blue-700 normal-case tracking-normal">
+                    {counterPatients.length}
+                  </span>
+                )}
               </span>
 
               {counterPatients.length === 0 && (
