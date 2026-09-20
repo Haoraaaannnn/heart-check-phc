@@ -157,24 +157,42 @@ export default function TransferPage() {
     if (pending.length === 0) return;
     const pendingIds = pending.map(p => p.id);
 
-    setOnProgressPatients(prev => {
-      const withoutPending = prev.filter(p => !pendingIds.includes(p.id));
-      const onProgressPending = pending.filter(p => p.status === 'On Progress');
-      return [...withoutPending, ...onProgressPending];
-    });
-
     setAssignedPatients(prev => {
       const cleaned: Record<string, Patient[]> = {};
       for (const [cubicle, patients] of Object.entries(prev)) {
         cleaned[cubicle] = patients.filter(p => !pendingIds.includes(p.id));
       }
+
       const assignedPending = pending.filter(p => p.status === 'Assigned' && p.cubicleNum);
+      const overflow: Patient[] = [];
+
       for (const p of assignedPending) {
-        cleaned[p.cubicleNum!] = [...(cleaned[p.cubicleNum!] || []), p];
+        const bucket = cleaned[p.cubicleNum!] || [];
+        if (bucket.length < MAX_PATIENTS_PER_CUBICLE) {
+          cleaned[p.cubicleNum!] = [...bucket, p];
+        } else {
+          overflow.push(p); 
+        }
       }
+
+      if (overflow.length > 0) {
+        const overflowIds = new Set(overflow.map(p => p.id));
+        setOnProgressPatients(prevQueue => {
+          const withoutOverflow = prevQueue.filter(q => !overflowIds.has(q.id));
+          const requeued: Patient[] = overflow.map(p => ({
+            ...p,
+            status: 'On Progress',
+            cubicleNum: null,
+            called_at: undefined,
+          }));
+          return [...withoutOverflow, ...requeued];
+        });
+        setPendingUpdates(prevPending => prevPending.filter(p => !overflowIds.has(p.id)));
+      }
+
       return cleaned;
     });
-  }, [setOnProgressPatients, setAssignedPatients]);
+  }, [setOnProgressPatients, setAssignedPatients, setPendingUpdates]);
 
 
   const globalSyncRef = useRef(false);
@@ -318,13 +336,14 @@ export default function TransferPage() {
 
     setOnProgressPatients(prev => prev.filter(p => p.id !== patient.id));
 
-    setAssignedPatients(prev => ({
-      ...prev,
-      [bestCubicle.cubicleNum]: [
-        ...(prev[bestCubicle.cubicleNum] || []),
-        { ...patient, cubicleNum: bestCubicle.cubicleNum, status: 'Assigned', called_at: now },
-      ],
-    }));
+    setAssignedPatients(prev => {
+      const bucket = prev[bestCubicle.cubicleNum] || [];
+      if (bucket.length >= MAX_PATIENTS_PER_CUBICLE) return prev; 
+      return {
+        ...prev,
+        [bestCubicle.cubicleNum]: [...bucket, { ...patient, cubicleNum: bestCubicle.cubicleNum, status: 'Assigned', called_at: now }],
+      };
+    });
 
     setPendingUpdates(prev => [
       ...prev.filter(p => p.id !== patient.id),
