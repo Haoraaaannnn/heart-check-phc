@@ -1,42 +1,48 @@
 "use client";
 
-import { useEffect, useState } from "react";
 import { usePathname, useSearchParams } from "next/navigation";
 import KioskHeader from "@/app/kiosk/kiosk-services/components/KioskHeader";
 import KioskBackButton from "@/components/reusables/KioskBackButton";
+import { useIsMounted } from "@/hooks/useIsMounted";
 
-export default function MainKioskLayout({
-    children,
-}: {
+/** Props for {@link MainKioskLayout}. */
+interface MainKioskLayoutProps {
+    /** The current kiosk page (or nested kiosk layout). */
     children: React.ReactNode;
-}) {
-    const [mounted, setMounted] = useState(false);
+}
+
+/**
+ * Root layout for every `/kiosk/*` route.
+ *
+ * Provides the full-screen shell shared by all kiosk pages: an optional back
+ * button, the main content area, and the bottom footer (`KioskHeader`).
+ *
+ * @remarks
+ * Back button rules:
+ * - Only shown on `/kiosk/kiosk-services`, `/kiosk/kiosk-cubicle-selection`
+ *   and `/kiosk/consultation-category`.
+ * - The `type` (patient type) and `serviceId` query params are preserved when
+ *   going backward, so the patient doesn't lose their earlier choices.
+ *
+ * @param props - Layout props provided by Next.js.
+ * @returns The kiosk shell wrapping the current page.
+ */
+export default function MainKioskLayout({ children }: MainKioskLayoutProps) {
+    // False on the server and first paint, true after hydration (drives the fade-in).
+    const mounted = useIsMounted();
 
     const pathname = usePathname();
     const searchParams = useSearchParams();
 
-    // Get the selected patient type from the URL
+    // Selected patient type ("new" | "old") from the URL, if present.
     const patientType = searchParams.get("type");
 
-    useEffect(() => {
-        setMounted(true);
-    }, []);
-
-    /*
-     * Back button is ONLY allowed on these two pages:
-     *
-     * /kiosk/kiosk-services
-     * /kiosk/kiosk-cubicle-selection
-     */
     const shouldShowBackButton =
         pathname === "/kiosk/kiosk-services" ||
         pathname === "/kiosk/kiosk-cubicle-selection" ||
         pathname === "/kiosk/consultation-category";
 
-    /*
-     * Determine where the back button should go.
-     * Preserve the patient type when going backward.
-     */
+    // Where the back button goes; undefined means no back target on this page.
     let backHref: string | undefined = undefined;
 
     if (pathname === "/kiosk/kiosk-services") {
@@ -64,17 +70,16 @@ export default function MainKioskLayout({
                 mounted ? "opacity-100" : "opacity-0"
             }`}
         >
-            {/* Back Button */}
             {shouldShowBackButton && backHref && (
                 <KioskBackButton href={backHref} />
             )}
 
-            {/* Main Content — fills all remaining space, no fixed dimensions */}
+            {/* Main content: fills all remaining space, no fixed dimensions. */}
             <main className="flex min-h-0 w-full flex-1 flex-col overflow-hidden">
                 {children}
             </main>
 
-            {/* Bottom Header / Footer — sized by its own content, not a virtual canvas */}
+            {/* Footer: sized by its own content. */}
             <div className="w-full flex-shrink-0">
                 <KioskHeader />
             </div>
