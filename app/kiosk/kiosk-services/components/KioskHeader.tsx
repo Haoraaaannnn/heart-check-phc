@@ -2,6 +2,7 @@
 
 import { useEffect, useState } from "react";
 import { KioskHeaderStyle } from "@/app/kiosk/kiosk-services/constants/kioskHeader";
+import { KioskHeaderTexts } from "@/constants/kioskTexts";
 
 export default function KioskHeader(){
     const [time, setTime] = useState("");
@@ -21,8 +22,8 @@ export default function KioskHeader(){
     return (
         <header style={KioskHeaderStyle.container}>
             <div style={KioskHeaderStyle.brand}>
-                <span style={KioskHeaderStyle.brandPrimary}>Heart Check</span>
-                <span style={KioskHeaderStyle.brandAccent}>PHC</span>
+                <span style={KioskHeaderStyle.brandPrimary}> {KioskHeaderTexts.headerTitle}</span>
+                <span style={KioskHeaderStyle.brandAccent}>{KioskHeaderTexts.headerAccent}</span>
             </div>
             <div style={KioskHeaderStyle.clock}>
                 <p style={KioskHeaderStyle.time}>{time}</p>
