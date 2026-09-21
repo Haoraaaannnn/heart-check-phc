@@ -32,6 +32,7 @@ type OPScreeningFlowProps = {
   onActivateIdle: (patient: Patient) => void;
   onRemoveIdle: (patient: Patient) => void;
   allowedCounters?: number[];
+  allowedSubcategories?: string[];
 };
 
 export function OPScreeningFlow({
@@ -61,7 +62,8 @@ export function OPScreeningFlow({
   idlePatients,
   onActivateIdle,
   onRemoveIdle,
-  allowedCounters 
+  allowedCounters,
+  allowedSubcategories,
 }: OPScreeningFlowProps) {
   if (!selectedSubcategory) {
     const countFor = (sub: string) => ({
@@ -100,10 +102,29 @@ export function OPScreeningFlow({
       );
     };
 
+    const ALL_SUBCATEGORIES = [
+      { sub: 'Adult', icon: 'bx-male' },
+      { sub: 'Pedia', icon: 'bx-child' },
+    ];
+    const visibleSubcategories = allowedSubcategories !== undefined
+      ? ALL_SUBCATEGORIES.filter(s => allowedSubcategories.includes(s.sub))
+      : ALL_SUBCATEGORIES;
+
+    if (visibleSubcategories.length === 0) {
+      return (
+        <div className="bg-amber-50 border-2 border-amber-200 rounded-3xl p-8 text-center max-w-md mx-auto mt-8">
+          <i className="bx bx-info-circle text-4xl text-amber-500 mb-2 block"></i>
+          <p className="text-gray-600 font-medium">No OPD Screening rooms assigned to your account</p>
+          <p className="text-gray-400 text-sm mt-1">Ask a Super Admin to assign a room before you can manage patients here.</p>
+        </div>
+      );
+    }
+
     return (
       <div className="grid grid-cols-2 gap-3 max-w-md mx-auto mt-8">
-        <Subcard sub="Adult" icon="bx-male" />
-        <Subcard sub="Pedia" icon="bx-child" />
+        {visibleSubcategories.map(({ sub, icon }) => (
+          <Subcard key={sub} sub={sub} icon={icon} />
+        ))}
       </div>
     );
   }

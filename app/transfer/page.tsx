@@ -463,6 +463,13 @@ export default function TransferPage() {
     return [];
   };
 
+  const getAllowedSubcategories = (service: string) =>
+  [...new Set(
+    myRooms
+      .filter(r => r.service === service && r.subcategory)
+      .map(r => r.subcategory as string)
+  )];
+
   const getVisibleCubicles = () => {
     if (isConsultation && selectedSubcategory && selectedRoom) {
       return cubicles.filter(c =>
@@ -477,7 +484,7 @@ export default function TransferPage() {
         c.room === selectedRoom
       );
     } else if (!isConsultation && !isOPScreening && selectedCategory) {
-      // was: return cubicles.filter(c => c.category === selectedCategory);
+     
       const allowedRooms = myRooms
         .filter(r => r.service === selectedCategory && r.subcategory === null)
         .map(r => r.room);
@@ -548,7 +555,7 @@ export default function TransferPage() {
     .reduce((sum, [, n]) => sum + n, 0);
 
   const jumpToCategory = (category: string) => {
-    if (!myServices.includes(category)) return; // guard against stale/injected calls
+    if (!myServices.includes(category)) return;
     setSelectedCategory(category);
     setSelectedSubcategory(null);
     setSelectedOPSubcategory(null);
@@ -643,6 +650,7 @@ export default function TransferPage() {
           onActivateIdle={handleActivateIdle}
           onRemoveIdle={handleRemoveIdle}
           allowedCounters={myCounters}
+          allowedSubcategories={getAllowedSubcategories('Consultation')}
         />
       );
     }
@@ -676,6 +684,7 @@ export default function TransferPage() {
           onActivateIdle={handleActivateIdle}
           onRemoveIdle={handleRemoveIdle}
           allowedCounters={myCounters}
+          allowedSubcategories={getAllowedSubcategories('OPD Screening')}
         />
       );
     }

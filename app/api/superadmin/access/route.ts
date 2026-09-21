@@ -20,7 +20,6 @@ export async function GET(request: Request) {
 
   const authId = new URL(request.url).searchParams.get('authId');
 
-  // Real rooms that exist, derived from the cubicle table
   const { data: cubicles, error: cubicleError } = await supabaseAdmin
     .from('cubicle')
     .select('category, subcategory, room');
