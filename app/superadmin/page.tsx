@@ -48,10 +48,74 @@ export default function SuperAdminPage() {
   const [activeTab, setActiveTab] = useState<'users' | 'settings' >('users')
 
   const CLINICAL_ROLES = ['nurse', 'staff', 'doctor'];
+  const REGISTRATION_ROLES = ['registration'];
 
   const [cubicles, setCubicles] = useState<Cubicle[]>([]);
   const [selectedCubicleIds, setSelectedCubicleIds] = useState<number[]>([]);
 
+  const [accessOptions, setAccessOptions] = useState<{
+    services: string[];
+    consultationSubcategories: string[];
+    counters: number[];
+    availableRooms: { service: string; subcategory: string | null; room: number }[];
+  }>({ services: [], consultationSubcategories: [], counters: [], availableRooms: [] });
+
+  const [selectedServices, setSelectedServices] = useState<string[]>([]);
+  const [selectedRooms, setSelectedRooms] = useState<{ service: string; subcategory: string | null; room: number }[]>([]);
+  const [selectedCounters, setSelectedCounters] = useState<number[]>([]);
+
+  const loadAccess = async (authId?: string) => {
+  const { data: { session } } = await supabase.auth.getSession();
+  const query = authId ? `?authId=${encodeURIComponent(authId)}` : '';
+  const response = await fetch(`/api/superadmin/access${query}`, {
+    headers: { Authorization: `Bearer ${session?.access_token}` },
+  });
+  const data = await response.json();
+  if (!response.ok) throw new Error(data.error || 'Unable to load access options');
+
+  setAccessOptions({
+    services: data.services,
+    consultationSubcategories: data.consultationSubcategories,
+    counters: data.counters,
+    availableRooms: data.availableRooms,
+  });
+  setSelectedServices(data.assignedServices ?? []);
+  setSelectedRooms(data.assignedRooms ?? []);
+  setSelectedCounters(data.assignedCounters ?? []);
+};
+
+  const toggleService = (service: string) => {
+    setSelectedServices(prev => {
+      const isSelected = prev.includes(service);
+
+      if (isSelected) {
+        setSelectedRooms(rooms =>
+          rooms.filter(r => r.service !== service)
+        );
+
+        return prev.filter(s => s !== service);
+      }
+
+      return [...prev, service];
+    });
+  };
+
+  const roomKey = (r: { service: string; subcategory: string | null; room: number }) =>
+    `${r.service}::${r.subcategory ?? ''}::${r.room}`;
+
+  const toggleRoom = (room: { service: string; subcategory: string | null; room: number }) => {
+    setSelectedRooms(prev =>
+      prev.some(r => roomKey(r) === roomKey(room))
+        ? prev.filter(r => roomKey(r) !== roomKey(room))
+        : [...prev, room]
+    );
+  };
+
+  const toggleCounter = (counter: number) => {
+    setSelectedCounters(prev =>
+      prev.includes(counter) ? prev.filter(c => c !== counter) : [...prev, counter]
+    );
+  };
 
   const fetchUsers = async (page: number) => {
     setLoading(true)
@@ -134,15 +198,24 @@ export default function SuperAdminPage() {
               'Content-Type': 'application/json',
               'Authorization': `Bearer ${session?.access_token}`,
             },
-              body: JSON.stringify({
-                authId: editingUser.auth_id,
-                email: formEmail,
-                username: formUsername,
-                role: formRole,
-                cubicleIds: CLINICAL_ROLES.includes(formRole)
-                  ? selectedCubicleIds
-                  : [],
-              }),
+            body: JSON.stringify({
+              authId: editingUser.auth_id,
+              email: formEmail,
+              username: formUsername,
+              role: formRole,
+              cubicleIds: CLINICAL_ROLES.includes(formRole)
+                ? selectedCubicleIds
+                : [],
+              serviceAssignments: REGISTRATION_ROLES.includes(formRole)
+                ? selectedServices
+                : [],
+              roomAssignments: REGISTRATION_ROLES.includes(formRole)
+                ? selectedRooms
+                : [],
+              counterAssignments: REGISTRATION_ROLES.includes(formRole)
+                ? selectedCounters
+                : [],
+            }),
           })
           const data = await response.json()
           if (!response.ok) throw new Error(data.error)
@@ -167,8 +240,17 @@ export default function SuperAdminPage() {
               username: formUsername,
               role: formRole,
               cubicleIds: CLINICAL_ROLES.includes(formRole)
-              ? selectedCubicleIds
-              : [],
+                ? selectedCubicleIds
+                : [],
+              serviceAssignments: REGISTRATION_ROLES.includes(formRole)
+                ? selectedServices
+                : [],
+              roomAssignments: REGISTRATION_ROLES.includes(formRole)
+                ? selectedRooms
+                : [],
+              counterAssignments: REGISTRATION_ROLES.includes(formRole)
+                ? selectedCounters
+                : [],
             }),
           })
           const data = await response.json()
@@ -244,7 +326,10 @@ export default function SuperAdminPage() {
     setShowAddModal(true);
 
     try {
-      await loadCubicles(user.auth_id);
+      await Promise.all([
+        loadCubicles(user.auth_id),
+        loadAccess(user.auth_id),
+      ]);
     } catch (error: any) {
       setFormError(error.message);
     }
@@ -256,13 +341,21 @@ export default function SuperAdminPage() {
     setFormUsername('');
     setFormPassword('');
     setFormRole('registration');
+
     setSelectedCubicleIds([]);
+    setSelectedServices([]);
+    setSelectedRooms([]);
+    setSelectedCounters([]);
+
     setFormError('');
     setFormSuccess('');
     setShowAddModal(true);
 
     try {
-      await loadCubicles();
+      await Promise.all([
+        loadCubicles(),
+        loadAccess(),
+      ]);
     } catch (error: any) {
       setFormError(error.message);
     }
@@ -544,6 +637,99 @@ return (
                         </div>
                       </div>
                     ))}
+                  </div>
+                </div>
+              )}
+
+              {REGISTRATION_ROLES.includes(formRole) && (
+                <div className="mt-5 border-t border-slate-200 pt-5 space-y-5">
+                  {/* Services */}
+                  <div>
+                    <label className="block text-sm font-semibold text-slate-800 mb-2">Assigned services</label>
+                    <div className="grid grid-cols-2 gap-2">
+                      {accessOptions.services.map(service => (
+                        <button
+                          key={service}
+                          type="button"
+                          onClick={() => toggleService(service)}
+                          className={`rounded-lg border p-2 text-left text-sm transition ${
+                            selectedServices.includes(service)
+                              ? 'border-blue-500 bg-blue-50 text-blue-900'
+                              : 'border-gray-200 bg-white text-gray-700 hover:border-blue-300'
+                          }`}
+                        >
+                          {service}
+                        </button>
+                      ))}
+                    </div>
+                  </div>
+
+                  {/* Rooms — only for the services already selected */}
+                  <div>
+                    <label className="block text-sm font-semibold text-slate-800 mb-2">Assigned rooms</label>
+                    <div className="max-h-56 overflow-y-auto rounded-xl border border-gray-200 bg-gray-50 p-3 space-y-3">
+                      {selectedServices.length === 0 && (
+                        <p className="text-xs text-slate-500">Select a service above first.</p>
+                      )}
+                      {selectedServices.map(service => {
+                        const roomsForService = accessOptions.availableRooms.filter(r => r.service === service);
+                        const subcats = [...new Set(roomsForService.map(r => r.subcategory ?? '__none__'))];
+                        return (
+                          <div key={service}>
+                            <div className="mb-1 text-xs font-bold uppercase tracking-wide text-gray-900">{service}</div>
+                            {subcats.map(subKey => {
+                              const subcategory = subKey === '__none__' ? null : subKey;
+                              const rooms = roomsForService.filter(r => (r.subcategory ?? null) === subcategory);
+                              return (
+                                <div key={subKey} className="mb-2">
+                                  {subcategory && <div className="text-[11px] text-slate-500 mb-1">{subcategory}</div>}
+                                  <div className="flex flex-wrap gap-2">
+                                    {rooms.map(r => {
+                                      const isSelected = selectedRooms.some(sel => roomKey(sel) === roomKey(r));
+                                      return (
+                                        <button
+                                          key={roomKey(r)}
+                                          type="button"
+                                          onClick={() => toggleRoom(r)}
+                                          className={`px-3 py-1 rounded-full text-xs border ${
+                                            isSelected
+                                              ? 'border-blue-600 bg-blue-600 text-white'
+                                              : 'border-gray-300 bg-white text-gray-700'
+                                          }`}
+                                        >
+                                          Room {r.room}
+                                        </button>
+                                      );
+                                    })}
+                                  </div>
+                                </div>
+                              );
+                            })}
+                          </div>
+                        );
+                      })}
+                    </div>
+                  </div>
+
+                  {/* Counters — global, 1-5 */}
+                  <div>
+                    <label className="block text-sm font-semibold text-slate-800 mb-2">Assigned counters</label>
+                    <div className="flex gap-2">
+                      {accessOptions.counters.map(counter => (
+                        <button
+                          key={counter}
+                          type="button"
+                          onClick={() => toggleCounter(counter)}
+                          className={`w-10 h-10 rounded-lg border text-sm font-semibold ${
+                            selectedCounters.includes(counter)
+                              ? 'border-blue-600 bg-blue-600 text-white'
+                              : 'border-gray-300 bg-white text-gray-700'
+                          }`}
+                        >
+                          {counter}
+                        </button>
+                      ))}
+                    </div>
                   </div>
                 </div>
               )}

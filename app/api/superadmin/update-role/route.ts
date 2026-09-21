@@ -12,7 +12,7 @@ export async function PUT(request: Request) {
     const guard = await requireSuperadmin(request)
     if (!guard.authorized) return guard.response
 
-    const { authId, email, username, role, cubicleIds } = await request.json()
+    const { authId, email, username, role, cubicleIds, serviceAssignments, roomAssignments, counterAssignments } = await request.json()
 
     if (!authId) {
       return NextResponse.json(
@@ -83,6 +83,100 @@ export async function PUT(request: Request) {
         }
       }
     }
+
+  if (
+    serviceAssignments !== undefined ||
+    roomAssignments !== undefined ||
+    counterAssignments !== undefined
+  ) {
+    const { error: serviceDeleteError } = await supabaseAdmin
+      .from('user_services')
+      .delete()
+      .eq('user_id', userRow.id);
+
+    if (serviceDeleteError) {
+      console.error('user_services delete error:', serviceDeleteError);
+      throw new Error(serviceDeleteError.message);
+    }
+
+    const { error: roomDeleteError } = await supabaseAdmin
+      .from('user_rooms')
+      .delete()
+      .eq('user_id', userRow.id);
+
+    if (roomDeleteError) {
+      console.error('user_rooms delete error:', roomDeleteError);
+      throw new Error(roomDeleteError.message);
+    }
+
+    const { error: counterDeleteError } = await supabaseAdmin
+      .from('user_counters')
+      .delete()
+      .eq('user_id', userRow.id);
+
+    if (counterDeleteError) {
+      console.error('user_counters delete error:', counterDeleteError);
+      throw new Error(counterDeleteError.message);
+    }
+
+    if (role === 'registration') {
+      if (Array.isArray(serviceAssignments) && serviceAssignments.length > 0) {
+        const { error } = await supabaseAdmin
+          .from('user_services')
+          .insert(
+            serviceAssignments.map((service: string) => ({
+              user_id: userRow.id,
+              service,
+            }))
+          );
+
+        if (error) {
+          console.error('user_services insert error:', error);
+          throw new Error(error.message);
+        }
+      }
+
+      if (Array.isArray(roomAssignments) && roomAssignments.length > 0) {
+        const { error } = await supabaseAdmin
+          .from('user_rooms')
+          .insert(
+            roomAssignments.map(
+              (r: {
+                service: string;
+                subcategory: string | null;
+                room: number;
+              }) => ({
+                user_id: userRow.id,
+                service: r.service,
+                subcategory: r.subcategory,
+                room: r.room,
+              })
+            )
+          );
+
+        if (error) {
+          console.error('user_rooms insert error:', error);
+          throw new Error(error.message);
+        }
+      }
+
+      if (Array.isArray(counterAssignments) && counterAssignments.length > 0) {
+        const { error } = await supabaseAdmin
+          .from('user_counters')
+          .insert(
+            counterAssignments.map((counter: number) => ({
+              user_id: userRow.id,
+              counter,
+            }))
+          );
+
+        if (error) {
+          console.error('user_counters insert error:', error);
+          throw new Error(error.message);
+        }
+      }
+    }
+  }
 
     return NextResponse.json(
       { success: true, message: 'User updated successfully' },

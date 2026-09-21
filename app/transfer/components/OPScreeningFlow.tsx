@@ -31,6 +31,7 @@ type OPScreeningFlowProps = {
   idlePatients: Patient[];
   onActivateIdle: (patient: Patient) => void;
   onRemoveIdle: (patient: Patient) => void;
+  allowedCounters?: number[];
 };
 
 export function OPScreeningFlow({
@@ -60,6 +61,7 @@ export function OPScreeningFlow({
   idlePatients,
   onActivateIdle,
   onRemoveIdle,
+  allowedCounters 
 }: OPScreeningFlowProps) {
   if (!selectedSubcategory) {
     const countFor = (sub: string) => ({
@@ -145,6 +147,7 @@ export function OPScreeningFlow({
         dragOverCounter={dragOverCounter}
         onDragStart={onRegDragStart}
         onRelease={onReleaseFromCounter}
+        allowedCounters={allowedCounters}
       />
       <div className="mt-4">
         <QueueAndIdleLayout

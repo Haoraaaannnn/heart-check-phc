@@ -14,6 +14,7 @@ import { useDragAndDrop } from './hooks/useDragAndDrop';
 import { useRealtimeSubscription } from './hooks/useRealtimeSubscription';
 import { sendSMS } from "@/app/actions/sendSMS";
 import { useMaxRotations } from './hooks/useMaxRotations';
+import { useMyAccess } from './hooks/useMyAccess';
 
 import { useRegistrationDragAndDrop } from './hooks/useRegistrationDragAndDrop';
 import { Patient, Cubicle } from '@/types/Types';
@@ -42,6 +43,7 @@ export default function TransferPage() {
   const dragInProgressRef = useRef(false);
   const [showDoctorsModal, setShowDoctorsModal] = useState(false);
   const [showUnassignedMenu, setShowUnassignedMenu] = useState(false);
+  const { myServices, myRooms, myCounters, accessStatus, fetchMyAccess } = useMyAccess();
 
   const [isLoading, setIsLoading] = useState(true);
   const [isSyncing, setIsSyncing] = useState(false);
@@ -450,20 +452,14 @@ export default function TransferPage() {
 
   const getAvailableRooms = () => {
     if (!selectedCategory) return [];
-    if (isConsultation && selectedSubcategory) {
-      const filteredCubicles = cubicles.filter(c =>
-        c.category === selectedCategory && c.subcategory === selectedSubcategory
-      );
-      return [...new Set(filteredCubicles.map(c => c.room))].sort();
-    } else if (isOPScreening && selectedOPSubcategory) {
-      const filteredCubicles = cubicles.filter(c =>
-        c.category === selectedCategory && c.subcategory === selectedOPSubcategory
-      );
-      return [...new Set(filteredCubicles.map(c => c.room))].sort();
-    } else if (!isConsultation && !isOPScreening && selectedCategory) {
-      const filteredCubicles = cubicles.filter(c => c.category === selectedCategory);
-      return [...new Set(filteredCubicles.map(c => c.room))].sort();
-    }
+    const roomsFor = (subcategory: string | null) =>
+      myRooms
+        .filter(r => r.service === selectedCategory && (r.subcategory ?? null) === subcategory)
+        .map(r => r.room);
+
+    if (isConsultation && selectedSubcategory) return [...new Set(roomsFor(selectedSubcategory))].sort((a, b) => a - b);
+    if (isOPScreening && selectedOPSubcategory) return [...new Set(roomsFor(selectedOPSubcategory))].sort((a, b) => a - b);
+    if (!isConsultation && !isOPScreening && selectedCategory) return [...new Set(roomsFor(null))].sort((a, b) => a - b);
     return [];
   };
 
@@ -481,7 +477,11 @@ export default function TransferPage() {
         c.room === selectedRoom
       );
     } else if (!isConsultation && !isOPScreening && selectedCategory) {
-      return cubicles.filter(c => c.category === selectedCategory);
+      // was: return cubicles.filter(c => c.category === selectedCategory);
+      const allowedRooms = myRooms
+        .filter(r => r.service === selectedCategory && r.subcategory === null)
+        .map(r => r.room);
+      return cubicles.filter(c => c.category === selectedCategory && allowedRooms.includes(c.room));
     }
     return [];
   };
@@ -543,9 +543,12 @@ export default function TransferPage() {
     'Benzathine': idlePatients.filter(p => p.service === 'Benzathine').length,
   };
 
-  const totalUnassigned = Object.values(queueCounts).reduce((sum, n) => sum + n, 0);
+  const totalUnassigned = Object.entries(queueCounts)
+    .filter(([cat]) => myServices.includes(cat))
+    .reduce((sum, [, n]) => sum + n, 0);
 
   const jumpToCategory = (category: string) => {
+    if (!myServices.includes(category)) return; // guard against stale/injected calls
     setSelectedCategory(category);
     setSelectedSubcategory(null);
     setSelectedOPSubcategory(null);
@@ -562,6 +565,7 @@ export default function TransferPage() {
           fetchCubicles(),
           fetchRegistrationPatients(),
           fetchIdlePatients(),
+          fetchMyAccess(),
         ]);
       } finally {
         setIsLoading(false);
@@ -638,6 +642,7 @@ export default function TransferPage() {
           idlePatients={visibleIdlePatients}
           onActivateIdle={handleActivateIdle}
           onRemoveIdle={handleRemoveIdle}
+          allowedCounters={myCounters}
         />
       );
     }
@@ -670,6 +675,7 @@ export default function TransferPage() {
           idlePatients={visibleIdlePatients}
           onActivateIdle={handleActivateIdle}
           onRemoveIdle={handleRemoveIdle}
+          allowedCounters={myCounters}
         />
       );
     }
@@ -700,20 +706,51 @@ export default function TransferPage() {
 
   return (
     <div className="flex min-h-screen bg-linear-to-br from-white via-red-50 to-red-100 font-sans">
-      <Sidebar
-        sidebarOpen={sidebarOpen}
-        selectedCategory={selectedCategory}
-        queueCounts={queueCounts}
-        idleCounts={idleCounts}
-        onSelectCategory={(cat) => {
-          setSelectedCategory(cat);
-          setSelectedSubcategory(null);
-          setSelectedOPSubcategory(null);
-          setSelectedRoom(null);
-        }}
-        onToggleSidebar={() => setSidebarOpen(!sidebarOpen)}
-      />
+    <Sidebar
+      sidebarOpen={sidebarOpen}
+      selectedCategory={selectedCategory}
+      queueCounts={queueCounts}
+      idleCounts={idleCounts}
+      allowedServices={myServices}
+      onSelectCategory={(cat) => {
+        setSelectedCategory(cat);
+        setSelectedSubcategory(null);
+        setSelectedOPSubcategory(null);
+        setSelectedRoom(null);
+      }}
+      onToggleSidebar={() => setSidebarOpen(!sidebarOpen)}
+    />
 
+    {accessStatus === 'loading' ? (
+      <div className="flex-1 flex items-center justify-center">
+        <div className="text-center">
+          <div className="w-10 h-10 border-4 border-red-200 border-t-red-500 rounded-full animate-spin mx-auto mb-3" />
+          <p className="text-gray-500">Loading access...</p>
+        </div>
+      </div>
+    ) : accessStatus === 'error' ? (
+      <div className="flex-1 flex items-center justify-center">
+        <div className="rounded-2xl border border-red-200 bg-red-50 p-8 text-center">
+          <h2 className="text-lg font-semibold text-red-800">
+            Unable to load access
+          </h2>
+          <p className="mt-2 text-sm text-red-600">
+            Please refresh the page or contact a Super Admin.
+          </p>
+        </div>
+      </div>
+    ) : accessStatus === 'unassigned' ? (
+      <div className="flex-1 flex items-center justify-center">
+        <div className="rounded-2xl border border-amber-200 bg-amber-50 p-8 text-center shadow-sm">
+          <h2 className="text-lg font-semibold text-gray-900">
+            No services assigned
+          </h2>
+          <p className="mt-2 text-sm text-gray-600">
+            Ask a Super Admin to assign your services, rooms, and counters before managing patients.
+          </p>
+        </div>
+      </div>
+    ) : (
       <div className={`flex-1 transition-all duration-300 ${sidebarOpen ? 'ml-64' : 'ml-16'}`}>
         <div className="flex items-center justify-between px-8 py-4 bg-white/80 backdrop-blur-sm border-b border-red-100 shadow-sm">
           <div className="flex items-center gap-2">
@@ -747,27 +784,27 @@ export default function TransferPage() {
                       Needs Attention
                     </div>
                     <div className="max-h-72 overflow-y-auto">
-                      {Object.entries(queueCounts).filter(([, n]) => n > 0).length === 0 && (
+                      {Object.entries(queueCounts)
+                        .filter(([cat]) => myServices.includes(cat))
+                        .filter(([, n]) => n > 0).length === 0 && (
                         <p className="px-4 py-4 text-sm text-gray-400 text-center">All caught up — nobody waiting.</p>
                       )}
                       {Object.entries(queueCounts)
+                        .filter(([cat]) => myServices.includes(cat))
                         .filter(([, n]) => n > 0)
                         .sort((a, b) => b[1] - a[1])
                         .map(([cat, n]) => (
-                          <button
-                            key={cat}
-                            onClick={() => jumpToCategory(cat)}
-                            className="w-full flex items-center justify-between px-4 py-2.5 text-sm hover:bg-red-50 transition text-left"
-                          >
+                          <button key={cat} onClick={() => jumpToCategory(cat)} className="w-full flex items-center justify-between px-4 py-2.5 text-sm hover:bg-red-50 transition text-left">
                             <span className="text-gray-700">{cat}</span>
                             <span className="text-[#cc3535] font-bold bg-red-100 rounded-full px-2 py-0.5 text-xs">{n}</span>
                           </button>
-                        ))}
+                      ))}
                     </div>
                   </div>
                 </>
               )}
             </div>
+            
 
             {/* Manual confirm — replaces the old 1.8s auto-commit timer for
                 Consultation / OPD Screening assignments. */}
@@ -836,6 +873,7 @@ export default function TransferPage() {
           {renderContent()}
         </div>
       </div>
+      )}
       {showDoctorsModal && <DoctorsModal onClose={() => setShowDoctorsModal(false)} />}
     </div>
   );

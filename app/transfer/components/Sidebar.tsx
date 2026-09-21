@@ -10,10 +10,12 @@ type SidebarProps = {
   idleCounts?: Record<string, number>;
   onSelectCategory: (category: string) => void;
   onToggleSidebar: () => void;
+  allowedServices?: string[];
 };
 
-export function Sidebar({ sidebarOpen, selectedCategory, queueCounts, idleCounts = {}, onSelectCategory, onToggleSidebar }: SidebarProps) {
+export function Sidebar({ sidebarOpen, selectedCategory, queueCounts, idleCounts = {}, allowedServices, onSelectCategory, onToggleSidebar }: SidebarProps) {
   const router = useRouter();
+  const visibleCategories = allowedServices ? CATEGORIES.filter(c => allowedServices.includes(c)) : CATEGORIES;
 
   const CategoryItem = ({ category }: { category: string }) => {
     const queueCount = queueCounts[category] || 0;
@@ -45,36 +47,20 @@ export function Sidebar({ sidebarOpen, selectedCategory, queueCounts, idleCounts
           sidebarOpen ? (
             <span className="flex items-center gap-1 shrink-0 ml-2">
               {queueCount > 0 && (
-                <span
-                  className={`text-xs px-2 py-0.5 rounded-full ${
-                    isActive ? 'bg-white text-[#cc3535]' : 'bg-red-100 text-[#cc3535]'
-                  }`}
-                  title="Waiting in queue"
-                >
+                <span className={`text-xs px-2 py-0.5 rounded-full ${isActive ? 'bg-white text-[#cc3535]' : 'bg-red-100 text-[#cc3535]'}`} title="Waiting in queue">
                   {queueCount}
                 </span>
               )}
               {idleCount > 0 && (
-                <span
-                  className={`text-xs px-2 py-0.5 rounded-full ${
-                    isActive ? 'bg-white/20 text-white' : 'bg-gray-200 text-gray-600'
-                  }`}
-                  title="Idle numbers"
-                >
+                <span className={`text-xs px-2 py-0.5 rounded-full ${isActive ? 'bg-white/20 text-white' : 'bg-gray-200 text-gray-600'}`} title="Idle numbers">
                   {idleCount}
                 </span>
               )}
             </span>
           ) : (
-            <span
-              className={`absolute top-1 right-1 flex items-center justify-center text-[9px] font-bold leading-none w-4 h-4 rounded-full ring-2 ${
-                isActive
-                  ? 'bg-white text-[#cc3535] ring-[#cc3535]'
-                  : queueCount > 0
-                    ? 'bg-[#cc3535] text-white ring-white'
-                    : 'bg-gray-500 text-white ring-white'
-              }`}
-            >
+            <span className={`absolute top-1 right-1 flex items-center justify-center text-[9px] font-bold leading-none w-4 h-4 rounded-full ring-2 ${
+              isActive ? 'bg-white text-[#cc3535] ring-[#cc3535]' : queueCount > 0 ? 'bg-[#cc3535] text-white ring-white' : 'bg-gray-500 text-white ring-white'
+            }`}>
               {totalBadge > 9 ? '9+' : totalBadge}
             </span>
           )
@@ -84,11 +70,7 @@ export function Sidebar({ sidebarOpen, selectedCategory, queueCounts, idleCounts
   };
 
   return (
-    <div
-      className={`fixed left-0 top-0 h-full bg-white/95 backdrop-blur-sm border-r border-red-100 shadow-xl transition-all duration-300 z-20 flex flex-col ${
-        sidebarOpen ? 'w-64' : 'w-16'
-      }`}
-    >
+    <div className={`fixed left-0 top-0 h-full bg-white/95 backdrop-blur-sm border-r border-red-100 shadow-xl transition-all duration-300 z-20 flex flex-col ${sidebarOpen ? 'w-64' : 'w-16'}`}>
       <div className="flex items-center justify-between p-4 border-b border-red-100">
         {sidebarOpen && (
           <div className="flex items-center gap-2 min-w-0">
@@ -106,7 +88,7 @@ export function Sidebar({ sidebarOpen, selectedCategory, queueCounts, idleCounts
 
       <nav className="flex-1 overflow-y-auto py-4">
         <div className="space-y-1 px-2">
-          {CATEGORIES.map(category => (
+          {visibleCategories.map(category => (
             <CategoryItem key={category} category={category} />
           ))}
         </div>

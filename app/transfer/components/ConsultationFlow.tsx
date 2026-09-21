@@ -32,6 +32,7 @@ type ConsultationFlowProps = {
   idlePatients: Patient[];
   onActivateIdle: (patient: Patient) => void;
   onRemoveIdle: (patient: Patient) => void;
+  allowedCounters?: number[];
 };
 
 export function ConsultationFlow({
@@ -61,6 +62,7 @@ export function ConsultationFlow({
   idlePatients,
   onActivateIdle,
   onRemoveIdle,
+  allowedCounters 
 }: ConsultationFlowProps) {
   if (!selectedSubcategory) {
     const countFor = (sub: string) => ({
@@ -133,6 +135,7 @@ export function ConsultationFlow({
         dragOverCounter={dragOverCounter}
         onDragStart={onRegDragStart}
         onRelease={onReleaseFromCounter}
+        allowedCounters={allowedCounters}
       />
       <div className="mt-4">
         <QueueAndIdleLayout
