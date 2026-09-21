@@ -13,7 +13,7 @@ export async function POST(request: Request) {
     const guard = await requireSuperadmin(request)
     if (!guard.authorized) return guard.response
 
-    const { email, password, username, role, cubicleIds } = await request.json()
+    const { email, password, username, role, cubicleIds, serviceAssignments, roomAssignments, counterAssignments } = await request.json()
 
     if (!email || !password) {
       return NextResponse.json(
@@ -64,6 +64,73 @@ export async function POST(request: Request) {
         )
       }
     }
+
+  if (role === 'registration') {
+    if (Array.isArray(serviceAssignments) && serviceAssignments.length > 0) {
+      const { error } = await supabaseAdmin
+        .from('user_services')
+        .insert(
+          serviceAssignments.map((service: string) => ({
+            user_id: userRow.id,
+            service,
+          }))
+        );
+
+      if (error) {
+        console.error('user_services insert error:', error);
+        return NextResponse.json(
+          { error: `Service assignment failed: ${error.message}` },
+          { status: 400 }
+        );
+      }
+    }
+
+    if (Array.isArray(roomAssignments) && roomAssignments.length > 0) {
+      const { error } = await supabaseAdmin
+        .from('user_rooms')
+        .insert(
+          roomAssignments.map(
+            (r: {
+              service: string;
+              subcategory: string | null;
+              room: number;
+            }) => ({
+              user_id: userRow.id,
+              service: r.service,
+              subcategory: r.subcategory,
+              room: r.room,
+            })
+          )
+        );
+
+      if (error) {
+        console.error('user_rooms insert error:', error);
+        return NextResponse.json(
+          { error: `Room assignment failed: ${error.message}` },
+          { status: 400 }
+        );
+      }
+    }
+
+    if (Array.isArray(counterAssignments) && counterAssignments.length > 0) {
+      const { error } = await supabaseAdmin
+        .from('user_counters')
+        .insert(
+          counterAssignments.map((counter: number) => ({
+            user_id: userRow.id,
+            counter,
+          }))
+        );
+
+      if (error) {
+        console.error('user_counters insert error:', error);
+        return NextResponse.json(
+          { error: `Counter assignment failed: ${error.message}` },
+          { status: 400 }
+        );
+      }
+    }
+  }
 
     return NextResponse.json(
       { success: true, user: authData.user },

@@ -112,11 +112,19 @@ export function useAutoRotate(
         };
 
         const onProgressUpdates = timedOutOnProgress.map(p => buildUpdate(p, {}));
-        const assignedUpdates = timedOutAssigned.map(p => buildUpdate(p, {
-          cubicleNum: null,
-          called_at: null,
-          cubicle_top_started_at: null,
-        }));
+        const assignedUpdates = timedOutAssigned.map(p => {
+          const reorderedPreferred =
+            p.cubicleNum && p.preferredCubicleNums
+              ? [p.cubicleNum, ...p.preferredCubicleNums.filter(c => c !== p.cubicleNum)]
+              : p.preferredCubicleNums;
+
+          return buildUpdate(p, {
+            cubicleNum: null,
+            called_at: null,
+            cubicle_top_started_at: null,
+            ...(reorderedPreferred ? { preferredCubicleNums: reorderedPreferred } : {}),
+          });
+        });
 
         console.log('[rotate] DB updates to write:', { onProgressUpdates, assignedUpdates });
 
