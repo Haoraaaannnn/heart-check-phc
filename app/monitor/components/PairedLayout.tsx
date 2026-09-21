@@ -26,13 +26,24 @@ export function PairedLayout({ title, pairedData, formatCubicleDisplay, cubicleD
               const doctorName = pair.cubicle ? cubicleDoctorMap[pair.cubicle] : undefined;
               return (
                 <div key={index} className="grid grid-cols-2 gap-8">
-                  <div className={`bg-white rounded-2xl p-6 shadow-md border-2 flex items-center justify-center min-h-[120px] ${
-                    index === 0 ? 'border-[#cc3535] bg-red-50' : 'border-gray-100'
+                  <div className={`rounded-3xl flex flex-col items-center justify-center gap-1 transition-all ${
+                    index === 0
+                      ? 'bg-[#cc3535] shadow-2xl shadow-red-300 ring-[6px] ring-red-100 scale-105 min-h-[180px] p-8'
+                      : 'bg-white border-2 border-gray-100 min-h-[120px] p-6 opacity-70'
                   }`}>
                     {pair.patient ? (
-                      <span className="text-[#cc3535] font-black text-5xl tabular-nums">
-                        {pair.patient.patientNum}
-                      </span>
+                      <>
+                        {index === 0 && (
+                          <span className="text-white/80 text-base font-black uppercase tracking-widest">
+                            Now Serving
+                          </span>
+                        )}
+                        <span className={`font-black tabular-nums drop-shadow-md ${
+                          index === 0 ? 'text-white text-8xl' : 'text-gray-400 text-3xl'
+                        }`}>
+                          {pair.patient.patientNum}
+                        </span>
+                      </>
                     ) : (
                       <span className="text-gray-300 text-3xl">—</span>
                     )}

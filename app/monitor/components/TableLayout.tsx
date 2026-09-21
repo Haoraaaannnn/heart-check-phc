@@ -52,7 +52,7 @@ export function TableLayout({ title, cubicles, assignedPatients, formatCubicleDi
                 const roomCubicles = cubicles.filter(c => c.room === room);
                 return (
                   <tr key={room} className="border-b border-gray-100">
-                    <td className="px-6 py-8 font-bold text-gray-700 text-2xl bg-gray-50">
+                    <td className="px-6 py-8 font-bold text-gray-700 text-2xl bg-gray-50 sticky left-0 align-top">
                       Room {room}
                     </td>
                     {roomCubicles.map((cubicle) => {
@@ -66,21 +66,31 @@ export function TableLayout({ title, cubicles, assignedPatients, formatCubicleDi
                             {sortedPatients.length === 0 ? (
                               <div className="text-gray-300 text-xl">—</div>
                             ) : (
-                              sortedPatients.map((patient, idx) => (
-                                <div
-                                  key={patient.id}
-                                  className={`bg-white rounded-2xl p-4 shadow-sm border flex items-center justify-between gap-3 ${
-                                    idx === 0 ? 'border-[#cc3535] border-2' : 'border-gray-100'
-                                  }`}
-                                >
-                                  <span className="text-[#cc3535] font-black text-3xl tabular-nums">
-                                    {patient.patientNum}
-                                  </span>
-                                  {idx === 0 && (
-                                    <div className="w-3 h-3 rounded-full bg-green-400 animate-pulse"></div>
-                                  )}
-                                </div>
-                              ))
+                              sortedPatients.map((patient, idx) =>
+                                idx === 0 ? (
+                                  <div
+                                    key={patient.id}
+                                    className="relative bg-[#cc3535] rounded-3xl p-6 shadow-2xl shadow-red-300 ring-[6px] ring-red-100 scale-110 flex flex-col items-center justify-center gap-1 z-10"
+                                  >
+                                    <span className="text-white/80 text-sm font-black uppercase tracking-widest">
+                                      Now Serving
+                                    </span>
+                                    <span className="text-white font-black text-7xl tabular-nums leading-none drop-shadow-md">
+                                      {patient.patientNum}
+                                    </span>
+                                    <div className="absolute top-3 right-3 w-4 h-4 rounded-full bg-green-300 ring-2 ring-white animate-pulse" />
+                                  </div>
+                                ) : (
+                                  <div
+                                    key={patient.id}
+                                    className="bg-white rounded-2xl p-4 shadow-sm border border-gray-100 flex items-center justify-center opacity-70"
+                                  >
+                                    <span className="text-gray-400 font-black text-2xl tabular-nums">
+                                      {patient.patientNum}
+                                    </span>
+                                  </div>
+                                )
+                              )
                             )}
                           </div>
                         </td>
