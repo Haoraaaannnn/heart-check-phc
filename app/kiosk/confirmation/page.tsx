@@ -9,7 +9,7 @@ interface Props {
 }
 
 export default async function ConfirmationPage({ searchParams }: Props) {
-  const { serviceId, type } = await searchParams ?? {};
+  const { serviceId, type } = (await searchParams) ?? {};
   const supabase = await createClient();
   const { data } = await supabase
     .from("services")
