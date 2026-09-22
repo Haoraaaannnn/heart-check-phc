@@ -1,4 +1,4 @@
-import { useState } from 'react';
+import { useCallback, useState } from 'react';
 import { PatientStats, AnalyticsData } from '@/types/Types';
 import { DEFAULT_HOURLY_DATA } from '@/app/dashboard/patients/constants/patients';
 
@@ -12,7 +12,7 @@ export function usePatientsAnalyticsData() {
   });
   const [hourlyData, setHourlyData] = useState(DEFAULT_HOURLY_DATA);
 
-  const fetchAnalyticsData = async () => {
+  const fetchAnalyticsData = useCallback(async () => {
     try {
       const response = await fetch('http://localhost:8000/api/dashboard-data');
       if (!response.ok) throw new Error(`Analytics API error: ${response.status}`);
@@ -32,7 +32,7 @@ export function usePatientsAnalyticsData() {
       console.warn('Analytics API not available, using fallback data:', err);
       setHourlyData(DEFAULT_HOURLY_DATA);
     }
-  };
+  }, []);
 
   return { stats, setStats, hourlyData, fetchAnalyticsData };
 }

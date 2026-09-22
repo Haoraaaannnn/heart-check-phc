@@ -1,98 +1,77 @@
 "use client";
 
-import { useEffect, useState } from "react";
 import KioskBanner from "@/app/kiosk/kiosk-services/components/KioskBanner";
-import KioskBackButton from "./components/KioskBackButton";
+import { useIsLandscape } from "@/hooks/useIsLandscape";
+import { useIsMounted } from "@/hooks/useIsMounted";
 
-const backRoute: Record<string, string> = {
-    "/kiosk/kiosk-services": "/kiosk/kiosk-new-old-selection",
-};
+/** Props for {@link KioskLayout}. */
+interface KioskLayoutProps {
+    /** The page rendered inside this layout (the services grid). */
+    children: React.ReactNode;
+}
 
-export default function KioskLayout({children,}: {children: React.ReactNode;}) {
-    const [scale, setScale] = useState(1);
-    const [isLandscape, setIsLandscape] = useState(false);
-    const [mounted, setMounted] = useState(false);
+/**
+ * Layout for `/kiosk/kiosk-services`.
+ *
+ * Renders the banner and the services grid as one vertically centered group
+ * that scrolls when the cards don't fit above the footer.
+ *
+ * @remarks
+ * Where it sits in the tree:
+ * ```text
+ * app/kiosk/layout.tsx (MainKioskLayout)
+ *   -> back button, <main>, KioskHeader (footer with logo + clock)
+ *        -> THIS layout
+ *             -> KioskBanner + page.tsx (KioskServicesGrid)
+ * ```
+ *
+ * The bottom padding (`pb-[120px]` landscape, `pb-[140px]` portrait) must
+ * match the KioskHeader footer height. This layout is `fixed inset-0`, so it
+ * covers the footer and needs that space reserved manually.
+ *
+ * @param props - Layout props provided by Next.js.
+ * @returns The scrollable, centered banner + services content.
+ */
+export default function KioskLayout({ children }: KioskLayoutProps) {
+    // True when the window is wider than tall (kiosk mounted sideways).
+    const isLandscape = useIsLandscape();
 
-    useEffect(() => {
-        const updateScale = () => {
-            const landscape = window.innerWidth > window.innerHeight;
-
-            setIsLandscape(landscape);
-
-            const virtualWidth = landscape ? 1920 : 1080;
-            const virtualHeight = landscape ? 1080 : 1920;
-
-            const scaleX = window.innerWidth / virtualWidth;
-            const scaleY = window.innerHeight / virtualHeight;
-
-            setScale(Math.min(scaleX, scaleY) || 1);
-            setMounted(true);
-        };
-
-        updateScale();
-
-        window.addEventListener("resize", updateScale);
-        window.addEventListener("orientationchange", updateScale);
-
-        return () => {
-            window.removeEventListener("resize", updateScale);
-            window.removeEventListener(
-                "orientationchange",
-                updateScale
-            );
-        };
-    }, []);
+    // False until hydration finishes, so the page fades in instead of
+    // flashing the wrong layout on first paint.
+    const mounted = useIsMounted();
 
     return (
         <div
-            className={`fixed inset-0 flex items-center justify-center overflow-hidden bg-white transition-opacity duration-300 ${
+            className={`fixed inset-0 flex h-dvh w-dvw items-center justify-center overflow-hidden bg-white transition-opacity duration-300 ${
                 mounted ? "opacity-100" : "opacity-0"
             }`}
         >
-            {/* Virtual Kiosk Screen */}
-            <div
-                className="relative flex-shrink-0 overflow-hidden"
-                style={{
-                    width: isLandscape ? "1920px" : "1080px",
-                    height: isLandscape ? "1080px" : "1920px",
-                    transform: `scale(${scale})`,
-                    transformOrigin: "center center",
-                }}
-            >
-                <div className="relative flex h-full w-full flex-col overflow-hidden">
-
-                    {/* 
-                        Content area.
-                        Bottom padding leaves room for the
-                        shared KioskHeader.
-                    */}
-                    <main
-                        className={`flex flex-1 min-h-0 items-center justify-center overflow-hidden ${
-                            isLandscape
-                                ? "pb-[120px]"
-                                : "pb-[140px]"
+            <div className="relative flex h-full w-full flex-col overflow-hidden">
+                {/*
+                    Scrollable content area.
+                    Centering uses `m-auto` on the inner wrapper instead of
+                    `items-center` here: with items-center, content taller than
+                    the area overflows equally at top and bottom and
+                    overflow-hidden clips both ends (the cut-off heading and
+                    last card bug). m-auto centers short content and lets tall
+                    content start at the top and scroll.
+                    Scrollbar is hidden because this is a touch kiosk.
+                */}
+                <main
+                    className={`flex flex-1 min-h-0 overflow-y-auto overflow-x-hidden pt-4 [scrollbar-width:none] [&::-webkit-scrollbar]:hidden ${
+                        isLandscape ? "pb-[120px]" : "pb-[140px]"
+                    }`}
+                >
+                    <div
+                        className={`m-auto flex flex-col items-center ${
+                            isLandscape ? "w-[92%] max-w-[1600px]" : "w-full"
                         }`}
                     >
-                        {/* Banner + Service Cards as ONE GROUP */}
-                        <div
-                            className={
-                                isLandscape
-                                    ? "flex w-[55%] flex-col items-center justify-center"
-                                    : "flex w-full flex-col items-center justify-center"
-                            }
-                        >
-                            
-                            {/* Banner */}
-                            <KioskBanner />
+                        <KioskBanner />
 
-                            {/* Service Cards */}
-                            <div className="w-full">
-                                {children}
-                            </div>
-                        </div>
-                    </main>
-
-                </div>
+                        <div className="w-full">{children}</div>
+                    </div>
+                </main>
             </div>
         </div>
     );

@@ -1,7 +1,9 @@
+// this file is where the data insertion to the database happens
+
 "use client";
 
 import { useState } from "react";
-import { useRouter } from "next/navigation";
+import { useRouter, useSearchParams } from "next/navigation";
 import { supabase } from "@/lib/supabase";
 import { getTimestamp } from "@/lib/logger";
 import { Service } from "@/types/Services";
@@ -58,6 +60,12 @@ export default function KioskPhoneEntry({
   const [showSkipModal, setShowSkipModal] = useState(false);
   const [patientNum, setPatientNum] = useState<string | undefined>(initialPatientNum);
   const router = useRouter();
+  const searchParams = useSearchParams();
+
+  const patientType = searchParams.get("type");
+  const cancelHref = patientType
+    ? `/kiosk/kiosk-services?type=${encodeURIComponent(patientType)}`
+    : "/kiosk/kiosk-services";
 
   const addDigit = (digit: string) => { if (phone.length < MAX) setPhone((p) => p + digit); };
   const deleteLast = () => setPhone((p) => p.slice(0, -1));
@@ -148,6 +156,7 @@ export default function KioskPhoneEntry({
           onSkipConfirm={handleSkipConfirm}
           onContinueCancel={() => setShowContinueModal(false)}
           onSkipCancel={() => setShowSkipModal(false)}
+          href={cancelHref}
         />
       </div>
     </div>

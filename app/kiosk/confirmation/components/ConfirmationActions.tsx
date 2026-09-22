@@ -21,29 +21,45 @@ export default function ConfirmationActions({
   const handleContinue = () => {
     onContinue?.();
 
-    const isConsultation = service.label_en?.toLowerCase() === "consultation";
-    const isOPDScreening = service.label_en?.toLowerCase() === "opd screening";
+    const label = service.label_en?.trim().toLowerCase();
+    const isConsultation = label === "consultation";
+    const isOPDScreening = label === "opd screening";
+
+    // 'new' / 'old' services imply their own patient type; 'both' and
+    // anything unrecognised (NULL, unexpected value) stays undefined.
+    const serviceType =
+      service.patient_type === "new" || service.patient_type === "old"
+        ? service.patient_type
+        : undefined;
+
+    // Prefer what the patient actually picked; fall back to what the
+    // service implies. Stays undefined for 'both' services with no pick.
+    const resolvedType = patientType ?? serviceType;
+
+    // Single place that builds the URL so every branch threads the same
+    // params (the fallback used to drop `type`).
+    const buildUrl = (path: string) => {
+      const params = new URLSearchParams({ serviceId: String(service.id) });
+      if (resolvedType) params.set("type", resolvedType);
+      return `${path}?${params.toString()}`;
+    };
 
     if (isConsultation) {
       console.log(`${getTimestamp()} [CONFIRMATION ACCEPTED] Consultation service - Redirecting to cubicle selection - ServiceId: ${service.id}`);
-      router.push(
-        `/kiosk/consultation-category?serviceId=${service.id}${
-          patientType ? `&type=${patientType}` : ""
-        }`);
+      router.push(buildUrl("/kiosk/consultation-category"));
       return;
     }
 
     if (isOPDScreening) {
       console.log(`${getTimestamp()} [CONFIRMATION ACCEPTED] OPD Screening service - Redirecting to category selection - ServiceId: ${service.id}`);
-      router.push(
-        `/kiosk/opd-screening-category?serviceId=${service.id}${
-          patientType ? `&type=${patientType}` : ""
-        }`);
+      router.push(buildUrl("/kiosk/opd-screening-category"));
       return;
     }
 
-    console.log(`${getTimestamp()} [CONFIRMATION ACCEPTED] Service confirmed - Redirecting to SMS input - ServiceId: ${service.id}`);
-    router.push(`/kiosk/sms-input?serviceId=${service.id}`);
+    // 'both' services (OPD Card, Refill, ECG, Warfarin, Reschedule,
+    // Benzathine): no category step, no registration stage.
+    console.log(`${getTimestamp()} [CONFIRMATION ACCEPTED] 'both' service confirmed - Redirecting to SMS input - ServiceId: ${service.id}${resolvedType ? ` - type: ${resolvedType}` : ""}`);
+    router.push(buildUrl("/kiosk/sms-input"));
   };
 
   const handleCancel = () => {
