@@ -2,6 +2,14 @@
 
 import { useRouter, useSearchParams } from "next/navigation";
 
+/**
+ * Kiosk step where the patient selects their age category
+ * (Adult or Pedia) before proceeding to cubicle selection.
+ *
+ * Reads `serviceId` and `type` (patient type) from the URL query
+ * string, appends the chosen `subcategory`, and navigates to
+ * `/kiosk/kiosk-cubicle-selection`.
+ */
 export default function ConsultationCategoryPage() {
   const router = useRouter();
   const searchParams = useSearchParams();
@@ -9,6 +17,13 @@ export default function ConsultationCategoryPage() {
   const serviceId = searchParams.get("serviceId");
   const patientType = searchParams.get("type");
 
+  /**
+   * Builds the next URL's query params (carrying over `serviceId`
+   * and `type` if present, adding `subcategory`) and navigates
+   * to the cubicle selection step.
+   *
+   * @param subcategory - The age category the patient selected.
+   */
   const chooseCategory = (subcategory: "Adult" | "Pedia") => {
     const params = new URLSearchParams();
 
@@ -34,21 +49,27 @@ export default function ConsultationCategoryPage() {
         <button
           type="button"
           onClick={() => chooseCategory("Adult")}
-          className="rounded-[16px] border-2 border-gray-300 bg-white px-8 py-16 text-[38px] font-black text-black transition-all active:scale-95"
+          className="flex flex-row items-center justify-center gap-4 rounded-[16px] border-2 border-gray-300 bg-white px-8 py-16 text-[38px] font-black text-black transition-all active:scale-95"
         >
-          Adult
-          <br />
-          (19 Pataas)
+          <i className="bx bx-male text-red-600 text-[64px]" />
+          <span>
+            Adult
+            <br />
+            (19 Pataas)
+          </span>
         </button>
 
         <button
           type="button"
           onClick={() => chooseCategory("Pedia")}
-          className="rounded-[16px] border-2 border-gray-300 bg-white px-8 py-16 text-[38px] font-black text-black transition-all active:scale-95"
+          className="flex flex-row items-center justify-center gap-4 rounded-[16px] border-2 border-gray-300 bg-white px-8 py-16 text-[38px] font-black text-black transition-all active:scale-95"
         >
-          Pedia
-          <br />
-          (18 Pababa)
+          <i className="bx bx-child text-blue-600 text-[64px]" />
+          <span>
+            Pedia
+            <br />
+            (18 Pababa)
+          </span>
         </button>
       </div>
     </div>

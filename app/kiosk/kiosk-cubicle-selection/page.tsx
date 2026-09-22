@@ -38,7 +38,7 @@ export default async function KioskCubicleSelectionPage({ searchParams }: Props)
     }
 
     return (
-        <div className="grid grid-cols-2 w-full max-w-full landscape:grid-cols-2 content-evenly gap-x-8 gap-y-8 px-8 py-8">
+        <div className="grid grid-cols-2 w-full max-w-full landscape:grid-cols-3 content-evenly gap-x-8 gap-y-8 px-8 py-8">
             {cubicles?.map((cubicle: CubicleSelectorType) => (
             <CubicleCard
             key={cubicle.id}
