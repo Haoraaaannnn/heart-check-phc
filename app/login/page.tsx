@@ -210,6 +210,9 @@ function LoginPageInner() {
                 <i className={`bx ${showPassword ? 'bx-hide' : 'bx-show'} text-xl`}></i>
               </button>
             </div>
+            <a href="/forgot-password" className="text-sm text-gray-500 hover:text-[#cc3535]">
+              Forgot password?
+            </a>
           </div>
 
           <button
