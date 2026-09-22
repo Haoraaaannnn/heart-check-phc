@@ -1,7 +1,8 @@
+// app/kiosk/kiosk-cubicle-selection/components/CubicleCard.tsx
 "use client";
 
-import { useRouter } from "next/navigation";
 import { CubicleSelectorType } from "@/app/kiosk/kiosk-cubicle-selection/types/CubicleSelectorType";
+import { useKioskNavigate } from "@/app/kiosk/hooks/useKioskNavigate";
 
 interface CubicleCardProps {
   cubicle: CubicleSelectorType;
@@ -16,7 +17,7 @@ export default function CubicleCard({
   patientType,
   subcategory,
 }: CubicleCardProps) {
-  const router = useRouter();
+  const navigate = useKioskNavigate();
 
   const handleClick = () => {
     const params = new URLSearchParams();
@@ -39,7 +40,7 @@ export default function CubicleCard({
 
     params.set("preferredCubicleNums", cubicleNums.join(","));
 
-    router.push(`/kiosk/sms-input?${params.toString()}`);
+    navigate(`/kiosk/sms-input?${params.toString()}`);
   };
 
   return (

@@ -1,9 +1,11 @@
+// app/kiosk/opd-screening-category/page.tsx
 "use client";
 
-import { useRouter, useSearchParams } from "next/navigation";
+import { useSearchParams } from "next/navigation";
+import { useKioskNavigate } from "@/app/kiosk/hooks/useKioskNavigate";
 
 export default function OPDScreeningCategoryPage() {
-  const router = useRouter();
+  const navigate = useKioskNavigate();
   const searchParams = useSearchParams();
 
   const serviceId = searchParams.get("serviceId");
@@ -16,7 +18,7 @@ export default function OPDScreeningCategoryPage() {
     if (patientType) params.set("type", patientType);
     params.set("subcategory", subcategory);
 
-    router.push(`/kiosk/sms-input?${params.toString()}`);
+    navigate(`/kiosk/sms-input?${params.toString()}`);
   };
 
   return (

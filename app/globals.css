@@ -7,6 +7,7 @@
   --font-mono: var(--font-geist-mono);
   --font-tilt: var(--font-tilt-warp);
   --font-baloo: var(--font-baloo-2);
+  /* TO BE REMOVED */
   --color-brand: #7f0407;
   --color-brand-light: #ebb7b7;
   --color-brand-accent: #cc3535;

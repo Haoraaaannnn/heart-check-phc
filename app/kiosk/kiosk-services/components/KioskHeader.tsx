@@ -1,6 +1,8 @@
 "use client";
 
 import { useEffect, useState } from "react";
+import { KioskHeaderStyle } from "@/app/kiosk/kiosk-services/constants/kioskHeader";
+import { KioskHeaderTexts } from "@/constants/kioskTexts";
 
 export default function KioskHeader(){
     const [time, setTime] = useState("");
@@ -18,16 +20,14 @@ export default function KioskHeader(){
     }, []);
 
     return (
-        <header className="relative z-10 px-4 py-4 flex items-center justify-between bg-brand">
-            <div className="flex items-center gap-3">
-                <span 
-                    className="text-white font-black text-[34px] ">Heart Check</span>
-                <span 
-                    className="text-brand-light font-black text-[34px] ">PHC</span>
+        <header style={KioskHeaderStyle.container}>
+            <div style={KioskHeaderStyle.brand}>
+                <span style={KioskHeaderStyle.brandPrimary}> {KioskHeaderTexts.headerTitle}</span>
+                <span style={KioskHeaderStyle.brandAccent}>{KioskHeaderTexts.headerAccent}</span>
             </div>
-            <div className="text-right">
-                <p className="text-2xl text-[34px] text-white">{time}</p>
-                <div className=" font-black text-[28px] text-white">{date}</div>
+            <div style={KioskHeaderStyle.clock}>
+                <p style={KioskHeaderStyle.time}>{time}</p>
+                <div style={KioskHeaderStyle.date}>{date}</div>
             </div>
         </header>
     );
