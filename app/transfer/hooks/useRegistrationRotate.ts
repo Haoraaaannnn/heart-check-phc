@@ -2,7 +2,7 @@
 import { useEffect } from 'react';
 import { Patient } from '@/types/Types';
 import { supabase } from '@/lib/supabase';
-import { MAX_ROTATIONS_BEFORE_IDLE } from '../lib/constants';
+import { callRotateApi } from '../lib/rotateApi';
 
 export function useRegistrationRotate(
   registrationPatients: Patient[],
@@ -64,7 +64,7 @@ export function useRegistrationRotate(
           };
         });
 
-        await supabase.from('patients').upsert(updates, { onConflict: 'id' });
+        await callRotateApi(updates);
         await fetchRegistrationPatients();
       } catch (err) {
         console.error('Registration rotate error:', err);

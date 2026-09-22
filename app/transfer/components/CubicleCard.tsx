@@ -32,6 +32,10 @@ export function CubicleCard({
   warnAfterSeconds,
   doctorName,
 }: CubicleCardProps) {
+
+  const uniqueAssigned = Array.from(new Map(assigned.map(p => [p.id, p])).values());
+  const visibleAssigned = uniqueAssigned.slice(0, MAX_PATIENTS_PER_CUBICLE);
+
   return (
     <div
       data-cubicle={cubicle.cubicleNum}
@@ -43,16 +47,14 @@ export function CubicleCard({
       <div className="flex justify-between items-center">
         <span className="text-gray-700 font-semibold text-xs">{cubicle.cubicleNum}</span>
         <span className={`text-xs font-medium ${isFull ? 'text-red-500' : 'text-gray-400'}`}>
-          {assigned.length}/{MAX_PATIENTS_PER_CUBICLE}
+          {visibleAssigned.length}/{MAX_PATIENTS_PER_CUBICLE}
         </span>
       </div>
-      {doctorName && (
-        <span className="text-gray-700 text-[11px] font-semibold -mt-1">Dr. {doctorName}</span>
-      )}
-      {assigned.length === 0 && <p className="text-gray-300 text-xs">Drop patient here</p>}
+      {doctorName && <span className="...">Dr. {doctorName}</span>}
+      {visibleAssigned.length === 0 && <p className="text-gray-300 text-xs">Drop patient here</p>}
       {isFull && <p className="text-red-400 text-xs">Full - No more patients can be assigned</p>}
       <div className="flex flex-col gap-1">
-      {assigned.map((p, index) => (
+      {visibleAssigned.map((p, index) => (
         <div key={p.id} className="flex items-center gap-1">
           <span
             onMouseDown={isDraggable ? (e) => onDragStart(e, p, cubicle.cubicleNum) : undefined}

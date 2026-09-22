@@ -121,9 +121,7 @@ import { supabase } from "@/lib/supabase";
           )
           .find(
             (cubicle) =>
-              cubicle &&
-              (cubicleCounts[cubicle.cubicleNum] || 0) <
-                MAX_PATIENTS_PER_CUBICLE
+              cubicle && (cubicleCounts[cubicle.cubicleNum] || 0) < MAX_PATIENTS_PER_CUBICLE
           );
 
         if (!freeCubicle) continue;
@@ -136,19 +134,23 @@ import { supabase } from "@/lib/supabase";
           called_at: now2,
         };
 
-        setPendingUpdates((previous) => [
-          ...previous.filter((item) => item.id !== patient.id),
-          updatedPatient,
-        ]);
+        dbUpdates.push({
+          id: patient.id,
+          cubicleNum: freeCubicle.cubicleNum,
+          status: "Assigned",
+          reg_end: now2,
+          called_at: now2,
+          queue_position: 9999,
+        });
+        anyAutoAssigned = true;
 
         allAssignedIds.push(patient.id);
-        cubicleCounts[freeCubicle.cubicleNum] =
-          (cubicleCounts[freeCubicle.cubicleNum] || 0) + 1;
+        cubicleCounts[freeCubicle.cubicleNum] = (cubicleCounts[freeCubicle.cubicleNum] || 0) + 1;
 
         setAssignedPatients((previous) => ({
           ...previous,
           [freeCubicle.cubicleNum]: [
-            ...(previous[freeCubicle.cubicleNum] || []),
+            ...(previous[freeCubicle.cubicleNum] || []).filter(p => p.id !== updatedPatient.id),
             updatedPatient,
           ],
         }));
