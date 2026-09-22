@@ -1,6 +1,8 @@
+// app/kiosk/consultation-category/page.tsx
 "use client";
 
-import { useRouter, useSearchParams } from "next/navigation";
+import { useSearchParams } from "next/navigation";
+import { useKioskNavigate } from "@/app/kiosk/hooks/useKioskNavigate";
 
 /**
  * Kiosk step where the patient selects their age category
@@ -11,7 +13,7 @@ import { useRouter, useSearchParams } from "next/navigation";
  * `/kiosk/kiosk-cubicle-selection`.
  */
 export default function ConsultationCategoryPage() {
-  const router = useRouter();
+  const navigate = useKioskNavigate();
   const searchParams = useSearchParams();
 
   const serviceId = searchParams.get("serviceId");
@@ -31,7 +33,7 @@ export default function ConsultationCategoryPage() {
     if (patientType) params.set("type", patientType);
     params.set("subcategory", subcategory);
 
-    router.push(`/kiosk/kiosk-cubicle-selection?${params.toString()}`);
+    navigate(`/kiosk/kiosk-cubicle-selection?${params.toString()}`);
   };
 
   return (

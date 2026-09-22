@@ -1,18 +1,19 @@
+// app/kiosk/kiosk-new-old-selection/components/PatientTypeCards.tsx
 "use client";
 
-import { useRouter } from "next/navigation";
 import { PatientCategory } from "@/app/kiosk/kiosk-new-old-selection/types/PatientType";
 import * as TablerIcons from "@tabler/icons-react";
+import { useKioskNavigate } from "@/app/kiosk/hooks/useKioskNavigate";
 
 export default function KioskNewOldSelectionPage({patientCategory}: {patientCategory: PatientCategory}) {
 
-    const router = useRouter();
+    const navigate = useKioskNavigate();
     const pc = patientCategory;
     const Icon = (TablerIcons as Record<string, any>)[pc.icon_src] ?? TablerIcons.IconCircleDashed;
 
     return (
         <button
-        onClick={() => router.push(`/kiosk/kiosk-services?type=${pc.type}`)}
+        onClick={() => navigate(`/kiosk/kiosk-services?type=${pc.type}`)}
         className="relative flex items-center h-[200px] gap-2 pl-8 pr-12 py-6 rounded-[16px] transition-all active:scale-95 overflow-hidden bg-white border-2 border-gray-300"
         >
             <div className="w-22 h-22 bg-[#7f0407] py-4 px-4 rounded-[16px] flex items-center justify-center">
