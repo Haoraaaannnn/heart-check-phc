@@ -1,16 +1,66 @@
 @import "tailwindcss";
 @custom-variant dark (&:where(.dark, .dark *));
 
+/* -------------------------------------------------------------------------- */
+/* Semantic theme tokens                                                       */
+/* Values swap under `.dark` (class set on <html> by next-themes).             */
+/* Components use utilities like `bg-surface`, `text-content`, `border-line`   */
+/* and never need a `dark:` variant for these.                                 */
+/* -------------------------------------------------------------------------- */
+:root {
+  --surface: rgb(255 255 255 / 0.78);
+  --surface-muted: rgb(255 241 242 / 0.7);
+  --line: rgb(244 205 208 / 0.7);
+  --content: #1f2937;
+  --content-muted: #6b7280;
+  --content-subtle: #9ca3af;
+  --track: #f3e4e6;
+  --accent: #be123c;
+  --card-shadow: 0 10px 40px rgba(255, 120, 120, 0.08);
+  --gradient-brand: linear-gradient(135deg, #9f1239 0%, #e11d48 100%);
+  --gradient-banner: linear-gradient(115deg, #fff1f2 0%, #ffe4e6 45%, #fb7185 130%);
+}
+
+.dark {
+  --surface: rgb(17 24 39 / 0.7);
+  --surface-muted: rgb(31 41 55 / 0.6);
+  --line: rgb(55 65 81 / 0.6);
+  --content: #e5e7eb;
+  --content-muted: #9ca3af;
+  --content-subtle: #6b7280;
+  --track: #374151;
+  --accent: #fb7185;
+  --card-shadow: 0 10px 40px rgba(0, 0, 0, 0.25);
+  --gradient-brand: linear-gradient(135deg, #7f1d1d 0%, #be123c 100%);
+  --gradient-banner: linear-gradient(115deg, #1f2937 0%, #3b1d25 55%, #9f1239 130%);
+}
+
 @theme inline {
   /* We keep your custom fonts! */
   --font-sans: var(--font-geist-sans);
   --font-mono: var(--font-geist-mono);
   --font-tilt: var(--font-tilt-warp);
   --font-baloo: var(--font-baloo-2);
-  /* TO BE REMOVED */
-  --color-brand: #7f0407;
-  --color-brand-light: #ebb7b7;
-  --color-brand-accent: #cc3535;
+
+  /* Semantic tokens -> Tailwind utilities (bg-surface, text-content, ...) */
+  --color-surface: var(--surface);
+  --color-surface-muted: var(--surface-muted);
+  --color-line: var(--line);
+  --color-content: var(--content);
+  --color-content-muted: var(--content-muted);
+  --color-content-subtle: var(--content-subtle);
+  --color-track: var(--track);
+  --color-accent: var(--accent);
+  --shadow-card: var(--card-shadow);
+}
+
+/* Gradient backgrounds that follow the active theme */
+@utility bg-brand-gradient {
+  background-image: var(--gradient-brand);
+}
+
+@utility bg-banner-gradient {
+  background-image: var(--gradient-banner);
 }
 
 body {
@@ -19,6 +69,6 @@ body {
 
 /* We keep your cool glow effect! */
 .glow-red {
-  text-shadow: 0 0 10px rgba(204, 53, 53, 0.7), 
-               0 0 20px rgba(204, 53, 53, 0.4);
+  text-shadow: 0 0 10px rgba(204, 53, 53, 0.7),
+    0 0 20px rgba(204, 53, 53, 0.4);
 }

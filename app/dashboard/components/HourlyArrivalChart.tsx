@@ -1,82 +1,74 @@
 'use client';
 
-import { useEffect, useState } from 'react';
 import {
-  BarChart, Bar, XAxis, YAxis, CartesianGrid, Tooltip, ResponsiveContainer,
+  Bar,
+  BarChart,
+  CartesianGrid,
+  ResponsiveContainer,
+  Tooltip,
+  XAxis,
+  YAxis,
 } from 'recharts';
+import DashboardCard from '@/app/dashboard/components/DashboardCard';
+import { useDashboardTheme } from '@/app/dashboard/hooks/useDashboardTheme';
+import { HOURLY_CHART, TOOLTIP_BASE_STYLE } from '@/app/dashboard/constants/charts';
+import { SECTIONS } from '@/app/dashboard/constants/content';
+import { DASH } from '@/app/dashboard/constants/styles';
+
+const C = SECTIONS.hourlyArrivals;
 
 interface HourlyArrivalsChartProps {
   hourlyData: { time: string; patients: number }[];
   isMounted: boolean;
 }
 
-// Watches document.documentElement's class list so Recharts (which
-// needs literal color strings, not Tailwind `dark:` classes) can
-// theme its SVG fill / tooltip colors to match the current mode.
-function useIsDarkMode() {
-  const [isDark, setIsDark] = useState(false);
-
-  useEffect(() => {
-    const check = () => setIsDark(document.documentElement.classList.contains('dark'));
-    check();
-
-    const observer = new MutationObserver(check);
-    observer.observe(document.documentElement, { attributes: true, attributeFilter: ['class'] });
-    return () => observer.disconnect();
-  }, []);
-
-  return isDark;
-}
-
+/** Bar chart of patient arrivals per hour today. Colors adapt to light/dark via useDashboardTheme. */
 export default function HourlyArrivalsChart({ hourlyData, isMounted }: HourlyArrivalsChartProps) {
-  const isDark = useIsDarkMode();
+  const { chartColors } = useDashboardTheme();
 
   return (
-    <div className="bg-white/35 rounded-[28px] shadow-[0_10px_40px_rgba(255,120,120,0.06)] border border-red-50 backdrop-blur-xl p-8 w-full mb-8
-      dark:bg-gray-900/60 dark:border-gray-700/50 dark:shadow-black/20">
-      <div className="mb-6">
-        <h2 className="text-xl font-extrabold text-gray-800 dark:text-gray-200">Hourly Patient Arrivals</h2>
-        <p className="text-sm text-gray-400 mt-1">Number of patients registered per hour today</p>
-      </div>
-
-      <div style={{ width: '100%', height: 300, minHeight: 300 }}>
+    <DashboardCard title={C.title} subtitle={C.subtitle} icon={C.icon}>
+      <div style={{ width: '100%', height: HOURLY_CHART.height }}>
         {isMounted ? (
           <ResponsiveContainer width="99%" height="100%">
-            <BarChart data={hourlyData} margin={{ top: 10, right: 10, left: -20, bottom: 0 }}>
-              <CartesianGrid strokeDasharray="3 3" vertical={false} stroke={isDark ? '#374151' : '#f0f0f0'} />
+            <BarChart data={hourlyData} margin={HOURLY_CHART.margin}>
+              <CartesianGrid strokeDasharray="3 3" vertical={false} stroke={chartColors.grid} />
               <XAxis
                 dataKey="time"
-                tick={{ fontSize: 12, fill: '#9ca3af' }}
+                tick={{ fontSize: HOURLY_CHART.tickFontSize, fill: chartColors.axis }}
                 axisLine={false}
                 tickLine={false}
               />
               <YAxis
                 allowDecimals={false}
-                tick={{ fontSize: 12, fill: '#9ca3af' }}
+                tick={{ fontSize: HOURLY_CHART.tickFontSize, fill: chartColors.axis }}
                 axisLine={false}
                 tickLine={false}
-                domain={[0, (dataMax: number) => Math.max(dataMax, 4)]}
+                domain={[0, (dataMax: number) => Math.max(dataMax, HOURLY_CHART.minYMax)]}
               />
               <Tooltip
-                cursor={{ fill: isDark ? 'rgba(255,255,255,0.06)' : '#f3f4f6' }}
+                cursor={{ fill: chartColors.cursor }}
                 contentStyle={{
-                  borderRadius: '8px',
-                  border: 'none',
-                  boxShadow: '0 4px 6px -1px rgb(0 0 0 / 0.1)',
-                  backgroundColor: isDark ? '#1f2937' : '#ffffff',
-                  color: isDark ? '#e5e7eb' : '#111827',
+                  ...TOOLTIP_BASE_STYLE,
+                  backgroundColor: chartColors.tooltipBg,
+                  color: chartColors.tooltipText,
                 }}
-                formatter={(value) => [`${value} patients`, 'Arrivals']}
+                formatter={(value) => [`${value} patients`, C.tooltipSeriesLabel]}
               />
-              <Bar dataKey="patients" fill="#cc3535" radius={[4, 4, 0, 0]} maxBarSize={50} />
+              <Bar
+                dataKey="patients"
+                fill={chartColors.bar}
+                radius={HOURLY_CHART.barRadius}
+                maxBarSize={HOURLY_CHART.maxBarSize}
+              />
             </BarChart>
           </ResponsiveContainer>
         ) : (
-          <div className="w-full h-full flex items-center justify-center text-gray-400">
-            Loading chart...
+          <div className={`flex h-full w-full items-center justify-center ${DASH.card.empty}`}>
+            {C.loadingText}
           </div>
         )}
       </div>
-    </div>
+    </DashboardCard>
   );
 }
