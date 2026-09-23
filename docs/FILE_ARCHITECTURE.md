@@ -18,11 +18,23 @@ Directory structure:
     │   │   └── sendSMS.ts
     │   ├── api/
     │   │   ├── auth/
-    │   │   │   └── login/
+    │   │   │   ├── change-password/
+    │   │   │   │   └── route.ts
+    │   │   │   ├── forgot-password/
+    │   │   │   │   └── route.ts
+    │   │   │   ├── login/
+    │   │   │   │   └── route.ts
+    │   │   │   ├── reset-password/
+    │   │   │   │   └── route.ts
+    │   │   │   └── verify-recovery/
     │   │   │       └── route.ts
     │   │   ├── print-ticket/
     │   │   │   └── route.ts
+    │   │   ├── rotate/
+    │   │   │   └── route.ts
     │   │   └── superadmin/
+    │   │       ├── access/
+    │   │       │   └── route.ts
     │   │       ├── create-user/
     │   │       │   └── route.ts
     │   │       ├── cubicles/
@@ -33,6 +45,9 @@ Directory structure:
     │   │       │   └── route.ts
     │   │       └── update-role/
     │   │           └── route.ts
+    │   ├── auth/
+    │   │   └── confirm/
+    │   │       └── route.ts
     │   ├── dashboard/
     │   │   ├── layout.tsx
     │   │   ├── page.tsx
@@ -51,23 +66,39 @@ Directory structure:
     │   │   │   └── hooks/
     │   │   │       └── useAnalyticsData.ts
     │   │   ├── components/
+    │   │   │   ├── DashboardCard.tsx
     │   │   │   ├── DashboardMetrics.tsx
+    │   │   │   ├── DonutChart.tsx
     │   │   │   ├── HistoricalContextBanner.tsx
     │   │   │   ├── HourlyArrivalChart.tsx
     │   │   │   ├── LiveQueueTable.tsx
     │   │   │   ├── NotificationDropdown.tsx
+    │   │   │   ├── QuickLinks.tsx
+    │   │   │   ├── RecentActivity.tsx
+    │   │   │   ├── ServiceQueueOverview.tsx
     │   │   │   ├── ServiceStats.tsx
     │   │   │   ├── StatusBadge.tsx
+    │   │   │   ├── TicketStatusBreakdown.tsx
+    │   │   │   ├── WelcomeBanner.tsx
     │   │   │   └── navigation/
     │   │   │       ├── DashboardHeader.tsx
-    │   │   │       └── DashSideNavigation.tsx
+    │   │   │       ├── DashSideNavigation.tsx
+    │   │   │       ├── HeaderSearch.tsx
+    │   │   │       └── LiveClock.tsx
+    │   │   ├── constants/
+    │   │   │   ├── charts.ts
+    │   │   │   ├── content.ts
+    │   │   │   ├── navigation.ts
+    │   │   │   └── styles.ts
     │   │   ├── context/
     │   │   │   └── HistoricalSummaryContext.tsx
     │   │   ├── cubicles/
     │   │   │   └── page.tsx
     │   │   ├── hooks/
     │   │   │   ├── useBottleneckNotifications.ts
+    │   │   │   ├── useDashboardTheme.ts
     │   │   │   ├── useIdleTimeout.ts
+    │   │   │   ├── useMountedClock.ts
     │   │   │   └── useOverviewData.ts
     │   │   └── patients/
     │   │       ├── page.tsx
@@ -84,8 +115,12 @@ Directory structure:
     │   │           ├── usePatientsAnalyticsData.ts
     │   │           ├── usePatientsData.ts
     │   │           └── useServiceQueue.ts
+    │   ├── forgot-password/
+    │   │   └── page.tsx
     │   ├── kiosk/
     │   │   ├── layout.tsx
+    │   │   ├── components/
+    │   │   │   └── KioskLoadingOverlay.tsx
     │   │   ├── confirmation/
     │   │   │   ├── layout.tsx
     │   │   │   ├── page.tsx
@@ -96,6 +131,10 @@ Directory structure:
     │   │   │       └── ConfirmationModal.tsx
     │   │   ├── consultation-category/
     │   │   │   └── page.tsx
+    │   │   ├── context/
+    │   │   │   └── KioskLoadingContext.tsx
+    │   │   ├── hooks/
+    │   │   │   └── useKioskNavigate.ts
     │   │   ├── kiosk-cubicle-selection/
     │   │   │   ├── layout.tsx
     │   │   │   ├── page.tsx
@@ -116,11 +155,14 @@ Directory structure:
     │   │   ├── kiosk-services/
     │   │   │   ├── layout.tsx
     │   │   │   ├── page.tsx
-    │   │   │   └── components/
-    │   │   │       ├── KioskBanner.tsx
-    │   │   │       ├── KioskHeader.tsx
-    │   │   │       ├── KioskServicesCard.tsx
-    │   │   │       └── KioskServicesGrid.tsx
+    │   │   │   ├── components/
+    │   │   │   │   ├── KioskBanner.tsx
+    │   │   │   │   ├── KioskHeader.tsx
+    │   │   │   │   ├── KioskServicesCard.tsx
+    │   │   │   │   └── KioskServicesGrid.tsx
+    │   │   │   └── constants/
+    │   │   │       ├── kioskBanner.ts
+    │   │   │       └── kioskHeader.ts
     │   │   ├── opd-screening-category/
     │   │   │   └── page.tsx
     │   │   ├── queue-print/
@@ -176,10 +218,15 @@ Directory structure:
     │   │   │   └── useRequireAuth.ts
     │   │   └── lib/
     │   │       └── constants.ts
+    │   ├── reset-password/
+    │   │   ├── page.tsx
+    │   │   └── confirm/
+    │   │       └── page.tsx
     │   ├── superadmin/
     │   │   ├── layout.tsx
     │   │   ├── page.tsx
     │   │   ├── components/
+    │   │   │   ├── ChangePasswordForm.tsx
     │   │   │   ├── SettingsPannel.tsx
     │   │   │   └── SuperAdminNav.tsx
     │   │   ├── customization/
@@ -211,6 +258,7 @@ Directory structure:
     │       │   ├── useIdlePatients.ts
     │       │   ├── useIdleTimeout.ts
     │       │   ├── useMaxRotations.ts
+    │       │   ├── useMyAccess.ts
     │       │   ├── usePatientData.ts
     │       │   ├── useRealtimeSubscription.ts
     │       │   ├── useRegistrationDragAndDrop.ts
@@ -218,7 +266,8 @@ Directory structure:
     │       │   ├── useRequireAuth.ts
     │       │   └── useRotateTimeout.ts
     │       └── lib/
-    │           └── constants.ts
+    │           ├── constants.ts
+    │           └── rotateApi.ts
     ├── components/
     │   ├── backgrounds/
     │   │   └── DashboardBg.tsx
@@ -234,8 +283,13 @@ Directory structure:
     │       ├── patientMetricCard.tsx
     │       └── serviceMetricCard.tsx
     ├── constants/
-    │   ├── themes.js
-    │   └── themestesting.js
+    │   ├── app.ts
+    │   ├── colors.ts
+    │   ├── kiosk.ts
+    │   ├── kioskTexts.ts
+    │   ├── palette.ts
+    │   ├── queueStatus.ts
+    │   └── themes.js
     ├── docs/
     │   ├── ARCHITECTURE.md
     │   ├── CHANGES_NEEDED.md
@@ -257,6 +311,7 @@ Directory structure:
     │   ├── supabase.ts
     │   └── supabase/
     │       ├── admin.ts
+    │       ├── authGuard.ts
     │       ├── client.ts
     │       ├── server.ts
     │       └── superadminGuard.ts
@@ -272,7 +327,6 @@ Directory structure:
     │   ├── main.py
     │   ├── requirements.txt
     │   ├── run.py
-    │   ├── simulated_patients.csv
     │   ├── analytics/
     │   │   ├── __init__.py
     │   │   ├── constants.py
@@ -295,7 +349,9 @@ Directory structure:
     │   └── Types.ts
     └── utils/
         ├── chartDataPrep.ts
+        ├── formatDateTime.ts
         ├── formatMinutesToHMS.ts
         └── waitTime.ts
+
 
 ```
