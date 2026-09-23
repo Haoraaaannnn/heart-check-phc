@@ -49,9 +49,6 @@ export default function DashboardHeader() {
     <header className={S.root}>
       {/* Brand */}
       <div className={S.brand}>
-        <span className={S.logo}>
-          <i className="bx bxs-heart" />
-        </span>
         <div>
           <p className={S.brandTitle}>{APP_INFO.hospitalName}</p>
           <p className={S.brandTagline}>{APP_INFO.tagline}</p>

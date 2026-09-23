@@ -6,8 +6,8 @@
 
 /** Hospital and system branding shown in headers, banners and footers. */
 export const APP_INFO = {
-  hospitalName: 'Philippine Heart Center',
-  tagline: 'Excellence in Cardiovascular Care',
+  hospitalName: 'Heart Check PHC',
+  tagline: 'Admin Dashboard',
   systemName: 'Heart Check PHC',
   /** Words shown in the sidebar footer, joined with a middle dot. */
   pillars: ['Care', 'Excellence', 'Hearts'],
