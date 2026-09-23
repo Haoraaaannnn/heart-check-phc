@@ -1,5 +1,3 @@
-// this file is where the data insertion to the database happens
-
 "use client";
 
 import { useState } from "react";
@@ -48,6 +46,54 @@ function getPrefixInfo(service: Service, subcategory?: string) {
   return { prefix: SERVICE_PREFIXES[name] ?? 'C', groupBySubcategory: false };
 }
 
+/**
+ * Builds the URL for the SMS page's "Bumalik - Cancel" button.
+ *
+ * @remarks
+ * The kiosk flow has two possible shapes:
+ *  1. `kiosk-services` → confirmation modal → SMS input directly
+ *     (services with `patient_type: "both"` skip category/cubicle
+ *     selection entirely — see {@link NUMERIC_PREFIX_RULES} /
+ *     `ConfirmationActions.handleContinue`).
+ *  2. `kiosk-services` → confirmation modal → category page
+ *     (`consultation-category` / `opd-screening-category`) →
+ *     `kiosk-cubicle-selection` → SMS input.
+ *
+ * `subcategory` (Adult/Pedia) is only ever set once a category has been
+ * chosen, so its presence reliably signals shape (2). In that case the
+ * patient's immediately previous real step was cubicle selection, so
+ * Cancel returns there (preserving `serviceId`, `type`, and
+ * `subcategory` so the page renders the same state they left). From
+ * `kiosk-cubicle-selection`, its own back button should in turn return
+ * to the category page — that's a separate fix in `CubicleCard`, not
+ * covered here.
+ *
+ * Otherwise (shape 1, no `subcategory`) the patient came straight from
+ * `kiosk-services`, so Cancel returns there.
+ *
+ * @param serviceId - The `id` of the service being booked.
+ * @param patientType - The `type` query param ("new" | "old"), if present.
+ * @param subcategory - The Adult/Pedia category, if one was chosen.
+ * @returns The relative URL for the Cancel button's `href`.
+ */
+function buildCancelHref(
+  serviceId: number | string | undefined,
+  patientType: string | null,
+  subcategory: string | undefined,
+): string {
+  if (subcategory) {
+    const params = new URLSearchParams();
+    if (serviceId !== undefined) params.set("serviceId", String(serviceId));
+    if (patientType) params.set("type", patientType);
+    params.set("subcategory", subcategory);
+    return `/kiosk/kiosk-cubicle-selection?${params.toString()}`;
+  }
+
+  return patientType
+    ? `/kiosk/kiosk-services?type=${encodeURIComponent(patientType)}`
+    : "/kiosk/kiosk-services";
+}
+
 export default function KioskPhoneEntry({
   service,
   patientNum: initialPatientNum,
@@ -63,9 +109,7 @@ export default function KioskPhoneEntry({
   const searchParams = useSearchParams();
 
   const patientType = searchParams.get("type");
-  const cancelHref = patientType
-    ? `/kiosk/kiosk-services?type=${encodeURIComponent(patientType)}`
-    : "/kiosk/kiosk-services";
+  const cancelHref = buildCancelHref(service?.id, patientType, subcategory);
 
   const addDigit = (digit: string) => { if (phone.length < MAX) setPhone((p) => p + digit); };
   const deleteLast = () => setPhone((p) => p.slice(0, -1));
