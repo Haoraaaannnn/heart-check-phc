@@ -121,67 +121,90 @@ Directory structure:
     │   │   ├── layout.tsx
     │   │   ├── components/
     │   │   │   └── KioskLoadingOverlay.tsx
-    │   │   ├── confirmation/
-    │   │   │   ├── layout.tsx
-    │   │   │   ├── page.tsx
-    │   │   │   └── components/
-    │   │   │       ├── ConfimationDescription.tsx
-    │   │   │       ├── ConfirmationActions.tsx
-    │   │   │       ├── ConfirmationBanner.tsx
-    │   │   │       └── ConfirmationModal.tsx
-    │   │   ├── consultation-category/
-    │   │   │   └── page.tsx
+    │   │   ├── constants/
+    │   │   │   └── kioskNavigation.ts
     │   │   ├── context/
     │   │   │   └── KioskLoadingContext.tsx
     │   │   ├── hooks/
     │   │   │   └── useKioskNavigate.ts
-    │   │   ├── kiosk-cubicle-selection/
-    │   │   │   ├── layout.tsx
-    │   │   │   ├── page.tsx
-    │   │   │   ├── components/
-    │   │   │   │   ├── CubicleCard.tsx
-    │   │   │   │   └── CubicleHeader.tsx
-    │   │   │   └── types/
-    │   │   │       └── CubicleSelectorType.ts
-    │   │   ├── kiosk-new-old-selection/
-    │   │   │   ├── layout.tsx
-    │   │   │   ├── page.tsx
-    │   │   │   ├── components/
-    │   │   │   │   ├── KioskTitle.tsx
-    │   │   │   │   ├── PatientTypeBanner.tsx
-    │   │   │   │   └── PatientTypeCards.tsx
-    │   │   │   └── types/
-    │   │   │       └── PatientType.ts
-    │   │   ├── kiosk-services/
-    │   │   │   ├── layout.tsx
-    │   │   │   ├── page.tsx
-    │   │   │   ├── components/
-    │   │   │   │   ├── KioskBanner.tsx
-    │   │   │   │   ├── KioskHeader.tsx
-    │   │   │   │   ├── KioskServicesCard.tsx
-    │   │   │   │   └── KioskServicesGrid.tsx
-    │   │   │   └── constants/
-    │   │   │       ├── kioskBanner.ts
-    │   │   │       └── kioskHeader.ts
-    │   │   ├── opd-screening-category/
-    │   │   │   └── page.tsx
-    │   │   ├── queue-print/
-    │   │   │   ├── layout.tsx
-    │   │   │   ├── page.tsx
-    │   │   │   └── components/
-    │   │   │       ├── PrintFooter.tsx
-    │   │   │       ├── PrintHeader.tsx
-    │   │   │       └── QueuePrintContent.tsx
-    │   │   └── sms-input/
-    │   │       ├── layout.tsx
-    │   │       ├── page.tsx
-    │   │       └── components/
-    │   │           ├── ContinueButton.tsx
-    │   │           ├── KioskPhoneEntry.tsx
-    │   │           ├── NumPad.tsx
-    │   │           ├── PhoneInput.tsx
-    │   │           ├── SMSBanner.tsx
-    │   │           └── SMSInstruction.tsx
+    │   │   └── pages/
+    │   │       ├── category-selection/
+    │   │       │   ├── page.tsx
+    │   │       │   └── constants/
+    │   │       │       ├── categorySelection.ts
+    │   │       │       └── categorySelectionTexts.ts
+    │   │       ├── confirmation/
+    │   │       │   ├── layout.tsx
+    │   │       │   ├── page.tsx
+    │   │       │   ├── components/
+    │   │       │   │   ├── ConfimationDescription.tsx
+    │   │       │   │   ├── ConfirmationActions.tsx
+    │   │       │   │   ├── ConfirmationBanner.tsx
+    │   │       │   │   └── ConfirmationModal.tsx
+    │   │       │   └── constants/
+    │   │       │       ├── confirmation.ts
+    │   │       │       └── confirmationTexts.ts
+    │   │       ├── kiosk-cubicle-selection/
+    │   │       │   ├── layout.tsx
+    │   │       │   ├── page.tsx
+    │   │       │   ├── components/
+    │   │       │   │   ├── CubicleCard.tsx
+    │   │       │   │   └── CubicleHeader.tsx
+    │   │       │   ├── constants/
+    │   │       │   │   ├── cubicleSelection.ts
+    │   │       │   │   └── cubicleSelectionTexts.ts
+    │   │       │   └── types/
+    │   │       │       └── CubicleSelectorType.ts
+    │   │       ├── kiosk-new-old-selection/
+    │   │       │   ├── layout.tsx
+    │   │       │   ├── page.tsx
+    │   │       │   ├── components/
+    │   │       │   │   ├── KioskTitle.tsx
+    │   │       │   │   ├── PatientTypeBanner.tsx
+    │   │       │   │   └── PatientTypeCards.tsx
+    │   │       │   ├── constants/
+    │   │       │   │   ├── kioskNewOld.ts
+    │   │       │   │   └── kioskNewOldTexts.ts
+    │   │       │   └── types/
+    │   │       │       └── PatientType.ts
+    │   │       ├── kiosk-services/
+    │   │       │   ├── layout.tsx
+    │   │       │   ├── page.tsx
+    │   │       │   ├── components/
+    │   │       │   │   ├── KioskBanner.tsx
+    │   │       │   │   ├── KioskFooterWave.tsx
+    │   │       │   │   ├── KioskHeader.tsx
+    │   │       │   │   ├── KioskServicesCard.tsx
+    │   │       │   │   └── KioskServicesGrid.tsx
+    │   │       │   └── constants/
+    │   │       │       ├── kioskBanner.ts
+    │   │       │       ├── kioskBannerTexts.ts
+    │   │       │       ├── kioskHeader.ts
+    │   │       │       ├── kioskHeaderTexts.ts
+    │   │       │       └── kioskServices.ts
+    │   │       ├── queue-print/
+    │   │       │   ├── layout.tsx
+    │   │       │   ├── page.tsx
+    │   │       │   ├── components/
+    │   │       │   │   ├── PrintFooter.tsx
+    │   │       │   │   ├── PrintHeader.tsx
+    │   │       │   │   └── QueuePrintContent.tsx
+    │   │       │   └── constants/
+    │   │       │       ├── queuePrint.ts
+    │   │       │       └── queuePrintTexts.ts
+    │   │       └── sms-input/
+    │   │           ├── layout.tsx
+    │   │           ├── page.tsx
+    │   │           ├── components/
+    │   │           │   ├── ContinueButton.tsx
+    │   │           │   ├── KioskPhoneEntry.tsx
+    │   │           │   ├── NumPad.tsx
+    │   │           │   ├── PhoneInput.tsx
+    │   │           │   ├── SMSBanner.tsx
+    │   │           │   └── SMSInstruction.tsx
+    │   │           └── constants/
+    │   │               ├── smsInput.ts
+    │   │               └── smsInputTexts.ts
     │   ├── login/
     │   │   └── page.tsx
     │   ├── monitor/
@@ -351,6 +374,4 @@ Directory structure:
         ├── formatDateTime.ts
         ├── formatMinutesToHMS.ts
         └── waitTime.ts
-
-
 ```
