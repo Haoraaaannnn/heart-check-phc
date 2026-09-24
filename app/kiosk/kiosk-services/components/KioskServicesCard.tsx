@@ -42,7 +42,7 @@ export default function ServiceCard({ service, onSelect }: Props) {
             className="relative flex items-center h-41 gap-4 px-6 py-4 rounded-2xl transition-all active:scale-95 overflow-hidden bg-white border-2 border-gray-300 text-left"
         >
             {/* Brand-colored icon tile */}
-            <div className="size-22 shrink-0 bg-brand p-4 rounded-2xl flex items-center justify-center">
+            <div className="size-22 shrink-0 bg-red-800 p-4 rounded-2xl flex items-center justify-center">
                 <Icon size={76} stroke={1.5} color="#ffffff" />
             </div>
 
