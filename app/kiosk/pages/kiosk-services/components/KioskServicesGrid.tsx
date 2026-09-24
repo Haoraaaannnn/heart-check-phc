@@ -4,6 +4,7 @@ import { useState } from "react";
 import ServiceCard from "@/app/kiosk/pages/kiosk-services/components/KioskServicesCard";
 import ConfirmationModal from "@/app/kiosk/pages/confirmation/components/ConfirmationModal";
 import type { Service } from "@/types/Services";
+import { KioskServicesGridStyle } from "@/app/kiosk/pages/kiosk-services/constants/kioskServices";
 
 /** Props for {@link KioskServicesGrid}. */
 interface Props {
@@ -54,8 +55,11 @@ export default function KioskServicesGrid({ services, patientType }: Props) {
 
     return (
         <>
-            <div className="w-full">
-                <div className="grid w-full grid-cols-2 landscape:grid-cols-3 gap-6 px-8 py-6">
+            <div style={KioskServicesGridStyle.container}>
+                <div
+                    style={KioskServicesGridStyle.grid}
+                    className="grid-cols-2 landscape:grid-cols-3"
+                >
                     {services.map((service) => (
                         <ServiceCard
                             key={service.id}

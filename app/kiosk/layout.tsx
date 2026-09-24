@@ -135,9 +135,18 @@ export default function MainKioskLayout({ children }: MainKioskLayoutProps) {
     }
 
     if (pathname === "/kiosk/pages/kiosk-cubicle-selection") {
-        backHref = patientType
-            ? `/kiosk/pages/kiosk-services?type=${encodeURIComponent(patientType)}`
-            : "/kiosk/pages/kiosk-services";
+        const serviceId = searchParams.get("serviceId");
+        if (serviceId) {
+            const params = new URLSearchParams();
+            if (patientType) params.set("type", patientType);
+            params.set("serviceId", serviceId);
+            params.set("serviceLabel", "Consultation");
+            backHref = `/kiosk/pages/category-selection?${params.toString()}`;
+        } else {
+            backHref = patientType
+                ? `/kiosk/pages/kiosk-services?type=${encodeURIComponent(patientType)}`
+                : "/kiosk/pages/kiosk-services";
+        }
     }
 
     if (pathname === "/kiosk/pages/category-selection") {

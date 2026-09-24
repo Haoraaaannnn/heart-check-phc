@@ -2,8 +2,7 @@
 
 import Image from "next/image";
 import { kioskNewOldTexts } from "@/app/kiosk/pages/kiosk-new-old-selection/constants/kioskNewOldTexts";
-import { kioskNewOldTypography } from "@/app/kiosk/pages/kiosk-new-old-selection/constants/kioskNewOld";
-import { themeColors } from "@/constants/colors";
+import { KioskTitleStyle } from "@/app/kiosk/pages/kiosk-new-old-selection/constants/kioskNewOld";
 
 /** Props for {@link KioskTitle}. */
 interface KioskTitleProps {
@@ -23,15 +22,15 @@ interface KioskTitleProps {
  */
 export default function KioskTitle({ isLandscape }: KioskTitleProps) {
     return (
-        <div className="flex w-full flex-col items-center justify-center gap-6 md:gap-8">
+        <div style={KioskTitleStyle.container}>
             {/* Main Brand Title */}
-            <div className="text-center">
+            <div style={KioskTitleStyle.titleWrapper}>
                 <span
-                    className="font-black text-gray-800 [-webkit-text-stroke:1px_currentColor]"
-                    style={{ fontSize: kioskNewOldTypography.titleSize }}
+                    style={KioskTitleStyle.title}
+                    className="[-webkit-text-stroke:1px_currentColor]"
                 >
                     {kioskNewOldTexts.titleMain}{" "}
-                    <span style={{ color: themeColors.brandRed }}>
+                    <span style={KioskTitleStyle.titleAccent}>
                         {kioskNewOldTexts.titleAccent}
                     </span>
                 </span>

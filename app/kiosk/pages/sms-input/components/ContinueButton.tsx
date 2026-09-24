@@ -4,7 +4,7 @@ import Link from "next/link";
 import { Service } from "@/types/Services";
 import ConfirmationModal from "@/components/modals/ConfirmationModal";
 import { smsInputTexts } from "@/app/kiosk/pages/sms-input/constants/smsInputTexts";
-import { themeColors } from "@/constants/colors";
+import { SMSContinueButtonStyle } from "@/app/kiosk/pages/sms-input/constants/smsInput";
 
 /** Props for {@link ContinueButton}. */
 interface ContinueButtonProps {
@@ -62,23 +62,24 @@ export default function ContinueButton({
     href,
 }: ContinueButtonProps) {
     return (
-        <div className="w-full flex flex-col gap-3 mt-auto">
+        <div style={SMSContinueButtonStyle.container} className="mt-auto">
             {/* Primary Continue Button */}
             <button
                 type="button"
                 onClick={disabled ? undefined : onContinue}
                 disabled={disabled}
-                className="w-full font-bold text-white disabled:opacity-50 disabled:pointer-events-none py-3.5 sm:py-4 rounded-2xl text-xl sm:text-2xl active:scale-[0.98] transition-all shadow-md hover:brightness-105"
-                style={{ backgroundColor: themeColors.brandRed }}
+                style={SMSContinueButtonStyle.continueBtn}
+                className="disabled:opacity-50 disabled:pointer-events-none active:scale-[0.98] transition-all shadow-md hover:brightness-105"
             >
                 {smsInputTexts.continueBtn}
             </button>
 
             {/* Secondary Controls (Cancel and Skip) */}
-            <div className="flex gap-3 sm:gap-4">
+            <div className="flex gap-3 sm:gap-4 w-full">
                 <Link
                     href={href}
-                    className="flex-1 text-center py-2.5 sm:py-3 border-2 border-gray-300 text-gray-600 font-bold rounded-2xl text-base sm:text-lg active:scale-95 transition-all bg-white hover:bg-gray-50 flex items-center justify-center"
+                    style={SMSContinueButtonStyle.cancelBtn}
+                    className="flex-1 active:scale-95 transition-all hover:bg-gray-50 flex items-center justify-center"
                 >
                     {smsInputTexts.cancelBtn}
                 </Link>
@@ -86,7 +87,8 @@ export default function ContinueButton({
                 <button
                     type="button"
                     onClick={onSkip}
-                    className="flex-1 text-center py-2.5 sm:py-3 border-2 border-gray-300 text-gray-600 font-bold rounded-2xl text-base sm:text-lg active:scale-95 transition-all bg-white hover:bg-gray-50"
+                    style={SMSContinueButtonStyle.cancelBtn}
+                    className="flex-1 active:scale-95 transition-all hover:bg-gray-50"
                 >
                     {smsInputTexts.skipBtn}
                 </button>

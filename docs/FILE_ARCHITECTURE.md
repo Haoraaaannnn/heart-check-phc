@@ -286,7 +286,6 @@ Directory structure:
     │   ├── app.ts
     │   ├── colors.ts
     │   ├── kiosk.ts
-    │   ├── kioskTexts.ts
     │   ├── palette.ts
     │   ├── queueStatus.ts
     │   └── themes.js

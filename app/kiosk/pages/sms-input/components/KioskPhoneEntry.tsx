@@ -43,24 +43,50 @@ function getPrefixInfo(service: Service, subcategory?: string) {
 /**
  * Builds the URL for the SMS page's "Bumalik - Cancel" button.
  *
- * @param serviceId - The `id` of the service being booked.
+ * @remarks
+ * Routing logic:
+ * - Consultation: returns to cubicle selection (only consultation uses cubicles).
+ * - OPD Screening: returns to unified age category selection (cubicles are bypassed).
+ * - Other direct services: returns to the main kiosk services menu.
+ *
+ * @param service - The active service record.
  * @param patientType - The `type` query param ("new" | "old"), if present.
  * @param subcategory - The Adult/Pedia category, if one was chosen.
  * @returns The relative URL for the Cancel button's `href`.
  */
 function buildCancelHref(
-    serviceId: number | string | undefined,
+    service: Service | undefined,
     patientType: string | null,
     subcategory: string | undefined
 ): string {
-    if (subcategory) {
+    const serviceName = service?.label_en?.trim().toLowerCase();
+    const serviceId = service?.id;
+
+    // Consultation uses cubicles, so backing returns to cubicle selection
+    if (serviceName === "consultation") {
         const params = new URLSearchParams();
         if (serviceId !== undefined) params.set("serviceId", String(serviceId));
         if (patientType) params.set("type", patientType);
-        params.set("subcategory", subcategory);
+        if (subcategory) params.set("subcategory", subcategory);
         return `/kiosk/pages/kiosk-cubicle-selection?${params.toString()}`;
     }
 
+    // OPD Screening (and any service with an Adult/Pedia age category) bypasses cubicles
+    // and returns directly to category selection
+    if (
+        serviceName === "opd screening" ||
+        serviceName === "opd-screening" ||
+        serviceName === "opdscreening" ||
+        Boolean(subcategory)
+    ) {
+        const params = new URLSearchParams();
+        if (serviceId !== undefined) params.set("serviceId", String(serviceId));
+        if (patientType) params.set("type", patientType);
+        if (service?.label_en) params.set("serviceLabel", service.label_en);
+        return `/kiosk/pages/category-selection?${params.toString()}`;
+    }
+
+    // All other direct services return to the main kiosk services menu
     return patientType
         ? `/kiosk/pages/kiosk-services?type=${encodeURIComponent(patientType)}`
         : "/kiosk/pages/kiosk-services";
@@ -89,7 +115,7 @@ export default function KioskPhoneEntry({
     const { showLoading, hideLoading } = useKioskLoading();
 
     const patientType = searchParams.get("type");
-    const cancelHref = buildCancelHref(service?.id, patientType, subcategory);
+    const cancelHref = buildCancelHref(service, patientType, subcategory);
 
     const addDigit = (digit: string) => {
         if (phone.length < SMS_PHONE_MAX_LENGTH) setPhone((p) => p + digit);

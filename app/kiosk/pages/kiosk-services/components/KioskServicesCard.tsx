@@ -16,6 +16,11 @@ interface Props {
     onSelect: (service: Service) => void;
 }
 
+import {
+    KioskServicesCardStyle,
+    kioskServicesColors,
+} from "@/app/kiosk/pages/kiosk-services/constants/kioskServices";
+
 /**
  * One tappable service button on the kiosk.
  *
@@ -39,19 +44,20 @@ export default function ServiceCard({ service, onSelect }: Props) {
         <button
             type="button"
             onClick={() => onSelect(service)}
-            className="relative flex items-center h-41 gap-4 px-6 py-4 rounded-2xl transition-all active:scale-95 overflow-hidden bg-white border-2 border-gray-300 text-left"
+            style={KioskServicesCardStyle.card}
+            className="transition-all active:scale-95 hover:border-red-400 hover:shadow-md"
         >
             {/* Brand-colored icon tile */}
-            <div className="size-22 shrink-0 bg-red-800 p-4 rounded-2xl flex items-center justify-center">
-                <Icon size={76} stroke={1.5} color="#ffffff" />
+            <div style={KioskServicesCardStyle.iconTile}>
+                <Icon size={76} stroke={1.5} color={kioskServicesColors.iconFill} />
             </div>
 
             {/* Labels. min-w-0 lets the text wrap instead of pushing the arrow out. */}
-            <div className="relative z-10 flex flex-col flex-1 min-w-0 pl-2 text-black">
-                <span className="font-black text-[30px] landscape:text-[clamp(22px,1.6vw,30px)]">
+            <div style={KioskServicesCardStyle.labelWrapper}>
+                <span style={KioskServicesCardStyle.title}>
                     {service.label_fil}
                 </span>
-                <span className="w-fit inline-block bg-red-300/20 border border-red-500/35 text-black text-[20px] landscape:text-[clamp(16px,1.1vw,20px)] px-4 py-1 rounded-full">
+                <span style={KioskServicesCardStyle.pill}>
                     {service.label_en}
                 </span>
             </div>
@@ -59,7 +65,7 @@ export default function ServiceCard({ service, onSelect }: Props) {
             <TablerIcons.IconArrowNarrowRight
                 size={36}
                 stroke={2}
-                color="#D7D6D6"
+                color={kioskServicesColors.arrowColor}
                 className="shrink-0"
             />
         </button>

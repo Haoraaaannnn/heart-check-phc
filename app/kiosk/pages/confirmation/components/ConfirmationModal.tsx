@@ -5,7 +5,7 @@ import * as TablerIcons from "@tabler/icons-react";
 import type { Service } from "@/types/Services";
 import ConfirmationDescriptions from "@/app/kiosk/pages/confirmation/components/ConfimationDescription";
 import ConfirmationActions from "@/app/kiosk/pages/confirmation/components/ConfirmationActions";
-import { themeColors } from "@/constants/colors";
+import { ConfirmationModalStyle } from "@/app/kiosk/pages/confirmation/constants/confirmation";
 
 /** Tabler icons mapping for runtime lookup. */
 const ICONS = TablerIcons as unknown as Record<string, TablerIcons.Icon | undefined>;
@@ -57,18 +57,17 @@ export default function ConfirmationModal({
             role="dialog"
             aria-modal="true"
             aria-labelledby="confirmation-modal-title"
-            className="fixed inset-0 z-50 flex items-center justify-center bg-black/60 backdrop-blur-sm p-4 animate-in fade-in duration-200"
+            style={ConfirmationModalStyle.overlay}
+            className="animate-in fade-in duration-200"
             onClick={onClose}
         >
             <div
-                className="relative flex flex-col w-full max-w-[900px] max-h-[92vh] overflow-y-auto bg-white rounded-3xl shadow-2xl [scrollbar-width:none] [&::-webkit-scrollbar]:hidden"
+                style={ConfirmationModalStyle.modalBox}
+                className="[scrollbar-width:none] [&::-webkit-scrollbar]:hidden"
                 onClick={(e) => e.stopPropagation()}
             >
                 {/* Modal Header */}
-                <div
-                    className="relative flex items-center gap-4 px-6 sm:px-8 py-5 sm:py-6 rounded-t-3xl text-white shrink-0"
-                    style={{ backgroundColor: themeColors.brandRed }}
-                >
+                <div style={ConfirmationModalStyle.modalHeader}>
                     <Icon
                         className="size-12 sm:size-14 shrink-0"
                         size={56}
@@ -78,23 +77,23 @@ export default function ConfirmationModal({
                     <div className="flex flex-col min-w-0">
                         <span
                             id="confirmation-modal-title"
-                            className="font-black text-xl sm:text-2xl leading-tight truncate"
+                            style={ConfirmationModalStyle.modalTitle}
                         >
                             {service.label_fil}
                         </span>
-                        <span className="w-fit inline-block bg-white/20 border border-white/35 text-white text-xs sm:text-sm font-bold px-3 py-0.5 rounded-full mt-1">
+                        <span style={ConfirmationModalStyle.modalBadge}>
                             {service.label_en}
                         </span>
                     </div>
                 </div>
 
                 {/* Description Body */}
-                <div className="px-6 sm:px-8 py-5 sm:py-6">
+                <div style={ConfirmationModalStyle.modalBody}>
                     <ConfirmationDescriptions service={service} />
                 </div>
 
                 {/* Actions Footer */}
-                <div className="px-6 sm:px-8 pb-6 sm:pb-8">
+                <div style={ConfirmationModalStyle.modalFooter}>
                     <ConfirmationActions
                         service={service}
                         patientType={patientType}

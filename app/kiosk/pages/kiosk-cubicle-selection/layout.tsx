@@ -31,12 +31,12 @@ export default function KioskCubicleSelectionLayout({
 
     return (
         <div
-            className={`fixed inset-0 flex h-dvh w-dvw items-center justify-center overflow-hidden bg-white transition-opacity duration-300 ${
+            className={`flex h-full w-full items-center justify-center overflow-hidden bg-white transition-opacity duration-300 ${
                 mounted ? "opacity-100" : "opacity-0"
             }`}
         >
             <div className="relative flex h-full w-full flex-col overflow-hidden">
-                <main
+                <div
                     className={`flex flex-1 min-h-0 overflow-y-auto overflow-x-hidden pt-4 [scrollbar-width:none] [&::-webkit-scrollbar]:hidden ${
                         isLandscape ? "pb-[120px]" : "pb-[140px]"
                     }`}
@@ -49,7 +49,7 @@ export default function KioskCubicleSelectionLayout({
                         <CubicleHeader />
                         <div className="w-full">{children}</div>
                     </div>
-                </main>
+                </div>
             </div>
         </div>
     );

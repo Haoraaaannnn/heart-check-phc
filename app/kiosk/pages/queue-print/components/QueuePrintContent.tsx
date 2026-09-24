@@ -5,9 +5,11 @@ import { useEffect, useRef } from "react";
 import { Service } from "@/types/Services";
 import { getTimestamp } from "@/lib/logger";
 import { supabase } from "@/lib/supabase";
-import { QUEUE_PRINT_REDIRECT_DELAY_MS } from "@/app/kiosk/pages/queue-print/constants/queuePrint";
+import {
+    QUEUE_PRINT_REDIRECT_DELAY_MS,
+    QueuePrintTicketStyle,
+} from "@/app/kiosk/pages/queue-print/constants/queuePrint";
 import { queuePrintTexts } from "@/app/kiosk/pages/queue-print/constants/queuePrintTexts";
-import { themeColors } from "@/constants/colors";
 
 /** Props for {@link QueuePrintContent}. */
 interface QueuePrintContentProps {
@@ -146,7 +148,7 @@ export default function QueuePrintContent({
     }, [router]);
 
     return (
-        <div className="w-full max-w-lg md:max-w-2xl bg-white rounded-3xl shadow-xl border border-gray-100 p-6 md:p-8 flex flex-col items-center justify-center gap-4 text-center">
+        <div style={QueuePrintTicketStyle.ticketContainer} className="gap-4 text-center">
             {/* Service Information */}
             <div className="flex flex-col items-center justify-center gap-2">
                 {service?.label_fil && (
@@ -155,10 +157,7 @@ export default function QueuePrintContent({
                     </span>
                 )}
 
-                <span
-                    className="text-sm sm:text-base font-bold text-white px-5 py-1.5 rounded-full shadow-sm"
-                    style={{ backgroundColor: themeColors.brandRed }}
-                >
+                <span style={QueuePrintTicketStyle.badge} className="shadow-sm">
                     {service?.label_en || "Consultation"}
                 </span>
             </div>
@@ -172,7 +171,7 @@ export default function QueuePrintContent({
                     {queuePrintTexts.queueLabel}
                 </span>
 
-                <span className="text-[clamp(64px,14vh,110px)] font-black text-gray-900 leading-none tracking-tight py-2">
+                <span style={QueuePrintTicketStyle.queueNumber}>
                     {patientNum}
                 </span>
             </div>
