@@ -78,7 +78,16 @@ Kiosk inserts currently go through the public anon key directly to Supabase. Wit
 /login      → public
 ```
 
-`useRoleGuard` is retained alongside middleware — not redundant, but complementary: middleware is the security boundary, the hook remains useful for in-page conditional UI (hiding buttons, conditional rendering) that doesn't warrant a full page redirect.
+`useRoleGuard` and `useRequireAuth` are retained alongside middleware — not redundant, but complementary: middleware is the security boundary, while client hooks manage in-page conditional UI (hiding buttons, conditional rendering) and state hydration without triggering page-level full-page reloads.
+
+### Layer 3 — In-Dashboard Access Resolution (`useMyAccess`)
+
+For clinical operations in `/transfer` and `/nurse`, user capabilities are further scoped by assigned rooms and services:
+- **Query Resolution:** The `useMyAccess` hook queries `users` by `auth_id = auth.uid()` to determine user identity and role.
+- **Superadmin/Admin Privilege Bypass:** If the authenticated account is `superadmin` or `admin`, the hook automatically bypasses room filtering, granting unrestricted management across all services, rooms, and counters.
+- **Nurse & Staff Room Scoping:** For standard clinical accounts, the hook fetches specifically mapped rooms from `user_services` and `cubicles`.
+- **Query Memoization & Lifecycle Protection:** Database calls in `useMyAccess` are memoized using `useCallback` and restricted to mount invocation to eliminate re-fetching loops.
+- **Safe Hierarchical Navigation:** All internal step-back actions in the dashboard are state-driven, preventing history ejection to `/login`.
 
 **Design decision to confirm with team:** admin/superadmin are currently allowed to fall through into `/nurse` and `/transfer` (oversight/support access). If admins should be fully separated from nurse/transfer workflows instead, remove them from those route arrays.
 
