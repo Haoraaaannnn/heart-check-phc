@@ -33,7 +33,7 @@ import { useKioskLoading } from "@/app/kiosk/context/KioskLoadingContext";
  * ```tsx
  * const navigate = useKioskNavigate();
  * // ...
- * <button onClick={() => navigate(`/kiosk/kiosk-services?type=${type}`)}>
+ * <button onClick={() => navigate(`/kiosk/pages/kiosk-services?type=${type}`)}>
  * ```
  *
  * @returns A function with the same signature as `router.push()`.
