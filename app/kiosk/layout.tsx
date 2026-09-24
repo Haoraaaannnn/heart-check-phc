@@ -3,7 +3,7 @@
 
 import { usePathname, useSearchParams } from "next/navigation";
 import { useEffect, useRef } from "react";
-import KioskHeader from "@/app/kiosk/kiosk-services/components/KioskHeader";
+import KioskHeader from "@/app/kiosk/pages/kiosk-services/components/KioskHeader";
 import KioskBackButton from "@/components/reusables/KioskBackButton";
 import { useIsMounted } from "@/hooks/useIsMounted";
 import {
@@ -104,8 +104,8 @@ function KioskRouteChangeIndicator({ pathname }: { pathname: string }) {
  *
  * @remarks
  * Back button rules:
- * - Only shown on `/kiosk/kiosk-services`, `/kiosk/kiosk-cubicle-selection`,
- *   `/kiosk/consultation-category`, and `/kiosk/opd-screening-category`.
+ * - Only shown on `/kiosk/pages/kiosk-services`, `/kiosk/pages/kiosk-cubicle-selection`,
+ *   and `/kiosk/pages/category-selection`.
  * - The `type` (patient type) and `serviceId` query params are preserved when
  *   going backward, so the patient doesn't lose their earlier choices.
  *
@@ -123,40 +123,39 @@ export default function MainKioskLayout({ children }: MainKioskLayoutProps) {
     const patientType = searchParams.get("type");
 
     const shouldShowBackButton =
-        pathname === "/kiosk/kiosk-services" ||
-        pathname === "/kiosk/kiosk-cubicle-selection" ||
-        pathname === "/kiosk/consultation-category" ||
-        pathname === "/kiosk/opd-screening-category";
+        pathname === "/kiosk/pages/kiosk-services" ||
+        pathname === "/kiosk/pages/kiosk-cubicle-selection" ||
+        pathname === "/kiosk/pages/category-selection";
 
     // Where the back button goes; undefined means no back target on this page.
     let backHref: string | undefined = undefined;
 
-    if (pathname === "/kiosk/kiosk-services") {
-        backHref = "/kiosk/kiosk-new-old-selection";
+    if (pathname === "/kiosk/pages/kiosk-services") {
+        backHref = "/kiosk/pages/kiosk-new-old-selection";
     }
 
-    if (pathname === "/kiosk/kiosk-cubicle-selection") {
-        backHref = patientType
-            ? `/kiosk/kiosk-services?type=${encodeURIComponent(patientType)}`
-            : "/kiosk/kiosk-services";
+    if (pathname === "/kiosk/pages/kiosk-cubicle-selection") {
+        const serviceId = searchParams.get("serviceId");
+        if (serviceId) {
+            const params = new URLSearchParams();
+            if (patientType) params.set("type", patientType);
+            params.set("serviceId", serviceId);
+            params.set("serviceLabel", "Consultation");
+            backHref = `/kiosk/pages/category-selection?${params.toString()}`;
+        } else {
+            backHref = patientType
+                ? `/kiosk/pages/kiosk-services?type=${encodeURIComponent(patientType)}`
+                : "/kiosk/pages/kiosk-services";
+        }
     }
 
-    if (pathname === "/kiosk/consultation-category") {
+    if (pathname === "/kiosk/pages/category-selection") {
         const serviceId = searchParams.get("serviceId");
         const params = new URLSearchParams();
         if (patientType) params.set("type", patientType);
         if (serviceId) params.set("serviceId", serviceId);
         const query = params.toString();
-        backHref = `/kiosk/kiosk-services${query ? `?${query}` : ""}`;
-    }
-
-    if (pathname === "/kiosk/opd-screening-category") {
-        const serviceId = searchParams.get("serviceId");
-        const params = new URLSearchParams();
-        if (patientType) params.set("type", patientType);
-        if (serviceId) params.set("serviceId", serviceId);
-        const query = params.toString();
-        backHref = `/kiosk/kiosk-services${query ? `?${query}` : ""}`;
+        backHref = `/kiosk/pages/kiosk-services${query ? `?${query}` : ""}`;
     }
 
     return (
