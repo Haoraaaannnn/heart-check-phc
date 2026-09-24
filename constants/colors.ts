@@ -1,12 +1,20 @@
 /**
- * Global theme colors as hex strings.
- *
- * Every value must be a full hex color including the leading `#`. The
- * `satisfies` check turns a missing `#` (e.g. "7f0407") into a compile
- * error instead of a silently ignored inline style.
+ * Heart Check PHC theme colors.
  */
 export const themeColors = {
-  brightRed: "#fd0e19",
-  brandRed: "#7f0407",
-  DarkRed: "#0a0000",
+    lightRed: "#f15b6c",
+    roseRed: "#d9364b",
+    brightRed: "#c9142b",
+    brandRed: "#a8071a",
+    deepRed: "#76000d",
+
+    /**
+     * Kept for compatibility with existing kiosk components.
+     */
+    DarkRed: "#4d0008",
+
+    /**
+     * Existing bright red token.
+     */
+    brightRedLegacy: "#fd0e19",
 } as const satisfies Record<string, `#${string}`>;
