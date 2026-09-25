@@ -1,14 +1,14 @@
-# Heart Check PHC — Product Requirements Document
+# Heart Check PHC: A Kiosk-Based Queue Management and Analytics System — Product Requirements Document
 
 ## Problem Statement
 
 The Philippine Heart Center's (PHC) Outpatient Department manages patient flow through a scheduled appointment system with fixed patient caps, non-expandable cubicles, and no-show rescheduling policies. Under this structure, operational variance is inherently low — but PHC currently lacks a system to systematically track, analyze, and forecast queue behavior across registration, specialized services, and consultation stages. Without this, policy decisions around appointment caps, staffing, and service scheduling are made without a data-backed view of actual patient flow patterns.
 
-Heart Check PHC addresses this by pairing an IoT-based queue management kiosk with a full analytics pipeline — descriptive, diagnostic, predictive, and prescriptive — built specifically around PHC's real operational constraints rather than a generic hospital queueing template.
+Heart Check PHC addresses this by pairing a kiosk-based check-in queue management terminal with a full analytics pipeline — descriptive, diagnostic, predictive, and prescriptive — built specifically around PHC's real operational constraints rather than a generic hospital queueing template.
 
 ## Project Framing
 
-This is explicitly a **collaborative integration** with PHC's existing infrastructure, not a greenfield deployment. This distinction matters throughout the system design: the kiosk demonstrates the operational/IoT side, while the analytics dashboard demonstrates the data science side — together satisfying both the ML and Data Analytics specialization requirements for the capstone.
+This is explicitly a **collaborative integration** with PHC's existing infrastructure, not a greenfield deployment. This distinction matters throughout the system design: the kiosk demonstrates the operational client-facing and queue management side, while the analytics dashboard demonstrates the data science side — together satisfying both the ML and Data Analytics specialization requirements for the capstone.
 
 ## Objectives
 
@@ -40,7 +40,14 @@ This is explicitly a **collaborative integration** with PHC's existing infrastru
   - Live room queue indicators displaying waiting vs. assigned patients
   - Viewport-pinned layout with sticky breadcrumb and back button navigation
 - Global reusable component architecture (`BackButton`, `ScrollArea`, `NotificationBadge`)
-- Full analytics dashboard: descriptive, diagnostic, predictive (forecasting), prescriptive
+- Full analytics dashboard (`/dashboard`):
+  - Modular subpage architecture (`/dashboard/pages/` — Overview, Patients, Analytics, Cubicles) conforming to `AGENTS.md`
+  - Descriptive, diagnostic, predictive (forecasting), and prescriptive tiers
+  - Automated PHC-compliant Excel workbook export (`/api/export-excel`, `export.py`, `ExportExcelButton.tsx`)
+- Superadmin system administration (`/superadmin`, `/superadmin/customization`):
+  - User account provisioning, role management, and service/room/cubicle mapping
+- Secure authentication & password management:
+  - Account login, session verification, and forgot/reset-password flow with attempt rate-limiting tables
 - Historical data import and integration (PHC's existing Excel-based records, March 2024–December 2025)
 - Queueing theory modeling (M/M/1 per service/cubicle; Erlang C as theoretical benchmark)
 - Role-based access control at both the data layer (RLS) and route layer (middleware)

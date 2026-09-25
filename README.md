@@ -1,4 +1,4 @@
-# Heart Check PHC — IoT Queue Management & Patient Flow Analytics
+# Heart Check PHC: A Kiosk-Based Queue Management and Analytics System
 
 > **Collaborative Capstone Integration** for the **Philippine Heart Center (PHC)** Outpatient Department (OPD).  
 > **STI College Caloocan — BS Computer Science**  
@@ -10,7 +10,7 @@
 
 **Heart Check PHC** is a specialized queue management and patient flow analytics system engineered specifically for the Philippine Heart Center's Outpatient Department. Rather than a generic hospital queue, the platform is designed around PHC's real-world operational constraints: scheduled patient appointments, fixed patient caps, capped cubicle capacities, and multi-stage patient flows (Registration → Triage/Screening → Specialized Services → Doctor Consultation).
 
-The platform pairs an intuitive **IoT-based touchscreen check-in kiosk** and **public display monitor** with a comprehensive **clinical queue management interface** (Transfer/Nurse dashboard) and a **four-tier analytics engine** (Descriptive, Diagnostic, Predictive, Prescriptive).
+The platform pairs an intuitive **touchscreen self-service check-in kiosk** and **public display monitor** with a comprehensive **clinical queue management interface** (Transfer/Nurse dashboard) and a **four-tier analytics engine** (Descriptive, Diagnostic, Predictive, Prescriptive).
 
 ---
 
@@ -60,10 +60,12 @@ Heart Check PHC is architected as a cohesive full-stack platform:
    - **Registration & Cubicle Management:** Vertical lanes for registration counters and cubicle stations with timer tracking and doctor assignment.
 
 4. **Analytics & Decision Support (`/dashboard`):**
+   - **Modular Page Structure:** Refactored into specialized sub-pages (`/dashboard/pages/` — Overview, Patients, Analytics, Cubicles) adhering to `AGENTS.md` separation of concerns.
    - **Descriptive:** Hourly arrival patterns, stage bottlenecks, compliance metrics.
    - **Diagnostic:** Service duration variance and stage drop-offs.
    - **Predictive:** Five forecasting models (SMA, WMA, EMA, Linear Regression, ARIMA) with automated MAE-based model selection.
    - **Prescriptive:** Capacity optimization and appointment cap policy recommendations.
+   - **Reporting & Export:** Automated PHC-formatted Excel workbook generation (`/api/export-excel`).
 
 5. **Administration (`/superadmin`):**
    - User account provisioning, role assignment, room and counter mapping, and kiosk service menu control.
@@ -77,9 +79,9 @@ Heart Check PHC is architected as a cohesive full-stack platform:
 | **Frontend** | Next.js 15 (App Router), React 19, TypeScript, Tailwind CSS, Recharts |
 | **Icons & UI** | Tabler Icons, Boxicons, Custom CSS design tokens |
 | **Backend API** | FastAPI (Python 3.10+), Uvicorn |
-| **Data & ML** | Pandas, NumPy, Scikit-learn, Statsmodels, SimPy |
+| **Data & ML** | Pandas, NumPy, Scikit-learn, Statsmodels, SimPy, OpenPyXL |
 | **Database** | Supabase (PostgreSQL 15), Supabase Realtime, Row-Level Security (RLS) |
-| **Hardware / IoT**| Touchscreen Kiosk terminal, USB Thermal Receipt Printer, Audio speakers |
+| **Hardware / Peripherals**| Touchscreen Kiosk terminal, USB Thermal Receipt Printer, Audio speakers |
 
 ---
 

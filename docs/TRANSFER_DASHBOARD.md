@@ -1,4 +1,4 @@
-# Heart Check PHC — Patient Transfer Dashboard Architecture & Clinical Guide
+# Heart Check PHC: A Kiosk-Based Queue Management and Analytics System — Patient Transfer Dashboard Architecture & Clinical Guide
 
 ## 1. Overview & Clinical Context
 

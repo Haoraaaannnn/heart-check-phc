@@ -1,4 +1,4 @@
-# Heart Check PHC — Design System & Reusable Components Guide
+# Heart Check PHC: A Kiosk-Based Queue Management and Analytics System — Design System & Reusable Components Guide
 
 ## 1. Overview
 

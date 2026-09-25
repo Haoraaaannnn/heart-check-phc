@@ -1,4 +1,4 @@
-# Heart Check PHC — Security Documentation
+# Heart Check PHC: A Kiosk-Based Queue Management and Analytics System — Security Documentation
 
 ## Overview
 
@@ -31,16 +31,16 @@ Full schema audit (via `pg_policies`) found RLS enabled across every table, but 
 - **`cubicle`** — read correctly scoped, writes correctly gated to superadmin, but has no INSERT/DELETE policy at all — meaning both are silently blocked by default under RLS. Needs confirmation this is intentional.
 - **`patient_category`** — not yet reviewed in depth.
 
-### Current design
+### Current design (as originally planned)
 
 Access on `patients` is scoped using a new `is_historical` column (added during this pass — the table had no live/historical distinction before) to separate **live operational rows** (kiosk-created, `is_historical = false`) from **historical imported rows** (`is_historical = true`). No role — not even superadmin, through the app itself — can update or delete historical rows through normal RLS-governed access; that's reserved for a manual, service-role-key operation outside the app (the import script itself, run locally).
 
 | Operation | Kiosk (public) | Monitor (public) | Nurse/Transfer | Dashboard (admin) | Superadmin                                          |
-| --------- | -------------- | ---------------- | -------------- | ----------------- | --------------------------------------------------- |
-| SELECT    | —              | live rows only   | all rows       | all rows          | all rows                                            |
-| INSERT    | live rows only | —                | —              | —                 | —                                                   |
-| UPDATE    | —              | —                | live rows only | —                 | —                                                   |
-| DELETE    | —              | —                | —              | —                 | live rows only (historical never deletable via app) |
+| --------- | -------------- | ---------------- | -------------- | ------------------ | ---------------------------------------------------- |
+| SELECT    | —              | live rows only   | all rows       | all rows           | all rows                                              |
+| INSERT    | live rows only | —                 | —              | —                   | —                                                      |
+| UPDATE    | —              | —                 | live rows only | —                   | —                                                      |
+| DELETE    | —              | —                 | —              | —                   | live rows only (historical never deletable via app)   |
 
 `services` and `users` are locked down to superadmin-only writes, matching the `doctors`/`app_settings` pattern.
 
@@ -48,9 +48,17 @@ Helper functions (`is_staff()`, `is_superadmin()`) wrap the `users.role` check a
 
 Full SQL for all of the above is in `CHANGES_NEEDED.md`.
 
+> **⚠️ Superseded — flag for a fresh audit.** The most recent live schema pull (`SCHEMA_REFERENCE.md`) shows the `patients` table's actual policy set no longer matches this table. The old wide-open `anon`/`public` policies (unconditioned INSERT/SELECT) are still present, and alongside them are new policies — `patients_select_nurse_scoped`, `patients_update_nurse_scoped` (both gated on `is_clinical_staff()` AND cubicle membership via `my_cubicle_nums()`), and `patients_select_registration_full`, `patients_update_registration_full` (gated on `is_registration_staff()`, unscoped by cubicle). None of the `is_historical`-scoped policies described above (`patients_select_public_live`, `patients_insert_kiosk`, `patients_update_staff_live_only`, `patients_delete_superadmin_live_only`) appear in the live pull, and there is no DELETE policy at all currently. `is_clinical_staff()`, `is_registration_staff()`, and `my_cubicle_nums()` are new helper functions, not yet documented here. This table's access model has evolved past a live/historical split into a per-cubicle, per-role staff-assignment model (see the new `user_cubicles`, `user_services`, `user_rooms`, `user_counters` tables in `DATABASE_SCHEMA.md`) — this section needs a rewrite once the actual intended policy set is confirmed, not a patch.
+>
+> Similarly, `doctors`' write policies in the live pull show plain `true`/`authenticated`-only checks (`Authenticated users can delete/insert/update doctors`), not the superadmin-gated `EXISTS` checks described above — confirm whether this is a regression or an intentional loosening before treating it as fixed.
+>
+> `cubicle` now also has an `Allow public read access` policy for `anon, authenticated`, on top of the two authenticated-only read policies already listed — three overlapping SELECT policies, same duplicate-policy pattern flagged on `patients` originally.
+
 ### Kiosk write path (open item)
 
 Kiosk inserts currently go through the public anon key directly to Supabase. With the corrected `patients_insert_kiosk` policy this is now scoped (can only insert live, non-historical rows with a `patientNum`), which meaningfully reduces the risk — but a more defensible long-term design still routes kiosk submissions through a FastAPI endpoint using the Supabase **service role key** server-side, so the anon key never needs INSERT rights on `patients` at all and the write path is validated/sanitized server-side before touching the database. Treat the current RLS-scoped anon insert as the acceptable interim state, not the final design.
+
+> Note: per the live schema pull above, the wide-open `anon` INSERT policies (`Allow insert for all`, `Allow public insert`, `Allow public insert on patients`) still appear present — confirm `patients_insert_kiosk` was actually applied and the old ones dropped, or this paragraph is describing an unapplied fix.
 
 ### Import script — separately fixed
 
@@ -58,51 +66,42 @@ Kiosk inserts currently go through the public anon key directly to Supabase. Wit
 
 ## Layer 2 — Route-Level Access Control
 
-### Where we started
+### Current state
 
-`useRoleGuard` — a client-side React hook querying `users.role` and redirecting unauthorized users — was the only access control on protected routes, and `middleware.ts` did not exist at all. This has a known gap: Next.js sends the page to the browser first, the page begins rendering, and only then does the hook run its check and redirect. In the window between page-load and redirect, unauthorized content can flash or be briefly interactive — and this check can be bypassed entirely by anyone disabling JavaScript or intercepting the client-side redirect.
+Route protection is **still client-side only**. `useRoleGuard` (and/or `lib/supabase/authGuard.ts`) queries `users.role` and redirects unauthorized users, but this runs *after* Next.js has already sent the page to the browser — there is a window where unauthorized content can flash or be briefly interactive, and the check can be bypassed by disabling JavaScript or intercepting the client-side redirect.
 
-**Open item:** confirm `useRoleGuard`'s implementation actually queries `users`/`auth_id` correctly — not yet reviewed against the real hook code, only assumed to match the corrected schema.
+`middleware.ts` does **not** exist in the repo. This was previously documented here as implemented — that was incorrect. It remains a planned fix, not a completed one.
 
-### Current design
+**Open item:** confirm `useRoleGuard`/`authGuard.ts` actually queries `users`/`auth_id` correctly against the corrected schema — not yet reviewed against the real hook code.
 
-**Next.js Middleware** (`middleware.ts`, project root) runs server-side, before any protected page is delivered to the browser. Unauthorized requests are redirected before rendering — no flash, no client-bypassable check.
+### Planned design (not yet built)
 
-```
+Server-side middleware, matching this route map, still needs to be added:
+
 /superadmin → superadmin only
-/dashboard  → admin, superadmin
-/nurse      → nurse, staff, admin, superadmin
-/transfer   → nurse, staff, admin, superadmin
-/kiosk      → public, no auth check (excluded from middleware matcher)
-/monitor    → public, no auth check (excluded from middleware matcher)
-/login      → public
-```
+/dashboard → admin, superadmin
+/nurse → nurse, staff, admin, superadmin
+/transfer → nurse, staff, admin, superadmin
+/kiosk → public, no auth check
+/monitor → public, no auth check
+/login → public
 
-`useRoleGuard` and `useRequireAuth` are retained alongside middleware — not redundant, but complementary: middleware is the security boundary, while client hooks manage in-page conditional UI (hiding buttons, conditional rendering) and state hydration without triggering page-level full-page reloads.
 
-### Layer 3 — In-Dashboard Access Resolution (`useMyAccess`)
+An `/unauthorized` page also does not exist yet and will be needed once middleware redirects to it.
 
-For clinical operations in `/transfer` and `/nurse`, user capabilities are further scoped by assigned rooms and services:
-- **Query Resolution:** The `useMyAccess` hook queries `users` by `auth_id = auth.uid()` to determine user identity and role.
-- **Superadmin/Admin Privilege Bypass:** If the authenticated account is `superadmin` or `admin`, the hook automatically bypasses room filtering, granting unrestricted management across all services, rooms, and counters.
-- **Nurse & Staff Room Scoping:** For standard clinical accounts, the hook fetches specifically mapped rooms from `user_services` and `cubicles`.
-- **Query Memoization & Lifecycle Protection:** Database calls in `useMyAccess` are memoized using `useCallback` and restricted to mount invocation to eliminate re-fetching loops.
-- **Safe Hierarchical Navigation:** All internal step-back actions in the dashboard are state-driven, preventing history ejection to `/login`.
-
-**Design decision to confirm with team:** admin/superadmin are currently allowed to fall through into `/nurse` and `/transfer` (oversight/support access). If admins should be fully separated from nurse/transfer workflows instead, remove them from those route arrays.
-
-**Required follow-up:** create an `/unauthorized` page — middleware redirects there on a failed role check, and without the page existing, that redirect currently resolves to a 404 instead of a clean access-denied message.
+**Design decision to confirm with team:** admin/superadmin are currently allowed to fall through into `/nurse` and `/transfer` (oversight/support access) in the planned route map above. If admins should be fully separated from nurse/transfer workflows instead, remove them from those route arrays once middleware is built.
 
 ## Other Open Items
 
-- **CORS** — not yet locked down on the FastAPI backend. Needed before PHC on-prem handoff, cheap to do earlier.
-- **Rate limiting** — `slowapi` recommended on the analytics report endpoints, since these are the most computationally expensive (pandas/statsmodels) and most exposed to abuse.
+- **CORS** — configured for development frontend origins (`localhost:3000`, `127.0.0.1:3000`) via `CORSMiddleware` in `python_backend/main.py`. Requires updating to official PHC domain/IP upon on-premise production deployment.
+- **Rate limiting** — `slowapi` recommended on the analytics report endpoints, since these are the most computationally expensive (pandas/statsmodels) and most exposed to abuse. Note: `login_attempts` and `password_reset_attempts` tables now exist in the live schema, suggesting some rate-limiting/lockout logic has been added for auth endpoints specifically — not yet documented here, confirm scope.
 - **HTTPS/reverse proxy** — required for the PHC on-premises handoff; not yet addressed.
+- **New staff-assignment tables** (`user_cubicles`, `user_services`, `user_rooms`, `user_counters`, `cubicle_selector`, `cubicle_selector_cubicle`) — not yet covered in this document at all; the `patients` scoped-RLS model above depends on these. Needs its own section once the intended design is confirmed.
 
 ## Why This Matters for the Thesis Defense
 
-A technical evaluator — particularly PHC MIS staff conducting UAT — can trivially check Supabase's policy list and immediately spot an all-`true` RLS configuration. Closing this before UAT is both a genuine security improvement and a defensible answer if questioned directly on data protection during defense. The two-layer design (RLS + middleware) is also a legitimate "defense in depth" talking point: even if one layer is misconfigured or bypassed, the other still holds.
+A technical evaluator — particularly PHC MIS staff conducting UAT — can trivially check Supabase's policy list and immediately spot an all-`true` RLS configuration. Closing this before UAT is both a genuine security improvement and a defensible answer if questioned directly on data protection during defense. The two-layer design (RLS + middleware) is also a legitimate "defense in depth" talking point — once middleware is actually built — even if one layer is misconfigured or bypassed, the other still holds.
 
 ---
 
-_Last updated: reflects the full schema audit, RLS cleanup across `patients`/`services`/`users`, and middleware implementation. Remaining follow-ups tracked in `OPEN_ISSUES.md`._
+_Last updated: reflects the full schema audit and RLS cleanup across `patients`/`services`/`users` as originally planned. Route-level middleware is still an open item, not yet built — see `CHANGES_NEEDED.md`. A newer live schema pull shows `patients`/`doctors`/`cubicle` policies have diverged further from this document's "Current design" section — flagged inline above, needs a follow-up audit pass. Remaining follow-ups tracked in `OPEN_ISSUES.md`._

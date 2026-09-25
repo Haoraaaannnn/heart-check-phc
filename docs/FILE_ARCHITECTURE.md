@@ -1,6 +1,7 @@
 ```text
 Directory structure:
 └── haoraaaannnn-heart-check-phc/
+    ├── AGENTS.md
     ├── README.md
     ├── declaration.d.ts
     ├── eslint.config.mjs
@@ -81,8 +82,8 @@ Directory structure:
     │   │   │   ├── TicketStatusBreakdown.tsx
     │   │   │   ├── WelcomeBanner.tsx
     │   │   │   └── navigation/
-    │   │   │       ├── DashboardHeader.tsx
     │   │   │       ├── DashSideNavigation.tsx
+    │   │   │       ├── DashboardHeader.tsx
     │   │   │       ├── HeaderSearch.tsx
     │   │   │       └── LiveClock.tsx
     │   │   ├── constants/
@@ -100,6 +101,59 @@ Directory structure:
     │   │   │   ├── useIdleTimeout.ts
     │   │   │   ├── useMountedClock.ts
     │   │   │   └── useOverviewData.ts
+    │   │   ├── pages/
+    │   │   │   ├── analytics/
+    │   │   │   │   ├── page.tsx
+    │   │   │   │   ├── components/
+    │   │   │   │   │   ├── AlgorithmComparisonTable.tsx
+    │   │   │   │   │   ├── AnalyticsHeader.tsx
+    │   │   │   │   │   ├── AnalyticsMetricCards.tsx
+    │   │   │   │   │   ├── ArimaForecast.tsx
+    │   │   │   │   │   ├── BottleneckStageTable.tsx
+    │   │   │   │   │   ├── DateRangeSelector.tsx
+    │   │   │   │   │   ├── ExportExcelButton.tsx
+    │   │   │   │   │   ├── LRForecast.tsx
+    │   │   │   │   │   ├── PHCComplianceSummary.tsx
+    │   │   │   │   │   └── VolumeAndWaitCharts.tsx
+    │   │   │   │   ├── constants/
+    │   │   │   │   │   ├── analytics.ts
+    │   │   │   │   │   └── analyticsTexts.ts
+    │   │   │   │   └── hooks/
+    │   │   │   │       └── useAnalyticsData.ts
+    │   │   │   ├── cubicles/
+    │   │   │   │   ├── page.tsx
+    │   │   │   │   ├── components/
+    │   │   │   │   │   ├── CubicleCard.tsx
+    │   │   │   │   │   ├── CubiclesGrid.tsx
+    │   │   │   │   │   ├── CubiclesHeader.tsx
+    │   │   │   │   │   ├── CubiclesLegend.tsx
+    │   │   │   │   │   └── CubiclesStatsGrid.tsx
+    │   │   │   │   ├── constants/
+    │   │   │   │   │   ├── cubicles.ts
+    │   │   │   │   │   └── cubiclesTexts.ts
+    │   │   │   │   ├── hooks/
+    │   │   │   │   │   └── useCubiclesData.ts
+    │   │   │   │   └── types/
+    │   │   │   │       └── cubicle.ts
+    │   │   │   ├── overview/
+    │   │   │   │   └── page.tsx
+    │   │   │   └── patients/
+    │   │   │       ├── page.tsx
+    │   │   │       ├── components/
+    │   │   │       │   ├── HourlyPatientFlowChart.tsx
+    │   │   │       │   ├── PatientStatGrid.tsx
+    │   │   │       │   ├── PatientsHeader.tsx
+    │   │   │       │   ├── RecentPatientTable.tsx
+    │   │   │       │   ├── ServiceDistributionChart.tsx
+    │   │   │       │   ├── ServiceFilterBar.tsx
+    │   │   │       │   └── ServiceQueuePanel.tsx
+    │   │   │       ├── constants/
+    │   │   │       │   ├── patients.ts
+    │   │   │       │   └── patientsTexts.ts
+    │   │   │       └── hooks/
+    │   │   │           ├── usePatientsAnalyticsData.ts
+    │   │   │           ├── usePatientsData.ts
+    │   │   │           └── useServiceQueue.ts
     │   │   └── patients/
     │   │       ├── page.tsx
     │   │       ├── components/
@@ -269,9 +323,11 @@ Directory structure:
     │       │   ├── DragHandle.tsx
     │       │   ├── ElapsedTimer.tsx
     │       │   ├── IdleNumbersPanel.tsx
-    │       │   ├── OnProgressSection.tsx
+    │       │   ├── IdleNumbersSection.tsx
     │       │   ├── OPScreeningFlow.tsx
+    │       │   ├── OnProgressSection.tsx
     │       │   ├── OtherServicesFlow.tsx
+    │       │   ├── QueueAndIdleLayout.tsx
     │       │   ├── QueuePanel.tsx
     │       │   ├── RegistrationCounterSection.tsx
     │       │   ├── ServiceBoard.tsx
@@ -305,16 +361,16 @@ Directory structure:
     │   ├── modals/
     │   │   └── ConfirmationModal.tsx
     │   └── reusables/
+    │       ├── BackButton.tsx
+    │       ├── KioskBackButton.tsx
+    │       ├── NotificationBadge.tsx
+    │       ├── ScrollArea.tsx
     │       ├── analyticsMetricCards.tsx
     │       ├── analyticsMetricHeader.tsx
     │       ├── analyticsMetricPara.tsx
-    │       ├── BackButton.tsx
-    │       ├── KioskBackButton.tsx
     │       ├── metricCards.tsx
-    │       ├── NotificationBadge.tsx
     │       ├── patientHeaderCard.tsx
     │       ├── patientMetricCard.tsx
-    │       ├── ScrollArea.tsx
     │       └── serviceMetricCard.tsx
     ├── constants/
     │   ├── app.ts
