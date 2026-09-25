@@ -91,7 +91,7 @@ export const SECTIONS = {
     emptyText: 'No patients in the queue today.',
     allServicesLabel: 'All Services',
     viewAllLabel: 'View All Queues',
-    viewAllHref: '/dashboard/patients',
+    viewAllHref: '/dashboard/pages/patients',
     /** Max rows shown. */
     limit: 6,
   },
@@ -108,7 +108,7 @@ export const SECTIONS = {
     icon: 'bx-time-five',
     emptyText: 'No activity yet today.',
     viewAllLabel: 'View All',
-    viewAllHref: '/dashboard/patients',
+    viewAllHref: '/dashboard/pages/patients',
     /** Max entries shown. */
     limit: 5,
   },
@@ -174,8 +174,8 @@ export interface QuickLinkConfig {
 }
 
 export const QUICK_LINKS: readonly QuickLinkConfig[] = [
-  { label: 'Reports & Analytics', href: '/dashboard/analytics', icon: 'bxs-report', tone: 'blue' },
-  { label: 'Patient Records', href: '/dashboard/patients', icon: 'bx-male-female', tone: 'rose' },
+  { label: 'Reports & Analytics', href: '/dashboard/pages/analytics', icon: 'bxs-report', tone: 'blue' },
+  { label: 'Patient Records', href: '/dashboard/pages/patients', icon: 'bx-male-female', tone: 'rose' },
   { label: 'Consultation', href: '/dashboard/servicesPHC/consultation', icon: 'bx-chat', tone: 'green' },
   { label: 'OPD Screening', href: '/dashboard/servicesPHC/opdScreening', icon: 'bx-search-alt-2', tone: 'purple' },
 ];

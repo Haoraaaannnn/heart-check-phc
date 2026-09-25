@@ -1,17 +1,28 @@
 /**
- * Sidebar navigation for the admin dashboard.
- * Adding, renaming or reordering a menu entry is a change to this file only.
+ * @fileoverview Navigation configuration and route definitions for the admin dashboard.
+ * Adding, renaming, or reordering menu items is handled solely in this file.
  *
- * The dashboard is read-only/informational, so there are intentionally no
- * User Management or Settings entries here (those belong to superadmin).
+ * @module app/dashboard/constants/navigation
  */
 
+/** Canonical route paths across the admin dashboard. */
+export const DASHBOARD_ROUTES = {
+  /** Admin dashboard root overview. */
+  HOME: '/dashboard',
+  /** Real-time cubicle monitoring and examination room status. */
+  CUBICLES: '/dashboard/pages/cubicles',
+  /** Patient volume trends, queue breakdowns, and 30-day logs. */
+  PATIENTS: '/dashboard/pages/patients',
+  /** Advanced bottleneck analysis and algorithmic forecasting. */
+  ANALYTICS: '/dashboard/pages/analytics',
+} as const;
+
 /** Route of the dashboard home page (matched exactly, not by prefix). */
-export const DASHBOARD_HOME = '/dashboard';
+export const DASHBOARD_HOME = DASHBOARD_ROUTES.HOME;
 
 const SERVICES_BASE = '/dashboard/servicesPHC';
 
-/** A single link. */
+/** A single navigation link. */
 export interface NavLink {
   key: string;
   label: string;
@@ -42,10 +53,9 @@ export const NAV_ITEMS: readonly NavItem[] = [
     key: 'queue',
     label: 'Queue Management',
     icon: 'bx-message-square-detail',
-    // The previous sidebar had Cubicles commented out. Remove this group if the page isn't ready.
-    children: [{ label: 'Cubicles', href: '/dashboard/cubicles' }],
+    children: [{ label: 'Cubicles', href: DASHBOARD_ROUTES.CUBICLES }],
   },
-  { key: 'patients', label: 'Patients', icon: 'bx-male-female', href: '/dashboard/patients' },
+  { key: 'patients', label: 'Patients', icon: 'bx-male-female', href: DASHBOARD_ROUTES.PATIENTS },
   {
     key: 'services',
     label: 'Services',
@@ -65,6 +75,6 @@ export const NAV_ITEMS: readonly NavItem[] = [
     key: 'analytics',
     label: 'Reports & Analytics',
     icon: 'bx-bar-chart-alt-2',
-    href: '/dashboard/analytics',
+    href: DASHBOARD_ROUTES.ANALYTICS,
   },
 ];
