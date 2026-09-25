@@ -265,15 +265,23 @@ Directory structure:
     │       │   ├── CubicleCard.tsx
     │       │   ├── DoctorsModal.tsx
     │       │   ├── DoctorsPanel.tsx
+    │       │   ├── DragGhost.tsx
+    │       │   ├── DragHandle.tsx
     │       │   ├── ElapsedTimer.tsx
-    │       │   ├── IdleNumbersSection.tsx
+    │       │   ├── IdleNumbersPanel.tsx
     │       │   ├── OnProgressSection.tsx
     │       │   ├── OPScreeningFlow.tsx
     │       │   ├── OtherServicesFlow.tsx
-    │       │   ├── QueueAndIdleLayout.tsx
+    │       │   ├── QueuePanel.tsx
     │       │   ├── RegistrationCounterSection.tsx
-    │       │   └── Sidebar.tsx
+    │       │   ├── ServiceBoard.tsx
+    │       │   ├── Sidebar.tsx
+    │       │   └── StepPickers.tsx
+    │       ├── constants/
+    │       │   ├── transfer.ts
+    │       │   └── transferTexts.ts
     │       ├── hooks/
+    │       │   ├── dragUtils.ts
     │       │   ├── useAutoAssign.ts
     │       │   ├── useAutoRotate.ts
     │       │   ├── useCubicleData.ts
@@ -300,10 +308,13 @@ Directory structure:
     │       ├── analyticsMetricCards.tsx
     │       ├── analyticsMetricHeader.tsx
     │       ├── analyticsMetricPara.tsx
+    │       ├── BackButton.tsx
     │       ├── KioskBackButton.tsx
     │       ├── metricCards.tsx
+    │       ├── NotificationBadge.tsx
     │       ├── patientHeaderCard.tsx
     │       ├── patientMetricCard.tsx
+    │       ├── ScrollArea.tsx
     │       └── serviceMetricCard.tsx
     ├── constants/
     │   ├── app.ts
@@ -315,13 +326,15 @@ Directory structure:
     ├── docs/
     │   ├── ARCHITECTURE.md
     │   ├── CHANGES_NEEDED.md
+    │   ├── COMPONENTS_GUIDE.md
     │   ├── DATABASE_SCHEMA.md
     │   ├── FILE_ARCHITECTURE.md
     │   ├── OPEN_ISSUES.md
     │   ├── PRD.md
     │   ├── SCHEMA_REFERENCE.md
     │   ├── SECURITY.md
-    │   └── SETUP_AND_SEEDING.md
+    │   ├── SETUP_AND_SEEDING.md
+    │   └── TRANSFER_DASHBOARD.md
     ├── fonts/
     │   └── fonts.ts
     ├── hooks/

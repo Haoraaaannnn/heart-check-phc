@@ -43,8 +43,18 @@ Unlike a multi-port, multi-app architecture, Heart Check PHC runs as a **single 
 
 #### 1. Frontend — Next.js 15 (App Router)
 
-- **Framework:** Next.js 15, React, TypeScript, Tailwind CSS, Recharts (for analytics visualizations)
+- **Framework:** Next.js 15, React 19, TypeScript, Tailwind CSS, Recharts (for analytics visualizations)
 - **Routing:** Role-based route segments under `app/` — `kiosk`, `monitor`, `login`, `nurse`, `transfer`, `dashboard`, `superadmin`
+- **Clinical Transfer Engine (`/transfer`):**
+  - **Pointer Events Drag-and-Drop:** Built on pointer primitives (`pointerdown`, `pointermove`, `pointerup`, `pointercancel`) supporting touchscreens, medical stylus pens, and desktop mice. Uses an unclipped floating preview portal (`DragGhost.tsx`) and dynamic hit-testing (`document.elementsFromPoint`).
+  - **FIFO Queue Stack Discipline:** Strict lock where only the top patient (`index === 0`, "Serving Next") is draggable and assignable; remaining patients (`index > 0`) are locked to enforce outpatient FIFO fairness.
+  - **Pinned Viewport & Sticky Navigation:** Pinned `h-screen overflow-hidden` container with permanent `shrink-0 z-20` sub-header for breadcrumbs and `BackButton`, leaving `<main>` as the sole scrolling container (`.phc-scroll`).
+  - **Safe Step-Back Navigation:** Non-destructive hierarchical back step (`Room` → `Subcategory` → `Category`) avoiding accidental history pop to `/login`.
+  - **Separation of Concerns:** Strict adherence to `AGENTS.md` (copy in `transferTexts.ts`, styling tokens in `transfer.ts`, modular single-responsibility subcomponents).
+- **Reusable Component System (`components/reusables/`):**
+  - `BackButton.tsx` (priority `onClick` → `href` → `router.back()`, 44px touch target).
+  - `ScrollArea.tsx` (cross-browser `.phc-scroll` container with orientation controls).
+  - `NotificationBadge.tsx` (numeric counts, pulsing live alert ring `.phc-badge-pulse`, color tokens).
 - **Auth client setup:** `lib/supabase/` — `client.ts` (browser client), `server.ts` (server-component client using `@supabase/ssr` cookie pattern), `admin.ts` (privileged/service-role operations)
 - **Access control:** Two-layer — Next.js Middleware (server-side, blocks page delivery before render) + `useRoleGuard` hook (client-side, in-page UI conditionals). See `SECURITY.md` for full detail.
 
@@ -153,4 +163,4 @@ Forecasting is deliberately framed as a **strategic policy decision-support tool
 
 ---
 
-_Last updated: reflects system state as of the RLS/middleware security pass. Update this doc alongside any structural changes ahead of Chapter 4._
+_Last updated: reflects system state including RLS/middleware security pass, transfer dashboard Pointer Drag and FIFO queue redesign, and reusable component integration._

@@ -15,8 +15,8 @@ cd heart-check-phc
 If you already have it cloned, make sure you are on the correct branch:
 
 ```bash
-git checkout Feat-Printing
-git pull origin Feat-Printing
+git checkout main
+git pull origin main
 ```
 
 ---
@@ -68,6 +68,7 @@ Create a `.env.local` file in the repository root (next to `README.md`):
 ```text
 NEXT_PUBLIC_SUPABASE_URL=https://your-project.supabase.co
 NEXT_PUBLIC_SUPABASE_ANON_KEY=your-anon-key
+SUPABASE_SERVICE_ROLE_KEY=your-service-role-key
 ```
 
 > Note: This file is local only. Do not commit your keys to public repositories.

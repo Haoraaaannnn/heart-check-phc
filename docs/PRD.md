@@ -31,12 +31,15 @@ This is explicitly a **collaborative integration** with PHC's existing infrastru
 
 ## Scope
 
-### In Scope
-
 - Kiosk check-in flow for OPD services (Consultation, OPD Screening, others per `services` table)
 - Live queue tracking through registration and consultation stages
 - Real-time display monitor
-- Role-based staff interface for queue progression
+- Role-based staff interface for queue progression (`/transfer` and `/nurse`):
+  - Pointer Events drag-and-drop system supporting clinical touchscreens, stylus pens, and desktop workstations
+  - Strict FIFO queue discipline (only top "Serving Next" patient unlocked and assignable, preventing queue jumping)
+  - Live room queue indicators displaying waiting vs. assigned patients
+  - Viewport-pinned layout with sticky breadcrumb and back button navigation
+- Global reusable component architecture (`BackButton`, `ScrollArea`, `NotificationBadge`)
 - Full analytics dashboard: descriptive, diagnostic, predictive (forecasting), prescriptive
 - Historical data import and integration (PHC's existing Excel-based records, March 2024–December 2025)
 - Queueing theory modeling (M/M/1 per service/cubicle; Erlang C as theoretical benchmark)
