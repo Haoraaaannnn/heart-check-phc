@@ -23,7 +23,9 @@ const S = DASH.sidebar;
  */
 function isRouteActive(href: string, pathname: string): boolean {
   if (href === DASHBOARD_HOME) return pathname === href;
-  return pathname === href || pathname.startsWith(`${href}/`);
+  const normHref = href.replace('/dashboard/pages/', '/dashboard/');
+  const normPath = pathname.replace('/dashboard/pages/', '/dashboard/');
+  return normPath === normHref || normPath.startsWith(`${normHref}/`);
 }
 
 /** Type guard: is this nav entry a collapsible group? */
