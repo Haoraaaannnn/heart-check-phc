@@ -1,8 +1,8 @@
-# Heart Check PHC — System Architecture Documentation
+# Heart Check PHC: A Kiosk-Based Queue Management and Analytics System — System Architecture Documentation
 
 ## Overview
 
-Heart Check PHC is an IoT-based queueing management and patient flow analytics platform built for the Philippine Heart Center's (PHC) Outpatient Department. Unlike a greenfield deployment, this is a **collaborative integration** with PHC's existing operational structure — a fixed-appointment, capped-cubicle system with low operational variance — which shapes both the technical and documentation decisions throughout this project.
+Heart Check PHC is a kiosk-based queue management and patient flow analytics platform built for the Philippine Heart Center's (PHC) Outpatient Department. Unlike a greenfield deployment, this is a **collaborative integration** with PHC's existing operational structure — a fixed-appointment, capped-cubicle system with low operational variance — which shapes both the technical and documentation decisions throughout this project.
 
 The system serves six distinct user contexts through one Next.js application: a physical kiosk for patient check-in, a public display monitor, staff-facing queue management (nurse/transfer), an analytics dashboard (admin), and a superadmin layer for account management.
 
@@ -20,7 +20,7 @@ Unlike a multi-port, multi-app architecture, Heart Check PHC runs as a **single 
 │                                                │
 │  /kiosk      — public, unauthenticated        │
 │  /monitor    — public, unauthenticated        │
-│  /login      — public                         │
+│  /login      — public (auth recovery routes)  │
 │  /nurse      — authenticated (nurse/staff)     │
 │  /transfer   — authenticated (nurse/staff)     │
 │  /dashboard  — authenticated (admin)           │
@@ -35,7 +35,8 @@ Unlike a multi-port, multi-app architecture, Heart Check PHC runs as a **single 
 │  - patients table │         │  - analytics/       │
 │  - users table (role-based accounts) │         │  - forecasting/      │
 │  - services table │         │  - queue_metrics/    │
-│  - RLS policies   │         │  - report.py          │
+│  - RLS policies   │         │  - export.py        │
+│                   │         │  - report.py        │
 └───────────────────┘         └───────────────────────┘
 ```
 
@@ -44,13 +45,20 @@ Unlike a multi-port, multi-app architecture, Heart Check PHC runs as a **single 
 #### 1. Frontend — Next.js 15 (App Router)
 
 - **Framework:** Next.js 15, React 19, TypeScript, Tailwind CSS, Recharts (for analytics visualizations)
-- **Routing:** Role-based route segments under `app/` — `kiosk`, `monitor`, `login`, `nurse`, `transfer`, `dashboard`, `superadmin`
+- **Routing:** Role-based route segments under `app/` — `kiosk`, `monitor`, `login`, `forgot-password`, `reset-password`, `nurse`, `transfer`, `dashboard`, `superadmin`
 - **Clinical Transfer Engine (`/transfer`):**
   - **Pointer Events Drag-and-Drop:** Built on pointer primitives (`pointerdown`, `pointermove`, `pointerup`, `pointercancel`) supporting touchscreens, medical stylus pens, and desktop mice. Uses an unclipped floating preview portal (`DragGhost.tsx`) and dynamic hit-testing (`document.elementsFromPoint`).
   - **FIFO Queue Stack Discipline:** Strict lock where only the top patient (`index === 0`, "Serving Next") is draggable and assignable; remaining patients (`index > 0`) are locked to enforce outpatient FIFO fairness.
   - **Pinned Viewport & Sticky Navigation:** Pinned `h-screen overflow-hidden` container with permanent `shrink-0 z-20` sub-header for breadcrumbs and `BackButton`, leaving `<main>` as the sole scrolling container (`.phc-scroll`).
   - **Safe Step-Back Navigation:** Non-destructive hierarchical back step (`Room` → `Subcategory` → `Category`) avoiding accidental history pop to `/login`.
   - **Separation of Concerns:** Strict adherence to `AGENTS.md` (copy in `transferTexts.ts`, styling tokens in `transfer.ts`, modular single-responsibility subcomponents).
+- **Modular Dashboard Architecture (`app/dashboard/`):**
+  - Adheres strictly to `AGENTS.md` modular structure under `app/dashboard/pages/`:
+    - `overview/` — operational summary, live queue overview, arrival trends, and quick access.
+    - `patients/` — patient flow monitoring, service filtering, and queue lifecycle tables.
+    - `analytics/` — 4-tier analytics (descriptive, diagnostic, forecasting with MAE comparison, prescriptive recommendations), and Excel export.
+    - `cubicles/` — real-time cubicle station occupancy grid, doctor assignments, and operational capacity tracking.
+  - Backward compatibility: Legacy route segments (`/dashboard/analytics`, `/dashboard/patients`, `/dashboard/cubicles`) re-export their canonical counterparts.
 - **Reusable Component System (`components/reusables/`):**
   - `BackButton.tsx` (priority `onClick` → `href` → `router.back()`, 44px touch target).
   - `ScrollArea.tsx` (cross-browser `.phc-scroll` container with orientation controls).
@@ -60,16 +68,18 @@ Unlike a multi-port, multi-app architecture, Heart Check PHC runs as a **single 
 
 #### 2. Backend — FastAPI (Python)
 
-- **Purpose:** Analytics computation — descriptive, diagnostic, predictive, and prescriptive tiers — plus queueing theory calculations and forecasting
-- **Key libraries:** Pandas, NumPy, Scikit-learn, Statsmodels, SimPy
+- **Purpose:** Analytics computation — descriptive, diagnostic, predictive, and prescriptive tiers — plus queueing theory calculations, forecasting, and PHC compliance reporting
+- **Key libraries:** Pandas, NumPy, Scikit-learn, Statsmodels, SimPy, OpenPyXL
+- **CORS Configuration:** `CORSMiddleware` active, permitting requests from authorized frontend origins (`localhost:3000`, `127.0.0.1:3000`).
 - **Structure** (`python_backend/analytics/`):
-  - `constants.py` — shared constants
+  - `constants.py` — shared constants and threshold parameters
   - `helpers.py` — shared utility functions
   - `preprocessing.py` — data cleaning/normalization (includes the `patient_id` priority-fallback logic — see `DATABASE_SCHEMA.md`)
-  - `descriptive.py` — daily summaries, hourly patterns
+  - `descriptive.py` — daily summaries, hourly patterns, and monthly breakdowns
   - `queue_metrics.py` — M/M/1 and M/M/c queueing model calculations
   - `forecasting.py` — SMA, WMA, EMA, Linear Regression, ARIMA with MAE-based auto-selection
   - `staffing.py` — staffing/capacity-related calculations
+  - `export.py` — builds PHC-compliant Excel workbooks matching official OPD reporting formats with automated stage threshold metrics
   - `report.py` — orchestrates the full analytics report generation
   - Debug-only (not production): `db_seeder.py`, `simulation.py`, `distribution_tests.py`, `check_dates.py`, `debug_analytics.py`
 
@@ -81,8 +91,8 @@ Unlike a multi-port, multi-app architecture, Heart Check PHC runs as a **single 
 
 #### 4. Hardware (Kiosk Prototype)
 
-- Kiosk unit, display, printer, speaker
-- Consultation queue management is the core demonstrated functionality for Chapter 4
+- Dedicated Touchscreen Kiosk terminal, display screen, thermal receipt printer, audio speakers
+- Self-service consultation check-in and queue ticket issuance is the core demonstrated functionality for Chapter 4
 
 ## Queueing Model
 

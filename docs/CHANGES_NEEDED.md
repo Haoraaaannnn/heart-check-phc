@@ -1,6 +1,8 @@
-# Heart Check PHC — Changes Needed (Security Pass)
+# Heart Check PHC: A Kiosk-Based Queue Management and Analytics System — Changes Needed (Security Pass)
 
 This document lists every concrete change to apply, in order. Nothing here is optional — each item closes a real gap found while auditing the actual schema. Apply in the order listed; some steps depend on earlier ones.
+
+> **Note:** A more recent live schema pull (`SCHEMA_REFERENCE.md`) shows the `patients`/`doctors`/`cubicle` tables have policies that don't match either the "before" state or the "after" SQL below — some old wide-open policies appear to still be present, new scoped policies (`patients_select_nurse_scoped`, `patients_select_registration_full`, etc.) have been added on top, and `doctors`' write policies look unguarded again. Treat steps 3–5 below as the *originally planned* fix, not confirmed-current state — re-audit before assuming these were applied as written.
 
 ## 1. Add the missing schema column
 
@@ -37,6 +39,8 @@ AS $$
 $$;
 ```
 
+> The live schema also references `is_clinical_staff()`, `is_registration_staff()`, and `my_cubicle_nums()` in the `patients` policies — these are not defined here and their SQL isn't documented anywhere yet. Add their definitions once confirmed.
+
 ## 3. Fix `services` — highest priority
 
 Currently `anon` (fully public, no login) can INSERT and DELETE. This is the kiosk's entire menu — a public key holder could wipe it and take the kiosk down.
@@ -58,6 +62,8 @@ CREATE POLICY "services_delete_superadmin"
 ON services FOR DELETE TO authenticated
 USING (is_superadmin());
 ```
+
+> **Not confirmed applied.** The latest live pull still shows `Enable read access for all users`, `Allow anon deletion on services`, `Allow anon insert on services`, and `Allow public read on services` all present on `services` — this fix does not appear to have landed yet, or was reverted.
 
 ## 4. Fix `users` — public account data leak
 
@@ -86,6 +92,8 @@ CREATE POLICY "users_delete_superadmin"
 ON users FOR DELETE TO authenticated
 USING (is_superadmin());
 ```
+
+> **Not confirmed applied.** The latest live pull still shows only `Enable read access for all users` (public, `true`) on `users` — this fix does not appear to have landed yet.
 
 ## 5. Fix `patients` — RLS wide open + no historical protection
 
@@ -123,6 +131,8 @@ ON patients FOR DELETE TO authenticated
 USING (is_superadmin() AND is_historical = false);
 ```
 
+> **Superseded, not just "unconfirmed."** The latest live pull shows a different policy set entirely on `patients`: the old wide-open `anon`/`public` INSERT/SELECT policies are still present, and none of the five policies above (`patients_select_public_live`, `patients_select_staff_all`, `patients_insert_kiosk`, `patients_update_staff_live_only`, `patients_delete_superadmin_live_only`) exist in that pull. Instead there are `patients_select_nurse_scoped`, `patients_update_nurse_scoped`, `patients_select_registration_full`, `patients_update_registration_full` — a per-cubicle/per-role model built on `is_clinical_staff()`, `is_registration_staff()`, and `my_cubicle_nums()`. This step needs to be rewritten against that actual current model, including defining those three helper functions and deciding whether the old wide-open policies should finally be dropped as part of that rewrite. No DELETE policy exists on `patients` in the live pull at all.
+
 ## 6. Update `import_phc_data.py`
 
 Two changes — this script currently uses the public anon key and never marks its own rows as historical, both of which conflict with the new `patients` policies above.
@@ -159,90 +169,92 @@ cols = ["created_at", "phoneNum", "service",
 
 ⚠️ Test on one sheet before running against all files — the service role key bypasses RLS entirely, so a mistake here isn't caught by any policy.
 
-## 7. Add `middleware.ts` (did not exist before this pass)
-
-Place at project root. Corrects two wrong assumptions from earlier drafts: the role table is `users` (not `profiles`), and the join column is `auth_id` (not `id`).
-
-```typescript
-import { createServerClient } from "@supabase/ssr";
-import { NextResponse, type NextRequest } from "next/server";
-
-const roleRoutes: Record<string, string[]> = {
-  "/superadmin": ["superadmin"],
-  "/dashboard": ["admin", "superadmin"],
-  "/nurse": ["nurse", "staff", "admin", "superadmin"],
-  "/transfer": ["nurse", "staff", "admin", "superadmin"],
-};
-
-export async function middleware(request: NextRequest) {
-  let response = NextResponse.next({ request });
-
-  const supabase = createServerClient(
-    process.env.NEXT_PUBLIC_SUPABASE_URL!,
-    process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY!,
-    {
-      cookies: {
-        getAll() {
-          return request.cookies.getAll();
-        },
-        setAll(cookiesToSet) {
-          cookiesToSet.forEach(({ name, value }) =>
-            request.cookies.set(name, value),
-          );
-          response = NextResponse.next({ request });
-          cookiesToSet.forEach(({ name, value, options }) =>
-            response.cookies.set(name, value, options),
-          );
-        },
-      },
-    },
-  );
-
-  const {
-    data: { user },
-  } = await supabase.auth.getUser();
-  const path = request.nextUrl.pathname;
-  const matchedPrefix = Object.keys(roleRoutes).find((p) => path.startsWith(p));
-
-  if (matchedPrefix) {
-    if (!user) {
-      return NextResponse.redirect(new URL("/login", request.url));
-    }
-
-    const { data: userRow } = await supabase
-      .from("users")
-      .select("role")
-      .eq("auth_id", user.id)
-      .single();
-
-    if (!userRow || !roleRoutes[matchedPrefix].includes(userRow.role)) {
-      return NextResponse.redirect(new URL("/unauthorized", request.url));
-    }
-  }
-
-  return response;
-}
-
-export const config = {
-  matcher: [
-    "/superadmin/:path*",
-    "/dashboard/:path*",
-    "/nurse/:path*",
-    "/transfer/:path*",
-  ],
-};
-```
-
-Also create a basic `/unauthorized` page — the redirect above resolves to a 404 without it.
-
 ## Still Open — Not Yet Fixed
 
-- **`useRoleGuard` hook** — needs the same `profiles`→`users`, `id`→`auth_id` correction if it was written against the old assumed schema. Not yet reviewed against actual code.
-- **`cubicle`** — has no INSERT/DELETE policy at all, meaning both are fully blocked under RLS by default. Confirm this is intentional (managed only via service role / Supabase dashboard) rather than an oversight.
-- **CORS** on FastAPI — not yet configured.
-- **Rate limiting** on analytics endpoints — `slowapi` recommended, not yet applied.
+- **Route-level middleware (`middleware.ts`)** — does not exist yet. Route protection is currently client-side only (`useRoleGuard`/`authGuard.ts`), which has a known flash/bypass gap. Corrects two wrong assumptions from earlier drafts: the role table is `users` (not `profiles`), and the join column is `auth_id` (not `id`). Plan below, not yet applied:
+
+```typescript
+  import { createServerClient } from "@supabase/ssr";
+  import { NextResponse, type NextRequest } from "next/server";
+
+  const roleRoutes: Record<string, string[]> = {
+    "/superadmin": ["superadmin"],
+    "/dashboard": ["admin", "superadmin"],
+    "/nurse": ["nurse", "staff", "admin", "superadmin"],
+    "/transfer": ["nurse", "staff", "admin", "superadmin"],
+  };
+
+  export async function middleware(request: NextRequest) {
+    let response = NextResponse.next({ request });
+
+    const supabase = createServerClient(
+      process.env.NEXT_PUBLIC_SUPABASE_URL!,
+      process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY!,
+      {
+        cookies: {
+          getAll() {
+            return request.cookies.getAll();
+          },
+          setAll(cookiesToSet) {
+            cookiesToSet.forEach(({ name, value }) =>
+              request.cookies.set(name, value),
+            );
+            response = NextResponse.next({ request });
+            cookiesToSet.forEach(({ name, value, options }) =>
+              response.cookies.set(name, value, options),
+            );
+          },
+        },
+      },
+    );
+
+    const {
+      data: { user },
+    } = await supabase.auth.getUser();
+    const path = request.nextUrl.pathname;
+    const matchedPrefix = Object.keys(roleRoutes).find((p) => path.startsWith(p));
+
+    if (matchedPrefix) {
+      if (!user) {
+        return NextResponse.redirect(new URL("/login", request.url));
+      }
+
+      const { data: userRow } = await supabase
+        .from("users")
+        .select("role")
+        .eq("auth_id", user.id)
+        .single();
+
+      if (!userRow || !roleRoutes[matchedPrefix].includes(userRow.role)) {
+        return NextResponse.redirect(new URL("/unauthorized", request.url));
+      }
+    }
+
+    return response;
+  }
+
+  export const config = {
+    matcher: [
+      "/superadmin/:path*",
+      "/dashboard/:path*",
+      "/nurse/:path*",
+      "/transfer/:path*",
+    ],
+  };
+```
+
+  Also requires a basic `/unauthorized` page — without it, the eventual middleware redirect resolves to a 404.
+
+- **`useRoleGuard` hook** — needs the same `profiles`→`users`, `id`→`auth_id` correction if it was written against the old assumed schema. Not yet reviewed against actual code. May now overlap with `lib/supabase/authGuard.ts` — clarify which is the source of truth.
+- **`cubicle`** — has no INSERT/DELETE policy at all, meaning both are fully blocked under RLS by default. Confirm this is intentional (managed only via service role / Supabase dashboard) rather than an oversight. Also now has 3 overlapping SELECT policies in the live pull — cleanup candidate.
+- **CORS** on FastAPI — configured for dev origins (`localhost:3000`, `127.0.0.1:3000`) via `CORSMiddleware` in `main.py`; production origins to be configured upon PHC on-premise handoff.
+- **Rate limiting** on analytics endpoints — `slowapi` recommended, not yet applied. Note: `login_attempts` and `password_reset_attempts` tables now exist — some rate-limiting/lockout has apparently been built for auth endpoints; document once confirmed.
 - **`patient_category` table** — appeared in the schema dump but hasn't been discussed; check whether it needs the same RLS review as `services`.
+- **`services` and `users` fixes (steps 3–4 above)** — do not appear applied in the latest live schema pull; re-run or confirm.
+- **`patients` fix (step 5 above)** — superseded by a different, undocumented policy model in the live pull (`patients_select_nurse_scoped`, `patients_select_registration_full`, etc.). Needs a fresh design pass, not a re-apply of the SQL above.
+- **`doctors` write policies** — live pull shows unguarded `true`/`authenticated`-only checks instead of the superadmin-gated `EXISTS` checks assumed elsewhere in this doc. Confirm intentional vs. regression.
+- **New staff-assignment tables** (`user_cubicles`, `user_services`, `user_rooms`, `user_counters`, `cubicle_selector`, `cubicle_selector_cubicle`) and the `is_clinical_staff()`/`is_registration_staff()`/`my_cubicle_nums()` helper functions — not documented anywhere yet, and the `patients` policies now depend on them.
 
 ---
 
-_Apply in order. After running, re-query `pg_policies` for each table to confirm the old `true`-only policies are actually gone, not just shadowed by new ones._
+_Apply in order. After running, re-query `pg_policies` for each table to confirm the old `true`-only policies are actually gone, not just shadowed by new ones. As of the latest live schema pull, several of the fixes above do not appear to have landed as written — re-audit before Chapter 4._

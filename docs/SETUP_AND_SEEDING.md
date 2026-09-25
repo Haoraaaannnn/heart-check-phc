@@ -1,4 +1,4 @@
-# Heart Check PHC Setup and Seeding Guide
+# Heart Check PHC: A Kiosk-Based Queue Management and Analytics System — Setup and Seeding Guide
 
 ## Overview
 This guide explains how to install and run the frontend, backend, and seeder for Heart Check PHC. It also explains how to automate simulated patient seeding.
@@ -85,6 +85,9 @@ The backend API endpoints are:
 
 - `http://localhost:8000/health`
 - `http://localhost:8000/api/dashboard-data`
+- `http://localhost:8000/api/available-years`
+- `http://localhost:8000/api/monthly-breakdown/{year}`
+- `http://localhost:8000/api/export-excel`
 
 ---
 

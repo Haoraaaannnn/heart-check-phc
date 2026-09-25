@@ -1,92 +1,63 @@
-# Heart Check PHC — Open & Resolved Issues Tracker
+# Heart Check PHC: A Kiosk-Based Queue Management and Analytics System — Open Issues Tracker
 
-Running list of known follow-ups, ongoing tasks, and resolved fixes. Move resolved items to the "Resolved" section with context and date rather than deleting them — providing clear documentation of engineering decisions for thesis Chapter 4.
+Running list of known follow-ups that aren't urgent enough to block progress, but shouldn't get lost. Check items off as they're resolved; add new ones as they come up instead of letting them live only in chat history.
+
+## Security
+
+- [ ] `middleware.ts` does not exist yet — route protection is client-side only (`useRoleGuard`/`authGuard.ts`), with a known flash/bypass gap. Server-side middleware is planned but not built (see `CHANGES_NEEDED.md`).
+- [ ] `useRoleGuard` hook — confirm it queries `users`/`auth_id`, not the earlier assumed `profiles`/`id`; clarify overlap with `lib/supabase/authGuard.ts`
+- [ ] `cubicle` table — no INSERT/DELETE policy exists; confirm this is intentional (service-role-only) rather than an oversight. Also has 3 overlapping SELECT policies in the latest live pull — cleanup candidate.
+- [ ] `patient_category` table — RLS policies not yet reviewed
+- [ ] Rate limiting (`slowapi`) not yet applied to analytics endpoints — note: `login_attempts`/`password_reset_attempts` tables now exist, suggesting auth-endpoint rate limiting has been added separately; document once confirmed
+- [ ] `/unauthorized` page doesn't exist yet — will be needed once middleware is added
+- [ ] Kiosk insert still uses anon key directly to Supabase; longer-term move to a FastAPI endpoint + service role key is still the better design
+- [ ] `services` RLS fix — latest live pull still shows the old wide-open `anon` INSERT/DELETE policies present; the planned fix in `CHANGES_NEEDED.md` step 3 does not appear applied
+- [ ] `users` RLS fix — latest live pull still shows the public-read policy present; the planned fix in `CHANGES_NEEDED.md` step 4 does not appear applied
+- [ ] `patients` RLS — the planned `is_historical`-scoped fix (`CHANGES_NEEDED.md` step 5) does not match the live pull at all; live policies show a newer, undocumented `is_clinical_staff()`/`is_registration_staff()`/`my_cubicle_nums()` model layered on top of the still-present old wide-open policies, and there is no DELETE policy. Needs a full re-audit and fresh design doc, not a re-apply of the old SQL.
+- [ ] `doctors` write policies — live pull shows unguarded `true`/`authenticated`-only checks instead of superadmin-gated checks; confirm intentional vs. regression
+- [ ] New staff-assignment tables (`user_cubicles`, `user_services`, `user_rooms`, `user_counters`, `cubicle_selector`, `cubicle_selector_cubicle`) and their helper functions are undocumented — needed before the `patients` RLS rewrite above can be written up properly
+
+## Data / Schema
+
+- [ ] Confirm exact `users.role` string values in production data (case-sensitive) — mismatches silently break policies and middleware
+- [ ] Run `is_historical` migration + backfill on `patients` (see `CHANGES_NEEDED.md` step 1) — not yet applied as of this doc's writing
+- [ ] `distribution_tests.py` — statistical validation of Poisson/exponential assumptions, pending real PHC data to run meaningfully
+- [ ] New `patients` columns not yet documented in narrative form: `preferredCubicleNums`, `subcategory`, `cooldown_until`, `rotation_count`, `counter_rejoin_at`, `counter_top_started_at`, `idle_at`, `removed_at` — need actual semantics, currently only flagged as "not yet documented" in `DATABASE_SCHEMA.md`
+- [ ] `carryout_start`/`carryout_end` now exist as real `patients` columns — confirm whether the computed `avg_total_time` pipeline includes them now, which would change or close the previously-documented ~4-minute discrepancy vs. PHC's recorded average
+- [ ] `users.assigned_room` — new column, purpose not yet documented against the `user_rooms` join table
+
+## Analytics / ML (Planned, Post-Current-Priorities)
+
+- [ ] Per-patient dynamic wait-time prediction (build first)
+- [ ] Bottleneck/anomaly detection layer on `descriptive.py`
+
+## Documentation
+
+- [ ] Merge relevant sections of this doc set into the team's existing `CLAUDE.md` once reviewed
+- [x] Re-verify `ARCHITECTURE.md`'s file/endpoint structure against the actual repo — updated to reflect modular `app/dashboard/pages/` refactor and backend endpoints
+- [x] `PRD.md` scope/objectives updated with password-reset auth flow, superadmin cubicle management, modular dashboard presentation, and Excel export (`export.py`, `ExportExcelButton.tsx`)
+- [x] `python_backend/analytics/export.py` documented in `ARCHITECTURE.md` and `PRD.md`
+- [x] Title standardization across all documents: Updated to `Heart Check PHC: A Kiosk-Based Queue Management and Analytics System` (removing obsolete IoT terminology)
+
+## Deployment (Production Handoff, Not Urgent Yet)
+
+- [ ] Supabase Realtime replacement (WebSocket polling via FastAPI) needed if migrating off Supabase
+- [ ] HTTPS / reverse proxy setup for PHC on-prem server
+- [ ] Docker packaging for PHC IT/MIS handoff
 
 ---
 
-## 🟡 Open Issues
+_Add new items as they surface. Move resolved items to a "Resolved" section below with the date, rather than deleting them — useful for Chapter 4 documentation of the security work done._
 
-### Security
-- [ ] `useRoleGuard` hook — confirm all query paths consistently use `users`/`auth_id`, matching the schema rather than legacy `profiles`/`id`.
-- [ ] `cubicle` table — confirm whether absence of INSERT/DELETE policies under RLS is intentional (managed strictly via superadmin / service role key) or requires explicit policies.
-- [ ] `patient_category` table — audit RLS write policies to ensure non-superadmin accounts cannot modify categories.
-- [ ] CORS configuration on FastAPI backend — specify permitted origins before on-premises deployment.
-- [ ] Rate limiting (`slowapi`) on analytics endpoints — protect CPU-heavy statsmodels/ARIMA computations.
-- [ ] `/unauthorized` page creation — build a dedicated access-denied page for middleware redirects.
-- [ ] Kiosk write path hardening — migrate kiosk `INSERT` from direct anon Supabase client to an authenticated FastAPI service-role proxy endpoint.
+## Resolved
 
-### Data & Schema
-- [ ] Confirm exact `users.role` string casing in production database (`'superadmin'`, `'admin'`, `'nurse'`, `'staff'`).
-- [ ] Apply `is_historical` column migration and backfill on live Supabase `patients` table (see `CHANGES_NEEDED.md` Step 1).
-- [ ] Statistical validation of Poisson/exponential queue assumptions (`distribution_tests.py`) once extensive real-world PHC logs are recorded.
+- [x] Import script used anon key and never marked rows historical — fixed: uses service role key and sets `is_historical = true`
+- [x] CORS on FastAPI backend — configured via `CORSMiddleware` in `python_backend/main.py` allowing frontend origins (localhost/127.0.0.1:3000/3001)
+- [x] Architecture & PRD documentation — synchronized with latest codebase refactorings and title standardization
 
-### Analytics & ML (Post-Chapter 4 Planning)
-- [ ] Dynamic per-patient wait-time prediction model based on assigned cubicle, historical pace, and queue depth.
-- [ ] Bottleneck & stage anomaly detection alerts for OPD triage administrators.
+## Not Resolved
 
-### Production Handoff & Deployment
-- [ ] On-premise PostgreSQL migration strategy (replacing Supabase Realtime with FastAPI WebSocket channels).
-- [ ] Reverse proxy (Nginx) & SSL configuration for PHC intranet.
-- [ ] Docker containerization for Next.js frontend and FastAPI backend.
-
----
-
-## 🟢 Resolved Issues
-
-### Clinical Transfer Dashboard Redesign & Bug Fixes (September 2026)
-
-- [x] **Infinite Render Loop / Stuck on "Verifying account access...":**
-  - *Symptom:* Transfer dashboard was permanently frozen displaying the loading spinner.
-  - *Cause:* `initialize()` `useEffect` in `app/transfer/page.tsx` included unmemoized query functions (`fetchMyAccess`, `fetchCubicles`) in its dependency array, re-triggering state changes on every render.
-  - *Resolution:* Wrapped data fetching functions in `useCallback` and restricted mount initialization to run once on component mount (`[]`).
-
-- [x] **Back Button Caused Accidental Logout:**
-  - *Symptom:* Clicking the back button inside the transfer dashboard navigated to `/login`, logging the staff member out.
-  - *Cause:* `components/reusables/BackButton.tsx` executed `if (onClick) onClick(e); if (!href) router.back();` without a `return`, causing it to execute both the custom click handler and the browser history pop back to `/login`.
-  - *Resolution:* Added an immediate `return` when `onClick` is provided, and updated `handleBack()` in `page.tsx` to safely step backward through dashboard states (`Room` → `Subcategory` → `Category`).
-
-- [x] **Back Button & Breadcrumbs Scrolled With Content:**
-  - *Symptom:* When scrolling down cubicle or counter lists, the back button and breadcrumb bar scrolled off the screen.
-  - *Cause:* The outer container had `min-h-screen`, causing the entire window to scroll.
-  - *Resolution:* Pinned the root viewport with `h-screen overflow-hidden`, placed `BreadcrumbNav` and `BackButton` inside a sticky sub-header (`shrink-0 z-20`), and designated `<main>` as the sole scrolling element (`overflow-y-auto min-h-0 phc-scroll`).
-
-- [x] **Patient Group Selector Missing Pedia:**
-  - *Symptom:* Subcategory selector only showed "Adult" and omitted "Pedia" for certain staff members.
-  - *Cause:* `getAllowedSubcategories` filtered subcategories strictly against `myRooms`. If the user's assigned rooms lacked pediatric entries, Pedia was hidden entirely.
-  - *Resolution:* Configured `ConsultationFlow` and `OPScreeningFlow` to display both Adult and Pedia cards, falling back to the database `cubicles` table when personal room mappings are incomplete.
-
-- [x] **Room Selection Cards Missing Queue Counts:**
-  - *Symptom:* Room cards (e.g. Room 4) showed zero queued patients.
-  - *Cause:* `RoomPicker` only tallied patients already assigned to cubicles and ignored waiting patients in the queue.
-  - *Resolution:* Updated `RoomPicker` to inspect `onProgressPatients` and match `preferredCubicleNums` containing the room identifier (e.g. `Consultation R4 C1`), displaying both live queue counts (`X in queue`) and assigned counts (`Y assigned`) with pulsing alerts.
-
-- [x] **Touchscreen & Tablet Incompatibility with Drag-and-Drop:**
-  - *Symptom:* HTML5 / mouse-only drag-and-drop failed on clinical tablets, touch monitors, and stylus pens.
-  - *Cause:* Previous drag implementation relied on raw desktop `mousedown`/`mousemove`/`mouseup` events.
-  - *Resolution:* Implemented unified Pointer Events engine (`dragUtils.ts`, `DragHandle.tsx`, `DragGhost.tsx`) supporting touch coordinates, multi-device pointer normalization, and an unclipped portal drag preview.
-
-- [x] **Queue Reordering / Out-of-Order Assignment (FIFO Violation):**
-  - *Symptom:* Staff could drag any arbitrary patient from anywhere in the queue.
-  - *Resolution:* Enforced strict FIFO queue lock: only `index === 0` ("Serving Next") is unlocked, draggable, and assignable; `index > 0` patients are locked in the stack with a lock badge.
-
-### Security & Data Layer Fixes
-
-- [x] **`patients` Table RLS Wide Open:**
-  - *Symptom:* Ten unconditional `true` policies allowed public deletion of historical and live queue records.
-  - *Resolution:* Implemented `is_historical`-scoped policies restricting modifications to authenticated staff and separating live from historical rows.
-
-- [x] **`services` Table Vulnerability:**
-  - *Symptom:* Anon public role had permissions to INSERT and DELETE kiosk services.
-  - *Resolution:* Locked all write operations (`INSERT`, `UPDATE`, `DELETE`) to verified superadmins via `is_superadmin()` security definer function.
-
-- [x] **`users` Table Account Information Leak:**
-  - *Symptom:* Public role could read all usernames, emails, and roles.
-  - *Resolution:* Restricted `SELECT` to authenticated self-reads (`auth_id = auth.uid()`) and superadmin oversight.
-
-- [x] **Missing Server-Side Route Guard:**
-  - *Symptom:* Pages relied solely on client-side React hook, causing flashes of protected pages.
-  - *Resolution:* Implemented server-side `middleware.ts` gating `/superadmin`, `/dashboard`, `/nurse`, and `/transfer` before page rendering.
-
-- [x] **Historical Data Import Key & Flag:**
-  - *Symptom:* `import_phc_data.py` imported Excel data using the public anon key without setting `is_historical`.
-  - *Resolution:* Swapped to `SUPABASE_SERVICE_ROLE_KEY` and explicitly flagged inserted records with `is_historical = True`.
+- [ ] `patients` RLS wide open (all policies `true`) — a fix was designed (`is_historical`-scoped policies) but does not appear applied; live schema also shows a separate, newer, undocumented scoped-access model layered on top — needs full re-audit
+- [ ] `services` table — anon could INSERT/DELETE the kiosk service menu — fix designed (superadmin-only writes) but does not appear applied per latest live pull
+- [ ] `users` table — public (no-login) read access to accounts — fix designed (self-read + superadmin-all) but does not appear applied per latest live pull
+- [ ] No route-level middleware exists — planned, not yet built
