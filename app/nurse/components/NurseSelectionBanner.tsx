@@ -39,8 +39,8 @@ export function NurseSelectionBanner({
   const { patient, currentStage, cubicleNum } = selectedPatient;
 
   // Determine stage-specific hint text
-  let hintText = nurseTexts.tapStageToMove;
-  let originLabel = '';
+  let hintText: string = nurseTexts.tapStageToMove;
+  let originLabel: string = '';
 
   if (currentStage === 'assigned') {
     hintText = nurseTexts.selectedHintAssigned;

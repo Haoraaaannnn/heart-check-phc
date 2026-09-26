@@ -40,13 +40,13 @@ export interface NurseBoardProps {
   /** Pointer down listener for drag initiation. */
   onPointerDown: (e: React.PointerEvent, patient: Patient, stage: ClinicalStage) => void;
   /** Transition handlers. */
-  onMoveToWithDoctor: (patient: Patient) => void;
-  onMoveBackFromDoctor: (patient: Patient) => void;
-  onMoveToCarryout: (patient: Patient) => void;
-  onMoveBackFromCarryout: (patient: Patient) => void;
-  onFinish: (patient: Patient) => void;
+  onMoveToWithDoctor: (patient: Patient) => void | Promise<boolean | void>;
+  onMoveBackFromDoctor: (patient: Patient) => void | Promise<boolean | void>;
+  onMoveToCarryout: (patient: Patient) => void | Promise<boolean | void>;
+  onMoveBackFromCarryout: (patient: Patient) => void | Promise<boolean | void>;
+  onFinish: (patient: Patient) => void | Promise<boolean | void>;
   /** Direct advance handler in tablet selection mode. */
-  onAssignSelectedToStage: (stage: ClinicalStage) => void;
+  onAssignSelectedToStage: (stage: ClinicalStage) => void | Promise<boolean | void>;
   /** Helper checking if a stage is an eligible destination for selection. */
   isStageValidTarget: (stage: ClinicalStage) => boolean;
 }

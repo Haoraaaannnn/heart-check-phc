@@ -36,7 +36,7 @@ export interface UseNurseSelectionReturn {
  * @returns State and mutation handlers for Click-to-Select interactions.
  */
 export function useNurseSelection(
-  onTransition: (patient: Patient, targetStage: ClinicalStage) => void | Promise<void>
+  onTransition: (patient: Patient, targetStage: ClinicalStage) => boolean | void | Promise<boolean | void>
 ): UseNurseSelectionReturn {
   const [selectedPatient, setSelectedPatient] = useState<SelectedNursePatient | null>(null);
 

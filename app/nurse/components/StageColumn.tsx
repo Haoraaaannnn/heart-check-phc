@@ -36,7 +36,7 @@ export interface StageColumnProps {
   /** Whether this stage is an eligible target during Click-to-Select tablet mode. */
   isValidSelectionTarget?: boolean;
   /** Callback triggered when user clicks '+ Move Here' button in selection mode. */
-  onMoveHere?: () => void;
+  onMoveHere?: () => void | Promise<boolean | void>;
   /** Rendered patient cards to display within the scroll container. */
   children: React.ReactNode;
 }
@@ -60,14 +60,14 @@ export function StageColumn({
   children,
 }: StageColumnProps) {
   const isTargetActive = isDragOver || isValidSelectionTarget;
+  const columnStyle = isTargetActive
+    ? { ...NurseStyle.stageColumn, ...NurseStyle.activeDropzone }
+    : NurseStyle.stageColumn;
 
   return (
     <section
       data-stage-id={stage}
-      style={{
-        ...NurseStyle.stageColumn,
-        ...(isTargetActive ? NurseStyle.activeDropzone : {}),
-      }}
+      style={columnStyle}
       className={`transition-all duration-150 ${
         isTargetActive
           ? 'border-emerald-500 ring-2 ring-emerald-400/40 bg-emerald-50/20'

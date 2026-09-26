@@ -251,29 +251,31 @@ export function useNurseActions(
    */
   const handleTransitionStage = useCallback(
     async (patient: Patient, targetStage: ClinicalStage): Promise<boolean> => {
+      const statusLower = (patient.status || '').toLowerCase().trim();
+
       if (targetStage === 'with_doctor') {
-        if (patient.status === 'Assigned') {
+        if (statusLower === 'assigned' || patient.status === 'Assigned') {
           return handleMoveToWithDoctor(patient);
         }
-        if (patient.status === 'Carryout') {
+        if (statusLower === 'carryout' || patient.status === 'Carryout') {
           return handleMoveBackFromCarryout(patient);
         }
       }
 
       if (targetStage === 'carryout') {
-        if (patient.status === 'With Doctor') {
+        if (statusLower === 'with doctor' || patient.status === 'With Doctor') {
           return handleMoveToCarryout(patient);
         }
       }
 
       if (targetStage === 'done') {
-        if (patient.status === 'Carryout') {
+        if (statusLower === 'carryout' || patient.status === 'Carryout') {
           return handleFinish(patient);
         }
       }
 
       if (targetStage === 'assigned') {
-        if (patient.status === 'With Doctor') {
+        if (statusLower === 'with doctor' || patient.status === 'With Doctor') {
           return handleMoveBackFromDoctor(patient);
         }
       }

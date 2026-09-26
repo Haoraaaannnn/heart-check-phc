@@ -39,15 +39,15 @@ export interface NursePatientCardProps {
   /** Pointer down listener to initiate drag-and-drop. */
   onPointerDown?: (e: React.PointerEvent, patient: Patient, stage: ClinicalStage) => void;
   /** Quick action: Advance to With Doctor stage. */
-  onMoveToWithDoctor?: (patient: Patient) => void;
+  onMoveToWithDoctor?: (patient: Patient) => void | Promise<boolean | void>;
   /** Quick action: Rollback from With Doctor back to Assigned. */
-  onMoveBackFromDoctor?: (patient: Patient) => void;
+  onMoveBackFromDoctor?: (patient: Patient) => void | Promise<boolean | void>;
   /** Quick action: Advance from With Doctor to Carryout stage. */
-  onMoveToCarryout?: (patient: Patient) => void;
+  onMoveToCarryout?: (patient: Patient) => void | Promise<boolean | void>;
   /** Quick action: Rollback from Carryout back to With Doctor. */
-  onMoveBackFromCarryout?: (patient: Patient) => void;
+  onMoveBackFromCarryout?: (patient: Patient) => void | Promise<boolean | void>;
   /** Quick action: Advance from Carryout to Done (finished ledger). */
-  onFinish?: (patient: Patient) => void;
+  onFinish?: (patient: Patient) => void | Promise<boolean | void>;
 }
 
 /**

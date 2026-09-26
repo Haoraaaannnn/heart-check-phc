@@ -29,15 +29,15 @@ export interface CarryoutSectionProps {
   /** Whether this stage is an eligible destination during tablet selection. */
   isValidSelectionTarget?: boolean;
   /** Action handler rolling back patient to doctor consultation. */
-  onMoveBack: (patient: Patient) => void;
+  onMoveBack: (patient: Patient) => void | Promise<boolean | void>;
   /** Action handler completing care orders and archiving patient visit today. */
-  onFinish: (patient: Patient) => void;
+  onFinish: (patient: Patient) => void | Promise<boolean | void>;
   /** Callback to select a patient in tablet mode. */
   onSelectPatient?: (patient: Patient, stage: ClinicalStage, cubicleNum: string) => void;
   /** Pointer down listener for drag initiation. */
   onPointerDown?: (e: React.PointerEvent, patient: Patient, stage: ClinicalStage) => void;
   /** Callback triggered when user clicks '+ Move Here' in selection mode. */
-  onMoveHere?: () => void;
+  onMoveHere?: () => void | Promise<boolean | void>;
 }
 
 /**

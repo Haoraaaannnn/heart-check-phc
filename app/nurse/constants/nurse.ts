@@ -132,7 +132,9 @@ export const NurseStyle = {
   stageColumn: {
     backgroundColor: '#ffffff',
     borderRadius: '1rem',
-    border: '1px solid #e2e8f0',
+    borderWidth: '1px',
+    borderStyle: 'solid',
+    borderColor: '#e2e8f0',
     display: 'flex',
     flexDirection: 'column',
     minHeight: 0,
@@ -143,7 +145,9 @@ export const NurseStyle = {
 
   stageColumnHeader: {
     padding: '0.875rem 1rem',
-    borderBottom: '1px solid #f1f5f9',
+    borderBottomWidth: '1px',
+    borderBottomStyle: 'solid',
+    borderBottomColor: '#f1f5f9',
     display: 'flex',
     alignItems: 'center',
     justifyContent: 'space-between',
@@ -161,18 +165,24 @@ export const NurseStyle = {
   } as CSSProperties,
 
   activeDropzone: {
+    borderWidth: '1px',
+    borderStyle: 'solid',
     borderColor: '#10b981',
     backgroundColor: 'rgba(236, 253, 245, 0.6)',
     boxShadow: '0 0 0 2px rgba(16, 185, 129, 0.25)',
   } as CSSProperties,
 
   assignTargetCard: {
+    borderWidth: '1px',
+    borderStyle: 'solid',
     borderColor: '#10b981',
     backgroundColor: 'rgba(236, 253, 245, 0.4)',
     boxShadow: '0 0 0 2px rgba(16, 185, 129, 0.2)',
   } as CSSProperties,
 
   selectedPatientRow: {
+    borderWidth: '1px',
+    borderStyle: 'solid',
     borderColor: '#cc3535',
     backgroundColor: '#fff1f2',
     boxShadow: '0 0 0 2px rgba(204, 53, 53, 0.25)',

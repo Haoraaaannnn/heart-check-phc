@@ -37,9 +37,9 @@ export interface AssignedSectionProps {
   /** Pointer down listener for drag initiation. */
   onPointerDown?: (e: React.PointerEvent, patient: Patient, stage: ClinicalStage) => void;
   /** Action handler advancing patient to doctor consultation. */
-  onMoveToWithDoctor: (patient: Patient) => void;
+  onMoveToWithDoctor: (patient: Patient) => void | Promise<boolean | void>;
   /** Callback triggered when user clicks '+ Move Here' in selection mode. */
-  onMoveHere?: () => void;
+  onMoveHere?: () => void | Promise<boolean | void>;
 }
 
 /**

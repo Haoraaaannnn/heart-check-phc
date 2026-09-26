@@ -65,7 +65,7 @@ export function isValidStageTransition(from: ClinicalStage, to: ClinicalStage): 
  * @returns State and event handlers for drag tracking, ghost rendering, and dropzones.
  */
 export function useNurseDragAndDrop(
-  onTransition: (patient: Patient, targetStage: ClinicalStage) => void | Promise<void>
+  onTransition: (patient: Patient, targetStage: ClinicalStage) => boolean | void | Promise<boolean | void>
 ): UseNurseDragAndDropReturn {
   const [draggedPatient, setDraggedPatient] = useState<Patient | null>(null);
   const [dragSourceStage, setDragSourceStage] = useState<ClinicalStage | null>(null);
