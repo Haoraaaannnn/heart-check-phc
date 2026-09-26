@@ -1,12 +1,27 @@
+/**
+ * @fileoverview Authentication and clinical authorization guard hook for the Nurse Dashboard.
+ *
+ * Verifies active session and ensures the user holds a permitted clinical role
+ * ('nurse', 'staff', 'doctor', 'superadmin', 'admin').
+ *
+ * Adheres strictly to AGENTS.md guidelines with full JSDoc and zero emojis.
+ */
+
 'use client';
 
 import { useEffect, useState } from 'react';
 import { useRouter } from 'next/navigation';
 import { supabase } from '@/lib/supabase';
 
-const NURSE_ROLES = ['nurse', 'staff', 'doctor'];
+/** Permitted clinical roles authorized to access the Nurse Station */
+const PERMITTED_NURSE_ROLES = ['nurse', 'staff', 'doctor', 'superadmin', 'admin'] as const;
 
-export function useRequireAuth() {
+/**
+ * Authentication and role verification guard hook.
+ *
+ * @returns Boolean `checking` indicating if authentication validation is still in progress.
+ */
+export function useRequireAuth(): boolean {
   const router = useRouter();
   const [checking, setChecking] = useState(true);
 
@@ -16,24 +31,39 @@ export function useRequireAuth() {
     const verifyAccess = async () => {
       const {
         data: { session },
+        error: sessionError,
       } = await supabase.auth.getSession();
 
-      if (!session) {
+      if (sessionError || !session) {
         router.replace('/login');
         return;
       }
 
-      const { data: profile, error } = await supabase
+      // Query user role by auth_id first, then fallback to email
+      let userRole: string | null = null;
+
+      const { data: userByAuth } = await supabase
         .from('users')
         .select('role')
         .eq('auth_id', session.user.id)
-        .single();
+        .maybeSingle();
 
-      if (
-        error ||
-        !profile ||
-        !NURSE_ROLES.includes(profile.role)
-      ) {
+      if (userByAuth) {
+        userRole = userByAuth.role;
+      } else if (session.user.email) {
+        const { data: userByEmail } = await supabase
+          .from('users')
+          .select('role')
+          .eq('email', session.user.email)
+          .maybeSingle();
+
+        if (userByEmail) {
+          userRole = userByEmail.role;
+        }
+      }
+
+      if (!userRole || !PERMITTED_NURSE_ROLES.includes(userRole as any)) {
+        console.warn('Unauthorized role access attempt to Nurse Station:', userRole);
         await supabase.auth.signOut();
         router.replace('/login');
         return;
@@ -46,11 +76,11 @@ export function useRequireAuth() {
 
     void verifyAccess();
 
-    const { data: listener } = supabase.auth.onAuthStateChange(
-      (_event, session) => {
-        if (!session) router.replace('/login');
+    const { data: listener } = supabase.auth.onAuthStateChange((_event, session) => {
+      if (!session) {
+        router.replace('/login');
       }
-    );
+    });
 
     return () => {
       active = false;
@@ -60,3 +90,5 @@ export function useRequireAuth() {
 
   return checking;
 }
+
+export default useRequireAuth;

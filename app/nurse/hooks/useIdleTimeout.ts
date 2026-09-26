@@ -1,12 +1,28 @@
+/**
+ * @fileoverview Clinical inactivity monitor hook for the Nurse Dashboard.
+ *
+ * Automatically logs out clinical staff after 20 minutes of inactivity
+ * to protect patient privacy and preserve healthcare session integrity.
+ *
+ * Adheres strictly to AGENTS.md guidelines with full JSDoc and zero emojis.
+ */
+
 'use client';
+
 import { useEffect, useRef, useCallback } from 'react';
 import { useRouter } from 'next/navigation';
 import { supabase } from '@/lib/supabase';
 
-const IDLE_LIMIT_MS = 20 * 60 * 1000; // 20 minutes
+/** Inactivity limit in milliseconds (20 minutes) */
+const IDLE_LIMIT_MS = 20 * 60 * 1000;
+
+/** User interaction events that reset the activity countdown */
 const ACTIVITY_EVENTS = ['mousemove', 'mousedown', 'keydown', 'scroll', 'touchstart', 'click'];
 
-export function useIdleTimeout() {
+/**
+ * Custom React hook monitoring user activity to enforce automatic session timeout.
+ */
+export function useIdleTimeout(): void {
   const router = useRouter();
   const timerRef = useRef<ReturnType<typeof setTimeout> | null>(null);
 
@@ -16,7 +32,9 @@ export function useIdleTimeout() {
   }, [router]);
 
   const resetTimer = useCallback(() => {
-    if (timerRef.current) clearTimeout(timerRef.current);
+    if (timerRef.current) {
+      clearTimeout(timerRef.current);
+    }
     timerRef.current = setTimeout(logout, IDLE_LIMIT_MS);
   }, [logout]);
 
@@ -28,12 +46,16 @@ export function useIdleTimeout() {
     );
 
     const handleVisibility = () => {
-      if (document.visibilityState === 'visible') resetTimer();
+      if (document.visibilityState === 'visible') {
+        resetTimer();
+      }
     };
     document.addEventListener('visibilitychange', handleVisibility);
 
     return () => {
-      if (timerRef.current) clearTimeout(timerRef.current);
+      if (timerRef.current) {
+        clearTimeout(timerRef.current);
+      }
       ACTIVITY_EVENTS.forEach((event) =>
         window.removeEventListener(event, resetTimer)
       );
@@ -41,3 +63,5 @@ export function useIdleTimeout() {
     };
   }, [resetTimer]);
 }
+
+export default useIdleTimeout;
