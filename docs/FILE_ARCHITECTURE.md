@@ -449,14 +449,15 @@ Directory structure:
     │   ├── COMPONENTS_GUIDE.md
     │   ├── DATABASE_SCHEMA.md
     │   ├── FILE_ARCHITECTURE.md
+    │   ├── NURSE_DASHBOARD_SYSTEM_DESIGN.md
     │   ├── OPEN_ISSUES.md
     │   ├── PRD.md
     │   ├── SCHEMA_REFERENCE.md
     │   ├── SECURITY.md
     │   ├── SETUP_AND_SEEDING.md
+    │   ├── SYSTEM_DESIGN.md
     │   ├── TRANSFER_DASHBOARD.md
-    │   ├── TRANSFER_MANUAL_TWEAKING_GUIDE.md
-    │   └── NURSE_DASHBOARD_SYSTEM_DESIGN.md
+    │   └── TRANSFER_MANUAL_TWEAKING_GUIDE.md
     ├── fonts/
     │   └── fonts.ts
     ├── hooks/
