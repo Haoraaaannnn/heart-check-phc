@@ -390,7 +390,9 @@ Directory structure:
     │   ├── SCHEMA_REFERENCE.md
     │   ├── SECURITY.md
     │   ├── SETUP_AND_SEEDING.md
-    │   └── TRANSFER_DASHBOARD.md
+    │   ├── TRANSFER_DASHBOARD.md
+    │   ├── TRANSFER_MANUAL_TWEAKING_GUIDE.md
+    │   └── NURSE_DASHBOARD_SYSTEM_DESIGN.md
     ├── fonts/
     │   └── fonts.ts
     ├── hooks/
