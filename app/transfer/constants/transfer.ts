@@ -90,4 +90,20 @@ export const TransferStyle = {
     opacity: 1,
     cursor: 'grab',
   } as CSSProperties,
+
+  selectedPatientRow: {
+    borderColor: '#cc3535',
+    backgroundColor: '#fff1f2',
+    boxShadow: '0 0 0 2px rgba(204, 53, 53, 0.25)',
+  } as CSSProperties,
+
+  assignTargetCard: {
+    borderColor: '#10b981',
+    backgroundColor: 'rgba(236, 253, 245, 0.5)',
+    boxShadow: '0 0 0 2px rgba(16, 185, 129, 0.25)',
+  } as CSSProperties,
+
+  selectionBanner: {
+    boxShadow: '0 20px 25px -5px rgba(0, 0, 0, 0.1), 0 8px 10px -6px rgba(0, 0, 0, 0.1)',
+  } as CSSProperties,
 } as const;

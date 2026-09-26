@@ -184,11 +184,13 @@ export function RoomPicker({
       </h2>
       <div className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 gap-4">
         {rooms.map(room => {
-          const roomCubicles = visibleCubicles.filter(c => c.room === room);
+          const safeCubicles = Array.isArray(visibleCubicles) ? visibleCubicles : [];
+          const safeAssignedPatients = assignedPatients || {};
+          const roomCubicles = safeCubicles.filter(c => c.room === room);
           const roomCubicleNums = new Set(roomCubicles.map(c => c.cubicleNum));
 
           const totalAssigned = roomCubicles.reduce(
-            (sum, c) => sum + (assignedPatients[c.cubicleNum]?.length || 0),
+            (sum, c) => sum + (safeAssignedPatients[c.cubicleNum]?.length || 0),
             0
           );
 

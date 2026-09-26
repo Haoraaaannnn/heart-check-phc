@@ -6,7 +6,7 @@
 
 ---
 
-## 📌 Project Overview
+## Project Overview
 
 **Heart Check PHC** is a specialized queue management and patient flow analytics system engineered specifically for the Philippine Heart Center's Outpatient Department. Rather than a generic hospital queue, the platform is designed around PHC's real-world operational constraints: scheduled patient appointments, fixed patient caps, capped cubicle capacities, and multi-stage patient flows (Registration → Triage/Screening → Specialized Services → Doctor Consultation).
 
@@ -14,7 +14,7 @@ The platform pairs an intuitive **touchscreen self-service check-in kiosk** and 
 
 ---
 
-## 🏛️ System Architecture
+## System Architecture
 
 Heart Check PHC is architected as a cohesive full-stack platform:
 
@@ -72,7 +72,7 @@ Heart Check PHC is architected as a cohesive full-stack platform:
 
 ---
 
-## 🛠️ Technology Stack
+## Technology Stack
 
 | Layer | Technologies |
 |---|---|
@@ -85,7 +85,7 @@ Heart Check PHC is architected as a cohesive full-stack platform:
 
 ---
 
-## 🚀 Getting Started
+## Getting Started
 
 ### Prerequisites
 
@@ -145,7 +145,7 @@ Verify backend health at [http://localhost:8000/health](http://localhost:8000/he
 
 ---
 
-## 📊 Seeding and Simulation
+## Seeding and Simulation
 
 Simulate realistic outpatient queue traffic using the integrated seeder:
 
@@ -160,7 +160,7 @@ For automated periodic seeding, refer to [`docs/SETUP_AND_SEEDING.md`](file:///h
 
 ---
 
-## 📚 Project Documentation Directory
+## Project Documentation Directory
 
 Comprehensive documentation is maintained in the `docs/` folder:
 
@@ -180,9 +180,11 @@ Comprehensive documentation is maintained in the `docs/` folder:
 
 ---
 
-## 📐 Architectural Standards (`AGENTS.md`)
+## Architectural Standards (`AGENTS.md`)
 
 All contributions to this repository follow strict software engineering rules:
 1. **Separation of Concerns:** UI component files only assemble and render. Text copy resides in `<feature>Texts.ts`; styles and tokens reside in `<feature>.ts`.
 2. **Comprehensive JSDoc Documentation:** Every file, component, hook, and utility function must be thoroughly documented with purpose, parameters, return types, and remarks.
 3. **Fidelity to Clinical Workflows:** Layouts adhere faithfully to clinical requirements (strict FIFO queueing, pointer event drag operations, sticky navigation headers).
+4. **No Emojis:** Zero emojis are permitted in documentation, markdown files, code comments, commit messages, or UI copy.
+5. **Absolute Prohibition on Automated Execution:** Automated tools and AI agents must never execute bash or terminal commands; all command and file executions must be performed manually by the user.

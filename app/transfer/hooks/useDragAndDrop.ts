@@ -317,4 +317,7 @@ export function useDragAndDrop(
   };
 }
 
+export { useTransferSelection } from './useTransferSelection';
+export type { UseTransferSelectionOptions, UseTransferSelectionReturn } from './useTransferSelection';
+
 export default useDragAndDrop;

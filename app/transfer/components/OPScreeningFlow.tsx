@@ -1,12 +1,22 @@
+/**
+ * @fileoverview OPD Screening service workflow component.
+ *
+ * Implements subcategory selection, room routing, and the active two-column
+ * ServiceBoard layout with Click-to-Select tablet transfer mechanics.
+ *
+ * @module app/transfer/components/OPScreeningFlow
+ */
+
 'use client';
 
 import React from 'react';
 import { Cubicle, Patient } from '@/types/Types';
 import { SubcategoryPicker, RoomPicker } from './StepPickers';
 import { ServiceBoard } from './ServiceBoard';
+import { SelectedTransferPatient } from '../types/transfer';
 
 /**
- * Props for `OPScreeningFlow`.
+ * Props for {@link OPScreeningFlow}.
  */
 export interface OPScreeningFlowProps {
   selectedSubcategory: string | null;
@@ -40,12 +50,21 @@ export interface OPScreeningFlowProps {
   onRemoveIdle: (patient: Patient) => void;
   allowedCounters?: number[];
   allowedSubcategories?: string[];
+
+  // Click-to-Select tablet mode props
+  selectedPatient?: SelectedTransferPatient | null;
+  onSelectQueuePatient?: (patient: Patient) => void;
+  onSelectCubiclePatient?: (patient: Patient, cubicleNum: string) => void;
+  onSelectCounterPatient?: (patient: Patient, counterNum: number) => void;
+  onTargetCubicleClick?: (cubicleNum: string) => void;
+  onTargetCounterClick?: (counterNum: number) => void;
+  onCancelSelection?: () => void;
 }
 
 /**
  * OPD Screening service workflow component.
  *
- * @param props - Screening state and event handlers.
+ * @param props - Screening state, patient queues, and interaction handlers.
  * @returns The active OPD Screening step view.
  */
 export function OPScreeningFlow({
@@ -80,13 +99,24 @@ export function OPScreeningFlow({
   onRemoveIdle,
   allowedCounters,
   allowedSubcategories,
+  selectedPatient,
+  onSelectQueuePatient,
+  onSelectCubiclePatient,
+  onSelectCounterPatient,
+  onTargetCubicleClick,
+  onTargetCounterClick,
+  onCancelSelection,
 }: OPScreeningFlowProps) {
   // Step 1: Subcategory Picker
   if (!selectedSubcategory) {
+    const safeOnProgress = Array.isArray(visibleOnProgress) ? visibleOnProgress : [];
+    const safeIdle = Array.isArray(idlePatients) ? idlePatients : [];
+    const safeRegistration = Array.isArray(registrationPatients) ? registrationPatients : [];
+
     const countFor = (sub: string) => ({
-      queue: visibleOnProgress.filter(p => p.subcategory === sub).length,
-      idle: idlePatients.filter(p => p.subcategory === sub).length,
-      registration: registrationPatients.filter(p => p.subcategory === sub).length,
+      queue: safeOnProgress.filter(p => p.subcategory === sub).length,
+      idle: safeIdle.filter(p => p.subcategory === sub).length,
+      registration: safeRegistration.filter(p => p.subcategory === sub).length,
     });
 
     const ALL_SUBCATEGORIES = [
@@ -94,7 +124,6 @@ export function OPScreeningFlow({
       { sub: 'Pedia', icon: 'bx-child' },
     ];
 
-    // Always provide both Adult and Pedia options
     const visibleSubcategories = ALL_SUBCATEGORIES;
 
     return (
@@ -149,6 +178,13 @@ export function OPScreeningFlow({
       onRegDragStart={onRegDragStart}
       onReleaseFromCounter={onReleaseFromCounter}
       allowedCounters={allowedCounters}
+      selectedPatient={selectedPatient}
+      onSelectQueuePatient={onSelectQueuePatient}
+      onSelectCubiclePatient={onSelectCubiclePatient}
+      onSelectCounterPatient={onSelectCounterPatient}
+      onTargetCubicleClick={onTargetCubicleClick}
+      onTargetCounterClick={onTargetCounterClick}
+      onCancelSelection={onCancelSelection}
     />
   );
 }

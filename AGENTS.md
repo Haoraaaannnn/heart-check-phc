@@ -4,7 +4,7 @@ This document outlines the mandatory rules and architectural standards that the 
 
 ---
 
-## 📜 Core Rules
+## Core Rules
 
 ### 1. Refactor Code Alongside Comprehensive Documentation
 - Every refactored or newly created file must include comprehensive, high-quality documentation.
@@ -52,7 +52,20 @@ This document outlines the mandatory rules and architectural standards that the 
 
 ---
 
-## 📋 Agent Pre-Commit / Pre-Completion Checklist
+### 6. No Emojis in Documentation, Code, or System Files
+- Emojis must NEVER be used in documentation files (`.md`), code comments, JSDoc annotations, commit messages, or UI copy.
+- All documentation, headings, tables, and lists must use clean, professional, plain-text formatting.
+
+---
+
+### 7. Absolute Prohibition on Command & File Execution
+- The agent must NEVER execute bash/terminal commands, background processes, build tools, package managers (`npm`, `npx`), linters, or test suites.
+- All command executions, builds, installations, database migrations, and runtime validations are to be performed manually by the user.
+- The agent's role is strictly limited to file analysis, reading, writing, and documentation.
+
+---
+
+## Agent Pre-Commit / Pre-Completion Checklist
 
 Before completing any refactoring or coding task, verify against these rules:
 - [ ] Every changed/created file has full file-level and symbol-level JSDoc comments.
@@ -62,3 +75,5 @@ Before completing any refactoring or coding task, verify against these rules:
 - [ ] Global constants contain only shared/system-level tokens; local constants remain in their feature directory.
 - [ ] If an image reference was provided, the implementation matches the image faithfully.
 - [ ] No unintentional visual or layout regressions were introduced during refactoring.
+- [ ] No emojis are used anywhere in documentation, code, or comments.
+- [ ] Zero terminal or file executions were attempted; all executions are left entirely to the user.

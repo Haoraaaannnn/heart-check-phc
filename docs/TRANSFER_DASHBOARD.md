@@ -46,7 +46,23 @@ The Transfer Dashboard was recently overhauled to achieve full compliance with `
 ### E. Strict Separation of Concerns (`AGENTS.md`)
 - **Copy:** All labels, descriptions, tooltips, empty states, and modal texts are isolated in `app/transfer/constants/transferTexts.ts`.
 - **Styling:** Design tokens, color mappings, and inline layout styles are isolated in `app/transfer/constants/transfer.ts`.
-- **Modularity:** Monolithic rendering is decomposed into focused, single-responsibility subcomponents (`QueuePanel`, `ServiceBoard`, `CubicleCard`, `RegistrationCounterSection`, `IdleNumbersPanel`, `StepPickers`).
+- **Modularity:** Monolithic rendering is decomposed into focused, single-responsibility subcomponents (`QueuePanel`, `ServiceBoard`, `CubicleCard`, `RegistrationCounterSection`, `IdleNumbersPanel`, `StepPickers`, `SelectionBanner`).
+
+### F. Non-Scrollable Fit-to-Screen Dashboard Architecture
+- All components must display on screen simultaneously on both PC and tablet without page-level, counter-level, or cubicle-level scrolling.
+- **Enforcement:**
+  - **Zero Page Scroll:** The main container is locked (`overflow-hidden`), completely preventing window or outer dashboard scrolling.
+  - **Non-Scrollable Horizontal Counters:** Registration counters are laid out as a compact horizontal grid across the top of the right column, visible all at once without scrolling.
+  - **Non-Scrollable Horizontal Cubicles:** Consultation and screening cubicles are laid out as a compact horizontal row/grid directly beneath the counters, formatted with the exact same horizontal tile pattern.
+  - **Queue-Only Scrolling:** The only vertically scrollable components on the dashboard are the Active Queue (`OnProgressSection`) and Idle Patients (`IdleNumbersPanel`) inside the left `QueuePanel`, accommodating fluctuating queue volume while keeping all transfer targets stationary.
+
+### G. Dual-Mode Transfer Engine: Pointer Drag-and-Drop & Click-to-Select
+- On touch tablets and constrained screens, dragging cards across the screen can be difficult and prone to dropping.
+- **Enforcement:**
+  - **Click-to-Select:** Staff can tap the front patient (`index === 0`) in the queue, an assigned cubicle patient, or a registration patient to activate Selection Mode.
+  - **Visual Affordances:** Destination cubicles and counters highlight with pulsing borders and "+ Assign Here" / "Move Here" action buttons. Tapping the target station immediately transfers the patient.
+  - **Floating Context Banner (`SelectionBanner.tsx`):** Displays active patient info, contextual hints, and a 1-tap Cancel button (also cancelable via `Escape` key or re-tapping).
+  - **Seamless Coexistence:** Pointer drag-and-drop (`useDragAndDrop`, `useRegistrationDragAndDrop`) remains fully active for mouse users or staff who prefer dragging.
 
 ---
 
@@ -90,12 +106,13 @@ app/transfer/
 │   ├── DragHandle.tsx                 # Accessible touch grip handle
 │   ├── ElapsedTimer.tsx               # Real-time ticking counter for ongoing consultations
 │   ├── IdleNumbersPanel.tsx           # Idle/timed-out patient list with reactivation & remove actions
-│   ├── OnProgressSection.tsx          # FIFO queue list (index 0 draggable, index > 0 locked)
+│   ├── OnProgressSection.tsx          # FIFO queue list (index 0 draggable/selectable, index > 0 locked)
 │   ├── OPScreeningFlow.tsx            # OPD Screening multi-step wrapper
 │   ├── OtherServicesFlow.tsx          # Single-room auxiliary services wrapper
 │   ├── QueuePanel.tsx                 # Tabbed queue container (Active Waiting vs. Idle)
 │   ├── RegistrationCounterSection.tsx # Vertical list of registration counters (Counter 1, Counter 2)
-│   ├── ServiceBoard.tsx               # 2-column layout (QueuePanel on left, Stations on right)
+│   ├── SelectionBanner.tsx            # Floating context banner for Click-to-Select mode
+│   ├── ServiceBoard.tsx               # Non-scrollable 2-column layout with horizontal counters and cubicle grid
 │   ├── Sidebar.tsx                    # Fixed responsive navigation rail
 │   └── StepPickers.tsx                # Modular SelectionCard, SubcategoryPicker, and RoomPicker
 ├── constants/
@@ -116,7 +133,10 @@ app/transfer/
 │   ├── useRegistrationDragAndDrop.ts  # Pointer drag state between registration counters
 │   ├── useRegistrationRotate.ts       # Registration counter patient cycler
 │   ├── useRequireAuth.ts              # Authentication guard
-│   └── useRotateTimeout.ts            # Rotation interval timer
+│   ├── useRotateTimeout.ts            # Rotation interval timer
+│   └── useTransferSelection.ts        # Click-to-select transfer state and assignment executor
+├── types/
+│   └── transfer.ts                    # Domain types: SelectedTransferPatient, StationViewMode
 └── lib/
     ├── constants.ts                   # Legacy constants reference
     └── rotateApi.ts                   # API helper for queue rotate endpoint
@@ -150,3 +170,10 @@ When a user begins dragging from the touch handle of the top patient card:
    - If the user has role `'superadmin'` or `'admin'`, the hook automatically bypasses restricted room filtering and grants complete access to all services, rooms, and counters.
    - For standard `'nurse'` and `'staff'` accounts, the hook fetches specific allowed cubicles and rooms.
 3. Callbacks (`fetchMyAccess`, `fetchCubicles`) are wrapped in `useCallback` to eliminate infinite re-renders on dashboard mount.
+
+---
+
+## 7. Developer & Customization Reference
+
+For actionable instructions on editing UI copy, changing card dimensions, adjusting timers, modifying counter numbers, or configuring Click-to-Select tablet modes, refer to the [Manual Tweaking & Customization Guide](file:///home/jensen/Github-Repositories/heart-check-phc/docs/TRANSFER_MANUAL_TWEAKING_GUIDE.md).
+

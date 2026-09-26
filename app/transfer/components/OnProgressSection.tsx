@@ -1,24 +1,42 @@
+/**
+ * @fileoverview Active Queue (On Progress) panel component.
+ *
+ * Implements strict hospital FIFO queue discipline: only the front/top patient
+ * (`index === 0`, "Serving Next") is unlocked for transfer, pointer drag-and-drop,
+ * or Click-to-Select tablet assignment. Subsequent downstream patients remain locked
+ * in the stack until the front patient is served or rotated.
+ *
+ * Designed as the designated vertically scrollable container on the dashboard left column.
+ *
+ * @module app/transfer/components/OnProgressSection
+ */
+
 'use client';
 
 import React from 'react';
 import { Patient } from '@/types/Types';
 import { ElapsedTimer } from './ElapsedTimer';
 import { transferTexts } from '../constants/transferTexts';
-import { ScrollArea } from '@/components/reusables/ScrollArea';
+import { TransferStyle } from '../constants/transfer';
+import { SelectedTransferPatient } from '../types/transfer';
 import { DragHandle } from './DragHandle';
 
 /**
- * Props for `OnProgressSection`.
+ * Props for {@link OnProgressSection}.
  */
 export interface OnProgressSectionProps {
   /** Array of active queue patients sorted by queue priority. */
   patients: Patient[];
-  /** Whether drag-and-drop assignment is permitted. */
+  /** Whether drag-and-drop or tap assignment is permitted. */
   isDraggable: boolean;
   /** Currently selected service category name. */
   selectedCategory: string | null;
   /** ID of patient currently being dragged, if any. */
   draggedPatientId?: number;
+  /** Currently selected patient in Click-to-Select mode. */
+  selectedPatient?: SelectedTransferPatient | null;
+  /** Callback triggered when the unlocked top patient is tapped/clicked for selection. */
+  onSelectPatient?: (patient: Patient) => void;
   /** Pointer down handler to initiate drag. */
   onPointerDown?: (e: React.PointerEvent, patient: Patient) => void;
   /** Backward compatible mouse drag starter. */
@@ -36,14 +54,7 @@ export interface OnProgressSectionProps {
 }
 
 /**
- * Queue component with strict queue stack discipline.
- *
- * @remarks
- * **Queue Locking Principle:**
- * In accordance with hospital protocol, queue patients are locked on their stack in FIFO order.
- * - The patient at `index === 0` (top of stack) is unlocked ("Serving Next") and can be dragged or assigned.
- * - All downstream patients (`index > 0`) remain locked (`cursor-not-allowed`) until the front patient
- *   is assigned, times out, or is moved to Idle.
+ * Queue component with strict FIFO queue stack discipline and internal smooth scrolling.
  *
  * @param props - Queue data, drag handlers, and action triggers.
  * @returns The rendered OnProgressSection component.
@@ -53,29 +64,28 @@ export function OnProgressSection({
   isDraggable,
   selectedCategory,
   draggedPatientId,
+  selectedPatient,
+  onSelectPatient,
   onPointerDown,
   onDragStart,
   onSpeak,
   onAssignNow,
   speakingId,
   warnAfterSeconds,
-  compact = false,
 }: OnProgressSectionProps) {
+  const safePatients = Array.isArray(patients) ? patients : [];
+
   return (
-    <div
-      className={`bg-white border border-slate-200 rounded-2xl shadow-xs transition-all ${
-        compact ? 'p-3' : 'p-4'
-      }`}
-    >
+    <div className="h-full flex flex-col min-h-0 overflow-hidden select-none">
       {/* Header */}
-      <div className="flex items-center justify-between gap-2 mb-3 pb-2 border-b border-slate-100">
+      <div className="flex items-center justify-between gap-2 mb-2 pb-1.5 border-b border-slate-100 shrink-0">
         <div className="flex items-center gap-2">
           <span className="w-2.5 h-2.5 rounded-full bg-emerald-500 animate-pulse inline-block" />
           <h2 className="text-slate-700 font-bold text-xs tracking-wider uppercase">
             {transferTexts.onProgressHeading}
           </h2>
           <span className="text-[11px] font-bold px-1.5 py-0.5 rounded-full bg-emerald-100 text-emerald-800">
-            {patients.length}
+            {safePatients.length}
           </span>
         </div>
         <span className="text-[11px] text-slate-400 font-medium">
@@ -85,18 +95,19 @@ export function OnProgressSection({
         </span>
       </div>
 
-      {/* Patient List */}
-      {patients.length === 0 ? (
+      {/* Patient List (The only scrollable container in the Active Queue) */}
+      {safePatients.length === 0 ? (
         <div className="py-8 text-center text-slate-400 text-xs">
           {transferTexts.noPatientsInQueue}
         </div>
       ) : (
-        <ScrollArea className="max-h-[380px] pr-1 space-y-2">
-          {patients.map((p, index) => {
+        <div className="flex-1 min-h-0 overflow-y-auto phc-scroll pr-1 space-y-1.5">
+          {safePatients.map((p, index) => {
             // Stack discipline: Only the top patient (index === 0) is unlocked
             const isTop = index === 0;
             const isLocked = !isTop;
             const isBeingDragged = draggedPatientId === p.id;
+            const isSelected = selectedPatient?.patient.id === p.id;
 
             const handlePointerStart = (e: React.PointerEvent) => {
               if (!isDraggable || isLocked) return;
@@ -112,40 +123,58 @@ export function OnProgressSection({
               }
             };
 
+            const handleCardClick = () => {
+              if (isTop && isDraggable && onSelectPatient) {
+                onSelectPatient(p);
+              }
+            };
+
             return (
               <div
                 key={p.id}
                 onPointerDown={handlePointerStart}
                 onMouseDown={handleMouseStart}
-                className={`relative flex items-center justify-between border rounded-xl p-2.5 transition-all select-none ${
+                onClick={handleCardClick}
+                style={isSelected ? TransferStyle.selectedPatientRow : undefined}
+                className={`relative flex items-center justify-between border rounded-xl p-2 transition-all select-none ${
                   isBeingDragged
                     ? 'opacity-30 border-[#cc3535] bg-red-50'
+                    : isSelected
+                    ? 'border-[#cc3535] bg-red-50/80 shadow-xs ring-2 ring-[#cc3535] cursor-pointer'
                     : isTop
-                    ? 'border-emerald-300 bg-emerald-50/40 shadow-xs cursor-grab active:cursor-grabbing hover:border-emerald-400'
+                    ? 'border-emerald-300 bg-emerald-50/40 shadow-2xs cursor-grab active:cursor-grabbing hover:border-emerald-400'
                     : 'border-slate-200 bg-slate-50/60 opacity-80 cursor-not-allowed'
                 }`}
               >
                 {/* Left Patient Details */}
-                <div className="flex items-center gap-2.5 min-w-0">
-                  {/* Grip or Lock Icon */}
+                <div className="flex items-center gap-2 min-w-0">
+                  {/* Grip, Lock Icon, or Selection Indicator */}
                   {isDraggable && (
                     isTop ? (
-                      <DragHandle title="Drag patient to cubicle" />
+                      isSelected ? (
+                        <span className="w-6 h-6 rounded-md bg-[#cc3535] text-white flex items-center justify-center shrink-0 shadow-2xs">
+                          <i className="bx bx-check text-sm font-bold" aria-hidden="true" />
+                        </span>
+                      ) : (
+                        <DragHandle title={transferTexts.tapToSelectHint} />
+                      )
                     ) : (
                       <span
                         title={transferTexts.lockedInStack}
-                        className="inline-flex items-center justify-center w-7 h-7 text-slate-400"
+                        className="inline-flex items-center justify-center w-6 h-6 text-slate-400"
                       >
-                        <i className="bx bx-lock-alt text-base" aria-hidden="true" />
+                        <i className="bx bx-lock-alt text-sm" aria-hidden="true" />
                       </span>
                     )
                   )}
 
                   {/* Patient Number Tag */}
                   <span
-                    className={`font-black text-sm px-2 py-0.5 rounded-lg ${
-                      isTop
-                        ? 'bg-[#cc3535] text-white shadow-xs'
+                    className={`font-black text-xs px-2 py-0.5 rounded-lg shrink-0 ${
+                      isSelected
+                        ? 'bg-[#cc3535] text-white shadow-2xs'
+                        : isTop
+                        ? 'bg-[#cc3535] text-white shadow-2xs'
                         : 'bg-slate-200 text-slate-700'
                     }`}
                   >
@@ -154,7 +183,7 @@ export function OnProgressSection({
 
                   {/* Service info & Position */}
                   <div className="min-w-0 flex flex-col">
-                    <div className="flex items-center gap-1.5">
+                    <div className="flex items-center gap-1">
                       <span className="text-slate-800 text-xs font-semibold truncate">
                         {p.service}
                         {p.subcategory && ` · ${p.subcategory}`}
@@ -165,7 +194,11 @@ export function OnProgressSection({
                       </span>
                     </div>
 
-                    {isTop ? (
+                    {isSelected ? (
+                      <span className="text-[10px] text-[#cc3535] font-bold tracking-tight">
+                        {transferTexts.selectedBadge} · {transferTexts.selectedQueuePatientHint}
+                      </span>
+                    ) : isTop ? (
                       <span className="text-[10px] text-emerald-600 font-bold tracking-tight">
                         {transferTexts.servingNext}
                       </span>
@@ -183,15 +216,17 @@ export function OnProgressSection({
                 </div>
 
                 {/* Right Action Buttons */}
-                <div className="flex items-center gap-1.5 shrink-0 ml-2">
+                <div className="flex items-center gap-1 shrink-0 ml-1.5">
                   {/* Call Button */}
                   <button
                     type="button"
+                    onPointerDown={e => e.stopPropagation()}
+                    onMouseDown={e => e.stopPropagation()}
                     onClick={e => {
                       e.stopPropagation();
-                      const num = p.patientNum;
-                      const letter = num.charAt(0);
-                      const digits = parseInt(num.slice(1), 10).toString();
+                      const num = p.patientNum || '';
+                      const letter = num ? num.charAt(0) : '';
+                      const digits = num.length > 1 ? parseInt(num.slice(1), 10).toString() : '';
                       onSpeak(
                         `Number ${letter} ${digits}, Number ${letter} ${digits}, go to the ${
                           selectedCategory || 'consultation'
@@ -201,7 +236,7 @@ export function OnProgressSection({
                     }}
                     disabled={speakingId === p.id}
                     title={transferTexts.callPatientTooltip}
-                    className={`w-7 h-7 flex items-center justify-center rounded-lg text-xs transition-colors cursor-pointer ${
+                    className={`w-6 h-6 flex items-center justify-center rounded-md text-xs transition-colors cursor-pointer ${
                       speakingId === p.id
                         ? 'bg-blue-100 text-blue-300 cursor-not-allowed'
                         : 'bg-blue-50 hover:bg-blue-100 text-blue-600'
@@ -212,7 +247,7 @@ export function OnProgressSection({
                         speakingId === p.id
                           ? 'bx-loader-alt animate-spin'
                           : 'bxs-volume-full'
-                      } text-sm`}
+                      } text-xs`}
                       aria-hidden="true"
                     />
                   </button>
@@ -228,16 +263,16 @@ export function OnProgressSection({
                         onAssignNow(p);
                       }}
                       title={transferTexts.assignNowTooltip}
-                      className="w-7 h-7 flex items-center justify-center rounded-lg text-xs bg-emerald-50 hover:bg-emerald-100 text-emerald-700 transition-colors cursor-pointer"
+                      className="w-6 h-6 flex items-center justify-center rounded-md text-xs bg-emerald-50 hover:bg-emerald-100 text-emerald-700 transition-colors cursor-pointer"
                     >
-                      <i className="bx bx-check-circle text-base" aria-hidden="true" />
+                      <i className="bx bx-check-circle text-sm" aria-hidden="true" />
                     </button>
                   )}
                 </div>
               </div>
             );
           })}
-        </ScrollArea>
+        </div>
       )}
     </div>
   );

@@ -21,7 +21,7 @@ import { DoctorsModal } from './components/DoctorsModal';
 import { usePatientData } from './hooks/usePatientData';
 import { useCubicleData } from './hooks/useCubicleData';
 import { useAutoAssign } from './hooks/useAutoAssign';
-import { useDragAndDrop } from './hooks/useDragAndDrop';
+import { useDragAndDrop, useTransferSelection } from './hooks/useDragAndDrop';
 import { useRealtimeSubscription } from './hooks/useRealtimeSubscription';
 import { sendSMS } from '@/app/actions/sendSMS';
 import { useMaxRotations } from './hooks/useMaxRotations';
@@ -35,7 +35,6 @@ import { useRequireAuth } from './hooks/useRequireAuth';
 import { MAX_PATIENTS_PER_CUBICLE } from './lib/constants';
 import { useIdlePatients } from './hooks/useIdlePatients';
 import { useRegistrationRotate } from './hooks/useRegistrationRotate';
-import { transferTexts } from './constants/transferTexts';
 import { NotificationBadge } from '@/components/reusables/NotificationBadge';
 
 /**
@@ -120,9 +119,62 @@ export default function TransferPage() {
     fetchData
   );
 
+  // Click-to-Select transfer hook (Tablet-friendly interaction)
+  const {
+    selectedPatient,
+    selectPatient,
+    clearSelection,
+    assignSelectedToCubicle,
+    moveSelectedToCounter,
+  } = useTransferSelection({
+    assignedPatients,
+    setOnProgressPatients,
+    setAssignedPatients,
+    setPendingUpdates,
+    setRegistrationPatients,
+  });
+
+  const handleSelectQueuePatient = useCallback(
+    (patient: Patient) => {
+      selectPatient(patient, 'queue');
+    },
+    [selectPatient]
+  );
+
+  const handleSelectCubiclePatient = useCallback(
+    (patient: Patient, cubicleNum: string) => {
+      selectPatient(patient, 'cubicle', cubicleNum);
+    },
+    [selectPatient]
+  );
+
+  const handleSelectCounterPatient = useCallback(
+    (patient: Patient, counterNum: number) => {
+      selectPatient(patient, 'counter', counterNum);
+    },
+    [selectPatient]
+  );
+
+  const handleTargetCubicleClick = useCallback(
+    (cubicleNum: string) => {
+      assignSelectedToCubicle(cubicleNum);
+    },
+    [assignSelectedToCubicle]
+  );
+
+  const handleTargetCounterClick = useCallback(
+    (counterNum: number) => {
+      void moveSelectedToCounter(counterNum);
+    },
+    [moveSelectedToCounter]
+  );
+
   useEffect(() => {
     dragInProgressRef.current = Boolean(draggedPatient || regDraggedPatient);
-  }, [draggedPatient, regDraggedPatient]);
+    if (draggedPatient || regDraggedPatient) {
+      clearSelection();
+    }
+  }, [draggedPatient, regDraggedPatient, clearSelection]);
 
   useEffect(() => {
     if (!draggedPatient) return;
@@ -569,19 +621,29 @@ export default function TransferPage() {
   };
 
   const getVisibleCubicles = () => {
-    if (isConsultation && selectedSubcategory && selectedRoom) {
+    if (isConsultation && selectedSubcategory) {
+      if (selectedRoom) {
+        return cubicles.filter(
+          c =>
+            c.category === selectedCategory &&
+            c.subcategory === selectedSubcategory &&
+            c.room === selectedRoom
+        );
+      }
       return cubicles.filter(
-        c =>
-          c.category === selectedCategory &&
-          c.subcategory === selectedSubcategory &&
-          c.room === selectedRoom
+        c => c.category === selectedCategory && c.subcategory === selectedSubcategory
       );
-    } else if (isOPScreening && selectedOPSubcategory && selectedRoom) {
+    } else if (isOPScreening && selectedOPSubcategory) {
+      if (selectedRoom) {
+        return cubicles.filter(
+          c =>
+            c.category === selectedCategory &&
+            c.subcategory === selectedOPSubcategory &&
+            c.room === selectedRoom
+        );
+      }
       return cubicles.filter(
-        c =>
-          c.category === selectedCategory &&
-          c.subcategory === selectedOPSubcategory &&
-          c.room === selectedRoom
+        c => c.category === selectedCategory && c.subcategory === selectedOPSubcategory
       );
     } else if (!isConsultation && !isOPScreening && selectedCategory) {
       const allowedRooms = myRooms
@@ -764,6 +826,13 @@ export default function TransferPage() {
           onRemoveIdle={handleRemoveIdle}
           allowedCounters={myCounters}
           allowedSubcategories={getAllowedSubcategories('Consultation')}
+          selectedPatient={selectedPatient}
+          onSelectQueuePatient={handleSelectQueuePatient}
+          onSelectCubiclePatient={handleSelectCubiclePatient}
+          onSelectCounterPatient={handleSelectCounterPatient}
+          onTargetCubicleClick={handleTargetCubicleClick}
+          onTargetCounterClick={handleTargetCounterClick}
+          onCancelSelection={clearSelection}
         />
       );
     }
@@ -802,6 +871,13 @@ export default function TransferPage() {
           onRemoveIdle={handleRemoveIdle}
           allowedCounters={myCounters}
           allowedSubcategories={getAllowedSubcategories('OPD Screening')}
+          selectedPatient={selectedPatient}
+          onSelectQueuePatient={handleSelectQueuePatient}
+          onSelectCubiclePatient={handleSelectCubiclePatient}
+          onSelectCounterPatient={handleSelectCounterPatient}
+          onTargetCubicleClick={handleTargetCubicleClick}
+          onTargetCounterClick={handleTargetCounterClick}
+          onCancelSelection={clearSelection}
         />
       );
     }
@@ -826,6 +902,11 @@ export default function TransferPage() {
         idlePatients={visibleIdlePatients}
         onActivateIdle={handleActivateIdle}
         onRemoveIdle={handleRemoveIdle}
+        selectedPatient={selectedPatient}
+        onSelectQueuePatient={handleSelectQueuePatient}
+        onSelectCubiclePatient={handleSelectCubiclePatient}
+        onTargetCubicleClick={handleTargetCubicleClick}
+        onCancelSelection={clearSelection}
       />
     );
   };
@@ -851,14 +932,14 @@ export default function TransferPage() {
       {/* Main Content Area: Offset for icon rail (< 2xl) and full sidebar (>= 2xl) */}
       <div className="flex-1 ml-18 2xl:ml-64 flex flex-col h-screen overflow-hidden min-w-0 transition-all duration-200">
         {/* Top Header Bar (Fixed) */}
-        <header className="h-16 px-6 bg-white border-b border-slate-200 flex items-center justify-between gap-4 shrink-0 z-30 shadow-2xs">
+        <header className="h-16 px-4 sm:px-6 bg-white border-b border-slate-200 flex items-center justify-between gap-3 sm:gap-4 shrink-0 z-30 shadow-2xs">
           <div className="flex items-center gap-3 min-w-0">
             <span className="text-xs font-bold text-slate-400 uppercase tracking-widest hidden sm:inline">
               PHC Transfer
             </span>
           </div>
 
-          <div className="flex items-center gap-2.5">
+          <div className="flex items-center gap-2 sm:gap-2.5">
             {/* Needs Attention / Unassigned Dropdown */}
             <div className="relative">
               <button
@@ -967,7 +1048,7 @@ export default function TransferPage() {
         </header>
 
         {/* Sticky Sub-Header: Back Button & Breadcrumb Navigation (Permanently Pinned) */}
-        <div className="shrink-0 px-6 py-2.5 bg-white/95 backdrop-blur-md border-b border-slate-200/90 z-20 flex items-center min-h-[52px]">
+        <div className="shrink-0 px-4 sm:px-6 py-2.5 bg-white/95 backdrop-blur-md border-b border-slate-200/90 z-20 flex items-center min-h-[52px]">
           <BreadcrumbNav
             selectedCategory={selectedCategory}
             selectedSubcategory={
@@ -991,8 +1072,8 @@ export default function TransferPage() {
           />
         </div>
 
-        {/* Scrollable Dashboard Content */}
-        <main className="flex-1 p-6 overflow-y-auto phc-scroll min-h-0">
+        {/* Main Dashboard Content (Non-scrollable, fit-to-screen) */}
+        <main className="flex-1 p-2 sm:p-3 overflow-hidden min-h-0 flex flex-col">
 
           {accessStatus === 'loading' ? (
             <div className="flex items-center justify-center py-20">
