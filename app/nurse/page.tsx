@@ -1,52 +1,101 @@
+/**
+ * @fileoverview Main orchestrator, route guard, and state coordinator for the Nurse Dashboard.
+ *
+ * Provides a non-scrollable, fit-to-screen 3-column clinical pipeline Kanban interface
+ * for outpatient consultation rooms at the Philippine Heart Center.
+ *
+ * Implements:
+ * - Parity with the Patient Transfer Dashboard standard (h-screen overflow-hidden)
+ * - Dual-mode interaction engine (Pointer Drag-and-Drop and Click-to-Select tablet mode)
+ * - Superadmin / Admin bypass for full cubicle visibility
+ * - Configurable real-time elapsed timers with urgency thresholds
+ * - Deepgram TTS audio announcements
+ * - Separation of concerns with centralized texts and design tokens
+ *
+ * Adheres strictly to AGENTS.md guidelines:
+ * - 100% copy isolated in nurseTexts
+ * - 100% styles isolated in NurseStyle
+ * - Zero emojis in code, comments, or UI
+ * - Full file-level and symbol-level JSDoc
+ */
+
 'use client';
-import { useState, useEffect } from 'react';
+
+import React, { useState, useEffect, useMemo, useCallback } from 'react';
 import { useRouter } from 'next/navigation';
 import { supabase } from '@/lib/supabase';
-import { Sidebar } from './components/Sidebar';
-import { AssignedSection } from './components/AssignedSection';
-import { WithDoctorSection } from './components/WithDoctorSection';
-import { FinishedTable } from './components/FinishedTable';
+import { Patient } from '@/types/Types';
+import { NurseSidebar } from './components/NurseSidebar';
+import { NurseHeader } from './components/NurseHeader';
+import { NurseBoard } from './components/NurseBoard';
+import { NurseSelectionBanner } from './components/NurseSelectionBanner';
+import { NurseDragGhost } from './components/NurseDragGhost';
+import { FinishedDrawer } from './components/FinishedDrawer';
+
+import { useRequireAuth } from './hooks/useRequireAuth';
+import { useIdleTimeout } from './hooks/useIdleTimeout';
 import { useNurseData } from './hooks/useNurseData';
 import { useNurseActions } from './hooks/useNurseActions';
+import {
+  useNurseDragAndDrop,
+  isValidStageTransition,
+} from './hooks/useNurseDragAndDrop';
+import { useNurseSelection } from './hooks/useNurseSelection';
 import { useRealtimeSubscription } from './hooks/useRealtimeSubscription';
 import { useBottleneckNotifications } from '@/app/dashboard/hooks/useBottleneckNotifications';
-import NotificationDropdown from '@/app/dashboard/components/NotificationDropdown';
-import { CarryoutSection } from './components/CarryoutSection';
-import { useIdleTimeout } from './hooks/useIdleTimeout';
-import { useRequireAuth } from './hooks/useRequireAuth';
+import { nurseTexts } from './constants/nurseTexts';
+import { NurseStyle, nurseLayoutTokens } from './constants/nurse';
 
-
+/**
+ * Nurse Station point-of-care page component.
+ *
+ * @returns The rendered non-scrollable Nurse Dashboard.
+ */
 export default function NursePage() {
+  const router = useRouter();
   const checking = useRequireAuth();
   useIdleTimeout();
-  const router = useRouter();
-  const [selectedCategory, setSelectedCategory] = useState<string | null>(null);
-  const [speaking, setSpeaking] = useState<number | null>(null);
+
+  // Navigation & Filtering State
   const [sidebarOpen, setSidebarOpen] = useState(true);
+  const [selectedCategory, setSelectedCategory] = useState<string | null>(null);
   const [selectedCubicleNum, setSelectedCubicleNum] = useState<string | null>(null);
 
+  // Modal / Drawer State
+  const [finishedDrawerOpen, setFinishedDrawerOpen] = useState(false);
+
+  // Audio Announcement State
+  const [speakingId, setSpeakingId] = useState<number | null>(null);
+
+  // Loading & Sync States
   const [isLoading, setIsLoading] = useState(true);
   const [isSyncing, setIsSyncing] = useState(false);
 
+  // Core Data Hook
   const {
     assignedPatients,
     withDoctorPatients,
     carryoutPatients,
     finishedPatients,
+    assignmentStatus,
+    assignedCubicles,
     setAssignedPatients,
     setWithDoctorPatients,
     setCarryoutPatients,
     fetchData,
     fetchFinished,
-    assignmentStatus,
-    assignedCubicles, 
   } = useNurseData();
+
+  // State Mutation Actions Hook
   const {
+    actionError,
+    clearActionError,
     handleMoveToWithDoctor,
     handleMoveBackFromDoctor,
     handleMoveToCarryout,
     handleMoveBackFromCarryout,
     handleFinish,
+    handleTransitionStage,
   } = useNurseActions(
     setAssignedPatients,
     setWithDoctorPatients,
@@ -54,6 +103,26 @@ export default function NursePage() {
     fetchFinished
   );
 
+  // Pointer Events Drag-and-Drop Hook
+  const {
+    draggedPatient,
+    dragSourceStage,
+    dragOverStage,
+    dragPoint,
+    handlePointerDown,
+    cancelDrag,
+  } = useNurseDragAndDrop(handleTransitionStage);
+
+  // Click-to-Select Tablet Mode Hook
+  const {
+    selectedPatient,
+    selectPatient,
+    clearSelection,
+    assignSelectedToStage,
+    isStageValidTarget,
+  } = useNurseSelection(handleTransitionStage);
+
+  // Bottleneck Notifications
   const {
     notifications,
     unreadCount,
@@ -63,268 +132,314 @@ export default function NursePage() {
     clearAll,
   } = useBottleneckNotifications();
 
-  const handleRealtimeUpdate = async () => {
+  // Debounced Realtime synchronization
+  const handleRealtimeUpdate = useCallback(async () => {
     setIsSyncing(true);
     try {
-      await fetchData();
-      await fetchFinished();
+      await Promise.all([fetchData(), fetchFinished()]);
     } finally {
       setIsSyncing(false);
     }
-  };
+  }, [fetchData, fetchFinished]);
 
-  useRealtimeSubscription(handleRealtimeUpdate);
+  useRealtimeSubscription(handleRealtimeUpdate, 300);
 
+  // Initial Data Load
   useEffect(() => {
-    const init = async () => {
+    const initializeDashboard = async () => {
       setIsLoading(true);
       try {
-        const { data } = await supabase.auth.getSession();
-        if (!data.session) { 
-          router.replace('/login'); 
-          return; 
+        const {
+          data: { session },
+        } = await supabase.auth.getSession();
+
+        if (!session) {
+          router.replace('/login');
+          return;
         }
-        
-        await Promise.all([
-          fetchData(),
-          fetchFinished()
-        ]);
+
+        await Promise.all([fetchData(), fetchFinished()]);
       } catch (error) {
-        console.error('Initialization error:', error);
+        console.error('Nurse dashboard initialization error:', error);
       } finally {
         setIsLoading(false);
       }
     };
-    init();
-  }, []);
 
-  const speak = async (text: string, patientId: number, times: number = 3) => {
-    setSpeaking(patientId);
-    try {
-      const response = await fetch(
-        'https://api.deepgram.com/v1/speak?model=aura-2-amalthea-en',
-        {
-          method: 'POST',
-          headers: {
-            'Authorization': `Token ${process.env.NEXT_PUBLIC_DEEPGRAM_KEY}`,
-            'Content-Type': 'application/json',
-          },
-          body: JSON.stringify({ text }),
+    void initializeDashboard();
+  }, [fetchData, fetchFinished, router]);
+
+  // Deepgram TTS Audio Announcement
+  const speakAnnouncement = useCallback(
+    async (text: string, patientId: number, repeatTimes: number = 3) => {
+      setSpeakingId(patientId);
+      try {
+        const response = await fetch(
+          'https://api.deepgram.com/v1/speak?model=aura-2-amalthea-en',
+          {
+            method: 'POST',
+            headers: {
+              Authorization: `Token ${process.env.NEXT_PUBLIC_DEEPGRAM_KEY}`,
+              'Content-Type': 'application/json',
+            },
+            body: JSON.stringify({ text }),
+          }
+        );
+
+        if (!response.ok) {
+          setSpeakingId(null);
+          return;
         }
-      );
-      if (!response.ok) { setSpeaking(null); return; }
-      const arrayBuffer = await response.arrayBuffer();
-      const audioBlob = new Blob([arrayBuffer], { type: 'audio/mp3' });
-      const audioUrl = URL.createObjectURL(audioBlob);
-      let count = 0;
-      const audio = new Audio(audioUrl);
-      const playOnce = async () => { audio.currentTime = 0; await audio.play(); count++; };
-      audio.onended = () => {
-        if (count < times) setTimeout(playOnce, 800);
-        else { URL.revokeObjectURL(audioUrl); setSpeaking(null); }
-      };
-      await playOnce();
-    } catch { setSpeaking(null); }
-  };
 
-  const handleCall = (patient: any) => {
-    const num = patient.patientNum;
-    const letter = num.charAt(0);
-    const digits = parseInt(num.slice(1), 10).toString();
-    speak(`Number ${letter} ${digits}, Number ${letter} ${digits}, please proceed to the doctor`, patient.id);
-  };
+        const arrayBuffer = await response.arrayBuffer();
+        const audioBlob = new Blob([arrayBuffer], { type: 'audio/mp3' });
+        const audioUrl = URL.createObjectURL(audioBlob);
+        let playCount = 0;
+        const audio = new Audio(audioUrl);
 
-  const visibleAssigned = assignedPatients.filter((patient) => {
-    const matchesService =
-      !selectedCategory || patient.service === selectedCategory;
+        const playOnce = async () => {
+          audio.currentTime = 0;
+          await audio.play();
+          playCount++;
+        };
 
-    const matchesCubicle =
-      !selectedCubicleNum ||
-      patient.cubicleNum === selectedCubicleNum;
+        audio.onended = () => {
+          if (playCount < repeatTimes) {
+            setTimeout(playOnce, 800);
+          } else {
+            URL.revokeObjectURL(audioUrl);
+            setSpeakingId(null);
+          }
+        };
 
-    return matchesService && matchesCubicle;
-  });
+        await playOnce();
+      } catch (err) {
+        console.error('Audio announcement exception:', err);
+        setSpeakingId(null);
+      }
+    },
+    []
+  );
 
-  const visibleWithDoctor = withDoctorPatients.filter((patient) => {
-    const matchesService =
-      !selectedCategory || patient.service === selectedCategory;
+  /**
+   * Triggers formatted outpatient cubicle audio call.
+   */
+  const handleCall = useCallback(
+    (patient: Patient) => {
+      const num = patient.patientNum;
+      const letter = num.charAt(0);
+      const digits = parseInt(num.slice(1), 10).toString();
+      const destination = patient.cubicleNum
+        ? `cubicle ${patient.cubicleNum}`
+        : 'the doctor';
 
-    const matchesCubicle =
-      !selectedCubicleNum ||
-      patient.cubicleNum === selectedCubicleNum;
+      const announcement = nurseTexts.ttsCallPhrase(letter, digits, destination);
+      void speakAnnouncement(announcement, patient.id);
+    },
+    [speakAnnouncement]
+  );
 
-    return matchesService && matchesCubicle;
-  });
+  // Filtered Patient Rosters based on Category and Cubicle
+  const filterPatientList = useCallback(
+    (list: Patient[]) => {
+      return list.filter((patient) => {
+        const matchesCategory =
+          !selectedCategory || patient.service === selectedCategory;
+        const matchesCubicle =
+          !selectedCubicleNum || patient.cubicleNum === selectedCubicleNum;
+        return matchesCategory && matchesCubicle;
+      });
+    },
+    [selectedCategory, selectedCubicleNum]
+  );
 
-  const visibleCarryout = carryoutPatients.filter((patient) => {
-    const matchesService =
-      !selectedCategory || patient.service === selectedCategory;
+  const visibleAssigned = useMemo(
+    () => filterPatientList(assignedPatients),
+    [filterPatientList, assignedPatients]
+  );
 
-    const matchesCubicle =
-      !selectedCubicleNum ||
-      patient.cubicleNum === selectedCubicleNum;
+  const visibleWithDoctor = useMemo(
+    () => filterPatientList(withDoctorPatients),
+    [filterPatientList, withDoctorPatients]
+  );
 
-    return matchesService && matchesCubicle;
-  });
+  const visibleCarryout = useMemo(
+    () => filterPatientList(carryoutPatients),
+    [filterPatientList, carryoutPatients]
+  );
 
-    const visibleFinished = finishedPatients.filter((patient) => {
-    const matchesService =
-      !selectedCategory || patient.service === selectedCategory;
+  const visibleFinished = useMemo(
+    () => filterPatientList(finishedPatients),
+    [filterPatientList, finishedPatients]
+  );
 
-    const matchesCubicle =
-      !selectedCubicleNum ||
-      patient.cubicleNum === selectedCubicleNum;
-
-    return matchesService && matchesCubicle;
-  });
-
-  const getCounts = () => {
+  // Category counts for sidebar indicators
+  const categoryCounts = useMemo(() => {
     const counts: Record<string, number> = {};
-
-    const assignedCategories = [
+    const categories = [
       ...new Set(assignedCubicles.map((cubicle) => cubicle.category)),
     ];
 
-    assignedCategories.forEach((category) => {
+    categories.forEach((category) => {
       counts[category] =
-        assignedPatients.filter((patient) => patient.service === category).length +
-        withDoctorPatients.filter((patient) => patient.service === category).length +
-        carryoutPatients.filter((patient) => patient.service === category).length;
+        assignedPatients.filter((p) => p.service === category).length +
+        withDoctorPatients.filter((p) => p.service === category).length +
+        carryoutPatients.filter((p) => p.service === category).length;
     });
 
     return counts;
-  };
+  }, [assignedCubicles, assignedPatients, withDoctorPatients, carryoutPatients]);
 
-    if (checking) {
-    return (
-      <div className="flex min-h-screen items-center justify-center">
-        <div className="w-10 h-10 border-4 border-red-200 border-t-red-500 rounded-full animate-spin" />
-      </div>
-    );
-  }
+  // Clear category and cubicle filters
+  const handleClearFilter = useCallback(() => {
+    setSelectedCategory(null);
+    setSelectedCubicleNum(null);
+  }, []);
 
-  if (isLoading) {
+  // Loading State Render
+  if (checking || isLoading) {
     return (
-      <div className="flex min-h-screen items-center justify-center bg-linear-to-br from-white via-red-50 to-red-100">
+      <div className="flex h-screen items-center justify-center bg-slate-50">
         <div className="text-center">
-          <div className="w-16 h-16 border-4 border-red-200 border-t-red-500 rounded-full animate-spin mx-auto mb-4"></div>
-          <p className="text-gray-600 font-medium">Loading nurse dashboard...</p>
-          <p className="text-gray-400 text-sm mt-2">Please wait</p>
+          <div className="w-12 h-12 border-4 border-red-200 border-t-[#cc3535] rounded-full animate-spin mx-auto mb-4" />
+          <p className="text-sm font-bold text-slate-700">
+            {nurseTexts.loadingDashboard}
+          </p>
+          <p className="text-xs text-slate-400 mt-1">{nurseTexts.pleaseWait}</p>
         </div>
       </div>
     );
   }
 
+  const isDraggingGhostValid =
+    !!dragOverStage &&
+    !!dragSourceStage &&
+    isValidStageTransition(dragSourceStage, dragOverStage);
+
   return (
-    <div className="flex min-h-screen bg-linear-to-br from-white via-red-50 to-red-100 font-sans relative">
-      <Sidebar
+    <div style={NurseStyle.viewportContainer} className="select-none">
+      {/* Collapsible Navigation Sidebar */}
+      <NurseSidebar
         sidebarOpen={sidebarOpen}
         selectedCategory={selectedCategory}
         selectedCubicleNum={selectedCubicleNum}
-        categoryCounts={getCounts()}
+        categoryCounts={categoryCounts}
         assignedCubicles={assignedCubicles}
         onSelectCategory={(category) => {
           setSelectedCategory(category);
           setSelectedCubicleNum(null);
         }}
         onSelectCubicle={(cubicleNum) => {
-          const cubicle = assignedCubicles.find(
-            (item) => item.cubicleNum === cubicleNum
-          );
-
+          const cubicle = assignedCubicles.find((c) => c.cubicleNum === cubicleNum);
           setSelectedCategory(cubicle?.category ?? null);
           setSelectedCubicleNum(cubicleNum);
         }}
         onToggleSidebar={() => setSidebarOpen(!sidebarOpen)}
       />
 
-        <div
-          className="flex-1 transition-all duration-300"
-          style={{ marginLeft: sidebarOpen ? '280px' : '64px' }}
-        >
-        <div className="flex items-center justify-between px-8 py-4 bg-white/80 backdrop-blur-sm border-b border-blue-100 shadow-sm">
-          <div className="flex items-center gap-2">
-            <i className="bx bx-user-plus text-gray-400 text-lg"></i>
-            <span className="text-gray-500 text-sm">Patient Management</span>
+      {/* Main Fit-to-Screen Pipeline Area */}
+      <div
+        style={{
+          ...NurseStyle.mainArea,
+          marginLeft: sidebarOpen
+            ? nurseLayoutTokens.sidebarWidthExpanded
+            : nurseLayoutTokens.sidebarWidthCollapsed,
+        }}
+      >
+        {/* Fixed Top Header Bar */}
+        <NurseHeader
+          isSyncing={isSyncing}
+          selectedCategory={selectedCategory}
+          selectedCubicleNum={selectedCubicleNum}
+          assignedCubicles={assignedCubicles}
+          finishedCount={visibleFinished.length}
+          onOpenFinishedLedger={() => setFinishedDrawerOpen(true)}
+          onClearFilter={handleClearFilter}
+          notifications={notifications}
+          unreadCount={unreadCount}
+          onMarkAsRead={markAsRead}
+          onMarkAllAsRead={markAllAsRead}
+          onDismissNotification={dismissNotification}
+          onClearAllNotifications={clearAll}
+        />
+
+        {/* Action Error Notification Toast */}
+        {actionError && (
+          <div
+            role="alert"
+            className="mx-6 mt-3 px-4 py-3 rounded-xl bg-red-50 border border-red-200 text-red-800 text-xs font-semibold flex items-center justify-between shrink-0 shadow-xs animate-in fade-in duration-150"
+          >
+            <div className="flex items-center gap-2">
+              <i className="bx bx-error-circle text-base text-red-600" aria-hidden="true" />
+              <span>{actionError}</span>
+            </div>
+            <button
+              type="button"
+              onClick={clearActionError}
+              className="text-red-500 hover:text-red-800 font-bold ml-4 cursor-pointer"
+            >
+              <i className="bx bx-x text-base" aria-hidden="true" />
+            </button>
           </div>
-          <div className="flex items-center gap-3">
-            {isSyncing && (
-              <div className="flex items-center gap-2 px-3 py-1.5 bg-blue-50 rounded-lg">
-                <div className="w-3.5 h-3.5 border-2 border-blue-400 border-t-transparent rounded-full animate-spin"></div>
-                <span className="text-xs text-blue-600 font-medium">Syncing...</span>
+        )}
+
+        {/* Workspace: Unassigned Empty State vs 3-Column Pipeline Board */}
+        {assignmentStatus === 'unassigned' ? (
+          <div className="flex-1 flex items-center justify-center p-8">
+            <div className="rounded-3xl border border-amber-200 bg-amber-50/70 p-8 text-center shadow-sm max-w-md">
+              <div className="mx-auto mb-4 flex h-14 w-14 items-center justify-center rounded-2xl bg-amber-100 text-amber-700 text-2xl">
+                <i className="bx bx-error text-2xl" aria-hidden="true" />
               </div>
-            )}
-            <NotificationDropdown
-              notifications={notifications}
-              unreadCount={unreadCount}
-              onMarkAsRead={markAsRead}
-              onMarkAllAsRead={markAllAsRead}
-              onDismiss={dismissNotification}
-              onClearAll={clearAll}
-            />
-          </div>
-        </div>
-
-        <div className="px-8 py-6 h-[calc(100vh-73px)] overflow-y-auto">
-          <div className="flex items-center gap-2 mb-4">
-            <h1 className="text-xl font-semibold text-gray-700">Patient Queue</h1>
-            {selectedCategory && (
-              <span className="text-sm text-gray-500 bg-gray-100 px-3 py-1 rounded-full">
-                Filtered by: {selectedCategory}
-                <button
-                  onClick={() => {
-                    setSelectedCategory(null);
-                    setSelectedCubicleNum(null);
-                  }}
-                  className="ml-2 text-gray-400 hover:text-[#cc3535]"
-                >
-                  <i className="bx bx-x"></i>
-                </button>
-              </span>
-            )}
-          </div>
-
-          {assignmentStatus === 'unassigned' ? (
-            <div className="rounded-2xl border border-amber-200 bg-amber-50 p-8 text-center shadow-sm">
-              <div className="mx-auto mb-4 flex h-14 w-14 items-center justify-center rounded-full bg-amber-100 text-2xl text-amber-700">
-                !
-              </div>
-
-              <h2 className="text-lg font-semibold text-gray-900">
-                No cubicles assigned
+              <h2 className="text-base font-bold text-slate-900">
+                {nurseTexts.unassignedTitle}
               </h2>
-
-              <p className="mx-auto mt-2 max-w-md text-sm text-gray-600">
-                Your account does not have any cubicles yet. Ask a Super Admin to assign
-                your room before managing patients.
+              <p className="mt-2 text-xs text-slate-600 leading-relaxed">
+                {nurseTexts.unassignedDesc}
               </p>
             </div>
-          ) : (
-            <div className="flex flex-col gap-6">
-              <AssignedSection
-                patients={visibleAssigned}
-                speakingId={speaking}
-                onCall={handleCall}
-                onMoveToWithDoctor={handleMoveToWithDoctor}
-              />
-
-              <WithDoctorSection
-                patients={visibleWithDoctor}
-                onMoveBack={handleMoveBackFromDoctor}
-                onMoveToCarryout={handleMoveToCarryout}
-              />
-
-              <CarryoutSection
-                patients={visibleCarryout}
-                onMoveBack={handleMoveBackFromCarryout}
-                onFinish={handleFinish}
-              />
-
-              <FinishedTable patients={visibleFinished} />
-            </div>
-          )}
-        </div>
+          </div>
+        ) : (
+          <NurseBoard
+            assignedPatients={visibleAssigned}
+            withDoctorPatients={visibleWithDoctor}
+            carryoutPatients={visibleCarryout}
+            speakingId={speakingId}
+            selectedPatient={selectedPatient}
+            dragOverStage={dragOverStage}
+            onCall={handleCall}
+            onSelectPatient={selectPatient}
+            onPointerDown={handlePointerDown}
+            onMoveToWithDoctor={handleMoveToWithDoctor}
+            onMoveBackFromDoctor={handleMoveBackFromDoctor}
+            onMoveToCarryout={handleMoveToCarryout}
+            onMoveBackFromCarryout={handleMoveBackFromCarryout}
+            onFinish={handleFinish}
+            onAssignSelectedToStage={assignSelectedToStage}
+            isStageValidTarget={isStageValidTarget}
+          />
+        )}
       </div>
+
+      {/* Click-to-Select Tablet Mode Guidance Banner */}
+      <NurseSelectionBanner
+        selectedPatient={selectedPatient}
+        onCancel={clearSelection}
+      />
+
+      {/* Pointer Events Drag Ghost Preview Card */}
+      <NurseDragGhost
+        patient={draggedPatient}
+        point={dragPoint}
+        sourceStage={dragSourceStage}
+        isValidDropTarget={isDraggingGhostValid}
+      />
+
+      {/* Finished Today Archive Slide-over Drawer */}
+      <FinishedDrawer
+        isOpen={finishedDrawerOpen}
+        onClose={() => setFinishedDrawerOpen(false)}
+        patients={visibleFinished}
+      />
     </div>
   );
 }

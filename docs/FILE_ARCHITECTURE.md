@@ -284,17 +284,34 @@ Directory structure:
     │   │   │   ├── AssignedSection.tsx
     │   │   │   ├── CarryoutSection.tsx
     │   │   │   ├── ElapsedTimer.tsx
+    │   │   │   ├── FinishedDrawer.tsx
     │   │   │   ├── FinishedTable.tsx
+    │   │   │   ├── NurseBoard.tsx
+    │   │   │   ├── NurseDragGhost.tsx
+    │   │   │   ├── NurseDragHandle.tsx
+    │   │   │   ├── NurseHeader.tsx
+    │   │   │   ├── NursePatientCard.tsx
+    │   │   │   ├── NurseSelectionBanner.tsx
+    │   │   │   ├── NurseSidebar.tsx
     │   │   │   ├── Sidebar.tsx
+    │   │   │   ├── StageColumn.tsx
     │   │   │   └── WithDoctorSection.tsx
+    │   │   ├── constants/
+    │   │   │   ├── nurse.ts
+    │   │   │   └── nurseTexts.ts
     │   │   ├── hooks/
+    │   │   │   ├── dragUtils.ts
     │   │   │   ├── useIdleTimeout.ts
     │   │   │   ├── useNurseActions.ts
     │   │   │   ├── useNurseData.ts
+    │   │   │   ├── useNurseDragAndDrop.ts
+    │   │   │   ├── useNurseSelection.ts
     │   │   │   ├── useRealtimeSubscription.ts
     │   │   │   └── useRequireAuth.ts
-    │   │   └── lib/
-    │   │       └── constants.ts
+    │   │   ├── lib/
+    │   │   │   └── constants.ts
+    │   │   └── types/
+    │   │       └── nurse.ts
     │   ├── reset-password/
     │   │   ├── page.tsx
     │   │   └── confirm/

@@ -1,56 +1,88 @@
+/**
+ * @fileoverview Column 2: With Doctor section component for the Nurse Dashboard.
+ *
+ * Displays patients currently undergoing physician examination inside cubicles,
+ * tracking real-time consultation duration and providing advance/rollback actions.
+ *
+ * Adheres strictly to AGENTS.md guidelines with full JSDoc and zero emojis.
+ */
+
 'use client';
+
+import React from 'react';
 import { Patient } from '@/types/Types';
-import { ElapsedTimer } from './ElapsedTimer';
+import { ClinicalStage } from '../types/nurse';
+import { nurseTexts } from '../constants/nurseTexts';
+import { StageColumn } from './StageColumn';
+import { NursePatientCard } from './NursePatientCard';
 
-type WithDoctorSectionProps = {
+/**
+ * Props for the WithDoctorSection component.
+ */
+export interface WithDoctorSectionProps {
+  /** Roster of patients currently in medical consultation. */
   patients: Patient[];
-  onMoveBack: (patient: Patient) => void;
-  onMoveToCarryout: (patient: Patient) => void;
-};
+  /** ID of patient currently selected in tablet selection mode. */
+  selectedPatientId?: number | null;
+  /** Whether this stage is currently hovered during a drag. */
+  isDragOver?: boolean;
+  /** Whether this stage is an eligible destination during tablet selection. */
+  isValidSelectionTarget?: boolean;
+  /** Action handler rolling back patient to assigned waiting queue. */
+  onMoveBack: (patient: Patient) => void | Promise<boolean | void>;
+  /** Action handler advancing patient to post-care carryout. */
+  onMoveToCarryout: (patient: Patient) => void | Promise<boolean | void>;
+  /** Callback to select a patient in tablet mode. */
+  onSelectPatient?: (patient: Patient, stage: ClinicalStage, cubicleNum: string) => void;
+  /** Pointer down listener for drag initiation. */
+  onPointerDown?: (e: React.PointerEvent, patient: Patient, stage: ClinicalStage) => void;
+  /** Callback triggered when user clicks '+ Move Here' in selection mode. */
+  onMoveHere?: () => void | Promise<boolean | void>;
+}
 
+/**
+ * Renders the With Doctor column within the clinical pipeline.
+ *
+ * @param props - Section configuration and patient rosters.
+ * @returns The rendered With Doctor section component.
+ */
 export function WithDoctorSection({
   patients,
+  selectedPatientId,
+  isDragOver = false,
+  isValidSelectionTarget = false,
   onMoveBack,
   onMoveToCarryout,
+  onSelectPatient,
+  onPointerDown,
+  onMoveHere,
 }: WithDoctorSectionProps) {
   return (
-    <div className="bg-white border-2 border-purple-100 rounded-3xl shadow-sm p-5">
-      <h2 className="text-purple-500 font-semibold text-xs mb-3 tracking-widest uppercase flex items-center gap-2">
-        <span className="w-2 h-2 rounded-full bg-purple-400 animate-pulse inline-block"></span>
-        With Doctor ({patients.length})
-      </h2>
-      {patients.length === 0 && (
-        <p className="text-gray-300 text-xs">No patients with doctor</p>
-      )}
-      {patients.length > 0 && (
-        <div className="grid grid-cols-2 gap-3 sm:grid-cols-3 lg:grid-cols-4">
-          {patients.map(p => (
-            <div key={p.id} className="border border-purple-100 rounded-2xl p-3 flex flex-col gap-2 bg-purple-50">
-              <div className="flex items-center justify-between">
-                <span className="text-[#cc3535] font-black text-lg">{p.patientNum}</span>
-                <ElapsedTimer startedAt={p.consult_start} />
-              </div>
-              <span className="text-gray-500 text-xs font-medium">{p.service}</span>
-              <div className="flex items-center gap-1 mt-1">
-                <button
-                  onClick={() => onMoveBack(p)}
-                  className="flex-1 flex items-center justify-center gap-1 py-1 rounded-xl text-xs font-medium bg-yellow-50 hover:bg-yellow-100 text-yellow-600 transition"
-                >
-                  <i className="bx bx-undo text-xs"></i>
-                  <span>Back</span>
-                </button>
-                <button
-                  onClick={() => onMoveToCarryout(p)}
-                  className="flex-1 flex items-center justify-center gap-1 py-1 rounded-xl text-xs font-medium bg-orange-50 hover:bg-orange-100 text-orange-600 transition"
-                >
-                  <i className="bx bx-transfer-alt text-sm" />
-                  <span>Carryout</span>
-                </button>
-              </div>
-            </div>
-          ))}
-        </div>
-      )}
-    </div>
+    <StageColumn
+      stage="with_doctor"
+      title={nurseTexts.stageWithDoctorHeading}
+      icon="bx-pulse"
+      badgeColorClass="bg-purple-100 text-purple-700"
+      count={patients.length}
+      emptyText={nurseTexts.emptyWithDoctor}
+      isDragOver={isDragOver}
+      isValidSelectionTarget={isValidSelectionTarget}
+      onMoveHere={onMoveHere}
+    >
+      {patients.map((patient) => (
+        <NursePatientCard
+          key={patient.id}
+          patient={patient}
+          stage="with_doctor"
+          isSelected={selectedPatientId === patient.id}
+          onSelect={onSelectPatient}
+          onPointerDown={onPointerDown}
+          onMoveBackFromDoctor={onMoveBack}
+          onMoveToCarryout={onMoveToCarryout}
+        />
+      ))}
+    </StageColumn>
   );
 }
+
+export default WithDoctorSection;

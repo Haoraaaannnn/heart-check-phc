@@ -58,10 +58,10 @@ This document outlines the mandatory rules and architectural standards that the 
 
 ---
 
-### 7. Absolute Prohibition on Command & File Execution
-- The agent must NEVER execute bash/terminal commands, background processes, build tools, package managers (`npm`, `npx`), linters, or test suites.
-- All command executions, builds, installations, database migrations, and runtime validations are to be performed manually by the user.
-- The agent's role is strictly limited to file analysis, reading, writing, and documentation.
+### 7. Explicit User Permission Required for Command & File Execution
+- The agent may propose and execute terminal commands, package manager operations, git operations, linters, or build validations **ONLY AFTER requesting and receiving explicit permission from the user**.
+- The agent must NEVER execute autonomous or unconfirmed terminal commands without prior user consent.
+- Always state the exact command to be executed and its purpose before running it.
 
 ---
 
@@ -76,4 +76,4 @@ Before completing any refactoring or coding task, verify against these rules:
 - [ ] If an image reference was provided, the implementation matches the image faithfully.
 - [ ] No unintentional visual or layout regressions were introduced during refactoring.
 - [ ] No emojis are used anywhere in documentation, code, or comments.
-- [ ] Zero terminal or file executions were attempted; all executions are left entirely to the user.
+- [ ] All terminal commands and executions received explicit user confirmation prior to running.
