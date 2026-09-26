@@ -2,8 +2,11 @@
 
 import { Service } from "@/types/Services";
 import { IconBackspace } from "@tabler/icons-react";
-import { SMS_PHONE_PLACEHOLDER } from "@/app/kiosk/pages/sms-input/constants/smsInput";
-import { themeColors } from "@/constants/colors";
+import {
+    SMS_PHONE_PLACEHOLDER,
+    SMSPhoneInputStyle,
+    SMSPhoneInputClasses,
+} from "@/app/kiosk/pages/sms-input/constants/smsPhoneInput";
 
 /** Props for {@link PhoneInput}. */
 interface PhoneInputProps {
@@ -36,12 +39,12 @@ export default function PhoneInput({ phone, onDelete, service: _service }: Phone
     };
 
     return (
-        <div className="w-full flex items-center bg-white px-4 sm:px-6 border-2 border-gray-200 shadow-inner h-16 sm:h-20 rounded-2xl">
-            <div className="flex-1 font-bold tracking-widest text-black text-2xl sm:text-3xl md:text-4xl whitespace-nowrap overflow-hidden">
+        <div style={SMSPhoneInputStyle.container}>
+            <div style={SMSPhoneInputStyle.digitsWrapper}>
                 {phone.length > 0 ? (
                     formatPhone(phone)
                 ) : (
-                    <span className="text-gray-300 font-normal">
+                    <span style={SMSPhoneInputStyle.placeholder}>
                         {SMS_PHONE_PLACEHOLDER}
                     </span>
                 )}
@@ -51,10 +54,10 @@ export default function PhoneInput({ phone, onDelete, service: _service }: Phone
                 type="button"
                 onClick={onDelete}
                 aria-label="Delete last digit"
-                className="h-11 sm:h-13 px-4 sm:px-5 flex items-center justify-center text-white active:scale-95 shadow-md rounded-xl transition-all duration-150 hover:brightness-105"
-                style={{ backgroundColor: themeColors.brandRed }}
+                style={SMSPhoneInputStyle.backspaceBtn}
+                className={SMSPhoneInputClasses.backspaceBtn}
             >
-                <IconBackspace size={28} className="sm:size-8" />
+                <IconBackspace size={28} className={SMSPhoneInputClasses.backspaceIcon} />
             </button>
         </div>
     );

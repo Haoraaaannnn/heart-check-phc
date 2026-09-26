@@ -5,7 +5,10 @@ import * as TablerIcons from "@tabler/icons-react";
 import type { Service } from "@/types/Services";
 import ConfirmationDescriptions from "@/app/kiosk/pages/confirmation/components/ConfimationDescription";
 import ConfirmationActions from "@/app/kiosk/pages/confirmation/components/ConfirmationActions";
-import { ConfirmationModalStyle } from "@/app/kiosk/pages/confirmation/constants/confirmation";
+import {
+    ConfirmationModalStyle,
+    ConfirmationModalClasses,
+} from "@/app/kiosk/pages/confirmation/constants/confirmationModal";
 
 /** Tabler icons mapping for runtime lookup. */
 const ICONS = TablerIcons as unknown as Record<string, TablerIcons.Icon | undefined>;
@@ -58,23 +61,23 @@ export default function ConfirmationModal({
             aria-modal="true"
             aria-labelledby="confirmation-modal-title"
             style={ConfirmationModalStyle.overlay}
-            className="animate-in fade-in duration-200"
+            className={ConfirmationModalClasses.overlay}
             onClick={onClose}
         >
             <div
                 style={ConfirmationModalStyle.modalBox}
-                className="[scrollbar-width:none] [&::-webkit-scrollbar]:hidden"
+                className={ConfirmationModalClasses.scroll}
                 onClick={(e) => e.stopPropagation()}
             >
                 {/* Modal Header */}
                 <div style={ConfirmationModalStyle.modalHeader}>
                     <Icon
-                        className="size-12 sm:size-14 shrink-0"
+                        className={ConfirmationModalClasses.icon}
                         size={56}
                         stroke={1.5}
                         color="#ffffff"
                     />
-                    <div className="flex flex-col min-w-0">
+                    <div className={ConfirmationModalClasses.headerText}>
                         <span
                             id="confirmation-modal-title"
                             style={ConfirmationModalStyle.modalTitle}

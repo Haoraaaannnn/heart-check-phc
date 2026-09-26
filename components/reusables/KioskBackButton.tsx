@@ -2,13 +2,17 @@
 
 import Link from "next/link";
 import { IconArrowLeft } from "@tabler/icons-react";
-import { themeColors } from "@/constants/colors";
+import {
+    KioskBackButtonClasses,
+    KioskBackButtonStyles,
+} from "@/app/kiosk/constants/kioskBackButton";
+import { KioskBackButtonTexts } from "@/app/kiosk/constants/kioskBackButtonTexts";
 
 /** Props for {@link KioskBackButton}. */
 interface KioskBackButtonProps {
     /** Target URL route to navigate back to. */
     href: string;
-    /** Optional custom button label (defaults to "Bumalik - Back"). */
+    /** Optional custom button label (defaults to {@link KioskBackButtonTexts.label}). */
     label?: string;
 }
 
@@ -24,13 +28,14 @@ interface KioskBackButtonProps {
  */
 export default function KioskBackButton({
     href,
-    label = "Bumalik - Back",
+    label = KioskBackButtonTexts.label,
 }: KioskBackButtonProps) {
     return (
         <Link
             href={href}
-            className="absolute left-6 top-6 z-50 flex items-center gap-2 rounded-2xl px-5 py-2.5 text-xl sm:text-2xl font-bold text-white shadow-md transition-all duration-150 active:scale-95 hover:brightness-105"
-            style={{ backgroundColor: themeColors.brandRed }}
+            aria-label={KioskBackButtonTexts.ariaLabel}
+            className={KioskBackButtonClasses.button}
+            style={KioskBackButtonStyles.button}
         >
             <IconArrowLeft size={28} stroke={2} />
             <span>{label}</span>

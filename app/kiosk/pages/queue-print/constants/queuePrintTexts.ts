@@ -1,12 +1,21 @@
 /**
- * Text copy for the ticket printing screen and ticket receipt output.
- *
- * Provides bilingual thank-you message, waiting instructions, and queue label.
+ * @file queuePrintTexts.ts
+ * @description Centralized barrel re-exporting component-scoped text constants for queue printing.
+ */
+
+import { PrintHeaderTexts } from "./printHeaderTexts";
+import { PrintFooterTexts } from "./printFooterTexts";
+import { QueuePrintTicketTexts } from "./queuePrintTicketTexts";
+
+export * from "./printHeaderTexts";
+export * from "./printFooterTexts";
+export * from "./queuePrintTicketTexts";
+
+/**
+ * Composite text copy dictionary for queue ticket printing.
  */
 export const queuePrintTexts = {
-    headerFil: "Maraming Salamat po!",
-    headerEn: "Thank you!",
-    footerFil: "Ipiniprinta ang inyong numero. Maghintay na tawagin ito sa Rehistrasyon.",
-    footerEn: "Your number is being printed. Wait for it to be called at Registration.",
-    queueLabel: "Your Queue Number",
+    ...PrintHeaderTexts,
+    ...PrintFooterTexts,
+    ...QueuePrintTicketTexts,
 } as const;

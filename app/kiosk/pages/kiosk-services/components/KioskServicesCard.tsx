@@ -18,6 +18,7 @@ interface Props {
 
 import {
     KioskServicesCardStyle,
+    KioskServicesClasses,
     kioskServicesColors,
 } from "@/app/kiosk/pages/kiosk-services/constants/kioskServices";
 
@@ -45,7 +46,7 @@ export default function ServiceCard({ service, onSelect }: Props) {
             type="button"
             onClick={() => onSelect(service)}
             style={KioskServicesCardStyle.card}
-            className="transition-all active:scale-95 hover:border-red-400 hover:shadow-md"
+            className={KioskServicesClasses.card}
         >
             {/* Brand-colored icon tile */}
             <div style={KioskServicesCardStyle.iconTile}>
@@ -66,7 +67,7 @@ export default function ServiceCard({ service, onSelect }: Props) {
                 size={36}
                 stroke={2}
                 color={kioskServicesColors.arrowColor}
-                className="shrink-0"
+                className={KioskServicesClasses.cardArrow}
             />
         </button>
     );

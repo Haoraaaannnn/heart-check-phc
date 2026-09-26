@@ -1,3 +1,5 @@
+import { SMSLayoutClasses } from "@/app/kiosk/pages/sms-input/constants/smsLayout";
+
 /** Props for {@link SMSInputLayout}. */
 interface SMSInputLayoutProps {
     /** Page contents for the SMS phone input step. */
@@ -12,7 +14,7 @@ interface SMSInputLayoutProps {
  */
 export default function SMSInputLayout({ children }: SMSInputLayoutProps) {
     return (
-        <div className="h-full w-full flex flex-col overflow-hidden">
+        <div className={SMSLayoutClasses.layoutContainer}>
             {children}
         </div>
     );

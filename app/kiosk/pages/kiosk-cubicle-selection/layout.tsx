@@ -3,6 +3,7 @@
 import CubicleHeader from "@/app/kiosk/pages/kiosk-cubicle-selection/components/CubicleHeader";
 import { useIsLandscape } from "@/hooks/useIsLandscape";
 import { useIsMounted } from "@/hooks/useIsMounted";
+import { CubicleLayoutClasses } from "@/app/kiosk/pages/kiosk-cubicle-selection/constants/cubicleLayout";
 
 /** Props for {@link KioskCubicleSelectionLayout}. */
 interface KioskCubicleSelectionLayoutProps {
@@ -30,24 +31,12 @@ export default function KioskCubicleSelectionLayout({
     const mounted = useIsMounted();
 
     return (
-        <div
-            className={`flex h-full w-full items-center justify-center overflow-hidden bg-white transition-opacity duration-300 ${
-                mounted ? "opacity-100" : "opacity-0"
-            }`}
-        >
-            <div className="relative flex h-full w-full flex-col overflow-hidden">
-                <div
-                    className={`flex flex-1 min-h-0 overflow-y-auto overflow-x-hidden pt-4 [scrollbar-width:none] [&::-webkit-scrollbar]:hidden ${
-                        isLandscape ? "pb-[120px]" : "pb-[140px]"
-                    }`}
-                >
-                    <div
-                        className={`m-auto flex flex-col items-center ${
-                            isLandscape ? "w-[92%] max-w-[1600px]" : "w-full max-w-[900px]"
-                        }`}
-                    >
+        <div className={CubicleLayoutClasses.layoutOverlay(mounted)}>
+            <div className={CubicleLayoutClasses.layoutContainer}>
+                <div className={CubicleLayoutClasses.layoutMain(isLandscape)}>
+                    <div className={CubicleLayoutClasses.layoutInner(isLandscape)}>
                         <CubicleHeader />
-                        <div className="w-full">{children}</div>
+                        <div className={CubicleLayoutClasses.layoutChildren}>{children}</div>
                     </div>
                 </div>
             </div>

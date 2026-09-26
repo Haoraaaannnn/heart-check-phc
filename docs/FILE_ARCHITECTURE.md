@@ -172,10 +172,17 @@ Directory structure:
     │   ├── forgot-password/
     │   │   └── page.tsx
     │   ├── kiosk/
+    │   │   ├── README.md
     │   │   ├── layout.tsx
     │   │   ├── components/
     │   │   │   └── KioskLoadingOverlay.tsx
     │   │   ├── constants/
+    │   │   │   ├── kioskBackButton.ts
+    │   │   │   ├── kioskBackButtonTexts.ts
+    │   │   │   ├── kioskLayout.ts
+    │   │   │   ├── kioskLayoutTexts.ts
+    │   │   │   ├── kioskLoadingOverlay.ts
+    │   │   │   ├── kioskLoadingOverlayTexts.ts
     │   │   │   └── kioskNavigation.ts
     │   │   ├── context/
     │   │   │   └── KioskLoadingContext.tsx
@@ -185,6 +192,11 @@ Directory structure:
     │   │       ├── category-selection/
     │   │       │   ├── page.tsx
     │   │       │   └── constants/
+    │   │       │       ├── categoryCards.ts
+    │   │       │       ├── categoryCardsTexts.ts
+    │   │       │       ├── categoryHeader.ts
+    │   │       │       ├── categoryHeaderTexts.ts
+    │   │       │       ├── categoryLayout.ts
     │   │       │       ├── categorySelection.ts
     │   │       │       └── categorySelectionTexts.ts
     │   │       ├── confirmation/
@@ -197,6 +209,15 @@ Directory structure:
     │   │       │   │   └── ConfirmationModal.tsx
     │   │       │   └── constants/
     │   │       │       ├── confirmation.ts
+    │   │       │       ├── confirmationActions.ts
+    │   │       │       ├── confirmationActionsTexts.ts
+    │   │       │       ├── confirmationBanner.ts
+    │   │       │       ├── confirmationDescription.ts
+    │   │       │       ├── confirmationDescriptionTexts.ts
+    │   │       │       ├── confirmationLayout.ts
+    │   │       │       ├── confirmationLayoutTexts.ts
+    │   │       │       ├── confirmationModal.ts
+    │   │       │       ├── confirmationModalTexts.ts
     │   │       │       └── confirmationTexts.ts
     │   │       ├── kiosk-cubicle-selection/
     │   │       │   ├── layout.tsx
@@ -205,6 +226,10 @@ Directory structure:
     │   │       │   │   ├── CubicleCard.tsx
     │   │       │   │   └── CubicleHeader.tsx
     │   │       │   ├── constants/
+    │   │       │   │   ├── cubicleCard.ts
+    │   │       │   │   ├── cubicleHeader.ts
+    │   │       │   │   ├── cubicleHeaderTexts.ts
+    │   │       │   │   ├── cubicleLayout.ts
     │   │       │   │   ├── cubicleSelection.ts
     │   │       │   │   └── cubicleSelectionTexts.ts
     │   │       │   └── types/
@@ -218,7 +243,13 @@ Directory structure:
     │   │       │   │   └── PatientTypeCards.tsx
     │   │       │   ├── constants/
     │   │       │   │   ├── kioskNewOld.ts
-    │   │       │   │   └── kioskNewOldTexts.ts
+    │   │       │   │   ├── kioskNewOldLayout.ts
+    │   │       │   │   ├── kioskNewOldTexts.ts
+    │   │       │   │   ├── kioskTitle.ts
+    │   │       │   │   ├── kioskTitleTexts.ts
+    │   │       │   │   ├── patientTypeBanner.ts
+    │   │       │   │   ├── patientTypeBannerTexts.ts
+    │   │       │   │   └── patientTypeCards.ts
     │   │       │   └── types/
     │   │       │       └── PatientType.ts
     │   │       ├── kiosk-services/
@@ -244,8 +275,15 @@ Directory structure:
     │   │       │   │   ├── PrintHeader.tsx
     │   │       │   │   └── QueuePrintContent.tsx
     │   │       │   └── constants/
+    │   │       │       ├── printFooter.ts
+    │   │       │       ├── printFooterTexts.ts
+    │   │       │       ├── printHeader.ts
+    │   │       │       ├── printHeaderTexts.ts
     │   │       │       ├── queuePrint.ts
-    │   │       │       └── queuePrintTexts.ts
+    │   │       │       ├── queuePrintLayout.ts
+    │   │       │       ├── queuePrintTexts.ts
+    │   │       │       ├── queuePrintTicket.ts
+    │   │       │       └── queuePrintTicketTexts.ts
     │   │       └── sms-input/
     │   │           ├── layout.tsx
     │   │           ├── page.tsx
@@ -257,8 +295,17 @@ Directory structure:
     │   │           │   ├── SMSBanner.tsx
     │   │           │   └── SMSInstruction.tsx
     │   │           └── constants/
+    │   │               ├── smsBanner.ts
+    │   │               ├── smsContinueButton.ts
+    │   │               ├── smsContinueButtonTexts.ts
     │   │               ├── smsInput.ts
-    │   │               └── smsInputTexts.ts
+    │   │               ├── smsInputTexts.ts
+    │   │               ├── smsInstruction.ts
+    │   │               ├── smsInstructionTexts.ts
+    │   │               ├── smsLayout.ts
+    │   │               ├── smsModalTexts.ts
+    │   │               ├── smsNumPad.ts
+    │   │               └── smsPhoneInput.ts
     │   ├── login/
     │   │   └── page.tsx
     │   ├── monitor/
@@ -402,14 +449,15 @@ Directory structure:
     │   ├── COMPONENTS_GUIDE.md
     │   ├── DATABASE_SCHEMA.md
     │   ├── FILE_ARCHITECTURE.md
+    │   ├── NURSE_DASHBOARD_SYSTEM_DESIGN.md
     │   ├── OPEN_ISSUES.md
     │   ├── PRD.md
     │   ├── SCHEMA_REFERENCE.md
     │   ├── SECURITY.md
     │   ├── SETUP_AND_SEEDING.md
+    │   ├── SYSTEM_DESIGN.md
     │   ├── TRANSFER_DASHBOARD.md
-    │   ├── TRANSFER_MANUAL_TWEAKING_GUIDE.md
-    │   └── NURSE_DASHBOARD_SYSTEM_DESIGN.md
+    │   └── TRANSFER_MANUAL_TWEAKING_GUIDE.md
     ├── fonts/
     │   └── fonts.ts
     ├── hooks/

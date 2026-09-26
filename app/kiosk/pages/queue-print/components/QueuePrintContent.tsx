@@ -8,8 +8,8 @@ import { supabase } from "@/lib/supabase";
 import {
     QUEUE_PRINT_REDIRECT_DELAY_MS,
     QueuePrintTicketStyle,
-} from "@/app/kiosk/pages/queue-print/constants/queuePrint";
-import { queuePrintTexts } from "@/app/kiosk/pages/queue-print/constants/queuePrintTexts";
+} from "@/app/kiosk/pages/queue-print/constants/queuePrintTicket";
+import { QueuePrintTicketTexts } from "@/app/kiosk/pages/queue-print/constants/queuePrintTicketTexts";
 
 /** Props for {@link QueuePrintContent}. */
 interface QueuePrintContentProps {
@@ -148,27 +148,27 @@ export default function QueuePrintContent({
     }, [router]);
 
     return (
-        <div style={QueuePrintTicketStyle.ticketContainer} className="gap-4 text-center">
+        <div style={QueuePrintTicketStyle.ticketContainer}>
             {/* Service Information */}
-            <div className="flex flex-col items-center justify-center gap-2">
+            <div style={QueuePrintTicketStyle.serviceHeader}>
                 {service?.label_fil && (
-                    <span className="text-2xl sm:text-3xl md:text-4xl font-black text-gray-900 leading-tight">
+                    <span style={QueuePrintTicketStyle.serviceTitle}>
                         {service.label_fil}
                     </span>
                 )}
 
-                <span style={QueuePrintTicketStyle.badge} className="shadow-sm">
+                <span style={QueuePrintTicketStyle.badge}>
                     {service?.label_en || "Consultation"}
                 </span>
             </div>
 
             {/* Separator Divider */}
-            <div className="w-full h-px bg-gray-200 my-1" />
+            <div style={QueuePrintTicketStyle.divider} />
 
             {/* Queue Number Callout */}
-            <div className="flex flex-col items-center justify-center w-full py-2">
-                <span className="text-sm sm:text-base font-bold text-gray-500 mb-1">
-                    {queuePrintTexts.queueLabel}
+            <div style={QueuePrintTicketStyle.queueWrapper}>
+                <span style={QueuePrintTicketStyle.queueLabel}>
+                    {QueuePrintTicketTexts.queueLabel}
                 </span>
 
                 <span style={QueuePrintTicketStyle.queueNumber}>

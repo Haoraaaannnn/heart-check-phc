@@ -306,6 +306,8 @@ export const KioskHeaderStyle = {
         display: "flex",
         alignItems: "center",
         gap: kioskHeaderSpacing.brandGap,
+        position: "relative",
+        zIndex: 1,
     },
 
     /**
@@ -331,6 +333,8 @@ export const KioskHeaderStyle = {
      */
     clock: {
         textAlign: "right",
+        position: "relative",
+        zIndex: 1,
     },
 
     /**
@@ -352,5 +356,20 @@ export const KioskHeaderStyle = {
         fontSize: kioskHeaderFontSize.date,
         fontWeight: kioskHeaderFontWeight.normal,
         margin: 0,
+    },
+} satisfies Record<string, CSSProperties>;
+
+/**
+ * Visual styling dictionary for the SVG background wave.
+ */
+export const KioskFooterWaveStyle = {
+    svg: {
+        position: "absolute",
+        inset: 0,
+        width: "100%",
+        height: "100%",
+        zIndex: 0,
+        display: "block",
+        pointerEvents: "none",
     },
 } satisfies Record<string, CSSProperties>;

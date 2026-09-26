@@ -1,4 +1,5 @@
 import { themeColors } from "@/constants/colors";
+import { KioskFooterWaveStyle } from "@/app/kiosk/pages/kiosk-services/constants/kioskHeader";
 
 const kioskFooterWave = {
     viewBox: "0 0 1024 420",
@@ -129,15 +130,7 @@ export default function KioskFooterWave() {
             viewBox={kioskFooterWave.viewBox}
             preserveAspectRatio="none"
             aria-hidden="true"
-            style={{
-                position: "absolute",
-                inset: 0,
-                width: "100%",
-                height: "100%",
-                zIndex: 0,
-                display: "block",
-                pointerEvents: "none",
-            }}
+            style={KioskFooterWaveStyle.svg}
         >
             {kioskFooterWaveLayers.map((layer, index) => (
                 <path

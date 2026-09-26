@@ -112,3 +112,30 @@ export const KioskServicesGridStyle = {
         paddingBottom: kioskServicesSpacing.gridPaddingY,
     },
 } satisfies Record<string, CSSProperties>;
+
+/**
+ * Tailwind CSS class name dictionary for kiosk services components.
+ *
+ * Centralizes interactive pseudo-classes, transitions, grid templates,
+ * and layout utility classes so that component files avoid hardcoding raw utility strings.
+ */
+export const KioskServicesClasses = {
+    card: "transition-all active:scale-95 hover:border-red-400 hover:shadow-md",
+    cardArrow: "shrink-0",
+    grid: "grid-cols-2 landscape:grid-cols-3",
+    layoutOverlay: (mounted: boolean): string =>
+        `fixed inset-0 flex h-dvh w-dvw items-center justify-center overflow-hidden bg-white transition-opacity duration-300 ${
+            mounted ? "opacity-100" : "opacity-0"
+        }`,
+    layoutContainer: "relative flex h-full w-full flex-col overflow-hidden",
+    layoutMain: (isLandscape: boolean): string =>
+        `flex flex-1 min-h-0 overflow-y-auto overflow-x-hidden pt-4 [scrollbar-width:none] [&::-webkit-scrollbar]:hidden ${
+            isLandscape ? "pb-[120px]" : "pb-[140px]"
+        }`,
+    layoutInner: (isLandscape: boolean): string =>
+        `m-auto flex flex-col items-center ${
+            isLandscape ? "w-[92%] max-w-[1600px]" : "w-full"
+        }`,
+    layoutChildren: "w-full",
+} as const;
+

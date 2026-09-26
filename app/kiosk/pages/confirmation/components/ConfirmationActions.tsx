@@ -3,8 +3,11 @@
 import { useKioskNavigate } from "@/app/kiosk/hooks/useKioskNavigate";
 import { getTimestamp } from "@/lib/logger";
 import { Service } from "@/types/Services";
-import { confirmationTexts } from "@/app/kiosk/pages/confirmation/constants/confirmationTexts";
-import { ConfirmationActionsStyle } from "@/app/kiosk/pages/confirmation/constants/confirmation";
+import { ConfirmationActionsTexts } from "@/app/kiosk/pages/confirmation/constants/confirmationActionsTexts";
+import {
+    ConfirmationActionsStyle,
+    ConfirmationActionsClasses,
+} from "@/app/kiosk/pages/confirmation/constants/confirmationActions";
 
 /** Props for {@link ConfirmationActions}. */
 interface ConfirmationActionsProps {
@@ -103,15 +106,15 @@ export default function ConfirmationActions({
     };
 
     return (
-        <div style={ConfirmationActionsStyle.container} className="flex-col">
+        <div style={ConfirmationActionsStyle.container}>
             {/* Primary confirmation button */}
             <button
                 type="button"
                 onClick={handleContinue}
                 style={ConfirmationActionsStyle.continueBtn}
-                className="transition-all duration-150 active:scale-95 shadow-md hover:brightness-105"
+                className={ConfirmationActionsClasses.continueBtn}
             >
-                {confirmationTexts.continueBtn}
+                {ConfirmationActionsTexts.continueBtn}
             </button>
 
             {/* Secondary cancel/back button */}
@@ -119,9 +122,9 @@ export default function ConfirmationActions({
                 type="button"
                 onClick={handleCancel}
                 style={ConfirmationActionsStyle.cancelBtn}
-                className="transition-all duration-150 active:scale-95 hover:bg-gray-50"
+                className={ConfirmationActionsClasses.cancelBtn}
             >
-                {confirmationTexts.cancelBtn}
+                {ConfirmationActionsTexts.cancelBtn}
             </button>
         </div>
     );

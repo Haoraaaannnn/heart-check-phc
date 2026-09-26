@@ -3,12 +3,18 @@
 import { useSearchParams } from "next/navigation";
 import { IconUser, IconMoodKid, IconArrowNarrowRight } from "@tabler/icons-react";
 import { useKioskNavigate } from "@/app/kiosk/hooks/useKioskNavigate";
-import { useIsLandscape } from "@/hooks/useIsLandscape";
-import { categorySelectionTexts } from "@/app/kiosk/pages/category-selection/constants/categorySelectionTexts";
+import { CategoryHeaderTexts } from "@/app/kiosk/pages/category-selection/constants/categoryHeaderTexts";
+import { CategoryHeaderStyle } from "@/app/kiosk/pages/category-selection/constants/categoryHeader";
+import { CategoryCardsTexts } from "@/app/kiosk/pages/category-selection/constants/categoryCardsTexts";
 import {
-    categorySelectionTheme,
-    CategorySelectionStyle,
-} from "@/app/kiosk/pages/category-selection/constants/categorySelection";
+    CategoryCardsStyle,
+    CategoryCardsClasses,
+    categoryCardsTheme,
+} from "@/app/kiosk/pages/category-selection/constants/categoryCards";
+import {
+    CategoryLayoutStyle,
+    CategoryLayoutClasses,
+} from "@/app/kiosk/pages/category-selection/constants/categoryLayout";
 
 /**
  * Unified kiosk step where the patient selects their age category
@@ -31,7 +37,6 @@ import {
 export default function CategorySelectionPage() {
     const navigate = useKioskNavigate();
     const searchParams = useSearchParams();
-    const isLandscape = useIsLandscape();
 
     const serviceId = searchParams.get("serviceId");
     const patientType = searchParams.get("type");
@@ -61,50 +66,50 @@ export default function CategorySelectionPage() {
 
     return (
         <div
-            style={CategorySelectionStyle.container}
-            className={isLandscape ? "pb-[120px]" : "pb-[140px]"}
+            className={CategoryLayoutClasses.container}
+            style={CategoryLayoutStyle.container}
         >
-            <div style={CategorySelectionStyle.contentWrapper}>
+            <div style={CategoryLayoutStyle.contentWrapper}>
                 {/* Header Instructions */}
-                <div style={CategorySelectionStyle.header}>
-                    <h1 style={CategorySelectionStyle.title}>
-                        {categorySelectionTexts.titleFil}
+                <div style={CategoryHeaderStyle.header}>
+                    <h1 style={CategoryHeaderStyle.title}>
+                        {CategoryHeaderTexts.titleFil}
                     </h1>
-                    <p style={CategorySelectionStyle.subtitle}>
-                        {categorySelectionTexts.titleEn}
+                    <p style={CategoryHeaderStyle.subtitle}>
+                        {CategoryHeaderTexts.titleEn}
                     </p>
                 </div>
 
                 {/* Category Options */}
-                <div style={CategorySelectionStyle.cardsGrid}>
+                <div style={CategoryCardsStyle.cardsGrid}>
                     {/* Adult Button */}
                     <button
                         type="button"
                         onClick={() => chooseCategory("Adult")}
-                        style={CategorySelectionStyle.card}
-                        className="group transition-all duration-150 active:scale-95 hover:border-red-400 hover:shadow-lg"
+                        style={CategoryCardsStyle.card}
+                        className={CategoryCardsClasses.adultCard}
                     >
                         <div
-                            style={CategorySelectionStyle.adultIconTile}
-                            className="transition-transform group-hover:scale-105"
+                            style={CategoryCardsStyle.adultIconTile}
+                            className={CategoryCardsClasses.iconTile}
                         >
-                            <IconUser size={64} stroke={1.5} color={categorySelectionTheme.iconFill} />
+                            <IconUser size={64} stroke={1.5} color={categoryCardsTheme.iconFill} />
                         </div>
 
                         <div>
-                            <span style={CategorySelectionStyle.cardTitle}>
-                                {categorySelectionTexts.adultLabelFil}
+                            <span style={CategoryCardsStyle.cardTitle}>
+                                {CategoryCardsTexts.adultLabelFil}
                             </span>
-                            <span style={CategorySelectionStyle.cardSubtitle}>
-                                {categorySelectionTexts.adultLabelEn}
+                            <span style={CategoryCardsStyle.cardSubtitle}>
+                                {CategoryCardsTexts.adultLabelEn}
                             </span>
                         </div>
 
                         <div
-                            style={CategorySelectionStyle.ctaAdult}
-                            className="group-hover:translate-x-1 transition-transform"
+                            style={CategoryCardsStyle.ctaAdult}
+                            className={CategoryCardsClasses.cta}
                         >
-                            <span>{categorySelectionTexts.cta}</span>
+                            <span>{CategoryCardsTexts.cta}</span>
                             <IconArrowNarrowRight size={24} stroke={2} />
                         </div>
                     </button>
@@ -113,30 +118,30 @@ export default function CategorySelectionPage() {
                     <button
                         type="button"
                         onClick={() => chooseCategory("Pedia")}
-                        style={CategorySelectionStyle.card}
-                        className="group transition-all duration-150 active:scale-95 hover:border-sky-400 hover:shadow-lg"
+                        style={CategoryCardsStyle.card}
+                        className={CategoryCardsClasses.pediaCard}
                     >
                         <div
-                            style={CategorySelectionStyle.pediaIconTile}
-                            className="transition-transform group-hover:scale-105"
+                            style={CategoryCardsStyle.pediaIconTile}
+                            className={CategoryCardsClasses.iconTile}
                         >
-                            <IconMoodKid size={64} stroke={1.5} color={categorySelectionTheme.iconFill} />
+                            <IconMoodKid size={64} stroke={1.5} color={categoryCardsTheme.iconFill} />
                         </div>
 
                         <div>
-                            <span style={CategorySelectionStyle.cardTitle}>
-                                {categorySelectionTexts.pediaLabelFil}
+                            <span style={CategoryCardsStyle.cardTitle}>
+                                {CategoryCardsTexts.pediaLabelFil}
                             </span>
-                            <span style={CategorySelectionStyle.cardSubtitle}>
-                                {categorySelectionTexts.pediaLabelEn}
+                            <span style={CategoryCardsStyle.cardSubtitle}>
+                                {CategoryCardsTexts.pediaLabelEn}
                             </span>
                         </div>
 
                         <div
-                            style={CategorySelectionStyle.ctaPedia}
-                            className="group-hover:translate-x-1 transition-transform"
+                            style={CategoryCardsStyle.ctaPedia}
+                            className={CategoryCardsClasses.cta}
                         >
-                            <span>{categorySelectionTexts.cta}</span>
+                            <span>{CategoryCardsTexts.cta}</span>
                             <IconArrowNarrowRight size={24} stroke={2} />
                         </div>
                     </button>

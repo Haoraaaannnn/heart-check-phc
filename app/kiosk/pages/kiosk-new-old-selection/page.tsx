@@ -1,6 +1,7 @@
 import { createClient } from "@/lib/supabase/server";
 import PatientTypeCard from "@/app/kiosk/pages/kiosk-new-old-selection/components/PatientTypeCards";
 import { PatientCategory } from "@/app/kiosk/pages/kiosk-new-old-selection/types/PatientType";
+import { PatientTypeCardsClasses } from "@/app/kiosk/pages/kiosk-new-old-selection/constants/patientTypeCards";
 
 /**
  * Kiosk entrance page for patient category selection (`/kiosk/pages/kiosk-new-old-selection`).
@@ -24,7 +25,7 @@ export default async function KioskNewOldSelectionPage() {
         .order("order", { ascending: true });
 
     return (
-        <div className="grid w-full grid-cols-1 sm:grid-cols-2 gap-4 sm:gap-6 px-4 py-4">
+        <div className={PatientTypeCardsClasses.grid}>
             {patientTypes?.map((category: PatientCategory) => (
                 <PatientTypeCard key={category.id} patientCategory={category} />
             ))}

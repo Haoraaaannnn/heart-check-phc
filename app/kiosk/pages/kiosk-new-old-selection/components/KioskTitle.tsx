@@ -1,8 +1,11 @@
 "use client";
 
 import Image from "next/image";
-import { kioskNewOldTexts } from "@/app/kiosk/pages/kiosk-new-old-selection/constants/kioskNewOldTexts";
-import { KioskTitleStyle } from "@/app/kiosk/pages/kiosk-new-old-selection/constants/kioskNewOld";
+import { KioskTitleTexts } from "@/app/kiosk/pages/kiosk-new-old-selection/constants/kioskTitleTexts";
+import {
+    KioskTitleStyle,
+    KioskTitleClasses,
+} from "@/app/kiosk/pages/kiosk-new-old-selection/constants/kioskTitle";
 
 /** Props for {@link KioskTitle}. */
 interface KioskTitleProps {
@@ -27,26 +30,22 @@ export default function KioskTitle({ isLandscape }: KioskTitleProps) {
             <div style={KioskTitleStyle.titleWrapper}>
                 <span
                     style={KioskTitleStyle.title}
-                    className="[-webkit-text-stroke:1px_currentColor]"
+                    className={KioskTitleClasses.titleStroke}
                 >
-                    {kioskNewOldTexts.titleMain}{" "}
+                    {KioskTitleTexts.titleMain}{" "}
                     <span style={KioskTitleStyle.titleAccent}>
-                        {kioskNewOldTexts.titleAccent}
+                        {KioskTitleTexts.titleAccent}
                     </span>
                 </span>
             </div>
 
             {/* Hospital Building Illustration */}
-            <div
-                className={`relative mx-auto aspect-[16/9] w-full overflow-hidden rounded-2xl shadow-sm ${
-                    isLandscape ? "max-w-[760px]" : "max-w-[900px]"
-                }`}
-            >
+            <div className={KioskTitleClasses.titleImageWrapper(isLandscape)}>
                 <Image
                     src="/images/PHC.jpg"
-                    alt={kioskNewOldTexts.imageAlt}
+                    alt={KioskTitleTexts.imageAlt}
                     fill
-                    className="object-cover"
+                    className={KioskTitleClasses.titleImage}
                     priority
                 />
             </div>

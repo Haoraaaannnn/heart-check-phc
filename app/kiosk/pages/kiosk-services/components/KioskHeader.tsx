@@ -48,22 +48,10 @@ export default function KioskHeader() {
     }, []);
 
     return (
-        <header
-            style={{
-                ...KioskHeaderStyle.container,
-                position: "relative",
-                overflow: "hidden",
-            }}
-        >
+        <header style={KioskHeaderStyle.container}>
             <KioskFooterWave />
 
-            <div
-                style={{
-                    ...KioskHeaderStyle.brand,
-                    position: "relative",
-                    zIndex: 1,
-                }}
-            >
+            <div style={KioskHeaderStyle.brand}>
                 <span style={KioskHeaderStyle.brandPrimary}>
                     {KioskHeaderTexts.headerTitle}
                 </span>
@@ -73,13 +61,7 @@ export default function KioskHeader() {
                 </span>
             </div>
 
-            <div
-                style={{
-                    ...KioskHeaderStyle.clock,
-                    position: "relative",
-                    zIndex: 1,
-                }}
-            >
+            <div style={KioskHeaderStyle.clock}>
                 <p style={KioskHeaderStyle.time}>{time}</p>
 
                 <div style={KioskHeaderStyle.date}>
