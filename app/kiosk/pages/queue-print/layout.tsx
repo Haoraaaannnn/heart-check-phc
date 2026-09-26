@@ -4,7 +4,7 @@ import PrintHeader from "@/app/kiosk/pages/queue-print/components/PrintHeader";
 import PrintFooter from "@/app/kiosk/pages/queue-print/components/PrintFooter";
 import { useIsLandscape } from "@/hooks/useIsLandscape";
 import { useIsMounted } from "@/hooks/useIsMounted";
-import { QueuePrintClasses } from "@/app/kiosk/pages/queue-print/constants/queuePrint";
+import { QueuePrintLayoutClasses } from "@/app/kiosk/pages/queue-print/constants/queuePrintLayout";
 
 /** Props for {@link QueuePrintLayout}. */
 interface QueuePrintLayoutProps {
@@ -27,9 +27,9 @@ export default function QueuePrintLayout({ children }: QueuePrintLayoutProps) {
     const mounted = useIsMounted();
 
     return (
-        <div className={QueuePrintClasses.layoutContainer(mounted, isLandscape)}>
+        <div className={QueuePrintLayoutClasses.layoutContainer(mounted, isLandscape)}>
             <PrintHeader />
-            <main className={QueuePrintClasses.layoutMain}>
+            <main className={QueuePrintLayoutClasses.layoutMain}>
                 {children}
             </main>
             <PrintFooter />

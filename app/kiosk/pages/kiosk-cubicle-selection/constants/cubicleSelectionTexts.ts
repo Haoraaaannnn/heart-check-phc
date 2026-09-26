@@ -1,10 +1,15 @@
 /**
- * Text copy for the kiosk cubicle selection screen.
- *
- * Provides bilingual greeting and instructions prompting consultation patients
- * to select their designated doctor cubicle.
+ * @file cubicleSelectionTexts.ts
+ * @description Centralized barrel re-exporting component-scoped text constants for cubicle selection.
+ */
+
+import { CubicleHeaderTexts } from "./cubicleHeaderTexts";
+
+export * from "./cubicleHeaderTexts";
+
+/**
+ * Composite text copy dictionary for cubicle selection.
  */
 export const cubicleSelectionTexts = {
-    headerTitle: "Magandang Araw! Welcome to Heart Check PHC!",
-    headerSubtitle: "Pumili at pindutin ang cubicle na naangkop sa inyo:",
+    ...CubicleHeaderTexts,
 } as const;

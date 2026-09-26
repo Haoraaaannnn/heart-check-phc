@@ -1,11 +1,11 @@
 "use client";
 
 import Image from "next/image";
-import { kioskNewOldTexts } from "@/app/kiosk/pages/kiosk-new-old-selection/constants/kioskNewOldTexts";
+import { KioskTitleTexts } from "@/app/kiosk/pages/kiosk-new-old-selection/constants/kioskTitleTexts";
 import {
     KioskTitleStyle,
-    KioskNewOldClasses,
-} from "@/app/kiosk/pages/kiosk-new-old-selection/constants/kioskNewOld";
+    KioskTitleClasses,
+} from "@/app/kiosk/pages/kiosk-new-old-selection/constants/kioskTitle";
 
 /** Props for {@link KioskTitle}. */
 interface KioskTitleProps {
@@ -30,22 +30,22 @@ export default function KioskTitle({ isLandscape }: KioskTitleProps) {
             <div style={KioskTitleStyle.titleWrapper}>
                 <span
                     style={KioskTitleStyle.title}
-                    className={KioskNewOldClasses.titleStroke}
+                    className={KioskTitleClasses.titleStroke}
                 >
-                    {kioskNewOldTexts.titleMain}{" "}
+                    {KioskTitleTexts.titleMain}{" "}
                     <span style={KioskTitleStyle.titleAccent}>
-                        {kioskNewOldTexts.titleAccent}
+                        {KioskTitleTexts.titleAccent}
                     </span>
                 </span>
             </div>
 
             {/* Hospital Building Illustration */}
-            <div className={KioskNewOldClasses.titleImageWrapper(isLandscape)}>
+            <div className={KioskTitleClasses.titleImageWrapper(isLandscape)}>
                 <Image
                     src="/images/PHC.jpg"
-                    alt={kioskNewOldTexts.imageAlt}
+                    alt={KioskTitleTexts.imageAlt}
                     fill
-                    className={KioskNewOldClasses.titleImage}
+                    className={KioskTitleClasses.titleImage}
                     priority
                 />
             </div>

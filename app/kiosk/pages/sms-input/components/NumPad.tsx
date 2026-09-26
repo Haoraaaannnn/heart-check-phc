@@ -1,7 +1,7 @@
 import {
     SMSNumPadStyle,
-    SMSInputClasses,
-} from "@/app/kiosk/pages/sms-input/constants/smsInput";
+    SMSNumPadClasses,
+} from "@/app/kiosk/pages/sms-input/constants/smsNumPad";
 
 /** Props for {@link NumPad}. */
 interface NumPadProps {
@@ -31,7 +31,7 @@ export default function NumPad({ onDigit }: NumPadProps) {
                         onClick={() => onDigit(btn)}
                         aria-label={`Digit ${btn}`}
                         style={SMSNumPadStyle.keyButton}
-                        className={SMSInputClasses.keypadBtn}
+                        className={SMSNumPadClasses.keypadBtn}
                     >
                         {btn}
                     </button>

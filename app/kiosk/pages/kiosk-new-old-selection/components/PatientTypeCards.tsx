@@ -5,9 +5,9 @@ import { PatientCategory } from "@/app/kiosk/pages/kiosk-new-old-selection/types
 import { useKioskNavigate } from "@/app/kiosk/hooks/useKioskNavigate";
 import {
     PatientTypeCardStyle,
-    KioskNewOldClasses,
-    kioskNewOldColors,
-} from "@/app/kiosk/pages/kiosk-new-old-selection/constants/kioskNewOld";
+    PatientTypeCardsClasses,
+    patientTypeCardColors,
+} from "@/app/kiosk/pages/kiosk-new-old-selection/constants/patientTypeCards";
 
 /**
  * Tabler icons index for dynamic resolution via `patientCategory.icon_src`.
@@ -44,14 +44,14 @@ export default function PatientTypeCard({ patientCategory }: PatientTypeCardProp
             type="button"
             onClick={handleSelect}
             style={PatientTypeCardStyle.card}
-            className={KioskNewOldClasses.card}
+            className={PatientTypeCardsClasses.card}
         >
             {/* Brand-colored icon container */}
             <div
                 style={PatientTypeCardStyle.iconWrapper}
-                className={KioskNewOldClasses.cardIconWrapper}
+                className={PatientTypeCardsClasses.cardIconWrapper}
             >
-                <Icon size={56} stroke={1.5} color={kioskNewOldColors.white} className={KioskNewOldClasses.cardIcon} />
+                <Icon size={56} stroke={1.5} color={patientTypeCardColors.white} className={PatientTypeCardsClasses.cardIcon} />
             </div>
 
             {/* Category Labels */}
@@ -69,8 +69,8 @@ export default function PatientTypeCard({ patientCategory }: PatientTypeCardProp
             <TablerIcons.IconArrowNarrowRight
                 size={36}
                 stroke={2}
-                color={kioskNewOldColors.arrowColor}
-                className={KioskNewOldClasses.cardArrow}
+                color={patientTypeCardColors.arrowColor}
+                className={PatientTypeCardsClasses.cardArrow}
             />
         </button>
     );

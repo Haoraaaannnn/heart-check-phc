@@ -4,7 +4,7 @@ import KioskTitle from "@/app/kiosk/pages/kiosk-new-old-selection/components/Kio
 import PatientTypeBanner from "@/app/kiosk/pages/kiosk-new-old-selection/components/PatientTypeBanner";
 import { useIsLandscape } from "@/hooks/useIsLandscape";
 import { useIsMounted } from "@/hooks/useIsMounted";
-import { KioskNewOldClasses } from "@/app/kiosk/pages/kiosk-new-old-selection/constants/kioskNewOld";
+import { KioskNewOldLayoutClasses } from "@/app/kiosk/pages/kiosk-new-old-selection/constants/kioskNewOldLayout";
 
 /** Props for {@link KioskNewOldSelectionLayout}. */
 interface KioskNewOldSelectionLayoutProps {
@@ -34,29 +34,29 @@ export default function KioskNewOldSelectionLayout({
     const mounted = useIsMounted();
 
     return (
-        <div className={KioskNewOldClasses.layoutOverlay(mounted)}>
-            <main className={KioskNewOldClasses.layoutMain(isLandscape)}>
-                <div className={KioskNewOldClasses.layoutCenterWrapper}>
+        <div className={KioskNewOldLayoutClasses.layoutOverlay(mounted)}>
+            <main className={KioskNewOldLayoutClasses.layoutMain(isLandscape)}>
+                <div className={KioskNewOldLayoutClasses.layoutCenterWrapper}>
                     {isLandscape ? (
                         /* LANDSCAPE DUAL-COLUMN VIEW */
-                        <div className={KioskNewOldClasses.layoutLandscapeRow}>
+                        <div className={KioskNewOldLayoutClasses.layoutLandscapeRow}>
                             {/* Left column: Hospital Title & Image */}
-                            <div className={KioskNewOldClasses.layoutLandscapeLeftCol}>
+                            <div className={KioskNewOldLayoutClasses.layoutLandscapeLeftCol}>
                                 <KioskTitle isLandscape={true} />
                             </div>
 
                             {/* Right column: Banner Instructions & Cards */}
-                            <div className={KioskNewOldClasses.layoutLandscapeRightCol}>
+                            <div className={KioskNewOldLayoutClasses.layoutLandscapeRightCol}>
                                 <PatientTypeBanner />
-                                <div className={KioskNewOldClasses.layoutChildrenWrapper}>{children}</div>
+                                <div className={KioskNewOldLayoutClasses.layoutChildrenWrapper}>{children}</div>
                             </div>
                         </div>
                     ) : (
                         /* PORTRAIT STACKED VIEW */
-                        <div className={KioskNewOldClasses.layoutPortraitStack}>
+                        <div className={KioskNewOldLayoutClasses.layoutPortraitStack}>
                             <KioskTitle isLandscape={false} />
                             <PatientTypeBanner />
-                            <div className={KioskNewOldClasses.layoutChildrenWrapper}>{children}</div>
+                            <div className={KioskNewOldLayoutClasses.layoutChildrenWrapper}>{children}</div>
                         </div>
                     )}
                 </div>

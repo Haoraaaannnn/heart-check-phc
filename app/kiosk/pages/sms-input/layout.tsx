@@ -1,4 +1,4 @@
-import { SMSInputClasses } from "@/app/kiosk/pages/sms-input/constants/smsInput";
+import { SMSLayoutClasses } from "@/app/kiosk/pages/sms-input/constants/smsLayout";
 
 /** Props for {@link SMSInputLayout}. */
 interface SMSInputLayoutProps {
@@ -14,7 +14,7 @@ interface SMSInputLayoutProps {
  */
 export default function SMSInputLayout({ children }: SMSInputLayoutProps) {
     return (
-        <div className={SMSInputClasses.layoutContainer}>
+        <div className={SMSLayoutClasses.layoutContainer}>
             {children}
         </div>
     );

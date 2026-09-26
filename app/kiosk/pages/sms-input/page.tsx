@@ -2,7 +2,7 @@ import { createClient } from "@/lib/supabase/server";
 import SMSBanner from "@/app/kiosk/pages/sms-input/components/SMSBanner";
 import KioskPhoneEntry from "@/app/kiosk/pages/sms-input/components/KioskPhoneEntry";
 import { notFound } from "next/navigation";
-import { SMSInputClasses } from "@/app/kiosk/pages/sms-input/constants/smsInput";
+import { SMSLayoutClasses } from "@/app/kiosk/pages/sms-input/constants/smsLayout";
 
 /** Props Next.js passes to the SMS phone input page. */
 interface SMSPageProps {
@@ -42,15 +42,15 @@ export default async function SMSPage({ searchParams }: SMSPageProps) {
     }
 
     return (
-        <div className={SMSInputClasses.pageContainer}>
-            <div className={SMSInputClasses.pageContent}>
+        <div className={SMSLayoutClasses.pageContainer}>
+            <div className={SMSLayoutClasses.pageContent}>
                 {/* Service Brand Banner */}
-                <div className={SMSInputClasses.pageBannerWrapper}>
+                <div className={SMSLayoutClasses.pageBannerWrapper}>
                     <SMSBanner service={service} />
                 </div>
 
                 {/* Keypad and Phone Entry Area */}
-                <div className={SMSInputClasses.pageEntryWrapper}>
+                <div className={SMSLayoutClasses.pageEntryWrapper}>
                     <KioskPhoneEntry
                         service={service}
                         patientNum={patientNum}

@@ -1,5 +1,5 @@
-import { queuePrintTexts } from "@/app/kiosk/pages/queue-print/constants/queuePrintTexts";
-import { PrintFooterStyle } from "@/app/kiosk/pages/queue-print/constants/queuePrint";
+import { PrintFooterTexts } from "@/app/kiosk/pages/queue-print/constants/printFooterTexts";
+import { PrintFooterStyle } from "@/app/kiosk/pages/queue-print/constants/printFooter";
 
 /**
  * Bottom guidance notice informing the patient that their ticket is printing.
@@ -10,10 +10,10 @@ export default function PrintFooter() {
     return (
         <div style={PrintFooterStyle.container}>
             <p style={PrintFooterStyle.noticeFil}>
-                {queuePrintTexts.footerFil}
+                {PrintFooterTexts.footerFil}
             </p>
             <p style={PrintFooterStyle.noticeEn}>
-                {queuePrintTexts.footerEn}
+                {PrintFooterTexts.footerEn}
             </p>
         </div>
     );

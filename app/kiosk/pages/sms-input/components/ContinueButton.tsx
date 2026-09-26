@@ -3,11 +3,12 @@
 import Link from "next/link";
 import { Service } from "@/types/Services";
 import ConfirmationModal from "@/components/modals/ConfirmationModal";
-import { smsInputTexts } from "@/app/kiosk/pages/sms-input/constants/smsInputTexts";
+import { SMSContinueButtonTexts } from "@/app/kiosk/pages/sms-input/constants/smsContinueButtonTexts";
+import { SMSModalTexts } from "@/app/kiosk/pages/sms-input/constants/smsModalTexts";
 import {
     SMSContinueButtonStyle,
-    SMSInputClasses,
-} from "@/app/kiosk/pages/sms-input/constants/smsInput";
+    SMSContinueButtonClasses,
+} from "@/app/kiosk/pages/sms-input/constants/smsContinueButton";
 
 /** Props for {@link ContinueButton}. */
 interface ContinueButtonProps {
@@ -72,9 +73,9 @@ export default function ContinueButton({
                 onClick={disabled ? undefined : onContinue}
                 disabled={disabled}
                 style={SMSContinueButtonStyle.continueBtn}
-                className={SMSInputClasses.continueBtn}
+                className={SMSContinueButtonClasses.continueBtn}
             >
-                {smsInputTexts.continueBtn}
+                {SMSContinueButtonTexts.continueBtn}
             </button>
 
             {/* Secondary Controls (Cancel and Skip) */}
@@ -82,30 +83,30 @@ export default function ContinueButton({
                 <Link
                     href={href}
                     style={SMSContinueButtonStyle.cancelBtn}
-                    className={SMSInputClasses.secondaryBtn}
+                    className={SMSContinueButtonClasses.secondaryBtn}
                 >
-                    {smsInputTexts.cancelBtn}
+                    {SMSContinueButtonTexts.cancelBtn}
                 </Link>
 
                 <button
                     type="button"
                     onClick={onSkip}
                     style={SMSContinueButtonStyle.cancelBtn}
-                    className={SMSInputClasses.secondaryBtn}
+                    className={SMSContinueButtonClasses.secondaryBtn}
                 >
-                    {smsInputTexts.skipBtn}
+                    {SMSContinueButtonTexts.skipBtn}
                 </button>
             </div>
 
             {/* Phone Number Verification Modal */}
             <ConfirmationModal
                 isOpen={showContinueModal}
-                titleFil={smsInputTexts.continueModalTitleFil}
-                titleEng={smsInputTexts.continueModalTitleEn}
-                messageFil={smsInputTexts.continueModalMsgFil}
-                messageEng={smsInputTexts.continueModalMsgEn}
-                confirmText={smsInputTexts.continueModalConfirm}
-                cancelText={smsInputTexts.continueModalCancel}
+                titleFil={SMSModalTexts.continueModalTitleFil}
+                titleEng={SMSModalTexts.continueModalTitleEn}
+                messageFil={SMSModalTexts.continueModalMsgFil}
+                messageEng={SMSModalTexts.continueModalMsgEn}
+                confirmText={SMSModalTexts.continueModalConfirm}
+                cancelText={SMSModalTexts.continueModalCancel}
                 phone={phone}
                 onConfirm={onContinueConfirm}
                 onCancel={onContinueCancel}
@@ -114,13 +115,13 @@ export default function ContinueButton({
             {/* Skip Warning Modal */}
             <ConfirmationModal
                 isOpen={showSkipModal}
-                titleFil={smsInputTexts.skipModalTitleFil}
-                titleEng={smsInputTexts.skipModalTitleEn}
-                messageFil={smsInputTexts.skipModalMsgFil}
-                messageEng={smsInputTexts.skipModalMsgEn}
+                titleFil={SMSModalTexts.skipModalTitleFil}
+                titleEng={SMSModalTexts.skipModalTitleEn}
+                messageFil={SMSModalTexts.skipModalMsgFil}
+                messageEng={SMSModalTexts.skipModalMsgEn}
                 phone={phone}
-                confirmText={smsInputTexts.skipModalConfirm}
-                cancelText={smsInputTexts.skipModalCancel}
+                confirmText={SMSModalTexts.skipModalConfirm}
+                cancelText={SMSModalTexts.skipModalCancel}
                 onConfirm={onSkipConfirm}
                 onCancel={onSkipCancel}
                 isDangerous={true}

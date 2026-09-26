@@ -1,5 +1,5 @@
-import { queuePrintTexts } from "@/app/kiosk/pages/queue-print/constants/queuePrintTexts";
-import { PrintHeaderStyle } from "@/app/kiosk/pages/queue-print/constants/queuePrint";
+import { PrintHeaderTexts } from "@/app/kiosk/pages/queue-print/constants/printHeaderTexts";
+import { PrintHeaderStyle } from "@/app/kiosk/pages/queue-print/constants/printHeader";
 
 /**
  * Top acknowledgement header on the ticket printing completion screen.
@@ -10,10 +10,10 @@ export default function PrintHeader() {
     return (
         <div style={PrintHeaderStyle.container}>
             <h1 style={PrintHeaderStyle.title}>
-                {queuePrintTexts.headerFil}
+                {PrintHeaderTexts.headerFil}
             </h1>
             <p style={PrintHeaderStyle.subtitle}>
-                {queuePrintTexts.headerEn}
+                {PrintHeaderTexts.headerEn}
             </p>
         </div>
     );

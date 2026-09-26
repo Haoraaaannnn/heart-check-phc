@@ -1,7 +1,7 @@
 "use client";
 
-import { cubicleSelectionTexts } from "@/app/kiosk/pages/kiosk-cubicle-selection/constants/cubicleSelectionTexts";
-import { CubicleHeaderStyle } from "@/app/kiosk/pages/kiosk-cubicle-selection/constants/cubicleSelection";
+import { CubicleHeaderTexts } from "@/app/kiosk/pages/kiosk-cubicle-selection/constants/cubicleHeaderTexts";
+import { CubicleHeaderStyle } from "@/app/kiosk/pages/kiosk-cubicle-selection/constants/cubicleHeader";
 
 /**
  * Top header banner on the cubicle selection screen.
@@ -15,11 +15,11 @@ export default function CubicleHeader() {
     return (
         <div style={CubicleHeaderStyle.container}>
             <h1 style={CubicleHeaderStyle.title}>
-                {cubicleSelectionTexts.headerTitle}
+                {CubicleHeaderTexts.headerTitle}
             </h1>
 
             <p style={CubicleHeaderStyle.subtitle}>
-                {cubicleSelectionTexts.headerSubtitle}
+                {CubicleHeaderTexts.headerSubtitle}
             </p>
         </div>
     );

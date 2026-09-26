@@ -8,8 +8,8 @@ import { supabase } from "@/lib/supabase";
 import {
     QUEUE_PRINT_REDIRECT_DELAY_MS,
     QueuePrintTicketStyle,
-} from "@/app/kiosk/pages/queue-print/constants/queuePrint";
-import { queuePrintTexts } from "@/app/kiosk/pages/queue-print/constants/queuePrintTexts";
+} from "@/app/kiosk/pages/queue-print/constants/queuePrintTicket";
+import { QueuePrintTicketTexts } from "@/app/kiosk/pages/queue-print/constants/queuePrintTicketTexts";
 
 /** Props for {@link QueuePrintContent}. */
 interface QueuePrintContentProps {
@@ -168,7 +168,7 @@ export default function QueuePrintContent({
             {/* Queue Number Callout */}
             <div style={QueuePrintTicketStyle.queueWrapper}>
                 <span style={QueuePrintTicketStyle.queueLabel}>
-                    {queuePrintTexts.queueLabel}
+                    {QueuePrintTicketTexts.queueLabel}
                 </span>
 
                 <span style={QueuePrintTicketStyle.queueNumber}>

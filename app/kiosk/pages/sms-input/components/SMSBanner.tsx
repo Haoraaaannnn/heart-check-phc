@@ -1,7 +1,7 @@
 "use client";
 
 import { Service } from "@/types/Services";
-import { SMSBannerStyle } from "@/app/kiosk/pages/sms-input/constants/smsInput";
+import { SMSBannerStyle } from "@/app/kiosk/pages/sms-input/constants/smsBanner";
 
 /** Props for {@link SMSBanner}. */
 interface SMSBannerProps {

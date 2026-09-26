@@ -1,7 +1,7 @@
 "use client";
 
-import { kioskNewOldTexts } from "@/app/kiosk/pages/kiosk-new-old-selection/constants/kioskNewOldTexts";
-import { PatientTypeBannerStyle } from "@/app/kiosk/pages/kiosk-new-old-selection/constants/kioskNewOld";
+import { PatientTypeBannerTexts } from "@/app/kiosk/pages/kiosk-new-old-selection/constants/patientTypeBannerTexts";
+import { PatientTypeBannerStyle } from "@/app/kiosk/pages/kiosk-new-old-selection/constants/patientTypeBanner";
 
 /**
  * Welcome greeting and instruction banner on the patient type selection screen.
@@ -15,11 +15,11 @@ export default function PatientTypeBanner() {
     return (
         <div style={PatientTypeBannerStyle.container}>
             <h1 style={PatientTypeBannerStyle.title}>
-                {kioskNewOldTexts.bannerTitle}
+                {PatientTypeBannerTexts.bannerTitle}
             </h1>
 
             <p style={PatientTypeBannerStyle.subtitle}>
-                {kioskNewOldTexts.bannerSubtitle}
+                {PatientTypeBannerTexts.bannerSubtitle}
             </p>
         </div>
     );

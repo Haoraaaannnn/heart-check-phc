@@ -1,7 +1,6 @@
 import { Service } from "@/types/Services";
-import { smsInputTexts } from "@/app/kiosk/pages/sms-input/constants/smsInputTexts";
-
-import { SMSInstructionStyle } from "@/app/kiosk/pages/sms-input/constants/smsInput";
+import { SMSInstructionTexts } from "@/app/kiosk/pages/sms-input/constants/smsInstructionTexts";
+import { SMSInstructionStyle } from "@/app/kiosk/pages/sms-input/constants/smsInstruction";
 
 /** Props for {@link SMSInstruction}. */
 interface SMSInstructionProps {
@@ -19,11 +18,11 @@ export default function SMSInstruction({ service: _service }: SMSInstructionProp
     return (
         <div style={SMSInstructionStyle.container}>
             <p style={SMSInstructionStyle.instructionFil}>
-                {smsInputTexts.instructionFil}
+                {SMSInstructionTexts.instructionFil}
             </p>
             <div style={SMSInstructionStyle.divider} />
             <p style={SMSInstructionStyle.instructionEn}>
-                {smsInputTexts.instructionEn}
+                {SMSInstructionTexts.instructionEn}
             </p>
         </div>
     );

@@ -5,8 +5,8 @@ import { IconBackspace } from "@tabler/icons-react";
 import {
     SMS_PHONE_PLACEHOLDER,
     SMSPhoneInputStyle,
-    SMSInputClasses,
-} from "@/app/kiosk/pages/sms-input/constants/smsInput";
+    SMSPhoneInputClasses,
+} from "@/app/kiosk/pages/sms-input/constants/smsPhoneInput";
 
 /** Props for {@link PhoneInput}. */
 interface PhoneInputProps {
@@ -55,9 +55,9 @@ export default function PhoneInput({ phone, onDelete, service: _service }: Phone
                 onClick={onDelete}
                 aria-label="Delete last digit"
                 style={SMSPhoneInputStyle.backspaceBtn}
-                className={SMSInputClasses.backspaceBtn}
+                className={SMSPhoneInputClasses.backspaceBtn}
             >
-                <IconBackspace size={28} className={SMSInputClasses.backspaceIcon} />
+                <IconBackspace size={28} className={SMSPhoneInputClasses.backspaceIcon} />
             </button>
         </div>
     );

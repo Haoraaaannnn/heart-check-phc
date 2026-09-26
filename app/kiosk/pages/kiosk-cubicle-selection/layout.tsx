@@ -3,7 +3,7 @@
 import CubicleHeader from "@/app/kiosk/pages/kiosk-cubicle-selection/components/CubicleHeader";
 import { useIsLandscape } from "@/hooks/useIsLandscape";
 import { useIsMounted } from "@/hooks/useIsMounted";
-import { CubicleSelectionClasses } from "@/app/kiosk/pages/kiosk-cubicle-selection/constants/cubicleSelection";
+import { CubicleLayoutClasses } from "@/app/kiosk/pages/kiosk-cubicle-selection/constants/cubicleLayout";
 
 /** Props for {@link KioskCubicleSelectionLayout}. */
 interface KioskCubicleSelectionLayoutProps {
@@ -31,12 +31,12 @@ export default function KioskCubicleSelectionLayout({
     const mounted = useIsMounted();
 
     return (
-        <div className={CubicleSelectionClasses.layoutOverlay(mounted)}>
-            <div className={CubicleSelectionClasses.layoutContainer}>
-                <div className={CubicleSelectionClasses.layoutMain(isLandscape)}>
-                    <div className={CubicleSelectionClasses.layoutInner(isLandscape)}>
+        <div className={CubicleLayoutClasses.layoutOverlay(mounted)}>
+            <div className={CubicleLayoutClasses.layoutContainer}>
+                <div className={CubicleLayoutClasses.layoutMain(isLandscape)}>
+                    <div className={CubicleLayoutClasses.layoutInner(isLandscape)}>
                         <CubicleHeader />
-                        <div className={CubicleSelectionClasses.layoutChildren}>{children}</div>
+                        <div className={CubicleLayoutClasses.layoutChildren}>{children}</div>
                     </div>
                 </div>
             </div>

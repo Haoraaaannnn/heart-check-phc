@@ -3,7 +3,7 @@ import { redirect } from "next/navigation";
 import CubicleCard from "@/app/kiosk/pages/kiosk-cubicle-selection/components/CubicleCard";
 import { CubicleSelectorType } from "@/app/kiosk/pages/kiosk-cubicle-selection/types/CubicleSelectorType";
 import { getTimestamp } from "@/lib/logger";
-import { CubicleSelectionClasses } from "@/app/kiosk/pages/kiosk-cubicle-selection/constants/cubicleSelection";
+import { CubicleCardClasses } from "@/app/kiosk/pages/kiosk-cubicle-selection/constants/cubicleCard";
 
 /** Props Next.js passes to the cubicle selection page. */
 interface KioskCubicleSelectionPageProps {
@@ -87,7 +87,7 @@ export default async function KioskCubicleSelectionPage({
     }
 
     return (
-        <div className={CubicleSelectionClasses.grid}>
+        <div className={CubicleCardClasses.grid}>
             {cubicles?.map((cubicle: CubicleSelectorType) => (
                 <CubicleCard
                     key={cubicle.id}
