@@ -167,7 +167,7 @@ cols = ["created_at", "phoneNum", "service",
          "consult_start", "consult_end", "is_historical"]  # added here
 ```
 
-⚠️ Test on one sheet before running against all files — the service role key bypasses RLS entirely, so a mistake here isn't caught by any policy.
+WARNING: Test on one sheet before running against all files — the service role key bypasses RLS entirely, so a mistake here isn't caught by any policy.
 
 ## Still Open — Not Yet Fixed
 

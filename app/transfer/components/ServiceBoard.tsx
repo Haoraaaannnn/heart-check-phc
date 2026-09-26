@@ -1,3 +1,14 @@
+/**
+ * @fileoverview Non-scrollable ServiceBoard orchestrating Queue Panel, Counters, and Cubicles.
+ *
+ * Implements a non-scrollable, fit-to-screen dashboard layout:
+ * - Left column (4 cols): Active queue and idle patients panel (the only vertically scrollable component).
+ * - Right column (8 cols): Registration counters in a compact horizontal grid and cubicle stations in a responsive grid.
+ * - Zero page-level or station-level scrolling, ensuring all components are directly visible on screen.
+ *
+ * @module app/transfer/components/ServiceBoard
+ */
+
 'use client';
 
 import React from 'react';
@@ -5,11 +16,12 @@ import { Cubicle, Patient } from '@/types/Types';
 import { QueuePanel } from './QueuePanel';
 import { RegistrationCounterSection } from './RegistrationCounterSection';
 import { CubicleCard } from './CubicleCard';
-import { ScrollArea } from '@/components/reusables/ScrollArea';
+import { SelectionBanner } from './SelectionBanner';
 import { transferTexts } from '../constants/transferTexts';
+import { SelectedTransferPatient } from '../types/transfer';
 
 /**
- * Props for `ServiceBoard`.
+ * Props for {@link ServiceBoard}.
  */
 export interface ServiceBoardProps {
   /** Service category identifier. */
@@ -22,7 +34,7 @@ export interface ServiceBoardProps {
   cubicles: Cubicle[];
   /** Map of assigned patients by cubicle number. */
   assignedPatients: Record<string, Patient[]>;
-  /** Whether drag-and-drop assignment is active. */
+  /** Whether drag-and-drop or tap assignment is active. */
   isDraggable: boolean;
   /** Currently dragged patient, if any. */
   draggedPatient?: Patient | null;
@@ -68,16 +80,26 @@ export interface ServiceBoardProps {
   onReleaseFromCounter?: (patient: Patient) => void;
   /** Allowed counter numbers. */
   allowedCounters?: number[];
+
+  // Click-to-Select Tablet Interaction Mode Props
+  /** Currently selected patient in Click-to-Select mode. */
+  selectedPatient?: SelectedTransferPatient | null;
+  /** Callback triggered when user taps an active queue patient to select. */
+  onSelectQueuePatient?: (patient: Patient) => void;
+  /** Callback triggered when user taps a cubicle patient to select. */
+  onSelectCubiclePatient?: (patient: Patient, cubicleNum: string) => void;
+  /** Callback triggered when user taps a registration counter patient to select. */
+  onSelectCounterPatient?: (patient: Patient, counterNum: number) => void;
+  /** Callback triggered when user taps an available cubicle to assign the selected patient. */
+  onTargetCubicleClick?: (cubicleNum: string) => void;
+  /** Callback triggered when user taps a target counter to move the selected patient. */
+  onTargetCounterClick?: (counterNum: number) => void;
+  /** Callback to cancel patient selection. */
+  onCancelSelection?: () => void;
 }
 
 /**
- * Shared two-column board orchestrating the queue panel on the left and station list on the right.
- *
- * @remarks
- * **List Transformation & Architecture:**
- * - Left column: Dedicated queue and idle operations panel.
- * - Right column: Registration counters and cubicles structured as clear, vertical list lanes.
- * - Responsive layout stacks gracefully on mobile / narrow tablet screens.
+ * ServiceBoard presenting Queue, Counters, and Cubicles on screen without scrolling.
  *
  * @param props - All data and interaction handlers for the service board.
  * @returns The rendered ServiceBoard component.
@@ -110,90 +132,133 @@ export function ServiceBoard({
   onRegDragStart,
   onReleaseFromCounter,
   allowedCounters,
+  selectedPatient,
+  onSelectQueuePatient,
+  onSelectCubiclePatient,
+  onSelectCounterPatient,
+  onTargetCubicleClick,
+  onTargetCounterClick,
+  onCancelSelection,
 }: ServiceBoardProps) {
+  const hasRegistrationCounters = Boolean(
+    registrationPatients !== undefined && onReleaseFromCounter
+  );
+
   return (
-    <div className="grid grid-cols-1 lg:grid-cols-12 gap-6 items-start">
-      {/* Left Column: Queue & Idle Panel (4 cols on lg, 3.5 on xl) */}
-      <div className="lg:col-span-4 xl:col-span-4 space-y-4">
-        <QueuePanel
-          onProgressPatients={onProgressPatients}
-          idlePatients={idlePatients}
-          isDraggable={isDraggable}
-          selectedCategory={category}
-          draggedPatientId={draggedPatient?.id}
-          onPointerDown={onPointerDownFromQueue}
-          onDragStart={onDragStartFromQueue}
-          onSpeak={onSpeak}
-          onAssignNow={onAssignNow}
-          speakingId={speakingId}
-          warnAfterSeconds={warnAfterSeconds}
-          onActivateIdle={onActivateIdle}
-          onRemoveIdle={onRemoveIdle}
-        />
-      </div>
-
-      {/* Right Column: Registration & Cubicles List (8 cols on lg, 8 on xl) */}
-      <div className="lg:col-span-8 xl:col-span-8 space-y-4">
-        {/* Registration Counters (if available for this flow) */}
-        {registrationPatients !== undefined && onReleaseFromCounter && (
-          <RegistrationCounterSection
-            patients={registrationPatients}
-            draggedPatient={regDraggedPatient ?? null}
-            dragOverCounter={dragOverCounter ?? null}
-            onPointerDown={onRegPointerDown}
-            onDragStart={onRegDragStart}
-            onRelease={onReleaseFromCounter}
-            allowedCounters={allowedCounters}
+    <>
+      <div className="h-full flex-1 flex flex-col md:grid md:grid-cols-12 gap-3 min-h-0 overflow-hidden">
+        {/* Left Column: Queue & Idle Panel (4 cols on tablet and desktop) */}
+        <div className="md:col-span-4 lg:col-span-4 h-full flex flex-col min-h-0 overflow-hidden">
+          <QueuePanel
+            onProgressPatients={onProgressPatients}
+            idlePatients={idlePatients}
+            isDraggable={isDraggable}
+            selectedCategory={category}
+            draggedPatientId={draggedPatient?.id}
+            selectedPatient={selectedPatient}
+            onSelectQueuePatient={onSelectQueuePatient}
+            onPointerDown={onPointerDownFromQueue}
+            onDragStart={onDragStartFromQueue}
+            onSpeak={onSpeak}
+            onAssignNow={onAssignNow}
+            speakingId={speakingId}
+            warnAfterSeconds={warnAfterSeconds}
+            onActivateIdle={onActivateIdle}
+            onRemoveIdle={onRemoveIdle}
           />
-        )}
+        </div>
 
-        {/* Cubicles Station List */}
-        <div className="bg-white border border-slate-200 rounded-2xl shadow-xs p-4">
-          <div className="flex items-center justify-between gap-2 mb-3 pb-2 border-b border-slate-100">
-            <div className="flex items-center gap-2">
-              <span className="w-2.5 h-2.5 rounded-full bg-slate-700 inline-block" />
-              <h2 className="text-slate-700 font-bold text-xs tracking-wider uppercase">
-                {transferTexts.cubiclesHeading}
-              </h2>
-              <span className="text-[11px] font-bold px-1.5 py-0.5 rounded-full bg-slate-100 text-slate-700">
-                {cubicles.length}
+        {/* Right Column: Counters + Cubicles (8 cols on tablet and desktop) */}
+        <div className="md:col-span-8 lg:col-span-8 h-full flex flex-col min-h-0 gap-2.5 overflow-hidden">
+          {/* Registration Counters (if available) - Horizontal compact grid, NO scrollbar */}
+          {hasRegistrationCounters && (
+            <RegistrationCounterSection
+              patients={registrationPatients!}
+              draggedPatient={regDraggedPatient ?? null}
+              dragOverCounter={dragOverCounter ?? null}
+              selectedPatient={selectedPatient}
+              onSelectPatient={onSelectCounterPatient}
+              onTargetCounterClick={onTargetCounterClick}
+              onPointerDown={onRegPointerDown}
+              onDragStart={onRegDragStart}
+              onRelease={onReleaseFromCounter!}
+              allowedCounters={allowedCounters}
+            />
+          )}
+
+          {/* Consultation & Screening Cubicles - Horizontal row same as counters */}
+          <div className="bg-white border border-slate-200 rounded-2xl shadow-xs p-2.5 sm:p-3 select-none shrink-0 overflow-hidden">
+            <div className="flex items-center justify-between gap-2 mb-2 pb-1.5 border-b border-slate-100">
+              <div className="flex items-center gap-2">
+                <span className="w-2 h-2 rounded-full bg-slate-700 inline-block" />
+                <h2 className="text-slate-700 font-bold text-xs tracking-wider uppercase">
+                  {transferTexts.cubiclesHeading}
+                </h2>
+                <span className="text-[10px] font-bold px-1.5 py-0.2 rounded-full bg-slate-100 text-slate-700">
+                  {cubicles.length}
+                </span>
+              </div>
+              <span className="text-[10px] text-slate-400 font-medium">
+                {category}
               </span>
             </div>
-            <span className="text-[11px] text-slate-400 font-medium">
-              {category}
-            </span>
-          </div>
 
-          {/* List of Cubicle Lanes */}
-          <ScrollArea className="max-h-[580px] pr-1 space-y-3">
-            {cubicles.map(cubicle => {
-              const assigned = assignedPatients[cubicle.cubicleNum] || [];
-              const isOver = dragOverCubicle === cubicle.cubicleNum;
-              const isFull = assigned.length >= 5;
+            {/* Horizontal Cubicles Grid - same as counters! */}
+            {(() => {
+              const safeCubicles = Array.isArray(cubicles) ? cubicles : [];
+              const safeAssignedPatients = assignedPatients || {};
+              const safeDoctorMap = cubicleDoctorMap || {};
+
+              if (safeCubicles.length === 0) {
+                return (
+                  <p className="text-slate-400 text-xs py-2 text-center">
+                    {transferTexts.noRoomsConfiguredDesc}
+                  </p>
+                );
+              }
 
               return (
-                <CubicleCard
-                  key={cubicle.id}
-                  cubicle={cubicle}
-                  assigned={assigned}
-                  isOver={isOver}
-                  isDraggable={isDraggable}
-                  isFull={isFull}
-                  onPointerDown={onPointerDownFromCubicle}
-                  onDragStart={onDragStartFromCubicle}
-                  onSpeak={onSpeak}
-                  onMoveBack={onMoveBackToProgress}
-                  draggedPatientId={draggedPatient?.id}
-                  speakingId={speakingId}
-                  doctorName={cubicleDoctorMap[cubicle.cubicleNum]}
-                  warnAfterSeconds={warnAfterSeconds}
-                />
+                <div className="grid grid-cols-2 sm:grid-cols-3 lg:grid-cols-5 gap-2">
+                  {safeCubicles.map(cubicle => {
+                    const assigned = safeAssignedPatients[cubicle.cubicleNum] || [];
+                    const isOver = dragOverCubicle === cubicle.cubicleNum;
+                    const isFull = assigned.length >= 5;
+
+                    return (
+                      <CubicleCard
+                        key={cubicle.id}
+                        cubicle={cubicle}
+                        assigned={assigned}
+                        isOver={isOver}
+                        isDraggable={isDraggable}
+                        isFull={isFull}
+                        selectedPatient={selectedPatient}
+                        onSelectPatient={onSelectCubiclePatient}
+                        onTargetClick={onTargetCubicleClick}
+                        onPointerDown={onPointerDownFromCubicle}
+                        onDragStart={onDragStartFromCubicle}
+                        onSpeak={onSpeak}
+                        onMoveBack={onMoveBackToProgress}
+                        draggedPatientId={draggedPatient?.id}
+                        speakingId={speakingId}
+                        doctorName={safeDoctorMap[cubicle.cubicleNum]}
+                        warnAfterSeconds={warnAfterSeconds}
+                      />
+                    );
+                  })}
+                </div>
               );
-            })}
-          </ScrollArea>
+            })()}
+          </div>
         </div>
       </div>
-    </div>
+
+      {/* Floating Selection Banner for Click-to-Select Tablet Guidance */}
+      <SelectionBanner
+        selectedPatient={selectedPatient ?? null}
+        onCancel={onCancelSelection || (() => {})}
+      />
+    </>
   );
 }
 

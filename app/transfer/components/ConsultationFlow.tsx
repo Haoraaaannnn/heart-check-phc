@@ -1,13 +1,24 @@
+/**
+ * @fileoverview Consultation service workflow component.
+ *
+ * Progresses across 3 stages:
+ * 1. Subcategory Selection (Adult / Pedia) with real-time queue badges.
+ * 2. Room Selection (e.g. Room 1, 2) with assigned counts.
+ * 3. Two-Column ServiceBoard with queue panel, list-based stations, and Click-to-Select tablet support.
+ *
+ * @module app/transfer/components/ConsultationFlow
+ */
+
 'use client';
 
 import React from 'react';
 import { Cubicle, Patient } from '@/types/Types';
-import { CONSULTATION_SUBCATEGORIES } from '../lib/constants';
 import { SubcategoryPicker, RoomPicker } from './StepPickers';
 import { ServiceBoard } from './ServiceBoard';
+import { SelectedTransferPatient } from '../types/transfer';
 
 /**
- * Props for `ConsultationFlow`.
+ * Props for {@link ConsultationFlow}.
  */
 export interface ConsultationFlowProps {
   selectedSubcategory: string | null;
@@ -41,18 +52,21 @@ export interface ConsultationFlowProps {
   onRemoveIdle: (patient: Patient) => void;
   allowedCounters?: number[];
   allowedSubcategories?: string[];
+
+  // Click-to-Select tablet mode props
+  selectedPatient?: SelectedTransferPatient | null;
+  onSelectQueuePatient?: (patient: Patient) => void;
+  onSelectCubiclePatient?: (patient: Patient, cubicleNum: string) => void;
+  onSelectCounterPatient?: (patient: Patient, counterNum: number) => void;
+  onTargetCubicleClick?: (cubicleNum: string) => void;
+  onTargetCounterClick?: (counterNum: number) => void;
+  onCancelSelection?: () => void;
 }
 
 /**
  * Consultation service workflow component.
  *
- * @remarks
- * Progresses across 3 stages:
- * 1. Subcategory Selection (Adult / Pedia) with real-time queue badges.
- * 2. Room Selection (e.g. Room 1, 2) with assigned counts.
- * 3. Two-Column ServiceBoard with queue panel and list-based stations.
- *
- * @param props - Navigation state, patient queues, and drag handlers.
+ * @param props - Navigation state, patient queues, and interaction handlers.
  * @returns The active view corresponding to current selection step.
  */
 export function ConsultationFlow({
@@ -87,13 +101,24 @@ export function ConsultationFlow({
   onRemoveIdle,
   allowedCounters,
   allowedSubcategories,
+  selectedPatient,
+  onSelectQueuePatient,
+  onSelectCubiclePatient,
+  onSelectCounterPatient,
+  onTargetCubicleClick,
+  onTargetCounterClick,
+  onCancelSelection,
 }: ConsultationFlowProps) {
   // Step 1: Subcategory Picker
   if (!selectedSubcategory) {
+    const safeOnProgress = Array.isArray(visibleOnProgress) ? visibleOnProgress : [];
+    const safeIdle = Array.isArray(idlePatients) ? idlePatients : [];
+    const safeRegistration = Array.isArray(registrationPatients) ? registrationPatients : [];
+
     const countFor = (sub: string) => ({
-      queue: visibleOnProgress.filter(p => p.subcategory === sub).length,
-      idle: idlePatients.filter(p => p.subcategory === sub).length,
-      registration: registrationPatients.filter(p => p.subcategory === sub).length,
+      queue: safeOnProgress.filter(p => p.subcategory === sub).length,
+      idle: safeIdle.filter(p => p.subcategory === sub).length,
+      registration: safeRegistration.filter(p => p.subcategory === sub).length,
     });
 
     const SUBCATEGORY_DEFINITIONS = [
@@ -101,7 +126,6 @@ export function ConsultationFlow({
       { sub: 'Pedia', icon: 'bx-child' },
     ];
 
-    // Always provide both Adult and Pedia options
     const visibleList = SUBCATEGORY_DEFINITIONS;
 
     return (
@@ -156,6 +180,13 @@ export function ConsultationFlow({
       onRegDragStart={onRegDragStart}
       onReleaseFromCounter={onReleaseFromCounter}
       allowedCounters={allowedCounters}
+      selectedPatient={selectedPatient}
+      onSelectQueuePatient={onSelectQueuePatient}
+      onSelectCubiclePatient={onSelectCubiclePatient}
+      onSelectCounterPatient={onSelectCounterPatient}
+      onTargetCubicleClick={onTargetCubicleClick}
+      onTargetCounterClick={onTargetCounterClick}
+      onCancelSelection={onCancelSelection}
     />
   );
 }

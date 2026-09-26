@@ -106,7 +106,7 @@ export function BreadcrumbNav({
         )}
 
         {/* Subcategory */}
-        {isConsultation && selectedSubcategory && (
+        {selectedSubcategory && (
           <>
             <span className="text-slate-300 font-normal">/</span>
             <button

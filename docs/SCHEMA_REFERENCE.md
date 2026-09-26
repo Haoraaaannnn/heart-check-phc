@@ -188,7 +188,7 @@
 | `Allow anon insert on services` | INSERT | anon | PERMISSIVE | — | `true` |
 | `Allow public read on services` | SELECT | anon | PERMISSIVE | `true` | — |
 
-_⚠️ Still unconditioned/public-writable as of this pull — the fix in `CHANGES_NEEDED.md` step 3 does not appear applied here._
+_WARNING: Still unconditioned/public-writable as of this pull — the fix in `CHANGES_NEEDED.md` step 3 does not appear applied here._
 
 ### `patient_category`
 
@@ -213,7 +213,7 @@ _⚠️ Still unconditioned/public-writable as of this pull — the fix in `CHAN
 | `Authenticated users can insert doctors` | INSERT | authenticated | PERMISSIVE | — | `true` |
 | `Authenticated users can update doctors` | UPDATE | authenticated | PERMISSIVE | `true` | `true` |
 
-_⚠️ Previously documented as superadmin-gated (`EXISTS ... role = 'superadmin'`); this pull shows plain `true`/`authenticated`-only checks — any authenticated user can now write. Flagging for confirmation._
+_WARNING: Previously documented as superadmin-gated (`EXISTS ... role = 'superadmin'`); this pull shows plain `true`/`authenticated`-only checks — any authenticated user can now write. Flagging for confirmation._
 
 ### `cubicle`
 
@@ -253,7 +253,7 @@ _Correctly designed — self-read-or-superadmin pattern, superadmin-only writes.
 |--------|---------|-------|--------|-------|------------|
 | `Enable read access for all users` | SELECT | public | PERMISSIVE | `true` | — |
 
-_⚠️ Public account-data leak still present — the `CHANGES_NEEDED.md` step 4 fix does not appear applied here._
+_WARNING: Public account-data leak still present — the `CHANGES_NEEDED.md` step 4 fix does not appear applied here._
 
 ### `patients`
 
@@ -269,7 +269,7 @@ _⚠️ Public account-data leak still present — the `CHANGES_NEEDED.md` step 
 | `patients_select_registration_full` | SELECT | authenticated | PERMISSIVE | `is_registration_staff()` | — |
 | `patients_update_registration_full` | UPDATE | authenticated | PERMISSIVE | `is_registration_staff()` | `is_registration_staff()` |
 
-_⚠️ Old wide-open `anon`/`public` policies (unconditioned INSERT/SELECT) are still present alongside the new `is_clinical_staff()`/`is_registration_staff()`/`my_cubicle_nums()` scoped policies — the earlier `is_historical`-based fix set (`patients_select_public_live`, `patients_insert_kiosk`, `patients_update_staff_live_only`, `patients_delete_superadmin_live_only`) does not appear in this pull at all, and no DELETE policy exists here. This table's access model has clearly evolved past what `SECURITY.md`/`CHANGES_NEEDED.md` describe — needs a fresh audit, not a patch of the old doc's language. `is_clinical_staff()`, `is_registration_staff()`, and `my_cubicle_nums()` are not yet documented anywhere as helper functions._
+_WARNING: Old wide-open `anon`/`public` policies (unconditioned INSERT/SELECT) are still present alongside the new `is_clinical_staff()`/`is_registration_staff()`/`my_cubicle_nums()` scoped policies — the earlier `is_historical`-based fix set (`patients_select_public_live`, `patients_insert_kiosk`, `patients_update_staff_live_only`, `patients_delete_superadmin_live_only`) does not appear in this pull at all, and no DELETE policy exists here. This table's access model has clearly evolved past what `SECURITY.md`/`CHANGES_NEEDED.md` describe — needs a fresh audit, not a patch of the old doc's language. `is_clinical_staff()`, `is_registration_staff()`, and `my_cubicle_nums()` are not yet documented anywhere as helper functions._
 
 ### `user_services`
 

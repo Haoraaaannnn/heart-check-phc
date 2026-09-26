@@ -71,6 +71,29 @@ export const transferTexts = {
   dropTargetFull: "Cubicle is at maximum capacity",
   dropTargetSame: "Patient is already at this cubicle",
   draggingLabel: "Moving Patient",
+
+  // Click-to-Select & Tablet Interaction Mode
+  selectedPatientBannerPrefix: "Selected:",
+  selectedQueuePatientHint: "Tap an available cubicle to assign",
+  selectedCubiclePatientHint: "Tap another cubicle to reassign",
+  selectedCounterPatientHint: "Tap target counter to move patient",
+  cancelSelection: "Cancel Selection",
+  assignHereBtn: "Assign Here",
+  reassignHereBtn: "Move Here",
+  moveToCounterBtn: "Move Here",
+  tapToSelectHint: "Tap to select or drag",
+  tapToAssignHint: "Tap to assign",
+  selectedBadge: "Selected",
+  cubicleSelectTargetHint: "Tap to assign patient here",
+  counterSelectTargetHint: "Tap to move patient here",
+  cubicleFullNotice: "Cubicle full (max 5)",
+  deselectedNotice: "Selection cancelled",
+
+  // Station View Switcher (Tablet & Layout Controls)
+  viewToggleCubicles: "Cubicles",
+  viewToggleCounters: "Registration Counters",
+  viewToggleBoth: "Split View",
+  stationsSectionTitle: "Service Stations",
 } as const;
 
 export default transferTexts;

@@ -1,3 +1,16 @@
+/**
+ * @fileoverview Compact horizontal Cubicle Station component formatted identically to registration counters.
+ *
+ * Implements a streamlined horizontal tile displaying:
+ * - Cubicle identifier badge and assigned doctor
+ * - Station capacity badge and Click-to-Select assignment trigger
+ * - Primary patient currently at cubicle with elapsed timer, audio call, and undo actions
+ * - Compact queue line of waiting patients
+ * - Direct pointer dropzone target (`data-cubicle`) for drag-and-drop transfers
+ *
+ * @module app/transfer/components/CubicleCard
+ */
+
 'use client';
 
 import React from 'react';
@@ -5,10 +18,12 @@ import { Patient, Cubicle } from '@/types/Types';
 import { MAX_PATIENTS_PER_CUBICLE } from '../lib/constants';
 import { ElapsedTimer } from './ElapsedTimer';
 import { transferTexts } from '../constants/transferTexts';
+import { TransferStyle } from '../constants/transfer';
+import { SelectedTransferPatient } from '../types/transfer';
 import { DragHandle } from './DragHandle';
 
 /**
- * Props for `CubicleCard`.
+ * Props for {@link CubicleCard}.
  */
 export interface CubicleCardProps {
   /** Cubicle data object. */
@@ -21,6 +36,12 @@ export interface CubicleCardProps {
   isDraggable: boolean;
   /** Whether maximum capacity has been reached. */
   isFull: boolean;
+  /** Currently selected patient awaiting target assignment in Click-to-Select mode. */
+  selectedPatient?: SelectedTransferPatient | null;
+  /** Callback triggered when user taps an assigned patient to select them for reassignment. */
+  onSelectPatient?: (patient: Patient, cubicleNum: string) => void;
+  /** Callback triggered when user taps this cubicle as the destination target for the selected patient. */
+  onTargetClick?: (cubicleNum: string) => void;
   /** Pointer down drag initiation handler. */
   onPointerDown?: (e: React.PointerEvent, patient: Patient, cubicleNum: string) => void;
   /** Mouse drag handler for backward compatibility. */
@@ -40,15 +61,10 @@ export interface CubicleCardProps {
 }
 
 /**
- * Professional Cubicle Lane component designed for list-based layout.
+ * Compact horizontal Cubicle Station card structured identically to registration counter tiles.
  *
- * @remarks
- * **List-Oriented Architecture:**
- * Formatted as a rich, spacious station card that excels in vertical list layouts,
- * avoiding the cramped columns of legacy grid layouts.
- *
- * @param props - Cubicle state, assigned patients, and pointer handlers.
- * @returns The rendered cubicle card component.
+ * @param props - Cubicle state, assigned patients, and interaction handlers.
+ * @returns The rendered horizontal cubicle card.
  */
 export function CubicleCard({
   cubicle,
@@ -56,6 +72,9 @@ export function CubicleCard({
   isOver,
   isDraggable,
   isFull,
+  selectedPatient,
+  onSelectPatient,
+  onTargetClick,
   onPointerDown,
   onDragStart,
   onSpeak,
@@ -65,149 +84,224 @@ export function CubicleCard({
   warnAfterSeconds,
   doctorName,
 }: CubicleCardProps) {
-  const uniqueAssigned = Array.from(new Map(assigned.map(p => [p.id, p])).values());
+  const safeAssigned = Array.isArray(assigned) ? assigned : [];
+  const uniqueAssigned = Array.from(new Map(safeAssigned.map(p => [p.id, p])).values());
   const visibleAssigned = uniqueAssigned.slice(0, MAX_PATIENTS_PER_CUBICLE);
+  const topPatient = visibleAssigned[0];
+  const waitingPatients = visibleAssigned.slice(1);
+
+  // Check if this cubicle is an eligible destination for the active selection
+  const isTargetEligible =
+    Boolean(selectedPatient) &&
+    (selectedPatient?.sourceType === 'queue' ||
+      (selectedPatient?.sourceType === 'cubicle' &&
+        String(selectedPatient.sourceId) !== cubicle.cubicleNum)) &&
+    !isFull;
+
+  const handleCardTargetClick = () => {
+    if (isTargetEligible && onTargetClick) {
+      onTargetClick(cubicle.cubicleNum);
+    }
+  };
 
   return (
     <div
       data-cubicle={cubicle.cubicleNum}
-      className={`rounded-2xl border-2 p-4 transition-all duration-150 select-none flex flex-col gap-3 shadow-xs ${
+      onClick={handleCardTargetClick}
+      style={isTargetEligible ? TransferStyle.assignTargetCard : undefined}
+      className={`rounded-xl border p-2 flex flex-col justify-between transition-all select-none min-h-[76px] ${
         isOver && isDraggable
-          ? 'border-[#cc3535] bg-red-50/80 scale-[1.01] shadow-md phc-dropzone'
+          ? 'border-[#cc3535] bg-red-50/80 scale-[1.01] shadow-xs phc-dropzone'
+          : isTargetEligible
+          ? 'border-emerald-500 bg-emerald-50/40 ring-2 ring-emerald-500/20 hover:border-emerald-600 hover:shadow-xs cursor-pointer'
           : isFull
           ? 'border-rose-200 bg-rose-50/20'
-          : 'border-slate-200 bg-white hover:border-slate-300'
+          : 'border-slate-200 bg-slate-50/60 hover:bg-slate-50'
       }`}
     >
-      {/* Station Header */}
-      <div className="flex items-center justify-between gap-3 pb-2 border-b border-slate-100">
-        <div className="flex items-center gap-2.5 min-w-0">
-          <div className="w-8 h-8 rounded-xl bg-slate-900 text-white flex items-center justify-center font-bold text-xs shrink-0 shadow-xs">
+      {/* Cubicle Tile Header: Badge + Cubicle Num + Doctor + Assign / Capacity */}
+      <div className="flex items-center justify-between gap-1 mb-1">
+        <div className="flex items-center gap-1.5 min-w-0">
+          <span className="w-5 h-5 rounded-md bg-slate-900 text-white font-bold text-[10px] flex items-center justify-center shrink-0 shadow-2xs">
             {cubicle.cubicleNum}
-          </div>
+          </span>
           <div className="min-w-0">
-            <h3 className="text-xs font-bold text-slate-800 truncate">
+            <span className="text-[11px] font-bold text-slate-800 truncate block leading-none">
               {cubicle.cubicleNum}
-            </h3>
-            <p className="text-[11px] text-slate-500 font-medium truncate">
+            </span>
+            <span className="text-[9px] text-slate-500 font-medium truncate block leading-none mt-0.5">
               {doctorName
                 ? `${transferTexts.doctorPrefix} ${doctorName}`
                 : transferTexts.unassignedDoctor}
-            </p>
+            </span>
           </div>
         </div>
 
-        {/* Capacity & Status Badges */}
-        <div className="flex items-center gap-2 shrink-0">
+        {/* Right side of header: "+ Assign" button if target eligible, or capacity pill */}
+        {isTargetEligible ? (
+          <button
+            type="button"
+            onClick={e => {
+              e.stopPropagation();
+              handleCardTargetClick();
+            }}
+            className="px-1.5 py-0.5 text-[10px] font-bold bg-emerald-600 hover:bg-emerald-700 active:bg-emerald-800 text-white rounded transition-colors shadow-2xs shrink-0 cursor-pointer"
+          >
+            {selectedPatient?.sourceType === 'queue'
+              ? transferTexts.assignHereBtn
+              : transferTexts.reassignHereBtn}
+          </button>
+        ) : (
           <span
-            className={`text-[11px] font-bold px-2 py-0.5 rounded-full ${
+            className={`text-[9px] font-bold px-1.5 py-0.2 rounded-full shrink-0 ${
               isFull
                 ? 'bg-rose-100 text-rose-700'
                 : 'bg-emerald-100 text-emerald-800'
             }`}
           >
-            {isFull ? transferTexts.cubicleFullAlert : transferTexts.cubicleAvailable}
-          </span>
-          <span className="text-xs font-semibold text-slate-500">
             {visibleAssigned.length}/{MAX_PATIENTS_PER_CUBICLE}
           </span>
-        </div>
+        )}
       </div>
 
-      {/* Patient Assignment Area */}
-      {visibleAssigned.length === 0 ? (
-        <div className="py-6 border-2 border-dashed border-slate-200 rounded-xl text-center text-slate-400 text-xs font-medium">
-          {transferTexts.dropPatientHere}
-        </div>
-      ) : (
-        <div className="flex flex-col gap-2">
-          {visibleAssigned.map((p, index) => {
-            const isBeingDragged = draggedPatientId === p.id;
+      {/* Primary Patient at Cubicle (or Drop/Assign target) */}
+      {topPatient ? (
+        (() => {
+          const isTopSelected = selectedPatient?.patient.id === topPatient.id;
 
+          const handleTopPatientClick = (e: React.MouseEvent) => {
+            e.stopPropagation();
+            if (isDraggable && onSelectPatient) {
+              onSelectPatient(topPatient, cubicle.cubicleNum);
+            }
+          };
+
+          return (
+            <div
+              onPointerDown={e => onPointerDown?.(e, topPatient, cubicle.cubicleNum)}
+              onMouseDown={e => onDragStart?.(e, topPatient, cubicle.cubicleNum)}
+              onClick={handleTopPatientClick}
+              style={isTopSelected ? TransferStyle.selectedPatientRow : undefined}
+              className={`p-1.5 bg-white rounded-lg border transition-all flex items-center justify-between gap-1 shadow-2xs cursor-pointer ${
+                draggedPatientId === topPatient.id
+                  ? 'opacity-40'
+                  : isTopSelected
+                  ? 'border-[#cc3535] bg-red-50/80 ring-2 ring-[#cc3535]'
+                  : 'border-slate-200 hover:border-slate-300'
+              }`}
+            >
+              <div className="flex items-center gap-1 min-w-0">
+                {isDraggable && (
+                  isTopSelected ? (
+                    <span className="w-4 h-4 rounded bg-[#cc3535] text-white flex items-center justify-center shrink-0">
+                      <i className="bx bx-check text-[10px] font-bold" aria-hidden="true" />
+                    </span>
+                  ) : (
+                    <DragHandle title={transferTexts.tapToSelectHint} />
+                  )
+                )}
+                <span className="font-black text-xs text-[#cc3535] shrink-0">
+                  {topPatient.patientNum}
+                </span>
+                <span className="text-[10px] text-slate-500 truncate hidden xl:inline">
+                  {topPatient.subcategory || topPatient.service}
+                </span>
+                <ElapsedTimer
+                  startedAt={topPatient.cubicle_top_started_at}
+                  warnAfterSeconds={warnAfterSeconds}
+                />
+              </div>
+
+              <div className="flex items-center gap-1 shrink-0">
+                {/* Audio call button */}
+                <button
+                  type="button"
+                  onPointerDown={e => e.stopPropagation()}
+                  onMouseDown={e => e.stopPropagation()}
+                  onClick={e => {
+                    e.stopPropagation();
+                    const num = topPatient.patientNum || '';
+                    const letter = num ? num.charAt(0) : '';
+                    const digits = num.length > 1 ? parseInt(num.slice(1), 10).toString() : '';
+                    onSpeak(
+                      `Number ${letter} ${digits}, Number ${letter} ${digits}, go to ${cubicle.cubicleNum}`,
+                      topPatient.id
+                    );
+                  }}
+                  disabled={speakingId === topPatient.id}
+                  title={transferTexts.callPatientTooltip}
+                  className={`w-5 h-5 rounded flex items-center justify-center transition-colors cursor-pointer ${
+                    speakingId === topPatient.id
+                      ? 'bg-blue-100 text-blue-300 cursor-not-allowed'
+                      : 'bg-blue-50 hover:bg-blue-100 text-blue-600'
+                  }`}
+                >
+                  <i
+                    className={`bx ${
+                      speakingId === topPatient.id
+                        ? 'bx-loader-alt animate-spin'
+                        : 'bxs-volume-full'
+                    } text-[11px]`}
+                    aria-hidden="true"
+                  />
+                </button>
+
+                {/* Return to queue button */}
+                <button
+                  type="button"
+                  onPointerDown={e => e.stopPropagation()}
+                  onMouseDown={e => e.stopPropagation()}
+                  onClick={e => {
+                    e.stopPropagation();
+                    onMoveBack(topPatient, cubicle.cubicleNum);
+                  }}
+                  title={transferTexts.moveToQueueTooltip}
+                  className="w-5 h-5 rounded flex items-center justify-center bg-amber-50 hover:bg-amber-100 text-amber-700 transition-colors cursor-pointer"
+                >
+                  <i className="bx bx-undo text-xs" aria-hidden="true" />
+                </button>
+              </div>
+            </div>
+          );
+        })()
+      ) : (
+        <div className="py-2 text-center text-slate-400 text-[11px] italic">
+          {isTargetEligible ? transferTexts.cubicleSelectTargetHint : 'Available'}
+        </div>
+      )}
+
+      {/* Additional Waiting Patients in this Cubicle Lane */}
+      {waitingPatients.length > 0 && (
+        <div className="flex items-center gap-1 mt-1 overflow-hidden">
+          <span className="text-[9px] text-slate-400 font-bold uppercase shrink-0">
+            Next:
+          </span>
+          {waitingPatients.slice(0, 2).map(p => {
+            const isWaitingSelected = selectedPatient?.patient.id === p.id;
             return (
-              <div
+              <span
                 key={p.id}
-                className={`flex items-center justify-between gap-2 p-2 rounded-xl border transition-all ${
-                  isBeingDragged
-                    ? 'opacity-40 border-[#cc3535] bg-red-50'
-                    : index === 0
-                    ? 'border-emerald-200 bg-emerald-50/40 shadow-xs'
-                    : 'border-slate-100 bg-slate-50/60'
+                onPointerDown={e => onPointerDown?.(e, p, cubicle.cubicleNum)}
+                onMouseDown={e => onDragStart?.(e, p, cubicle.cubicleNum)}
+                onClick={e => {
+                  e.stopPropagation();
+                  onSelectPatient?.(p, cubicle.cubicleNum);
+                }}
+                className={`text-[10px] font-semibold px-1 py-0.5 rounded border shadow-2xs cursor-pointer transition-colors ${
+                  isWaitingSelected
+                    ? 'bg-red-50 text-[#cc3535] border-[#cc3535] ring-1 ring-[#cc3535]'
+                    : 'bg-white border-slate-200 text-slate-600 hover:border-slate-300'
                 }`}
               >
-                {/* Patient Info */}
-                <div className="flex items-center gap-2 min-w-0">
-                  {isDraggable && (
-                    <span
-                      onPointerDown={e => onPointerDown?.(e, p, cubicle.cubicleNum)}
-                      onMouseDown={e => onDragStart?.(e, p, cubicle.cubicleNum)}
-                    >
-                      <DragHandle title="Drag patient to reassign" />
-                    </span>
-                  )}
-
-                  <span className="px-2 py-0.5 bg-[#cc3535] text-white rounded-lg text-xs font-black shadow-xs shrink-0">
-                    {p.patientNum}
-                  </span>
-
-                  <span className="text-xs text-slate-600 font-medium truncate">
-                    {p.service}
-                    {p.subcategory && ` · ${p.subcategory}`}
-                  </span>
-
-                  {index === 0 && (
-                    <ElapsedTimer
-                      startedAt={p.cubicle_top_started_at}
-                      warnAfterSeconds={warnAfterSeconds}
-                    />
-                  )}
-                </div>
-
-                {/* Patient Actions */}
-                <div className="flex items-center gap-1.5 shrink-0 ml-1">
-                  {/* Call Button */}
-                  <button
-                    type="button"
-                    onClick={() => {
-                      const num = p.patientNum;
-                      const letter = num.charAt(0);
-                      const digits = parseInt(num.slice(1), 10).toString();
-                      onSpeak(
-                        `Number ${letter} ${digits}, Number ${letter} ${digits}, go to ${cubicle.cubicleNum}`,
-                        p.id
-                      );
-                    }}
-                    disabled={speakingId === p.id}
-                    title={transferTexts.callPatientTooltip}
-                    className={`w-7 h-7 rounded-lg flex items-center justify-center transition-colors cursor-pointer ${
-                      speakingId === p.id
-                        ? 'bg-blue-100 text-blue-300 cursor-not-allowed'
-                        : 'bg-blue-50 hover:bg-blue-100 text-blue-600'
-                    }`}
-                  >
-                    <i
-                      className={`bx ${
-                        speakingId === p.id
-                          ? 'bx-loader-alt animate-spin'
-                          : 'bxs-volume-full'
-                      } text-sm`}
-                      aria-hidden="true"
-                    />
-                  </button>
-
-                  {/* Move Back to Queue */}
-                  <button
-                    type="button"
-                    onClick={() => onMoveBack(p, cubicle.cubicleNum)}
-                    title={transferTexts.moveToQueueTooltip}
-                    className="w-7 h-7 rounded-lg flex items-center justify-center bg-amber-50 hover:bg-amber-100 text-amber-700 transition-colors cursor-pointer"
-                  >
-                    <i className="bx bx-undo text-base" aria-hidden="true" />
-                  </button>
-                </div>
-              </div>
+                {p.patientNum}
+              </span>
             );
           })}
+          {waitingPatients.length > 2 && (
+            <span className="text-[9px] text-slate-400 font-medium shrink-0">
+              +{waitingPatients.length - 2}
+            </span>
+          )}
         </div>
       )}
     </div>
