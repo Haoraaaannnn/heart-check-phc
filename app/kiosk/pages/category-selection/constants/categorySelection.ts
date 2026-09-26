@@ -10,6 +10,8 @@ export { categorySelectionTexts } from "./categorySelectionTexts";
  */
 export const categorySelectionSpacing = {
     containerPaddingX: 24,
+    containerPaddingBottomLandscape: 120,
+    containerPaddingBottomPortrait: 140,
     contentGap: "clamp(24px, 4vh, 48px)",
     cardsGap: "clamp(18px, 2.5vw, 32px)",
     cardPadding: "clamp(24px, 3.5vw, 40px)",
@@ -172,3 +174,18 @@ export const CategorySelectionStyle = {
         fontSize: categorySelectionFontSize.cta,
     },
 } satisfies Record<string, CSSProperties>;
+
+/**
+ * Tailwind CSS class name dictionary for `CategorySelectionPage`.
+ *
+ * Centralizes all interactive pseudo-classes, hover transitions, and group animations
+ * so that consumer UI files avoid hardcoding raw utility strings.
+ */
+export const CategorySelectionClasses = {
+    container: "landscape:pb-[120px] portrait:pb-[140px]",
+    adultCard: "group transition-all duration-150 active:scale-95 hover:border-red-400 hover:shadow-lg",
+    pediaCard: "group transition-all duration-150 active:scale-95 hover:border-sky-400 hover:shadow-lg",
+    iconTile: "transition-transform group-hover:scale-105",
+    cta: "group-hover:translate-x-1 transition-transform",
+} as const;
+

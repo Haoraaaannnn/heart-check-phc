@@ -3,6 +3,7 @@
 import KioskBanner from "@/app/kiosk/pages/kiosk-services/components/KioskBanner";
 import { useIsLandscape } from "@/hooks/useIsLandscape";
 import { useIsMounted } from "@/hooks/useIsMounted";
+import { KioskServicesClasses } from "@/app/kiosk/pages/kiosk-services/constants/kioskServices";
 
 /** Props for {@link KioskLayout}. */
 interface KioskLayoutProps {
@@ -41,12 +42,8 @@ export default function KioskLayout({ children }: KioskLayoutProps) {
     const mounted = useIsMounted();
 
     return (
-        <div
-            className={`fixed inset-0 flex h-dvh w-dvw items-center justify-center overflow-hidden bg-white transition-opacity duration-300 ${
-                mounted ? "opacity-100" : "opacity-0"
-            }`}
-        >
-            <div className="relative flex h-full w-full flex-col overflow-hidden">
+        <div className={KioskServicesClasses.layoutOverlay(mounted)}>
+            <div className={KioskServicesClasses.layoutContainer}>
                 {/*
                     Scrollable content area.
                     Centering uses `m-auto` on the inner wrapper instead of
@@ -57,19 +54,11 @@ export default function KioskLayout({ children }: KioskLayoutProps) {
                     content start at the top and scroll.
                     Scrollbar is hidden because this is a touch kiosk.
                 */}
-                <main
-                    className={`flex flex-1 min-h-0 overflow-y-auto overflow-x-hidden pt-4 [scrollbar-width:none] [&::-webkit-scrollbar]:hidden ${
-                        isLandscape ? "pb-[120px]" : "pb-[140px]"
-                    }`}
-                >
-                    <div
-                        className={`m-auto flex flex-col items-center ${
-                            isLandscape ? "w-[92%] max-w-[1600px]" : "w-full"
-                        }`}
-                    >
+                <main className={KioskServicesClasses.layoutMain(isLandscape)}>
+                    <div className={KioskServicesClasses.layoutInner(isLandscape)}>
                         <KioskBanner />
 
-                        <div className="w-full">{children}</div>
+                        <div className={KioskServicesClasses.layoutChildren}>{children}</div>
                     </div>
                 </main>
             </div>

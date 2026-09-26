@@ -9,6 +9,8 @@ import {
     useState,
 } from "react";
 
+import { KioskLoadingOverlayTexts } from "@/app/kiosk/constants/kioskLoadingOverlayTexts";
+
 /** Shape of the value exposed by {@link KioskLoadingProvider}. */
 interface KioskLoadingContextValue {
     /** Whether the full-screen loading overlay is currently visible. */
@@ -29,7 +31,7 @@ const KioskLoadingContext = createContext<KioskLoadingContextValue | null>(
     null,
 );
 
-const DEFAULT_MESSAGE = "Loading, please wait...";
+const DEFAULT_MESSAGE = KioskLoadingOverlayTexts.defaultMessage;
 
 /**
  * Provides kiosk-wide loading overlay state.
@@ -48,7 +50,7 @@ export function KioskLoadingProvider({
     children: React.ReactNode;
 }) {
     const [isLoading, setIsLoading] = useState(false);
-    const [message, setMessage] = useState(DEFAULT_MESSAGE);
+    const [message, setMessage] = useState<string>(DEFAULT_MESSAGE);
 
     const showLoading = useCallback((nextMessage?: string) => {
         if (nextMessage) setMessage(nextMessage);

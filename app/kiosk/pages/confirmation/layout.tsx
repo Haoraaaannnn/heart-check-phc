@@ -1,6 +1,7 @@
 "use client";
 
 import { useIsMounted } from "@/hooks/useIsMounted";
+import { ConfirmationClasses } from "@/app/kiosk/pages/confirmation/constants/confirmation";
 
 /** Props for {@link ConfirmationLayout}. */
 interface ConfirmationLayoutProps {
@@ -18,12 +19,8 @@ export default function ConfirmationLayout({ children }: ConfirmationLayoutProps
     const mounted = useIsMounted();
 
     return (
-        <div
-            className={`flex h-dvh w-dvw items-center justify-center overflow-hidden bg-white transition-opacity duration-300 ${
-                mounted ? "opacity-100" : "opacity-0"
-            }`}
-        >
-            <main className="flex h-full w-full flex-col items-center">
+        <div className={ConfirmationClasses.layoutOverlay(mounted)}>
+            <main className={ConfirmationClasses.layoutMain}>
                 {children}
             </main>
         </div>

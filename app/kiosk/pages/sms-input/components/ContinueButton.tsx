@@ -4,7 +4,10 @@ import Link from "next/link";
 import { Service } from "@/types/Services";
 import ConfirmationModal from "@/components/modals/ConfirmationModal";
 import { smsInputTexts } from "@/app/kiosk/pages/sms-input/constants/smsInputTexts";
-import { SMSContinueButtonStyle } from "@/app/kiosk/pages/sms-input/constants/smsInput";
+import {
+    SMSContinueButtonStyle,
+    SMSInputClasses,
+} from "@/app/kiosk/pages/sms-input/constants/smsInput";
 
 /** Props for {@link ContinueButton}. */
 interface ContinueButtonProps {
@@ -62,24 +65,24 @@ export default function ContinueButton({
     href,
 }: ContinueButtonProps) {
     return (
-        <div style={SMSContinueButtonStyle.container} className="mt-auto">
+        <div style={SMSContinueButtonStyle.container}>
             {/* Primary Continue Button */}
             <button
                 type="button"
                 onClick={disabled ? undefined : onContinue}
                 disabled={disabled}
                 style={SMSContinueButtonStyle.continueBtn}
-                className="disabled:opacity-50 disabled:pointer-events-none active:scale-[0.98] transition-all shadow-md hover:brightness-105"
+                className={SMSInputClasses.continueBtn}
             >
                 {smsInputTexts.continueBtn}
             </button>
 
             {/* Secondary Controls (Cancel and Skip) */}
-            <div className="flex gap-3 sm:gap-4 w-full">
+            <div style={SMSContinueButtonStyle.actionsRow}>
                 <Link
                     href={href}
                     style={SMSContinueButtonStyle.cancelBtn}
-                    className="flex-1 active:scale-95 transition-all hover:bg-gray-50 flex items-center justify-center"
+                    className={SMSInputClasses.secondaryBtn}
                 >
                     {smsInputTexts.cancelBtn}
                 </Link>
@@ -88,7 +91,7 @@ export default function ContinueButton({
                     type="button"
                     onClick={onSkip}
                     style={SMSContinueButtonStyle.cancelBtn}
-                    className="flex-1 active:scale-95 transition-all hover:bg-gray-50"
+                    className={SMSInputClasses.secondaryBtn}
                 >
                     {smsInputTexts.skipBtn}
                 </button>

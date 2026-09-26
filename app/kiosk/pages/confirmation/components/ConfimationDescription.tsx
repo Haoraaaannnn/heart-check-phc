@@ -1,6 +1,6 @@
 import { Service } from "@/types/Services";
-import { confirmationTexts } from "@/app/kiosk/pages/confirmation/constants/confirmationTexts";
-import { ConfirmationDescriptionStyle } from "@/app/kiosk/pages/confirmation/constants/confirmation";
+import { ConfirmationDescriptionTexts } from "@/app/kiosk/pages/confirmation/constants/confirmationDescriptionTexts";
+import { ConfirmationDescriptionStyle } from "@/app/kiosk/pages/confirmation/constants/confirmationDescription";
 
 /** Props for {@link ConfirmationDescriptions}. */
 interface ConfirmationDescriptionsProps {
@@ -16,20 +16,20 @@ interface ConfirmationDescriptionsProps {
  */
 export default function ConfirmationDescriptions({ service }: ConfirmationDescriptionsProps) {
     return (
-        <div style={ConfirmationDescriptionStyle.container} className="w-full p-5 sm:p-6 border-2 border-gray-200 rounded-2xl bg-white shadow-inner">
-            <span style={ConfirmationDescriptionStyle.badge} className="shadow-sm">
-                {confirmationTexts.badgeHeading}
+        <div style={ConfirmationDescriptionStyle.container}>
+            <span style={ConfirmationDescriptionStyle.badge}>
+                {ConfirmationDescriptionTexts.badgeHeading}
             </span>
 
             {/* Filipino Description */}
-            <p style={ConfirmationDescriptionStyle.text} className="mt-1 text-left font-black">
+            <p style={ConfirmationDescriptionStyle.textFil}>
                 {service.description_fil}
             </p>
 
-            <div className="h-[2px] w-full bg-gray-200 rounded my-1" />
+            <div style={ConfirmationDescriptionStyle.divider} />
 
             {/* English Description */}
-            <p style={ConfirmationDescriptionStyle.text} className="text-left font-medium text-gray-600">
+            <p style={ConfirmationDescriptionStyle.textEn}>
                 {service.description_en}
             </p>
         </div>

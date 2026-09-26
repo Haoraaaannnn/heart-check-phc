@@ -3,11 +3,12 @@
 import { useSearchParams } from "next/navigation";
 import { IconUser, IconMoodKid, IconArrowNarrowRight } from "@tabler/icons-react";
 import { useKioskNavigate } from "@/app/kiosk/hooks/useKioskNavigate";
-import { useIsLandscape } from "@/hooks/useIsLandscape";
 import { categorySelectionTexts } from "@/app/kiosk/pages/category-selection/constants/categorySelectionTexts";
 import {
+    categorySelectionSpacing,
     categorySelectionTheme,
     CategorySelectionStyle,
+    CategorySelectionClasses,
 } from "@/app/kiosk/pages/category-selection/constants/categorySelection";
 
 /**
@@ -31,7 +32,6 @@ import {
 export default function CategorySelectionPage() {
     const navigate = useKioskNavigate();
     const searchParams = useSearchParams();
-    const isLandscape = useIsLandscape();
 
     const serviceId = searchParams.get("serviceId");
     const patientType = searchParams.get("type");
@@ -61,8 +61,8 @@ export default function CategorySelectionPage() {
 
     return (
         <div
+            className={CategorySelectionClasses.container}
             style={CategorySelectionStyle.container}
-            className={isLandscape ? "pb-[120px]" : "pb-[140px]"}
         >
             <div style={CategorySelectionStyle.contentWrapper}>
                 {/* Header Instructions */}
@@ -82,11 +82,11 @@ export default function CategorySelectionPage() {
                         type="button"
                         onClick={() => chooseCategory("Adult")}
                         style={CategorySelectionStyle.card}
-                        className="group transition-all duration-150 active:scale-95 hover:border-red-400 hover:shadow-lg"
+                        className={CategorySelectionClasses.adultCard}
                     >
                         <div
                             style={CategorySelectionStyle.adultIconTile}
-                            className="transition-transform group-hover:scale-105"
+                            className={CategorySelectionClasses.iconTile}
                         >
                             <IconUser size={64} stroke={1.5} color={categorySelectionTheme.iconFill} />
                         </div>
@@ -102,7 +102,7 @@ export default function CategorySelectionPage() {
 
                         <div
                             style={CategorySelectionStyle.ctaAdult}
-                            className="group-hover:translate-x-1 transition-transform"
+                            className={CategorySelectionClasses.cta}
                         >
                             <span>{categorySelectionTexts.cta}</span>
                             <IconArrowNarrowRight size={24} stroke={2} />
@@ -114,11 +114,11 @@ export default function CategorySelectionPage() {
                         type="button"
                         onClick={() => chooseCategory("Pedia")}
                         style={CategorySelectionStyle.card}
-                        className="group transition-all duration-150 active:scale-95 hover:border-sky-400 hover:shadow-lg"
+                        className={CategorySelectionClasses.pediaCard}
                     >
                         <div
                             style={CategorySelectionStyle.pediaIconTile}
-                            className="transition-transform group-hover:scale-105"
+                            className={CategorySelectionClasses.iconTile}
                         >
                             <IconMoodKid size={64} stroke={1.5} color={categorySelectionTheme.iconFill} />
                         </div>
@@ -134,7 +134,7 @@ export default function CategorySelectionPage() {
 
                         <div
                             style={CategorySelectionStyle.ctaPedia}
-                            className="group-hover:translate-x-1 transition-transform"
+                            className={CategorySelectionClasses.cta}
                         >
                             <span>{categorySelectionTexts.cta}</span>
                             <IconArrowNarrowRight size={24} stroke={2} />

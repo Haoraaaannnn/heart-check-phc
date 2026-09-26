@@ -2,7 +2,10 @@
 
 import Image from "next/image";
 import { kioskNewOldTexts } from "@/app/kiosk/pages/kiosk-new-old-selection/constants/kioskNewOldTexts";
-import { KioskTitleStyle } from "@/app/kiosk/pages/kiosk-new-old-selection/constants/kioskNewOld";
+import {
+    KioskTitleStyle,
+    KioskNewOldClasses,
+} from "@/app/kiosk/pages/kiosk-new-old-selection/constants/kioskNewOld";
 
 /** Props for {@link KioskTitle}. */
 interface KioskTitleProps {
@@ -27,7 +30,7 @@ export default function KioskTitle({ isLandscape }: KioskTitleProps) {
             <div style={KioskTitleStyle.titleWrapper}>
                 <span
                     style={KioskTitleStyle.title}
-                    className="[-webkit-text-stroke:1px_currentColor]"
+                    className={KioskNewOldClasses.titleStroke}
                 >
                     {kioskNewOldTexts.titleMain}{" "}
                     <span style={KioskTitleStyle.titleAccent}>
@@ -37,16 +40,12 @@ export default function KioskTitle({ isLandscape }: KioskTitleProps) {
             </div>
 
             {/* Hospital Building Illustration */}
-            <div
-                className={`relative mx-auto aspect-[16/9] w-full overflow-hidden rounded-2xl shadow-sm ${
-                    isLandscape ? "max-w-[760px]" : "max-w-[900px]"
-                }`}
-            >
+            <div className={KioskNewOldClasses.titleImageWrapper(isLandscape)}>
                 <Image
                     src="/images/PHC.jpg"
                     alt={kioskNewOldTexts.imageAlt}
                     fill
-                    className="object-cover"
+                    className={KioskNewOldClasses.titleImage}
                     priority
                 />
             </div>

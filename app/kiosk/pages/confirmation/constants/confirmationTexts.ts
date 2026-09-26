@@ -1,12 +1,23 @@
 /**
+ * @file confirmationTexts.ts
+ * @description Centralized barrel re-exporting component-scoped text constants for the confirmation screen.
+ */
+
+import { ConfirmationDescriptionTexts } from "./confirmationDescriptionTexts";
+import { ConfirmationActionsTexts } from "./confirmationActionsTexts";
+import { ConfirmationLayoutTexts } from "./confirmationLayoutTexts";
+
+export * from "./confirmationDescriptionTexts";
+export * from "./confirmationActionsTexts";
+export * from "./confirmationModalTexts";
+export * from "./confirmationLayoutTexts";
+
+/**
  * Text copy for the service confirmation modal and fallback page.
- *
- * Provides bilingual headings, call-to-action button labels (Continue / Cancel),
- * and empty-state messaging when no service is selected.
  */
 export const confirmationTexts = {
-    badgeHeading: "Ano ito? — What is this?",
-    continueBtn: "Magpatuloy - Continue",
-    cancelBtn: "Bumalik - Cancel",
-    noService: "Walang napiling serbisyo. — No service selected.",
+    badgeHeading: ConfirmationDescriptionTexts.badgeHeading,
+    continueBtn: ConfirmationActionsTexts.continueBtn,
+    cancelBtn: ConfirmationActionsTexts.cancelBtn,
+    noService: ConfirmationLayoutTexts.noService,
 } as const;

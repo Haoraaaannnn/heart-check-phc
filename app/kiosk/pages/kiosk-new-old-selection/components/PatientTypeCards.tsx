@@ -5,6 +5,7 @@ import { PatientCategory } from "@/app/kiosk/pages/kiosk-new-old-selection/types
 import { useKioskNavigate } from "@/app/kiosk/hooks/useKioskNavigate";
 import {
     PatientTypeCardStyle,
+    KioskNewOldClasses,
     kioskNewOldColors,
 } from "@/app/kiosk/pages/kiosk-new-old-selection/constants/kioskNewOld";
 
@@ -43,14 +44,14 @@ export default function PatientTypeCard({ patientCategory }: PatientTypeCardProp
             type="button"
             onClick={handleSelect}
             style={PatientTypeCardStyle.card}
-            className="group transition-all duration-150 active:scale-95 hover:border-red-400 hover:shadow-md"
+            className={KioskNewOldClasses.card}
         >
             {/* Brand-colored icon container */}
             <div
                 style={PatientTypeCardStyle.iconWrapper}
-                className="transition-transform group-hover:scale-105"
+                className={KioskNewOldClasses.cardIconWrapper}
             >
-                <Icon size={56} stroke={1.5} color={kioskNewOldColors.white} className="sm:size-16" />
+                <Icon size={56} stroke={1.5} color={kioskNewOldColors.white} className={KioskNewOldClasses.cardIcon} />
             </div>
 
             {/* Category Labels */}
@@ -69,7 +70,7 @@ export default function PatientTypeCard({ patientCategory }: PatientTypeCardProp
                 size={36}
                 stroke={2}
                 color={kioskNewOldColors.arrowColor}
-                className="shrink-0 transition-transform group-hover:translate-x-1"
+                className={KioskNewOldClasses.cardArrow}
             />
         </button>
     );

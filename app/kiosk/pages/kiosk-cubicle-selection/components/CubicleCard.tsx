@@ -5,6 +5,7 @@ import { CubicleSelectorType } from "@/app/kiosk/pages/kiosk-cubicle-selection/t
 import { useKioskNavigate } from "@/app/kiosk/hooks/useKioskNavigate";
 import {
     CubicleCardStyle,
+    CubicleSelectionClasses,
     cubicleSelectionColors,
 } from "@/app/kiosk/pages/kiosk-cubicle-selection/constants/cubicleSelection";
 
@@ -71,12 +72,12 @@ export default function CubicleCard({
             type="button"
             onClick={handleClick}
             style={CubicleCardStyle.card}
-            className="group transition-all duration-150 active:scale-95 hover:border-red-400 hover:shadow-md"
+            className={CubicleSelectionClasses.card}
         >
             {/* Brand-colored icon container */}
             <div
                 style={CubicleCardStyle.iconWrapper}
-                className="transition-transform group-hover:scale-105"
+                className={CubicleSelectionClasses.cardIconWrapper}
             >
                 <IconStethoscope size={48} stroke={1.5} color={cubicleSelectionColors.iconFill} />
             </div>
@@ -93,7 +94,7 @@ export default function CubicleCard({
                 size={36}
                 stroke={2}
                 color={cubicleSelectionColors.arrowColor}
-                className="shrink-0 transition-transform group-hover:translate-x-1"
+                className={CubicleSelectionClasses.cardArrow}
             />
         </button>
     );

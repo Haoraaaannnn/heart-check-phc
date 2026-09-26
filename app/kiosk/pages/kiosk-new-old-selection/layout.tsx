@@ -4,6 +4,7 @@ import KioskTitle from "@/app/kiosk/pages/kiosk-new-old-selection/components/Kio
 import PatientTypeBanner from "@/app/kiosk/pages/kiosk-new-old-selection/components/PatientTypeBanner";
 import { useIsLandscape } from "@/hooks/useIsLandscape";
 import { useIsMounted } from "@/hooks/useIsMounted";
+import { KioskNewOldClasses } from "@/app/kiosk/pages/kiosk-new-old-selection/constants/kioskNewOld";
 
 /** Props for {@link KioskNewOldSelectionLayout}. */
 interface KioskNewOldSelectionLayoutProps {
@@ -33,37 +34,29 @@ export default function KioskNewOldSelectionLayout({
     const mounted = useIsMounted();
 
     return (
-        <div
-            className={`fixed inset-0 flex h-dvh w-dvw items-center justify-center overflow-hidden bg-white transition-opacity duration-300 ${
-                mounted ? "opacity-100" : "opacity-0"
-            }`}
-        >
-            <main
-                className={`flex h-full w-full min-h-0 flex-1 overflow-y-auto overflow-x-hidden pt-4 [scrollbar-width:none] [&::-webkit-scrollbar]:hidden ${
-                    isLandscape ? "pb-[120px]" : "pb-[140px]"
-                }`}
-            >
-                <div className="m-auto flex w-full items-center justify-center">
+        <div className={KioskNewOldClasses.layoutOverlay(mounted)}>
+            <main className={KioskNewOldClasses.layoutMain(isLandscape)}>
+                <div className={KioskNewOldClasses.layoutCenterWrapper}>
                     {isLandscape ? (
                         /* LANDSCAPE DUAL-COLUMN VIEW */
-                        <div className="flex w-[92%] max-w-[1750px] items-center justify-center gap-[4vw]">
+                        <div className={KioskNewOldClasses.layoutLandscapeRow}>
                             {/* Left column: Hospital Title & Image */}
-                            <div className="flex w-[45%] flex-col items-center justify-center">
+                            <div className={KioskNewOldClasses.layoutLandscapeLeftCol}>
                                 <KioskTitle isLandscape={true} />
                             </div>
 
                             {/* Right column: Banner Instructions & Cards */}
-                            <div className="flex w-[55%] flex-col items-center justify-center">
+                            <div className={KioskNewOldClasses.layoutLandscapeRightCol}>
                                 <PatientTypeBanner />
-                                <div className="w-full">{children}</div>
+                                <div className={KioskNewOldClasses.layoutChildrenWrapper}>{children}</div>
                             </div>
                         </div>
                     ) : (
                         /* PORTRAIT STACKED VIEW */
-                        <div className="flex w-full max-w-[900px] flex-col items-center justify-center px-[4vw]">
+                        <div className={KioskNewOldClasses.layoutPortraitStack}>
                             <KioskTitle isLandscape={false} />
                             <PatientTypeBanner />
-                            <div className="w-full">{children}</div>
+                            <div className={KioskNewOldClasses.layoutChildrenWrapper}>{children}</div>
                         </div>
                     )}
                 </div>

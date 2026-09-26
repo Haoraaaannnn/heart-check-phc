@@ -2,6 +2,11 @@
 "use client";
 
 import { useKioskLoading } from "@/app/kiosk/context/KioskLoadingContext";
+import {
+    KioskLoadingOverlayClasses,
+    KioskLoadingOverlayStyles,
+} from "@/app/kiosk/constants/kioskLoadingOverlay";
+import { KioskLoadingOverlayTexts } from "@/app/kiosk/constants/kioskLoadingOverlayTexts";
 
 /**
  * KioskLoadingOverlay
@@ -13,6 +18,8 @@ import { useKioskLoading } from "@/app/kiosk/context/KioskLoadingContext";
  *
  * The backdrop is blurred (not fully opaque) so the page behind stays
  * visible but reads as inert while the overlay is up.
+ *
+ * @returns The rendered full-screen loading overlay, or null when inactive.
  */
 export default function KioskLoadingOverlay() {
     const { isLoading, message } = useKioskLoading();
@@ -21,16 +28,21 @@ export default function KioskLoadingOverlay() {
 
     return (
         <div
-            role="status"
-            aria-live="polite"
+            role={KioskLoadingOverlayTexts.ariaRole}
+            aria-live={KioskLoadingOverlayTexts.ariaLive}
             aria-label={message}
-            className="fixed inset-0 z-50 flex flex-col items-center justify-center gap-6 bg-white/40 backdrop-blur-sm"
+            className={KioskLoadingOverlayClasses.overlay}
+            style={KioskLoadingOverlayStyles.overlay}
         >
             <div
-                className="h-16 w-16 animate-spin rounded-full border-4 border-gray-200 border-t-blue-600"
+                className={KioskLoadingOverlayClasses.spinner}
+                style={KioskLoadingOverlayStyles.spinner}
                 aria-hidden="true"
             />
-            <p className="text-lg font-medium text-gray-700 drop-shadow-sm">
+            <p
+                className={KioskLoadingOverlayClasses.message}
+                style={KioskLoadingOverlayStyles.message}
+            >
                 {message}
             </p>
         </div>

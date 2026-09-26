@@ -1,4 +1,7 @@
-"use client";
+import {
+    SMSNumPadStyle,
+    SMSInputClasses,
+} from "@/app/kiosk/pages/sms-input/constants/smsInput";
 
 /** Props for {@link NumPad}. */
 interface NumPadProps {
@@ -17,7 +20,7 @@ const KEYPAD_BUTTONS = ["1", "2", "3", "4", "5", "6", "7", "8", "9", "", "0", ""
  */
 export default function NumPad({ onDigit }: NumPadProps) {
     return (
-        <div className="grid grid-cols-3 grid-rows-4 gap-3 sm:gap-4 md:gap-5 w-full max-w-[24rem] sm:max-w-[28rem] mx-auto">
+        <div style={SMSNumPadStyle.grid}>
             {KEYPAD_BUTTONS.map((btn, index) =>
                 btn === "" ? (
                     <div key={index} aria-hidden="true" />
@@ -27,7 +30,8 @@ export default function NumPad({ onDigit }: NumPadProps) {
                         type="button"
                         onClick={() => onDigit(btn)}
                         aria-label={`Digit ${btn}`}
-                        className="w-full h-16 sm:h-20 md:h-22 bg-gray-100 hover:bg-gray-200 rounded-2xl text-3xl sm:text-4xl md:text-5xl font-bold text-gray-900 shadow-[0_4px_0_#cbd5e1] flex items-center justify-center transition-all duration-100 active:translate-y-1 active:shadow-none"
+                        style={SMSNumPadStyle.keyButton}
+                        className={SMSInputClasses.keypadBtn}
                     >
                         {btn}
                     </button>

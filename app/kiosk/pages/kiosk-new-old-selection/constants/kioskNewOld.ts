@@ -165,3 +165,38 @@ export const kioskNewOldStyles = {
         backgroundColor: kioskNewOldColors.brandRed,
     },
 } satisfies Record<string, CSSProperties>;
+
+/**
+ * Tailwind CSS class name dictionary for the patient type selection screen.
+ *
+ * Centralizes layout grids, responsive columns, image wrappers, and interactive
+ * hover/active states so that UI files avoid hardcoded utility strings.
+ */
+export const KioskNewOldClasses = {
+    grid: "grid w-full grid-cols-1 sm:grid-cols-2 gap-4 sm:gap-6 px-4 py-4",
+    card: "group transition-all duration-150 active:scale-95 hover:border-red-400 hover:shadow-md",
+    cardIconWrapper: "transition-transform group-hover:scale-105",
+    cardIcon: "sm:size-16",
+    cardArrow: "shrink-0 transition-transform group-hover:translate-x-1",
+    titleStroke: "[-webkit-text-stroke:1px_currentColor]",
+    titleImageWrapper: (isLandscape: boolean): string =>
+        `relative mx-auto aspect-[16/9] w-full overflow-hidden rounded-2xl shadow-sm ${
+            isLandscape ? "max-w-[760px]" : "max-w-[900px]"
+        }`,
+    titleImage: "object-cover",
+    layoutOverlay: (mounted: boolean): string =>
+        `fixed inset-0 flex h-dvh w-dvw items-center justify-center overflow-hidden bg-white transition-opacity duration-300 ${
+            mounted ? "opacity-100" : "opacity-0"
+        }`,
+    layoutMain: (isLandscape: boolean): string =>
+        `flex h-full w-full min-h-0 flex-1 overflow-y-auto overflow-x-hidden pt-4 [scrollbar-width:none] [&::-webkit-scrollbar]:hidden ${
+            isLandscape ? "pb-[120px]" : "pb-[140px]"
+        }`,
+    layoutCenterWrapper: "m-auto flex w-full items-center justify-center",
+    layoutLandscapeRow: "flex w-[92%] max-w-[1750px] items-center justify-center gap-[4vw]",
+    layoutLandscapeLeftCol: "flex w-[45%] flex-col items-center justify-center",
+    layoutLandscapeRightCol: "flex w-[55%] flex-col items-center justify-center",
+    layoutPortraitStack: "flex w-full max-w-[900px] flex-col items-center justify-center px-[4vw]",
+    layoutChildrenWrapper: "w-full",
+} as const;
+

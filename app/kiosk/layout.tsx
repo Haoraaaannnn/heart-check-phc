@@ -11,6 +11,10 @@ import {
     useKioskLoading,
 } from "@/app/kiosk/context/KioskLoadingContext";
 import KioskLoadingOverlay from "@/app/kiosk/components/KioskLoadingOverlay";
+import {
+    KioskLayoutClasses,
+    KioskLayoutStyle,
+} from "@/app/kiosk/constants/kioskLayout";
 
 /** Props for {@link MainKioskLayout}. */
 interface MainKioskLayoutProps {
@@ -163,21 +167,26 @@ export default function MainKioskLayout({ children }: MainKioskLayoutProps) {
             <KioskRouteChangeIndicator pathname={pathname} />
 
             <div
-                className={`fixed inset-0 flex h-dvh w-dvw flex-col overflow-hidden bg-white transition-opacity duration-300 ${
-                    mounted ? "opacity-100" : "opacity-0"
-                }`}
+                className={KioskLayoutClasses.container(mounted)}
+                style={KioskLayoutStyle.container}
             >
                 {shouldShowBackButton && backHref && (
                     <KioskBackButton href={backHref} />
                 )}
 
                 {/* Main content: fills all remaining space, no fixed dimensions. */}
-                <main className="flex min-h-0 w-full flex-1 flex-col overflow-hidden">
+                <main
+                    className={KioskLayoutClasses.main}
+                    style={KioskLayoutStyle.main}
+                >
                     {children}
                 </main>
 
                 {/* Footer: sized by its own content. */}
-                <div className="w-full flex-shrink-0">
+                <div
+                    className={KioskLayoutClasses.footerWrapper}
+                    style={KioskLayoutStyle.footerWrapper}
+                >
                     <KioskHeader />
                 </div>
             </div>

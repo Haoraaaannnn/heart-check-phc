@@ -14,6 +14,7 @@ import {
     SMS_PHONE_MAX_LENGTH,
     SMS_SERVICE_PREFIXES,
     NUMERIC_PREFIX_RULES,
+    SMSInputClasses,
 } from "@/app/kiosk/pages/sms-input/constants/smsInput";
 
 /** Props for {@link KioskPhoneEntry}. */
@@ -198,20 +199,20 @@ export default function KioskPhoneEntry({
     };
 
     return (
-        <div className="h-full min-h-0 w-full grid grid-cols-1 grid-rows-[auto_minmax(0,1fr)_auto] gap-3 sm:gap-4 md:gap-6 p-4 md:p-6 overflow-hidden bg-white landscape:grid-cols-[1.2fr_1fr] landscape:grid-rows-[auto_minmax(0,1fr)_auto] landscape:gap-x-12 landscape:gap-y-6">
+        <div className={SMSInputClasses.entryGrid}>
             {/* Left Column (Landscape): Instructions and Phone Display */}
-            <div className="flex w-full flex-col gap-3 sm:gap-4 landscape:col-start-1 landscape:row-start-1 landscape:row-span-2 landscape:justify-center landscape:items-start">
+            <div className={SMSInputClasses.entryLeftCol}>
                 <SMSInstruction service={service} />
                 <PhoneInput phone={phone} onDelete={deleteLast} service={service} />
             </div>
 
             {/* Right Column (Landscape): Keypad */}
-            <div className="flex h-full w-full items-center justify-center portrait:py-4 landscape:items-center landscape:justify-end landscape:col-start-2 landscape:row-start-1 landscape:row-span-2 landscape:px-4 lg:landscape:px-8">
+            <div className={SMSInputClasses.entryRightCol}>
                 <NumPad onDigit={addDigit} />
             </div>
 
             {/* Bottom Row: Action Controls */}
-            <div className="flex-none w-full landscape:col-start-1 landscape:col-end-3 landscape:row-start-3">
+            <div className={SMSInputClasses.entryBottomRow}>
                 <ContinueButton
                     disabled={phone.length !== SMS_PHONE_MAX_LENGTH}
                     onContinue={() => setShowContinueModal(true)}

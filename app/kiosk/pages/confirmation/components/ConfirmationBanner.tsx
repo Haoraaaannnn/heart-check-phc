@@ -1,6 +1,9 @@
 import * as TablerIcons from "@tabler/icons-react";
 import type { Service } from "@/types/Services";
-import { ConfirmationBannerStyle } from "@/app/kiosk/pages/confirmation/constants/confirmation";
+import {
+    ConfirmationBannerStyle,
+    ConfirmationBannerClasses,
+} from "@/app/kiosk/pages/confirmation/constants/confirmationBanner";
 
 /** Tabler icons mapping for runtime resolution. */
 const ICONS = TablerIcons as unknown as Record<string, TablerIcons.Icon | undefined>;
@@ -23,7 +26,7 @@ export default function ServiceBanner({ service }: ServiceBannerProps) {
     return (
         <div style={ConfirmationBannerStyle.banner}>
             <Icon
-                className="w-16 sm:w-24 md:w-28 h-16 sm:h-24 md:h-28 drop-shadow-md shrink-0"
+                className={ConfirmationBannerClasses.icon}
                 size={110}
                 stroke={1.5}
                 color="#ffffff"

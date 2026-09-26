@@ -138,3 +138,31 @@ export const cubicleSelectionStyles = {
         backgroundColor: cubicleSelectionColors.iconTileBg,
     },
 } satisfies Record<string, CSSProperties>;
+
+/**
+ * Tailwind CSS class name dictionary for cubicle selection components.
+ *
+ * Centralizes layout grids, card interactions, and layout wrapper classes
+ * so that consumer UI components avoid hardcoded utility strings.
+ */
+export const CubicleSelectionClasses = {
+    grid: "grid w-full grid-cols-1 sm:grid-cols-2 landscape:grid-cols-3 gap-6 px-6 py-6",
+    card: "group transition-all duration-150 active:scale-95 hover:border-red-400 hover:shadow-md",
+    cardIconWrapper: "transition-transform group-hover:scale-105",
+    cardArrow: "shrink-0 transition-transform group-hover:translate-x-1",
+    layoutOverlay: (mounted: boolean): string =>
+        `flex h-full w-full items-center justify-center overflow-hidden bg-white transition-opacity duration-300 ${
+            mounted ? "opacity-100" : "opacity-0"
+        }`,
+    layoutContainer: "relative flex h-full w-full flex-col overflow-hidden",
+    layoutMain: (isLandscape: boolean): string =>
+        `flex flex-1 min-h-0 overflow-y-auto overflow-x-hidden pt-4 [scrollbar-width:none] [&::-webkit-scrollbar]:hidden ${
+            isLandscape ? "pb-[120px]" : "pb-[140px]"
+        }`,
+    layoutInner: (isLandscape: boolean): string =>
+        `m-auto flex flex-col items-center ${
+            isLandscape ? "w-[92%] max-w-[1600px]" : "w-full max-w-[900px]"
+        }`,
+    layoutChildren: "w-full",
+} as const;
+
