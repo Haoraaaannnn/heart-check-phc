@@ -140,11 +140,10 @@ app/nurse/
 │   ├── StageColumn.tsx                # Reusable pipeline column container with dropzone detection
 │   └── WithDoctorSection.tsx          # Column 2: Active doctor consultation stage
 ├── constants/
-│   ├── index.ts                       # Barrel re-export for constants
 │   ├── nurse.ts                       # CSSProperties, layout tokens, theme colors & stage styles
 │   └── nurseTexts.ts                  # ALL text copy, labels, tooltips, empty states & TTS phrases
 ├── hooks/
-│   ├── index.ts                       # Barrel export for all custom hooks
+│   ├── dragUtils.ts                   # Pointer coordinate and drop target hit-testing utilities
 │   ├── useIdleTimeout.ts              # Inactivity monitor to preserve clinical session integrity
 │   ├── useNurseActions.ts             # State mutations with optimistic updates & Supabase persistence
 │   ├── useNurseData.ts                # Real-time data fetching, Superadmin bypass & cubicle scoping
@@ -606,7 +605,7 @@ The refactoring will be executed across four distinct, safe phases:
 │ - Refactor useNurseActions.ts (remove alert, add undo) │
 │ - Create useNurseSelection.ts (Click-to-Select)        │
 │ - Create useNurseDragAndDrop.ts (Pointer DnD)          │
-│ - Create hooks/index.ts barrel export                  │
+│ - Enforce direct imports (no barrel index files)       │
 └──────────────────────────┬─────────────────────────────┘
                            │
                            ▼

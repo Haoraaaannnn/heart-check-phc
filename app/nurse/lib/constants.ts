@@ -5,7 +5,8 @@
  * and re-exports new architectural constants from app/nurse/constants.
  */
 
-export * from '../constants';
+export * from '../constants/nurse';
+export * from '../constants/nurseTexts';
 
 export const CATEGORIES = [
   'Consultation', 'OPD Card', 'Refill Prescription', 'ECG',

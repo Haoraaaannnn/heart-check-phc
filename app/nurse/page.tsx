@@ -25,24 +25,23 @@ import React, { useState, useEffect, useMemo, useCallback } from 'react';
 import { useRouter } from 'next/navigation';
 import { supabase } from '@/lib/supabase';
 import { Patient } from '@/types/Types';
+import { NurseSidebar } from './components/NurseSidebar';
+import { NurseHeader } from './components/NurseHeader';
+import { NurseBoard } from './components/NurseBoard';
+import { NurseSelectionBanner } from './components/NurseSelectionBanner';
+import { NurseDragGhost } from './components/NurseDragGhost';
+import { FinishedDrawer } from './components/FinishedDrawer';
+
+import { useRequireAuth } from './hooks/useRequireAuth';
+import { useIdleTimeout } from './hooks/useIdleTimeout';
+import { useNurseData } from './hooks/useNurseData';
+import { useNurseActions } from './hooks/useNurseActions';
 import {
-  NurseSidebar,
-  NurseHeader,
-  NurseBoard,
-  NurseSelectionBanner,
-  NurseDragGhost,
-  FinishedDrawer,
-} from './components';
-import {
-  useRequireAuth,
-  useIdleTimeout,
-  useNurseData,
-  useNurseActions,
   useNurseDragAndDrop,
-  useNurseSelection,
-  useRealtimeSubscription,
   isValidStageTransition,
-} from './hooks';
+} from './hooks/useNurseDragAndDrop';
+import { useNurseSelection } from './hooks/useNurseSelection';
+import { useRealtimeSubscription } from './hooks/useRealtimeSubscription';
 import { useBottleneckNotifications } from '@/app/dashboard/hooks/useBottleneckNotifications';
 import { nurseTexts } from './constants/nurseTexts';
 import { NurseStyle, nurseLayoutTokens } from './constants/nurse';

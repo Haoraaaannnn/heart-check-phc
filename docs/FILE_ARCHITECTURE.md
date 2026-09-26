@@ -286,7 +286,6 @@ Directory structure:
     │   │   │   ├── ElapsedTimer.tsx
     │   │   │   ├── FinishedDrawer.tsx
     │   │   │   ├── FinishedTable.tsx
-    │   │   │   ├── index.ts
     │   │   │   ├── NurseBoard.tsx
     │   │   │   ├── NurseDragGhost.tsx
     │   │   │   ├── NurseDragHandle.tsx
@@ -298,12 +297,10 @@ Directory structure:
     │   │   │   ├── StageColumn.tsx
     │   │   │   └── WithDoctorSection.tsx
     │   │   ├── constants/
-    │   │   │   ├── index.ts
     │   │   │   ├── nurse.ts
     │   │   │   └── nurseTexts.ts
     │   │   ├── hooks/
     │   │   │   ├── dragUtils.ts
-    │   │   │   ├── index.ts
     │   │   │   ├── useIdleTimeout.ts
     │   │   │   ├── useNurseActions.ts
     │   │   │   ├── useNurseData.ts
