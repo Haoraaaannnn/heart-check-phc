@@ -305,7 +305,8 @@ Directory structure:
     │   │               ├── smsLayout.ts
     │   │               ├── smsModalTexts.ts
     │   │               ├── smsNumPad.ts
-    │   │               └── smsPhoneInput.ts
+    │   │               ├── smsPhoneInput.ts
+    │   │               └── smsPrefixRules.ts
     │   ├── login/
     │   │   └── page.tsx
     │   ├── monitor/

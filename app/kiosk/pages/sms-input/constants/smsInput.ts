@@ -10,6 +10,7 @@ export * from "./smsNumPad";
 export * from "./smsContinueButton";
 export * from "./smsLayout";
 export * from "./smsInputTexts";
+export * from "./smsPrefixRules";
 
 import { SMSPhoneInputClasses } from "./smsPhoneInput";
 import { SMSNumPadClasses } from "./smsNumPad";
