@@ -70,26 +70,25 @@ Kiosk inserts currently go through the public anon key directly to Supabase. Wit
 
 Route protection is **still client-side only**. `useRoleGuard` (and/or `lib/supabase/authGuard.ts`) queries `users.role` and redirects unauthorized users, but this runs *after* Next.js has already sent the page to the browser — there is a window where unauthorized content can flash or be briefly interactive, and the check can be bypassed by disabling JavaScript or intercepting the client-side redirect.
 
-`middleware.ts` does **not** exist in the repo. This was previously documented here as implemented — that was incorrect. It remains a planned fix, not a completed one.
+`middleware.ts` is now implemented at the project root. See below for the built route map.
 
 **Open item:** confirm `useRoleGuard`/`authGuard.ts` actually queries `users`/`auth_id` correctly against the corrected schema — not yet reviewed against the real hook code.
 
-### Planned design (not yet built)
+### Built implementation
 
-Server-side middleware, matching this route map, still needs to be added:
+Server-side middleware (`middleware.ts`) matches the following route map:
 
-/superadmin → superadmin only
-/dashboard → admin, superadmin
-/nurse → nurse, staff, admin, superadmin
-/transfer → nurse, staff, admin, superadmin
-/kiosk → public, no auth check
-/monitor → public, no auth check
-/login → public
+- /superadmin → superadmin only
+- /dashboard → admin, superadmin
+- /nurse → nurse, staff, admin, superadmin
+- /transfer → nurse, staff, admin, superadmin
+- /kiosk → public, no auth check
+- /monitor → public, no auth check
+- /login → public
 
+An `/unauthorized` page has also been created. Middleware redirects unauthenticated users to `/login` and authenticated users with insufficient role to `/unauthorized`.
 
-An `/unauthorized` page also does not exist yet and will be needed once middleware redirects to it.
-
-**Design decision to confirm with team:** admin/superadmin are currently allowed to fall through into `/nurse` and `/transfer` (oversight/support access) in the planned route map above. If admins should be fully separated from nurse/transfer workflows instead, remove them from those route arrays once middleware is built.
+**Design decision confirmed:** admin/superadmin are permitted on `/nurse` and `/transfer` for oversight and support access.
 
 ## Other Open Items
 

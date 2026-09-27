@@ -5,6 +5,15 @@
 
 import { CSSProperties } from "react";
 import { themeColors } from "@/constants/colors";
+import { COMMON_ICONS } from "@/constants/icons";
+
+/**
+ * Icon tokens for the universal kiosk back navigation button.
+ */
+export const KioskBackButtonTokens = {
+    /** Boxicons class for the left-pointing navigation arrow. */
+    iconClass: COMMON_ICONS.back,
+} as const;
 
 /**
  * Static visual style definitions for the universal kiosk back navigation button.
@@ -15,6 +24,13 @@ export const KioskBackButtonStyles = {
      */
     button: {
         backgroundColor: themeColors.brandRed,
+    },
+    /**
+     * Inline icon sizing ensuring faithful rendering identical to previous Tabler icons.
+     */
+    icon: {
+        fontSize: 28,
+        lineHeight: 1,
     },
 } satisfies Record<string, CSSProperties>;
 

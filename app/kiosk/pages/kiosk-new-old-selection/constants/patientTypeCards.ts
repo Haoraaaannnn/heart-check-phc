@@ -5,6 +5,14 @@
 
 import { CSSProperties } from "react";
 import { themeColors } from "@/constants/colors";
+import { PATIENT_TYPE_ICONS, COMMON_ICONS } from "@/constants/icons";
+
+/** Boxicons class tokens for patient category card elements. */
+export const PatientTypeCardIcons = {
+    ...PATIENT_TYPE_ICONS,
+    arrow: COMMON_ICONS.arrowRight,
+    fallback: COMMON_ICONS.fallback,
+} as const;
 
 /** Typography tokens for patient type cards. */
 export const patientTypeCardTypography = {
@@ -20,6 +28,16 @@ export const patientTypeCardColors = {
 
 /** Inline styles for `PatientTypeCard`. */
 export const PatientTypeCardStyle = {
+    cardIcon: {
+        fontSize: 56,
+        color: themeColors.white,
+        lineHeight: 1,
+    },
+    arrowIcon: {
+        fontSize: 36,
+        color: "#D7D6D6",
+        lineHeight: 1,
+    },
     card: {
         position: "relative",
         display: "flex",

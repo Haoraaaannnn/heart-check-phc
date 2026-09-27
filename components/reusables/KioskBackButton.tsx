@@ -1,10 +1,10 @@
 "use client";
 
 import Link from "next/link";
-import { IconArrowLeft } from "@tabler/icons-react";
 import {
     KioskBackButtonClasses,
     KioskBackButtonStyles,
+    KioskBackButtonTokens,
 } from "@/app/kiosk/constants/kioskBackButton";
 import { KioskBackButtonTexts } from "@/app/kiosk/constants/kioskBackButtonTexts";
 
@@ -37,7 +37,11 @@ export default function KioskBackButton({
             className={KioskBackButtonClasses.button}
             style={KioskBackButtonStyles.button}
         >
-            <IconArrowLeft size={28} stroke={2} />
+            <i
+                className={`bx ${KioskBackButtonTokens.iconClass}`}
+                style={KioskBackButtonStyles.icon}
+                aria-hidden="true"
+            />
             <span>{label}</span>
         </Link>
     );

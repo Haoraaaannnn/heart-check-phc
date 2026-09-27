@@ -1,5 +1,12 @@
 import { CSSProperties } from "react";
 import { themeColors } from "@/constants/colors";
+import { COMMON_ICONS } from "@/constants/icons";
+
+/** Boxicons class tokens for services menu elements. */
+export const KioskServicesIcons = {
+    arrow: COMMON_ICONS.arrowRight,
+    fallback: COMMON_ICONS.fallback,
+} as const;
 
 /** Spacing tokens for the services menu cards and grid. */
 export const kioskServicesSpacing = {
@@ -35,6 +42,16 @@ export const kioskServicesTypography = {
 
 /** Inline styles for `ServiceCard`. */
 export const KioskServicesCardStyle = {
+    icon: {
+        fontSize: 76,
+        color: kioskServicesColors.iconFill,
+        lineHeight: 1,
+    },
+    arrowIcon: {
+        fontSize: 36,
+        color: kioskServicesColors.arrowColor,
+        lineHeight: 1,
+    },
     card: {
         position: "relative",
         display: "flex",

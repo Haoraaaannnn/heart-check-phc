@@ -77,7 +77,7 @@ Heart Check PHC is architected as a cohesive full-stack platform:
 | Layer | Technologies |
 |---|---|
 | **Frontend** | Next.js 15 (App Router), React 19, TypeScript, Tailwind CSS, Recharts |
-| **Icons & UI** | Tabler Icons, Boxicons, Custom CSS design tokens |
+| **Icons & UI** | Boxicons (centralized tokens in `constants/icons.ts`), Custom CSS design tokens |
 | **Backend API** | FastAPI (Python 3.10+), Uvicorn |
 | **Data & ML** | Pandas, NumPy, Scikit-learn, Statsmodels, SimPy, OpenPyXL |
 | **Database** | Supabase (PostgreSQL 15), Supabase Realtime, Row-Level Security (RLS) |
@@ -177,6 +177,7 @@ Comprehensive documentation is maintained in the `docs/` folder:
 | [`docs/SETUP_AND_SEEDING.md`](file:///home/jensen/Github-Repositories/heart-check-phc/docs/SETUP_AND_SEEDING.md) | Installation, local configuration, and automated queue data seeding guide |
 | [`docs/CHANGES_NEEDED.md`](file:///home/jensen/Github-Repositories/heart-check-phc/docs/CHANGES_NEEDED.md) | Actionable checklist for database migrations, role helpers, and security patches |
 | [`docs/FILE_ARCHITECTURE.md`](file:///home/jensen/Github-Repositories/heart-check-phc/docs/FILE_ARCHITECTURE.md) | Complete directory tree mapping every file in the repository |
+| [`docs/CONNECTIVITY_RESILIENCE.md`](file:///home/jensen/Github-Repositories/heart-check-phc/docs/CONNECTIVITY_RESILIENCE.md) | Connectivity resilience strategy: polling fallback for weak internet, LAN-first WebSocket architecture for PHC on-premises deployment |
 
 ---
 

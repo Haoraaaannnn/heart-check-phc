@@ -1,7 +1,6 @@
 "use client";
 
 import { useSearchParams } from "next/navigation";
-import { IconUser, IconMoodKid, IconArrowNarrowRight } from "@tabler/icons-react";
 import { useKioskNavigate } from "@/app/kiosk/hooks/useKioskNavigate";
 import { CategoryHeaderTexts } from "@/app/kiosk/pages/category-selection/constants/categoryHeaderTexts";
 import { CategoryHeaderStyle } from "@/app/kiosk/pages/category-selection/constants/categoryHeader";
@@ -9,6 +8,7 @@ import { CategoryCardsTexts } from "@/app/kiosk/pages/category-selection/constan
 import {
     CategoryCardsStyle,
     CategoryCardsClasses,
+    CategoryCardsIcons,
     categoryCardsTheme,
 } from "@/app/kiosk/pages/category-selection/constants/categoryCards";
 import {
@@ -93,7 +93,11 @@ export default function CategorySelectionPage() {
                             style={CategoryCardsStyle.adultIconTile}
                             className={CategoryCardsClasses.iconTile}
                         >
-                            <IconUser size={64} stroke={1.5} color={categoryCardsTheme.iconFill} />
+                            <i
+                                className={`bx ${CategoryCardsIcons.adult}`}
+                                style={CategoryCardsStyle.icon}
+                                aria-hidden="true"
+                            />
                         </div>
 
                         <div>
@@ -110,7 +114,11 @@ export default function CategorySelectionPage() {
                             className={CategoryCardsClasses.cta}
                         >
                             <span>{CategoryCardsTexts.cta}</span>
-                            <IconArrowNarrowRight size={24} stroke={2} />
+                            <i
+                                className={`bx ${CategoryCardsIcons.arrow}`}
+                                style={CategoryCardsStyle.arrowIcon}
+                                aria-hidden="true"
+                            />
                         </div>
                     </button>
 
@@ -125,7 +133,11 @@ export default function CategorySelectionPage() {
                             style={CategoryCardsStyle.pediaIconTile}
                             className={CategoryCardsClasses.iconTile}
                         >
-                            <IconMoodKid size={64} stroke={1.5} color={categoryCardsTheme.iconFill} />
+                            <i
+                                className={`bx ${CategoryCardsIcons.pedia}`}
+                                style={CategoryCardsStyle.icon}
+                                aria-hidden="true"
+                            />
                         </div>
 
                         <div>
@@ -142,7 +154,11 @@ export default function CategorySelectionPage() {
                             className={CategoryCardsClasses.cta}
                         >
                             <span>{CategoryCardsTexts.cta}</span>
-                            <IconArrowNarrowRight size={24} stroke={2} />
+                            <i
+                                className={`bx ${CategoryCardsIcons.arrow}`}
+                                style={CategoryCardsStyle.arrowIcon}
+                                aria-hidden="true"
+                            />
                         </div>
                     </button>
                 </div>

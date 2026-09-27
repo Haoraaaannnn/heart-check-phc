@@ -1,11 +1,11 @@
 "use client";
 
 import { Service } from "@/types/Services";
-import { IconBackspace } from "@tabler/icons-react";
 import {
     SMS_PHONE_PLACEHOLDER,
     SMSPhoneInputStyle,
     SMSPhoneInputClasses,
+    SMSPhoneInputIcons,
 } from "@/app/kiosk/pages/sms-input/constants/smsPhoneInput";
 
 /** Props for {@link PhoneInput}. */
@@ -57,7 +57,11 @@ export default function PhoneInput({ phone, onDelete, service: _service }: Phone
                 style={SMSPhoneInputStyle.backspaceBtn}
                 className={SMSPhoneInputClasses.backspaceBtn}
             >
-                <IconBackspace size={28} className={SMSPhoneInputClasses.backspaceIcon} />
+                <i
+                    className={`bx ${SMSPhoneInputIcons.backspace} ${SMSPhoneInputClasses.backspaceIcon}`}
+                    style={SMSPhoneInputStyle.backspaceIcon}
+                    aria-hidden="true"
+                />
             </button>
         </div>
     );

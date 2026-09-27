@@ -6,6 +6,14 @@
 import { CSSProperties } from "react";
 import { themeColors } from "@/constants/colors";
 import { fontSizeBody } from "@/constants/kiosk";
+import { SUBCATEGORY_ICONS, COMMON_ICONS } from "@/constants/icons";
+
+/** Boxicons class tokens for age category selection cards. */
+export const CategoryCardsIcons = {
+    adult: SUBCATEGORY_ICONS.Adult,
+    pedia: SUBCATEGORY_ICONS.Pedia,
+    arrow: COMMON_ICONS.arrowRight,
+} as const;
 
 /** Theme colors for the Adult and Pedia category buttons. */
 export const categoryCardsTheme = {
@@ -38,6 +46,15 @@ export const categoryCardsTypography = {
 
 /** Inline styles for the category cards grid and buttons. */
 export const CategoryCardsStyle = {
+    icon: {
+        fontSize: categoryCardsSpacing.iconSize,
+        color: categoryCardsTheme.iconFill,
+        lineHeight: 1,
+    },
+    arrowIcon: {
+        fontSize: 24,
+        lineHeight: 1,
+    },
     cardsGrid: {
         display: "grid",
         width: "100%",

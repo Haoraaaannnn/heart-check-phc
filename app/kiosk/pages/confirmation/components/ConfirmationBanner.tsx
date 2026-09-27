@@ -1,12 +1,9 @@
-import * as TablerIcons from "@tabler/icons-react";
 import type { Service } from "@/types/Services";
 import {
     ConfirmationBannerStyle,
     ConfirmationBannerClasses,
 } from "@/app/kiosk/pages/confirmation/constants/confirmationBanner";
-
-/** Tabler icons mapping for runtime resolution. */
-const ICONS = TablerIcons as unknown as Record<string, TablerIcons.Icon | undefined>;
+import { resolveServiceIcon } from "@/constants/icons";
 
 /** Props for {@link ServiceBanner}. */
 interface ServiceBannerProps {
@@ -21,15 +18,14 @@ interface ServiceBannerProps {
  * @returns The service banner with brand background.
  */
 export default function ServiceBanner({ service }: ServiceBannerProps) {
-    const Icon = ICONS[service.icon_src] ?? TablerIcons.IconCircleDashed;
+    const iconClass = resolveServiceIcon(service);
 
     return (
         <div style={ConfirmationBannerStyle.banner}>
-            <Icon
-                className={ConfirmationBannerClasses.icon}
-                size={110}
-                stroke={1.5}
-                color="#ffffff"
+            <i
+                className={`bx ${iconClass} ${ConfirmationBannerClasses.icon}`}
+                style={ConfirmationBannerStyle.icon}
+                aria-hidden="true"
             />
             <div style={ConfirmationBannerStyle.textWrapper}>
                 <span style={ConfirmationBannerStyle.title}>

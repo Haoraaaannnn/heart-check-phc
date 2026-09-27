@@ -39,6 +39,7 @@ Use this lookup table to immediately find the file you need:
 | :--- | :--- |
 | **Change text copy, titles, or button labels** | Look for the matching `constants/<component>Texts.ts` in that route. |
 | **Change colors, typography, or card padding** | Look for the matching `constants/<component>.ts` in that route. |
+| **Change icons or resolve service/category Boxicons** | [constants/icons.ts](file:///home/jensen/Github-Repositories/heart-check-phc/constants/icons.ts) (central icon map and resolvers) or local `<component>.ts` (page-specific icon tokens). |
 | **Change layout dimensions, padding, or orientation behavior** | Look for `constants/<feature>Layout.ts` or the route's `layout.tsx`. |
 | **Change navigation flow or routing destinations** | Check the page component (`page.tsx`) or `app/kiosk/hooks/useKioskNavigate.ts`. |
 | **Change loading overlay message or animation** | [kioskLoadingOverlayTexts.ts](file:///home/jensen/Github-Repositories/heart-check-phc/app/kiosk/constants/kioskLoadingOverlayTexts.ts) / [kioskLoadingOverlay.ts](file:///home/jensen/Github-Repositories/heart-check-phc/app/kiosk/constants/kioskLoadingOverlay.ts). |
@@ -46,6 +47,7 @@ Use this lookup table to immediately find the file you need:
 | **Change the hardware ticket print API payload** | [QueuePrintContent.tsx](file:///home/jensen/Github-Repositories/heart-check-phc/app/kiosk/pages/queue-print/components/QueuePrintContent.tsx) and `/api/print-ticket/route.ts`. |
 | **Change ticket redirect countdown delay** | [queuePrintTicket.ts](file:///home/jensen/Github-Repositories/heart-check-phc/app/kiosk/pages/queue-print/constants/queuePrintTicket.ts) (`QUEUE_PRINT_REDIRECT_DELAY_MS`). |
 | **Change mobile phone number validation rules** | [KioskPhoneEntry.tsx](file:///home/jensen/Github-Repositories/heart-check-phc/app/kiosk/pages/sms-input/components/KioskPhoneEntry.tsx). |
+| **Change queue ticket prefixes and numeric rules** | [smsPrefixRules.ts](file:///home/jensen/Github-Repositories/heart-check-phc/app/kiosk/pages/sms-input/constants/smsPrefixRules.ts). |
 
 ---
 
@@ -179,6 +181,8 @@ Keypad screen for entering the patient's Philippine mobile number (`09XX XXX XXX
   - [smsNumPad.ts](file:///home/jensen/Github-Repositories/heart-check-phc/app/kiosk/pages/sms-input/constants/smsNumPad.ts): Touch keypad button sizing, colors, and active press states (`SMSNumPadStyle`, `SMSNumPadClasses`).
   - [smsContinueButton.ts](file:///home/jensen/Github-Repositories/heart-check-phc/app/kiosk/pages/sms-input/constants/smsContinueButton.ts): Primary button styles and disabled states (`SMSContinueButtonStyle`).
   - [smsLayout.ts](file:///home/jensen/Github-Repositories/heart-check-phc/app/kiosk/pages/sms-input/constants/smsLayout.ts): Keypad screen layout and column wrappers (`SMSLayoutClasses`).
+- **Where to Edit Queue Ticket Prefixes & Rules:**
+  - [smsPrefixRules.ts](file:///home/jensen/Github-Repositories/heart-check-phc/app/kiosk/pages/sms-input/constants/smsPrefixRules.ts): Service ticket prefix mappings (`SMS_SERVICE_PREFIXES`) and numeric subcategory routing rules (`NUMERIC_PREFIX_RULES`).
 
 ---
 
