@@ -177,6 +177,7 @@ Comprehensive documentation is maintained in the `docs/` folder:
 | [`docs/SETUP_AND_SEEDING.md`](file:///home/jensen/Github-Repositories/heart-check-phc/docs/SETUP_AND_SEEDING.md) | Installation, local configuration, and automated queue data seeding guide |
 | [`docs/CHANGES_NEEDED.md`](file:///home/jensen/Github-Repositories/heart-check-phc/docs/CHANGES_NEEDED.md) | Actionable checklist for database migrations, role helpers, and security patches |
 | [`docs/FILE_ARCHITECTURE.md`](file:///home/jensen/Github-Repositories/heart-check-phc/docs/FILE_ARCHITECTURE.md) | Complete directory tree mapping every file in the repository |
+| [`docs/CONNECTIVITY_RESILIENCE.md`](file:///home/jensen/Github-Repositories/heart-check-phc/docs/CONNECTIVITY_RESILIENCE.md) | Connectivity resilience strategy: polling fallback for weak internet, LAN-first WebSocket architecture for PHC on-premises deployment |
 
 ---
 

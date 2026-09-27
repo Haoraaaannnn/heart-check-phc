@@ -36,6 +36,9 @@ import { MAX_PATIENTS_PER_CUBICLE } from './lib/constants';
 import { useIdlePatients } from './hooks/useIdlePatients';
 import { useRegistrationRotate } from './hooks/useRegistrationRotate';
 import { NotificationBadge } from '@/components/reusables/NotificationBadge';
+import { useConnectionStatus } from '@/hooks/useConnectionStatus';
+import { ConnectionStatusBanner } from '@/components/reusables/ConnectionStatusBanner';
+
 
 /**
  * Primary Patient Transfer dashboard view component.
@@ -315,7 +318,11 @@ export default function TransferPage() {
     }, 400);
   }, [syncNow]);
 
-  useRealtimeSubscription(handleRealtimeUpdate);
+  // Connection status tracking for weak-signal / offline resilience.
+  const { isOnline, channelStatus, isFullyConnected, setChannelStatus } = useConnectionStatus();
+
+  useRealtimeSubscription(handleRealtimeUpdate, setChannelStatus);
+
 
   const autoAssignBusy = useRef<boolean>(false);
   const autoRotateBusy = useRef<boolean>(false);
@@ -915,6 +922,13 @@ export default function TransferPage() {
 
   return (
     <div className="flex h-screen overflow-hidden bg-slate-50 font-sans text-slate-800">
+      {/* Connection status banner — visible only on weak signal or offline */}
+      <ConnectionStatusBanner
+        isOnline={isOnline}
+        channelStatus={channelStatus}
+        isFullyConnected={isFullyConnected}
+      />
+
       {/* Fixed Sidebar */}
       <Sidebar
         selectedCategory={selectedCategory}

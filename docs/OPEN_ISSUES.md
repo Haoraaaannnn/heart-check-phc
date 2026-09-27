@@ -4,7 +4,7 @@ Running list of known follow-ups that aren't urgent enough to block progress, bu
 
 ## Security
 
-- [x] `middleware.ts` — built. Server-side route guard using `@supabase/ssr` cookie-based session validation with role-based access control. Protects `/superadmin`, `/dashboard`, `/nurse`, `/transfer`. Redirects unauthenticated users to `/login` and unauthorized users to `/unauthorized`.
+- [x] `proxy.ts` (formerly `middleware.ts`) — built. Server-side route guard using `@supabase/ssr` cookie-based session validation with role-based access control. Protects `/superadmin`, `/dashboard`, `/nurse`, `/transfer`. Redirects unauthenticated users to `/login` and unauthorized users to `/unauthorized`. Renamed from `middleware.ts` to `proxy.ts` per Next.js 16 deprecation.
 - [ ] `useRoleGuard` hook — confirm it queries `users`/`auth_id`, not the earlier assumed `profiles`/`id`; clarify overlap with `lib/supabase/authGuard.ts`
 - [ ] `cubicle` table — no INSERT/DELETE policy exists; confirm this is intentional (service-role-only) rather than an oversight. Also has 3 overlapping SELECT policies in the latest live pull — cleanup candidate.
 - [ ] `patient_category` table — RLS policies not yet reviewed

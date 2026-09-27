@@ -1,14 +1,17 @@
 /**
- * @file middleware.ts
- * @description Next.js Edge Middleware providing server-side route-level access control.
+ * @file proxy.ts
+ * @description Next.js Edge Proxy providing server-side route-level access control.
  *
- * This middleware intercepts every incoming HTTP request for protected route segments
+ * Renamed from `middleware.ts` to `proxy.ts` per Next.js 16 conventions.
+ * The "middleware" file convention was deprecated in Next.js 16 in favour of "proxy".
+ *
+ * This proxy intercepts every incoming HTTP request for protected route segments
  * before Next.js renders or delivers any HTML to the browser. It validates the
  * Supabase session cookie and checks the caller's role from the `users` table
  * against the required roles for the matched route prefix.
  *
  * Two-layer security architecture:
- * - Layer 1 (this file): Server-side middleware — blocks unauthenticated or
+ * - Layer 1 (this file): Server-side proxy — blocks unauthenticated or
  *   unauthorized requests before page delivery. Cannot be bypassed by disabling
  *   JavaScript on the client.
  * - Layer 2 (client-side): `lib/supabase/authGuard.ts` and role guard hooks —
@@ -29,7 +32,7 @@
  *
  * @see docs/SECURITY.md
  * @see docs/CHANGES_NEEDED.md
- * @module middleware
+ * @module proxy
  */
 
 import { createServerClient } from "@supabase/ssr";
@@ -56,7 +59,7 @@ const ROLE_ROUTES: Record<string, string[]> = {
 };
 
 /**
- * Next.js Edge Middleware function.
+ * Next.js Edge Proxy function.
  *
  * Intercepts requests for protected routes, validates the Supabase session,
  * and enforces role-based access control before the page is rendered.
@@ -72,7 +75,7 @@ const ROLE_ROUTES: Record<string, string[]> = {
  * @param request - The incoming Next.js edge request object.
  * @returns A `NextResponse` — either passing the request through, or redirecting.
  */
-export async function middleware(request: NextRequest) {
+export async function proxy(request: NextRequest) {
     let response = NextResponse.next({ request });
 
     /**
@@ -162,13 +165,13 @@ export async function middleware(request: NextRequest) {
 }
 
 /**
- * Next.js middleware route matcher configuration.
+ * Next.js proxy route matcher configuration.
  *
  * @remarks
- * Limits the middleware to only run on protected route segments.
+ * Limits the proxy to only run on protected route segments.
  * Public routes (`/kiosk`, `/monitor`, `/login`, `/auth`, API routes,
- * and static assets) are excluded from middleware entirely to avoid
- * unnecessary session lookups on every public page load.
+ * and static assets) are excluded entirely to avoid unnecessary session
+ * lookups on every public page load.
  */
 export const config = {
     matcher: [

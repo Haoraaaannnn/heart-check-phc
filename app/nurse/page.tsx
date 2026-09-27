@@ -45,6 +45,9 @@ import { useRealtimeSubscription } from './hooks/useRealtimeSubscription';
 import { useBottleneckNotifications } from '@/app/dashboard/hooks/useBottleneckNotifications';
 import { nurseTexts } from './constants/nurseTexts';
 import { NurseStyle, nurseLayoutTokens } from './constants/nurse';
+import { useConnectionStatus } from '@/hooks/useConnectionStatus';
+import { ConnectionStatusBanner } from '@/components/reusables/ConnectionStatusBanner';
+
 
 /**
  * Nurse Station point-of-care page component.
@@ -142,7 +145,10 @@ export default function NursePage() {
     }
   }, [fetchData, fetchFinished]);
 
-  useRealtimeSubscription(handleRealtimeUpdate, 300);
+  // Connection status tracking for weak-signal / offline resilience.
+  const { isOnline, channelStatus, isFullyConnected, setChannelStatus } = useConnectionStatus();
+
+  useRealtimeSubscription(handleRealtimeUpdate, 300, setChannelStatus);
 
   // Initial Data Load
   useEffect(() => {
@@ -318,6 +324,13 @@ export default function NursePage() {
 
   return (
     <div style={NurseStyle.viewportContainer} className="select-none">
+      {/* Connection status banner — visible only on weak signal or offline */}
+      <ConnectionStatusBanner
+        isOnline={isOnline}
+        channelStatus={channelStatus}
+        isFullyConnected={isFullyConnected}
+      />
+
       {/* Collapsible Navigation Sidebar */}
       <NurseSidebar
         sidebarOpen={sidebarOpen}
