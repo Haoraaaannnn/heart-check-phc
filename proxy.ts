@@ -54,8 +54,16 @@ import { NextResponse, type NextRequest } from "next/server";
 const ROLE_ROUTES: Record<string, string[]> = {
     "/superadmin": ["superadmin"],
     "/dashboard": ["admin", "superadmin"],
-    "/nurse": ["nurse", "staff", "admin", "superadmin"],
-    "/transfer": ["nurse", "staff", "admin", "superadmin"],
+    "/nurse": ["nurse", "staff", "doctor", "admin", "superadmin"],
+    "/transfer": ["registration", "nurse", "staff", "admin", "superadmin"],
+    "/select-screen": [
+        "superadmin",
+        "admin",
+        "nurse",
+        "staff",
+        "doctor",
+        "registration",
+    ],
 };
 
 /**
@@ -152,11 +160,10 @@ export async function proxy(request: NextRequest) {
             .eq("auth_id", user.id)
             .single();
 
-        /**
-         * If the role lookup fails, or the user's role is not in the allowed list
-         * for this route, redirect to the unauthorized page.
-         */
-        if (!userRow || !ROLE_ROUTES[matchedPrefix].includes(userRow.role)) {
+        const userRole = (userRow?.role || '').toLowerCase().trim();
+        const allowedRoles = (ROLE_ROUTES[matchedPrefix] || []).map((r) => r.toLowerCase().trim());
+
+        if (!userRow || !allowedRoles.includes(userRole)) {
             return NextResponse.redirect(new URL("/unauthorized", request.url));
         }
     }
@@ -179,5 +186,6 @@ export const config = {
         "/dashboard/:path*",
         "/nurse/:path*",
         "/transfer/:path*",
+        "/select-screen/:path*",
     ],
 };

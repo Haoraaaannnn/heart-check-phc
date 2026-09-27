@@ -52,21 +52,6 @@ export default function LandingPage() {
           of Philippine Heart Center
         </p>
 
-        <div className="flex flex-col justify-center gap-4 sm:flex-row">
-          <button
-            onClick={() => router.push("/monitor")}
-            className="rounded-full bg-[#cc3535] px-10 py-4 text-base font-bold text-white shadow-[0_10px_30px_rgba(204,53,53,0.25)] transition hover:bg-red-700 active:scale-95"
-          >
-            Monitor
-          </button>
-
-          <button
-            onClick={() => router.push("/kiosk/pages/kiosk-new-old-selection")}
-            className="rounded-full border border-white/50 bg-white/50 px-10 py-4 text-base font-bold text-[#cc3535] backdrop-blur-xl transition hover:bg-white/70 active:scale-95"
-          >
-            Patient Kiosk
-          </button>
-        </div>
       </div>
     </div>
 

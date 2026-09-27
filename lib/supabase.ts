@@ -1,14 +1,15 @@
-import { createClient } from '@supabase/supabase-js';
+/**
+ * @fileoverview Universal browser Supabase client using @supabase/ssr.
+ *
+ * Persists session tokens to cookies so they are sent to Next.js Edge proxy/middleware
+ * and Server Components, preventing unauthorized redirects after client-side authentication.
+ *
+ * @module lib/supabase
+ */
 
-export const supabase = createClient(
+import { createBrowserClient } from '@supabase/ssr';
+
+export const supabase = createBrowserClient(
   process.env.NEXT_PUBLIC_SUPABASE_URL!,
-  process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY!,
-  {
-    auth: {
-      persistSession: true,
-      storage: typeof window !== 'undefined' ? window.sessionStorage : undefined,
-      autoRefreshToken: true,
-      detectSessionInUrl: false,
-    },
-  }
+  process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY!
 );

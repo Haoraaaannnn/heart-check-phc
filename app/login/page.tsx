@@ -93,7 +93,7 @@ function LoginPageInner() {
       const { data: roleData, error: dbError } = await supabase
         .from('users')
         .select('role')
-        .eq('email', emailValue)
+        .ilike('email', emailValue)
         .single();
 
       setLoading(false);
@@ -105,22 +105,8 @@ function LoginPageInner() {
 
       setEmail('');
 
-      switch (roleData.role) {
-        case 'superadmin':
-          router.push('/superadmin');
-          break;
-        case 'admin':
-          router.push('/dashboard');
-          break;
-        case 'registration':
-          router.push('/transfer');
-          break;
-        case 'nurse':
-          router.push('/nurse');
-          break;
-        default:
-          router.push('/transfer');
-      }
+      router.push('/select-screen');
+      router.refresh();
     } catch (error) {
       setPassword('');
       if (passwordInputRef.current) {

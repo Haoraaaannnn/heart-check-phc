@@ -97,7 +97,7 @@ export default function RecentPatientsTable({ patients }: RecentPatientsTablePro
                           {patient.status}
                         </span>
                       </td>
-                      <td className={S.td}>{patient.time}</td>
+                      <td className={S.td}>{patient.time || patient.createdAt}</td>
                       <td className={`${S.td} font-mono font-bold text-content`}>
                         {patient.waitTime}
                       </td>
