@@ -4,12 +4,12 @@ Running list of known follow-ups that aren't urgent enough to block progress, bu
 
 ## Security
 
-- [ ] `middleware.ts` does not exist yet — route protection is client-side only (`useRoleGuard`/`authGuard.ts`), with a known flash/bypass gap. Server-side middleware is planned but not built (see `CHANGES_NEEDED.md`).
+- [x] `middleware.ts` — built. Server-side route guard using `@supabase/ssr` cookie-based session validation with role-based access control. Protects `/superadmin`, `/dashboard`, `/nurse`, `/transfer`. Redirects unauthenticated users to `/login` and unauthorized users to `/unauthorized`.
 - [ ] `useRoleGuard` hook — confirm it queries `users`/`auth_id`, not the earlier assumed `profiles`/`id`; clarify overlap with `lib/supabase/authGuard.ts`
 - [ ] `cubicle` table — no INSERT/DELETE policy exists; confirm this is intentional (service-role-only) rather than an oversight. Also has 3 overlapping SELECT policies in the latest live pull — cleanup candidate.
 - [ ] `patient_category` table — RLS policies not yet reviewed
 - [ ] Rate limiting (`slowapi`) not yet applied to analytics endpoints — note: `login_attempts`/`password_reset_attempts` tables now exist, suggesting auth-endpoint rate limiting has been added separately; document once confirmed
-- [ ] `/unauthorized` page doesn't exist yet — will be needed once middleware is added
+- [x] `/unauthorized` page — built. Displays a branded access-denied screen for authenticated users whose role does not satisfy the middleware route requirements.
 - [ ] Kiosk insert still uses anon key directly to Supabase; longer-term move to a FastAPI endpoint + service role key is still the better design
 - [ ] `services` RLS fix — latest live pull still shows the old wide-open `anon` INSERT/DELETE policies present; the planned fix in `CHANGES_NEEDED.md` step 3 does not appear applied
 - [ ] `users` RLS fix — latest live pull still shows the public-read policy present; the planned fix in `CHANGES_NEEDED.md` step 4 does not appear applied
@@ -60,4 +60,4 @@ _Add new items as they surface. Move resolved items to a "Resolved" section belo
 - [ ] `patients` RLS wide open (all policies `true`) — a fix was designed (`is_historical`-scoped policies) but does not appear applied; live schema also shows a separate, newer, undocumented scoped-access model layered on top — needs full re-audit
 - [ ] `services` table — anon could INSERT/DELETE the kiosk service menu — fix designed (superadmin-only writes) but does not appear applied per latest live pull
 - [ ] `users` table — public (no-login) read access to accounts — fix designed (self-read + superadmin-all) but does not appear applied per latest live pull
-- [ ] No route-level middleware exists — planned, not yet built
+- [x] Route-level middleware — built (`middleware.ts` at project root). See Security section above for full detail.
