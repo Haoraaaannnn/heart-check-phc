@@ -1,7 +1,6 @@
 "use client";
 
 import { useEffect } from "react";
-import * as TablerIcons from "@tabler/icons-react";
 import type { Service } from "@/types/Services";
 import ConfirmationDescriptions from "@/app/kiosk/pages/confirmation/components/ConfimationDescription";
 import ConfirmationActions from "@/app/kiosk/pages/confirmation/components/ConfirmationActions";
@@ -9,9 +8,7 @@ import {
     ConfirmationModalStyle,
     ConfirmationModalClasses,
 } from "@/app/kiosk/pages/confirmation/constants/confirmationModal";
-
-/** Tabler icons mapping for runtime lookup. */
-const ICONS = TablerIcons as unknown as Record<string, TablerIcons.Icon | undefined>;
+import { resolveServiceIcon } from "@/constants/icons";
 
 /** Props for {@link ConfirmationModal}. */
 interface ConfirmationModalProps {
@@ -53,7 +50,7 @@ export default function ConfirmationModal({
 
     if (!isOpen || !service) return null;
 
-    const Icon = ICONS[service.icon_src] ?? TablerIcons.IconCircleDashed;
+    const iconClass = resolveServiceIcon(service);
 
     return (
         <div
@@ -71,11 +68,10 @@ export default function ConfirmationModal({
             >
                 {/* Modal Header */}
                 <div style={ConfirmationModalStyle.modalHeader}>
-                    <Icon
-                        className={ConfirmationModalClasses.icon}
-                        size={56}
-                        stroke={1.5}
-                        color="#ffffff"
+                    <i
+                        className={`bx ${iconClass} ${ConfirmationModalClasses.icon}`}
+                        style={ConfirmationModalStyle.icon}
+                        aria-hidden="true"
                     />
                     <div className={ConfirmationModalClasses.headerText}>
                         <span

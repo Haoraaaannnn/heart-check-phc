@@ -5,6 +5,12 @@
 
 import { CSSProperties } from "react";
 import { themeColors } from "@/constants/colors";
+import { COMMON_ICONS } from "@/constants/icons";
+
+/** Boxicons class tokens for SMS phone input display. */
+export const SMSPhoneInputIcons = {
+    backspace: COMMON_ICONS.backspace,
+} as const;
 
 /** Max phone number digits for PH mobile format (e.g. 09XXXXXXXXX). */
 export const SMS_PHONE_MAX_LENGTH = 11;
@@ -14,6 +20,10 @@ export const SMS_PHONE_PLACEHOLDER = "0912 345 6780";
 
 /** Inline styles for `PhoneInput`. */
 export const SMSPhoneInputStyle = {
+    backspaceIcon: {
+        fontSize: 28,
+        lineHeight: 1,
+    },
     container: {
         width: "100%",
         display: "flex",

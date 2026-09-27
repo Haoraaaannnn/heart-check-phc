@@ -5,6 +5,13 @@
 
 import { CSSProperties } from "react";
 import { themeColors } from "@/constants/colors";
+import { COMMON_ICONS } from "@/constants/icons";
+
+/** Boxicons class tokens for cubicle card elements. */
+export const CubicleCardIcons = {
+    cubicle: COMMON_ICONS.cubicle,
+    arrow: COMMON_ICONS.arrowRight,
+} as const;
 
 /** Spacing values for cubicle card. */
 export const cubicleCardSpacing = {
@@ -31,6 +38,16 @@ export const cubicleCardColors = {
 
 /** Inline styles for `CubicleCard`. */
 export const CubicleCardStyle = {
+    icon: {
+        fontSize: 48,
+        color: cubicleCardColors.iconFill,
+        lineHeight: 1,
+    },
+    arrowIcon: {
+        fontSize: 36,
+        color: cubicleCardColors.arrowColor,
+        lineHeight: 1,
+    },
     card: {
         position: "relative",
         display: "flex",

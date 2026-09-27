@@ -3,7 +3,10 @@
 import { useEffect, useMemo, useState } from "react";
 import { createClient } from "@/lib/supabase/client";
 import { Service } from "@/types/Services";
-import * as TablerIcons from "@tabler/icons-react";
+import {
+    AVAILABLE_SERVICE_BOXICONS,
+    resolveServiceIcon,
+} from "@/constants/icons";
 
 type PatientType = "new" | "old" | "both";
 
@@ -17,13 +20,6 @@ const EMPTY_FORM: Omit<Service, "id"> = {
     description_fil: "",
     patient_type: "both",
 };
-
-function resolveIcon(iconName: string) {
-    return (
-        (TablerIcons as Record<string, any>)[iconName] ??
-        TablerIcons.IconCircleDashed
-    );
-}
 
 // main method for the page
 export default function AdminServicePage() {
@@ -42,16 +38,15 @@ export default function AdminServicePage() {
     const [iconQuery, setIconQuery] = useState("");
     const [saving, setSaving] = useState(false);
 
-    const allIconNames = useMemo(() => Object.keys(TablerIcons).filter((key) => key.startsWith("Icon") && key !== "IconCircleDashed"), []);
+    const allIconNames = useMemo(() => AVAILABLE_SERVICE_BOXICONS, []);
 
     // filter icon names based on query
     const filteredIconNames = useMemo(() => {
-        if (!iconQuery) return allIconNames.slice(0,20);
+        if (!iconQuery) return allIconNames.slice(0, 20);
         return allIconNames
-        .filter ((name) => name.toLowerCase().includes(iconQuery.toLowerCase()))
-        .slice (0,30);
-    }, [iconQuery, allIconNames]
-    )
+            .filter((name) => name.toLowerCase().includes(iconQuery.toLowerCase()))
+            .slice(0, 30);
+    }, [iconQuery, allIconNames]);
 
     // function to load services from supabase
     async function loadServices() {
@@ -105,8 +100,8 @@ export default function AdminServicePage() {
             setError("English and Filipino label are both required.")
             return;
         } 
-        if (!allIconNames.includes(form.icon_src)){
-            setError("Please pick a valid icon from the suggestion list.")
+        if (!form.icon_src.trim()){
+            setError("Please pick or enter a valid Boxicon class name (e.g. bx-pulse, bx-heart).")
             return;
         }
 
@@ -288,30 +283,33 @@ export default function AdminServicePage() {
                         setIconQuery(e.target.value);
                         setForm({ ...form, icon_src: e.target.value });
                     }}
-                    className="flex-1 border rounded-md px-3 py-2 text-sm text-gray-500 border-gray-300"
-                    placeholder="Search Tabler icon name, e.g. IconStethoscope"
+                    className="flex-1 border rounded-md px-3 py-2 text-sm text-gray-700 border-gray-300"
+                    placeholder="Search Boxicon class name, e.g. bx-pulse, bx-heart"
                     />
+                    {form.icon_src && (
+                        <div className="flex items-center gap-2 px-3 py-1.5 rounded-md border border-gray-200 bg-gray-50">
+                            <i className={`bx ${resolveServiceIcon(form.icon_src)} text-2xl text-slate-700`} aria-hidden="true" />
+                            <span className="text-xs text-gray-600 font-mono">{form.icon_src}</span>
+                        </div>
+                    )}
                 </div>
 
                 {iconQuery && filteredIconNames.length > 0 && (
-                    <div className="mt-2 border rounded-md bg-white max-h-40 overflow-y-auto text-black border-gray-300">
-                    {filteredIconNames.map((name) => {
-                        const Icon = resolveIcon(name);
-                        return (
+                    <div className="mt-2 border rounded-md bg-white max-h-48 overflow-y-auto text-black border-gray-300">
+                    {filteredIconNames.map((name) => (
                         <button
                             key={name}
                             type="button"
                             onClick={() => {
-                            setIconQuery(name);
-                            setForm({ ...form, icon_src: name });
+                                setIconQuery(name);
+                                setForm({ ...form, icon_src: name });
                             }}
-                            className="w-full flex items-center gap-2 px-3 py-2 text-sm hover:bg-gray-100 text-left"
+                            className="w-full flex items-center gap-3 px-3 py-2 text-sm hover:bg-gray-100 text-left"
                         >
-                            <Icon size={16} />
-                            {name}
+                            <i className={`bx ${name} text-lg text-slate-700`} aria-hidden="true" />
+                            <span className="font-mono text-xs">{name}</span>
                         </button>
-                        );
-                    })}
+                    ))}
                     </div>
                 )}
                 </div>
@@ -353,9 +351,12 @@ export default function AdminServicePage() {
                 </thead>
                 <tbody>
                 {services.map((service) => {
-                    const Icon = resolveIcon(service.icon_src);
+                    const iconClass = resolveServiceIcon(service);
                     return (
                     <tr key={service.id} className="border-t">
+                        <td className="px-4 py-2 text-black">
+                            <i className={`bx ${iconClass} text-2xl text-slate-700`} aria-hidden="true" />
+                        </td>
                         <td className="px-4 py-2 text-black">
                         {service.label_en} / {service.label_fil}
                         </td>

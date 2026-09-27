@@ -11,7 +11,7 @@ export type PatientCategory = {
     label_en: string;
     /** Filipino primary label displayed prominently on the card (e.g., "Bagong Pasyente"). */
     label_fil: string;
-    /** Tabler icon component name resolved dynamically at render time (e.g., "IconUserPlus"). */
+    /** Boxicons class name or legacy icon name resolved dynamically at render time (e.g., "bx-user-plus"). */
     icon_src: string;
     /** Display sequence order configured by administrators. */
     order: number;

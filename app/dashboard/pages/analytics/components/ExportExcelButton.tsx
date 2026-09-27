@@ -7,8 +7,10 @@
 'use client';
 
 import { useState } from 'react';
-import { IconDownload, IconLoader2 } from '@tabler/icons-react';
-import { ANALYTICS_STYLES } from '@/app/dashboard/pages/analytics/constants/analytics';
+import {
+  ANALYTICS_STYLES,
+  ANALYTICS_ICONS,
+} from '@/app/dashboard/pages/analytics/constants/analytics';
 import { ANALYTICS_TEXTS } from '@/app/dashboard/pages/analytics/constants/analyticsTexts';
 
 interface ExportExcelButtonProps {
@@ -77,9 +79,9 @@ export default function ExportExcelButton({
         className={S.root}
       >
         {isExporting ? (
-          <IconLoader2 className={S.spinner} />
+          <i className={`bx ${ANALYTICS_ICONS.spinner} ${S.spinner}`} aria-hidden="true" />
         ) : (
-          <IconDownload className="h-4 w-4" />
+          <i className={`bx ${ANALYTICS_ICONS.download} h-4 w-4 text-base`} aria-hidden="true" />
         )}
         <span>{isExporting ? T.buttonLoading : T.buttonIdle}</span>
       </button>

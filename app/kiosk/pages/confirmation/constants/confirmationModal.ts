@@ -22,6 +22,10 @@ export const confirmationModalColors = {
 
 /** Inline styles for `ConfirmationModal`. */
 export const ConfirmationModalStyle = {
+    icon: {
+        fontSize: 56,
+        lineHeight: 1,
+    },
     overlay: {
         position: "fixed",
         inset: 0,

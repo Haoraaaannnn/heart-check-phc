@@ -10,6 +10,13 @@
  */
 
 import { cardSurface } from '@/constants/themes';
+import { COMMON_ICONS } from '@/constants/icons';
+
+/** Icon tokens for Analytics page controls and indicators. */
+export const ANALYTICS_ICONS = {
+  download: COMMON_ICONS.download,
+  spinner: COMMON_ICONS.spinner,
+} as const;
 
 /** Presets for the date range selector. */
 export const ANALYTICS_PRESETS = [

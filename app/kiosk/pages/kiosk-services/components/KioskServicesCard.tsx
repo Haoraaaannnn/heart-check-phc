@@ -1,11 +1,10 @@
-import * as TablerIcons from "@tabler/icons-react";
 import { Service } from "@/types/Services";
-
-/**
- * Tabler icons indexed by export name, so `services.icon_src` can pick one
- * at runtime. Values are optional because an unknown name returns undefined.
- */
-const ICONS = TablerIcons as unknown as Record<string, TablerIcons.Icon | undefined>;
+import {
+    KioskServicesCardStyle,
+    KioskServicesClasses,
+    KioskServicesIcons,
+} from "@/app/kiosk/pages/kiosk-services/constants/kioskServices";
+import { resolveServiceIcon } from "@/constants/icons";
 
 /** Props for {@link ServiceCard}. */
 interface Props {
@@ -16,19 +15,11 @@ interface Props {
     onSelect: (service: Service) => void;
 }
 
-import {
-    KioskServicesCardStyle,
-    KioskServicesClasses,
-    kioskServicesColors,
-} from "@/app/kiosk/pages/kiosk-services/constants/kioskServices";
-
 /**
  * One tappable service button on the kiosk.
  *
  * @remarks
- * - Icon: `service.icon_src` holds a Tabler icon name (e.g. "IconEcg"),
- *   resolved at render time. An invalid name falls back to `IconCircleDashed`
- *   instead of crashing.
+ * - Icon: Resolved dynamically via {@link resolveServiceIcon} using Boxicons.
  * - Title: `label_fil` (Filipino, large). Pill: `label_en` (English, smaller).
  * - Fixed height (164px) so all cards line up. Icon and arrow use `shrink-0`
  *   so only the text column shrinks in the narrower 3-column landscape grid.
@@ -38,8 +29,7 @@ import {
  * @returns A button showing the service icon, both labels, and an arrow.
  */
 export default function ServiceCard({ service, onSelect }: Props) {
-    // Look up the icon component by name; fall back if the name is invalid.
-    const Icon = ICONS[service.icon_src] ?? TablerIcons.IconCircleDashed;
+    const iconClass = resolveServiceIcon(service);
 
     return (
         <button
@@ -50,7 +40,11 @@ export default function ServiceCard({ service, onSelect }: Props) {
         >
             {/* Brand-colored icon tile */}
             <div style={KioskServicesCardStyle.iconTile}>
-                <Icon size={76} stroke={1.5} color={kioskServicesColors.iconFill} />
+                <i
+                    className={`bx ${iconClass}`}
+                    style={KioskServicesCardStyle.icon}
+                    aria-hidden="true"
+                />
             </div>
 
             {/* Labels. min-w-0 lets the text wrap instead of pushing the arrow out. */}
@@ -63,11 +57,10 @@ export default function ServiceCard({ service, onSelect }: Props) {
                 </span>
             </div>
 
-            <TablerIcons.IconArrowNarrowRight
-                size={36}
-                stroke={2}
-                color={kioskServicesColors.arrowColor}
-                className={KioskServicesClasses.cardArrow}
+            <i
+                className={`bx ${KioskServicesIcons.arrow} ${KioskServicesClasses.cardArrow}`}
+                style={KioskServicesCardStyle.arrowIcon}
+                aria-hidden="true"
             />
         </button>
     );

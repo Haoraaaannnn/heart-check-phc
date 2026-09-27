@@ -1,18 +1,13 @@
 "use client";
 
-import * as TablerIcons from "@tabler/icons-react";
 import { PatientCategory } from "@/app/kiosk/pages/kiosk-new-old-selection/types/PatientType";
 import { useKioskNavigate } from "@/app/kiosk/hooks/useKioskNavigate";
 import {
     PatientTypeCardStyle,
     PatientTypeCardsClasses,
-    patientTypeCardColors,
+    PatientTypeCardIcons,
 } from "@/app/kiosk/pages/kiosk-new-old-selection/constants/patientTypeCards";
-
-/**
- * Tabler icons index for dynamic resolution via `patientCategory.icon_src`.
- */
-const ICONS = TablerIcons as unknown as Record<string, TablerIcons.Icon | undefined>;
+import { resolvePatientTypeIcon } from "@/constants/icons";
 
 /** Props for {@link PatientTypeCard}. */
 interface PatientTypeCardProps {
@@ -33,7 +28,7 @@ interface PatientTypeCardProps {
 export default function PatientTypeCard({ patientCategory }: PatientTypeCardProps) {
     const navigate = useKioskNavigate();
     const pc = patientCategory;
-    const Icon = ICONS[pc.icon_src] ?? TablerIcons.IconCircleDashed;
+    const iconClass = resolvePatientTypeIcon(pc);
 
     const handleSelect = () => {
         navigate(`/kiosk/pages/kiosk-services?type=${pc.type}`);
@@ -51,7 +46,11 @@ export default function PatientTypeCard({ patientCategory }: PatientTypeCardProp
                 style={PatientTypeCardStyle.iconWrapper}
                 className={PatientTypeCardsClasses.cardIconWrapper}
             >
-                <Icon size={56} stroke={1.5} color={patientTypeCardColors.white} className={PatientTypeCardsClasses.cardIcon} />
+                <i
+                    className={`bx ${iconClass} ${PatientTypeCardsClasses.cardIcon}`}
+                    style={PatientTypeCardStyle.cardIcon}
+                    aria-hidden="true"
+                />
             </div>
 
             {/* Category Labels */}
@@ -66,11 +65,10 @@ export default function PatientTypeCard({ patientCategory }: PatientTypeCardProp
             </div>
 
             {/* Directional navigation indicator */}
-            <TablerIcons.IconArrowNarrowRight
-                size={36}
-                stroke={2}
-                color={patientTypeCardColors.arrowColor}
-                className={PatientTypeCardsClasses.cardArrow}
+            <i
+                className={`bx ${PatientTypeCardIcons.arrow} ${PatientTypeCardsClasses.cardArrow}`}
+                style={PatientTypeCardStyle.arrowIcon}
+                aria-hidden="true"
             />
         </button>
     );

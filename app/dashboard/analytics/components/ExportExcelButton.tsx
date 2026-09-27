@@ -1,7 +1,7 @@
 "use client";
 
 import { useState } from "react";
-import { IconDownload, IconLoader2 } from "@tabler/icons-react";
+import { COMMON_ICONS } from "@/constants/icons";
 
 interface ExportExcelButtonProps {
   range: string; // "90d" | "180d" | "365d" | "all"
@@ -52,7 +52,11 @@ export default function ExportExcelButton({ range, service, status }: ExportExce
         disabled={isExporting}
         className="flex items-center gap-2 rounded-lg bg-emerald-600 px-4 py-2 text-sm font-medium text-white hover:bg-emerald-700 disabled:opacity-60"
       >
-        {isExporting ? <IconLoader2 className="h-4 w-4 animate-spin" /> : <IconDownload className="h-4 w-4" />}
+        {isExporting ? (
+          <i className={`bx ${COMMON_ICONS.spinner} text-base animate-spin`} aria-hidden="true" />
+        ) : (
+          <i className={`bx ${COMMON_ICONS.download} text-base`} aria-hidden="true" />
+        )}
         {isExporting ? "Exporting..." : "Export to Excel"}
       </button>
       {error && <p className="text-xs text-red-500">{error}</p>}

@@ -28,6 +28,10 @@ export const confirmationBannerColors = {
 
 /** Inline styles for `ConfirmationBanner`. */
 export const ConfirmationBannerStyle = {
+    icon: {
+        fontSize: 110,
+        lineHeight: 1,
+    },
     banner: {
         position: "relative",
         display: "flex",

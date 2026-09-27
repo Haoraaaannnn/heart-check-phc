@@ -77,7 +77,7 @@ Heart Check PHC is architected as a cohesive full-stack platform:
 | Layer | Technologies |
 |---|---|
 | **Frontend** | Next.js 15 (App Router), React 19, TypeScript, Tailwind CSS, Recharts |
-| **Icons & UI** | Tabler Icons, Boxicons, Custom CSS design tokens |
+| **Icons & UI** | Boxicons (centralized tokens in `constants/icons.ts`), Custom CSS design tokens |
 | **Backend API** | FastAPI (Python 3.10+), Uvicorn |
 | **Data & ML** | Pandas, NumPy, Scikit-learn, Statsmodels, SimPy, OpenPyXL |
 | **Database** | Supabase (PostgreSQL 15), Supabase Realtime, Row-Level Security (RLS) |

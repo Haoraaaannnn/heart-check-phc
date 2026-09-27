@@ -1,12 +1,11 @@
 "use client";
 
-import { IconStethoscope, IconArrowNarrowRight } from "@tabler/icons-react";
 import { CubicleSelectorType } from "@/app/kiosk/pages/kiosk-cubicle-selection/types/CubicleSelectorType";
 import { useKioskNavigate } from "@/app/kiosk/hooks/useKioskNavigate";
 import {
     CubicleCardStyle,
     CubicleCardClasses,
-    cubicleCardColors,
+    CubicleCardIcons,
 } from "@/app/kiosk/pages/kiosk-cubicle-selection/constants/cubicleCard";
 
 /** Props for {@link CubicleCard}. */
@@ -79,7 +78,11 @@ export default function CubicleCard({
                 style={CubicleCardStyle.iconWrapper}
                 className={CubicleCardClasses.cardIconWrapper}
             >
-                <IconStethoscope size={48} stroke={1.5} color={cubicleCardColors.iconFill} />
+                <i
+                    className={`bx ${CubicleCardIcons.cubicle}`}
+                    style={CubicleCardStyle.icon}
+                    aria-hidden="true"
+                />
             </div>
 
             {/* Cubicle Title */}
@@ -90,11 +93,10 @@ export default function CubicleCard({
             </div>
 
             {/* Directional arrow */}
-            <IconArrowNarrowRight
-                size={36}
-                stroke={2}
-                color={cubicleCardColors.arrowColor}
-                className={CubicleCardClasses.cardArrow}
+            <i
+                className={`bx ${CubicleCardIcons.arrow} ${CubicleCardClasses.cardArrow}`}
+                style={CubicleCardStyle.arrowIcon}
+                aria-hidden="true"
             />
         </button>
     );

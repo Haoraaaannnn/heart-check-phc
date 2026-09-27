@@ -162,7 +162,7 @@ Forecasting is deliberately framed as a **strategic policy decision-support tool
 | Backend framework  | FastAPI (Python)                                                                 |
 | Data/ML            | Pandas, NumPy, Scikit-learn, Statsmodels, SimPy                                  |
 | Database           | Supabase (PostgreSQL) → PHC on-prem PostgreSQL (production)                      |
-| Icons              | Tabler Icons (`@tabler/icons-react`), dynamically resolved via `icon_src` column |
+| Icons              | Boxicons (`boxicons`), centralized via `constants/icons.ts`                      |
 | Auth               | Supabase Auth + `@supabase/ssr`                                                  |
 
 ## Known Architectural Trade-offs (for thesis documentation)
