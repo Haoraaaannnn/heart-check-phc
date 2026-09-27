@@ -21,6 +21,54 @@ export function SettingsPanel() {
   const [loginAttemptsMessage, setLoginAttemptsMessage] = useState('');
   const [loginAttemptsError, setLoginAttemptsError] = useState('');
 
+  const [lockoutSeconds, setLockoutSeconds] = useState<string>('30');
+  const [lockoutLoading, setLockoutLoading] = useState(true);
+  const [lockoutSaving, setLockoutSaving] = useState(false);
+  const [lockoutMessage, setLockoutMessage] = useState('');
+  const [lockoutError, setLockoutError] = useState('');
+
+  const fetchLockoutSeconds = async () => {
+    setLockoutLoading(true);
+    const { data, error } = await supabase
+      .from('app_settings')
+      .select('value')
+      .eq('key', 'login_lockout_seconds')
+      .single();
+
+    if (!error && data) setLockoutSeconds(data.value);
+    setLockoutLoading(false);
+  };
+
+  useEffect(() => { fetchLockoutSeconds(); }, []);
+
+  const handleSaveLockoutSeconds = async () => {
+    setLockoutError('');
+    setLockoutMessage('');
+
+    const seconds = parseInt(lockoutSeconds, 10);
+    if (isNaN(seconds) || seconds <= 0) {
+      setLockoutError('Enter a valid whole number greater than 0.');
+      return;
+    }
+
+    setLockoutSaving(true);
+    try {
+      const { error } = await supabase
+        .from('app_settings')
+        .upsert(
+          { key: 'login_lockout_seconds', value: seconds.toString(), updated_at: new Date().toISOString() },
+          { onConflict: 'key' }
+        );
+      if (error) throw error;
+      setLockoutMessage('Updated successfully.');
+      setTimeout(() => setLockoutMessage(''), 2500);
+    } catch (err: any) {
+      setLockoutError(err.message || 'Failed to save.');
+    } finally {
+      setLockoutSaving(false);
+    }
+  };
+
   const fetchMaxRotations = async () => {
     setRotationsLoading(true);
     const { data, error } = await supabase
@@ -238,7 +286,6 @@ export function SettingsPanel() {
         )}
       </div>
 
-      {/* New: Max Login Attempts */}
       <div className="bg-white rounded-lg shadow p-6 max-w-md">
         <h2 className="text-xl font-bold text-gray-900 mb-1">Max Login Attempts</h2>
         <p className="text-gray-600 text-sm mb-4">
@@ -275,6 +322,48 @@ export function SettingsPanel() {
                 className="ml-auto px-4 py-2 bg-blue-600 text-white rounded-lg hover:bg-blue-700 transition disabled:opacity-50 cursor-pointer"
               >
                 {loginAttemptsSaving ? 'Saving...' : 'Save'}
+              </button>
+            </div>
+          </>
+        )}
+      </div>
+
+      <div className="bg-white rounded-lg shadow p-6 max-w-md">
+        <h2 className="text-xl font-bold text-gray-900 mb-1">Login Lockout Duration</h2>
+        <p className="text-gray-600 text-sm mb-4">
+          How long an account stays locked out after hitting the max failed login attempts.
+        </p>
+
+        {lockoutLoading ? (
+          <p className="text-gray-400 text-sm">Loading...</p>
+        ) : (
+          <>
+            {lockoutError && (
+              <div className="mb-3 p-3 bg-red-100 border border-red-200 text-red-700 rounded-lg text-sm">
+                {lockoutError}
+              </div>
+            )}
+            {lockoutMessage && (
+              <div className="mb-3 p-3 bg-green-100 border border-green-200 text-green-700 rounded-lg text-sm">
+                {lockoutMessage}
+              </div>
+            )}
+            <div className="flex items-center gap-3">
+              <input
+                type="number"
+                min="1"
+                step="1"
+                value={lockoutSeconds}
+                onChange={(e) => setLockoutSeconds(e.target.value)}
+                className="w-28 p-2 border border-gray-300 rounded-lg text-gray-900 focus:outline-none focus:ring-2 focus:ring-blue-500"
+              />
+              <span className="text-gray-600 text-sm">seconds</span>
+              <button
+                onClick={handleSaveLockoutSeconds}
+                disabled={lockoutSaving}
+                className="ml-auto px-4 py-2 bg-blue-600 text-white rounded-lg hover:bg-blue-700 transition disabled:opacity-50 cursor-pointer"
+              >
+                {lockoutSaving ? 'Saving...' : 'Save'}
               </button>
             </div>
           </>

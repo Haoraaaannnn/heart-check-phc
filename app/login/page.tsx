@@ -60,6 +60,7 @@ function LoginPageInner() {
 
   const handleSubmit = async (e: React.FormEvent<HTMLFormElement>) => {
     e.preventDefault();
+    if (lockoutSecondsRemaining !== null) return;
     setError('');
     setLoading(true);
 
@@ -214,7 +215,7 @@ function LoginPageInner() {
 
           <button
             type="submit"
-            disabled={loading}
+            disabled={loading || lockoutSecondsRemaining !== null}
             className="w-full rounded-2xl bg-[#cc3535] py-3 text-base font-semibold text-white shadow-[0_10px_30px_rgba(204,53,53,0.20)] transition-all duration-300 hover:bg-red-700 hover:shadow-lg active:scale-95 disabled:opacity-60 disabled:cursor-not-allowed"
             aria-label="Login to your account"
           >

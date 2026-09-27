@@ -9,7 +9,7 @@ const supabaseAdmin = createClient(
 )
 
 const DEFAULT_MAX_ATTEMPTS = 3
-const LOCKOUT_MS = 30 * 1000
+const DEFAULT_LOCKOUT_MS = 30 * 1000
 
 export async function POST(request: Request) {
   try {
@@ -22,20 +22,35 @@ export async function POST(request: Request) {
     const normalizedEmail = email.trim().toLowerCase()
     const now = Date.now()
 
-    const { data: maxAttemptsRow } = await supabaseAdmin
-      .from('app_settings')
-      .select('value')
-      .eq('key', 'max_login_attempts')
-      .maybeSingle()
+    const [{ data: maxAttemptsRow }, { data: lockoutRow }] = await Promise.all([
+      supabaseAdmin
+        .from('app_settings')
+        .select('value')
+        .eq('key', 'max_login_attempts')
+        .maybeSingle(),
+      supabaseAdmin
+        .from('app_settings')
+        .select('value')
+        .eq('key', 'login_lockout_seconds')
+        .maybeSingle(),
+    ])
 
     const parsedMaxAttempts = maxAttemptsRow ? parseInt(maxAttemptsRow.value, 10) : NaN
     const MAX_ATTEMPTS =
       !isNaN(parsedMaxAttempts) && parsedMaxAttempts > 0 ? parsedMaxAttempts : DEFAULT_MAX_ATTEMPTS
 
+    const parsedLockoutSeconds = lockoutRow ? parseInt(lockoutRow.value, 10) : NaN
+    const LOCKOUT_MS =
+      !isNaN(parsedLockoutSeconds) && parsedLockoutSeconds > 0
+        ? parsedLockoutSeconds * 1000
+        : DEFAULT_LOCKOUT_MS
+
     const { data: attemptRow } = await supabaseAdmin
       .from('login_attempts')
       .select('*')
       .eq('email', normalizedEmail)
+      .order('updated_at', { ascending: false })
+      .limit(1)
       .maybeSingle()
 
     if (attemptRow?.locked_until) {
@@ -79,7 +94,7 @@ export async function POST(request: Request) {
           attempt_count: newCount,
           locked_until: new Date(now + LOCKOUT_MS).toISOString(),
           updated_at: new Date().toISOString(),
-        })
+        }, { onConflict: 'email' })
         return NextResponse.json(
           { error: 'locked', secondsRemaining: Math.ceil(LOCKOUT_MS / 1000) },
           { status: 429 }
@@ -91,7 +106,7 @@ export async function POST(request: Request) {
         attempt_count: newCount,
         locked_until: null,
         updated_at: new Date().toISOString(),
-      })
+      }, { onConflict: 'email' })
 
       return NextResponse.json({ error: 'Invalid email or password' }, { status: 401 })
     }
@@ -101,7 +116,7 @@ export async function POST(request: Request) {
       attempt_count: 0,
       locked_until: null,
       updated_at: new Date().toISOString(),
-    })
+    }, { onConflict: 'email' })
 
     return NextResponse.json({
       session: signInData.session,
