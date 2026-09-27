@@ -8,7 +8,7 @@ const supabaseAdmin = createClient(
   process.env.SUPABASE_SERVICE_ROLE_KEY!
 )
 
-const MAX_ATTEMPTS = 3
+const DEFAULT_MAX_ATTEMPTS = 3
 const LOCKOUT_MS = 30 * 1000
 
 export async function POST(request: Request) {
@@ -21,6 +21,16 @@ export async function POST(request: Request) {
 
     const normalizedEmail = email.trim().toLowerCase()
     const now = Date.now()
+
+    const { data: maxAttemptsRow } = await supabaseAdmin
+      .from('app_settings')
+      .select('value')
+      .eq('key', 'max_login_attempts')
+      .maybeSingle()
+
+    const parsedMaxAttempts = maxAttemptsRow ? parseInt(maxAttemptsRow.value, 10) : NaN
+    const MAX_ATTEMPTS =
+      !isNaN(parsedMaxAttempts) && parsedMaxAttempts > 0 ? parsedMaxAttempts : DEFAULT_MAX_ATTEMPTS
 
     const { data: attemptRow } = await supabaseAdmin
       .from('login_attempts')
@@ -67,7 +77,7 @@ export async function POST(request: Request) {
         await supabaseAdmin.from('login_attempts').upsert({
           email: normalizedEmail,
           attempt_count: newCount,
-          locked_until: null,
+          locked_until: new Date(now + LOCKOUT_MS).toISOString(),
           updated_at: new Date().toISOString(),
         })
         return NextResponse.json(
@@ -78,20 +88,20 @@ export async function POST(request: Request) {
 
       await supabaseAdmin.from('login_attempts').upsert({
         email: normalizedEmail,
-        attempt_count: 0,
-        locked_until: new Date(now + LOCKOUT_MS).toISOString(),
+        attempt_count: newCount,
+        locked_until: null,
         updated_at: new Date().toISOString(),
       })
 
       return NextResponse.json({ error: 'Invalid email or password' }, { status: 401 })
     }
 
-      await supabaseAdmin.from('login_attempts').upsert({
-        email: normalizedEmail,
-        attempt_count: 0,
-        locked_until: null,
-        updated_at: new Date().toISOString(),
-      })
+    await supabaseAdmin.from('login_attempts').upsert({
+      email: normalizedEmail,
+      attempt_count: 0,
+      locked_until: null,
+      updated_at: new Date().toISOString(),
+    })
 
     return NextResponse.json({
       session: signInData.session,

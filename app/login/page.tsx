@@ -19,6 +19,7 @@ function LoginPageInner() {
   const [email, setEmail] = useState('');
   const [password, setPassword] = useState('');
   const [error, setError] = useState('');
+  const [lockoutSecondsRemaining, setLockoutSecondsRemaining] = useState<number | null>(null);
   const [loading, setLoading] = useState(false);
   const [showPassword, setShowPassword] = useState(false);
 
@@ -32,19 +33,30 @@ function LoginPageInner() {
   }, [searchParams]);
 
   useEffect(() => {
-    if (!error) return;
+    if (!error || lockoutSecondsRemaining !== null) return;
     const timer = setTimeout(() => setError(''), 5000);
     return () => clearTimeout(timer);
-  }, [error]);
+  }, [error, lockoutSecondsRemaining]);
 
   useEffect(() => {
-    return () => {
-      setPassword('');
-      if (passwordInputRef.current) {
-        passwordInputRef.current.value = '';
-      }
-    };
-  }, []);
+    if (lockoutSecondsRemaining === null) return;
+    if (lockoutSecondsRemaining <= 0) {
+      setLockoutSecondsRemaining(null);
+      setError('');
+      return;
+    }
+    const interval = setInterval(() => {
+      setLockoutSecondsRemaining(prev => (prev !== null ? prev - 1 : null));
+    }, 1000);
+    return () => clearInterval(interval);
+  }, [lockoutSecondsRemaining]);
+
+  useEffect(() => {
+    if (lockoutSecondsRemaining === null) return;
+    const mins = Math.floor(lockoutSecondsRemaining / 60);
+    const secs = lockoutSecondsRemaining % 60;
+    setError(`Too many failed attempts. Try again in ${mins}m ${secs}s.`);
+  }, [lockoutSecondsRemaining]);
 
   const handleSubmit = async (e: React.FormEvent<HTMLFormElement>) => {
     e.preventDefault();
@@ -69,10 +81,9 @@ function LoginPageInner() {
 
       if (!response.ok) {
         if (response.status === 429) {
-          const mins = Math.floor(data.secondsRemaining / 60);
-          const secs = data.secondsRemaining % 60;
-          setError(`Too many failed attempts. Try again in ${mins}m ${secs}s.`);
+          setLockoutSecondsRemaining(data.secondsRemaining);
         } else {
+          setLockoutSecondsRemaining(null);
           setError(data.error || 'Invalid email or password');
         }
         setLoading(false);
