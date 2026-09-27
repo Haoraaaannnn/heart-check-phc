@@ -115,17 +115,53 @@ export function usePatientData(
           avgWaitTime: calculatedAvgWait,
         });
 
-        setRecentPatients(todayPatientData.slice(0, RECENT_LIST_SIZE));
+        const transformedToday: RecentPatient[] = todayPatientData
+          .slice(0, RECENT_LIST_SIZE)
+          .map((patient: any) => {
+            const waitMin =
+              patient.consult_start && patient.created_at
+                ? Math.max(
+                    0,
+                    Math.floor(
+                      (new Date(patient.consult_start).getTime() -
+                        new Date(patient.created_at).getTime()) /
+                        60000
+                    )
+                  )
+                : undefined;
+
+            const createdAtDate = patient.created_at ? new Date(patient.created_at) : new Date();
+
+            return {
+              id: String(patient.id),
+              patientNum: patient.patientNum || '',
+              service: patient.service || 'Unknown',
+              status: patient.status || 'Unknown',
+              createdAt: createdAtDate.toLocaleString(),
+              time: patient.created_at
+                ? new Date(patient.created_at).toLocaleTimeString([], {
+                    hour: '2-digit',
+                    minute: '2-digit',
+                  })
+                : '--',
+              waitTime: waitMin,
+            };
+          });
+
+        setRecentPatients(transformedToday);
 
         const distArray = Object.entries(distribution).map(([name, value]) => ({
           name,
           value,
         }));
         setServiceDistribution(distArray);
+      } else {
+        setRecentPatients([]);
+        setServiceDistribution([]);
       }
 
       if (allPatientData) {
-        const transformedAll = allPatientData.map((patient: any) => {
+        const transformedAll: AllRecentPatient[] = allPatientData.map((patient: any) => {
           let calculatedWait = '--';
           if (patient.created_at) {
             const registered = new Date(patient.created_at).getTime();
@@ -135,25 +171,36 @@ export function usePatientData(
             calculatedWait = `${Math.max(0, Math.floor((consult - registered) / 60000))}m`;
           }
 
+          const createdAtDate = patient.created_at ? new Date(patient.created_at) : new Date();
+
           return {
-            id: patient.id,
-            patientNum: patient.patientNum,
-            service: patient.service,
-            status: patient.status,
-            time: new Date(patient.created_at).toLocaleTimeString([], {
-              hour: '2-digit',
-              minute: '2-digit',
-            }),
+            id: String(patient.id),
+            patientNum: patient.patientNum || '',
+            service: patient.service || 'Unknown',
+            status: patient.status || 'Unknown',
+            createdAt: createdAtDate.toLocaleString(),
+            createdAtDate,
+            time: patient.created_at
+              ? new Date(patient.created_at).toLocaleTimeString([], {
+                  hour: '2-digit',
+                  minute: '2-digit',
+                })
+              : '--',
             waitTime: calculatedWait,
           };
         });
 
         setAllRecentPatients(transformedAll);
+      } else {
+        setAllRecentPatients([]);
       }
     } catch (err: any) {
       if (!isStale()) {
         console.error('Error fetching patient data:', err);
         setError(err.message || 'Failed to load patient data');
+        setRecentPatients([]);
+        setAllRecentPatients([]);
+        setServiceDistribution([]);
       }
     }
   }, [service, setStats]);

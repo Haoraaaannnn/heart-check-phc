@@ -1,23 +1,51 @@
+/**
+ * Summary metrics of patient traffic for the current day.
+ */
 export interface PatientStats {
+  /** Total registered patient count for today. */
   totalToday: number;
+  /** Number of patients currently awaiting consultation. */
   inQueue: number;
+  /** Number of patients currently undergoing consultation. */
   inService: number;
+  /** Number of patients completed and served today. */
   servedToday: number;
+  /** Average wait duration in minutes across all served or queued patients. */
   avgWaitTime: number;
 }
 
+/**
+ * Represents a patient record within recent queue summaries and feeds.
+ */
 export interface RecentPatient {
+  /** Unique database identifier of the patient record. */
   id: string;
+  /** Queue ticket number displayed to patients. */
   patientNum: string;
+  /** Medical service or department assigned. */
   service: string;
+  /** Current queue progress status. */
   status: string;
+  /** Full registration timestamp formatted for display. */
   createdAt: string;
-  waitTime?: number;
+  /** Short time string formatted for tabular display (e.g. HH:MM AM/PM). */
+  time?: string;
+  /** Elapsed or calculated wait duration in minutes, or formatted string. */
+  waitTime?: number | string;
 }
 
+/**
+ * Extended patient record including date representations for multi-day logs.
+ */
 export interface AllRecentPatient extends RecentPatient {
-  createdAtDate: Date;
+  /** Native Date object of patient registration. */
+  createdAtDate?: Date;
+  /** Short time string formatted for tabular display. */
+  time?: string;
+  /** Elapsed or calculated wait duration formatted string or number. */
+  waitTime?: string | number;
 }
+
 
 export interface AnalyticsData {
   daily_summary?: Array<{
