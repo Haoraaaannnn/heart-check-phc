@@ -1,18 +1,11 @@
+import { CATEGORY_ICONS } from '@/constants/icons';
+
 export const CATEGORIES = [
   'Consultation', 'OPD Card', 'Refill Prescription', 'ECG',
   'Warfarin', 'OPD Reschedule', 'Benzathine', 'OPD Screening'
 ];
 
-export const CATEGORY_ICONS: Record<string, string> = {
-  'Consultation': 'bx-chat',
-  'OPD Card': 'bx-id-card',
-  'Refill Prescription': 'bx-capsule',
-  'ECG': 'bx-heart',
-  'Warfarin': 'bxs-capsule',
-  'OPD Reschedule': 'bx-calendar',
-  'Benzathine': 'bx-injection',
-  'OPD Screening': 'bx-search-alt-2'
-};
+export { CATEGORY_ICONS };
 
 export const ROTATE_TIMEOUT_MS = 2 * 60 * 1000;
 export const MAX_ROTATIONS_BEFORE_IDLE = 5;

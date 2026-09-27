@@ -1,4 +1,4 @@
-# Heart Check PHC Setup and Seeding Guide
+# Heart Check PHC: A Kiosk-Based Queue Management and Analytics System — Setup and Seeding Guide
 
 ## Overview
 This guide explains how to install and run the frontend, backend, and seeder for Heart Check PHC. It also explains how to automate simulated patient seeding.
@@ -15,8 +15,8 @@ cd heart-check-phc
 If you already have it cloned, make sure you are on the correct branch:
 
 ```bash
-git checkout Feat-Printing
-git pull origin Feat-Printing
+git checkout main
+git pull origin main
 ```
 
 ---
@@ -68,6 +68,7 @@ Create a `.env.local` file in the repository root (next to `README.md`):
 ```text
 NEXT_PUBLIC_SUPABASE_URL=https://your-project.supabase.co
 NEXT_PUBLIC_SUPABASE_ANON_KEY=your-anon-key
+SUPABASE_SERVICE_ROLE_KEY=your-service-role-key
 ```
 
 > Note: This file is local only. Do not commit your keys to public repositories.
@@ -84,6 +85,9 @@ The backend API endpoints are:
 
 - `http://localhost:8000/health`
 - `http://localhost:8000/api/dashboard-data`
+- `http://localhost:8000/api/available-years`
+- `http://localhost:8000/api/monthly-breakdown/{year}`
+- `http://localhost:8000/api/export-excel`
 
 ---
 

@@ -1,109 +1,162 @@
 'use client';
+
+import React from 'react';
 import { useRouter } from 'next/navigation';
 import { supabase } from '@/lib/supabase';
 import { CATEGORIES, CATEGORY_ICONS } from '../lib/constants';
+import { transferTexts } from '../constants/transferTexts';
+import { NotificationBadge } from '@/components/reusables/NotificationBadge';
 
-type SidebarProps = {
-  sidebarOpen: boolean;
+/**
+ * Props for the `Sidebar` component.
+ */
+export interface SidebarProps {
+  /** Currently selected service category, or null. */
   selectedCategory: string | null;
+  /** Map of service category names to active queue counts. */
   queueCounts: Record<string, number>;
+  /** Map of service category names to idle counts. */
   idleCounts?: Record<string, number>;
+  /** Callback fired when a category is clicked. */
   onSelectCategory: (category: string) => void;
-  onToggleSidebar: () => void;
+  /** Optional allowed service categories for restricted roles. */
   allowedServices?: string[];
-};
+}
 
-export function Sidebar({ sidebarOpen, selectedCategory, queueCounts, idleCounts = {}, allowedServices, onSelectCategory, onToggleSidebar }: SidebarProps) {
+/**
+ * Clean, fixed-width sidebar navigation for the Patient Transfer dashboard.
+ *
+ * @remarks
+ * In accordance with redesign specifications:
+ * - Auto-hide and toggle collapse buttons have been eliminated.
+ * - Displays as an icon rail on screens below `2xl`, expanding to a full 64-width panel on `2xl+`.
+ * - Employs accessible tooltips and NotificationBadges for real-time queue visibility.
+ *
+ * @param props - Navigation state and category counts.
+ * @returns The rendered sidebar component.
+ */
+export function Sidebar({
+  selectedCategory,
+  queueCounts,
+  idleCounts = {},
+  allowedServices,
+  onSelectCategory,
+}: SidebarProps) {
   const router = useRouter();
-  const visibleCategories = allowedServices ? CATEGORIES.filter(c => allowedServices.includes(c)) : CATEGORIES;
+  const visibleCategories = allowedServices
+    ? CATEGORIES.filter(c => allowedServices.includes(c))
+    : CATEGORIES;
 
-  const CategoryItem = ({ category }: { category: string }) => {
-    const queueCount = queueCounts[category] || 0;
-    const idleCount = idleCounts[category] || 0;
-    const isActive = selectedCategory === category;
-    const icon = CATEGORY_ICONS[category] || 'bx-folder';
-    const totalBadge = queueCount + idleCount;
-
-    return (
-      <button
-        onClick={() => onSelectCategory(category)}
-        title={!sidebarOpen ? `${category}${queueCount > 0 ? ` — ${queueCount} waiting` : ''}${idleCount > 0 ? ` — ${idleCount} idle` : ''}` : undefined}
-        className={`relative w-full text-left px-4 py-3 rounded-xl transition-all duration-200 flex items-center group ${
-          sidebarOpen ? 'justify-between' : 'justify-center'
-        } ${
-          isActive
-            ? 'bg-[#cc3535] text-white shadow-md shadow-red-200'
-            : 'text-gray-700 hover:bg-red-50'
-        }`}
-      >
-        <div className="flex items-center gap-3 min-w-0">
-          <i className={`bx ${icon} text-xl shrink-0 ${isActive ? 'text-white' : 'text-gray-500 group-hover:text-[#cc3535]'}`}></i>
-          {sidebarOpen && (
-            <span className="text-sm font-medium truncate">{category}</span>
-          )}
-        </div>
-
-        {(queueCount > 0 || idleCount > 0) && (
-          sidebarOpen ? (
-            <span className="flex items-center gap-1 shrink-0 ml-2">
-              {queueCount > 0 && (
-                <span className={`text-xs px-2 py-0.5 rounded-full ${isActive ? 'bg-white text-[#cc3535]' : 'bg-red-100 text-[#cc3535]'}`} title="Waiting in queue">
-                  {queueCount}
-                </span>
-              )}
-              {idleCount > 0 && (
-                <span className={`text-xs px-2 py-0.5 rounded-full ${isActive ? 'bg-white/20 text-white' : 'bg-gray-200 text-gray-600'}`} title="Idle numbers">
-                  {idleCount}
-                </span>
-              )}
-            </span>
-          ) : (
-            <span className={`absolute top-1 right-1 flex items-center justify-center text-[9px] font-bold leading-none w-4 h-4 rounded-full ring-2 ${
-              isActive ? 'bg-white text-[#cc3535] ring-[#cc3535]' : queueCount > 0 ? 'bg-[#cc3535] text-white ring-white' : 'bg-gray-500 text-white ring-white'
-            }`}>
-              {totalBadge > 9 ? '9+' : totalBadge}
-            </span>
-          )
-        )}
-      </button>
-    );
+  const handleLogout = async () => {
+    await supabase.auth.signOut();
+    router.replace('/login');
   };
 
   return (
-    <div className={`fixed left-0 top-0 h-full bg-white/95 backdrop-blur-sm border-r border-red-100 shadow-xl transition-all duration-300 z-20 flex flex-col ${sidebarOpen ? 'w-64' : 'w-16'}`}>
-      <div className="flex items-center justify-between p-4 border-b border-red-100">
-        {sidebarOpen && (
-          <div className="flex items-center gap-2 min-w-0">
-            <span className="text-gray-800 font-bold text-sm truncate">Patient Transfer</span>
+    <aside
+      className="fixed left-0 top-0 h-full bg-white border-r border-slate-200 shadow-xs z-30 flex flex-col w-18 2xl:w-64 transition-all duration-200 select-none"
+      aria-label="Dashboard navigation"
+    >
+      {/* Brand Header */}
+      <div className="h-16 flex items-center justify-center 2xl:justify-start px-4 border-b border-slate-100">
+        <div className="flex items-center gap-3 min-w-0">
+          <div className="w-10 h-10 rounded-xl bg-[#cc3535] text-white flex items-center justify-center font-black text-lg shadow-xs shrink-0">
+            <i className="bx bxs-heart" aria-hidden="true" />
           </div>
-        )}
-        <button
-          onClick={onToggleSidebar}
-          title={sidebarOpen ? 'Collapse sidebar' : 'Expand sidebar'}
-          className={`p-2 rounded-lg hover:bg-red-50 transition-colors text-gray-500 hover:text-[#cc3535] ${!sidebarOpen && 'mx-auto'}`}
-        >
-          <i className={`bx ${sidebarOpen ? 'bx-chevron-left' : 'bx-chevron-right'} text-xl`}></i>
-        </button>
+          <div className="hidden 2xl:block min-w-0">
+            <h1 className="text-sm font-bold text-slate-800 tracking-tight truncate">
+              {transferTexts.dashboardTitle}
+            </h1>
+            <p className="text-[11px] font-medium text-slate-400">PHC Management</p>
+          </div>
+        </div>
       </div>
 
-      <nav className="flex-1 overflow-y-auto py-4">
-        <div className="space-y-1 px-2">
-          {visibleCategories.map(category => (
-            <CategoryItem key={category} category={category} />
-          ))}
-        </div>
+      {/* Category List */}
+      <nav className="flex-1 overflow-y-auto py-4 px-2 space-y-1 phc-scroll">
+        {visibleCategories.map(category => {
+          const queueCount = queueCounts[category] || 0;
+          const idleCount = idleCounts[category] || 0;
+          const totalCount = queueCount + idleCount;
+          const isActive = selectedCategory === category;
+          const icon = CATEGORY_ICONS[category] || 'bx-folder';
+
+          const tooltip = `${category}${
+            queueCount > 0 ? ` — ${queueCount} waiting` : ''
+          }${idleCount > 0 ? ` — ${idleCount} idle` : ''}`;
+
+          return (
+            <button
+              key={category}
+              type="button"
+              onClick={() => onSelectCategory(category)}
+              title={tooltip}
+              aria-current={isActive ? 'page' : undefined}
+              className={`w-full relative flex items-center justify-center 2xl:justify-between px-3 py-2.5 rounded-xl transition-all duration-150 group cursor-pointer ${
+                isActive
+                  ? 'bg-[#cc3535] text-white shadow-xs font-semibold'
+                  : 'text-slate-600 hover:bg-slate-100 hover:text-slate-900 font-medium'
+              }`}
+            >
+              <div className="flex items-center gap-3 min-w-0">
+                <i
+                  className={`bx ${icon} text-xl shrink-0 ${
+                    isActive ? 'text-white' : 'text-slate-400 group-hover:text-[#cc3535]'
+                  }`}
+                  aria-hidden="true"
+                />
+                <span className="hidden 2xl:inline text-sm truncate">{category}</span>
+              </div>
+
+              {/* Badges for 2xl+ */}
+              <div className="hidden 2xl:flex items-center gap-1 shrink-0 ml-2">
+                {queueCount > 0 && (
+                  <NotificationBadge
+                    count={queueCount}
+                    color={isActive ? 'brand' : 'amber'}
+                    pulse={queueCount > 3}
+                    className={isActive ? '!bg-white !text-[#cc3535] ring-transparent' : ''}
+                  />
+                )}
+                {idleCount > 0 && (
+                  <NotificationBadge
+                    count={idleCount}
+                    color="gray"
+                    className={isActive ? '!bg-white/20 !text-white ring-transparent' : ''}
+                  />
+                )}
+              </div>
+
+              {/* Indicator Dot for rail view (< 2xl) */}
+              {totalCount > 0 && (
+                <span className="2xl:hidden absolute top-1.5 right-1.5">
+                  <NotificationBadge
+                    variant="dot"
+                    pulse={queueCount > 0}
+                    color={isActive ? 'brand' : 'amber'}
+                    className={isActive ? '!bg-white ring-[#cc3535]' : ''}
+                  />
+                </span>
+              )}
+            </button>
+          );
+        })}
       </nav>
 
-      <div className="p-4 border-t border-red-100">
+      {/* Footer / Logout */}
+      <div className="p-3 border-t border-slate-100">
         <button
-          onClick={async () => { await supabase.auth.signOut(); router.replace('/login'); }}
-          title={!sidebarOpen ? 'Logout' : undefined}
-          className={`flex items-center gap-3 w-full px-3 py-2 rounded-lg text-gray-500 hover:bg-red-50 hover:text-[#cc3535] transition-colors ${!sidebarOpen && 'justify-center'}`}
+          type="button"
+          onClick={handleLogout}
+          title={transferTexts.logoutLabel}
+          className="w-full flex items-center justify-center 2xl:justify-start gap-3 px-3 py-2.5 rounded-xl text-slate-500 hover:text-[#cc3535] hover:bg-red-50 transition-colors font-medium text-sm cursor-pointer"
         >
-          <i className="bx bx-log-out text-lg"></i>
-          {sidebarOpen && <span className="text-sm font-medium">Logout</span>}
+          <i className="bx bx-log-out text-xl shrink-0" aria-hidden="true" />
+          <span className="hidden 2xl:inline truncate">{transferTexts.logoutLabel}</span>
         </button>
       </div>
-    </div>
+    </aside>
   );
 }
+
+export default Sidebar;

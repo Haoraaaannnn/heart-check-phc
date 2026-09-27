@@ -1,82 +1,95 @@
 'use client';
 
+import { useEffect } from 'react';
 import { useRouter } from 'next/navigation';
-import { useEffect, useState } from 'react';
 import { supabase } from '@/lib/supabase';
 import { useOverviewData } from '@/app/dashboard/hooks/useOverviewData';
 import { useHistoricalSummary } from '@/app/dashboard/context/HistoricalSummaryContext';
+import { useIdleTimeout } from '@/app/dashboard/hooks/useIdleTimeout';
+import { useMountedClock } from '@/app/dashboard/hooks/useMountedClock';
 import { calcAvgWaitTime } from '@/utils/waitTime';
+import WelcomeBanner from '@/app/dashboard/components/WelcomeBanner';
 import DashboardMetrics from '@/app/dashboard/components/DashboardMetrics';
 import HistoricalContextBanner from '@/app/dashboard/components/HistoricalContextBanner';
+import ServiceQueueOverview from '@/app/dashboard/components/ServiceQueueOverview';
+import TicketStatusBreakdown from '@/app/dashboard/components/TicketStatusBreakdown';
+import QuickLinks from '@/app/dashboard/components/QuickLinks';
 import LiveQueueTable from '@/app/dashboard/components/LiveQueueTable';
-import ServiceStats from '@/app/dashboard/components/ServiceStats';
 import HourlyArrivalsChart from '@/app/dashboard/components/HourlyArrivalChart';
-import { useIdleTimeout } from './hooks/useIdleTimeout';
+import RecentActivity from '@/app/dashboard/components/RecentActivity';
+import { DASH } from '@/app/dashboard/constants/styles';
 
-
+/**
+ * Admin dashboard overview (/dashboard).
+ *
+ * Read-only: this page only displays queue/patient data - admins here are not
+ * superadmin, so no ticket actions live on this page (see QuickLinks, which
+ * only navigates elsewhere).
+ *
+ * Layout: welcome banner + metrics + (service overview | ticket breakdown) +
+ * quick links in the main column; live queue, hourly chart and recent
+ * activity in the right rail. Falls back to HistoricalContextBanner when
+ * there's no activity today.
+ */
 export default function DashboardPage() {
   useIdleTimeout();
   const router = useRouter();
-  const [isMounted, setIsMounted] = useState(false);
-  const [currentTime, setCurrentTime] = useState<Date | null>(null);
+  const { isMounted, currentTime } = useMountedClock();
 
-  const { stats, patientsList, deptStats, hourlyData } = useOverviewData();
+  const { stats, patientsList, deptStats, hourlyData, yesterdayCount } = useOverviewData();
   const { historicalData, historicalLoading } = useHistoricalSummary();
 
+  // Session guard only - mount flag and clock now live in useMountedClock.
   useEffect(() => {
-    setIsMounted(true);
-    setCurrentTime(new Date());
-
     const checkSession = async () => {
       const { data } = await supabase.auth.getSession();
       if (!data.session) router.replace('/login');
     };
     checkSession();
-
-    const timer = setInterval(() => setCurrentTime(new Date()), 60000);
-    return () => clearInterval(timer);
   }, [router]);
 
   const avgWaitTime =
     isMounted && currentTime ? calcAvgWaitTime(patientsList, currentTime) : '--';
-
   const showHistoricalBanner = isMounted && stats.todayCount === 0;
 
   return (
-    <div className="min-h-screen w-full">
-      <div className="px-8 py-6 mx-auto max-w-10xl flex flex-col gap-6">
+    <div className={DASH.layout.page}>
+      <WelcomeBanner currentTime={currentTime} isMounted={isMounted} />
 
-        <DashboardMetrics
-          stats={stats}
-          avgWaitTime={avgWaitTime}
-          isMounted={isMounted}
+      <DashboardMetrics
+        stats={stats}
+        avgWaitTime={avgWaitTime}
+        yesterdayCount={yesterdayCount}
+        isMounted={isMounted}
+      />
+
+      {showHistoricalBanner && (
+        <HistoricalContextBanner
+          historicalData={historicalData}
+          historicalLoading={historicalLoading}
         />
+      )}
 
-        {showHistoricalBanner && (
-          <HistoricalContextBanner
-            historicalData={historicalData}
-            historicalLoading={historicalLoading}
-          />
-        )}
+      <div className={DASH.layout.grid}>
+        {/* Main column */}
+        <div className={DASH.layout.column}>
+          <div className={DASH.layout.twoUp}>
+            <ServiceQueueOverview deptStats={deptStats} isMounted={isMounted} />
+            <TicketStatusBreakdown stats={stats} isMounted={isMounted} />
+          </div>
+          <QuickLinks />
+        </div>
 
-        <div className="grid grid-cols-1 lg:grid-cols-3 gap-6">
+        {/* Right rail */}
+        <div className={DASH.layout.column}>
           <LiveQueueTable
             patients={patientsList}
             currentTime={currentTime ?? new Date()}
             isMounted={isMounted}
           />
-          <ServiceStats
-            deptStats={deptStats}
-            stats={stats}
-            isMounted={isMounted}
-          />
+          <HourlyArrivalsChart hourlyData={hourlyData} isMounted={isMounted} />
+          <RecentActivity patients={patientsList} isMounted={isMounted} />
         </div>
-
-        <HourlyArrivalsChart
-          hourlyData={hourlyData}
-          isMounted={isMounted}
-        />
-
       </div>
     </div>
   );

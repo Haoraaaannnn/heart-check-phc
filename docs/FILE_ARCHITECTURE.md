@@ -1,6 +1,7 @@
 ```text
 Directory structure:
 └── haoraaaannnn-heart-check-phc/
+    ├── AGENTS.md
     ├── README.md
     ├── declaration.d.ts
     ├── eslint.config.mjs
@@ -18,11 +19,23 @@ Directory structure:
     │   │   └── sendSMS.ts
     │   ├── api/
     │   │   ├── auth/
-    │   │   │   └── login/
+    │   │   │   ├── change-password/
+    │   │   │   │   └── route.ts
+    │   │   │   ├── forgot-password/
+    │   │   │   │   └── route.ts
+    │   │   │   ├── login/
+    │   │   │   │   └── route.ts
+    │   │   │   ├── reset-password/
+    │   │   │   │   └── route.ts
+    │   │   │   └── verify-recovery/
     │   │   │       └── route.ts
     │   │   ├── print-ticket/
     │   │   │   └── route.ts
+    │   │   ├── rotate/
+    │   │   │   └── route.ts
     │   │   └── superadmin/
+    │   │       ├── access/
+    │   │       │   └── route.ts
     │   │       ├── create-user/
     │   │       │   └── route.ts
     │   │       ├── cubicles/
@@ -33,6 +46,9 @@ Directory structure:
     │   │       │   └── route.ts
     │   │       └── update-role/
     │   │           └── route.ts
+    │   ├── auth/
+    │   │   └── confirm/
+    │   │       └── route.ts
     │   ├── dashboard/
     │   │   ├── layout.tsx
     │   │   ├── page.tsx
@@ -51,24 +67,93 @@ Directory structure:
     │   │   │   └── hooks/
     │   │   │       └── useAnalyticsData.ts
     │   │   ├── components/
+    │   │   │   ├── DashboardCard.tsx
     │   │   │   ├── DashboardMetrics.tsx
+    │   │   │   ├── DonutChart.tsx
     │   │   │   ├── HistoricalContextBanner.tsx
     │   │   │   ├── HourlyArrivalChart.tsx
     │   │   │   ├── LiveQueueTable.tsx
     │   │   │   ├── NotificationDropdown.tsx
+    │   │   │   ├── QuickLinks.tsx
+    │   │   │   ├── RecentActivity.tsx
+    │   │   │   ├── ServiceQueueOverview.tsx
     │   │   │   ├── ServiceStats.tsx
     │   │   │   ├── StatusBadge.tsx
+    │   │   │   ├── TicketStatusBreakdown.tsx
+    │   │   │   ├── WelcomeBanner.tsx
     │   │   │   └── navigation/
+    │   │   │       ├── DashSideNavigation.tsx
     │   │   │       ├── DashboardHeader.tsx
-    │   │   │       └── DashSideNavigation.tsx
+    │   │   │       ├── HeaderSearch.tsx
+    │   │   │       └── LiveClock.tsx
+    │   │   ├── constants/
+    │   │   │   ├── charts.ts
+    │   │   │   ├── content.ts
+    │   │   │   ├── navigation.ts
+    │   │   │   └── styles.ts
     │   │   ├── context/
     │   │   │   └── HistoricalSummaryContext.tsx
     │   │   ├── cubicles/
     │   │   │   └── page.tsx
     │   │   ├── hooks/
     │   │   │   ├── useBottleneckNotifications.ts
+    │   │   │   ├── useDashboardTheme.ts
     │   │   │   ├── useIdleTimeout.ts
+    │   │   │   ├── useMountedClock.ts
     │   │   │   └── useOverviewData.ts
+    │   │   ├── pages/
+    │   │   │   ├── analytics/
+    │   │   │   │   ├── page.tsx
+    │   │   │   │   ├── components/
+    │   │   │   │   │   ├── AlgorithmComparisonTable.tsx
+    │   │   │   │   │   ├── AnalyticsHeader.tsx
+    │   │   │   │   │   ├── AnalyticsMetricCards.tsx
+    │   │   │   │   │   ├── ArimaForecast.tsx
+    │   │   │   │   │   ├── BottleneckStageTable.tsx
+    │   │   │   │   │   ├── DateRangeSelector.tsx
+    │   │   │   │   │   ├── ExportExcelButton.tsx
+    │   │   │   │   │   ├── LRForecast.tsx
+    │   │   │   │   │   ├── PHCComplianceSummary.tsx
+    │   │   │   │   │   └── VolumeAndWaitCharts.tsx
+    │   │   │   │   ├── constants/
+    │   │   │   │   │   ├── analytics.ts
+    │   │   │   │   │   └── analyticsTexts.ts
+    │   │   │   │   └── hooks/
+    │   │   │   │       └── useAnalyticsData.ts
+    │   │   │   ├── cubicles/
+    │   │   │   │   ├── page.tsx
+    │   │   │   │   ├── components/
+    │   │   │   │   │   ├── CubicleCard.tsx
+    │   │   │   │   │   ├── CubiclesGrid.tsx
+    │   │   │   │   │   ├── CubiclesHeader.tsx
+    │   │   │   │   │   ├── CubiclesLegend.tsx
+    │   │   │   │   │   └── CubiclesStatsGrid.tsx
+    │   │   │   │   ├── constants/
+    │   │   │   │   │   ├── cubicles.ts
+    │   │   │   │   │   └── cubiclesTexts.ts
+    │   │   │   │   ├── hooks/
+    │   │   │   │   │   └── useCubiclesData.ts
+    │   │   │   │   └── types/
+    │   │   │   │       └── cubicle.ts
+    │   │   │   ├── overview/
+    │   │   │   │   └── page.tsx
+    │   │   │   └── patients/
+    │   │   │       ├── page.tsx
+    │   │   │       ├── components/
+    │   │   │       │   ├── HourlyPatientFlowChart.tsx
+    │   │   │       │   ├── PatientStatGrid.tsx
+    │   │   │       │   ├── PatientsHeader.tsx
+    │   │   │       │   ├── RecentPatientTable.tsx
+    │   │   │       │   ├── ServiceDistributionChart.tsx
+    │   │   │       │   ├── ServiceFilterBar.tsx
+    │   │   │       │   └── ServiceQueuePanel.tsx
+    │   │   │       ├── constants/
+    │   │   │       │   ├── patients.ts
+    │   │   │       │   └── patientsTexts.ts
+    │   │   │       └── hooks/
+    │   │   │           ├── usePatientsAnalyticsData.ts
+    │   │   │           ├── usePatientsData.ts
+    │   │   │           └── useServiceQueue.ts
     │   │   └── patients/
     │   │       ├── page.tsx
     │   │       ├── components/
@@ -84,62 +169,144 @@ Directory structure:
     │   │           ├── usePatientsAnalyticsData.ts
     │   │           ├── usePatientsData.ts
     │   │           └── useServiceQueue.ts
+    │   ├── forgot-password/
+    │   │   └── page.tsx
     │   ├── kiosk/
+    │   │   ├── README.md
     │   │   ├── layout.tsx
-    │   │   ├── confirmation/
-    │   │   │   ├── layout.tsx
-    │   │   │   ├── page.tsx
-    │   │   │   └── components/
-    │   │   │       ├── ConfimationDescription.tsx
-    │   │   │       ├── ConfirmationActions.tsx
-    │   │   │       ├── ConfirmationBanner.tsx
-    │   │   │       └── ConfirmationModal.tsx
-    │   │   ├── consultation-category/
-    │   │   │   └── page.tsx
-    │   │   ├── kiosk-cubicle-selection/
-    │   │   │   ├── layout.tsx
-    │   │   │   ├── page.tsx
-    │   │   │   ├── components/
-    │   │   │   │   ├── CubicleCard.tsx
-    │   │   │   │   └── CubicleHeader.tsx
-    │   │   │   └── types/
-    │   │   │       └── CubicleSelectorType.ts
-    │   │   ├── kiosk-new-old-selection/
-    │   │   │   ├── layout.tsx
-    │   │   │   ├── page.tsx
-    │   │   │   ├── components/
-    │   │   │   │   ├── KioskTitle.tsx
-    │   │   │   │   ├── PatientTypeBanner.tsx
-    │   │   │   │   └── PatientTypeCards.tsx
-    │   │   │   └── types/
-    │   │   │       └── PatientType.ts
-    │   │   ├── kiosk-services/
-    │   │   │   ├── layout.tsx
-    │   │   │   ├── page.tsx
-    │   │   │   └── components/
-    │   │   │       ├── KioskBanner.tsx
-    │   │   │       ├── KioskHeader.tsx
-    │   │   │       ├── KioskServicesCard.tsx
-    │   │   │       └── KioskServicesGrid.tsx
-    │   │   ├── opd-screening-category/
-    │   │   │   └── page.tsx
-    │   │   ├── queue-print/
-    │   │   │   ├── layout.tsx
-    │   │   │   ├── page.tsx
-    │   │   │   └── components/
-    │   │   │       ├── PrintFooter.tsx
-    │   │   │       ├── PrintHeader.tsx
-    │   │   │       └── QueuePrintContent.tsx
-    │   │   └── sms-input/
-    │   │       ├── layout.tsx
-    │   │       ├── page.tsx
-    │   │       └── components/
-    │   │           ├── ContinueButton.tsx
-    │   │           ├── KioskPhoneEntry.tsx
-    │   │           ├── NumPad.tsx
-    │   │           ├── PhoneInput.tsx
-    │   │           ├── SMSBanner.tsx
-    │   │           └── SMSInstruction.tsx
+    │   │   ├── components/
+    │   │   │   └── KioskLoadingOverlay.tsx
+    │   │   ├── constants/
+    │   │   │   ├── kioskBackButton.ts
+    │   │   │   ├── kioskBackButtonTexts.ts
+    │   │   │   ├── kioskLayout.ts
+    │   │   │   ├── kioskLayoutTexts.ts
+    │   │   │   ├── kioskLoadingOverlay.ts
+    │   │   │   ├── kioskLoadingOverlayTexts.ts
+    │   │   │   └── kioskNavigation.ts
+    │   │   ├── context/
+    │   │   │   └── KioskLoadingContext.tsx
+    │   │   ├── hooks/
+    │   │   │   └── useKioskNavigate.ts
+    │   │   └── pages/
+    │   │       ├── category-selection/
+    │   │       │   ├── page.tsx
+    │   │       │   └── constants/
+    │   │       │       ├── categoryCards.ts
+    │   │       │       ├── categoryCardsTexts.ts
+    │   │       │       ├── categoryHeader.ts
+    │   │       │       ├── categoryHeaderTexts.ts
+    │   │       │       ├── categoryLayout.ts
+    │   │       │       ├── categorySelection.ts
+    │   │       │       └── categorySelectionTexts.ts
+    │   │       ├── confirmation/
+    │   │       │   ├── layout.tsx
+    │   │       │   ├── page.tsx
+    │   │       │   ├── components/
+    │   │       │   │   ├── ConfimationDescription.tsx
+    │   │       │   │   ├── ConfirmationActions.tsx
+    │   │       │   │   ├── ConfirmationBanner.tsx
+    │   │       │   │   └── ConfirmationModal.tsx
+    │   │       │   └── constants/
+    │   │       │       ├── confirmation.ts
+    │   │       │       ├── confirmationActions.ts
+    │   │       │       ├── confirmationActionsTexts.ts
+    │   │       │       ├── confirmationBanner.ts
+    │   │       │       ├── confirmationDescription.ts
+    │   │       │       ├── confirmationDescriptionTexts.ts
+    │   │       │       ├── confirmationLayout.ts
+    │   │       │       ├── confirmationLayoutTexts.ts
+    │   │       │       ├── confirmationModal.ts
+    │   │       │       ├── confirmationModalTexts.ts
+    │   │       │       └── confirmationTexts.ts
+    │   │       ├── kiosk-cubicle-selection/
+    │   │       │   ├── layout.tsx
+    │   │       │   ├── page.tsx
+    │   │       │   ├── components/
+    │   │       │   │   ├── CubicleCard.tsx
+    │   │       │   │   └── CubicleHeader.tsx
+    │   │       │   ├── constants/
+    │   │       │   │   ├── cubicleCard.ts
+    │   │       │   │   ├── cubicleHeader.ts
+    │   │       │   │   ├── cubicleHeaderTexts.ts
+    │   │       │   │   ├── cubicleLayout.ts
+    │   │       │   │   ├── cubicleSelection.ts
+    │   │       │   │   └── cubicleSelectionTexts.ts
+    │   │       │   └── types/
+    │   │       │       └── CubicleSelectorType.ts
+    │   │       ├── kiosk-new-old-selection/
+    │   │       │   ├── layout.tsx
+    │   │       │   ├── page.tsx
+    │   │       │   ├── components/
+    │   │       │   │   ├── KioskTitle.tsx
+    │   │       │   │   ├── PatientTypeBanner.tsx
+    │   │       │   │   └── PatientTypeCards.tsx
+    │   │       │   ├── constants/
+    │   │       │   │   ├── kioskNewOld.ts
+    │   │       │   │   ├── kioskNewOldLayout.ts
+    │   │       │   │   ├── kioskNewOldTexts.ts
+    │   │       │   │   ├── kioskTitle.ts
+    │   │       │   │   ├── kioskTitleTexts.ts
+    │   │       │   │   ├── patientTypeBanner.ts
+    │   │       │   │   ├── patientTypeBannerTexts.ts
+    │   │       │   │   └── patientTypeCards.ts
+    │   │       │   └── types/
+    │   │       │       └── PatientType.ts
+    │   │       ├── kiosk-services/
+    │   │       │   ├── layout.tsx
+    │   │       │   ├── page.tsx
+    │   │       │   ├── components/
+    │   │       │   │   ├── KioskBanner.tsx
+    │   │       │   │   ├── KioskFooterWave.tsx
+    │   │       │   │   ├── KioskHeader.tsx
+    │   │       │   │   ├── KioskServicesCard.tsx
+    │   │       │   │   └── KioskServicesGrid.tsx
+    │   │       │   └── constants/
+    │   │       │       ├── kioskBanner.ts
+    │   │       │       ├── kioskBannerTexts.ts
+    │   │       │       ├── kioskHeader.ts
+    │   │       │       ├── kioskHeaderTexts.ts
+    │   │       │       └── kioskServices.ts
+    │   │       ├── queue-print/
+    │   │       │   ├── layout.tsx
+    │   │       │   ├── page.tsx
+    │   │       │   ├── components/
+    │   │       │   │   ├── PrintFooter.tsx
+    │   │       │   │   ├── PrintHeader.tsx
+    │   │       │   │   └── QueuePrintContent.tsx
+    │   │       │   └── constants/
+    │   │       │       ├── printFooter.ts
+    │   │       │       ├── printFooterTexts.ts
+    │   │       │       ├── printHeader.ts
+    │   │       │       ├── printHeaderTexts.ts
+    │   │       │       ├── queuePrint.ts
+    │   │       │       ├── queuePrintLayout.ts
+    │   │       │       ├── queuePrintTexts.ts
+    │   │       │       ├── queuePrintTicket.ts
+    │   │       │       └── queuePrintTicketTexts.ts
+    │   │       └── sms-input/
+    │   │           ├── layout.tsx
+    │   │           ├── page.tsx
+    │   │           ├── components/
+    │   │           │   ├── ContinueButton.tsx
+    │   │           │   ├── KioskPhoneEntry.tsx
+    │   │           │   ├── NumPad.tsx
+    │   │           │   ├── PhoneInput.tsx
+    │   │           │   ├── SMSBanner.tsx
+    │   │           │   └── SMSInstruction.tsx
+    │   │           └── constants/
+    │   │               ├── smsBanner.ts
+    │   │               ├── smsContinueButton.ts
+    │   │               ├── smsContinueButtonTexts.ts
+    │   │               ├── smsInput.ts
+    │   │               ├── smsInputTexts.ts
+    │   │               ├── smsInstruction.ts
+    │   │               ├── smsInstructionTexts.ts
+    │   │               ├── smsLayout.ts
+    │   │               ├── smsModalTexts.ts
+    │   │               ├── smsNumPad.ts
+    │   │               ├── smsPhoneInput.ts
+    │   │               └── smsPrefixRules.ts
     │   ├── login/
     │   │   └── page.tsx
     │   ├── monitor/
@@ -165,21 +332,43 @@ Directory structure:
     │   │   │   ├── AssignedSection.tsx
     │   │   │   ├── CarryoutSection.tsx
     │   │   │   ├── ElapsedTimer.tsx
+    │   │   │   ├── FinishedDrawer.tsx
     │   │   │   ├── FinishedTable.tsx
+    │   │   │   ├── NurseBoard.tsx
+    │   │   │   ├── NurseDragGhost.tsx
+    │   │   │   ├── NurseDragHandle.tsx
+    │   │   │   ├── NurseHeader.tsx
+    │   │   │   ├── NursePatientCard.tsx
+    │   │   │   ├── NurseSelectionBanner.tsx
+    │   │   │   ├── NurseSidebar.tsx
     │   │   │   ├── Sidebar.tsx
+    │   │   │   ├── StageColumn.tsx
     │   │   │   └── WithDoctorSection.tsx
+    │   │   ├── constants/
+    │   │   │   ├── nurse.ts
+    │   │   │   └── nurseTexts.ts
     │   │   ├── hooks/
+    │   │   │   ├── dragUtils.ts
     │   │   │   ├── useIdleTimeout.ts
     │   │   │   ├── useNurseActions.ts
     │   │   │   ├── useNurseData.ts
+    │   │   │   ├── useNurseDragAndDrop.ts
+    │   │   │   ├── useNurseSelection.ts
     │   │   │   ├── useRealtimeSubscription.ts
     │   │   │   └── useRequireAuth.ts
-    │   │   └── lib/
-    │   │       └── constants.ts
+    │   │   ├── lib/
+    │   │   │   └── constants.ts
+    │   │   └── types/
+    │   │       └── nurse.ts
+    │   ├── reset-password/
+    │   │   ├── page.tsx
+    │   │   └── confirm/
+    │   │       └── page.tsx
     │   ├── superadmin/
     │   │   ├── layout.tsx
     │   │   ├── page.tsx
     │   │   ├── components/
+    │   │   │   ├── ChangePasswordForm.tsx
     │   │   │   ├── SettingsPannel.tsx
     │   │   │   └── SuperAdminNav.tsx
     │   │   ├── customization/
@@ -195,15 +384,25 @@ Directory structure:
     │       │   ├── CubicleCard.tsx
     │       │   ├── DoctorsModal.tsx
     │       │   ├── DoctorsPanel.tsx
+    │       │   ├── DragGhost.tsx
+    │       │   ├── DragHandle.tsx
     │       │   ├── ElapsedTimer.tsx
+    │       │   ├── IdleNumbersPanel.tsx
     │       │   ├── IdleNumbersSection.tsx
-    │       │   ├── OnProgressSection.tsx
     │       │   ├── OPScreeningFlow.tsx
+    │       │   ├── OnProgressSection.tsx
     │       │   ├── OtherServicesFlow.tsx
     │       │   ├── QueueAndIdleLayout.tsx
+    │       │   ├── QueuePanel.tsx
     │       │   ├── RegistrationCounterSection.tsx
-    │       │   └── Sidebar.tsx
+    │       │   ├── ServiceBoard.tsx
+    │       │   ├── Sidebar.tsx
+    │       │   └── StepPickers.tsx
+    │       ├── constants/
+    │       │   ├── transfer.ts
+    │       │   └── transferTexts.ts
     │       ├── hooks/
+    │       │   ├── dragUtils.ts
     │       │   ├── useAutoAssign.ts
     │       │   ├── useAutoRotate.ts
     │       │   ├── useCubicleData.ts
@@ -211,6 +410,7 @@ Directory structure:
     │       │   ├── useIdlePatients.ts
     │       │   ├── useIdleTimeout.ts
     │       │   ├── useMaxRotations.ts
+    │       │   ├── useMyAccess.ts
     │       │   ├── usePatientData.ts
     │       │   ├── useRealtimeSubscription.ts
     │       │   ├── useRegistrationDragAndDrop.ts
@@ -218,34 +418,47 @@ Directory structure:
     │       │   ├── useRequireAuth.ts
     │       │   └── useRotateTimeout.ts
     │       └── lib/
-    │           └── constants.ts
+    │           ├── constants.ts
+    │           └── rotateApi.ts
     ├── components/
     │   ├── backgrounds/
     │   │   └── DashboardBg.tsx
     │   ├── modals/
     │   │   └── ConfirmationModal.tsx
     │   └── reusables/
+    │       ├── BackButton.tsx
+    │       ├── KioskBackButton.tsx
+    │       ├── NotificationBadge.tsx
+    │       ├── ScrollArea.tsx
     │       ├── analyticsMetricCards.tsx
     │       ├── analyticsMetricHeader.tsx
     │       ├── analyticsMetricPara.tsx
-    │       ├── KioskBackButton.tsx
     │       ├── metricCards.tsx
     │       ├── patientHeaderCard.tsx
     │       ├── patientMetricCard.tsx
     │       └── serviceMetricCard.tsx
     ├── constants/
-    │   ├── themes.js
-    │   └── themestesting.js
+    │   ├── app.ts
+    │   ├── colors.ts
+    │   ├── kiosk.ts
+    │   ├── palette.ts
+    │   ├── queueStatus.ts
+    │   └── themes.js
     ├── docs/
     │   ├── ARCHITECTURE.md
     │   ├── CHANGES_NEEDED.md
+    │   ├── COMPONENTS_GUIDE.md
     │   ├── DATABASE_SCHEMA.md
     │   ├── FILE_ARCHITECTURE.md
+    │   ├── NURSE_DASHBOARD_SYSTEM_DESIGN.md
     │   ├── OPEN_ISSUES.md
     │   ├── PRD.md
     │   ├── SCHEMA_REFERENCE.md
     │   ├── SECURITY.md
-    │   └── SETUP_AND_SEEDING.md
+    │   ├── SETUP_AND_SEEDING.md
+    │   ├── SYSTEM_DESIGN.md
+    │   ├── TRANSFER_DASHBOARD.md
+    │   └── TRANSFER_MANUAL_TWEAKING_GUIDE.md
     ├── fonts/
     │   └── fonts.ts
     ├── hooks/
@@ -257,6 +470,7 @@ Directory structure:
     │   ├── supabase.ts
     │   └── supabase/
     │       ├── admin.ts
+    │       ├── authGuard.ts
     │       ├── client.ts
     │       ├── server.ts
     │       └── superadminGuard.ts
@@ -272,7 +486,6 @@ Directory structure:
     │   ├── main.py
     │   ├── requirements.txt
     │   ├── run.py
-    │   ├── simulated_patients.csv
     │   ├── analytics/
     │   │   ├── __init__.py
     │   │   ├── constants.py
@@ -295,7 +508,7 @@ Directory structure:
     │   └── Types.ts
     └── utils/
         ├── chartDataPrep.ts
+        ├── formatDateTime.ts
         ├── formatMinutesToHMS.ts
         └── waitTime.ts
-
 ```

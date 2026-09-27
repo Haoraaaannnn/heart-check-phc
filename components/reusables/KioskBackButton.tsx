@@ -1,19 +1,48 @@
 "use client";
 
 import Link from "next/link";
+import {
+    KioskBackButtonClasses,
+    KioskBackButtonStyles,
+    KioskBackButtonTokens,
+} from "@/app/kiosk/constants/kioskBackButton";
+import { KioskBackButtonTexts } from "@/app/kiosk/constants/kioskBackButtonTexts";
 
+/** Props for {@link KioskBackButton}. */
 interface KioskBackButtonProps {
+    /** Target URL route to navigate back to. */
     href: string;
+    /** Optional custom button label (defaults to {@link KioskBackButtonTexts.label}). */
     label?: string;
 }
 
-export default function KioskBackButton({ href, label }: KioskBackButtonProps) {
+/**
+ * Universal back button for kiosk workflow screens.
+ *
+ * @remarks
+ * Rendered with elevated z-index in `app/kiosk/layout.tsx` for permitted
+ * sub-screens, providing prominent tactile touch navigation for patients.
+ *
+ * @param props - Component props.
+ * @returns The fixed-position kiosk back button.
+ */
+export default function KioskBackButton({
+    href,
+    label = KioskBackButtonTexts.label,
+}: KioskBackButtonProps) {
     return (
         <Link
             href={href}
-            className="absolute left-6 top-6 z-50 rounded-[16px] bg-[#7f0407] px-4 py-2 text-[28px] font-bold text-white transition-all active:scale-95"
+            aria-label={KioskBackButtonTexts.ariaLabel}
+            className={KioskBackButtonClasses.button}
+            style={KioskBackButtonStyles.button}
         >
-            Bumalik - Back
+            <i
+                className={`bx ${KioskBackButtonTokens.iconClass}`}
+                style={KioskBackButtonStyles.icon}
+                aria-hidden="true"
+            />
+            <span>{label}</span>
         </Link>
     );
 }

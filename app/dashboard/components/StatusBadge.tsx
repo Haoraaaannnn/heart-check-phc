@@ -1,34 +1,34 @@
+import { getStatusGroup, STATUS_STYLES } from '@/constants/queueStatus';
+import { DASH } from '@/app/dashboard/constants/styles';
+
+const S = DASH.badge;
+
 interface StatusBadgeProps {
+  /** Raw `patients.status` value. */
   status: string;
 }
 
-export default function StatusBadge({ status }: StatusBadgeProps) {
-  const s = status.toLowerCase().trim();
+/** Uppercases the first letter, e.g. "assigned" -> "Assigned". */
+function capitalize(text: string): string {
+  return text.charAt(0).toUpperCase() + text.slice(1);
+}
 
-  if (['on progress', 'serving', 'consulting'].includes(s)) {
-    return (
-      <span className="px-3 py-1 bg-green-100 text-green-700 text-xs font-bold rounded-full flex items-center gap-1 w-max">
-        <span className="w-2 h-2 bg-green-500 rounded-full"></span> Serving
-      </span>
-    );
-  }
-  if (['pending', 'waiting', 'assigned'].includes(s)) {
-    return (
-      <span className="px-3 py-1 bg-orange-100 text-orange-600 text-xs font-bold rounded-full flex items-center gap-1 w-max">
-        <span className="w-2 h-2 bg-orange-500 rounded-full"></span> {status}
-      </span>
-    );
-  }
-  if (['completed', 'done', 'served'].includes(s)) {
-    return (
-      <span className="px-3 py-1 bg-gray-100 text-gray-500 text-xs font-bold rounded-full flex items-center gap-1 w-max">
-        ✓ Done
-      </span>
-    );
-  }
+/**
+ * Colored status pill for a ticket.
+ *
+ * The raw status is mapped to a group (waiting, serving, done, ...) by
+ * getStatusGroup(); label and colors come from STATUS_STYLES. Groups without a
+ * fixed label (waiting, unknown) show the raw status text, so "Assigned" and
+ * "Waiting" stay distinguishable.
+ */
+export default function StatusBadge({ status }: StatusBadgeProps) {
+  const style = STATUS_STYLES[getStatusGroup(status)];
+  const label = style.label ?? capitalize(status);
+
   return (
-    <span className="px-3 py-1 bg-gray-100 text-gray-500 text-xs font-bold rounded-full">
-      {status}
+    <span className={`${S.base} ${style.badge}`}>
+      <span className={`${S.dot} ${style.dot}`} />
+      {label}
     </span>
   );
 }
