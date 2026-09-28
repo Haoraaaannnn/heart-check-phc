@@ -16,6 +16,14 @@ import { COMMON_ICONS } from '@/constants/icons';
 export const ANALYTICS_ICONS = {
   download: COMMON_ICONS.download,
   spinner: COMMON_ICONS.spinner,
+  calendar: 'bx-calendar',
+  chevronLeft: 'bx-chevron-left',
+  chevronRight: 'bx-chevron-right',
+  close: 'bx-x',
+  file: 'bx-file',
+  infoCircle: 'bx-info-circle',
+  check: 'bx-check',
+  errorCircle: 'bx-error-circle',
 } as const;
 
 /** Presets for the date range selector. */
@@ -100,7 +108,60 @@ export const ANALYTICS_STYLES = {
 
   /** Export button styling. */
   exportButton: {
-    root: 'inline-flex items-center gap-2 rounded-xl bg-emerald-600 hover:bg-emerald-700 active:scale-95 px-4 py-2.5 text-xs md:text-sm font-semibold text-white shadow-sm transition disabled:opacity-60 disabled:cursor-not-allowed',
+    root: 'inline-flex items-center gap-2 rounded-xl bg-emerald-600 hover:bg-emerald-700 active:scale-95 px-4 py-2.5 text-xs md:text-sm font-semibold text-white shadow-sm transition disabled:opacity-60 disabled:cursor-not-allowed cursor-pointer',
+    spinner: 'h-4 w-4 animate-spin',
+  },
+
+  /** Export modal styling definitions. */
+  exportModal: {
+    backdrop:
+      'fixed inset-0 z-[9999] flex items-center justify-center bg-black/60 p-4 backdrop-blur-sm transition-opacity animate-in fade-in duration-200',
+    modalBox:
+      'relative z-[10000] w-full max-w-lg rounded-2xl border border-line bg-surface p-6 shadow-2xl transition-all',
+    header: 'flex items-start justify-between border-b border-line pb-4',
+    titleWrap: 'flex flex-col gap-1',
+    title: 'text-xl font-bold text-content flex items-center gap-2',
+    titleIcon: 'text-emerald-600 dark:text-emerald-400 text-2xl',
+    subtitle: 'text-xs text-content-muted leading-relaxed',
+    closeBtn:
+      'rounded-lg p-1.5 text-content-muted hover:bg-surface-muted hover:text-content transition cursor-pointer',
+    closeIcon: 'text-xl',
+    body: 'mt-5 flex flex-col gap-4',
+    section: 'flex flex-col gap-2',
+    sectionLabel:
+      'text-xs font-bold uppercase tracking-wider text-content-muted flex items-center gap-1.5',
+    yearRow: 'flex items-center gap-2',
+    yearSelect:
+      'w-full rounded-xl border border-line bg-surface px-3.5 py-2 text-sm font-semibold text-content outline-none transition focus:border-emerald-500 focus:ring-2 focus:ring-emerald-500/20',
+    yearButton:
+      'flex h-9 w-9 shrink-0 items-center justify-center rounded-xl border border-line bg-surface text-content hover:bg-surface-muted transition disabled:opacity-40 disabled:cursor-not-allowed cursor-pointer',
+    monthGrid: 'grid grid-cols-3 sm:grid-cols-4 gap-2',
+    loadingDates:
+      'flex items-center justify-center gap-2 rounded-xl border border-line bg-surface-muted/30 py-4 px-3 text-xs text-content-muted font-medium',
+    emptyState:
+      'flex items-center justify-center rounded-xl border border-line bg-surface-muted/30 py-4 px-3 text-xs text-content-muted font-medium',
+    monthBtn:
+      'flex flex-col items-center justify-center py-2 px-2 rounded-xl text-xs font-semibold border transition outline-none cursor-pointer',
+    monthBtnActive:
+      'bg-emerald-600 text-white border-emerald-600 shadow-md font-bold ring-2 ring-emerald-500/30',
+    monthBtnIdle:
+      'bg-surface-muted/40 border-line text-content hover:bg-surface-muted hover:border-emerald-500/50',
+    serviceSelect:
+      'w-full rounded-xl border border-line bg-surface px-3.5 py-2 text-sm font-semibold text-content outline-none transition focus:border-emerald-500 focus:ring-2 focus:ring-emerald-500/20',
+    infoCard:
+      'rounded-xl border border-emerald-500/20 bg-emerald-500/5 p-3.5 text-xs text-content-muted flex flex-col gap-1.5',
+    infoRow: 'flex items-center justify-between text-xs',
+    infoLabel: 'text-content-muted',
+    infoValue: 'font-semibold text-content',
+    errorBanner:
+      'flex items-center gap-2 rounded-xl border border-rose-500/20 bg-rose-500/10 p-3 text-xs font-medium text-rose-600 dark:text-rose-400',
+    successBanner:
+      'flex items-center gap-2 rounded-xl border border-emerald-500/20 bg-emerald-500/10 p-3 text-xs font-medium text-emerald-600 dark:text-emerald-400',
+    footer: 'mt-6 flex items-center justify-end gap-3 border-t border-line pt-4',
+    cancelBtn:
+      'rounded-xl border border-line bg-surface px-4 py-2 text-xs md:text-sm font-semibold text-content hover:bg-surface-muted transition cursor-pointer',
+    confirmBtn:
+      'flex items-center gap-2 rounded-xl bg-emerald-600 px-5 py-2 text-xs md:text-sm font-semibold text-white shadow-sm hover:bg-emerald-700 active:scale-95 disabled:opacity-60 disabled:cursor-not-allowed transition cursor-pointer',
     spinner: 'h-4 w-4 animate-spin',
   },
 
