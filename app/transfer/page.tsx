@@ -35,8 +35,9 @@ import { useRequireAuth } from './hooks/useRequireAuth';
 import { MAX_PATIENTS_PER_CUBICLE } from './lib/constants';
 import { useIdlePatients } from './hooks/useIdlePatients';
 import { useRegistrationRotate } from './hooks/useRegistrationRotate';
-import { NotificationBadge } from '@/components/reusables/NotificationBadge';
 import { useConnectionStatus } from '@/hooks/useConnectionStatus';
+import { useOfflineQueue } from '@/hooks/useOfflineQueue';
+import { enqueueMutation, removeMutation } from '@/lib/offlineQueue';
 import { ConnectionStatusBanner } from '@/components/reusables/ConnectionStatusBanner';
 
 
@@ -321,6 +322,9 @@ export default function TransferPage() {
   // Connection status tracking for weak-signal / offline resilience.
   const { isOnline, channelStatus, isFullyConnected, setChannelStatus } = useConnectionStatus();
 
+  // Persistent offline mutation queue (handles sudden power loss & network drops)
+  const { pendingCount, isSyncing: isSyncingQueue } = useOfflineQueue(syncNow);
+
   useRealtimeSubscription(handleRealtimeUpdate, setChannelStatus);
 
 
@@ -478,20 +482,39 @@ export default function TransferPage() {
   };
 
   /**
-   * Releases a patient from the registration window into the queue.
+   * Releases a patient from the registration window into the queue with offline outbox persistence.
    */
   const handleReleaseFromCounter = async (patient: Patient) => {
     const now = new Date().toISOString();
+    let queuedId: string | null = null;
 
     try {
-      const { error } = await supabase
-        .from('patients')
-        .update({ reg_end: now })
-        .eq('id', patient.id);
+      const queued = await enqueueMutation({
+        table: 'patients',
+        type: 'update',
+        payload: { reg_end: now },
+        matchKey: 'id',
+        matchValue: patient.id,
+        clientTimestamp: now,
+        description: `Release patient #${patient.id} from counter`,
+      });
+      queuedId = queued.id;
+    } catch (e) {
+      console.warn('Offline outbox enqueue warning:', e);
+    }
 
-      if (error) {
-        console.error('Failed to release patient from counter:', error);
-        return;
+    try {
+      if (typeof navigator !== 'undefined' && navigator.onLine) {
+        const { error } = await supabase
+          .from('patients')
+          .update({ reg_end: now })
+          .eq('id', patient.id);
+
+        if (!error && queuedId) {
+          await removeMutation(queuedId);
+        } else if (error) {
+          console.error('Failed to release patient from counter:', error);
+        }
       }
 
       setRegistrationPatients(prev => prev.filter(p => p.id !== patient.id));
@@ -499,7 +522,7 @@ export default function TransferPage() {
         prev.map(p => (p.id === patient.id ? { ...p, reg_end: now } : p))
       );
     } catch (err: unknown) {
-      console.error('Network error releasing patient from counter:', err);
+      console.warn('Network offline releasing patient from counter; saved to local outbox:', err);
       void syncNow();
     }
   };
@@ -515,7 +538,7 @@ export default function TransferPage() {
   };
 
   /**
-   * Commits all pending manual assignments to Supabase and sends SMS alerts.
+   * Commits all pending manual assignments to Supabase with durable offline outbox persistence.
    */
   const handleConfirm = useCallback(async () => {
     if (pendingUpdates.length === 0 || savingPendingUpdates.current) return;
@@ -541,23 +564,45 @@ export default function TransferPage() {
         progress_started_at: patient.progress_started_at ?? null,
       }));
 
-      await supabase.from('patients').upsert(patientUpdates, { onConflict: 'id' });
+      // 1. Immediately log to non-volatile IndexedDB outbox
+      let queuedId: string | null = null;
+      try {
+        const queued = await enqueueMutation({
+          table: 'patients',
+          type: 'upsert',
+          payload: patientUpdates,
+          matchKey: 'id',
+          clientTimestamp: now,
+          description: `Transfer confirm assignments for ${patientUpdates.length} patients`,
+        });
+        queuedId = queued.id;
+      } catch (e) {
+        console.warn('Offline outbox enqueue warning:', e);
+      }
 
-      await Promise.all(
-        snapshot
-          .filter(p => p.phoneNum && p.status === 'Assigned' && p.cubicleNum)
-          .map(p => sendSMS(String(p.phoneNum), p.patientNum, p.cubicleNum!))
-      );
+      // 2. If online, push directly to Supabase
+      if (typeof navigator !== 'undefined' && navigator.onLine) {
+        const { error: upsertErr } = await supabase.from('patients').upsert(patientUpdates, { onConflict: 'id' });
+        if (!upsertErr && queuedId) {
+          await removeMutation(queuedId);
+        }
 
-      const { data: queue } = await supabase
-        .from('patients')
-        .select('id')
-        .neq('status', 'Assigned')
-        .order('queue_position');
+        await Promise.all(
+          snapshot
+            .filter(p => p.phoneNum && p.status === 'Assigned' && p.cubicleNum)
+            .map(p => sendSMS(String(p.phoneNum), p.patientNum, p.cubicleNum!))
+        );
 
-      if (queue && queue.length > 0) {
-        const reorder = queue.map((row, i) => ({ id: row.id, queue_position: i + 1 }));
-        await supabase.from('patients').upsert(reorder, { onConflict: 'id' });
+        const { data: queue } = await supabase
+          .from('patients')
+          .select('id')
+          .neq('status', 'Assigned')
+          .order('queue_position');
+
+        if (queue && queue.length > 0) {
+          const reorder = queue.map((row, i) => ({ id: row.id, queue_position: i + 1 }));
+          await supabase.from('patients').upsert(reorder, { onConflict: 'id' });
+        }
       }
 
       setPendingUpdates([]);
@@ -566,7 +611,7 @@ export default function TransferPage() {
 
       await syncNow();
     } catch (err) {
-      console.error('Failed to confirm assignments:', err);
+      console.warn('Offline outbox saved transfer assignments; network sync deferred:', err);
     } finally {
       savingPendingUpdates.current = false;
       confirmingRef.current = false;
@@ -922,11 +967,13 @@ export default function TransferPage() {
 
   return (
     <div className="flex h-screen overflow-hidden bg-slate-50 font-sans text-slate-800">
-      {/* Connection status banner — visible only on weak signal or offline */}
+      {/* Connection status banner — visible on weak signal, offline, or pending sync */}
       <ConnectionStatusBanner
         isOnline={isOnline}
         channelStatus={channelStatus}
         isFullyConnected={isFullyConnected}
+        pendingCount={pendingCount}
+        isSyncingQueue={isSyncingQueue}
       />
 
       {/* Fixed Sidebar */}

@@ -46,6 +46,7 @@ import { useBottleneckNotifications } from '@/app/dashboard/hooks/useBottleneckN
 import { nurseTexts } from './constants/nurseTexts';
 import { NurseStyle, nurseLayoutTokens } from './constants/nurse';
 import { useConnectionStatus } from '@/hooks/useConnectionStatus';
+import { useOfflineQueue } from '@/hooks/useOfflineQueue';
 import { ConnectionStatusBanner } from '@/components/reusables/ConnectionStatusBanner';
 
 
@@ -147,6 +148,9 @@ export default function NursePage() {
 
   // Connection status tracking for weak-signal / offline resilience.
   const { isOnline, channelStatus, isFullyConnected, setChannelStatus } = useConnectionStatus();
+
+  // Persistent offline mutation queue (handles sudden power loss & network drops)
+  const { pendingCount, isSyncing: isSyncingQueue } = useOfflineQueue(handleRealtimeUpdate);
 
   useRealtimeSubscription(handleRealtimeUpdate, 300, setChannelStatus);
 
@@ -324,11 +328,13 @@ export default function NursePage() {
 
   return (
     <div style={NurseStyle.viewportContainer} className="select-none">
-      {/* Connection status banner — visible only on weak signal or offline */}
+      {/* Connection status banner — visible on weak signal, offline, or pending sync */}
       <ConnectionStatusBanner
         isOnline={isOnline}
         channelStatus={channelStatus}
         isFullyConnected={isFullyConnected}
+        pendingCount={pendingCount}
+        isSyncingQueue={isSyncingQueue}
       />
 
       {/* Collapsible Navigation Sidebar */}
@@ -361,7 +367,7 @@ export default function NursePage() {
       >
         {/* Fixed Top Header Bar */}
         <NurseHeader
-          isSyncing={isSyncing}
+          isSyncing={isSyncing || isSyncingQueue}
           selectedCategory={selectedCategory}
           selectedCubicleNum={selectedCubicleNum}
           assignedCubicles={assignedCubicles}
