@@ -1,33 +1,18 @@
 'use client';
 
-/**
- * @fileoverview Hook managing user service, room, and counter access permissions
- * for the Patient Transfer dashboard.
- */
-
+import { fetchActiveCounters } from '@/lib/counters';
 import { useState, useCallback } from 'react';
 import { supabase } from '@/lib/supabase';
 import { CATEGORIES } from '../lib/constants';
 
-/**
- * Access descriptor for a specific consultation or screening room.
- */
 export interface RoomAccess {
   service: string;
   subcategory: string | null;
   room: number;
 }
 
-/**
- * Verification state of user access permissions.
- */
 export type AccessStatus = 'loading' | 'assigned' | 'unassigned' | 'error';
 
-/**
- * Hook to retrieve and cache the authenticated user's assigned services, rooms, and counters.
- *
- * @returns User access lists, current verification status, and refresh function.
- */
 export function useMyAccess() {
   const [myServices, setMyServices] = useState<string[]>([]);
   const [myRooms, setMyRooms] = useState<RoomAccess[]>([]);
@@ -36,6 +21,8 @@ export function useMyAccess() {
 
   const fetchMyAccess = useCallback(async () => {
     setAccessStatus('loading');
+
+  const activeCounters = await fetchActiveCounters();
 
     try {
       const {
@@ -49,7 +36,6 @@ export function useMyAccess() {
         return;
       }
 
-      // Try finding user record by auth_id first, then fallback to email
       let user: { id: string | number; role?: string } | null = null;
 
       const { data: userByAuth, error: authQueryError } = await supabase
@@ -100,9 +86,9 @@ export function useMyAccess() {
 
       const serviceList = (services ?? []).map(s => s.service);
 
-      // If user is superadmin or admin and has no custom restrictions, grant full access
       if ((user.role === 'superadmin' || user.role === 'admin') && serviceList.length === 0) {
         setMyServices(CATEGORIES);
+        setMyCounters(activeCounters);
         setMyRooms([]);
         setMyCounters([1, 2, 3, 4, 5]);
         setAccessStatus('assigned');
@@ -113,6 +99,7 @@ export function useMyAccess() {
       setMyRooms((rooms ?? []) as RoomAccess[]);
       setMyCounters((counters ?? []).map(c => c.counter));
       setAccessStatus(serviceList.length > 0 ? 'assigned' : 'unassigned');
+      setMyCounters((counters ?? []).map(c => c.counter).filter(n => activeCounters.includes(n)));
     } catch (err) {
       console.error('useMyAccess: Unexpected exception while verifying access', err);
       setAccessStatus('error');

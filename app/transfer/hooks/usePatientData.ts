@@ -2,6 +2,7 @@
 import { useState, useRef, useCallback } from 'react';
 import { supabase } from '@/lib/supabase';
 import { Patient } from '@/types/Types';
+import { fetchActiveCounters } from '@/lib/counters';
 
 const getNextCounter = async (): Promise<number> => {
   const today = new Date();
@@ -19,8 +20,9 @@ const getNextCounter = async (): Promise<number> => {
     .order('created_at', { ascending: false })
     .limit(1);
 
+  const active = await fetchActiveCounters();
   const lastCounter = data?.[0]?.counter ?? 0;
-  return (lastCounter % 5) + 1;
+  return active.find(c => c > lastCounter) ?? active[0] ?? 1;
 };
 
 export function usePatientData() {

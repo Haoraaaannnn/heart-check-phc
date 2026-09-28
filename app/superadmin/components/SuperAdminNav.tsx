@@ -33,6 +33,10 @@ export default function SuperAdminNav() {
                 <Link href="/superadmin/customization" className="text-white/80 hover:text-white text-sm">
                     Customization
                 </Link>
+              
+                <Link href="/superadmin/facilities" className="text-white/80 hover:text-white text-sm">
+                    Facilities
+                </Link>
                 
                 <button onClick={handleSignOut} className="text-white/80 hover:text-white text-sm">
                     Sign Out

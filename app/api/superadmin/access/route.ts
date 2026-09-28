@@ -12,7 +12,6 @@ const SERVICES = [
   'Warfarin', 'OPD Reschedule', 'Benzathine', 'OPD Screening',
 ];
 const CONSULTATION_SUBCATEGORIES = ['Pedia', 'Adult'];
-const COUNTERS = [1, 2, 3, 4, 5];
 
 export async function GET(request: Request) {
   const guard = await requireSuperadmin(request);
@@ -23,6 +22,10 @@ export async function GET(request: Request) {
   const { data: cubicles, error: cubicleError } = await supabaseAdmin
     .from('cubicle')
     .select('category, subcategory, room');
+
+  const { data: counterRows } = await supabaseAdmin
+    .from('counters').select('counter_number').eq('active', true).order ('counter_number');
+    const COUNTERS = (counterRows ?? []).map(c => c.counter_number);
 
   if (cubicleError) {
     return NextResponse.json({ error: cubicleError.message }, { status: 400 });
@@ -79,6 +82,10 @@ export async function GET(request: Request) {
             roomsError,
             countersError,
         });
+
+        assignedServices = (services ?? []).map(s => s.service);
+        assignedRooms = (rooms ?? []) as typeof assignedRooms;
+        assignedCounters = (counters ?? []).map(c => c.counter);
 
         return NextResponse.json(
             {
