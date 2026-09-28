@@ -99,10 +99,7 @@ export default function CategoryMonitorPage() {
       <div className="min-h-screen bg-white font-sans">
         <Header title="Registration" currentTime={currentTime} />
         <RegistrationLayout patients={registrationPatients} />
-        <div className="bg-gray-100 border-t border-gray-200 px-12 py-6 flex items-center justify-between fixed bottom-0 left-0 right-0">
-          <p className="text-gray-500 text-xl">Pumunta po sa nababakang computer.</p>
-          <p className="text-gray-500 text-xl">Pumuntahan ang mga datos na distansya.</p>
-        </div>
+        <Footer />
       </div>
     );
   }

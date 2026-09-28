@@ -111,7 +111,7 @@ export function RegistrationLayout({ patients }: RegistrationLayoutProps) {
     <div className="p-12 overflow-x-auto">
       <table className="w-full border-collapse">
         <thead>
-          <tr className="bg-gray-100 border-b-2 border-gray-400">
+          <tr className="bg-gray-100 border-b-2 border-gray-200">
             <th className="px-6 py-5 text-left text-gray-600 text-xl font-semibold uppercase tracking-wider sticky left-0 bg-gray-100">
               Registration Counters
             </th>
@@ -126,30 +126,42 @@ export function RegistrationLayout({ patients }: RegistrationLayoutProps) {
           </tr>
         </thead>
         <tbody>
-          <tr className="border-b border-gray-400">
-            <td className="px-6 py-8 font-bold text-gray-700 text-2xl bg-gray-50 sticky left-0">
+          <tr className="border-b border-gray-100">
+            <td className="px-6 py-8 font-bold text-gray-700 text-2xl bg-gray-50 sticky left-0 align-top">
               Queue Numbers
             </td>
             {counters.map(n => {
               const list = patients.filter(p => p.counter === n);
               return (
-                <td key={n} className="px-6 py-8 text-center border-l border-gray-400 align-top">
+                <td key={n} className="px-6 py-8 text-center border-l border-gray-100 align-top">
                   <div className="space-y-3">
-                    {list.map((patient, i) => (
-                      <div
-                        key={patient.id}
-                        className={`bg-white rounded-2xl p-6 shadow-sm border-2 ${i === 0 ? 'border-[#cc3535]' : 'border-gray-200'}`}
-                      >
-                        <span className={`font-black text-5xl tabular-nums block ${i === 0 ? 'text-[#cc3535]' : 'text-gray-400'}`}>
-                          {patient.patientNum}
-                        </span>
-                        <div className={`w-3 h-3 rounded-full mx-auto mt-4 ${i === 0 ? 'bg-green-400 animate-pulse' : 'bg-gray-200'}`} />
-                      </div>
-                    ))}
+                    {list.map((patient, i) =>
+                      i === 0 ? (
+                        <div
+                          key={patient.id}
+                          className="relative bg-[#cc3535] rounded-3xl p-6 shadow-2xl shadow-red-300 ring-[6px] ring-red-100 scale-110 flex flex-col items-center justify-center gap-1 z-10"
+                        >
+                          <span className="text-white/80 text-sm font-black uppercase tracking-widest">
+                            Now Serving
+                          </span>
+                          <span className="text-white font-black text-7xl tabular-nums leading-none drop-shadow-md">
+                            {patient.patientNum}
+                          </span>
+                          <div className="absolute top-3 right-3 w-4 h-4 rounded-full bg-green-300 ring-2 ring-white animate-pulse" />
+                        </div>
+                      ) : (
+                        <div
+                          key={patient.id}
+                          className="bg-white rounded-2xl p-4 shadow-sm border border-gray-100 flex items-center justify-center opacity-70"
+                        >
+                          <span className="text-gray-400 font-black text-2xl tabular-nums">
+                            {patient.patientNum}
+                          </span>
+                        </div>
+                      )
+                    )}
                     {list.length === 0 && (
-                      <div className="bg-white rounded-2xl p-6 shadow-sm border border-gray-100">
-                        <span className="text-gray-300 text-3xl">—</span>
-                      </div>
+                      <div className="text-gray-300 text-xl">—</div>
                     )}
                   </div>
                 </td>
