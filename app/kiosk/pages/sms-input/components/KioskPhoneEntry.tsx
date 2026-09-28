@@ -35,6 +35,12 @@ interface KioskPhoneEntryProps {
 
 /**
  * Resolves the queue ticket prefix and grouping strategy for a service.
+ *
+ * @remarks
+ * The lookup against {@link SMS_SERVICE_PREFIXES} is performed case-insensitively
+ * to guard against casing mismatches between the DB `label_en` value and the
+ * map keys (e.g. "Opd Card" vs "OPD Card"). The first matching numeric rule
+ * always takes priority over the prefix map.
  */
 function getPrefixInfo(service: Service, subcategory?: string) {
     const name = service.label_en;
@@ -42,7 +48,17 @@ function getPrefixInfo(service: Service, subcategory?: string) {
     if (rule) {
         return { prefix: rule.prefix, groupBySubcategory: rule.groupBySubcategory };
     }
-    return { prefix: SMS_SERVICE_PREFIXES[name] ?? "C", groupBySubcategory: false };
+
+    // Case-insensitive lookup: find the first map key that matches label_en
+    // regardless of capitalisation (e.g. "OPD Card" == "opd card").
+    const nameLower = name?.toLowerCase() ?? "";
+    const matchedKey = Object.keys(SMS_SERVICE_PREFIXES).find(
+        (k) => k.toLowerCase() === nameLower
+    );
+    return {
+        prefix: matchedKey ? SMS_SERVICE_PREFIXES[matchedKey] : "C",
+        groupBySubcategory: false,
+    };
 }
 
 /**
@@ -134,6 +150,15 @@ export default function KioskPhoneEntry({
     const createPatient = async (phoneToSave: string | null): Promise<string> => {
         const { prefix, groupBySubcategory } = getPrefixInfo(service, subcategory);
 
+        // Diagnostic: log the resolved prefix and exact service label before the RPC call
+        // so any future prefix mismatch is immediately visible in the console.
+        console.log(`${getTimestamp()} [DB RPC] create_patient args:`, {
+            label_en: service.label_en,
+            prefix,
+            subcategory: subcategory ?? null,
+            groupBySubcategory,
+        });
+
         const t0 = performance.now();
         const { data, error } = await supabase.rpc("create_patient", {
             p_service: service.label_en,
@@ -145,7 +170,17 @@ export default function KioskPhoneEntry({
         });
         const elapsed = Math.round(performance.now() - t0);
 
-        if (error) throw error;
+        if (error) {
+            // Supabase PostgrestError has non-enumerable properties; wrap it in a
+            // native Error so the full context is always visible in catch blocks.
+            const pgError = new Error(
+                error.message ?? "Supabase RPC error"
+            ) as Error & { code?: string; details?: string; hint?: string };
+            pgError.code = error.code;
+            pgError.details = error.details;
+            pgError.hint = error.hint;
+            throw pgError;
+        }
         if (!data || data.length === 0) throw new Error("RPC returned no row");
 
         const row = data[0];
@@ -156,6 +191,42 @@ export default function KioskPhoneEntry({
             service: service.label_en,
         });
         return row.patientNum;
+    };
+
+    /**
+     * Serializes any caught value into a loggable plain object.
+     *
+     * @remarks
+     * Supabase's PostgrestError defines its properties as non-enumerable and
+     * implements a toJSON() that returns {}. Using Object.getOwnPropertyNames
+     * bypasses toJSON() and captures every own property regardless of enumerability.
+     * The raw value is also logged directly so it remains inspectable in DevTools
+     * even when manual extraction is incomplete.
+     *
+     * @param e - The caught value from a try/catch block.
+     * @returns A plain, serializable object with all available error fields.
+     */
+    const serializeError = (e: unknown): Record<string, unknown> => {
+        if (e == null) return { message: String(e) };
+
+        // Collect all own property names, including non-enumerable ones,
+        // to circumvent toJSON() overrides that hide the real error data.
+        const allKeys = Object.getOwnPropertyNames(e as object);
+        const extracted: Record<string, unknown> = {};
+        for (const key of allKeys) {
+            try {
+                extracted[key] = (e as Record<string, unknown>)[key];
+            } catch {
+                extracted[key] = "[unreadable]";
+            }
+        }
+
+        // Always guarantee a message field as a final fallback.
+        if (!extracted["message"]) {
+            extracted["message"] = String(e);
+        }
+
+        return extracted;
     };
 
     /**
@@ -170,11 +241,8 @@ export default function KioskPhoneEntry({
             router.push(`/kiosk/pages/queue-print?patientNum=${finalPatientNum}&serviceId=${service.id}`);
         } catch (e) {
             hideLoading();
-            console.error(`${getTimestamp()} [SMS CONTINUE ERROR]`, {
-                message: e instanceof Error ? e.message : String(e),
-                details: e,
-                stack: e instanceof Error ? e.stack : undefined,
-            });
+            console.error(`${getTimestamp()} [SMS CONTINUE ERROR] raw:`, e);
+            console.error(`${getTimestamp()} [SMS CONTINUE ERROR]`, serializeError(e));
         }
     };
 
@@ -194,11 +262,8 @@ export default function KioskPhoneEntry({
             router.push(`/kiosk/pages/queue-print?patientNum=${finalPatientNum}&serviceId=${service.id}`);
         } catch (e) {
             hideLoading();
-            console.error(`${getTimestamp()} [SMS SKIP ERROR]`, {
-                message: e instanceof Error ? e.message : String(e),
-                details: e,
-                stack: e instanceof Error ? e.stack : undefined,
-            });
+            console.error(`${getTimestamp()} [SMS SKIP ERROR] raw:`, e);
+            console.error(`${getTimestamp()} [SMS SKIP ERROR]`, serializeError(e));
         }
     };
 

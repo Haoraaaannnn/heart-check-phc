@@ -65,9 +65,25 @@ export async function PUT(request: Request) {
     return NextResponse.json({ error: `Room ${newRoom} already exists for this service.` }, { status: 409 });
   }
 
-  if ((await countActiveAtCubicles(rows.map((r: any) => r.cubicleNum))) > 0) {
+  const cubicleNums = rows.map((r: any) => r.cubicleNum);
+  const activeCount = await countActiveAtCubicles(cubicleNums);
+  if (activeCount > 0) {
+    const { data: blockingPatients } = await supabaseAdmin
+      .from('patients')
+      .select('patientNum, status, cubicleNum')
+      .in('cubicleNum', cubicleNums)
+      .neq('status', 'Done')
+      .neq('status', 'Idle')
+      .neq('status', 'Removed');
+
+    const details = (blockingPatients ?? [])
+      .map(p => `${p.patientNum} (${p.status})`)
+      .join(', ');
+
     return NextResponse.json(
-      { error: 'Patients are currently assigned to cubicles in this room. Renumber it once it is empty.' },
+      {
+        error: `Active patient(s) assigned to ${cubicleNums.join(', ')}: ${details || activeCount}. Complete or clear them before renumbering.`,
+      },
       { status: 409 }
     );
   }
