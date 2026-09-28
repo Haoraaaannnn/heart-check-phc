@@ -8,13 +8,68 @@ export function SettingsPanel() {
   const [saving, setSaving] = useState(false);
   const [message, setMessage] = useState('');
   const [error, setError] = useState('');
+
   const [maxRotations, setMaxRotations] = useState<string>('5');
   const [rotationsLoading, setRotationsLoading] = useState(true);
   const [rotationsSaving, setRotationsSaving] = useState(false);
   const [rotationsMessage, setRotationsMessage] = useState('');
   const [rotationsError, setRotationsError] = useState('');
 
-   const fetchMaxRotations = async () => {
+  const [maxLoginAttempts, setMaxLoginAttempts] = useState<string>('3');
+  const [loginAttemptsLoading, setLoginAttemptsLoading] = useState(true);
+  const [loginAttemptsSaving, setLoginAttemptsSaving] = useState(false);
+  const [loginAttemptsMessage, setLoginAttemptsMessage] = useState('');
+  const [loginAttemptsError, setLoginAttemptsError] = useState('');
+
+  const [lockoutSeconds, setLockoutSeconds] = useState<string>('30');
+  const [lockoutLoading, setLockoutLoading] = useState(true);
+  const [lockoutSaving, setLockoutSaving] = useState(false);
+  const [lockoutMessage, setLockoutMessage] = useState('');
+  const [lockoutError, setLockoutError] = useState('');
+
+  const fetchLockoutSeconds = async () => {
+    setLockoutLoading(true);
+    const { data, error } = await supabase
+      .from('app_settings')
+      .select('value')
+      .eq('key', 'login_lockout_seconds')
+      .single();
+
+    if (!error && data) setLockoutSeconds(data.value);
+    setLockoutLoading(false);
+  };
+
+  useEffect(() => { fetchLockoutSeconds(); }, []);
+
+  const handleSaveLockoutSeconds = async () => {
+    setLockoutError('');
+    setLockoutMessage('');
+
+    const seconds = parseInt(lockoutSeconds, 10);
+    if (isNaN(seconds) || seconds <= 0) {
+      setLockoutError('Enter a valid whole number greater than 0.');
+      return;
+    }
+
+    setLockoutSaving(true);
+    try {
+      const { error } = await supabase
+        .from('app_settings')
+        .upsert(
+          { key: 'login_lockout_seconds', value: seconds.toString(), updated_at: new Date().toISOString() },
+          { onConflict: 'key' }
+        );
+      if (error) throw error;
+      setLockoutMessage('Updated successfully.');
+      setTimeout(() => setLockoutMessage(''), 2500);
+    } catch (err: any) {
+      setLockoutError(err.message || 'Failed to save.');
+    } finally {
+      setLockoutSaving(false);
+    }
+  };
+
+  const fetchMaxRotations = async () => {
     setRotationsLoading(true);
     const { data, error } = await supabase
       .from('app_settings')
@@ -101,52 +156,95 @@ export function SettingsPanel() {
     }
   };
 
+  const fetchMaxLoginAttempts = async () => {
+    setLoginAttemptsLoading(true);
+    const { data, error } = await supabase
+      .from('app_settings')
+      .select('value')
+      .eq('key', 'max_login_attempts')
+      .single();
+
+    if (!error && data) setMaxLoginAttempts(data.value);
+    setLoginAttemptsLoading(false);
+  };
+
+  useEffect(() => { fetchMaxLoginAttempts(); }, []);
+
+  const handleSaveMaxLoginAttempts = async () => {
+    setLoginAttemptsError('');
+    setLoginAttemptsMessage('');
+
+    const count = parseInt(maxLoginAttempts, 10);
+    if (isNaN(count) || count <= 0) {
+      setLoginAttemptsError('Enter a valid whole number greater than 0.');
+      return;
+    }
+
+    setLoginAttemptsSaving(true);
+    try {
+      const { error } = await supabase
+        .from('app_settings')
+        .upsert(
+          { key: 'max_login_attempts', value: count.toString(), updated_at: new Date().toISOString() },
+          { onConflict: 'key' }
+        );
+      if (error) throw error;
+      setLoginAttemptsMessage('Updated successfully.');
+      setTimeout(() => setLoginAttemptsMessage(''), 2500);
+    } catch (err: any) {
+      setLoginAttemptsError(err.message || 'Failed to save.');
+    } finally {
+      setLoginAttemptsSaving(false);
+    }
+  };
+
   return (
     <div className="flex flex-col gap-6">
-    <div className="bg-white rounded-lg shadow p-6 max-w-md">
-      <h2 className="text-xl font-bold text-gray-900 mb-1">Auto-Rotation Timeout</h2>
-      <p className="text-gray-600 text-sm mb-4">
-        How long a patient can sit on-progress or in a cubicle before automatically rotating back to the queue.
-        Applies to all services, including Consultation and OPD Screening.
-      </p>
+      <div className="bg-white rounded-lg shadow p-6 max-w-md">
+        <h2 className="text-xl font-bold text-gray-900 mb-1">Auto-Rotation Timeout</h2>
+        <p className="text-gray-600 text-sm mb-4">
+          How long a patient can sit on-progress or in a cubicle before automatically rotating back to the queue.
+          Applies to all services, including Consultation and OPD Screening.
+        </p>
 
-      {loading ? (
-        <p className="text-gray-400 text-sm">Loading...</p>
-      ) : (
-        <>
-          {error && (
-            <div className="mb-3 p-3 bg-red-100 border border-red-200 text-red-700 rounded-lg text-sm">
-              {error}
-            </div>
-          )}
-          {message && (
-            <div className="mb-3 p-3 bg-green-100 border border-green-200 text-green-700 rounded-lg text-sm">
-              {message}
-            </div>
-          )}
+        {loading ? (
+          <p className="text-gray-400 text-sm">Loading...</p>
+        ) : (
+          <>
+            {error && (
+              <div className="mb-3 p-3 bg-red-100 border border-red-200 text-red-700 rounded-lg text-sm">
+                {error}
+              </div>
+            )}
+            {message && (
+              <div className="mb-3 p-3 bg-green-100 border border-green-200 text-green-700 rounded-lg text-sm">
+                {message}
+              </div>
+            )}
 
-          <div className="flex items-center gap-3">
-            <input
-              type="number"
-              min="0.5"
-              step="0.5"
-              value={minutes}
-              onChange={(e) => setMinutes(e.target.value)}
-              className="w-28 p-2 border border-gray-300 rounded-lg text-gray-900 focus:outline-none focus:ring-2 focus:ring-blue-500"
-            />
-            <span className="text-gray-600 text-sm">minutes</span>
-            <button
-              onClick={handleSave}
-              disabled={saving}
-              className="ml-auto px-4 py-2 bg-blue-600 text-white rounded-lg hover:bg-blue-700 transition disabled:opacity-50 cursor-pointer"
-            >
-              {saving ? 'Saving...' : 'Save'}
-            </button>
-          </div>
-        </>
-      )}
-    </div>
-    <div className="bg-white rounded-lg shadow p-6 max-w-md">
+            <div className="flex items-center gap-3">
+              <input
+                type="number"
+                min="0.5"
+                step="0.5"
+                value={minutes}
+                onChange={(e) => setMinutes(e.target.value)}
+                className="w-28 p-2 border border-gray-300 rounded-lg text-gray-900 focus:outline-none focus:ring-2 focus:ring-blue-500"
+              />
+              <span className="text-gray-600 text-sm">minutes</span>
+              <button
+                onClick={handleSave}
+                disabled={saving}
+                className="ml-auto px-4 py-2 bg-blue-600 text-white rounded-lg hover:bg-blue-700 transition disabled:opacity-50 cursor-pointer"
+              >
+                {saving ? 'Saving...' : 'Save'}
+              </button>
+            </div>
+          </>
+        )}
+      </div>
+
+      <div className="bg-white rounded-lg shadow p-6 max-w-md">
         <h2 className="text-xl font-bold text-gray-900 mb-1">Rotations Before Idle</h2>
         <p className="text-gray-600 text-sm mb-4">
           How many times a patient can time out and rotate back to the queue before being marked Idle.
@@ -182,6 +280,90 @@ export function SettingsPanel() {
                 className="ml-auto px-4 py-2 bg-blue-600 text-white rounded-lg hover:bg-blue-700 transition disabled:opacity-50 cursor-pointer"
               >
                 {rotationsSaving ? 'Saving...' : 'Save'}
+              </button>
+            </div>
+          </>
+        )}
+      </div>
+
+      <div className="bg-white rounded-lg shadow p-6 max-w-md">
+        <h2 className="text-xl font-bold text-gray-900 mb-1">Max Login Attempts</h2>
+        <p className="text-gray-600 text-sm mb-4">
+          How many failed login attempts are allowed before the account is temporarily locked out.
+        </p>
+
+        {loginAttemptsLoading ? (
+          <p className="text-gray-400 text-sm">Loading...</p>
+        ) : (
+          <>
+            {loginAttemptsError && (
+              <div className="mb-3 p-3 bg-red-100 border border-red-200 text-red-700 rounded-lg text-sm">
+                {loginAttemptsError}
+              </div>
+            )}
+            {loginAttemptsMessage && (
+              <div className="mb-3 p-3 bg-green-100 border border-green-200 text-green-700 rounded-lg text-sm">
+                {loginAttemptsMessage}
+              </div>
+            )}
+            <div className="flex items-center gap-3">
+              <input
+                type="number"
+                min="1"
+                step="1"
+                value={maxLoginAttempts}
+                onChange={(e) => setMaxLoginAttempts(e.target.value)}
+                className="w-28 p-2 border border-gray-300 rounded-lg text-gray-900 focus:outline-none focus:ring-2 focus:ring-blue-500"
+              />
+              <span className="text-gray-600 text-sm">attempts</span>
+              <button
+                onClick={handleSaveMaxLoginAttempts}
+                disabled={loginAttemptsSaving}
+                className="ml-auto px-4 py-2 bg-blue-600 text-white rounded-lg hover:bg-blue-700 transition disabled:opacity-50 cursor-pointer"
+              >
+                {loginAttemptsSaving ? 'Saving...' : 'Save'}
+              </button>
+            </div>
+          </>
+        )}
+      </div>
+
+      <div className="bg-white rounded-lg shadow p-6 max-w-md">
+        <h2 className="text-xl font-bold text-gray-900 mb-1">Login Lockout Duration</h2>
+        <p className="text-gray-600 text-sm mb-4">
+          How long an account stays locked out after hitting the max failed login attempts.
+        </p>
+
+        {lockoutLoading ? (
+          <p className="text-gray-400 text-sm">Loading...</p>
+        ) : (
+          <>
+            {lockoutError && (
+              <div className="mb-3 p-3 bg-red-100 border border-red-200 text-red-700 rounded-lg text-sm">
+                {lockoutError}
+              </div>
+            )}
+            {lockoutMessage && (
+              <div className="mb-3 p-3 bg-green-100 border border-green-200 text-green-700 rounded-lg text-sm">
+                {lockoutMessage}
+              </div>
+            )}
+            <div className="flex items-center gap-3">
+              <input
+                type="number"
+                min="1"
+                step="1"
+                value={lockoutSeconds}
+                onChange={(e) => setLockoutSeconds(e.target.value)}
+                className="w-28 p-2 border border-gray-300 rounded-lg text-gray-900 focus:outline-none focus:ring-2 focus:ring-blue-500"
+              />
+              <span className="text-gray-600 text-sm">seconds</span>
+              <button
+                onClick={handleSaveLockoutSeconds}
+                disabled={lockoutSaving}
+                className="ml-auto px-4 py-2 bg-blue-600 text-white rounded-lg hover:bg-blue-700 transition disabled:opacity-50 cursor-pointer"
+              >
+                {lockoutSaving ? 'Saving...' : 'Save'}
               </button>
             </div>
           </>
