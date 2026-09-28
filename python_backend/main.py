@@ -17,8 +17,9 @@ from analytics import generate_report
 from analytics.preprocessing import preprocess_queue_data
 from analytics.descriptive import monthly_breakdown
 
+import calendar
 from fastapi.responses import StreamingResponse
-from analytics.export import build_phc_workbook
+from analytics.export import build_phc_workbook, _to_manila
 
 BASE_DIR = os.path.dirname(os.path.abspath(__file__))
 env_path = os.path.join(BASE_DIR, "..", ".env.local")
@@ -64,6 +65,7 @@ _http_client = httpx.Client(timeout=30.0)
 CACHE_TTL_SECONDS = 300
 _monthly_cache: dict[int, tuple[float, list[dict]]] = {}
 _years_cache: tuple[float, list[int]] | None = None
+_export_dates_cache: tuple[float, dict] | None = None
 
 
 def _supabase_headers() -> dict:
@@ -274,6 +276,65 @@ def get_available_years():
     return {"years": years}
 
 
+@app.get("/api/available-export-dates")
+def get_available_export_dates(refresh: bool = False):
+    """
+    Returns the distinct years and calendar months that contain usable patient
+    queue records (reg_start) for PHC Time and Motion Analysis Excel export.
+
+    Cached for CACHE_TTL_SECONDS to avoid repeated table scans.
+    Pass ?refresh=true to invalidate and recompute the cache.
+    """
+    global _export_dates_cache
+
+    now = time.time()
+    if _export_dates_cache and not refresh and (now - _export_dates_cache[0]) < CACHE_TTL_SECONDS:
+        return _export_dates_cache[1]
+
+    try:
+        data = fetch_supabase_table(
+            "patients",
+            select="reg_start,created_at",
+        )
+    except Exception as e:
+        print(f"available-export-dates fetch error: {e}")
+        return {"years": [], "dates": {}}
+
+    if not data:
+        return {"years": [], "dates": {}}
+
+    dates_map: dict[int, set[int]] = {}
+
+    for row in data:
+        # PHC Time and Motion Analysis export sheets require reg_start
+        ts = row.get("reg_start")
+        if not ts:
+            continue
+        try:
+            m_dt = _to_manila(ts)
+            y = m_dt.year
+            m = m_dt.month
+            if y not in dates_map:
+                dates_map[y] = set()
+            dates_map[y].add(m)
+        except Exception:
+            continue
+
+    sorted_years = sorted(list(dates_map.keys()), reverse=True)
+    formatted_dates = {
+        str(y): sorted(list(months))
+        for y, months in dates_map.items()
+    }
+
+    result = {
+        "years": sorted_years,
+        "dates": formatted_dates,
+    }
+
+    _export_dates_cache = (now, result)
+    return result
+
+
 @app.get("/api/monthly-breakdown/{year}")
 def get_monthly_breakdown_for_year(year: int, refresh: bool = False):
     """
@@ -403,16 +464,45 @@ def get_empty_data():
     }
     
 @app.get("/api/export-excel")
-def export_excel(range: str = "90d", service: str | None = None):
+def export_excel(
+    range: str | None = None,
+    month: str | None = None,
+    service: str | None = None,
+):
     """
     Raw patient rows in PHC's own Time and Motion Analysis format —
     one sheet per day, matching the source .xls structure.
 
-    Gate this behind an admin/superadmin check (mirror is_staff()/is_superadmin())
-    before it ships — it returns raw patient-identifying data, same sensitivity
-    as the patients table itself under RLS.
+    Supports date filtering by:
+    1. month="YYYY-MM" (e.g. "2025-11") to export all days in that specific month.
+    2. range="90d" | "180d" | "365d" | "all" for rolling range exports.
     """
-    start_date, end_date = resolve_date_range(range)
+    target_year: int | None = None
+    target_month: int | None = None
+
+    if month:
+        parts = month.strip().split("-")
+        try:
+            if len(parts) == 2:
+                target_year = int(parts[0])
+                target_month = int(parts[1])
+            elif len(parts) == 1:
+                target_month = int(parts[0])
+                target_year = date.today().year
+            else:
+                raise ValueError("Invalid format")
+            if not (1 <= target_month <= 12):
+                raise ValueError("Invalid month value")
+        except Exception:
+            raise HTTPException(status_code=400, detail="Invalid month format. Expected YYYY-MM.")
+
+    if target_year and target_month:
+        days_in_month = calendar.monthrange(target_year, target_month)[1]
+        # Generous date boundaries to ensure UTC / Manila (+8) boundary cases are captured
+        start_date = (date(target_year, target_month, 1) - timedelta(days=1)).isoformat()
+        end_date = (date(target_year, target_month, days_in_month) + timedelta(days=2)).isoformat()
+    else:
+        start_date, end_date = resolve_date_range(range or DEFAULT_RANGE)
 
     try:
         data = fetch_supabase_table(
@@ -430,18 +520,31 @@ def export_excel(range: str = "90d", service: str | None = None):
         raise HTTPException(status_code=502, detail="Failed to fetch patient data.")
 
     if not data:
+        if target_year and target_month:
+            month_label = f"{calendar.month_name[target_month]} {target_year}"
+            raise HTTPException(status_code=404, detail=f"No patient records found for {month_label}.")
         raise HTTPException(status_code=404, detail="No patient records found for this range.")
 
     df = pd.DataFrame(data)
     df = normalize_dataframe(df)
 
-    if service:
+    if service and service.strip().lower() not in ("all", ""):
         df = df[df["service"] == service]
 
+    if target_year and target_month:
+        df["_manila_date"] = df["reg_start"].apply(
+            lambda t: _to_manila(t).date() if pd.notna(t) else None
+        )
+        df = df[df["_manila_date"].notna()]
+        df = df[df["_manila_date"].apply(lambda d: d.year == target_year and d.month == target_month)]
+
     if df.empty:
+        if target_year and target_month:
+            month_label = f"{calendar.month_name[target_month]} {target_year}"
+            raise HTTPException(status_code=404, detail=f"No patient records found for {month_label}.")
         raise HTTPException(status_code=404, detail="No patient records found for this range.")
 
-    clinic_label = service or "OPD"
+    clinic_label = service if (service and service.strip().lower() not in ("all", "")) else "OPD"
     try:
         buffer = build_phc_workbook(df, clinic_label=clinic_label)
     except ValueError as e:
@@ -453,7 +556,10 @@ def export_excel(range: str = "90d", service: str | None = None):
         print("=" * 60)
         raise HTTPException(status_code=500, detail="Failed to build the export.")
 
-    filename = f"phc_time_motion_export_{range}.xlsx"
+    if target_year and target_month:
+        filename = f"phc_time_motion_export_{target_year}_{target_month:02d}.xlsx"
+    else:
+        filename = f"phc_time_motion_export_{range or 'custom'}.xlsx"
 
     return StreamingResponse(
         buffer,
