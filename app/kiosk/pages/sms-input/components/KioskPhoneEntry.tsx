@@ -16,6 +16,11 @@ import {
     SMS_SERVICE_PREFIXES,
     NUMERIC_PREFIX_RULES,
 } from "@/app/kiosk/pages/sms-input/constants/smsInput";
+import {
+    getNextPhoneValue,
+    validatePhMobileNumber,
+} from "@/app/kiosk/pages/sms-input/utils/phoneValidation";
+import { SMSValidationTexts } from "@/app/kiosk/pages/sms-input/constants/smsValidationTexts";
 
 /** Props for {@link KioskPhoneEntry}. */
 interface KioskPhoneEntryProps {
@@ -111,7 +116,7 @@ function buildCancelHref(
 
 /**
  * Interactive phone entry controller coordinating keypad input, formatting,
- * and database ticket creation via Supabase RPC (`create_patient`).
+ * Philippine mobile number validation, and database ticket creation via Supabase RPC (`create_patient`).
  *
  * @param props - Component props.
  * @returns The complete phone number input layout with keypad and action triggers.
@@ -124,6 +129,7 @@ export default function KioskPhoneEntry({
 }: KioskPhoneEntryProps) {
     const preferredList = preferredCubicleNums ? preferredCubicleNums.split(",") : null;
     const [phone, setPhone] = useState("");
+    const [inputWarning, setInputWarning] = useState<{ fil: string; en: string } | null>(null);
     const [showContinueModal, setShowContinueModal] = useState(false);
     const [showSkipModal, setShowSkipModal] = useState(false);
     const [patientNum, setPatientNum] = useState<string | undefined>(initialPatientNum);
@@ -135,10 +141,23 @@ export default function KioskPhoneEntry({
     const cancelHref = buildCancelHref(service, patientType, subcategory);
 
     const addDigit = (digit: string) => {
-        if (phone.length < SMS_PHONE_MAX_LENGTH) setPhone((p) => p + digit);
+        const nextVal = getNextPhoneValue(phone, digit);
+        if (nextVal !== null) {
+            setPhone(nextVal);
+            setInputWarning(null);
+        } else if (phone.length === 0 || phone.length === 1) {
+            // Display guidance when the patient taps a non-09 starting digit
+            setInputWarning({
+                fil: SMSValidationTexts.mustStartWith09Fil,
+                en: SMSValidationTexts.mustStartWith09En,
+            });
+        }
     };
 
-    const deleteLast = () => setPhone((p) => p.slice(0, -1));
+    const deleteLast = () => {
+        setPhone((p) => p.slice(0, -1));
+        setInputWarning(null);
+    };
 
     /**
      * Executes the `create_patient` stored procedure in Supabase.
@@ -263,12 +282,34 @@ export default function KioskPhoneEntry({
         }
     };
 
+    const validation = validatePhMobileNumber(phone);
+    const isComplete = phone.length === SMS_PHONE_MAX_LENGTH;
+
+    let errorMessageFil: string | undefined;
+    let errorMessageEn: string | undefined;
+
+    if (inputWarning) {
+        errorMessageFil = inputWarning.fil;
+        errorMessageEn = inputWarning.en;
+    } else if (isComplete && !validation.isValid && validation.errorReason) {
+        const err = SMSValidationTexts.errors[validation.errorReason];
+        errorMessageFil = err.fil;
+        errorMessageEn = err.en;
+    }
+
     return (
         <div className={SMSLayoutClasses.entryGrid}>
             {/* Left Column (Landscape): Instructions and Phone Display */}
             <div className={SMSLayoutClasses.entryLeftCol}>
                 <SMSInstruction service={service} />
-                <PhoneInput phone={phone} onDelete={deleteLast} service={service} />
+                <PhoneInput
+                    phone={phone}
+                    onDelete={deleteLast}
+                    service={service}
+                    isValid={validation.isValid}
+                    errorMessageFil={errorMessageFil}
+                    errorMessageEn={errorMessageEn}
+                />
             </div>
 
             {/* Right Column (Landscape): Keypad */}
@@ -279,7 +320,7 @@ export default function KioskPhoneEntry({
             {/* Bottom Row: Action Controls */}
             <div className={SMSLayoutClasses.entryBottomRow}>
                 <ContinueButton
-                    disabled={phone.length !== SMS_PHONE_MAX_LENGTH}
+                    disabled={!validation.isValid}
                     onContinue={() => setShowContinueModal(true)}
                     onSkip={() => setShowSkipModal(true)}
                     service={service}

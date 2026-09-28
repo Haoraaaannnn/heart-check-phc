@@ -45,9 +45,8 @@ Use this lookup table to immediately find the file you need:
 | **Change loading overlay message or animation** | [kioskLoadingOverlayTexts.ts](file:///home/jensen/Github-Repositories/heart-check-phc/app/kiosk/constants/kioskLoadingOverlayTexts.ts) / [kioskLoadingOverlay.ts](file:///home/jensen/Github-Repositories/heart-check-phc/app/kiosk/constants/kioskLoadingOverlay.ts). |
 | **Change the universal back button appearance or label** | [kioskBackButtonTexts.ts](file:///home/jensen/Github-Repositories/heart-check-phc/app/kiosk/constants/kioskBackButtonTexts.ts) / [kioskBackButton.ts](file:///home/jensen/Github-Repositories/heart-check-phc/app/kiosk/constants/kioskBackButton.ts). |
 | **Change the hardware ticket print API payload** | [QueuePrintContent.tsx](file:///home/jensen/Github-Repositories/heart-check-phc/app/kiosk/pages/queue-print/components/QueuePrintContent.tsx) and `/api/print-ticket/route.ts`. |
-| **Change ticket redirect countdown delay** | [queuePrintTicket.ts](file:///home/jensen/Github-Repositories/heart-check-phc/app/kiosk/pages/queue-print/constants/queuePrintTicket.ts) (`QUEUE_PRINT_REDIRECT_DELAY_MS`). |
-| **Change mobile phone number validation rules** | [KioskPhoneEntry.tsx](file:///home/jensen/Github-Repositories/heart-check-phc/app/kiosk/pages/sms-input/components/KioskPhoneEntry.tsx). |
-| **Change queue ticket prefixes and numeric rules** | [smsPrefixRules.ts](file:///home/jensen/Github-Repositories/heart-check-phc/app/kiosk/pages/sms-input/constants/smsPrefixRules.ts). |
+| **Change mobile phone number validation rules** | [phoneValidation.ts](file:///c:/Users/ficti/Desktop/main/app/kiosk/pages/sms-input/utils/phoneValidation.ts) (NTC prefixes, sequential runs, repetition limits) and [KioskPhoneEntry.tsx](file:///c:/Users/ficti/Desktop/main/app/kiosk/pages/sms-input/components/KioskPhoneEntry.tsx). |
+| **Change queue ticket prefixes and numeric rules** | [smsPrefixRules.ts](file:///c:/Users/ficti/Desktop/main/app/kiosk/pages/sms-input/constants/smsPrefixRules.ts). |
 
 ---
 
@@ -171,18 +170,21 @@ Keypad screen for entering the patient's Philippine mobile number (`09XX XXX XXX
   - [ContinueButton.tsx](file:///home/jensen/Github-Repositories/heart-check-phc/app/kiosk/pages/sms-input/components/ContinueButton.tsx): Submit button.
   - [KioskPhoneEntry.tsx](file:///home/jensen/Github-Repositories/heart-check-phc/app/kiosk/pages/sms-input/components/KioskPhoneEntry.tsx): State orchestration for number input and validation.
 - **Where to Edit Texts:**
-  - [smsInstructionTexts.ts](file:///home/jensen/Github-Repositories/heart-check-phc/app/kiosk/pages/sms-input/constants/smsInstructionTexts.ts): Input title, subtitle, banner message, and placeholder (`SMSInstructionTexts`).
-  - [smsContinueButtonTexts.ts](file:///home/jensen/Github-Repositories/heart-check-phc/app/kiosk/pages/sms-input/constants/smsContinueButtonTexts.ts): Continue button label (`SMSContinueButtonTexts`).
-  - [smsModalTexts.ts](file:///home/jensen/Github-Repositories/heart-check-phc/app/kiosk/pages/sms-input/constants/smsModalTexts.ts): Validation alerts and confirmation modal text (`SMSModalTexts`).
+  - [smsInstructionTexts.ts](file:///c:/Users/ficti/Desktop/main/app/kiosk/pages/sms-input/constants/smsInstructionTexts.ts): Input title, subtitle, banner message, and placeholder (`SMSInstructionTexts`).
+  - [smsContinueButtonTexts.ts](file:///c:/Users/ficti/Desktop/main/app/kiosk/pages/sms-input/constants/smsContinueButtonTexts.ts): Continue button label (`SMSContinueButtonTexts`).
+  - [smsModalTexts.ts](file:///c:/Users/ficti/Desktop/main/app/kiosk/pages/sms-input/constants/smsModalTexts.ts): Validation alerts and confirmation modal text (`SMSModalTexts`).
+  - [smsValidationTexts.ts](file:///c:/Users/ficti/Desktop/main/app/kiosk/pages/sms-input/constants/smsValidationTexts.ts): Phone number format warnings and troll rejection messages (`SMSValidationTexts`).
 - **Where to Edit Styles:**
-  - [smsBanner.ts](file:///home/jensen/Github-Repositories/heart-check-phc/app/kiosk/pages/sms-input/constants/smsBanner.ts): Banner styling (`SMSBannerStyle`).
-  - [smsInstruction.ts](file:///home/jensen/Github-Repositories/heart-check-phc/app/kiosk/pages/sms-input/constants/smsInstruction.ts): Instruction header styling (`SMSInstructionStyle`).
-  - [smsPhoneInput.ts](file:///home/jensen/Github-Repositories/heart-check-phc/app/kiosk/pages/sms-input/constants/smsPhoneInput.ts): Number box border, colors, and typography (`SMSPhoneInputStyle`).
-  - [smsNumPad.ts](file:///home/jensen/Github-Repositories/heart-check-phc/app/kiosk/pages/sms-input/constants/smsNumPad.ts): Touch keypad button sizing, colors, and active press states (`SMSNumPadStyle`, `SMSNumPadClasses`).
-  - [smsContinueButton.ts](file:///home/jensen/Github-Repositories/heart-check-phc/app/kiosk/pages/sms-input/constants/smsContinueButton.ts): Primary button styles and disabled states (`SMSContinueButtonStyle`).
-  - [smsLayout.ts](file:///home/jensen/Github-Repositories/heart-check-phc/app/kiosk/pages/sms-input/constants/smsLayout.ts): Keypad screen layout and column wrappers (`SMSLayoutClasses`).
+  - [smsBanner.ts](file:///c:/Users/ficti/Desktop/main/app/kiosk/pages/sms-input/constants/smsBanner.ts): Banner styling (`SMSBannerStyle`).
+  - [smsInstruction.ts](file:///c:/Users/ficti/Desktop/main/app/kiosk/pages/sms-input/constants/smsInstruction.ts): Instruction header styling (`SMSInstructionStyle`).
+  - [smsPhoneInput.ts](file:///c:/Users/ficti/Desktop/main/app/kiosk/pages/sms-input/constants/smsPhoneInput.ts): Number box border, colors, typography, valid/error states, and feedback alert layout (`SMSPhoneInputStyle`).
+  - [smsNumPad.ts](file:///c:/Users/ficti/Desktop/main/app/kiosk/pages/sms-input/constants/smsNumPad.ts): Touch keypad button sizing, colors, and active press states (`SMSNumPadStyle`, `SMSNumPadClasses`).
+  - [smsContinueButton.ts](file:///c:/Users/ficti/Desktop/main/app/kiosk/pages/sms-input/constants/smsContinueButton.ts): Primary button styles and disabled states (`SMSContinueButtonStyle`).
+  - [smsLayout.ts](file:///c:/Users/ficti/Desktop/main/app/kiosk/pages/sms-input/constants/smsLayout.ts): Keypad screen layout and column wrappers (`SMSLayoutClasses`).
+- **Where to Edit Phone Validation & Anti-Troll Rules:**
+  - [phoneValidation.ts](file:///c:/Users/ficti/Desktop/main/app/kiosk/pages/sms-input/utils/phoneValidation.ts): Strict Philippine mobile number rules, 09 keypad constraint, NTC telco prefix verification, sequential run detection (`123456...`), and repetitive number limits (`09111111111`).
 - **Where to Edit Queue Ticket Prefixes & Rules:**
-  - [smsPrefixRules.ts](file:///home/jensen/Github-Repositories/heart-check-phc/app/kiosk/pages/sms-input/constants/smsPrefixRules.ts): Service ticket prefix mappings (`SMS_SERVICE_PREFIXES`) and numeric subcategory routing rules (`NUMERIC_PREFIX_RULES`).
+  - [smsPrefixRules.ts](file:///c:/Users/ficti/Desktop/main/app/kiosk/pages/sms-input/constants/smsPrefixRules.ts): Service ticket prefix mappings (`SMS_SERVICE_PREFIXES`) and numeric subcategory routing rules (`NUMERIC_PREFIX_RULES`).
 
 ---
 
