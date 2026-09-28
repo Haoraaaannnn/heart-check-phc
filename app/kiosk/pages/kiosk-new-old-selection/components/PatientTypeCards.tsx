@@ -43,7 +43,6 @@ export default function PatientTypeCard({ patientCategory }: PatientTypeCardProp
         >
             {/* Brand-colored icon container */}
             <div
-                style={PatientTypeCardStyle.iconWrapper}
                 className={PatientTypeCardsClasses.cardIconWrapper}
             >
                 <i

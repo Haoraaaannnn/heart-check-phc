@@ -29,8 +29,8 @@ export const patientTypeCardColors = {
 /** Inline styles for `PatientTypeCard`. */
 export const PatientTypeCardStyle = {
     cardIcon: {
-        fontSize: 56,
-        color: themeColors.white,
+        fontSize: 72,
+        color: themeColors.brandRed,
         lineHeight: 1,
     },
     arrowIcon: {
@@ -57,6 +57,7 @@ export const PatientTypeCardStyle = {
         overflow: "hidden",
         cursor: "pointer",
     },
+    /*
     iconWrapper: {
         flexShrink: 0,
         borderRadius: 16,
@@ -65,7 +66,7 @@ export const PatientTypeCardStyle = {
         justifyContent: "center",
         padding: 12,
         backgroundColor: themeColors.brandRed,
-    },
+    },*/
     labelsWrapper: {
         position: "relative",
         zIndex: 10,
@@ -80,9 +81,7 @@ export const PatientTypeCardStyle = {
         fontSize: patientTypeCardTypography.cardTitleSize,
         lineHeight: 1.2,
         color: "#111827",
-        whiteSpace: "nowrap",
         overflow: "hidden",
-        textOverflow: "ellipsis",
     },
     cardBadge: {
         marginTop: 6,
