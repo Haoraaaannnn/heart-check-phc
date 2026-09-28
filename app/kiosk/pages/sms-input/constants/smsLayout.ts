@@ -5,26 +5,45 @@
 
 import { CSSProperties } from "react";
 
+/** Spacing tokens for SMS page layout. */
+export const smsLayoutSpacing = {
+    containerPaddingX: 24,
+    contentGap: "clamp(16px, 2.5vh, 28px)",
+} as const;
+
 /** Layout style definitions for SMS phone entry container. */
 export const SMSLayoutStyle = {
-    pageContainer: {
+    container: {
+        display: "flex",
         height: "100%",
         width: "100%",
-        display: "flex",
         flexDirection: "column",
-        overflow: "hidden",
+        alignItems: "center",
+        justifyContent: "center",
+        paddingLeft: smsLayoutSpacing.containerPaddingX,
+        paddingRight: smsLayoutSpacing.containerPaddingX,
+        overflowY: "auto",
+    },
+    contentWrapper: {
+        margin: "auto",
+        display: "flex",
+        width: "100%",
+        maxWidth: 1050,
+        flexDirection: "column",
+        alignItems: "center",
+        gap: smsLayoutSpacing.contentGap,
     },
 } satisfies Record<string, CSSProperties>;
 
 /** Tailwind CSS class name dictionary for SMS input layouts. */
 export const SMSLayoutClasses = {
-    pageContainer: "h-full w-full flex flex-col overflow-hidden bg-white p-0",
-    pageContent: "flex flex-col w-full h-full gap-2 md:gap-4 overflow-hidden",
-    pageBannerWrapper: "flex-none",
-    pageEntryWrapper: "flex-1 min-h-0 h-full flex flex-col overflow-hidden",
-    layoutContainer: "h-full w-full flex flex-col overflow-hidden",
-    entryGrid: "h-full min-h-0 w-full grid grid-cols-1 grid-rows-[auto_minmax(0,1fr)_auto] gap-3 sm:gap-4 md:gap-6 p-4 md:p-6 overflow-hidden bg-white landscape:grid-cols-[1.2fr_1fr] landscape:grid-rows-[auto_minmax(0,1fr)_auto] landscape:gap-x-12 landscape:gap-y-6",
-    entryLeftCol: "flex w-full flex-col gap-3 sm:gap-4 landscape:col-start-1 landscape:row-start-1 landscape:row-span-2 landscape:justify-center landscape:items-start",
-    entryRightCol: "flex h-full w-full items-center justify-center portrait:py-4 landscape:items-center landscape:justify-end landscape:col-start-2 landscape:row-start-1 landscape:row-span-2 landscape:px-4 lg:landscape:px-8",
-    entryBottomRow: "flex-none w-full landscape:col-start-1 landscape:col-end-3 landscape:row-start-3",
+    container: "landscape:pt-6 landscape:pb-[80px] portrait:pt-20 portrait:pb-[120px] h-full w-full flex flex-col items-center justify-center overflow-y-auto bg-white",
+    contentWrapper: "w-full max-w-[1050px] mx-auto flex flex-col items-center",
+    entryGrid: "w-full grid grid-cols-1 landscape:grid-cols-2 gap-6 lg:gap-10 items-center justify-center",
+    entryLeftCol: "portrait:contents landscape:flex landscape:flex-col landscape:gap-4 w-full max-w-[480px] mx-auto",
+    entryRightCol: "portrait:order-2 landscape:order-none flex flex-col items-center justify-center w-full max-w-[440px] mx-auto",
+    phoneInputWrapper: "portrait:order-1 landscape:order-1 w-full",
+    instructionWrapper: "portrait:order-3 landscape:order-2 w-full",
+    continueWrapper: "portrait:order-4 landscape:order-3 w-full",
 } as const;
+

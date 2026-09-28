@@ -5,6 +5,7 @@
 
 import { CSSProperties } from "react";
 import { themeColors } from "@/constants/colors";
+import { kioskTypography } from "@/constants/kiosk";
 
 /** Spacing tokens for banner. */
 export const confirmationBannerSpacing = {
@@ -12,10 +13,10 @@ export const confirmationBannerSpacing = {
     paddingY: "clamp(20px, 2.5vh, 32px)",
 } as const;
 
-/** Typography tokens for banner. */
+/** Typography tokens for banner, referencing centralized root typography scale. */
 export const confirmationBannerTypography = {
-    bannerTitleSize: "clamp(24px, 3vw, 42px)",
-    bannerBadgeSize: "clamp(16px, 1.6vw, 24px)",
+    bannerTitleSize: kioskTypography.bannerTitle,
+    bannerBadgeSize: kioskTypography.bannerBadge,
 } as const;
 
 /** Colors for banner. */

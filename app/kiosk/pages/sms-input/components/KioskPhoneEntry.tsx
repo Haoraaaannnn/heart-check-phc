@@ -10,8 +10,12 @@ import PhoneInput from "./PhoneInput";
 import NumPad from "./NumPad";
 import ContinueButton from "./ContinueButton";
 import SMSInstruction from "./SMSInstruction";
+import SMSHeader from "./SMSHeader";
 import { SMS_PHONE_MAX_LENGTH } from "@/app/kiosk/pages/sms-input/constants/smsPhoneInput";
-import { SMSLayoutClasses } from "@/app/kiosk/pages/sms-input/constants/smsLayout";
+import {
+    SMSLayoutClasses,
+    SMSLayoutStyle,
+} from "@/app/kiosk/pages/sms-input/constants/smsLayout";
 import {
     SMS_SERVICE_PREFIXES,
     NUMERIC_PREFIX_RULES,
@@ -199,34 +203,54 @@ export default function KioskPhoneEntry({
     };
 
     return (
-        <div className={SMSLayoutClasses.entryGrid}>
-            {/* Left Column (Landscape): Instructions and Phone Display */}
-            <div className={SMSLayoutClasses.entryLeftCol}>
-                <SMSInstruction service={service} />
-                <PhoneInput phone={phone} onDelete={deleteLast} service={service} />
-            </div>
+        <div
+            className={SMSLayoutClasses.container}
+            style={SMSLayoutStyle.container}
+        >
+            <div
+                className={SMSLayoutClasses.contentWrapper}
+                style={SMSLayoutStyle.contentWrapper}
+            >
+                {/* Header Instructions */}
+                <SMSHeader service={service} subcategory={subcategory} />
 
-            {/* Right Column (Landscape): Keypad */}
-            <div className={SMSLayoutClasses.entryRightCol}>
-                <NumPad onDigit={addDigit} />
-            </div>
+                {/* Entry Grid (Left: Phone & Actions, Right: NumPad) */}
+                <div className={SMSLayoutClasses.entryGrid}>
+                    <div className={SMSLayoutClasses.entryLeftCol}>
+                        <div className={SMSLayoutClasses.phoneInputWrapper}>
+                            <PhoneInput
+                                phone={phone}
+                                onDelete={deleteLast}
+                                service={service}
+                            />
+                        </div>
 
-            {/* Bottom Row: Action Controls */}
-            <div className={SMSLayoutClasses.entryBottomRow}>
-                <ContinueButton
-                    disabled={phone.length !== SMS_PHONE_MAX_LENGTH}
-                    onContinue={() => setShowContinueModal(true)}
-                    onSkip={() => setShowSkipModal(true)}
-                    service={service}
-                    phone={phone}
-                    showContinueModal={showContinueModal}
-                    showSkipModal={showSkipModal}
-                    onContinueConfirm={handleContinueConfirm}
-                    onSkipConfirm={handleSkipConfirm}
-                    onContinueCancel={() => setShowContinueModal(false)}
-                    onSkipCancel={() => setShowSkipModal(false)}
-                    href={cancelHref}
-                />
+                        <div className={SMSLayoutClasses.instructionWrapper}>
+                            <SMSInstruction />
+                        </div>
+
+                        <div className={SMSLayoutClasses.continueWrapper}>
+                            <ContinueButton
+                                disabled={phone.length !== SMS_PHONE_MAX_LENGTH}
+                                onContinue={() => setShowContinueModal(true)}
+                                onSkip={() => setShowSkipModal(true)}
+                                service={service}
+                                phone={phone}
+                                showContinueModal={showContinueModal}
+                                showSkipModal={showSkipModal}
+                                onContinueConfirm={handleContinueConfirm}
+                                onSkipConfirm={handleSkipConfirm}
+                                onContinueCancel={() => setShowContinueModal(false)}
+                                onSkipCancel={() => setShowSkipModal(false)}
+                                href={cancelHref}
+                            />
+                        </div>
+                    </div>
+
+                    <div className={SMSLayoutClasses.entryRightCol}>
+                        <NumPad onDigit={addDigit} />
+                    </div>
+                </div>
             </div>
         </div>
     );

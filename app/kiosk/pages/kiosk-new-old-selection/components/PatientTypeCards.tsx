@@ -59,7 +59,9 @@ export default function PatientTypeCard({ patientCategory }: PatientTypeCardProp
                     {pc.label_fil}
                 </span>
 
-                <span style={PatientTypeCardStyle.cardBadge}>
+                <div style={PatientTypeCardStyle.divider} />
+
+                <span style={PatientTypeCardStyle.cardSubtitle}>
                     {pc.label_en}
                 </span>
             </div>

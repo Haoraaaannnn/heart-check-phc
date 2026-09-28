@@ -15,7 +15,7 @@ export const KioskLoadingOverlayStyles = {
     overlay: {
         position: "fixed",
         inset: 0,
-        zIndex: 50,
+        zIndex: 200,
         display: "flex",
         flexDirection: "column",
         alignItems: "center",
@@ -46,7 +46,7 @@ export const KioskLoadingOverlayClasses = {
     /**
      * High-visibility blur backdrop covering the active screen.
      */
-    overlay: "fixed inset-0 z-50 flex flex-col items-center justify-center gap-6 bg-white/40 backdrop-blur-sm",
+    overlay: "fixed inset-0 z-[200] flex flex-col items-center justify-center gap-6 bg-white/40 backdrop-blur-sm",
 
     /**
      * Animated circular loading spinner with dual-tone ring border.

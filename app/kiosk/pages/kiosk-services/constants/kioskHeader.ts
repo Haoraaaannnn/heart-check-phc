@@ -1,5 +1,6 @@
 import { CSSProperties } from "react";
 import { themeColors } from "@/constants/colors";
+import { kioskTypography } from "@/constants/kiosk";
 
 /**
  * Responsive spacing for the kiosk footer.
@@ -11,12 +12,12 @@ export const kioskHeaderSpacing = {
 } as const;
 
 /**
- * Footer typography.
+ * Footer typography referencing centralized root typography scale.
  */
 export const kioskHeaderFontSize = {
-    brand: "clamp(20px, 2.4vw, 34px)",
-    time: "clamp(20px, 2.4vw, 34px)",
-    date: "clamp(12px, 1.4vw, 18px)",
+    brand: kioskTypography.footerBrand,
+    time: kioskTypography.footerTime,
+    date: kioskTypography.footerDate,
 } as const;
 
 /**

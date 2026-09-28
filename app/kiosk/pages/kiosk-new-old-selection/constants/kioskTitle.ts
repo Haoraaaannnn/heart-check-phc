@@ -5,10 +5,11 @@
 
 import { CSSProperties } from "react";
 import { themeColors } from "@/constants/colors";
+import { kioskTypography } from "@/constants/kiosk";
 
-/** Typography tokens for kiosk title. */
+/** Typography tokens for kiosk title, referencing centralized root typography scale. */
 export const kioskTitleTypography = {
-    titleSize: "clamp(32px, 3.5vw, 54px)",
+    titleSize: kioskTypography.heroTitle,
 } as const;
 
 /** Inline styles for `KioskTitle`. */
