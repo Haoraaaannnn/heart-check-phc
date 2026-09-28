@@ -71,8 +71,12 @@ export async function PUT(request: Request) {
       { status: 409 }
     );
   }
+const escapeRegExp = (value: string) =>
+  value.replace(/[.*+?^${}()|[\]\\]/g, '\\$&');
 
-  const pattern = new RegExp(`(?<!\\d)R${room}(?!\\d)`);
+const safeRoom = escapeRegExp(String(room));
+
+const pattern = new RegExp(`(?<!\\d)R${safeRoom}(?!\\d)`);
   for (const row of rows as any[]) {
     const { error } = await supabaseAdmin
       .from('cubicle')
