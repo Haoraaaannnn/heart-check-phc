@@ -46,7 +46,7 @@ export interface RegistrationCounterSectionProps {
   allowedCounters?: number[];
 }
 
-const DEFAULT_COUNTERS = [1, 2, 3, 4, 5];
+const DEFAULT_COUNTERS: number[] = [];
 
 /**
  * Registration Counters section presenting all counters in a non-scrollable compact layout.
