@@ -1,6 +1,5 @@
 "use client";
 
-import Link from "next/link";
 import { Service } from "@/types/Services";
 import ConfirmationModal from "@/components/modals/ConfirmationModal";
 import { SMSContinueButtonTexts } from "@/app/kiosk/pages/sms-input/constants/smsContinueButtonTexts";
@@ -34,8 +33,8 @@ interface ContinueButtonProps {
     onContinueCancel: () => void;
     /** Callback dismissing the skip warning modal. */
     onSkipCancel: () => void;
-    /** Destination URL for the cancel button. */
-    href: string;
+    /** Optional destination URL for backwards compatibility. */
+    href?: string;
     /** Optional custom button label. */
     label?: string;
 }
@@ -44,12 +43,12 @@ interface ContinueButtonProps {
  * Bottom action controls for the SMS input step.
  *
  * @remarks
- * Includes primary Continue button (validated), Cancel button (navigating back
- * to the correct prior step), and Skip button with a warning that notifications
- * will not be received.
+ * Includes primary Continue button (active when 11 digits are entered)
+ * and secondary Skip button with confirmation modals. Universal back navigation
+ * is handled by `KioskBackButton` at the top-left of the layout shell.
  *
  * @param props - Component props.
- * @returns The bottom action bar and associated confirmation modals.
+ * @returns The action buttons and associated confirmation modals.
  */
 export default function ContinueButton({
     disabled,
@@ -63,7 +62,7 @@ export default function ContinueButton({
     onSkipConfirm,
     onContinueCancel,
     onSkipCancel,
-    href,
+    href: _href,
 }: ContinueButtonProps) {
     return (
         <div style={SMSContinueButtonStyle.container}>
@@ -78,25 +77,15 @@ export default function ContinueButton({
                 {SMSContinueButtonTexts.continueBtn}
             </button>
 
-            {/* Secondary Controls (Cancel and Skip) */}
-            <div style={SMSContinueButtonStyle.actionsRow}>
-                <Link
-                    href={href}
-                    style={SMSContinueButtonStyle.cancelBtn}
-                    className={SMSContinueButtonClasses.secondaryBtn}
-                >
-                    {SMSContinueButtonTexts.cancelBtn}
-                </Link>
-
-                <button
-                    type="button"
-                    onClick={onSkip}
-                    style={SMSContinueButtonStyle.cancelBtn}
-                    className={SMSContinueButtonClasses.secondaryBtn}
-                >
-                    {SMSContinueButtonTexts.skipBtn}
-                </button>
-            </div>
+            {/* Secondary Skip Action */}
+            <button
+                type="button"
+                onClick={onSkip}
+                style={SMSContinueButtonStyle.skipBtn}
+                className={SMSContinueButtonClasses.secondaryBtn}
+            >
+                {SMSContinueButtonTexts.skipBtn}
+            </button>
 
             {/* Phone Number Verification Modal */}
             <ConfirmationModal

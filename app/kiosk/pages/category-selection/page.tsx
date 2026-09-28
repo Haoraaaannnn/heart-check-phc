@@ -53,6 +53,7 @@ export default function CategorySelectionPage() {
 
         if (serviceId) params.set("serviceId", serviceId);
         if (patientType) params.set("type", patientType);
+        if (serviceLabel) params.set("serviceLabel", serviceLabel);
         params.set("subcategory", subcategory);
 
         // Consultation → cubicle selection, OPD Screening → SMS input.

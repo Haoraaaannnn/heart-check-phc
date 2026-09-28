@@ -159,29 +159,29 @@ Consultation doctor / room selection step.
 
 ### Screen 5: SMS Phone Entry (`app/kiosk/pages/sms-input/`)
 
-Keypad screen for entering the patient's Philippine mobile number (`09XX XXX XXXX`) for SMS queue notifications.
+Keypad screen for entering the patient's Philippine mobile number (`09XX XXX XXXX`) for SMS queue notifications. Cleaned and redesigned to match the borderless white aesthetic of other kiosk screens with the universal top-left back button.
 
-- **Route:** `/kiosk/pages/sms-input`
+- **Route:** `/kiosk/pages/sms-input?serviceId=...&type=...&subcategory=...`
 - **Page File:** [page.tsx](file:///home/jensen/Github-Repositories/heart-check-phc/app/kiosk/pages/sms-input/page.tsx)
 - **Layout File:** [layout.tsx](file:///home/jensen/Github-Repositories/heart-check-phc/app/kiosk/pages/sms-input/layout.tsx)
+- **Universal Back Button:** Supported via [app/kiosk/layout.tsx](file:///home/jensen/Github-Repositories/heart-check-phc/app/kiosk/layout.tsx) routing dynamically back to cubicle selection (for Consultation), category selection (for OPD Screening), or the main services catalog (for direct services).
 - **Components:**
-  - [SMSBanner.tsx](file:///home/jensen/Github-Repositories/heart-check-phc/app/kiosk/pages/sms-input/components/SMSBanner.tsx): Notice reminding patient that phone numbers receive SMS updates.
-  - [SMSInstruction.tsx](file:///home/jensen/Github-Repositories/heart-check-phc/app/kiosk/pages/sms-input/components/SMSInstruction.tsx): Keypad input instructions.
-  - [PhoneInput.tsx](file:///home/jensen/Github-Repositories/heart-check-phc/app/kiosk/pages/sms-input/components/PhoneInput.tsx): Formatted phone number display box.
-  - [NumPad.tsx](file:///home/jensen/Github-Repositories/heart-check-phc/app/kiosk/pages/sms-input/components/NumPad.tsx): On-screen touch keypad (digits 0-9 and backspace).
-  - [ContinueButton.tsx](file:///home/jensen/Github-Repositories/heart-check-phc/app/kiosk/pages/sms-input/components/ContinueButton.tsx): Submit button.
-  - [KioskPhoneEntry.tsx](file:///home/jensen/Github-Repositories/heart-check-phc/app/kiosk/pages/sms-input/components/KioskPhoneEntry.tsx): State orchestration for number input and validation.
+  - [SMSHeader.tsx](file:///home/jensen/Github-Repositories/heart-check-phc/app/kiosk/pages/sms-input/components/SMSHeader.tsx): Centered dual-language header ("Ilagay ang Mobile Number" / "Enter Mobile Number") and service pill badge.
+  - [SMSInstruction.tsx](file:///home/jensen/Github-Repositories/heart-check-phc/app/kiosk/pages/sms-input/components/SMSInstruction.tsx): Informative notice card explaining SMS queue notifications.
+  - [PhoneInput.tsx](file:///home/jensen/Github-Repositories/heart-check-phc/app/kiosk/pages/sms-input/components/PhoneInput.tsx): Formatted phone number display box with backspace button and touch scaling.
+  - [NumPad.tsx](file:///home/jensen/Github-Repositories/heart-check-phc/app/kiosk/pages/sms-input/components/NumPad.tsx): On-screen touch keypad with clean white card keys, 2px borders, and tactile active red border feedback (`active:!border-[#ED1C24]`).
+  - [ContinueButton.tsx](file:///home/jensen/Github-Repositories/heart-check-phc/app/kiosk/pages/sms-input/components/ContinueButton.tsx): Primary "Magpatuloy - Continue" button and secondary "Laktawan - Skip" button with confirmation modals.
+  - [KioskPhoneEntry.tsx](file:///home/jensen/Github-Repositories/heart-check-phc/app/kiosk/pages/sms-input/components/KioskPhoneEntry.tsx): State orchestration for number input, responsive layout, and database patient ticket creation via RPC (`create_patient`).
 - **Where to Edit Texts:**
-  - [smsInstructionTexts.ts](file:///home/jensen/Github-Repositories/heart-check-phc/app/kiosk/pages/sms-input/constants/smsInstructionTexts.ts): Input title, subtitle, banner message, and placeholder (`SMSInstructionTexts`).
-  - [smsContinueButtonTexts.ts](file:///home/jensen/Github-Repositories/heart-check-phc/app/kiosk/pages/sms-input/constants/smsContinueButtonTexts.ts): Continue button label (`SMSContinueButtonTexts`).
-  - [smsModalTexts.ts](file:///home/jensen/Github-Repositories/heart-check-phc/app/kiosk/pages/sms-input/constants/smsModalTexts.ts): Validation alerts and confirmation modal text (`SMSModalTexts`).
+  - [smsInstructionTexts.ts](file:///home/jensen/Github-Repositories/heart-check-phc/app/kiosk/pages/sms-input/constants/smsInstructionTexts.ts): Input title, subtitle, and hint card message (`SMSInstructionTexts`).
+  - [smsContinueButtonTexts.ts](file:///home/jensen/Github-Repositories/heart-check-phc/app/kiosk/pages/sms-input/constants/smsContinueButtonTexts.ts): Continue and Skip button labels (`SMSContinueButtonTexts`).
+  - [smsModalTexts.ts](file:///home/jensen/Github-Repositories/heart-check-phc/app/kiosk/pages/sms-input/constants/smsModalTexts.ts): Verification modal and skip confirmation modal texts (`SMSModalTexts`).
 - **Where to Edit Styles:**
-  - [smsBanner.ts](file:///home/jensen/Github-Repositories/heart-check-phc/app/kiosk/pages/sms-input/constants/smsBanner.ts): Banner styling (`SMSBannerStyle`).
-  - [smsInstruction.ts](file:///home/jensen/Github-Repositories/heart-check-phc/app/kiosk/pages/sms-input/constants/smsInstruction.ts): Instruction header styling (`SMSInstructionStyle`).
-  - [smsPhoneInput.ts](file:///home/jensen/Github-Repositories/heart-check-phc/app/kiosk/pages/sms-input/constants/smsPhoneInput.ts): Number box border, colors, and typography (`SMSPhoneInputStyle`).
-  - [smsNumPad.ts](file:///home/jensen/Github-Repositories/heart-check-phc/app/kiosk/pages/sms-input/constants/smsNumPad.ts): Touch keypad button sizing, colors, and active press states (`SMSNumPadStyle`, `SMSNumPadClasses`).
-  - [smsContinueButton.ts](file:///home/jensen/Github-Repositories/heart-check-phc/app/kiosk/pages/sms-input/constants/smsContinueButton.ts): Primary button styles and disabled states (`SMSContinueButtonStyle`).
-  - [smsLayout.ts](file:///home/jensen/Github-Repositories/heart-check-phc/app/kiosk/pages/sms-input/constants/smsLayout.ts): Keypad screen layout and column wrappers (`SMSLayoutClasses`).
+  - [smsInstruction.ts](file:///home/jensen/Github-Repositories/heart-check-phc/app/kiosk/pages/sms-input/constants/smsInstruction.ts): Header, subtitle, service badge, and hint card styles referencing `kioskTypography` (`SMSInstructionStyle`).
+  - [smsPhoneInput.ts](file:///home/jensen/Github-Repositories/heart-check-phc/app/kiosk/pages/sms-input/constants/smsPhoneInput.ts): Number box border, colors, and typography referencing `kioskTypography.phoneDigits` (`SMSPhoneInputStyle`, `SMSPhoneInputClasses`).
+  - [smsNumPad.ts](file:///home/jensen/Github-Repositories/heart-check-phc/app/kiosk/pages/sms-input/constants/smsNumPad.ts): Touch keypad button sizing, colors, typography referencing `kioskTypography.numPadKey`, and active press states with red border (`SMSNumPadStyle`, `SMSNumPadClasses`).
+  - [smsContinueButton.ts](file:///home/jensen/Github-Repositories/heart-check-phc/app/kiosk/pages/sms-input/constants/smsContinueButton.ts): Primary continue and secondary skip button styles referencing `kioskTypography.buttonText` (`SMSContinueButtonStyle`, `SMSContinueButtonClasses`).
+  - [smsLayout.ts](file:///home/jensen/Github-Repositories/heart-check-phc/app/kiosk/pages/sms-input/constants/smsLayout.ts): Keypad screen layout and column wrappers (`SMSLayoutStyle`, `SMSLayoutClasses`).
 - **Where to Edit Queue Ticket Prefixes & Rules:**
   - [smsPrefixRules.ts](file:///home/jensen/Github-Repositories/heart-check-phc/app/kiosk/pages/sms-input/constants/smsPrefixRules.ts): Service ticket prefix mappings (`SMS_SERVICE_PREFIXES`) and numeric subcategory routing rules (`NUMERIC_PREFIX_RULES`).
 

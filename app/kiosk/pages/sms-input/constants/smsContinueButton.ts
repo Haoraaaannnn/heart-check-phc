@@ -62,19 +62,27 @@ export const SMSContinueButtonStyle = {
         cursor: "pointer",
     },
     skipBtn: {
-        width: "fit-content",
-        color: "#6B7280",
+        width: "100%",
+        paddingLeft: 24,
+        paddingRight: 24,
+        paddingTop: 14,
+        paddingBottom: 14,
+        borderWidth: 2,
+        borderStyle: "solid",
+        borderColor: "#D1D5DB",
+        textAlign: "center",
+        borderRadius: 16,
         fontWeight: 700,
-        fontSize: SMSContinueButtonTypography.skipTextSize,
-        textDecoration: "underline",
-        background: "none",
-        border: "none",
+        color: "#4B5563",
+        fontSize: SMSContinueButtonTypography.buttonTextSize,
+        backgroundColor: themeColors.white,
         cursor: "pointer",
+        boxShadow: "0 1px 2px 0 rgba(0, 0, 0, 0.05)",
     },
 } satisfies Record<string, CSSProperties>;
 
 /** Tailwind utility classes for `ContinueButton`. */
 export const SMSContinueButtonClasses = {
-    continueBtn: "disabled:opacity-50 disabled:pointer-events-none active:scale-[0.98] active:brightness-95 transition-all shadow-md",
-    secondaryBtn: "flex-1 active:scale-95 transition-all active:bg-gray-100 flex items-center justify-center",
+    continueBtn: "disabled:opacity-40 disabled:pointer-events-none active:scale-[0.98] active:brightness-95 transition-all shadow-md",
+    secondaryBtn: "active:scale-[0.98] transition-all active:bg-gray-50 active:!border-[#ED1C24] flex items-center justify-center",
 } as const;
