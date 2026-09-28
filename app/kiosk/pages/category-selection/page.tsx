@@ -81,7 +81,10 @@ export default function CategorySelectionPage() {
                 </div>
 
                 {/* Category Options */}
-                <div style={CategoryCardsStyle.cardsGrid}>
+                <div
+                    style={CategoryCardsStyle.cardsGrid}
+                    className={CategoryCardsClasses.grid}
+                >
                     {/* Adult Button */}
                     <button
                         type="button"
@@ -89,37 +92,35 @@ export default function CategorySelectionPage() {
                         style={CategoryCardsStyle.card}
                         className={CategoryCardsClasses.adultCard}
                     >
+                        {/* Brand-colored icon container */}
                         <div
-                            style={CategoryCardsStyle.adultIconTile}
-                            className={CategoryCardsClasses.iconTile}
+                            style={CategoryCardsStyle.iconWrapper}
+                            className={CategoryCardsClasses.cardIconWrapper}
                         >
                             <i
                                 className={`bx ${CategoryCardsIcons.adult}`}
-                                style={CategoryCardsStyle.icon}
+                                style={CategoryCardsStyle.adultIcon}
                                 aria-hidden="true"
                             />
                         </div>
 
-                        <div>
+                        {/* Category Labels */}
+                        <div style={CategoryCardsStyle.labelsWrapper}>
                             <span style={CategoryCardsStyle.cardTitle}>
                                 {CategoryCardsTexts.adultLabelFil}
                             </span>
+                            <div style={CategoryCardsStyle.divider} />
                             <span style={CategoryCardsStyle.cardSubtitle}>
                                 {CategoryCardsTexts.adultLabelEn}
                             </span>
                         </div>
 
-                        <div
-                            style={CategoryCardsStyle.ctaAdult}
-                            className={CategoryCardsClasses.cta}
-                        >
-                            <span>{CategoryCardsTexts.cta}</span>
-                            <i
-                                className={`bx ${CategoryCardsIcons.arrow}`}
-                                style={CategoryCardsStyle.arrowIcon}
-                                aria-hidden="true"
-                            />
-                        </div>
+                        {/* Directional navigation indicator */}
+                        <i
+                            className={`bx ${CategoryCardsIcons.arrow} ${CategoryCardsClasses.cardArrow}`}
+                            style={CategoryCardsStyle.arrowIcon}
+                            aria-hidden="true"
+                        />
                     </button>
 
                     {/* Pedia Button */}
@@ -129,37 +130,35 @@ export default function CategorySelectionPage() {
                         style={CategoryCardsStyle.card}
                         className={CategoryCardsClasses.pediaCard}
                     >
+                        {/* Brand-colored icon container */}
                         <div
-                            style={CategoryCardsStyle.pediaIconTile}
-                            className={CategoryCardsClasses.iconTile}
+                            style={CategoryCardsStyle.iconWrapper}
+                            className={CategoryCardsClasses.cardIconWrapper}
                         >
                             <i
                                 className={`bx ${CategoryCardsIcons.pedia}`}
-                                style={CategoryCardsStyle.icon}
+                                style={CategoryCardsStyle.pediaIcon}
                                 aria-hidden="true"
                             />
                         </div>
 
-                        <div>
+                        {/* Category Labels */}
+                        <div style={CategoryCardsStyle.labelsWrapper}>
                             <span style={CategoryCardsStyle.cardTitle}>
                                 {CategoryCardsTexts.pediaLabelFil}
                             </span>
+                            <div style={CategoryCardsStyle.divider} />
                             <span style={CategoryCardsStyle.cardSubtitle}>
                                 {CategoryCardsTexts.pediaLabelEn}
                             </span>
                         </div>
 
-                        <div
-                            style={CategoryCardsStyle.ctaPedia}
-                            className={CategoryCardsClasses.cta}
-                        >
-                            <span>{CategoryCardsTexts.cta}</span>
-                            <i
-                                className={`bx ${CategoryCardsIcons.arrow}`}
-                                style={CategoryCardsStyle.arrowIcon}
-                                aria-hidden="true"
-                            />
-                        </div>
+                        {/* Directional navigation indicator */}
+                        <i
+                            className={`bx ${CategoryCardsIcons.arrow} ${CategoryCardsClasses.cardArrow}`}
+                            style={CategoryCardsStyle.arrowIcon}
+                            aria-hidden="true"
+                        />
                     </button>
                 </div>
             </div>

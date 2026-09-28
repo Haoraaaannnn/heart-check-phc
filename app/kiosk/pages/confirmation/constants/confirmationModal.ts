@@ -5,10 +5,12 @@
 
 import { CSSProperties } from "react";
 import { themeColors } from "@/constants/colors";
+import { kioskTypography } from "@/constants/kiosk";
 
-/** Typography tokens for confirmation modal. */
+/** Typography tokens for confirmation modal, referencing centralized root typography scale. */
 export const confirmationModalTypography = {
-    modalTitleSize: "clamp(20px, 2.2vw, 24px)",
+    modalTitleSize: kioskTypography.modalTitle,
+    modalBadgeSize: kioskTypography.modalBadge,
 } as const;
 
 /** Colors for confirmation modal. */
@@ -29,12 +31,13 @@ export const ConfirmationModalStyle = {
     overlay: {
         position: "fixed",
         inset: 0,
-        zIndex: 50,
+        zIndex: 100,
         display: "flex",
         alignItems: "center",
         justifyContent: "center",
         backgroundColor: confirmationModalColors.modalOverlay,
-        backdropFilter: "blur(4px)",
+        backdropFilter: "blur(8px)",
+        WebkitBackdropFilter: "blur(8px)",
         padding: 16,
     },
     modalBox: {
@@ -78,7 +81,7 @@ export const ConfirmationModalStyle = {
         backgroundColor: confirmationModalColors.pillBg,
         border: `1px solid ${confirmationModalColors.pillBorder}`,
         color: confirmationModalColors.white,
-        fontSize: 13,
+        fontSize: confirmationModalTypography.modalBadgeSize,
         fontWeight: 700,
         paddingLeft: 12,
         paddingRight: 12,
@@ -102,10 +105,10 @@ export const ConfirmationModalStyle = {
 
 /** Tailwind utility classes for `ConfirmationModal`. */
 export const ConfirmationModalClasses = {
-    overlay: "animate-in fade-in duration-200",
+    overlay: "fixed inset-0 z-[100] flex items-center justify-center p-4 bg-black/60 backdrop-blur-md animate-in fade-in duration-200",
     scroll: "[scrollbar-width:none] [&::-webkit-scrollbar]:hidden",
     icon: "size-12 sm:size-14 shrink-0",
     headerText: "flex flex-col min-w-0",
-    continueBtn: "transition-all duration-150 active:scale-95 shadow-md hover:brightness-105",
-    cancelBtn: "transition-all duration-150 active:scale-95 hover:bg-gray-50",
+    continueBtn: "transition-all duration-150 active:scale-95 active:brightness-95 shadow-md",
+    cancelBtn: "transition-all duration-150 active:scale-95 active:bg-gray-100",
 } as const;

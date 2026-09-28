@@ -5,6 +5,13 @@
 
 import { CSSProperties } from "react";
 import { themeColors } from "@/constants/colors";
+import { kioskTypography } from "@/constants/kiosk";
+
+/** Typography tokens for SMS banner, referencing centralized root typography scale. */
+export const SMSBannerTypography = {
+    titleSize: kioskTypography.bannerTitle,
+    badgeSize: kioskTypography.badgeSmall,
+} as const;
 
 /** Inline styles for `SMSBanner`. */
 export const SMSBannerStyle = {
@@ -30,7 +37,7 @@ export const SMSBannerStyle = {
     },
     labelFil: {
         fontWeight: 900,
-        fontSize: "clamp(24px, 2.5vw, 36px)",
+        fontSize: SMSBannerTypography.titleSize,
         lineHeight: 1.2,
         marginBottom: 4,
         color: themeColors.white,
@@ -41,7 +48,7 @@ export const SMSBannerStyle = {
         backgroundColor: "rgba(255, 255, 255, 0.2)",
         border: "1px solid rgba(255, 255, 255, 0.35)",
         color: themeColors.white,
-        fontSize: "clamp(12px, 1.2vw, 16px)",
+        fontSize: SMSBannerTypography.badgeSize,
         fontWeight: 700,
         paddingLeft: 12,
         paddingRight: 12,

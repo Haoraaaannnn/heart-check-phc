@@ -5,9 +5,18 @@
 
 import { CSSProperties } from "react";
 import { themeColors } from "@/constants/colors";
+import { kioskTypography } from "@/constants/kiosk";
 
 /** Number of milliseconds to display the ticket on screen before returning to entrance. */
 export const QUEUE_PRINT_REDIRECT_DELAY_MS = 5000;
+
+/** Typography tokens for printed ticket, referencing centralized root typography scale. */
+export const QueuePrintTicketTypography = {
+    serviceTitleSize: kioskTypography.ticketServiceTitle,
+    badgeSize: kioskTypography.badgeMedium,
+    queueLabelSize: kioskTypography.ticketQueueLabel,
+    queueNumberSize: kioskTypography.ticketQueueNumber,
+} as const;
 
 /** Inline styles for `QueuePrintContent`. */
 export const QueuePrintTicketStyle = {
@@ -35,7 +44,7 @@ export const QueuePrintTicketStyle = {
         gap: 8,
     },
     serviceTitle: {
-        fontSize: "clamp(24px, 3.5vw, 36px)",
+        fontSize: QueuePrintTicketTypography.serviceTitleSize,
         fontWeight: 900,
         color: "#111827",
         lineHeight: 1.25,
@@ -50,7 +59,7 @@ export const QueuePrintTicketStyle = {
         paddingTop: 4,
         paddingBottom: 4,
         borderRadius: 9999,
-        fontSize: "clamp(14px, 1.4vw, 18px)",
+        fontSize: QueuePrintTicketTypography.badgeSize,
         boxShadow: "0 1px 2px 0 rgba(0, 0, 0, 0.05)",
     },
     divider: {
@@ -70,14 +79,14 @@ export const QueuePrintTicketStyle = {
         paddingBottom: 8,
     },
     queueLabel: {
-        fontSize: "clamp(14px, 1.4vw, 16px)",
+        fontSize: QueuePrintTicketTypography.queueLabelSize,
         fontWeight: 700,
         color: "#6B7280",
         marginBottom: 4,
     },
     queueNumber: {
         fontWeight: 900,
-        fontSize: "clamp(48px, 7vw, 96px)",
+        fontSize: QueuePrintTicketTypography.queueNumberSize,
         color: themeColors.brandRed,
         lineHeight: 1,
         letterSpacing: "-0.025em",

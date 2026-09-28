@@ -4,6 +4,12 @@
  */
 
 import { CSSProperties } from "react";
+import { kioskTypography } from "@/constants/kiosk";
+
+/** Typography tokens for SMS keypad, referencing centralized root typography scale. */
+export const SMSNumPadTypography = {
+    keySize: kioskTypography.numPadKey,
+} as const;
 
 /** Inline styles for `NumPad`. */
 export const SMSNumPadStyle = {
@@ -21,7 +27,7 @@ export const SMSNumPadStyle = {
         height: "clamp(64px, 8vh, 88px)",
         backgroundColor: "#F3F4F6",
         borderRadius: 16,
-        fontSize: "clamp(30px, 3.8vw, 48px)",
+        fontSize: SMSNumPadTypography.keySize,
         fontWeight: 700,
         color: "#111827",
         boxShadow: "0 4px 0 #CBD5E1",
@@ -35,5 +41,5 @@ export const SMSNumPadStyle = {
 
 /** Tailwind utility classes for `NumPad`. */
 export const SMSNumPadClasses = {
-    keypadBtn: "hover:bg-gray-200 transition-all duration-100 active:translate-y-1 active:shadow-none",
+    keypadBtn: "transition-all duration-100 active:bg-gray-200 active:translate-y-1 active:shadow-none",
 } as const;

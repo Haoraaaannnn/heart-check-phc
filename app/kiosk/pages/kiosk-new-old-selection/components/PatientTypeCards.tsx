@@ -43,6 +43,7 @@ export default function PatientTypeCard({ patientCategory }: PatientTypeCardProp
         >
             {/* Brand-colored icon container */}
             <div
+                style={PatientTypeCardStyle.iconWrapper}
                 className={PatientTypeCardsClasses.cardIconWrapper}
             >
                 <i
@@ -58,7 +59,9 @@ export default function PatientTypeCard({ patientCategory }: PatientTypeCardProp
                     {pc.label_fil}
                 </span>
 
-                <span style={PatientTypeCardStyle.cardBadge}>
+                <div style={PatientTypeCardStyle.divider} />
+
+                <span style={PatientTypeCardStyle.cardSubtitle}>
                     {pc.label_en}
                 </span>
             </div>

@@ -1,6 +1,7 @@
 "use client";
 
-import { useEffect } from "react";
+import { useEffect, useState } from "react";
+import { createPortal } from "react-dom";
 import type { Service } from "@/types/Services";
 import ConfirmationDescriptions from "@/app/kiosk/pages/confirmation/components/ConfimationDescription";
 import ConfirmationActions from "@/app/kiosk/pages/confirmation/components/ConfirmationActions";
@@ -26,11 +27,12 @@ interface ConfirmationModalProps {
  * Modal dialog displaying service details and asking for patient confirmation.
  *
  * @remarks
- * Renders on top of the services grid when a card is selected. Locks the body
- * scroll while open and handles backdrop dismissal.
+ * Renders into `document.body` via {@link createPortal} with elevated z-index (100)
+ * to ensure the entire page layout and root navigation elements are cleanly blurred,
+ * preventing accidental interactions with the background shell or back button while active.
  *
  * @param props - Component props.
- * @returns The confirmation modal overlay, or null when closed.
+ * @returns The confirmation modal overlay portal, or null when closed.
  */
 export default function ConfirmationModal({
     service,
@@ -38,6 +40,12 @@ export default function ConfirmationModal({
     isOpen,
     onClose,
 }: ConfirmationModalProps) {
+    const [mounted, setMounted] = useState(false);
+
+    useEffect(() => {
+        setMounted(true);
+    }, []);
+
     // Prevent background scrolling while modal is active
     useEffect(() => {
         if (!isOpen) return;
@@ -48,11 +56,11 @@ export default function ConfirmationModal({
         };
     }, [isOpen]);
 
-    if (!isOpen || !service) return null;
+    if (!mounted || !isOpen || !service) return null;
 
     const iconClass = resolveServiceIcon(service);
 
-    return (
+    return createPortal(
         <div
             role="dialog"
             aria-modal="true"
@@ -100,6 +108,7 @@ export default function ConfirmationModal({
                     />
                 </div>
             </div>
-        </div>
+        </div>,
+        document.body
     );
 }

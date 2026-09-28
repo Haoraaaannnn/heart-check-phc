@@ -1,6 +1,7 @@
 import { CSSProperties } from "react";
 import { themeColors } from "@/constants/colors";
 import { COMMON_ICONS } from "@/constants/icons";
+import { kioskTypography } from "@/constants/kiosk";
 
 /** Boxicons class tokens for services menu elements. */
 export const KioskServicesIcons = {
@@ -23,28 +24,28 @@ export const kioskServicesSpacing = {
 
 /** Color tokens for the services cards. */
 export const kioskServicesColors = {
-    iconTileBg: themeColors.brandRed,
-    iconFill: themeColors.white,
     cardBg: themeColors.white,
     cardBorder: "#D1D5DB", // gray-300
     pillBg: "rgba(252, 165, 165, 0.2)",
     pillBorder: "rgba(239, 68, 68, 0.35)",
     pillText: themeColors.black,
     titleText: themeColors.black,
+    subtitleText: "#4B5563",
     arrowColor: "#D7D6D6",
 } as const;
 
-/** Typography tokens for service cards. */
+/** Typography tokens for service cards, referencing centralized root typography scale. */
 export const kioskServicesTypography = {
-    titleSize: "clamp(22px, 1.6vw, 30px)",
-    pillSize: "clamp(16px, 1.1vw, 20px)",
+    titleSize: kioskTypography.cardTitle,
+    subtitleSize: kioskTypography.cardSubtitle,
+    pillSize: kioskTypography.badgeLarge,
 } as const;
 
 /** Inline styles for `ServiceCard`. */
 export const KioskServicesCardStyle = {
     icon: {
         fontSize: 76,
-        color: kioskServicesColors.iconFill,
+        color: themeColors.brandRed,
         lineHeight: 1,
     },
     arrowIcon: {
@@ -71,16 +72,17 @@ export const KioskServicesCardStyle = {
         overflow: "hidden",
         cursor: "pointer",
     },
-    iconTile: {
-        width: kioskServicesSpacing.iconTileSize,
-        height: kioskServicesSpacing.iconTileSize,
-        flexShrink: 0,
-        backgroundColor: kioskServicesColors.iconTileBg,
-        padding: kioskServicesSpacing.iconTilePadding,
-        borderRadius: 16,
+    iconWrapper: {
         display: "flex",
         alignItems: "center",
         justifyContent: "center",
+        flexShrink: 0,
+    },
+    iconTile: {
+        display: "flex",
+        alignItems: "center",
+        justifyContent: "center",
+        flexShrink: 0,
     },
     labelWrapper: {
         position: "relative",
@@ -96,6 +98,20 @@ export const KioskServicesCardStyle = {
         fontWeight: 900,
         fontSize: kioskServicesTypography.titleSize,
         lineHeight: 1.2,
+    },
+    divider: {
+        height: 2,
+        width: "100%",
+        backgroundColor: "#E5E7EB",
+        borderRadius: 4,
+        marginTop: 6,
+        marginBottom: 6,
+    },
+    subtitle: {
+        fontSize: kioskServicesTypography.subtitleSize,
+        fontWeight: 600,
+        color: kioskServicesColors.subtitleText,
+        lineHeight: 1.3,
     },
     pill: {
         width: "fit-content",
@@ -137,8 +153,9 @@ export const KioskServicesGridStyle = {
  * and layout utility classes so that component files avoid hardcoding raw utility strings.
  */
 export const KioskServicesClasses = {
-    card: "transition-all active:scale-95 hover:border-red-400 hover:shadow-md",
-    cardArrow: "shrink-0",
+    card: "group transition-all duration-100 active:scale-[0.98] active:!border-[#ED1C24] active:shadow-sm",
+    cardIconWrapper: "shrink-0",
+    cardArrow: "shrink-0 transition-all duration-100 text-[#D7D6D6] group-active:!text-[#ED1C24] group-active:translate-x-1",
     grid: "grid-cols-2 landscape:grid-cols-3",
     layoutOverlay: (mounted: boolean): string =>
         `fixed inset-0 flex h-dvh w-dvw items-center justify-center overflow-hidden bg-white transition-opacity duration-300 ${

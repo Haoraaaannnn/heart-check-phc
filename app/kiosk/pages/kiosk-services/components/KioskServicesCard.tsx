@@ -38,8 +38,11 @@ export default function ServiceCard({ service, onSelect }: Props) {
             style={KioskServicesCardStyle.card}
             className={KioskServicesClasses.card}
         >
-            {/* Brand-colored icon tile */}
-            <div style={KioskServicesCardStyle.iconTile}>
+            {/* Brand-colored icon container */}
+            <div
+                style={KioskServicesCardStyle.iconWrapper}
+                className={KioskServicesClasses.cardIconWrapper}
+            >
                 <i
                     className={`bx ${iconClass}`}
                     style={KioskServicesCardStyle.icon}
@@ -52,7 +55,8 @@ export default function ServiceCard({ service, onSelect }: Props) {
                 <span style={KioskServicesCardStyle.title}>
                     {service.label_fil}
                 </span>
-                <span style={KioskServicesCardStyle.pill}>
+                <div style={KioskServicesCardStyle.divider} />
+                <span style={KioskServicesCardStyle.subtitle}>
                     {service.label_en}
                 </span>
             </div>

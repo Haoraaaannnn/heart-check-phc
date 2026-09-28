@@ -5,6 +5,13 @@
 
 import { CSSProperties } from "react";
 import { themeColors } from "@/constants/colors";
+import { kioskTypography } from "@/constants/kiosk";
+
+/** Typography tokens for SMS instruction panel, referencing centralized root typography scale. */
+export const SMSInstructionTypography = {
+    instructionFil: kioskTypography.instructionPrimary,
+    instructionEn: kioskTypography.instructionSecondary,
+} as const;
 
 /** Inline styles for `SMSInstruction`. */
 export const SMSInstructionStyle = {
@@ -24,7 +31,7 @@ export const SMSInstructionStyle = {
     },
     instructionFil: {
         fontWeight: 900,
-        fontSize: "clamp(20px, 2.2vw, 30px)",
+        fontSize: SMSInstructionTypography.instructionFil,
         color: "#111827",
         lineHeight: 1.25,
         margin: 0,
@@ -40,7 +47,7 @@ export const SMSInstructionStyle = {
     instructionEn: {
         marginTop: 6,
         fontWeight: 700,
-        fontSize: "clamp(15px, 1.5vw, 20px)",
+        fontSize: SMSInstructionTypography.instructionEn,
         color: "#4B5563",
         lineHeight: 1.25,
         margin: 0,

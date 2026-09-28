@@ -4,6 +4,13 @@
  */
 
 import { CSSProperties } from "react";
+import { kioskTypography } from "@/constants/kiosk";
+
+/** Typography tokens for print footer notice, referencing centralized root typography scale. */
+export const PrintFooterTypography = {
+    noticeFilSize: kioskTypography.ticketNoticePrimary,
+    noticeEnSize: kioskTypography.ticketNoticeSecondary,
+} as const;
 
 /** Inline styles for `PrintFooter`. */
 export const PrintFooterStyle = {
@@ -22,14 +29,14 @@ export const PrintFooterStyle = {
     },
     noticeFil: {
         fontWeight: 900,
-        fontSize: "clamp(14px, 1.4vw, 20px)",
+        fontSize: PrintFooterTypography.noticeFilSize,
         color: "#111827",
         lineHeight: 1.25,
         margin: 0,
     },
     noticeEn: {
         marginTop: 4,
-        fontSize: "clamp(12px, 1.2vw, 16px)",
+        fontSize: PrintFooterTypography.noticeEnSize,
         color: "#4B5563",
         fontWeight: 700,
         lineHeight: 1.25,

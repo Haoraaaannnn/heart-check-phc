@@ -6,6 +6,7 @@
 import { CSSProperties } from "react";
 import { themeColors } from "@/constants/colors";
 import { PATIENT_TYPE_ICONS, COMMON_ICONS } from "@/constants/icons";
+import { kioskTypography } from "@/constants/kiosk";
 
 /** Boxicons class tokens for patient category card elements. */
 export const PatientTypeCardIcons = {
@@ -14,16 +15,18 @@ export const PatientTypeCardIcons = {
     fallback: COMMON_ICONS.fallback,
 } as const;
 
-/** Typography tokens for patient type cards. */
+/** Typography tokens for patient type cards, referencing centralized root typography scale. */
 export const patientTypeCardTypography = {
-    cardTitleSize: "clamp(22px, 2vw, 30px)",
-    cardBadgeSize: "clamp(13px, 1.2vw, 18px)",
+    cardTitleSize: kioskTypography.cardTitle,
+    cardSubtitleSize: kioskTypography.cardSubtitle,
+    cardBadgeSize: kioskTypography.cardBadge,
 } as const;
 
 /** Color tokens for patient type cards. */
 export const patientTypeCardColors = {
     white: themeColors.white,
     arrowColor: "#D7D6D6",
+    subtitleColor: "#4B5563",
 } as const;
 
 /** Inline styles for `PatientTypeCard`. */
@@ -57,16 +60,12 @@ export const PatientTypeCardStyle = {
         overflow: "hidden",
         cursor: "pointer",
     },
-    /*
     iconWrapper: {
-        flexShrink: 0,
-        borderRadius: 16,
         display: "flex",
         alignItems: "center",
         justifyContent: "center",
-        padding: 12,
-        backgroundColor: themeColors.brandRed,
-    },*/
+        flexShrink: 0,
+    },
     labelsWrapper: {
         position: "relative",
         zIndex: 10,
@@ -82,6 +81,20 @@ export const PatientTypeCardStyle = {
         lineHeight: 1.2,
         color: "#111827",
         overflow: "hidden",
+    },
+    divider: {
+        height: 2,
+        width: "100%",
+        backgroundColor: "#E5E7EB",
+        borderRadius: 4,
+        marginTop: 6,
+        marginBottom: 6,
+    },
+    cardSubtitle: {
+        fontSize: patientTypeCardTypography.cardSubtitleSize,
+        fontWeight: 600,
+        color: patientTypeCardColors.subtitleColor,
+        lineHeight: 1.3,
     },
     cardBadge: {
         marginTop: 6,
@@ -104,8 +117,8 @@ export const PatientTypeCardStyle = {
 /** Tailwind utility classes for `PatientTypeCards`. */
 export const PatientTypeCardsClasses = {
     grid: "grid w-full grid-cols-1 sm:grid-cols-2 gap-4 sm:gap-6 px-4 py-4",
-    card: "group transition-all duration-150 active:scale-95 hover:border-red-400 hover:shadow-md",
-    cardIconWrapper: "transition-transform group-hover:scale-105",
+    card: "group transition-all duration-100 active:scale-[0.98] active:!border-[#ED1C24] active:shadow-sm",
+    cardIconWrapper: "shrink-0",
     cardIcon: "sm:size-16",
-    cardArrow: "shrink-0 transition-transform group-hover:translate-x-1",
+    cardArrow: "shrink-0 transition-all duration-100 text-[#D7D6D6] group-active:!text-[#ED1C24] group-active:translate-x-1",
 } as const;
