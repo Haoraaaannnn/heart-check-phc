@@ -302,69 +302,50 @@ export default function KioskPhoneEntry({
     }
 
     return (
-        <div className={SMSLayoutClasses.entryGrid}>
-            {/* Left Column (Landscape): Instructions and Phone Display */}
-            <div className={SMSLayoutClasses.entryLeftCol}>
-                <SMSInstruction service={service} />
-                <PhoneInput
-                    phone={phone}
-                    onDelete={deleteLast}
-                    service={service}
-                    isValid={validation.isValid}
-                    errorMessageFil={errorMessageFil}
-                    errorMessageEn={errorMessageEn}
-                />
-            </div>
+        <div style={SMSLayoutStyle.contentWrapper} className={SMSLayoutClasses.contentWrapper}>
+            <SMSHeader service={service} subcategory={subcategory} />
 
-                {/* Entry Grid (Left: Phone & Actions, Right: NumPad) */}
-                <div className={SMSLayoutClasses.entryGrid}>
-                    <div className={SMSLayoutClasses.entryLeftCol}>
-                        <div className={SMSLayoutClasses.phoneInputWrapper}>
-                            <PhoneInput
-                                phone={phone}
-                                onDelete={deleteLast}
-                                service={service}
-                            />
-                        </div>
-
-                        <div className={SMSLayoutClasses.instructionWrapper}>
-                            <SMSInstruction />
-                        </div>
-
-                        <div className={SMSLayoutClasses.continueWrapper}>
-                            <ContinueButton
-                                disabled={phone.length !== SMS_PHONE_MAX_LENGTH}
-                                onContinue={() => setShowContinueModal(true)}
-                                onSkip={() => setShowSkipModal(true)}
-                                service={service}
-                                phone={phone}
-                                showContinueModal={showContinueModal}
-                                showSkipModal={showSkipModal}
-                                onContinueConfirm={handleContinueConfirm}
-                                onSkipConfirm={handleSkipConfirm}
-                                onContinueCancel={() => setShowContinueModal(false)}
-                                onSkipCancel={() => setShowSkipModal(false)}
-                                href={cancelHref}
-                            />
-                        </div>
+            {/* Entry Grid (Left: Phone & Actions, Right: NumPad) */}
+            <div className={SMSLayoutClasses.entryGrid}>
+                {/* Left Column (Landscape): Instructions, Phone Display & Actions */}
+                <div className={SMSLayoutClasses.entryLeftCol}>
+                    <div className={SMSLayoutClasses.phoneInputWrapper}>
+                        <PhoneInput
+                            phone={phone}
+                            onDelete={deleteLast}
+                            service={service}
+                            isValid={validation.isValid}
+                            errorMessageFil={errorMessageFil}
+                            errorMessageEn={errorMessageEn}
+                        />
                     </div>
 
-            {/* Bottom Row: Action Controls */}
-            <div className={SMSLayoutClasses.entryBottomRow}>
-                <ContinueButton
-                    disabled={!validation.isValid}
-                    onContinue={() => setShowContinueModal(true)}
-                    onSkip={() => setShowSkipModal(true)}
-                    service={service}
-                    phone={phone}
-                    showContinueModal={showContinueModal}
-                    showSkipModal={showSkipModal}
-                    onContinueConfirm={handleContinueConfirm}
-                    onSkipConfirm={handleSkipConfirm}
-                    onContinueCancel={() => setShowContinueModal(false)}
-                    onSkipCancel={() => setShowSkipModal(false)}
-                    href={cancelHref}
-                />
+                    <div className={SMSLayoutClasses.instructionWrapper}>
+                        <SMSInstruction />
+                    </div>
+
+                    <div className={SMSLayoutClasses.continueWrapper}>
+                        <ContinueButton
+                            disabled={!validation.isValid}
+                            onContinue={() => setShowContinueModal(true)}
+                            onSkip={() => setShowSkipModal(true)}
+                            service={service}
+                            phone={phone}
+                            showContinueModal={showContinueModal}
+                            showSkipModal={showSkipModal}
+                            onContinueConfirm={handleContinueConfirm}
+                            onSkipConfirm={handleSkipConfirm}
+                            onContinueCancel={() => setShowContinueModal(false)}
+                            onSkipCancel={() => setShowSkipModal(false)}
+                            href={cancelHref}
+                        />
+                    </div>
+                </div>
+
+                {/* Right Column: Keypad */}
+                <div className={SMSLayoutClasses.entryRightCol}>
+                    <NumPad onDigit={addDigit} />
+                </div>
             </div>
         </div>
     );
