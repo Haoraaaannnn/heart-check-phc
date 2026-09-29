@@ -5,6 +5,7 @@
 
 import { CSSProperties } from "react";
 import { themeColors } from "@/constants/colors";
+import { kioskTypography } from "@/constants/kiosk";
 
 /** Spacing tokens for description. */
 export const confirmationDescriptionSpacing = {
@@ -12,10 +13,10 @@ export const confirmationDescriptionSpacing = {
     borderRadius: 16,
 } as const;
 
-/** Typography tokens for description. */
+/** Typography tokens for description, referencing centralized root typography scale. */
 export const confirmationDescriptionTypography = {
-    descBadgeSize: "clamp(14px, 1.4vw, 18px)",
-    descTextSize: "clamp(16px, 1.6vw, 22px)",
+    descBadgeSize: kioskTypography.descriptionBadge,
+    descTextSize: kioskTypography.descriptionText,
 } as const;
 
 /** Inline styles for `ConfimationDescription`. */

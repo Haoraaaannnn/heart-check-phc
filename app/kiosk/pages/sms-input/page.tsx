@@ -1,8 +1,6 @@
 import { createClient } from "@/lib/supabase/server";
-import SMSBanner from "@/app/kiosk/pages/sms-input/components/SMSBanner";
 import KioskPhoneEntry from "@/app/kiosk/pages/sms-input/components/KioskPhoneEntry";
 import { notFound } from "next/navigation";
-import { SMSLayoutClasses } from "@/app/kiosk/pages/sms-input/constants/smsLayout";
 
 /** Props Next.js passes to the SMS phone input page. */
 interface SMSPageProps {
@@ -30,7 +28,7 @@ export default async function SMSPage({ searchParams }: SMSPageProps) {
         await searchParams;
     const supabase = await createClient();
 
-    // Query active service to display on the top banner
+    // Query active service to forward details to phone entry
     const { data: service, error } = await supabase
         .from("services")
         .select("*")
@@ -42,23 +40,11 @@ export default async function SMSPage({ searchParams }: SMSPageProps) {
     }
 
     return (
-        <div className={SMSLayoutClasses.pageContainer}>
-            <div className={SMSLayoutClasses.pageContent}>
-                {/* Service Brand Banner */}
-                <div className={SMSLayoutClasses.pageBannerWrapper}>
-                    <SMSBanner service={service} />
-                </div>
-
-                {/* Keypad and Phone Entry Area */}
-                <div className={SMSLayoutClasses.pageEntryWrapper}>
-                    <KioskPhoneEntry
-                        service={service}
-                        patientNum={patientNum}
-                        preferredCubicleNums={preferredCubicleNums}
-                        subcategory={subcategory}
-                    />
-                </div>
-            </div>
-        </div>
+        <KioskPhoneEntry
+            service={service}
+            patientNum={patientNum}
+            preferredCubicleNums={preferredCubicleNums}
+            subcategory={subcategory}
+        />
     );
 }

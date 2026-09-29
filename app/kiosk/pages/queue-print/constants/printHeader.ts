@@ -4,6 +4,13 @@
  */
 
 import { CSSProperties } from "react";
+import { kioskTypography } from "@/constants/kiosk";
+
+/** Typography tokens for print header, referencing centralized root typography scale. */
+export const PrintHeaderTypography = {
+    titleSize: kioskTypography.pageTitle,
+    subtitleSize: kioskTypography.pageSubtitle,
+} as const;
 
 /** Inline styles for `PrintHeader`. */
 export const PrintHeaderStyle = {
@@ -22,14 +29,14 @@ export const PrintHeaderStyle = {
     },
     title: {
         fontWeight: 900,
-        fontSize: "clamp(24px, 3.2vw, 44px)",
+        fontSize: PrintHeaderTypography.titleSize,
         color: "#111827",
         lineHeight: 1.2,
         margin: 0,
     },
     subtitle: {
         marginTop: 4,
-        fontSize: "clamp(18px, 2.2vw, 28px)",
+        fontSize: PrintHeaderTypography.subtitleSize,
         color: "#374151",
         fontWeight: 700,
         margin: 0,

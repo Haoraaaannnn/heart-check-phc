@@ -20,10 +20,18 @@ export const KioskBackButtonTokens = {
  */
 export const KioskBackButtonStyles = {
     /**
-     * Button container visual styling including brand red background.
+     * Button container visual styling with white background, brand red text and border.
      */
     button: {
-        backgroundColor: themeColors.brandRed,
+        backgroundColor: themeColors.white,
+        color: themeColors.brandRed,
+        borderWidth: 2,
+        borderStyle: "solid",
+        borderColor: "#D1D5DB",
+        paddingTop: 16,
+        paddingBottom: 16,
+        paddingLeft: 24,
+        paddingRight: 24,
     },
     /**
      * Inline icon sizing ensuring faithful rendering identical to previous Tabler icons.
@@ -31,6 +39,7 @@ export const KioskBackButtonStyles = {
     icon: {
         fontSize: 28,
         lineHeight: 1,
+        color: themeColors.brandRed,
     },
 } satisfies Record<string, CSSProperties>;
 
@@ -39,7 +48,7 @@ export const KioskBackButtonStyles = {
  */
 export const KioskBackButtonClasses = {
     /**
-     * Tactile elevated pill button with touch-optimized scaling and hover feedback.
+     * Tactile elevated pill button with touch-optimized scaling.
      */
-    button: "absolute left-6 top-6 z-50 flex items-center gap-2 rounded-2xl px-5 py-2.5 text-xl sm:text-2xl font-bold text-white shadow-md transition-all duration-150 active:scale-95 hover:brightness-105",
+    button: "absolute left-6 top-6 z-50 flex items-center gap-2.5 rounded-2xl text-xl sm:text-2xl font-bold shadow-md transition-all duration-150 active:scale-95 active:!border-[#ED1C24] active:bg-gray-50",
 } as const;

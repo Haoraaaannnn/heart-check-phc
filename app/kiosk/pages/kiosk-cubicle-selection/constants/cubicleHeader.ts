@@ -5,6 +5,7 @@
 
 import { CSSProperties } from "react";
 import { themeColors } from "@/constants/colors";
+import { kioskTypography } from "@/constants/kiosk";
 
 /** Spacing values for cubicle header. */
 export const cubicleHeaderSpacing = {
@@ -13,10 +14,10 @@ export const cubicleHeaderSpacing = {
     headerSubtitleMarginTop: 12,
 } as const;
 
-/** Typography tokens for cubicle header. */
+/** Typography tokens for cubicle header, referencing centralized root typography scale. */
 export const cubicleHeaderTypography = {
-    titleSize: "clamp(24px, 2.5vw, 40px)",
-    subtitleSize: "clamp(18px, 1.8vw, 28px)",
+    titleSize: kioskTypography.pageTitle,
+    subtitleSize: kioskTypography.pageSubtitle,
 } as const;
 
 /** Inline styles for `CubicleHeader`. */

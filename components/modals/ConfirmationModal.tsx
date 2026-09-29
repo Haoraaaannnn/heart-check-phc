@@ -1,6 +1,7 @@
 "use client";
 
-import { useEffect } from "react";
+import { useEffect, useState } from "react";
+import { createPortal } from "react-dom";
 import { themeColors } from "@/constants/colors";
 
 /** Props for {@link ConfirmationModal}. */
@@ -48,6 +49,12 @@ export default function ConfirmationModal({
     onCancel,
     isDangerous: _isDangerous = false,
 }: ConfirmationModalProps) {
+    const [mounted, setMounted] = useState(false);
+
+    useEffect(() => {
+        setMounted(true);
+    }, []);
+
     // Lock body scroll when open
     useEffect(() => {
         if (!isOpen) return;
@@ -58,7 +65,7 @@ export default function ConfirmationModal({
         };
     }, [isOpen]);
 
-    if (!isOpen) return null;
+    if (!mounted || !isOpen) return null;
 
     /**
      * Formats digits into standard Philippine mobile spacing (09XX XXX XXXX).
@@ -70,11 +77,11 @@ export default function ConfirmationModal({
         return `${d.slice(0, 4)} ${d.slice(4, 7)} ${d.slice(7)}`;
     };
 
-    return (
+    return createPortal(
         <div
             role="dialog"
             aria-modal="true"
-            className="fixed inset-0 bg-black/60 backdrop-blur-sm flex items-center justify-center z-50 p-4 animate-in fade-in duration-200"
+            className="fixed inset-0 bg-black/60 backdrop-blur-md flex items-center justify-center z-[100] p-4 animate-in fade-in duration-200"
             onClick={onCancel}
         >
             <div
@@ -130,6 +137,7 @@ export default function ConfirmationModal({
                     </button>
                 </div>
             </div>
-        </div>
+        </div>,
+        document.body
     );
 }

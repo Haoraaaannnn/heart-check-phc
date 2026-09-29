@@ -5,11 +5,12 @@
 
 import { CSSProperties } from "react";
 import { themeColors } from "@/constants/colors";
+import { kioskTypography } from "@/constants/kiosk";
 
-/** Typography tokens for the category selection header. */
+/** Typography tokens for the category selection header, referencing centralized root typography scale. */
 export const categoryHeaderTypography = {
-    titleSize: "clamp(28px, 3.2vw, 42px)",
-    subtitleSize: "clamp(18px, 2vw, 26px)",
+    titleSize: kioskTypography.pageTitle,
+    subtitleSize: kioskTypography.pageSubtitle,
     titleWeight: 900,
     subtitleWeight: 500,
 } as const;

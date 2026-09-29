@@ -65,15 +65,17 @@ This document outlines the mandatory rules and architectural standards that the 
 
 ---
 
-### 8. Always Provide and Maintain Developer Editing Guides ("Where to Edit")
-- Every major domain, feature module, or subsystem folder (such as `app/kiosk/`, `app/nurse/`, `app/monitor/`, etc.) must include and maintain a dedicated, clear developer guide (`README.md` or domain guide).
-- The guide must provide an explicit and exhaustive mapping showing developers exactly where to edit for every type of change:
+### 8. Always Provide and Maintain Developer Editing Guides ("Where to Edit" Markdown Files)
+- Every major domain, feature module, or subsystem folder (such as `app/kiosk/`, `app/nurse/`, `app/monitor/`, `app/superadmin/`, etc.) must include and maintain a dedicated, clear developer guide (`README.md` or dedicated `.md` guide file).
+- **Create New Markdown Files When Necessary:** If a new page, feature folder, sub-route, or major subsystem is created or refactored, the agent must proactively assess whether a new `.md` file is needed to ensure developers can easily navigate the folder structure and understand how to make modifications.
+- **Continuous Documentation Updates:** Whenever a module, feature folder, component, or constants file is refactored, restructured, expanded, or modified, the corresponding `.md` guide must be updated simultaneously so developers always have an accurate, unambiguous reference on where to make changes without guessing.
+- **Mandatory "Where to Edit" Mapping:** Every guide must provide an explicit, exhaustive lookup table showing developers exactly where to edit for every type of change:
   - **Where to edit text copy, labels, and placeholders:** Direct links/paths to `<component>Texts.ts`.
   - **Where to edit visual styles, dimensions, and colors:** Direct links/paths to `<component>.ts` (inline `CSSProperties` and design tokens).
+  - **Where to edit centralized typography and global scales:** Direct links/paths to root `constants/` (e.g. `constants/kiosk.ts` for kiosk typography, `constants/colors.ts` for theme colors).
   - **Where to edit layout structures and responsive rules:** Direct links/paths to `<feature>Layout.ts` or layout components.
   - **Where to edit interactive logic, timers, and routing:** Direct links/paths to hooks (`hooks/`), context providers (`context/`), or component handlers.
   - **Where to edit types and contracts:** Direct links/paths to `types/` or database schemas.
-- Whenever a module or feature folder is refactored, restructured, or expanded, the developer guide must be updated simultaneously so developers always have an accurate, unambiguous reference on where to make changes without guessing.
 
 ---
 
@@ -85,8 +87,9 @@ Before completing any refactoring or coding task, verify against these rules:
 - [ ] Text copy is exported from `<feature>Texts.ts`.
 - [ ] Styles and visual properties are exported from `<feature>.ts`.
 - [ ] Global constants contain only shared/system-level tokens; local constants remain in their feature directory.
+- [ ] Centralized scales (such as kiosk typography in `constants/kiosk.ts`) are referenced by local constants.
 - [ ] If an image reference was provided, the implementation matches the image faithfully.
 - [ ] No unintentional visual or layout regressions were introduced during refactoring.
 - [ ] No emojis are used anywhere in documentation, code, or comments.
 - [ ] All terminal commands and executions received explicit user confirmation prior to running.
-- [ ] Developer guide (e.g. README.md) is created or updated with an explicit "where to edit" reference guide.
+- [ ] Developer guide markdown files (.md) are created or updated with an explicit "where to edit" reference guide so developers can navigate and make changes easily.

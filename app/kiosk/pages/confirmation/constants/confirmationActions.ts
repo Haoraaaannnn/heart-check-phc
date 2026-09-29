@@ -5,10 +5,11 @@
 
 import { CSSProperties } from "react";
 import { themeColors } from "@/constants/colors";
+import { kioskTypography } from "@/constants/kiosk";
 
-/** Typography tokens for action buttons. */
+/** Typography tokens for action buttons, referencing centralized root typography scale. */
 export const confirmationActionsTypography = {
-    btnTextSize: "clamp(18px, 1.8vw, 24px)",
+    btnTextSize: kioskTypography.buttonText,
 } as const;
 
 /** Inline styles for `ConfirmationActions`. */
@@ -64,6 +65,6 @@ export const ConfirmationActionsStyle = {
 
 /** Tailwind utility classes for `ConfirmationActions`. */
 export const ConfirmationActionsClasses = {
-    continueBtn: "transition-all duration-150 active:scale-95 hover:brightness-105 shadow-md",
-    cancelBtn: "transition-all duration-150 active:scale-95 hover:bg-gray-100 shadow-sm",
+    continueBtn: "transition-all duration-150 active:scale-95 active:brightness-95 shadow-md",
+    cancelBtn: "transition-all duration-150 active:scale-95 active:bg-gray-100 shadow-sm",
 } as const;

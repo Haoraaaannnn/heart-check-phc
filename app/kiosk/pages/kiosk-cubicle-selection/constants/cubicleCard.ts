@@ -6,6 +6,7 @@
 import { CSSProperties } from "react";
 import { themeColors } from "@/constants/colors";
 import { COMMON_ICONS } from "@/constants/icons";
+import { kioskTypography } from "@/constants/kiosk";
 
 /** Boxicons class tokens for cubicle card elements. */
 export const CubicleCardIcons = {
@@ -18,19 +19,16 @@ export const cubicleCardSpacing = {
     cardGap: 16,
     cardPaddingX: "clamp(18px, 2.5vw, 28px)",
     cardPaddingY: 16,
-    iconTilePadding: "clamp(10px, 1.2vw, 16px)",
 } as const;
 
-/** Typography tokens for cubicle card. */
+/** Typography tokens for cubicle card, referencing centralized root typography scale. */
 export const cubicleCardTypography = {
-    cardTitleSize: "clamp(20px, 2vw, 28px)",
+    cardTitleSize: kioskTypography.cardCubicleTitle,
 } as const;
 
 /** Color tokens for cubicle card. */
 export const cubicleCardColors = {
     cardTitleText: "#111827",
-    iconTileBg: themeColors.brandRed,
-    iconFill: themeColors.white,
     cardBg: themeColors.white,
     cardBorder: "#D1D5DB",
     arrowColor: "#D7D6D6",
@@ -39,8 +37,8 @@ export const cubicleCardColors = {
 /** Inline styles for `CubicleCard`. */
 export const CubicleCardStyle = {
     icon: {
-        fontSize: 48,
-        color: cubicleCardColors.iconFill,
+        fontSize: 56,
+        color: themeColors.brandRed,
         lineHeight: 1,
     },
     arrowIcon: {
@@ -68,13 +66,10 @@ export const CubicleCardStyle = {
         cursor: "pointer",
     },
     iconWrapper: {
-        flexShrink: 0,
-        borderRadius: 16,
         display: "flex",
         alignItems: "center",
         justifyContent: "center",
-        padding: cubicleCardSpacing.iconTilePadding,
-        backgroundColor: cubicleCardColors.iconTileBg,
+        flexShrink: 0,
     },
     titleWrapper: {
         position: "relative",
@@ -99,7 +94,7 @@ export const CubicleCardStyle = {
 /** Tailwind utility classes for `CubicleCard`. */
 export const CubicleCardClasses = {
     grid: "grid w-full grid-cols-1 sm:grid-cols-2 landscape:grid-cols-3 gap-6 px-6 py-6",
-    card: "group transition-all duration-150 active:scale-95 hover:border-red-400 hover:shadow-md",
-    cardIconWrapper: "transition-transform group-hover:scale-105",
-    cardArrow: "shrink-0 transition-transform group-hover:translate-x-1",
+    card: "group transition-all duration-100 active:scale-[0.98] active:!border-[#ED1C24] active:shadow-sm",
+    cardIconWrapper: "shrink-0",
+    cardArrow: "shrink-0 transition-all duration-100 text-[#D7D6D6] group-active:!text-[#ED1C24] group-active:translate-x-1",
 } as const;
