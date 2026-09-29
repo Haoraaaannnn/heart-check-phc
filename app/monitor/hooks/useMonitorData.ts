@@ -166,17 +166,23 @@ export function useMonitorData(category: string, subcategory: string | null, cat
     const tomorrow = new Date(today);
     tomorrow.setDate(today.getDate() + 1);
 
-    const { data, error } = await supabase
-    .from('patients')
-    .select('*')
-    .eq('service', category)
-    .eq('status', 'Assigned')
-    .not('cubicleNum', 'is', null)
-    .gte('created_at', today.toISOString())
-    .lt('created_at', tomorrow.toISOString())
-    .order('called_at', { ascending: true });
+    let query = supabase
+      .from('patients')
+      .select('*')
+      .eq('service', category)
+      .eq('status', 'Assigned')
+      .not('cubicleNum', 'is', null)
+      .gte('created_at', today.toISOString())
+      .lt('created_at', tomorrow.toISOString());
+
+    if (subcategory) {
+      query = query.eq('subcategory', subcategory);
+    }
+
+    const { data, error } = await query.order('called_at', { ascending: true });
 
     if (!error && data) {
+      setAssignedPatients(data);
       setAssignedPatients(data);
       
       if (isTableLayoutService) {
