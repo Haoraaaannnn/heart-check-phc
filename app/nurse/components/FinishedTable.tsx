@@ -85,16 +85,12 @@ export function FinishedTable({ patients, className = '' }: FinishedTableProps) 
       {/* Search Filter Input */}
       {patients.length > 5 && (
         <div className="relative">
-          <i
-            className="bx bx-search absolute left-3 top-1/2 -translate-y-1/2 text-slate-400 text-base"
-            aria-hidden="true"
-          />
           <input
             type="text"
             value={searchTerm}
             onChange={(e) => setSearchTerm(e.target.value)}
             placeholder={nurseTexts.searchFinishedPlaceholder}
-            className="w-full pl-9 pr-4 py-2 rounded-xl text-xs bg-slate-50 border border-slate-200 text-slate-700 placeholder-slate-400 focus:outline-hidden focus:ring-2 focus:ring-[#cc3535]/30 focus:border-[#cc3535] transition"
+            className="w-full px-3.5 py-2 rounded-xl text-xs bg-slate-50 border border-slate-200 text-slate-700 placeholder-slate-400 focus:outline-hidden focus:ring-2 focus:ring-[#cc3535]/30 focus:border-[#cc3535] transition"
           />
         </div>
       )}
@@ -102,9 +98,8 @@ export function FinishedTable({ patients, className = '' }: FinishedTableProps) 
       {/* Table Content */}
       {filteredPatients.length === 0 ? (
         <div className="py-12 text-center">
-          <i className="bx bx-file-blank text-3xl text-slate-300 mb-2" aria-hidden="true" />
           <p className="text-xs text-slate-400 font-medium">
-            {searchTerm ? 'No matching patients found' : nurseTexts.emptyFinished}
+            {searchTerm ? nurseTexts.noMatchingPatients : nurseTexts.emptyFinished}
           </p>
         </div>
       ) : (

@@ -23,8 +23,8 @@ export interface StageColumnProps {
   stage: ClinicalStage;
   /** Section heading label. */
   title: string;
-  /** Boxicon class name for stage indicator icon. */
-  icon: string;
+  /** Optional legacy icon class name. */
+  icon?: string;
   /** Badge color class string for patient count. */
   badgeColorClass: string;
   /** Current count of patients in this stage. */
@@ -50,7 +50,6 @@ export interface StageColumnProps {
 export function StageColumn({
   stage,
   title,
-  icon,
   badgeColorClass,
   count,
   emptyText,
@@ -77,7 +76,6 @@ export function StageColumn({
       {/* Column Header */}
       <div style={NurseStyle.stageColumnHeader}>
         <div className="flex items-center gap-2 min-w-0">
-          <i className={`bx ${icon} text-lg text-slate-500`} aria-hidden="true" />
           <h2 className="text-sm font-bold text-slate-800 tracking-tight truncate">
             {title}
           </h2>
@@ -93,9 +91,8 @@ export function StageColumn({
           <button
             type="button"
             onClick={onMoveHere}
-            className="inline-flex items-center gap-1 px-2.5 py-1 rounded-lg text-xs font-bold bg-emerald-600 hover:bg-emerald-700 active:bg-emerald-800 text-white shadow-xs transition-colors cursor-pointer animate-pulse"
+            className="inline-flex items-center px-2.5 py-1 rounded-lg text-xs font-bold bg-emerald-600 hover:bg-emerald-700 active:bg-emerald-800 text-white shadow-xs transition-colors cursor-pointer animate-pulse"
           >
-            <i className="bx bx-plus text-sm" aria-hidden="true" />
             <span>{nurseTexts.btnMoveHere}</span>
           </button>
         )}
@@ -105,9 +102,6 @@ export function StageColumn({
       <div style={NurseStyle.stageColumnContent} className="phc-scroll">
         {count === 0 ? (
           <div className="flex-1 flex flex-col items-center justify-center p-8 text-center min-h-[160px]">
-            <div className="w-10 h-10 rounded-full bg-slate-100 flex items-center justify-center text-slate-400 mb-2">
-              <i className={`bx ${icon} text-xl`} aria-hidden="true" />
-            </div>
             <p className="text-xs text-slate-400 font-medium max-w-[200px]">
               {emptyText}
             </p>

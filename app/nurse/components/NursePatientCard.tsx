@@ -152,16 +152,12 @@ export function NursePatientCard({
                   onCall(patient);
                 }}
                 disabled={isSpeaking}
-                className={`flex-1 flex items-center justify-center gap-1.5 py-1.5 px-2 rounded-xl text-xs font-semibold transition cursor-pointer ${
+                className={`flex-1 flex items-center justify-center py-1.5 px-2 rounded-xl text-xs font-semibold transition cursor-pointer ${
                   isSpeaking
                     ? 'bg-blue-100 text-blue-400 cursor-not-allowed'
                     : 'bg-blue-50 hover:bg-blue-100 text-blue-600 active:bg-blue-200'
                 }`}
               >
-                <i
-                  className={`bx ${isSpeaking ? 'bx-loader-alt animate-spin' : 'bxs-volume-full'} text-sm`}
-                  aria-hidden="true"
-                />
                 <span>{isSpeaking ? nurseTexts.btnCalling : nurseTexts.btnCall}</span>
               </button>
             )}
@@ -173,9 +169,8 @@ export function NursePatientCard({
                   e.stopPropagation();
                   onMoveToWithDoctor(patient);
                 }}
-                className="flex-1 flex items-center justify-center gap-1.5 py-1.5 px-2 rounded-xl text-xs font-semibold bg-purple-50 hover:bg-purple-100 text-purple-700 active:bg-purple-200 transition cursor-pointer"
+                className="flex-1 flex items-center justify-center py-1.5 px-2 rounded-xl text-xs font-semibold bg-purple-50 hover:bg-purple-100 text-purple-700 active:bg-purple-200 transition cursor-pointer"
               >
-                <i className="bx bx-user-plus text-sm" aria-hidden="true" />
                 <span>{nurseTexts.btnWithDoctor}</span>
               </button>
             )}
@@ -191,10 +186,9 @@ export function NursePatientCard({
                   e.stopPropagation();
                   onMoveBackFromDoctor(patient);
                 }}
-                className="flex items-center justify-center gap-1 py-1.5 px-2.5 rounded-xl text-xs font-semibold bg-slate-100 hover:bg-slate-200 text-slate-600 active:bg-slate-300 transition cursor-pointer"
+                className="flex items-center justify-center py-1.5 px-2.5 rounded-xl text-xs font-semibold bg-slate-100 hover:bg-slate-200 text-slate-600 active:bg-slate-300 transition cursor-pointer"
                 title={nurseTexts.btnBack}
               >
-                <i className="bx bx-undo text-sm" aria-hidden="true" />
                 <span>{nurseTexts.btnBack}</span>
               </button>
             )}
@@ -206,9 +200,8 @@ export function NursePatientCard({
                   e.stopPropagation();
                   onMoveToCarryout(patient);
                 }}
-                className="flex-1 flex items-center justify-center gap-1.5 py-1.5 px-2 rounded-xl text-xs font-semibold bg-orange-50 hover:bg-orange-100 text-orange-700 active:bg-orange-200 transition cursor-pointer"
+                className="flex-1 flex items-center justify-center py-1.5 px-2 rounded-xl text-xs font-semibold bg-orange-50 hover:bg-orange-100 text-orange-700 active:bg-orange-200 transition cursor-pointer"
               >
-                <i className="bx bx-transfer-alt text-sm" aria-hidden="true" />
                 <span>{nurseTexts.btnCarryout}</span>
               </button>
             )}
@@ -224,10 +217,9 @@ export function NursePatientCard({
                   e.stopPropagation();
                   onMoveBackFromCarryout(patient);
                 }}
-                className="flex items-center justify-center gap-1 py-1.5 px-2.5 rounded-xl text-xs font-semibold bg-slate-100 hover:bg-slate-200 text-slate-600 active:bg-slate-300 transition cursor-pointer"
+                className="flex items-center justify-center py-1.5 px-2.5 rounded-xl text-xs font-semibold bg-slate-100 hover:bg-slate-200 text-slate-600 active:bg-slate-300 transition cursor-pointer"
                 title={nurseTexts.btnBack}
               >
-                <i className="bx bx-undo text-sm" aria-hidden="true" />
                 <span>{nurseTexts.btnBack}</span>
               </button>
             )}
@@ -239,9 +231,8 @@ export function NursePatientCard({
                   e.stopPropagation();
                   onFinish(patient);
                 }}
-                className="flex-1 flex items-center justify-center gap-1.5 py-1.5 px-2 rounded-xl text-xs font-semibold bg-emerald-50 hover:bg-emerald-100 text-emerald-700 active:bg-emerald-200 transition cursor-pointer"
+                className="flex-1 flex items-center justify-center py-1.5 px-2 rounded-xl text-xs font-semibold bg-emerald-50 hover:bg-emerald-100 text-emerald-700 active:bg-emerald-200 transition cursor-pointer"
               >
-                <i className="bx bx-check text-base" aria-hidden="true" />
                 <span>{nurseTexts.btnDone}</span>
               </button>
             )}

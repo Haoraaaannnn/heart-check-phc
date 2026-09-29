@@ -2,6 +2,7 @@
 import { useState, useEffect, useMemo } from 'react';
 import { supabase } from '@/lib/supabase';
 import { Doctor, Cubicle } from '@/types/Types';
+import { transferTexts } from '../constants/transferTexts';
 
 export function DoctorsPanel() {
   const [doctors, setDoctors] = useState<Doctor[]>([]);
@@ -184,10 +185,7 @@ export function DoctorsPanel() {
 
       {doctors.length === 0 ? (
         <div className="bg-white rounded-2xl border-2 border-dashed border-gray-200 p-10 text-center">
-          <div className="w-12 h-12 mx-auto rounded-full bg-blue-50 flex items-center justify-center mb-3">
-            <i className="bx bx-plus-medical text-2xl text-blue-500"></i>
-          </div>
-          <p className="text-gray-700 font-semibold">No doctors yet</p>
+          <p className="text-gray-700 font-semibold">{transferTexts.noRoomsConfiguredTitle}</p>
           <p className="text-gray-400 text-sm mt-1 mb-4">Add a doctor to start assigning them to cubicles.</p>
           <button
             onClick={handleAddClick}
@@ -234,34 +232,31 @@ export function DoctorsPanel() {
                     <span className="text-xs text-gray-500">
                       {roomCount} cubicle{roomCount === 1 ? '' : 's'} assigned
                     </span>
-                    <div className="flex items-center gap-1" onClick={e => e.stopPropagation()}>
+                    <div className="flex items-center gap-1.5" onClick={e => e.stopPropagation()}>
                       <button
                         onClick={() => handleToggleActive(doc)}
-                        title={isActive ? 'Mark inactive' : 'Mark active'}
-                        className="w-7 h-7 flex items-center justify-center rounded-lg text-gray-400 hover:bg-gray-100 hover:text-gray-600 transition"
+                        className="px-2 py-0.5 rounded-lg text-xs font-semibold text-gray-500 hover:bg-gray-100 transition cursor-pointer"
                       >
-                        <i className={`bx ${isActive ? 'bx-toggle-right' : 'bx-toggle-left'} text-lg`}></i>
+                        {isActive ? transferTexts.deactivateBtn : transferTexts.activateBtn}
                       </button>
                       <button
                         onClick={() => handleEditClick(doc)}
-                        title="Edit doctor"
-                        className="w-7 h-7 flex items-center justify-center rounded-lg text-blue-500 hover:bg-blue-50 transition"
+                        className="px-2 py-0.5 rounded-lg text-xs font-semibold text-blue-600 hover:bg-blue-50 transition cursor-pointer"
                       >
-                        <i className="bx bx-pencil text-sm"></i>
+                        {transferTexts.editBtn}
                       </button>
                       <button
                         onClick={() => setShowDeleteConfirm(doc)}
-                        title="Delete doctor"
-                        className="w-7 h-7 flex items-center justify-center rounded-lg text-red-500 hover:bg-red-50 transition"
+                        className="px-2 py-0.5 rounded-lg text-xs font-semibold text-red-600 hover:bg-red-50 transition cursor-pointer"
                       >
-                        <i className="bx bx-trash text-sm"></i>
+                        {transferTexts.deleteBtn}
                       </button>
                     </div>
                   </div>
 
                   {isSelected && (
-                    <p className="text-[11px] font-semibold text-blue-600 flex items-center gap-1 -mb-1">
-                      <i className="bx bx-check-circle"></i> Editing this doctor's cubicles below
+                    <p className="text-[11px] font-semibold text-blue-600 -mb-1">
+                      {transferTexts.editingDoctorNotice}
                     </p>
                   )}
                 </div>
@@ -335,7 +330,7 @@ export function DoctorsPanel() {
                           </span>
                           {assignedName && (
                             <span className={`text-[10px] font-medium mt-0.5 ${isThisDoctor ? 'text-blue-100' : 'text-gray-500'}`}>
-                              {isThisDoctor ? '✓ Assigned' : `Dr. ${assignedName}`}
+                              {isThisDoctor ? 'Assigned' : `Dr. ${assignedName}`}
                             </span>
                           )}
                           {!assignedName && (

@@ -6,6 +6,7 @@ import { Notification } from '@/app/dashboard/hooks/useBottleneckNotifications';
 interface NotificationDropdownProps {
   notifications: Notification[];
   unreadCount: number;
+  showIcon?: boolean;
   onMarkAsRead: (id: string) => void;
   onMarkAllAsRead: () => void;
   onDismiss: (id: string) => void;
@@ -15,6 +16,7 @@ interface NotificationDropdownProps {
 export default function NotificationDropdown({
   notifications,
   unreadCount,
+  showIcon = true,
   onMarkAsRead,
   onMarkAllAsRead,
   onDismiss,
@@ -50,36 +52,51 @@ export default function NotificationDropdown({
     }
   };
 
-  const getNotificationIcon = (type: string) => {
+  const getNotificationTag = (type: string) => {
     switch (type) {
       case 'bottleneck':
-        return '⚠️';
+        return '[Alert]';
       case 'warning':
-        return '⚡';
+        return '[Warning]';
       case 'info':
-        return 'ℹ️';
+        return '[Info]';
       default:
-        return '📢';
+        return '[Notice]';
     }
   };
 
   return (
     <div className="relative" ref={dropdownRef}>
       {/* Notification Bell Button */}
-      <button
-        onClick={() => setIsOpen(!isOpen)}
-        className="relative w-10 h-10 flex items-center justify-center rounded-full bg-white dark:bg-gray-800 text-gray-600 dark:text-gray-300 hover:bg-gray-100 dark:hover:bg-gray-700 transition shadow-sm border border-gray-200 dark:border-gray-700"
-    aria-label="Notifications"
-      >
-        <i className='bx bxs-bell text-2xl'></i>
+      {showIcon ? (
+        <button
+          onClick={() => setIsOpen(!isOpen)}
+          className="relative w-10 h-10 flex items-center justify-center rounded-full bg-white dark:bg-gray-800 text-gray-600 dark:text-gray-300 hover:bg-gray-100 dark:hover:bg-gray-700 transition shadow-sm border border-gray-200 dark:border-gray-700"
+          aria-label="Notifications"
+        >
+          <i className='bx bxs-bell text-2xl'></i>
 
-        {/* Unread Count Badge */}
-        {unreadCount > 0 && (
-          <span className="absolute top-0 right-0 inline-flex items-center justify-center px-2 py-1 text-xs font-bold leading-none text-white transform translate-x-1/2 -translate-y-1/2 bg-red-600 rounded-full">
-            {unreadCount > 9 ? '9+' : unreadCount}
-          </span>
-        )}
-      </button>
+          {/* Unread Count Badge */}
+          {unreadCount > 0 && (
+            <span className="absolute top-0 right-0 inline-flex items-center justify-center px-2 py-1 text-xs font-bold leading-none text-white transform translate-x-1/2 -translate-y-1/2 bg-red-600 rounded-full">
+              {unreadCount > 9 ? '9+' : unreadCount}
+            </span>
+          )}
+        </button>
+      ) : (
+        <button
+          onClick={() => setIsOpen(!isOpen)}
+          className="relative inline-flex items-center gap-1.5 px-3 py-1.5 rounded-xl text-xs font-bold bg-white hover:bg-slate-50 text-slate-700 border border-slate-200 shadow-2xs transition-all cursor-pointer"
+          aria-label="Notifications"
+        >
+          <span>Alerts</span>
+          {unreadCount > 0 && (
+            <span className="px-1.5 py-0.5 rounded-full text-[10px] font-bold bg-red-600 text-white">
+              {unreadCount > 9 ? '9+' : unreadCount}
+            </span>
+          )}
+        </button>
+      )}
 
       {/* Dropdown Menu */}
       {isOpen && (
@@ -114,8 +131,8 @@ export default function NotificationDropdown({
                   )} ${!notification.read ? 'bg-opacity-100' : 'bg-opacity-50'}`}
                 >
                   <div className="flex items-start gap-3">
-                    <span className="text-lg flex-shrink-0">
-                      {getNotificationIcon(notification.type)}
+                    <span className="text-xs font-bold text-slate-500 flex-shrink-0 pt-0.5">
+                      {getNotificationTag(notification.type)}
                     </span>
                     <div className="flex-1 min-w-0">
                       <p className="font-semibold text-gray-900 dark:text-white text-sm">
@@ -132,18 +149,18 @@ export default function NotificationDropdown({
                       {!notification.read && (
                         <button
                           onClick={() => onMarkAsRead(notification.id)}
-                          className="p-1 hover:bg-gray-200 dark:hover:bg-gray-600 rounded text-xs text-gray-500 dark:text-gray-400"
+                          className="px-1.5 py-0.5 hover:bg-gray-200 dark:hover:bg-gray-600 rounded text-xs text-gray-500 dark:text-gray-400 font-medium"
                           title="Mark as read"
                         >
-                          ✓
+                          Read
                         </button>
                       )}
                       <button
                         onClick={() => onDismiss(notification.id)}
-                        className="p-1 hover:bg-gray-200 dark:hover:bg-gray-600 rounded text-xs text-gray-500 dark:text-gray-400"
+                        className="px-1.5 py-0.5 hover:bg-gray-200 dark:hover:bg-gray-600 rounded text-xs text-gray-500 dark:text-gray-400 font-medium"
                         title="Dismiss"
                       >
-                        ✕
+                        Dismiss
                       </button>
                     </div>
                   </div>

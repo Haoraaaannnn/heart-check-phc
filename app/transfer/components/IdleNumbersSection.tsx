@@ -1,6 +1,7 @@
 'use client';
 import { useState } from 'react';
 import { Patient } from '@/types/Types';
+import { transferTexts } from '../constants/transferTexts';
 
 type IdleNumbersSectionProps = {
   patients: Patient[];
@@ -17,28 +18,26 @@ export function IdleNumbersSection({ patients, onActivate, onRemove, compact }: 
       <button
         type="button"
         onClick={() => setCollapsed(c => !c)}
-        className="w-full flex items-center justify-between gap-2 group"
+        className="w-full flex items-center justify-between gap-2 group cursor-pointer"
       >
         <h2 className={`text-gray-500 font-semibold text-xs tracking-widest uppercase flex items-center gap-2 ${collapsed ? '' : 'mb-3'}`}>
           <span className="w-2 h-2 rounded-full bg-gray-400 inline-block" />
-          Idle Numbers
+          {transferTexts.idleNumbersHeading}
           <span className="text-[10px] font-bold px-1.5 py-0.5 rounded-full bg-gray-200 text-gray-600 normal-case tracking-normal">
             {patients.length}
           </span>
           <span className="text-xs text-gray-400 font-normal ml-1">
-            (Timed out 5+ times)
+            {transferTexts.idleSubtitle}
           </span>
         </h2>
-        <i
-          className={`bx bx-chevron-down text-lg text-gray-400 group-hover:text-gray-600 transition-transform duration-200 shrink-0 ${
-            collapsed ? '' : 'rotate-180'
-          }`}
-        ></i>
+        <span className="text-xs font-semibold text-gray-400 group-hover:text-gray-600 transition-colors shrink-0">
+          {collapsed ? transferTexts.show : transferTexts.hide}
+        </span>
       </button>
 
       {!collapsed && (
         patients.length === 0 ? (
-          <p className="text-gray-300 text-xs">No idle numbers.</p>
+          <p className="text-gray-300 text-xs">{transferTexts.noIdleNumbers}</p>
         ) : (
           <div className="flex flex-col gap-1.5 max-h-[200px] overflow-y-auto">
             {patients.map((p) => (
@@ -53,20 +52,20 @@ export function IdleNumbersSection({ patients, onActivate, onRemove, compact }: 
                   </span>
                   <span className="text-gray-300 text-[10px]">x{p.rotation_count ?? 0}</span>
                 </div>
-                <div className="flex items-center gap-1 shrink-0">
+                <div className="flex items-center gap-1.5 shrink-0">
                   <button
                     onClick={() => onActivate(p)}
-                    className="w-7 h-7 flex items-center justify-center rounded-lg text-xs bg-green-50 hover:bg-green-100 text-green-600 transition"
-                    title="Activate"
+                    className="px-2 py-0.5 rounded-lg text-xs font-semibold bg-green-50 hover:bg-green-100 text-green-600 transition cursor-pointer"
+                    title={transferTexts.activateBtn}
                   >
-                    <i className="bx bx-play-circle text-sm" />
+                    {transferTexts.activateBtn}
                   </button>
                   <button
                     onClick={() => onRemove(p)}
-                    className="w-7 h-7 flex items-center justify-center rounded-lg text-xs bg-red-50 hover:bg-red-100 text-red-500 transition"
-                    title="Remove"
+                    className="px-2 py-0.5 rounded-lg text-xs font-semibold bg-red-50 hover:bg-red-100 text-red-500 transition cursor-pointer"
+                    title={transferTexts.removeBtn}
                   >
-                    <i className="bx bx-trash text-sm" />
+                    {transferTexts.removeBtn}
                   </button>
                 </div>
               </div>

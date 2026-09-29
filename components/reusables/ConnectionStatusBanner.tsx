@@ -53,6 +53,12 @@ export interface ConnectionStatusBannerProps {
    * Sourced from `useOfflineQueue().isSyncing`.
    */
   isSyncingQueue?: boolean;
+
+  /**
+   * Whether to render the leading status icon.
+   * Defaults to true.
+   */
+  showIcon?: boolean;
 }
 
 /**
@@ -70,6 +76,7 @@ export function ConnectionStatusBanner({
   isFullyConnected,
   pendingCount = 0,
   isSyncingQueue = false,
+  showIcon = true,
 }: ConnectionStatusBannerProps) {
   const [showRecovery, setShowRecovery] = useState(false);
   const [wasEverDegraded, setWasEverDegraded] = useState(false);
@@ -207,11 +214,13 @@ export function ConnectionStatusBanner({
         transition: 'opacity 0.3s ease',
       }}
     >
-      <i
-        className={config.iconClass}
-        style={{ fontSize: '1rem', flexShrink: 0 }}
-        aria-hidden="true"
-      />
+      {showIcon && (
+        <i
+          className={config.iconClass}
+          style={{ fontSize: '1rem', flexShrink: 0 }}
+          aria-hidden="true"
+        />
+      )}
       <span>{config.message}</span>
     </div>
   );

@@ -122,8 +122,8 @@ export function ConsultationFlow({
     });
 
     const SUBCATEGORY_DEFINITIONS = [
-      { sub: 'Adult', icon: 'bx-male' },
-      { sub: 'Pedia', icon: 'bx-child' },
+      { sub: 'Adult' },
+      { sub: 'Pedia' },
     ];
 
     const visibleList = SUBCATEGORY_DEFINITIONS;

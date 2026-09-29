@@ -18,6 +18,7 @@ import { OPScreeningFlow } from './components/OPScreeningFlow';
 import { OtherServicesFlow } from './components/OtherServicesFlow';
 import { DragGhost } from './components/DragGhost';
 import { DoctorsModal } from './components/DoctorsModal';
+import { ConfirmAssignmentModal } from './components/ConfirmAssignmentModal';
 import { usePatientData } from './hooks/usePatientData';
 import { useCubicleData } from './hooks/useCubicleData';
 import { useAutoAssign } from './hooks/useAutoAssign';
@@ -39,6 +40,7 @@ import { useConnectionStatus } from '@/hooks/useConnectionStatus';
 import { useOfflineQueue } from '@/hooks/useOfflineQueue';
 import { enqueueMutation, removeMutation } from '@/lib/offlineQueue';
 import { ConnectionStatusBanner } from '@/components/reusables/ConnectionStatusBanner';
+import { transferTexts } from './constants/transferTexts';
 
 
 /**
@@ -57,7 +59,8 @@ export default function TransferPage() {
   const [selectedOPSubcategory, setSelectedOPSubcategory] = useState<string | null>(null);
   const [selectedRoom, setSelectedRoom] = useState<number | null>(null);
 
-  // Audio and Modal State
+  // Audio, Sidebar, and Modal State
+  const [isSidebarExpanded, setIsSidebarExpanded] = useState<boolean>(false);
   const [speaking, setSpeaking] = useState<number | null>(null);
   const [showDoctorsModal, setShowDoctorsModal] = useState<boolean>(false);
   const [showUnassignedMenu, setShowUnassignedMenu] = useState<boolean>(false);
@@ -619,6 +622,16 @@ export default function TransferPage() {
     }
   }, [pendingUpdates, setPendingUpdates, syncNow]);
 
+  /**
+   * Reverts all pending manual cubicle assignments and restores server queue state.
+   */
+  const handleCancelPending = useCallback(() => {
+    setPendingUpdates([]);
+    pendingUpdatesRef.current = [];
+    pendingAutoRotateIdsRef.current = new Set();
+    void fetchData();
+  }, [fetchData, setPendingUpdates]);
+
   // Back navigation handler
   const handleBack = () => {
     if (selectedRoom) {
@@ -832,12 +845,9 @@ export default function TransferPage() {
       return (
         <div className="flex items-center justify-center h-[65vh]">
           <div className="text-center max-w-sm">
-            <div className="w-16 h-16 bg-red-50 text-[#cc3535] rounded-2xl flex items-center justify-center mx-auto mb-4 shadow-xs">
-              <i className="bx bx-folder-open text-3xl" aria-hidden="true" />
-            </div>
-            <h2 className="text-base font-bold text-slate-800">No Service Selected</h2>
+            <h2 className="text-base font-bold text-slate-800">{transferTexts.noServiceSelectedTitle}</h2>
             <p className="text-slate-500 text-xs mt-1">
-              Select a service from the sidebar navigation to view and manage patient queues.
+              {transferTexts.noServiceSelectedDesc}
             </p>
           </div>
         </div>
@@ -963,7 +973,7 @@ export default function TransferPage() {
     );
   };
 
-  const showConfirmButton = (isConsultation || isOPScreening) && pendingUpdates.length > 0;
+  const showConfirmModal = (isConsultation || isOPScreening) && pendingUpdates.length > 0;
 
   return (
     <div className="flex h-screen overflow-hidden bg-slate-50 font-sans text-slate-800">
@@ -974,10 +984,12 @@ export default function TransferPage() {
         isFullyConnected={isFullyConnected}
         pendingCount={pendingCount}
         isSyncingQueue={isSyncingQueue}
+        showIcon={false}
       />
 
-      {/* Fixed Sidebar */}
+      {/* Expandable/Collapsible Sidebar (Icon-only vs Expanded with text) */}
       <Sidebar
+        isExpanded={isSidebarExpanded}
         selectedCategory={selectedCategory}
         queueCounts={queueCounts}
         idleCounts={idleCounts}
@@ -990,11 +1002,29 @@ export default function TransferPage() {
         }}
       />
 
-      {/* Main Content Area: Offset for icon rail (< 2xl) and full sidebar (>= 2xl) */}
-      <div className="flex-1 ml-18 2xl:ml-64 flex flex-col h-screen overflow-hidden min-w-0 transition-all duration-200">
+      {/* Main Content Area: Offset for icon rail (ml-18) or expanded panel (ml-64) */}
+      <div
+        className={`flex-1 flex flex-col h-screen overflow-hidden min-w-0 transition-all duration-300 ${
+          isSidebarExpanded ? 'ml-64' : 'ml-18'
+        }`}
+      >
         {/* Top Header Bar (Fixed) */}
         <header className="h-16 px-4 sm:px-6 bg-white border-b border-slate-200 flex items-center justify-between gap-3 sm:gap-4 shrink-0 z-30 shadow-2xs">
-          <div className="flex items-center gap-3 min-w-0">
+          <div className="flex items-center gap-2 sm:gap-3 min-w-0">
+            {/* Sidebar Expand / Collapse Toggle Button */}
+            <button
+              type="button"
+              onClick={() => setIsSidebarExpanded(prev => !prev)}
+              className="p-1.5 sm:p-2 rounded-xl text-slate-500 hover:text-slate-800 hover:bg-slate-100 active:bg-slate-200 transition-colors cursor-pointer shrink-0"
+              title={isSidebarExpanded ? transferTexts.collapseSidebar : transferTexts.expandSidebar}
+              aria-label={isSidebarExpanded ? transferTexts.collapseSidebar : transferTexts.expandSidebar}
+            >
+              <i
+                className={`bx ${isSidebarExpanded ? 'bx-chevron-left' : 'bx-menu'} text-xl block`}
+                aria-hidden="true"
+              />
+            </button>
+
             <span className="text-xs font-bold text-slate-400 uppercase tracking-widest hidden sm:inline">
               PHC Transfer
             </span>
@@ -1006,21 +1036,14 @@ export default function TransferPage() {
               <button
                 type="button"
                 onClick={() => setShowUnassignedMenu(v => !v)}
-                className={`flex items-center gap-2 px-3 py-1.5 rounded-xl border text-xs font-bold transition-all cursor-pointer ${
+                className={`flex items-center gap-1.5 px-3 py-1.5 rounded-xl border text-xs font-bold transition-all cursor-pointer ${
                   totalUnassigned > 0
                     ? 'bg-red-50 border-red-200 text-[#cc3535] hover:bg-red-100'
                     : 'bg-slate-50 border-slate-200 text-slate-400'
                 }`}
                 title="Patients waiting to be assigned"
               >
-                <i className="bx bx-user-voice text-base" aria-hidden="true" />
                 <span>{totalUnassigned} Unassigned</span>
-                <i
-                  className={`bx bx-chevron-down text-sm transition-transform ${
-                    showUnassignedMenu ? 'rotate-180' : ''
-                  }`}
-                  aria-hidden="true"
-                />
               </button>
 
               {showUnassignedMenu && (
@@ -1038,7 +1061,7 @@ export default function TransferPage() {
                         .filter(([cat]) => myServices.includes(cat))
                         .filter(([, n]) => n > 0).length === 0 ? (
                         <p className="px-4 py-6 text-xs text-slate-400 text-center">
-                          All caught up — nobody waiting.
+                          {transferTexts.allCaughtUp}
                         </p>
                       ) : (
                         Object.entries(queueCounts)
@@ -1063,31 +1086,6 @@ export default function TransferPage() {
               )}
             </div>
 
-            {/* Manual Assignment Confirm Button */}
-            {showConfirmButton && (
-              <button
-                type="button"
-                onClick={() => void handleConfirm()}
-                disabled={isConfirming}
-                className="flex items-center gap-2 px-4 py-1.5 rounded-xl bg-[#cc3535] text-white text-xs font-bold shadow-xs hover:bg-red-700 active:bg-red-800 transition-colors disabled:opacity-50 cursor-pointer"
-              >
-                {isConfirming ? (
-                  <>
-                    <div className="w-3 h-3 border-2 border-white/40 border-t-white rounded-full animate-spin" />
-                    <span>Saving...</span>
-                  </>
-                ) : (
-                  <>
-                    <i className="bx bx-check-circle text-sm" aria-hidden="true" />
-                    <span>
-                      Confirm {pendingUpdates.length} Assignment
-                      {pendingUpdates.length > 1 ? 's' : ''}
-                    </span>
-                  </>
-                )}
-              </button>
-            )}
-
             {/* Syncing Indicator */}
             {isSyncing && !isConfirming && (
               <div className="flex items-center gap-2 px-3 py-1 bg-blue-50 text-blue-700 border border-blue-200 rounded-xl text-xs font-semibold">
@@ -1100,10 +1098,10 @@ export default function TransferPage() {
             <button
               type="button"
               onClick={() => setShowDoctorsModal(true)}
-              className="w-9 h-9 bg-slate-100 hover:bg-slate-200 active:bg-slate-300 rounded-xl flex items-center justify-center transition-colors text-slate-600 cursor-pointer shadow-2xs"
+              className="px-3 py-1.5 bg-slate-100 hover:bg-slate-200 active:bg-slate-300 rounded-xl text-xs font-bold transition-colors text-slate-700 cursor-pointer shadow-2xs"
               title="Manage Doctors"
             >
-              <i className="bx bx-plus-medical text-base" aria-hidden="true" />
+              {transferTexts.doctorsBtn}
             </button>
           </div>
         </header>
@@ -1175,6 +1173,15 @@ export default function TransferPage() {
             : null
         }
         isValidDropTarget={Boolean(dragOverCubicle || dragOverCounter)}
+      />
+
+      {/* Confirm Assignment Modal */}
+      <ConfirmAssignmentModal
+        isOpen={Boolean(showConfirmModal)}
+        pendingPatients={pendingUpdates}
+        isConfirming={isConfirming}
+        onConfirm={handleConfirm}
+        onCancel={handleCancelPending}
       />
 
       {/* Doctors Assignment Modal */}
