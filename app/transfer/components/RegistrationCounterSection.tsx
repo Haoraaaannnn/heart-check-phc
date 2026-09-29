@@ -135,14 +135,9 @@ export function RegistrationCounterSection({
               >
                 {/* Counter Tile Header */}
                 <div className="flex items-center justify-between gap-1 mb-1">
-                  <div className="flex items-center gap-1.5 min-w-0">
-                    <span className="w-5 h-5 rounded-md bg-blue-600 text-white font-bold text-[10px] flex items-center justify-center shrink-0 shadow-2xs">
-                      C{counterNum}
-                    </span>
-                    <span className="text-[11px] font-bold text-slate-700 truncate">
-                      {transferTexts.counterPrefix} {counterNum}
-                    </span>
-                  </div>
+                  <span className="text-[11px] font-bold text-slate-700 truncate">
+                    {transferTexts.counterPrefix} {counterNum}
+                  </span>
 
                   {isTargetEligible ? (
                     <span className="text-[10px] font-bold text-blue-600 bg-blue-100 px-1.5 py-0.5 rounded shrink-0">
@@ -183,8 +178,8 @@ export function RegistrationCounterSection({
                       >
                         <div className="flex items-center gap-1 min-w-0">
                           {isTopSelected ? (
-                            <span className="w-4 h-4 rounded bg-[#cc3535] text-white flex items-center justify-center shrink-0">
-                              <i className="bx bx-check text-[10px] font-bold" aria-hidden="true" />
+                            <span className="px-1 py-0.5 rounded bg-[#cc3535] text-white text-[9px] font-bold shrink-0">
+                              SEL
                             </span>
                           ) : (
                             <DragHandle title={transferTexts.tapToSelectHint} />

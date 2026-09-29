@@ -14,6 +14,14 @@ The Nurse Station dashboard manages outpatient consultation workflows across cli
 
 The module implements optimistic state transitions backed by an offline-resilient Write-Ahead Logging (WAL) outbox pattern. Clinical actions are committed to local persistent disk storage (IndexedDB) prior to or concurrently with network transmission to Supabase, guaranteeing zero data loss during power outages, workstation reboots, or network disconnects.
 
+### Navigation Sidebar & Presentation Standard (Transfer Dashboard Parity)
+- **Unified Responsive Sidebar Standard:** The Nurse Dashboard navigation sidebar (`NurseSidebar.tsx`) follows the exact responsive architecture of the Patient Transfer dashboard (`Sidebar.tsx`).
+- **Icon-Only Rail vs. Expanded Text Modes:** Supports an icon-only rail (`w-18` / 72px) to maximize screen space for the 3-column clinical Kanban board, and an expanded panel (`w-64` / 256px) displaying full service category text labels, patient count badges, and room/cubicle hierarchies.
+- **Main Area Offset:** The main clinical pipeline Kanban area dynamically offsets with `flex-1 ml-18` in icon-only mode and `flex-1 ml-64` in expanded mode with smooth CSS transitions.
+- **Icon / Text Toggle Controls:** Can be toggled between icon-only and expanded-with-text modes at any time via the dedicated single toggle button in the top header bar (`NurseHeader.tsx`). To maintain a clean UI and avoid duplicate controls, no toggle buttons are placed inside the sidebar itself.
+- **Real-Time Notification Badges:** Displays full `NotificationBadge` counters in expanded view and compact pulse dots in icon-only rail view.
+- **Header Station Selector:** `NurseHeader.tsx` provides a compact station/category dropdown selector for quick one-click cubicle switching.
+
 ---
 
 ## Where to Edit
@@ -23,6 +31,8 @@ Use this table to quickly identify the exact file to modify for any given requir
 | What to Change | Primary File Path | Notes |
 | :--- | :--- | :--- |
 | UI text, labels, messages, empty states | `app/nurse/constants/nurseTexts.ts` | All UI strings must be defined here |
+| Centralized navigation & sidebar icons | `constants/icons.ts` | Centralized `SIDEBAR_ICONS` and `CATEGORY_ICONS` |
+| Navigation rail sidebar | `app/nurse/components/NurseSidebar.tsx` | Fixed responsive rail matching Transfer standard (`w-18 2xl:w-64`) |
 | Banner messages & offline sync alerts | `constants/connectionTexts.ts` | Shared across nurse and transfer dashboards |
 | Inline styles and layout tokens | `app/nurse/constants/nurse.ts` | CSSProperties and column dimension tokens |
 | Clinical stage progression actions | `app/nurse/hooks/useNurseActions.ts` | Optimistic mutations with outbox persistence |
@@ -33,7 +43,7 @@ Use this table to quickly identify the exact file to modify for any given requir
 | Realtime subscription and polling | `app/nurse/hooks/useRealtimeSubscription.ts` | Supabase Realtime channel coordination |
 | Main page coordination | `app/nurse/page.tsx` | Main orchestrator assembling subcomponents |
 | Board columns and cards | `app/nurse/components/NurseBoard.tsx` | 3-column clinical pipeline Kanban |
-| Header bar and connection status | `app/nurse/components/NurseHeader.tsx` | Header bar, sync indicators, filters |
+| Header bar & desktop cubicle dropdown | `app/nurse/components/NurseHeader.tsx` | Header bar, sync indicators, station dropdown |
 | Finished patient archive drawer | `app/nurse/components/FinishedDrawer.tsx` | Slide-over drawer for completed patients |
 | Audio announcements (TTS) | `app/nurse/page.tsx` | Deepgram Text-to-Speech integration |
 | Patient types and schemas | `types/Types.ts` | Core domain model for patient records |

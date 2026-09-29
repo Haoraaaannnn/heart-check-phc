@@ -61,7 +61,6 @@ export function WithDoctorSection({
     <StageColumn
       stage="with_doctor"
       title={nurseTexts.stageWithDoctorHeading}
-      icon="bx-pulse"
       badgeColorClass="bg-purple-100 text-purple-700"
       count={patients.length}
       emptyText={nurseTexts.emptyWithDoctor}

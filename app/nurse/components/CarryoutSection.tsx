@@ -61,7 +61,6 @@ export function CarryoutSection({
     <StageColumn
       stage="carryout"
       title={nurseTexts.stageCarryoutHeading}
-      icon="bx-capsule"
       badgeColorClass="bg-orange-100 text-orange-700"
       count={patients.length}
       emptyText={nurseTexts.emptyCarryout}

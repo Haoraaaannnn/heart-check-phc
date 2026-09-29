@@ -65,9 +65,6 @@ export function FinishedDrawer({ isOpen, onClose, patients }: FinishedDrawerProp
         {/* Drawer Header */}
         <div className="flex items-center justify-between p-5 border-b border-slate-200 bg-slate-50/80 backdrop-blur-xs shrink-0">
           <div className="flex items-center gap-3">
-            <div className="w-10 h-10 rounded-xl bg-emerald-100 text-emerald-700 flex items-center justify-center font-bold">
-              <i className="bx bx-check-double text-2xl" aria-hidden="true" />
-            </div>
             <div>
               <div className="flex items-center gap-2">
                 <h2
@@ -89,10 +86,10 @@ export function FinishedDrawer({ isOpen, onClose, patients }: FinishedDrawerProp
           <button
             type="button"
             onClick={onClose}
-            className="p-2 rounded-xl text-slate-400 hover:text-slate-600 hover:bg-slate-200/60 active:bg-slate-300/60 transition cursor-pointer"
+            className="px-3 py-1.5 rounded-xl text-xs font-semibold text-slate-500 hover:text-slate-700 hover:bg-slate-200/60 active:bg-slate-300/60 transition cursor-pointer"
             aria-label={nurseTexts.btnCloseFinished}
           >
-            <i className="bx bx-x text-2xl" aria-hidden="true" />
+            {nurseTexts.btnCloseFinished}
           </button>
         </div>
 

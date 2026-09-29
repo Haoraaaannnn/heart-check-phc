@@ -94,7 +94,6 @@ export function NurseSelectionBanner({
           onClick={onCancel}
           className="inline-flex items-center gap-1.5 px-3 py-1.5 rounded-xl text-xs font-bold text-slate-300 hover:text-white bg-slate-800 hover:bg-slate-700 active:bg-slate-600 border border-slate-600/60 transition-all cursor-pointer min-h-[36px]"
         >
-          <i className="bx bx-x text-base" aria-hidden="true" />
           <span>{nurseTexts.cancelSelection}</span>
           <kbd className="hidden md:inline-block ml-1 px-1.5 py-0.5 text-[10px] font-mono bg-slate-900 border border-slate-700 rounded text-slate-400">
             Esc

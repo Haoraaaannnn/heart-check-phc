@@ -61,7 +61,7 @@ export default function NursePage() {
   useIdleTimeout();
 
   // Navigation & Filtering State
-  const [sidebarOpen, setSidebarOpen] = useState(true);
+  const [isSidebarExpanded, setIsSidebarExpanded] = useState<boolean>(false);
   const [selectedCategory, setSelectedCategory] = useState<string | null>(null);
   const [selectedCubicleNum, setSelectedCubicleNum] = useState<string | null>(null);
 
@@ -335,11 +335,12 @@ export default function NursePage() {
         isFullyConnected={isFullyConnected}
         pendingCount={pendingCount}
         isSyncingQueue={isSyncingQueue}
+        showIcon={false}
       />
 
-      {/* Collapsible Navigation Sidebar */}
+      {/* Expandable/Collapsible Sidebar (Icon-only vs Expanded with text) */}
       <NurseSidebar
-        sidebarOpen={sidebarOpen}
+        isExpanded={isSidebarExpanded}
         selectedCategory={selectedCategory}
         selectedCubicleNum={selectedCubicleNum}
         categoryCounts={categoryCounts}
@@ -353,20 +354,18 @@ export default function NursePage() {
           setSelectedCategory(cubicle?.category ?? null);
           setSelectedCubicleNum(cubicleNum);
         }}
-        onToggleSidebar={() => setSidebarOpen(!sidebarOpen)}
       />
 
-      {/* Main Fit-to-Screen Pipeline Area */}
+      {/* Main Content Area: Offset for icon rail (ml-18) or expanded panel (ml-64) */}
       <div
-        style={{
-          ...NurseStyle.mainArea,
-          marginLeft: sidebarOpen
-            ? nurseLayoutTokens.sidebarWidthExpanded
-            : nurseLayoutTokens.sidebarWidthCollapsed,
-        }}
+        className={`flex-1 flex flex-col h-screen overflow-hidden min-w-0 transition-all duration-300 ${
+          isSidebarExpanded ? 'ml-64' : 'ml-18'
+        }`}
       >
         {/* Fixed Top Header Bar */}
         <NurseHeader
+          isSidebarOpen={isSidebarExpanded}
+          onToggleSidebar={() => setIsSidebarExpanded(prev => !prev)}
           isSyncing={isSyncing || isSyncingQueue}
           selectedCategory={selectedCategory}
           selectedCubicleNum={selectedCubicleNum}
@@ -374,6 +373,16 @@ export default function NursePage() {
           finishedCount={visibleFinished.length}
           onOpenFinishedLedger={() => setFinishedDrawerOpen(true)}
           onClearFilter={handleClearFilter}
+          onSelectCategory={(category) => {
+            setSelectedCategory(category);
+            setSelectedCubicleNum(null);
+          }}
+          onSelectCubicle={(cubicleNum) => {
+            const cubicle = assignedCubicles.find((c) => c.cubicleNum === cubicleNum);
+            setSelectedCategory(cubicle?.category ?? null);
+            setSelectedCubicleNum(cubicleNum);
+          }}
+          showCubicleDropdown={assignedCubicles.length > 0}
           notifications={notifications}
           unreadCount={unreadCount}
           onMarkAsRead={markAsRead}
@@ -389,15 +398,14 @@ export default function NursePage() {
             className="mx-6 mt-3 px-4 py-3 rounded-xl bg-red-50 border border-red-200 text-red-800 text-xs font-semibold flex items-center justify-between shrink-0 shadow-xs animate-in fade-in duration-150"
           >
             <div className="flex items-center gap-2">
-              <i className="bx bx-error-circle text-base text-red-600" aria-hidden="true" />
               <span>{actionError}</span>
             </div>
             <button
               type="button"
               onClick={clearActionError}
-              className="text-red-500 hover:text-red-800 font-bold ml-4 cursor-pointer"
+              className="text-red-500 hover:text-red-800 font-bold ml-4 cursor-pointer text-xs underline"
             >
-              <i className="bx bx-x text-base" aria-hidden="true" />
+              {nurseTexts.dismiss}
             </button>
           </div>
         )}
@@ -406,9 +414,6 @@ export default function NursePage() {
         {assignmentStatus === 'unassigned' ? (
           <div className="flex-1 flex items-center justify-center p-8">
             <div className="rounded-3xl border border-amber-200 bg-amber-50/70 p-8 text-center shadow-sm max-w-md">
-              <div className="mx-auto mb-4 flex h-14 w-14 items-center justify-center rounded-2xl bg-amber-100 text-amber-700 text-2xl">
-                <i className="bx bx-error text-2xl" aria-hidden="true" />
-              </div>
               <h2 className="text-base font-bold text-slate-900">
                 {nurseTexts.unassignedTitle}
               </h2>

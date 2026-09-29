@@ -84,22 +84,22 @@ export function IdleNumbersPanel({
                 </span>
               </div>
 
-              <div className="flex items-center gap-1 shrink-0 ml-2">
+              <div className="flex items-center gap-1.5 shrink-0 ml-2">
                 <button
                   type="button"
                   onClick={() => onActivate(p)}
                   title={transferTexts.activateIdleTooltip}
-                  className="w-6 h-6 flex items-center justify-center rounded-md text-emerald-700 bg-emerald-50 hover:bg-emerald-100 transition-colors cursor-pointer"
+                  className="px-2 py-0.5 text-[11px] font-bold rounded-md text-emerald-700 bg-emerald-50 hover:bg-emerald-100 transition-colors cursor-pointer"
                 >
-                  <i className="bx bx-play-circle text-sm" aria-hidden="true" />
+                  {transferTexts.activateBtn}
                 </button>
                 <button
                   type="button"
                   onClick={() => onRemove(p)}
                   title={transferTexts.removeIdleTooltip}
-                  className="w-6 h-6 flex items-center justify-center rounded-md text-rose-600 bg-rose-50 hover:bg-rose-100 transition-colors cursor-pointer"
+                  className="px-2 py-0.5 text-[11px] font-bold rounded-md text-rose-600 bg-rose-50 hover:bg-rose-100 transition-colors cursor-pointer"
                 >
-                  <i className="bx bx-trash text-sm" aria-hidden="true" />
+                  {transferTexts.removeBtn}
                 </button>
               </div>
             </div>
