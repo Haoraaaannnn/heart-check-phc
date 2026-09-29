@@ -37,6 +37,8 @@ export interface NurseHeaderProps {
   onSelectCategory?: (category: string | null) => void;
   /** Callback to select an individual cubicle filter. */
   onSelectCubicle?: (cubicleNum: string) => void;
+  /** Whether the cubicle/category dropdown selector should be displayed. Defaults to false. */
+  showCubicleDropdown?: boolean;
   /** Whether the sidebar is currently open/visible. */
   isSidebarOpen?: boolean;
   /** Callback fired to toggle or close the sidebar. */

@@ -40,6 +40,7 @@ import { useConnectionStatus } from '@/hooks/useConnectionStatus';
 import { useOfflineQueue } from '@/hooks/useOfflineQueue';
 import { enqueueMutation, removeMutation } from '@/lib/offlineQueue';
 import { ConnectionStatusBanner } from '@/components/reusables/ConnectionStatusBanner';
+import { NotificationBadge } from '@/components/reusables/NotificationBadge';
 import { transferTexts } from './constants/transferTexts';
 
 
