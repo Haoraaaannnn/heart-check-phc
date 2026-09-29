@@ -38,6 +38,7 @@ export const SMSLayoutStyle = {
 /** Tailwind CSS class name dictionary for SMS input layouts. */
 export const SMSLayoutClasses = {
     container: "landscape:pt-6 landscape:pb-[80px] portrait:pt-20 portrait:pb-[120px] h-full w-full flex flex-col items-center justify-center overflow-y-auto bg-white",
+    layoutContainer: "landscape:pt-6 landscape:pb-[80px] portrait:pt-20 portrait:pb-[120px] h-full w-full flex flex-col items-center justify-center overflow-y-auto bg-white",
     contentWrapper: "w-full max-w-[1050px] mx-auto flex flex-col items-center",
     entryGrid: "w-full grid grid-cols-1 landscape:grid-cols-2 gap-6 lg:gap-10 items-center justify-center",
     entryLeftCol: "portrait:contents landscape:flex landscape:flex-col landscape:gap-4 w-full max-w-[480px] mx-auto",
