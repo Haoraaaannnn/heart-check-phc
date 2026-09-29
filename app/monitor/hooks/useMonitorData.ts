@@ -160,7 +160,11 @@ export function useMonitorData(category: string, subcategory: string | null, cat
     }
   };
 
+  const patientsFetchId = useRef(0);
+  const registrationFetchId = useRef(0);
+
   const fetchPatients = async () => {
+    const requestId = ++patientsFetchId.current;
     const today = new Date();
     today.setHours(0, 0, 0, 0);
     const tomorrow = new Date(today);
@@ -181,8 +185,9 @@ export function useMonitorData(category: string, subcategory: string | null, cat
 
     const { data, error } = await query.order('called_at', { ascending: true });
 
+    if (requestId !== patientsFetchId.current) return;
+
     if (!error && data) {
-      setAssignedPatients(data);
       setAssignedPatients(data);
       
       if (isTableLayoutService) {
@@ -249,6 +254,7 @@ export function useMonitorData(category: string, subcategory: string | null, cat
   };
 
   const fetchRegistrationPatients = async () => {
+    const requestId = ++registrationFetchId.current;
     const today = new Date();
     today.setHours(0, 0, 0, 0);
     const tomorrow = new Date(today);
@@ -263,12 +269,15 @@ export function useMonitorData(category: string, subcategory: string | null, cat
       .gte('created_at', today.toISOString())
       .lt('created_at', tomorrow.toISOString())
       .order('counter', { ascending: true })
+      .in('status', ['On Progress', 'Waiting'])
+      .is('reg_end', null)
+      .not('counter', 'is', null)
       .order('created_at', { ascending: true });  
 
-    if (!error && data) {
-      setRegistrationPatients(data);
-    }
-  };
+   if (requestId !== registrationFetchId.current) return;
+   if (!error && data) setRegistrationPatients(data);
+   };
+
 
   const setupRegistrationSubscription = (onUpdate: () => void) => {
     const channel = supabase

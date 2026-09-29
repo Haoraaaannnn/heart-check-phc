@@ -59,20 +59,23 @@ export function useRealtimeSubscription(
     }, [onStatusChange]);
 
     useEffect(() => {
-        /**
-         * Activates the polling fallback if not already running.
-         */
+        let disposed = false;
+        let debounce: ReturnType<typeof setTimeout> | null = null;
+
+        /** Coalesces bursts of realtime events into a single fetch. */
+        const scheduleFetch = () => {
+            if (debounce) clearTimeout(debounce);
+            debounce = setTimeout(() => onFetchRef.current(), 300);
+        };
+
         const startPolling = () => {
             if (pollRef.current) return;
-            onFetchRef.current(); // Immediate fetch on fallback activation
+            onFetchRef.current();
             pollRef.current = setInterval(() => {
                 onFetchRef.current();
             }, MONITOR_POLL_INTERVAL_MS);
         };
 
-        /**
-         * Deactivates the polling fallback when the WebSocket recovers.
-         */
         const stopPolling = () => {
             if (pollRef.current) {
                 clearInterval(pollRef.current);
@@ -88,9 +91,12 @@ export function useRealtimeSubscription(
                 table: "patients",
                 filter: `service=eq.${category}`,
             }, () => {
-                onFetchRef.current();
+                scheduleFetch();
             })
             .subscribe((rawStatus) => {
+                // removeChannel() fires CLOSED during cleanup; ignore it so polling isn't restarted.
+                if (disposed) return;
+
                 const status = rawStatus as ChannelStatus;
                 onStatusChangeRef.current?.(status);
 
@@ -108,6 +114,8 @@ export function useRealtimeSubscription(
         window.addEventListener("online", handleOnline);
 
         return () => {
+            disposed = true;
+            if (debounce) clearTimeout(debounce);
             stopPolling();
             window.removeEventListener("online", handleOnline);
             void supabase.removeChannel(channel);
