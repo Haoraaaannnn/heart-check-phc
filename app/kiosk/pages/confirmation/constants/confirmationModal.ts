@@ -71,9 +71,8 @@ export const ConfirmationModalStyle = {
         fontWeight: 900,
         fontSize: confirmationModalTypography.modalTitleSize,
         lineHeight: 1.2,
-        whiteSpace: "nowrap",
-        overflow: "hidden",
-        textOverflow: "ellipsis",
+        overflowWrap: "break-word",
+        wordBreak: "break-word",
     },
     modalBadge: {
         width: "fit-content",

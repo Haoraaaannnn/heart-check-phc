@@ -21,9 +21,8 @@ interface Props {
  * @remarks
  * - Icon: Resolved dynamically via {@link resolveServiceIcon} using Boxicons.
  * - Title: `label_fil` (Filipino, large). Pill: `label_en` (English, smaller).
- * - Fixed height (164px) so all cards line up. Icon and arrow use `shrink-0`
- *   so only the text column shrinks in the narrower 3-column landscape grid.
- * - Landscape text uses `clamp()` to scale down so long labels don't overflow.
+ * - Responsive fluid minHeight and word wrapping so text never clips or hides on smaller screens.
+ * - Icon and arrow use fluid clamp scaling and `shrink-0` to protect text area.
  *
  * @param props - Component props.
  * @returns A button showing the service icon, both labels, and an arrow.

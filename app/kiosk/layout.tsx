@@ -192,9 +192,14 @@ export default function MainKioskLayout({ children }: MainKioskLayoutProps) {
                 className={KioskLayoutClasses.container(mounted)}
                 style={KioskLayoutStyle.container}
             >
-                {shouldShowBackButton && backHref && (
-                    <KioskBackButton href={backHref} />
-                )}
+                {shouldShowBackButton && backHref ? (
+                    <header
+                        className={KioskLayoutClasses.topNavWrapper}
+                        style={KioskLayoutStyle.topNavWrapper}
+                    >
+                        <KioskBackButton href={backHref} />
+                    </header>
+                ) : null}
 
                 {/* Main content: fills all remaining space, no fixed dimensions. */}
                 <main

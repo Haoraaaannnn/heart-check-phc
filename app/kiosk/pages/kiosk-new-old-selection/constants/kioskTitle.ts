@@ -20,7 +20,7 @@ export const KioskTitleStyle = {
         flexDirection: "column",
         alignItems: "center",
         justifyContent: "center",
-        gap: 24,
+        gap: "clamp(6px, 1.2vh, 16px)",
     },
     titleWrapper: {
         textAlign: "center",
@@ -41,7 +41,7 @@ export const KioskTitleClasses = {
     titleStroke: "[-webkit-text-stroke:1px_currentColor]",
     titleImageWrapper: (isLandscape: boolean): string =>
         `relative mx-auto aspect-[16/9] w-full overflow-hidden rounded-2xl shadow-sm ${
-            isLandscape ? "max-w-[760px]" : "max-w-[900px]"
+            isLandscape ? "max-w-[760px]" : "max-w-[480px] max-h-[18vh] sm:max-h-[22vh]"
         }`,
     titleImage: "object-cover",
 } as const;

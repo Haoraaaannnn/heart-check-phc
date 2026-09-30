@@ -79,6 +79,14 @@ This document outlines the mandatory rules and architectural standards that the 
 
 ---
 
+### 9. Kiosk UI Centering Standard & Non-Overflow Navigation
+- **All page content must ALWAYS be centered in the page:** Every screen's interactive contents, banners, card grids, instructions, and numeric keypads must be vertically and horizontally centered in `<main>` between the top navigation bar and the footer wave.
+- **Back Button Must Be Non-Overflow (In-Flow):** The universal back button must never be absolute or float over content (`no overflow`). It resides in a dedicated in-flow top navigation row (`topNavWrapper`). No headers, banners, labels, or text may ever sit alongside or collide with the back button.
+- **Scrollable Card Centering:** On screens with scrollable card areas (`kiosk-services`, `kiosk-cubicle-selection`), the scroll container and inner card grid must be vertically and horizontally centered (`m-auto`, `flex flex-col items-center justify-center`). Content must never be stuck to the top or leave awkward asymmetric empty margins at the bottom.
+- **Fixed Screens Centering:** On fixed screens (`kiosk-new-old-selection`, `category-selection`, `sms-input`, `queue-print`), content must be vertically and horizontally centered in the available space above the kiosk wave footer.
+
+---
+
 ## Agent Pre-Commit / Pre-Completion Checklist
 
 Before completing any refactoring or coding task, verify against these rules:
@@ -90,6 +98,7 @@ Before completing any refactoring or coding task, verify against these rules:
 - [ ] Centralized scales (such as kiosk typography in `constants/kiosk.ts`) are referenced by local constants.
 - [ ] If an image reference was provided, the implementation matches the image faithfully.
 - [ ] No unintentional visual or layout regressions were introduced during refactoring.
+- [ ] All kiosk screens, scrollable containers, and card grids are centered both horizontally and vertically.
 - [ ] No emojis are used anywhere in documentation, code, or comments.
 - [ ] All terminal commands and executions received explicit user confirmation prior to running.
 - [ ] Developer guide markdown files (.md) are created or updated with an explicit "where to edit" reference guide so developers can navigate and make changes easily.

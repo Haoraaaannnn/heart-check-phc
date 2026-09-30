@@ -3,8 +3,10 @@
 import { useState } from "react";
 import ServiceCard from "@/app/kiosk/pages/kiosk-services/components/KioskServicesCard";
 import ConfirmationModal from "@/app/kiosk/pages/confirmation/components/ConfirmationModal";
+import KioskBanner from "@/app/kiosk/pages/kiosk-services/components/KioskBanner";
 import type { Service } from "@/types/Services";
 import {
+    KioskServicesLayoutStyle,
     KioskServicesGridStyle,
     KioskServicesClasses,
 } from "@/app/kiosk/pages/kiosk-services/constants/kioskServices";
@@ -19,17 +21,16 @@ interface Props {
 }
 
 /**
- * Responsive grid of service cards plus the confirmation modal.
+ * Responsive menu of service cards with integrated greetings banner and confirmation modal.
  *
  * @remarks
- * - Portrait: 2 columns (3 would make the cards too narrow).
- * - Landscape: 3 columns, so the usual 7 services fit in 3 rows.
- * - Height and scrolling are NOT handled here. The parent layout
- *   (`kiosk-services/layout.tsx`) owns the scroll area, so extra rows added
- *   to the `services` table scroll instead of being clipped.
+ * Follows the single-container layout pattern of `category-selection` (Adult/Pedia):
+ * - Outer container centers all content vertically and horizontally within `<main>`.
+ * - Inner content wrapper bundles the greetings banner (`KioskBanner`) directly above
+ *   the service cards grid with tight spacing as one cohesive unit.
  *
  * @param props - Component props.
- * @returns The grid of service cards and the (initially closed) modal.
+ * @returns The unified greetings banner, service cards grid, and confirmation modal.
  */
 export default function KioskServicesGrid({ services, patientType }: Props) {
     // The service the patient tapped; passed to the modal for confirmation.
@@ -48,17 +49,29 @@ export default function KioskServicesGrid({ services, patientType }: Props) {
 
     /**
      * Closes the modal.
-     *
-     * Only the open flag is reset. `selectedService` is kept so the modal
-     * content doesn't blank out during its closing animation.
      */
     const handleClose = () => {
         setIsModalOpen(false);
     };
 
     return (
-        <>
-            <div style={KioskServicesGridStyle.container}>
+        <div
+            className={KioskServicesClasses.container}
+            style={KioskServicesLayoutStyle.container}
+        >
+            <div
+                className={KioskServicesClasses.contentWrapper}
+                style={KioskServicesLayoutStyle.contentWrapper}
+            >
+                {/* Greetings and instruction banner: grouped directly with service buttons */}
+                <header
+                    className={KioskServicesClasses.headerWrapper}
+                    style={KioskServicesLayoutStyle.headerWrapper}
+                >
+                    <KioskBanner />
+                </header>
+
+                {/* Service cards grid */}
                 <div
                     style={KioskServicesGridStyle.grid}
                     className={KioskServicesClasses.grid}
@@ -79,6 +92,6 @@ export default function KioskServicesGrid({ services, patientType }: Props) {
                 isOpen={isModalOpen}
                 onClose={handleClose}
             />
-        </>
+        </div>
     );
 }

@@ -70,18 +70,26 @@ export default function CategorySelectionPage() {
             className={CategoryLayoutClasses.container}
             style={CategoryLayoutStyle.container}
         >
-            <div style={CategoryLayoutStyle.contentWrapper}>
-                {/* Header Instructions */}
-                <div style={CategoryHeaderStyle.header}>
-                    <h1 style={CategoryHeaderStyle.title}>
-                        {CategoryHeaderTexts.titleFil}
-                    </h1>
-                    <p style={CategoryHeaderStyle.subtitle}>
-                        {CategoryHeaderTexts.titleEn}
-                    </p>
-                </div>
+            <div
+                className={CategoryLayoutClasses.contentWrapper}
+                style={CategoryLayoutStyle.contentWrapper}
+            >
+                {/* Header Instructions: greetings & prompt grouped directly with category buttons */}
+                <header
+                    className={CategoryLayoutClasses.headerWrapper}
+                    style={CategoryLayoutStyle.headerWrapper}
+                >
+                    <div style={CategoryHeaderStyle.header}>
+                        <h1 style={CategoryHeaderStyle.title}>
+                            {CategoryHeaderTexts.titleFil}
+                        </h1>
+                        <p style={CategoryHeaderStyle.subtitle}>
+                            {CategoryHeaderTexts.titleEn}
+                        </p>
+                    </div>
+                </header>
 
-                {/* Category Options */}
+                {/* Age category cards grid */}
                 <div
                     style={CategoryCardsStyle.cardsGrid}
                     className={CategoryCardsClasses.grid}
