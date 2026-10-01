@@ -11,7 +11,7 @@ const CATEGORIES = [
   { name: 'Warfarin', hasSubcategories: false },
   { name: 'OPD Reschedule', hasSubcategories: false },
   { name: 'Benzathine', hasSubcategories: false },
-  { name: 'OPD Screening', hasSubcategories: false }
+  { name: 'OPD Screening', hasSubcategories: true },
 ];
 
 const SUB_CATEGORIES = ['Pedia', 'Adult'];

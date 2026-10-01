@@ -469,6 +469,7 @@ export default function TransferPage() {
             cubicleNum: bestCubicle.cubicleNum,
             status: 'Assigned',
             called_at: now,
+            reg_end: patient.reg_end ?? now,
           },
         ],
       };
@@ -481,6 +482,7 @@ export default function TransferPage() {
         cubicleNum: bestCubicle.cubicleNum,
         status: 'Assigned',
         called_at: now,
+        reg_end: patient.reg_end ?? now,
       },
     ]);
   };
@@ -559,10 +561,8 @@ export default function TransferPage() {
         id: patient.id,
         cubicleNum: patient.cubicleNum,
         status: patient.status,
-        reg_end: patient.reg_end,
-        called_at:
-          patient.called_at ??
-          (patient.status === 'Assigned' ? now : null),
+        ...(patient.reg_end ? { reg_end: patient.reg_end } : {}),
+        called_at: patient.called_at ?? (patient.status === 'Assigned' ? now : null),
         queue_position: 9999,
         cooldown_until: patient.cooldown_until ?? null,
         progress_started_at: patient.progress_started_at ?? null,
