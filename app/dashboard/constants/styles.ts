@@ -24,24 +24,24 @@ export interface ToneStyle {
 
 export const TONES: Record<ToneKey, ToneStyle> = {
   rose: {
-    tile: 'border-rose-100 bg-rose-50/80 dark:border-rose-500/20 dark:bg-rose-500/10',
-    icon: 'bg-rose-100 text-rose-600 dark:bg-rose-500/20 dark:text-rose-300',
+    tile: 'border-rose-200 bg-rose-50 dark:border-rose-900 dark:bg-rose-950/40',
+    icon: 'bg-rose-100 text-rose-700 dark:bg-rose-900/60 dark:text-rose-300',
   },
   blue: {
-    tile: 'border-blue-100 bg-blue-50/80 dark:border-blue-500/20 dark:bg-blue-500/10',
-    icon: 'bg-blue-100 text-blue-600 dark:bg-blue-500/20 dark:text-blue-300',
+    tile: 'border-blue-200 bg-blue-50 dark:border-blue-900 dark:bg-blue-950/40',
+    icon: 'bg-blue-100 text-blue-700 dark:bg-blue-900/60 dark:text-blue-300',
   },
   green: {
-    tile: 'border-green-100 bg-green-50/80 dark:border-green-500/20 dark:bg-green-500/10',
-    icon: 'bg-green-100 text-green-600 dark:bg-green-500/20 dark:text-green-300',
+    tile: 'border-green-200 bg-green-50 dark:border-green-900 dark:bg-green-950/40',
+    icon: 'bg-green-100 text-green-700 dark:bg-green-900/60 dark:text-green-300',
   },
   purple: {
-    tile: 'border-purple-100 bg-purple-50/80 dark:border-purple-500/20 dark:bg-purple-500/10',
-    icon: 'bg-purple-100 text-purple-600 dark:bg-purple-500/20 dark:text-purple-300',
+    tile: 'border-purple-200 bg-purple-50 dark:border-purple-900 dark:bg-purple-950/40',
+    icon: 'bg-purple-100 text-purple-700 dark:bg-purple-900/60 dark:text-purple-300',
   },
   amber: {
-    tile: 'border-amber-100 bg-amber-50/80 dark:border-amber-500/20 dark:bg-amber-500/10',
-    icon: 'bg-amber-100 text-amber-600 dark:bg-amber-500/20 dark:text-amber-300',
+    tile: 'border-amber-200 bg-amber-50 dark:border-amber-900 dark:bg-amber-950/40',
+    icon: 'bg-amber-100 text-amber-700 dark:bg-amber-900/60 dark:text-amber-300',
   },
 };
 
@@ -59,9 +59,9 @@ export const DASH = {
     metricGrid: 'grid grid-cols-1 gap-4 sm:grid-cols-2 xl:grid-cols-4',
   },
 
-  /** Top bar. */
+  /** Top bar. Solid surface with bottom border. */
   header: {
-    root: 'sticky top-0 z-30 flex h-[72px] items-center gap-4 border-b border-line bg-surface px-4 backdrop-blur-xl md:px-6',
+    root: 'sticky top-0 z-30 flex h-[72px] items-center gap-4 border-b border-line bg-surface px-4 md:px-6',
     brand: 'flex shrink-0 items-center gap-3 md:w-[232px]',
     logo: 'flex h-11 w-11 items-center justify-center rounded-xl bg-brand-gradient text-2xl text-white shadow-md',
     brandTitle: 'text-base font-extrabold leading-tight text-content',
@@ -88,13 +88,13 @@ export const DASH = {
       'flex h-10 w-10 items-center justify-center rounded-full text-xl text-content-muted transition hover:bg-red-50 hover:text-red-600 dark:hover:bg-red-500/10',
   },
 
-  /** Left navigation. Color-only (no images). */
+  /** Left navigation. Solid surface with crisp right border. */
   sidebar: {
-    root: 'sticky top-[72px] hidden h-[calc(100vh-72px)] w-64 shrink-0 flex-col justify-between overflow-y-auto border-r border-line bg-surface bg-[linear-gradient(to_top,rgba(251,113,133,0.22),transparent_35%)] p-4 backdrop-blur-xl dark:bg-[linear-gradient(to_top,rgba(159,18,57,0.25),transparent_35%)] md:flex',
+    root: 'sticky top-[72px] hidden h-[calc(100vh-72px)] w-64 shrink-0 flex-col justify-between overflow-y-auto border-r border-line bg-surface p-4 md:flex',
     nav: 'flex flex-col gap-1',
     item: 'flex w-full items-center gap-3 rounded-xl px-4 py-3 text-left text-sm font-medium transition-colors',
     itemIdle: 'text-content-muted hover:bg-surface-muted hover:text-content',
-    itemActive: 'bg-brand-gradient font-semibold text-white shadow-md',
+    itemActive: 'bg-brand-gradient font-semibold text-white shadow-sm',
     itemGroupActive: 'bg-surface-muted font-semibold text-brand-accent',
     icon: 'text-xl',
     chevron: 'ml-auto text-lg transition-transform',
@@ -120,20 +120,19 @@ export const DASH = {
     filterSelect:'rounded-lg border border-line bg-surface-muted px-3 py-1.5 text-xs font-semibold text-content outline-none',
   },
 
-  /** Welcome banner (gradient only, no image). */
+  /** Welcome banner. Solid professional surface. */
   banner: {
-    root: 'relative overflow-hidden rounded-2xl border border-line bg-banner-gradient p-6 shadow-card',
-    decor:
-      'pointer-events-none absolute -right-16 -top-20 h-64 w-64 rounded-full bg-rose-400/30 blur-2xl dark:bg-rose-600/30',
+    root: 'relative overflow-hidden rounded-2xl border border-line bg-surface p-6 shadow-sm',
+    decor: 'hidden',
     content: 'relative z-10',
     eyebrow: 'text-xs font-bold uppercase tracking-widest text-brand-accent',
     title: 'mt-1 text-3xl font-extrabold text-content',
     subtitle: 'mt-1 text-sm text-content-muted',
   },
 
-  /** Top-row metric cards. */
+  /** Top-row metric cards. Solid tiles with subtle elevation. */
   metric: {
-    tile: 'flex items-center gap-4 rounded-2xl border p-5 shadow-card',
+    tile: 'flex items-center gap-4 rounded-2xl border p-5 shadow-sm',
     iconWrap: 'flex h-12 w-12 shrink-0 items-center justify-center rounded-full text-2xl',
     label: 'text-xs font-semibold text-content-muted',
     value: 'text-3xl font-extrabold leading-tight text-content',
@@ -153,7 +152,7 @@ export const DASH = {
     row: 'border-b border-line transition last:border-0 hover:bg-surface-muted',
     td: 'px-3 py-3 text-sm text-content-muted',
     ticket:
-      'inline-block rounded-lg bg-red-50 px-3 py-1 text-sm font-extrabold text-red-700 dark:bg-red-500/15 dark:text-red-300',
+      'inline-block rounded-lg bg-red-50 border border-red-200 px-3 py-1 text-sm font-extrabold text-red-700 dark:bg-red-950/40 dark:border-red-900 dark:text-red-300',
     select:
       'rounded-lg border border-line bg-surface-muted px-3 py-1.5 text-xs font-semibold text-content outline-none',
   },

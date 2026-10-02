@@ -31,11 +31,12 @@ export const categoryCardsTheme = {
  * Spacing tokens for category cards.
  */
 export const categoryCardsSpacing = {
-    cardsGap: "clamp(16px, 2vw, 24px)",
-    paddingX: "clamp(20px, 2.5vw, 32px)",
-    paddingY: 20,
-    iconSize: 72,
-    arrowSize: 36,
+    cardsGap: "clamp(12px, 1.6vmin, 20px)",
+    paddingX: "clamp(16px, 2vmin, 28px)",
+    paddingY: "clamp(12px, 1.5vh, 20px)",
+    cardMinHeight: "clamp(100px, 11vh, 150px)",
+    iconSize: "clamp(48px, 5vmin, 70px)",
+    arrowSize: "clamp(26px, 2.5vmin, 36px)",
 } as const;
 
 /**
@@ -61,8 +62,10 @@ export const CategoryCardsStyle = {
         position: "relative",
         display: "flex",
         width: "100%",
+        height: "100%",
+        minHeight: categoryCardsSpacing.cardMinHeight,
         alignItems: "center",
-        gap: 16,
+        gap: "clamp(14px, 1.8vmin, 20px)",
         borderRadius: 16,
         borderWidth: 2,
         borderStyle: "solid",
@@ -75,12 +78,14 @@ export const CategoryCardsStyle = {
         textAlign: "left",
         overflow: "hidden",
         cursor: "pointer",
+        boxSizing: "border-box",
     },
     iconWrapper: {
         display: "flex",
         alignItems: "center",
         justifyContent: "center",
         flexShrink: 0,
+        width: "clamp(48px, 5vmin, 70px)",
     },
     adultIconTile: {
         display: "flex",
@@ -116,14 +121,17 @@ export const CategoryCardsStyle = {
         flex: 1,
         flexDirection: "column",
         minWidth: 0,
-        paddingLeft: 8,
+        paddingLeft: "clamp(4px, 0.8vmin, 8px)",
+        overflowWrap: "anywhere",
+        wordBreak: "break-word",
     },
     cardTitle: {
         fontWeight: 900,
         fontSize: categoryCardsTypography.cardTitle,
         lineHeight: 1.2,
         color: categoryCardsTheme.titleColor,
-        overflow: "hidden",
+        overflowWrap: "anywhere",
+        wordBreak: "break-word",
     },
     divider: {
         height: 2,
@@ -137,7 +145,9 @@ export const CategoryCardsStyle = {
         fontSize: categoryCardsTypography.cardSubtitle,
         fontWeight: 600,
         color: categoryCardsTheme.cardSubtitleColor,
-        lineHeight: 1.3,
+        lineHeight: 1.25,
+        overflowWrap: "anywhere",
+        wordBreak: "break-word",
     },
     cardBadgeAdult: {
         marginTop: 6,
@@ -180,13 +190,17 @@ export const CategoryCardsStyle = {
         display: "grid",
         width: "100%",
         gridTemplateColumns: "repeat(auto-fit, minmax(280px, 1fr))",
+        gridAutoRows: "1fr",
         gap: categoryCardsSpacing.cardsGap,
+        margin: "0 auto",
+        paddingTop: 4,
+        paddingBottom: 0,
     },
 } satisfies Record<string, CSSProperties>;
 
 /** Tailwind CSS class name dictionary for category cards. */
 export const CategoryCardsClasses = {
-    grid: "grid w-full grid-cols-1 sm:grid-cols-2 gap-4 sm:gap-6 px-4 py-4",
+    grid: "grid w-full grid-cols-1 sm:grid-cols-2 gap-3 sm:gap-6 px-4 pt-1 sm:pt-2 pb-0 mx-auto auto-rows-fr",
     adultCard: "group transition-all duration-100 active:scale-[0.98] active:!border-[#ED1C24] active:shadow-sm",
     pediaCard: "group transition-all duration-100 active:scale-[0.98] active:!border-[#ED1C24] active:shadow-sm",
     cardIconWrapper: "shrink-0",

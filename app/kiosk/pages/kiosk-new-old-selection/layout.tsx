@@ -35,32 +35,47 @@ export default function KioskNewOldSelectionLayout({
 
     return (
         <div className={KioskNewOldLayoutClasses.layoutOverlay(mounted)}>
-            <main className={KioskNewOldLayoutClasses.layoutMain(isLandscape)}>
-                <div className={KioskNewOldLayoutClasses.layoutCenterWrapper}>
-                    {isLandscape ? (
-                        /* LANDSCAPE DUAL-COLUMN VIEW */
+            <div className={KioskNewOldLayoutClasses.layoutContainer}>
+                {isLandscape ? (
+                    /* LANDSCAPE DUAL-COLUMN VIEW */
+                    <main className={KioskNewOldLayoutClasses.layoutLandscapeMain}>
                         <div className={KioskNewOldLayoutClasses.layoutLandscapeRow}>
                             {/* Left column: Hospital Title & Image */}
                             <div className={KioskNewOldLayoutClasses.layoutLandscapeLeftCol}>
                                 <KioskTitle isLandscape={true} />
                             </div>
 
-                            {/* Right column: Banner Instructions & Cards */}
+                            {/* Right column: Banner Instructions & Cards (fixed, non-scrollable) */}
                             <div className={KioskNewOldLayoutClasses.layoutLandscapeRightCol}>
+                                <div className={KioskNewOldLayoutClasses.bannerWrapper}>
+                                    <PatientTypeBanner />
+                                </div>
+                                <div className={KioskNewOldLayoutClasses.cardsArea}>
+                                    <div className={KioskNewOldLayoutClasses.layoutChildrenWrapper}>{children}</div>
+                                </div>
+                            </div>
+                        </div>
+                    </main>
+                ) : (
+                    /* PORTRAIT STACKED VIEW */
+                    <main className={KioskNewOldLayoutClasses.layoutPortraitMain}>
+                        {/* Hospital branding & logo header */}
+                        <header className={KioskNewOldLayoutClasses.portraitHeaderWrapper}>
+                            <KioskTitle isLandscape={false} />
+                        </header>
+
+                        {/* Banner instructions directly on top of selection cards with zero gap */}
+                        <div className={KioskNewOldLayoutClasses.portraitSelectionGroup}>
+                            <div className={KioskNewOldLayoutClasses.bannerWrapper}>
                                 <PatientTypeBanner />
+                            </div>
+                            <div className={KioskNewOldLayoutClasses.cardsArea}>
                                 <div className={KioskNewOldLayoutClasses.layoutChildrenWrapper}>{children}</div>
                             </div>
                         </div>
-                    ) : (
-                        /* PORTRAIT STACKED VIEW */
-                        <div className={KioskNewOldLayoutClasses.layoutPortraitStack}>
-                            <KioskTitle isLandscape={false} />
-                            <PatientTypeBanner />
-                            <div className={KioskNewOldLayoutClasses.layoutChildrenWrapper}>{children}</div>
-                        </div>
-                    )}
-                </div>
-            </main>
+                    </main>
+                )}
+            </div>
         </div>
     );
 }

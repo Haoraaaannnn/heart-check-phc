@@ -28,16 +28,17 @@ export const KioskBackButtonStyles = {
         borderWidth: 2,
         borderStyle: "solid",
         borderColor: "#D1D5DB",
-        paddingTop: 16,
-        paddingBottom: 16,
-        paddingLeft: 24,
-        paddingRight: 24,
+        paddingTop: "clamp(12px, 1.4vh, 18px)",
+        paddingBottom: "clamp(12px, 1.4vh, 18px)",
+        paddingLeft: "clamp(16px, 2vmin, 26px)",
+        paddingRight: "clamp(16px, 2vmin, 26px)",
+        whiteSpace: "nowrap",
     },
     /**
      * Inline icon sizing ensuring faithful rendering identical to previous Tabler icons.
      */
     icon: {
-        fontSize: 28,
+        fontSize: "clamp(24px, 2.4vmin, 32px)",
         lineHeight: 1,
         color: themeColors.brandRed,
     },
@@ -48,7 +49,7 @@ export const KioskBackButtonStyles = {
  */
 export const KioskBackButtonClasses = {
     /**
-     * Tactile elevated pill button with touch-optimized scaling.
+     * In-flow elevated pill button with touch-optimized scaling (non-overflowing).
      */
-    button: "absolute left-6 top-6 z-50 flex items-center gap-2.5 rounded-2xl text-xl sm:text-2xl font-bold shadow-md transition-all duration-150 active:scale-95 active:!border-[#ED1C24] active:bg-gray-50",
+    button: "inline-flex items-center gap-2 sm:gap-2.5 rounded-2xl text-base sm:text-2xl font-bold shadow-sm transition-all duration-150 active:scale-95 active:!border-[#ED1C24] active:bg-gray-50",
 } as const;

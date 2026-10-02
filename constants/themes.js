@@ -12,8 +12,8 @@
 // ---------------------------------------------------------------------------
 // LEGACY - bg / text themes applicable to all especially on dashboard
 // ---------------------------------------------------------------------------
-export const darkTheme = "dark:bg-gray-900/60 dark:border-gray-700/50 dark:shadow-black/20";
-export const lightTheme = "rounded-[28px] shadow-[0_10px_40px_rgba(255,120,120,0.06)] border border-white/40 bg-white/35";
+export const darkTheme = "dark:bg-gray-900 dark:border-gray-800 dark:shadow-sm";
+export const lightTheme = "rounded-2xl shadow-sm border border-gray-200 bg-white";
 
 export const textLight = "text-gray-800";
 export const textDark = "dark:text-gray-200";
@@ -22,8 +22,8 @@ export const textDark = "dark:text-gray-200";
 // SEMANTIC - theme-aware via CSS variables (see app/globals.css)
 // ---------------------------------------------------------------------------
 
-/** Glass card surface: background, border, shadow and blur. Add radius/padding at the call site. */
-export const cardSurface = "bg-surface border border-line shadow-card backdrop-blur-xl";
+/** Solid card surface: background, border, and subtle elevation shadow. Add radius/padding at the call site. */
+export const cardSurface = "bg-surface border border-line shadow-sm";
 
 /** Primary body/heading text. */
 export const textPrimary = "text-content";

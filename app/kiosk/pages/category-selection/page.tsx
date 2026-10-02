@@ -70,97 +70,110 @@ export default function CategorySelectionPage() {
             className={CategoryLayoutClasses.container}
             style={CategoryLayoutStyle.container}
         >
-            <div style={CategoryLayoutStyle.contentWrapper}>
-                {/* Header Instructions */}
-                <div style={CategoryHeaderStyle.header}>
-                    <h1 style={CategoryHeaderStyle.title}>
-                        {CategoryHeaderTexts.titleFil}
-                    </h1>
-                    <p style={CategoryHeaderStyle.subtitle}>
-                        {CategoryHeaderTexts.titleEn}
-                    </p>
-                </div>
-
-                {/* Category Options */}
-                <div
-                    style={CategoryCardsStyle.cardsGrid}
-                    className={CategoryCardsClasses.grid}
+            <div
+                className={CategoryLayoutClasses.contentWrapper}
+                style={CategoryLayoutStyle.contentWrapper}
+            >
+                {/* Header Instructions: sticky greetings & prompt on top */}
+                <header
+                    className={CategoryLayoutClasses.headerWrapper}
+                    style={CategoryLayoutStyle.headerWrapper}
                 >
-                    {/* Adult Button */}
-                    <button
-                        type="button"
-                        onClick={() => chooseCategory("Adult")}
-                        style={CategoryCardsStyle.card}
-                        className={CategoryCardsClasses.adultCard}
+                    <div style={CategoryHeaderStyle.header}>
+                        <h1 style={CategoryHeaderStyle.title}>
+                            {CategoryHeaderTexts.titleFil}
+                        </h1>
+                        <p style={CategoryHeaderStyle.subtitle}>
+                            {CategoryHeaderTexts.titleEn}
+                        </p>
+                    </div>
+                </header>
+
+                {/* Age category cards scroll area */}
+                <div
+                    className={CategoryLayoutClasses.cardsScrollArea}
+                    style={CategoryLayoutStyle.cardsScrollArea}
+                >
+                    <div
+                        style={CategoryCardsStyle.cardsGrid}
+                        className={CategoryCardsClasses.grid}
                     >
-                        {/* Brand-colored icon container */}
-                        <div
-                            style={CategoryCardsStyle.iconWrapper}
-                            className={CategoryCardsClasses.cardIconWrapper}
+                        {/* Adult Button */}
+                        <button
+                            type="button"
+                            onClick={() => chooseCategory("Adult")}
+                            style={CategoryCardsStyle.card}
+                            className={CategoryCardsClasses.adultCard}
                         >
+                            {/* Brand-colored icon container */}
+                            <div
+                                style={CategoryCardsStyle.iconWrapper}
+                                className={CategoryCardsClasses.cardIconWrapper}
+                            >
+                                <i
+                                    className={`bx ${CategoryCardsIcons.adult}`}
+                                    style={CategoryCardsStyle.adultIcon}
+                                    aria-hidden="true"
+                                />
+                            </div>
+
+                            {/* Category Labels */}
+                            <div style={CategoryCardsStyle.labelsWrapper}>
+                                <span style={CategoryCardsStyle.cardTitle}>
+                                    {CategoryCardsTexts.adultLabelFil}
+                                </span>
+                                <div style={CategoryCardsStyle.divider} />
+                                <span style={CategoryCardsStyle.cardSubtitle}>
+                                    {CategoryCardsTexts.adultLabelEn}
+                                </span>
+                            </div>
+
+                            {/* Directional navigation indicator */}
                             <i
-                                className={`bx ${CategoryCardsIcons.adult}`}
-                                style={CategoryCardsStyle.adultIcon}
+                                className={`bx ${CategoryCardsIcons.arrow} ${CategoryCardsClasses.cardArrow}`}
+                                style={CategoryCardsStyle.arrowIcon}
                                 aria-hidden="true"
                             />
-                        </div>
+                        </button>
 
-                        {/* Category Labels */}
-                        <div style={CategoryCardsStyle.labelsWrapper}>
-                            <span style={CategoryCardsStyle.cardTitle}>
-                                {CategoryCardsTexts.adultLabelFil}
-                            </span>
-                            <div style={CategoryCardsStyle.divider} />
-                            <span style={CategoryCardsStyle.cardSubtitle}>
-                                {CategoryCardsTexts.adultLabelEn}
-                            </span>
-                        </div>
-
-                        {/* Directional navigation indicator */}
-                        <i
-                            className={`bx ${CategoryCardsIcons.arrow} ${CategoryCardsClasses.cardArrow}`}
-                            style={CategoryCardsStyle.arrowIcon}
-                            aria-hidden="true"
-                        />
-                    </button>
-
-                    {/* Pedia Button */}
-                    <button
-                        type="button"
-                        onClick={() => chooseCategory("Pedia")}
-                        style={CategoryCardsStyle.card}
-                        className={CategoryCardsClasses.pediaCard}
-                    >
-                        {/* Brand-colored icon container */}
-                        <div
-                            style={CategoryCardsStyle.iconWrapper}
-                            className={CategoryCardsClasses.cardIconWrapper}
+                        {/* Pedia Button */}
+                        <button
+                            type="button"
+                            onClick={() => chooseCategory("Pedia")}
+                            style={CategoryCardsStyle.card}
+                            className={CategoryCardsClasses.pediaCard}
                         >
+                            {/* Brand-colored icon container */}
+                            <div
+                                style={CategoryCardsStyle.iconWrapper}
+                                className={CategoryCardsClasses.cardIconWrapper}
+                            >
+                                <i
+                                    className={`bx ${CategoryCardsIcons.pedia}`}
+                                    style={CategoryCardsStyle.pediaIcon}
+                                    aria-hidden="true"
+                                />
+                            </div>
+
+                            {/* Category Labels */}
+                            <div style={CategoryCardsStyle.labelsWrapper}>
+                                <span style={CategoryCardsStyle.cardTitle}>
+                                    {CategoryCardsTexts.pediaLabelFil}
+                                </span>
+                                <div style={CategoryCardsStyle.divider} />
+                                <span style={CategoryCardsStyle.cardSubtitle}>
+                                    {CategoryCardsTexts.pediaLabelEn}
+                                </span>
+                            </div>
+
+                            {/* Directional navigation indicator */}
                             <i
-                                className={`bx ${CategoryCardsIcons.pedia}`}
-                                style={CategoryCardsStyle.pediaIcon}
+                                className={`bx ${CategoryCardsIcons.arrow} ${CategoryCardsClasses.cardArrow}`}
+                                style={CategoryCardsStyle.arrowIcon}
                                 aria-hidden="true"
                             />
-                        </div>
-
-                        {/* Category Labels */}
-                        <div style={CategoryCardsStyle.labelsWrapper}>
-                            <span style={CategoryCardsStyle.cardTitle}>
-                                {CategoryCardsTexts.pediaLabelFil}
-                            </span>
-                            <div style={CategoryCardsStyle.divider} />
-                            <span style={CategoryCardsStyle.cardSubtitle}>
-                                {CategoryCardsTexts.pediaLabelEn}
-                            </span>
-                        </div>
-
-                        {/* Directional navigation indicator */}
-                        <i
-                            className={`bx ${CategoryCardsIcons.arrow} ${CategoryCardsClasses.cardArrow}`}
-                            style={CategoryCardsStyle.arrowIcon}
-                            aria-hidden="true"
-                        />
-                    </button>
+                        </button>
+                    </div>
                 </div>
             </div>
         </div>
