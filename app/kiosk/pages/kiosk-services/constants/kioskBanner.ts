@@ -6,7 +6,7 @@ import { kioskTypography, fontSizeHeader } from "@/constants/kiosk";
 export const kioskBannerSpacing = {
   bannerPaddingX: 0,
   bannerBottom: 0,
-  bannerSubtitleMarginGap: 8,
+  bannerSubtitleMarginGap: 4,
 } as const;
 
 /** Typography tokens for kiosk banner, referencing centralized root typography scale. */
@@ -50,6 +50,8 @@ export const KioskBannerStyle = {
   container: {
     width: "100%",
     textAlign: "center",
+    paddingBottom: 0,
+    marginBottom: 0,
   },
   Title: {
     fontSize: kioskBannerTypography.titleSize,
@@ -61,6 +63,7 @@ export const KioskBannerStyle = {
   subtitle: {
     margin: 0,
     marginTop: kioskBannerSpacing.bannerSubtitleMarginGap,
+    marginBottom: 0,
     fontSize: kioskBannerTypography.subtitleSize,
     fontWeight: kioskBannerTypography.subtitleWeight,
     lineHeight: kioskBannerLineHeight.relaxed,

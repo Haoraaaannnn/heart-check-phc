@@ -52,7 +52,7 @@ export const ANALYTICS_STYLES = {
 
   /** Top banner / header region. */
   header: {
-    root: 'flex flex-col gap-4 rounded-2xl border border-line bg-surface p-6 shadow-card backdrop-blur-xl md:flex-row md:items-center md:justify-between',
+    root: 'flex flex-col gap-4 rounded-2xl border border-line bg-surface p-6 shadow-sm md:flex-row md:items-center md:justify-between',
     titleBlock: 'flex flex-col',
     title: 'text-2xl md:text-3xl font-extrabold text-content',
     subtitle: 'text-sm text-content-muted',
@@ -66,7 +66,7 @@ export const ANALYTICS_STYLES = {
 
   /** Individual metric card tokens. */
   metricCard: {
-    tile: 'flex items-center gap-4 rounded-2xl border border-line bg-surface p-5 shadow-card backdrop-blur-xl transition hover:-translate-y-0.5',
+    tile: 'flex items-center gap-4 rounded-2xl border border-line bg-surface p-5 shadow-sm transition hover:-translate-y-0.5',
     iconWrap: 'flex h-12 w-12 shrink-0 items-center justify-center rounded-full text-2xl',
     content: 'flex flex-col min-w-0 flex-1',
     label: 'text-xs font-semibold text-content-muted',
@@ -77,10 +77,10 @@ export const ANALYTICS_STYLES = {
 
   /** Status card specifically for System Status (Overwhelmed / Elevated / Normal). */
   systemStatusCard: {
-    base: 'flex flex-col justify-between rounded-2xl border p-5 shadow-card backdrop-blur-xl transition',
-    Normal: 'border-emerald-500/20 bg-emerald-500/10 text-emerald-900 dark:text-emerald-200',
-    Elevated: 'border-amber-500/20 bg-amber-500/10 text-amber-900 dark:text-amber-200',
-    Overwhelmed: 'border-rose-500/20 bg-rose-500/10 text-rose-900 dark:text-rose-200',
+    base: 'flex flex-col justify-between rounded-2xl border p-5 shadow-sm transition',
+    Normal: 'border-emerald-200 bg-emerald-50 text-emerald-900 dark:border-emerald-900 dark:bg-emerald-950/40 dark:text-emerald-200',
+    Elevated: 'border-amber-200 bg-amber-50 text-amber-900 dark:border-amber-900 dark:bg-amber-950/40 dark:text-amber-200',
+    Overwhelmed: 'border-rose-200 bg-rose-50 text-rose-900 dark:border-rose-900 dark:bg-rose-950/40 dark:text-rose-200',
     eyebrow: 'text-xs font-bold uppercase tracking-widest text-content-muted',
     value: 'mt-2 text-3xl font-extrabold text-content',
     bottleneck: 'mt-1 text-xs font-semibold text-content-muted',
@@ -91,17 +91,17 @@ export const ANALYTICS_STYLES = {
   table: {
     wrap: 'overflow-x-auto',
     table: 'w-full border-collapse text-left',
-    headRow: 'border-b border-line bg-surface-muted/50',
+    headRow: 'border-b border-line bg-surface-muted',
     th: 'px-4 py-3 text-[11px] font-bold uppercase tracking-wider text-content-muted first:rounded-l-lg last:rounded-r-lg',
-    row: 'border-b border-line transition last:border-0 hover:bg-surface-muted/60',
+    row: 'border-b border-line transition last:border-0 hover:bg-surface-muted',
     td: 'px-4 py-3.5 text-sm text-content-muted',
   },
 
   /** Severity badge styles for Bottleneck stages. */
   levelBadge: {
-    Normal: 'bg-emerald-500/15 text-emerald-600 dark:text-emerald-400 border border-emerald-500/30',
-    Elevated: 'bg-amber-500/15 text-amber-600 dark:text-amber-400 border border-amber-500/30',
-    Overwhelmed: 'bg-rose-500/15 text-rose-600 dark:text-rose-400 border border-rose-500/30',
+    Normal: 'bg-emerald-100 text-emerald-800 dark:bg-emerald-950/60 dark:text-emerald-300 border border-emerald-300 dark:border-emerald-800',
+    Elevated: 'bg-amber-100 text-amber-800 dark:bg-amber-950/60 dark:text-amber-300 border border-amber-300 dark:border-amber-800',
+    Overwhelmed: 'bg-rose-100 text-rose-800 dark:bg-rose-950/60 dark:text-rose-300 border border-rose-300 dark:border-rose-800',
     'No Data': 'bg-surface-muted text-content-muted border border-line',
     base: 'inline-flex items-center rounded-full px-2.5 py-1 text-xs font-bold',
   },
@@ -115,7 +115,7 @@ export const ANALYTICS_STYLES = {
   /** Export modal styling definitions. */
   exportModal: {
     backdrop:
-      'fixed inset-0 z-[9999] flex items-center justify-center bg-black/60 p-4 backdrop-blur-sm transition-opacity animate-in fade-in duration-200',
+      'fixed inset-0 z-[9999] flex items-center justify-center bg-black/60 p-4 transition-opacity animate-in fade-in duration-200',
     modalBox:
       'relative z-[10000] w-full max-w-lg rounded-2xl border border-line bg-surface p-6 shadow-2xl transition-all',
     header: 'flex items-start justify-between border-b border-line pb-4',
@@ -137,26 +137,26 @@ export const ANALYTICS_STYLES = {
       'flex h-9 w-9 shrink-0 items-center justify-center rounded-xl border border-line bg-surface text-content hover:bg-surface-muted transition disabled:opacity-40 disabled:cursor-not-allowed cursor-pointer',
     monthGrid: 'grid grid-cols-3 sm:grid-cols-4 gap-2',
     loadingDates:
-      'flex items-center justify-center gap-2 rounded-xl border border-line bg-surface-muted/30 py-4 px-3 text-xs text-content-muted font-medium',
+      'flex items-center justify-center gap-2 rounded-xl border border-line bg-surface-muted py-4 px-3 text-xs text-content-muted font-medium',
     emptyState:
-      'flex items-center justify-center rounded-xl border border-line bg-surface-muted/30 py-4 px-3 text-xs text-content-muted font-medium',
+      'flex items-center justify-center rounded-xl border border-line bg-surface-muted py-4 px-3 text-xs text-content-muted font-medium',
     monthBtn:
       'flex flex-col items-center justify-center py-2 px-2 rounded-xl text-xs font-semibold border transition outline-none cursor-pointer',
     monthBtnActive:
       'bg-emerald-600 text-white border-emerald-600 shadow-md font-bold ring-2 ring-emerald-500/30',
     monthBtnIdle:
-      'bg-surface-muted/40 border-line text-content hover:bg-surface-muted hover:border-emerald-500/50',
+      'bg-surface-muted border-line text-content hover:bg-surface-muted hover:border-emerald-500/50',
     serviceSelect:
       'w-full rounded-xl border border-line bg-surface px-3.5 py-2 text-sm font-semibold text-content outline-none transition focus:border-emerald-500 focus:ring-2 focus:ring-emerald-500/20',
     infoCard:
-      'rounded-xl border border-emerald-500/20 bg-emerald-500/5 p-3.5 text-xs text-content-muted flex flex-col gap-1.5',
+      'rounded-xl border border-emerald-200 bg-emerald-50 dark:border-emerald-900 dark:bg-emerald-950/40 p-3.5 text-xs text-content-muted flex flex-col gap-1.5',
     infoRow: 'flex items-center justify-between text-xs',
     infoLabel: 'text-content-muted',
     infoValue: 'font-semibold text-content',
     errorBanner:
-      'flex items-center gap-2 rounded-xl border border-rose-500/20 bg-rose-500/10 p-3 text-xs font-medium text-rose-600 dark:text-rose-400',
+      'flex items-center gap-2 rounded-xl border border-rose-200 bg-rose-50 dark:border-rose-900 dark:bg-rose-950/40 p-3 text-xs font-medium text-rose-700 dark:text-rose-300',
     successBanner:
-      'flex items-center gap-2 rounded-xl border border-emerald-500/20 bg-emerald-500/10 p-3 text-xs font-medium text-emerald-600 dark:text-emerald-400',
+      'flex items-center gap-2 rounded-xl border border-emerald-200 bg-emerald-50 dark:border-emerald-900 dark:bg-emerald-950/40 p-3 text-xs font-medium text-emerald-700 dark:text-emerald-300',
     footer: 'mt-6 flex items-center justify-end gap-3 border-t border-line pt-4',
     cancelBtn:
       'rounded-xl border border-line bg-surface px-4 py-2 text-xs md:text-sm font-semibold text-content hover:bg-surface-muted transition cursor-pointer',
@@ -178,6 +178,10 @@ export const ANALYTICS_STYLES = {
 
   /** Chart card layout. */
   chartGrid: 'grid grid-cols-1 gap-6 lg:grid-cols-2',
+
+  /** Reusable solid card pill and strip containers. */
+  phcKpiCard: 'flex flex-col rounded-xl border border-line bg-surface-muted p-4',
+  forecastPill: 'flex items-center justify-between rounded-xl border border-line bg-surface-muted p-4 flex-wrap gap-2',
 } as const;
 
 /** Queue stage line colors for wait-time trend charts. */

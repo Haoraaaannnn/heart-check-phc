@@ -72,7 +72,7 @@ export default function ArimaForecast({
     >
       <div className="flex flex-col gap-6">
         {/* Next Day Pill Banner */}
-        <div className="flex items-center justify-between rounded-xl border border-line bg-surface-muted/40 p-4 flex-wrap gap-2">
+        <div className={ANALYTICS_STYLES.forecastPill}>
           <span className="text-xs font-semibold text-content-muted">
             {T.forecastForPrefix}{' '}
             <span className="font-bold text-content">{arimaRaw?.forecast_date || '—'}</span>

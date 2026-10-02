@@ -30,15 +30,15 @@ export const KioskBackButtonStyles = {
         borderColor: "#D1D5DB",
         paddingTop: "clamp(12px, 1.4vh, 18px)",
         paddingBottom: "clamp(12px, 1.4vh, 18px)",
-        paddingLeft: "clamp(16px, 2vw, 26px)",
-        paddingRight: "clamp(16px, 2vw, 26px)",
+        paddingLeft: "clamp(16px, 2vmin, 26px)",
+        paddingRight: "clamp(16px, 2vmin, 26px)",
         whiteSpace: "nowrap",
     },
     /**
      * Inline icon sizing ensuring faithful rendering identical to previous Tabler icons.
      */
     icon: {
-        fontSize: "clamp(24px, 2.4vw, 32px)",
+        fontSize: "clamp(24px, 2.4vmin, 32px)",
         lineHeight: 1,
         color: themeColors.brandRed,
     },

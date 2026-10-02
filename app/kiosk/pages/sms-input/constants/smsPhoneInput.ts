@@ -102,14 +102,14 @@ export const SMSPhoneInputStyle = {
         gap: 2,
     },
     feedbackFil: {
-        fontSize: "clamp(13px, 1.6vw, 15px)",
+        fontSize: "clamp(13px, 1.6vmin, 15px)",
         fontWeight: 600,
         color: "#DC2626",
         lineHeight: 1.3,
         margin: 0,
     },
     feedbackEn: {
-        fontSize: "clamp(12px, 1.4vw, 14px)",
+        fontSize: "clamp(12px, 1.4vmin, 14px)",
         fontWeight: 400,
         color: "#6B7280",
         lineHeight: 1.3,

@@ -31,12 +31,12 @@ export const categoryCardsTheme = {
  * Spacing tokens for category cards.
  */
 export const categoryCardsSpacing = {
-    cardsGap: "clamp(12px, 1.6vw, 20px)",
-    paddingX: "clamp(16px, 2vw, 28px)",
+    cardsGap: "clamp(12px, 1.6vmin, 20px)",
+    paddingX: "clamp(16px, 2vmin, 28px)",
     paddingY: "clamp(12px, 1.5vh, 20px)",
     cardMinHeight: "clamp(100px, 11vh, 150px)",
-    iconSize: "clamp(48px, 5vw, 70px)",
-    arrowSize: "clamp(26px, 2.5vw, 36px)",
+    iconSize: "clamp(48px, 5vmin, 70px)",
+    arrowSize: "clamp(26px, 2.5vmin, 36px)",
 } as const;
 
 /**
@@ -65,7 +65,7 @@ export const CategoryCardsStyle = {
         height: "100%",
         minHeight: categoryCardsSpacing.cardMinHeight,
         alignItems: "center",
-        gap: "clamp(14px, 1.8vw, 20px)",
+        gap: "clamp(14px, 1.8vmin, 20px)",
         borderRadius: 16,
         borderWidth: 2,
         borderStyle: "solid",
@@ -85,7 +85,7 @@ export const CategoryCardsStyle = {
         alignItems: "center",
         justifyContent: "center",
         flexShrink: 0,
-        width: "clamp(48px, 5vw, 70px)",
+        width: "clamp(48px, 5vmin, 70px)",
     },
     adultIconTile: {
         display: "flex",
@@ -121,7 +121,7 @@ export const CategoryCardsStyle = {
         flex: 1,
         flexDirection: "column",
         minWidth: 0,
-        paddingLeft: "clamp(4px, 0.8vw, 8px)",
+        paddingLeft: "clamp(4px, 0.8vmin, 8px)",
         overflowWrap: "anywhere",
         wordBreak: "break-word",
     },
@@ -192,12 +192,15 @@ export const CategoryCardsStyle = {
         gridTemplateColumns: "repeat(auto-fit, minmax(280px, 1fr))",
         gridAutoRows: "1fr",
         gap: categoryCardsSpacing.cardsGap,
+        margin: "0 auto",
+        paddingTop: 4,
+        paddingBottom: 0,
     },
 } satisfies Record<string, CSSProperties>;
 
 /** Tailwind CSS class name dictionary for category cards. */
 export const CategoryCardsClasses = {
-    grid: "grid w-full grid-cols-1 sm:grid-cols-2 gap-3 sm:gap-6 px-4 pt-1 pb-2 auto-rows-fr",
+    grid: "grid w-full grid-cols-1 sm:grid-cols-2 gap-3 sm:gap-6 px-4 pt-1 sm:pt-2 pb-0 mx-auto auto-rows-fr",
     adultCard: "group transition-all duration-100 active:scale-[0.98] active:!border-[#ED1C24] active:shadow-sm",
     pediaCard: "group transition-all duration-100 active:scale-[0.98] active:!border-[#ED1C24] active:shadow-sm",
     cardIconWrapper: "shrink-0",

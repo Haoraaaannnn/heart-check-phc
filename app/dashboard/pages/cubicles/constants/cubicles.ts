@@ -27,7 +27,7 @@ export const CUBICLES_STYLES = {
 
   /** Top banner / header region. */
   header: {
-    root: 'flex flex-col gap-2 rounded-2xl border border-line bg-surface p-6 shadow-card backdrop-blur-xl md:flex-row md:items-center md:justify-between',
+    root: 'flex flex-col gap-2 rounded-2xl border border-line bg-surface p-6 shadow-sm md:flex-row md:items-center md:justify-between',
     titleBlock: 'flex flex-col',
     title: 'text-2xl md:text-3xl font-extrabold text-content',
     subtitle: 'text-sm text-content-muted',
@@ -39,7 +39,7 @@ export const CUBICLES_STYLES = {
 
   /** Metric card style tokens matching DashboardMetrics. */
   metricCard: {
-    tile: 'flex items-center gap-4 rounded-2xl border border-line bg-surface p-5 shadow-card backdrop-blur-xl transition hover:-translate-y-0.5',
+    tile: 'flex items-center gap-4 rounded-2xl border border-line bg-surface p-5 shadow-sm transition hover:-translate-y-0.5',
     iconWrap: 'flex h-12 w-12 shrink-0 items-center justify-center rounded-full text-2xl',
     content: 'flex flex-col min-w-0 flex-1',
     label: 'text-xs font-semibold text-content-muted',
@@ -52,7 +52,7 @@ export const CUBICLES_STYLES = {
 
   /** Individual cubicle status card. */
   cubicleCard: {
-    tile: 'flex flex-col justify-between rounded-xl border-2 p-5 shadow-sm transition hover:shadow-md backdrop-blur-md',
+    tile: 'flex flex-col justify-between rounded-xl border-2 p-5 shadow-sm transition hover:shadow-md',
     headerRow: 'flex items-center justify-between mb-3',
     number: 'text-lg font-extrabold text-content',
     statusBadge: 'inline-flex items-center gap-1.5 rounded-full px-2.5 py-0.5 text-xs font-bold uppercase',
@@ -62,7 +62,7 @@ export const CUBICLES_STYLES = {
     detailValue: 'font-bold text-content',
     timeText: 'font-mono text-content-muted',
     remainingPill:
-      'inline-flex items-center gap-1 rounded-md bg-rose-500/10 px-2 py-0.5 font-mono text-[11px] font-bold text-rose-600 dark:text-rose-400 border border-rose-500/20',
+      'inline-flex items-center gap-1 rounded-md bg-rose-50 px-2 py-0.5 font-mono text-[11px] font-bold text-rose-700 dark:bg-rose-950/40 dark:text-rose-300 border border-rose-200 dark:border-rose-900',
   },
 
   /** Status legend card. */
@@ -86,34 +86,34 @@ export const CUBICLE_STATUS_STYLES: Record<
   }
 > = {
   available: {
-    border: 'border-emerald-500/30',
-    bg: 'bg-emerald-500/5',
-    badgeBg: 'bg-emerald-500/15 border border-emerald-500/30',
-    badgeText: 'text-emerald-700 dark:text-emerald-300',
+    border: 'border-emerald-200 dark:border-emerald-900',
+    bg: 'bg-emerald-50 dark:bg-emerald-950/40',
+    badgeBg: 'bg-emerald-100 border border-emerald-300 dark:bg-emerald-900/50 dark:border-emerald-800',
+    badgeText: 'text-emerald-800 dark:text-emerald-300',
     dot: 'bg-emerald-500',
     icon: 'bx-check-circle',
   },
   occupied: {
-    border: 'border-rose-500/30',
-    bg: 'bg-rose-500/5',
-    badgeBg: 'bg-rose-500/15 border border-rose-500/30',
-    badgeText: 'text-rose-700 dark:text-rose-300',
+    border: 'border-rose-200 dark:border-rose-900',
+    bg: 'bg-rose-50 dark:bg-rose-950/40',
+    badgeBg: 'bg-rose-100 border border-rose-300 dark:bg-rose-900/50 dark:border-rose-800',
+    badgeText: 'text-rose-800 dark:text-rose-300',
     dot: 'bg-rose-500 animate-pulse',
     icon: 'bx-user',
   },
   maintenance: {
-    border: 'border-amber-500/30',
-    bg: 'bg-amber-500/5',
-    badgeBg: 'bg-amber-500/15 border border-amber-500/30',
-    badgeText: 'text-amber-700 dark:text-amber-300',
+    border: 'border-amber-200 dark:border-amber-900',
+    bg: 'bg-amber-50 dark:bg-amber-950/40',
+    badgeBg: 'bg-amber-100 border border-amber-300 dark:bg-amber-900/50 dark:border-amber-800',
+    badgeText: 'text-amber-800 dark:text-amber-300',
     dot: 'bg-amber-500',
     icon: 'bx-wrench',
   },
   cleaning: {
-    border: 'border-blue-500/30',
-    bg: 'bg-blue-500/5',
-    badgeBg: 'bg-blue-500/15 border border-blue-500/30',
-    badgeText: 'text-blue-700 dark:text-blue-300',
+    border: 'border-blue-200 dark:border-blue-900',
+    bg: 'bg-blue-50 dark:bg-blue-950/40',
+    badgeBg: 'bg-blue-100 border border-blue-300 dark:bg-blue-900/50 dark:border-blue-800',
+    badgeText: 'text-blue-800 dark:text-blue-300',
     dot: 'bg-blue-500',
     icon: 'bx-brush',
   },

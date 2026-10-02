@@ -105,7 +105,7 @@ export default async function KioskCubicleSelectionPage({
                 className={CubicleLayoutClasses.contentWrapper}
                 style={CubicleLayoutStyle.contentWrapper}
             >
-                {/* Greetings and instruction header: grouped directly with cubicle buttons */}
+                {/* Greetings and instruction header: sticky at top */}
                 <header
                     className={CubicleLayoutClasses.headerWrapper}
                     style={CubicleLayoutStyle.headerWrapper}
@@ -113,17 +113,22 @@ export default async function KioskCubicleSelectionPage({
                     <CubicleHeader />
                 </header>
 
-                {/* Cubicle cards grid */}
-                <div className={CubicleCardClasses.grid}>
-                    {cubicles?.map((cubicle: CubicleSelectorType) => (
-                        <CubicleCard
-                            key={cubicle.id}
-                            cubicle={cubicle}
-                            serviceId={serviceId}
-                            patientType={type}
-                            subcategory={subcategory}
-                        />
-                    ))}
+                {/* Cubicle cards scroll area */}
+                <div
+                    className={CubicleLayoutClasses.cardsScrollArea}
+                    style={CubicleLayoutStyle.cardsScrollArea}
+                >
+                    <div className={CubicleCardClasses.grid}>
+                        {cubicles?.map((cubicle: CubicleSelectorType) => (
+                            <CubicleCard
+                                key={cubicle.id}
+                                cubicle={cubicle}
+                                serviceId={serviceId}
+                                patientType={type}
+                                subcategory={subcategory}
+                            />
+                        ))}
+                    </div>
                 </div>
             </div>
         </div>

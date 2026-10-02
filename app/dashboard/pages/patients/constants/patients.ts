@@ -51,11 +51,11 @@ export const PATIENTS_STYLES = {
 
   /** Top banner / header region. */
   header: {
-    root: 'flex flex-col gap-2 rounded-2xl border border-line bg-surface p-6 shadow-card backdrop-blur-xl',
+    root: 'flex flex-col gap-2 rounded-2xl border border-line bg-surface p-6 shadow-sm',
     titleRow: 'flex items-center justify-between flex-wrap gap-4',
     title: 'text-2xl md:text-3xl font-extrabold text-content',
     subtitle: 'text-sm text-content-muted',
-    errorBadge: 'inline-flex items-center gap-2 rounded-xl bg-red-500/10 px-4 py-2 text-sm font-semibold text-red-600 dark:text-red-400 border border-red-500/20',
+    errorBadge: 'inline-flex items-center gap-2 rounded-xl bg-red-50 px-4 py-2 text-sm font-semibold text-red-700 dark:bg-red-950/40 dark:text-red-300 border border-red-200 dark:border-red-900',
   },
 
   /** Service filter pill bar. */
@@ -73,7 +73,7 @@ export const PATIENTS_STYLES = {
 
   /** Individual metric card token matching DashboardMetrics. */
   metricCard: {
-    tile: 'flex items-center gap-4 rounded-2xl border border-line bg-surface p-5 shadow-card backdrop-blur-xl transition hover:-translate-y-0.5',
+    tile: 'flex items-center gap-4 rounded-2xl border border-line bg-surface p-5 shadow-sm transition hover:-translate-y-0.5',
     iconWrap: 'flex h-12 w-12 shrink-0 items-center justify-center rounded-full text-2xl',
     content: 'flex flex-col min-w-0 flex-1',
     label: 'text-xs font-semibold text-content-muted',
@@ -95,12 +95,12 @@ export const PATIENTS_STYLES = {
     countHighlight: 'font-bold text-content',
     wrap: 'overflow-x-auto',
     table: 'w-full border-collapse text-left',
-    headRow: 'border-b border-line bg-surface-muted/50',
+    headRow: 'border-b border-line bg-surface-muted',
     th: 'px-4 py-3 text-[11px] font-bold uppercase tracking-wider text-content-muted first:rounded-l-lg last:rounded-r-lg',
-    row: 'border-b border-line transition last:border-0 hover:bg-surface-muted/60',
+    row: 'border-b border-line transition last:border-0 hover:bg-surface-muted',
     td: 'px-4 py-3.5 text-sm text-content-muted',
     ticketBadge:
-      'inline-block rounded-lg bg-red-500/10 px-3 py-1 font-mono text-sm font-extrabold text-red-600 dark:text-red-400 border border-red-500/20',
+      'inline-block rounded-lg bg-red-50 border border-red-200 px-3 py-1 font-mono text-sm font-extrabold text-red-700 dark:bg-red-950/40 dark:border-red-900 dark:text-red-300',
     statusBadge: 'inline-flex items-center gap-1.5 rounded-full px-3 py-1 text-xs font-bold',
     emptyWrap: 'py-12 text-center',
     emptyTitle: 'text-base font-bold text-content',
@@ -115,7 +115,7 @@ export const PATIENTS_STYLES = {
   serviceQueue: {
     statusStrip: 'flex items-center gap-3 flex-wrap',
     badgeActive:
-      'inline-flex items-center gap-2 rounded-full bg-emerald-500/10 border border-emerald-500/20 px-3 py-1 text-xs font-extrabold uppercase text-emerald-600 dark:text-emerald-400',
+      'inline-flex items-center gap-2 rounded-full bg-emerald-100 border border-emerald-300 px-3 py-1 text-xs font-extrabold uppercase text-emerald-800 dark:bg-emerald-950/60 dark:border-emerald-800 dark:text-emerald-300',
     badgeStandby:
       'inline-flex items-center gap-2 rounded-full bg-surface-muted border border-line px-3 py-1 text-xs font-extrabold uppercase text-content-muted',
     indicatorDotActive: 'h-2 w-2 rounded-full bg-emerald-500 animate-pulse',
@@ -126,50 +126,50 @@ export const PATIENTS_STYLES = {
     queueCardCol: 'lg:col-span-2',
     chartCardCol: 'lg:col-span-1',
     patientItem:
-      'flex items-center justify-between rounded-xl border border-line bg-surface-muted/40 p-4 transition hover:bg-surface-muted',
+      'flex items-center justify-between rounded-xl border border-line bg-surface-muted p-4 transition hover:bg-surface-muted/80',
     patientItemNext:
-      'flex items-center justify-between rounded-xl border-2 border-brand-accent/40 bg-brand-accent/5 p-4 transition',
+      'flex items-center justify-between rounded-xl border-2 border-brand-accent bg-rose-50 dark:bg-rose-950/40 p-4 transition',
     patientInfo: 'flex items-center gap-3 min-w-0',
     patientNumber:
-      'inline-block rounded-lg bg-red-500/10 px-3 py-1 font-mono text-sm font-extrabold text-red-600 dark:text-red-400 border border-red-500/20',
+      'inline-block rounded-lg bg-red-50 border border-red-200 px-3 py-1 font-mono text-sm font-extrabold text-red-700 dark:bg-red-950/40 dark:border-red-900 dark:text-red-300',
     patientMeta: 'flex flex-col',
     patientName: 'text-sm font-semibold text-content truncate',
     patientWait: 'text-xs text-content-muted',
     overduePill:
-      'inline-flex items-center gap-1 rounded-full bg-amber-500/15 border border-amber-500/30 px-2.5 py-0.5 text-[11px] font-bold text-amber-600 dark:text-amber-400',
+      'inline-flex items-center gap-1 rounded-full bg-amber-100 border border-amber-300 px-2.5 py-0.5 text-[11px] font-bold text-amber-800 dark:bg-amber-950/60 dark:border-amber-800 dark:text-amber-300',
   },
 } as const;
 
 /** Status color tokens for patient list badges. */
 export const PATIENT_STATUS_COLORS: Record<string, { bg: string; text: string; dot: string }> = {
   waiting: {
-    bg: 'bg-amber-500/15 border border-amber-500/30',
-    text: 'text-amber-600 dark:text-amber-400',
+    bg: 'bg-amber-100 border border-amber-300 dark:bg-amber-950/50 dark:border-amber-800',
+    text: 'text-amber-800 dark:text-amber-300',
     dot: 'bg-amber-500',
   },
   'in queue': {
-    bg: 'bg-amber-500/15 border border-amber-500/30',
-    text: 'text-amber-600 dark:text-amber-400',
+    bg: 'bg-amber-100 border border-amber-300 dark:bg-amber-950/50 dark:border-amber-800',
+    text: 'text-amber-800 dark:text-amber-300',
     dot: 'bg-amber-500',
   },
   serving: {
-    bg: 'bg-blue-500/15 border border-blue-500/30',
-    text: 'text-blue-600 dark:text-blue-400',
+    bg: 'bg-blue-100 border border-blue-300 dark:bg-blue-950/50 dark:border-blue-800',
+    text: 'text-blue-800 dark:text-blue-300',
     dot: 'bg-blue-500 animate-pulse',
   },
   'in service': {
-    bg: 'bg-blue-500/15 border border-blue-500/30',
-    text: 'text-blue-600 dark:text-blue-400',
+    bg: 'bg-blue-100 border border-blue-300 dark:bg-blue-950/50 dark:border-blue-800',
+    text: 'text-blue-800 dark:text-blue-300',
     dot: 'bg-blue-500 animate-pulse',
   },
   completed: {
-    bg: 'bg-emerald-500/15 border border-emerald-500/30',
-    text: 'text-emerald-600 dark:text-emerald-400',
+    bg: 'bg-emerald-100 border border-emerald-300 dark:bg-emerald-950/50 dark:border-emerald-800',
+    text: 'text-emerald-800 dark:text-emerald-300',
     dot: 'bg-emerald-500',
   },
   done: {
-    bg: 'bg-emerald-500/15 border border-emerald-500/30',
-    text: 'text-emerald-600 dark:text-emerald-400',
+    bg: 'bg-emerald-100 border border-emerald-300 dark:bg-emerald-950/50 dark:border-emerald-800',
+    text: 'text-emerald-800 dark:text-emerald-300',
     dot: 'bg-emerald-500',
   },
   default: {

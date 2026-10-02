@@ -53,7 +53,7 @@ export const COMMON_ICONS = {
   arrowRight: 'bx-right-arrow-alt',
   chevronRight: 'bx-chevron-right',
   chevronDown: 'bx-chevron-down',
-  backspace: 'bx-arrow-back',
+  backspace: 'bxs-tag-x',
   download: 'bx-download',
   spinner: 'bx-loader-alt',
   stethoscope: 'bx-pulse',

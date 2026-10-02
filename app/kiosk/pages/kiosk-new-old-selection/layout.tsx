@@ -59,15 +59,19 @@ export default function KioskNewOldSelectionLayout({
                 ) : (
                     /* PORTRAIT STACKED VIEW */
                     <main className={KioskNewOldLayoutClasses.layoutPortraitMain}>
-                        {/* Hospital branding & instructions header */}
+                        {/* Hospital branding & logo header */}
                         <header className={KioskNewOldLayoutClasses.portraitHeaderWrapper}>
                             <KioskTitle isLandscape={false} />
-                            <PatientTypeBanner />
                         </header>
 
-                        {/* Patient category cards area: fits on screen with zero scrolling */}
-                        <div className={KioskNewOldLayoutClasses.cardsArea}>
-                            <div className={KioskNewOldLayoutClasses.layoutChildrenWrapper}>{children}</div>
+                        {/* Banner instructions directly on top of selection cards with zero gap */}
+                        <div className={KioskNewOldLayoutClasses.portraitSelectionGroup}>
+                            <div className={KioskNewOldLayoutClasses.bannerWrapper}>
+                                <PatientTypeBanner />
+                            </div>
+                            <div className={KioskNewOldLayoutClasses.cardsArea}>
+                                <div className={KioskNewOldLayoutClasses.layoutChildrenWrapper}>{children}</div>
+                            </div>
                         </div>
                     </main>
                 )}

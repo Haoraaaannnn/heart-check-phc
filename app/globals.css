@@ -8,31 +8,31 @@
 /* and never need a `dark:` variant for these.                                 */
 /* -------------------------------------------------------------------------- */
 :root {
-  --surface: rgb(255 255 255 / 0.78);
-  --surface-muted: rgb(255 241 242 / 0.7);
-  --line: rgb(244 205 208 / 0.7);
+  --surface: #ffffff;
+  --surface-muted: #f8fafc;
+  --line: #e2e8f0;
   --content: #1f2937;
   --content-muted: #6b7280;
   --content-subtle: #9ca3af;
-  --track: #f3e4e6;
+  --track: #f1f5f9;
   --accent: #be123c;
-  --card-shadow: 0 10px 40px rgba(255, 120, 120, 0.08);
+  --card-shadow: 0 1px 3px 0 rgb(0 0 0 / 0.05), 0 1px 2px -1px rgb(0 0 0 / 0.05);
   --gradient-brand: linear-gradient(135deg, #9f1239 0%, #e11d48 100%);
-  --gradient-banner: linear-gradient(115deg, #fff1f2 0%, #ffe4e6 45%, #fb7185 130%);
+  --gradient-banner: linear-gradient(115deg, #ffffff 0%, #fff1f2 100%);
 }
 
 .dark {
-  --surface: rgb(17 24 39 / 0.7);
-  --surface-muted: rgb(31 41 55 / 0.6);
-  --line: rgb(55 65 81 / 0.6);
+  --surface: #111827;
+  --surface-muted: #1f2937;
+  --line: #374151;
   --content: #e5e7eb;
   --content-muted: #9ca3af;
   --content-subtle: #6b7280;
   --track: #374151;
   --accent: #fb7185;
-  --card-shadow: 0 10px 40px rgba(0, 0, 0, 0.25);
+  --card-shadow: 0 1px 3px 0 rgb(0 0 0 / 0.3), 0 1px 2px -1px rgb(0 0 0 / 0.3);
   --gradient-brand: linear-gradient(135deg, #7f1d1d 0%, #be123c 100%);
-  --gradient-banner: linear-gradient(115deg, #1f2937 0%, #3b1d25 55%, #9f1239 130%);
+  --gradient-banner: linear-gradient(115deg, #111827 0%, #1f2937 100%);
 }
 
 @theme inline {

@@ -8,8 +8,8 @@ import { themeColors } from "@/constants/colors";
 
 /** Typography tokens for patient type banner. */
 export const patientTypeBannerTypography = {
-    bannerTitleSize: "clamp(28px, 3.2vw, 44px)",
-    bannerSubtitleSize: "clamp(20px, 2.2vw, 30px)",
+    bannerTitleSize: "clamp(28px, 3.2vmin, 44px)",
+    bannerSubtitleSize: "clamp(20px, 2.2vmin, 30px)",
 } as const;
 
 /** Inline styles for `PatientTypeBanner`. */
@@ -18,7 +18,7 @@ export const PatientTypeBannerStyle = {
         width: "100%",
         paddingLeft: 24,
         paddingRight: 24,
-        paddingBottom: "clamp(6px, 1.2vh, 16px)",
+        paddingBottom: 0,
         textAlign: "center",
     },
     title: {

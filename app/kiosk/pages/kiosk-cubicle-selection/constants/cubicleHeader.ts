@@ -11,7 +11,7 @@ import { kioskTypography } from "@/constants/kiosk";
 export const cubicleHeaderSpacing = {
     headerPaddingX: 0,
     headerPaddingBottom: 0,
-    headerSubtitleMarginTop: 8,
+    headerSubtitleMarginTop: 4,
 } as const;
 
 /** Typography tokens for cubicle header, referencing centralized root typography scale. */
@@ -27,6 +27,8 @@ export const CubicleHeaderStyle = {
     container: {
         width: "100%",
         textAlign: "center",
+        paddingBottom: 0,
+        marginBottom: 0,
     },
     title: {
         fontSize: cubicleHeaderTypography.titleSize,
@@ -38,6 +40,7 @@ export const CubicleHeaderStyle = {
     subtitle: {
         margin: 0,
         marginTop: cubicleHeaderSpacing.headerSubtitleMarginTop,
+        marginBottom: 0,
         fontSize: cubicleHeaderTypography.subtitleSize,
         fontWeight: cubicleHeaderTypography.subtitleWeight,
         lineHeight: 1.25,

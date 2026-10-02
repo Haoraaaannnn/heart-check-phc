@@ -98,8 +98,8 @@ export default function HistoricalContextBanner({
 
   if (historicalLoading) {
     return (
-      <div className="bg-white/35 rounded-[28px] border border-white/40 p-6 backdrop-blur-xl dark:bg-gray-900/60 dark:border-gray-700/50">
-        <p className="text-sm text-gray-400">Loading historical context...</p>
+      <div className="rounded-2xl border border-line bg-surface p-6 shadow-sm">
+        <p className="text-sm text-content-muted">Loading historical context...</p>
       </div>
     );
   }
@@ -115,21 +115,21 @@ export default function HistoricalContextBanner({
   const isOverwhelmed = status === 'Overwhelmed';
 
   return (
-    <div className="bg-white/35 rounded-[28px] shadow-[0_10px_40px_rgba(255,120,120,0.06)] border border-white/40 p-8 backdrop-blur-xl dark:bg-gray-900/60 dark:border-gray-700/50 dark:shadow-black/20">
+    <div className="rounded-2xl border border-line bg-surface p-8 shadow-sm">
       <div className="flex items-start justify-between flex-wrap gap-4 mb-6">
         <div>
-          <h2 className="text-xl font-extrabold text-gray-800 dark:text-gray-200">
+          <h2 className="text-xl font-extrabold text-content">
             No live activity today
           </h2>
-          <p className="text-sm text-gray-400 mt-1">
+          <p className="text-sm text-content-muted mt-1">
             Here's what the historical data shows for this system
           </p>
         </div>
         <span
           className={`text-xs font-bold px-3 py-1.5 rounded-full uppercase ${
             isOverwhelmed
-              ? 'bg-red-100 text-red-700 dark:bg-red-900/30 dark:text-red-400'
-              : 'bg-green-100 text-green-700 dark:bg-green-900/30 dark:text-green-400'
+              ? 'bg-red-100 text-red-700 dark:bg-red-950/40 dark:border dark:border-red-900 dark:text-red-300'
+              : 'bg-green-100 text-green-700 dark:bg-green-950/40 dark:border dark:border-green-900 dark:text-green-300'
           }`}
         >
           {status}
@@ -138,46 +138,46 @@ export default function HistoricalContextBanner({
 
       <div className="grid grid-cols-1 sm:grid-cols-3 gap-5 mb-8">
         <div>
-          <p className="text-xs font-bold text-gray-400 uppercase tracking-widest mb-1">
+          <p className="text-xs font-bold text-content-subtle uppercase tracking-widest mb-1">
             Typical Bottleneck
           </p>
-          <p className="text-lg font-extrabold text-gray-800 dark:text-gray-200">
+          <p className="text-lg font-extrabold text-content">
             {bottleneckStage}
           </p>
         </div>
 
         <div>
-          <p className="text-xs font-bold text-gray-400 uppercase tracking-widest mb-1">
+          <p className="text-xs font-bold text-content-subtle uppercase tracking-widest mb-1">
             Avg. Total Patient Time
           </p>
-          <p className="text-lg font-extrabold text-gray-800 dark:text-gray-200">
+          <p className="text-lg font-extrabold text-content">
             {formatDuration(avgTotalMins)}
           </p>
         </div>
 
         <div>
-          <p className="text-xs font-bold text-gray-400 uppercase tracking-widest mb-1">
+          <p className="text-xs font-bold text-content-subtle uppercase tracking-widest mb-1">
             Next-Day Forecast
           </p>
-          <p className="text-lg font-extrabold text-gray-800 dark:text-gray-200">
+          <p className="text-lg font-extrabold text-content">
             {forecast !== null ? `${forecast} patients` : '—'}
             {bestAlgo && (
-              <span className="text-xs font-normal text-gray-400 ml-2">via {bestAlgo}</span>
+              <span className="text-xs font-normal text-content-muted ml-2">via {bestAlgo}</span>
             )}
           </p>
         </div>
       </div>
 
       {!yearsLoading && years.length > 0 && (
-        <div className="border-t border-white/20 dark:border-gray-700/50 pt-6">
+        <div className="border-t border-line pt-6">
           <div className="flex items-center justify-between flex-wrap gap-3 mb-4">
-            <h3 className="text-sm font-bold text-gray-700 dark:text-gray-300">
+            <h3 className="text-sm font-bold text-content">
               Monthly Breakdown
             </h3>
             <select
               value={activeYear ?? ''}
               onChange={(e) => setActiveYear(Number(e.target.value))}
-              className="text-sm font-semibold bg-white/60 dark:bg-gray-800/80 border border-white/40 dark:border-gray-700/50 rounded-lg px-3 py-1.5 text-gray-700 dark:text-gray-200"
+              className="text-sm font-semibold bg-surface-muted border border-line rounded-lg px-3 py-1.5 text-content outline-none"
             >
               {years.map((year) => (
                 <option key={year} value={year}>{year}</option>

@@ -16,8 +16,8 @@ export const CubicleCardIcons = {
 
 /** Spacing values for cubicle card. */
 export const cubicleCardSpacing = {
-    cardGap: "clamp(12px, 1.6vw, 18px)",
-    cardPaddingX: "clamp(16px, 2.2vw, 28px)",
+    cardGap: "clamp(12px, 1.6vmin, 18px)",
+    cardPaddingX: "clamp(16px, 2.2vmin, 28px)",
     cardPaddingY: "clamp(16px, 1.8vh, 22px)",
     cardMinHeight: "clamp(100px, 11vh, 130px)",
 } as const;
@@ -38,12 +38,12 @@ export const cubicleCardColors = {
 /** Inline styles for `CubicleCard`. */
 export const CubicleCardStyle = {
     icon: {
-        fontSize: "clamp(44px, 4.5vw, 60px)",
+        fontSize: "clamp(44px, 4.5vmin, 60px)",
         color: themeColors.brandRed,
         lineHeight: 1,
     },
     arrowIcon: {
-        fontSize: "clamp(26px, 2.6vw, 38px)",
+        fontSize: "clamp(26px, 2.6vmin, 38px)",
         color: cubicleCardColors.arrowColor,
         lineHeight: 1,
     },
@@ -74,7 +74,7 @@ export const CubicleCardStyle = {
         alignItems: "center",
         justifyContent: "center",
         flexShrink: 0,
-        width: "clamp(44px, 4.5vw, 60px)",
+        width: "clamp(44px, 4.5vmin, 60px)",
     },
     titleWrapper: {
         position: "relative",
@@ -83,7 +83,7 @@ export const CubicleCardStyle = {
         flex: 1,
         minWidth: 0,
         flexDirection: "column",
-        paddingLeft: "clamp(4px, 0.8vw, 8px)",
+        paddingLeft: "clamp(4px, 0.8vmin, 8px)",
         overflowWrap: "break-word",
         wordBreak: "break-word",
     },
@@ -100,7 +100,7 @@ export const CubicleCardStyle = {
 
 /** Tailwind utility classes for `CubicleCard`. */
 export const CubicleCardClasses = {
-    grid: "grid w-full grid-cols-1 sm:grid-cols-2 landscape:grid-cols-3 gap-3 sm:gap-6 px-4 pt-1 pb-2 auto-rows-fr",
+    grid: "grid w-full grid-cols-1 sm:grid-cols-2 landscape:grid-cols-3 gap-3 sm:gap-6 px-4 pt-1 pb-6 sm:pb-8 mx-auto auto-rows-fr",
     card: "group transition-all duration-100 active:scale-[0.98] active:!border-[#ED1C24] active:shadow-sm",
     cardIconWrapper: "shrink-0",
     cardArrow: "shrink-0 transition-all duration-100 text-[#D7D6D6] group-active:!text-[#ED1C24] group-active:translate-x-1",
