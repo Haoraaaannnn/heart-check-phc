@@ -25,12 +25,12 @@ The Patients module adheres strictly to the repository separation-of-concerns ru
    - Centralize all layout style maps (`PATIENTS_STYLES`), semantic status badge colors (`PATIENT_STATUS_COLORS`), chart color palettes (`COLORS`), and refresh intervals.
 
 4. **Interactive Hooks & Data Fetching (`hooks/`):**
-   - `usePatientsData.ts`: Manages today's summary metrics, recent patient list (`RecentPatient`), 30-day historical logs (`AllRecentPatient`), and service distribution.
+   - `usePatientsData.ts`: Manages today's summary metrics, recent patient list (`RecentPatient`), 30-day historical logs (`AllRecentPatient`), service distribution, and multi-field debounced patient search (lookup by database ID, ticket number, and contact phone number).
    - `usePatientsAnalyticsData.ts`: Coordinates analytics metrics and hourly intake trends.
    - `useServiceQueue.ts`: Real-time queue subscriptions and queue management for specific service departments.
 
 5. **Types & Data Contracts (`types/Types.ts`):**
-   - Shared data interfaces defining patient metrics, records, and table row contracts.
+   - Shared data interfaces defining patient metrics, records, phone numbers, and table row contracts.
 
 ---
 
@@ -38,16 +38,17 @@ The Patients module adheres strictly to the repository separation-of-concerns ru
 
 | Goal / Intended Change | Where to Edit |
 | :--- | :--- |
-| **Change page titles, table headers, card subtitles, or empty messages** | [patientsTexts.ts](file:///home/jensen/Github-Repositories/heart-check-phc/app/dashboard/pages/patients/constants/patientsTexts.ts) |
-| **Change visual styling, card layouts, table classes, or status colors** | [patients.ts](file:///home/jensen/Github-Repositories/heart-check-phc/app/dashboard/pages/patients/constants/patients.ts) |
-| **Change 30-day recent patient table presentation or pagination** | [RecentPatientTable.tsx](file:///home/jensen/Github-Repositories/heart-check-phc/app/dashboard/pages/patients/components/RecentPatientTable.tsx) |
-| **Change patient query logic, wait-time calculation, or list transformations** | [usePatientsData.ts](file:///home/jensen/Github-Repositories/heart-check-phc/app/dashboard/pages/patients/hooks/usePatientsData.ts) |
+| **Change page titles, table headers, card subtitles, search placeholders, or empty messages** | [patientsTexts.ts](file:///home/jensen/Github-Repositories/heart-check-phc/app/dashboard/pages/patients/constants/patientsTexts.ts) |
+| **Change visual styling, search input classes, card layouts, table styling, or status colors** | [patients.ts](file:///home/jensen/Github-Repositories/heart-check-phc/app/dashboard/pages/patients/constants/patients.ts) |
+| **Change patient table columns, phone display, or pagination controls** | [RecentPatientTable.tsx](file:///home/jensen/Github-Repositories/heart-check-phc/app/dashboard/pages/patients/components/RecentPatientTable.tsx) |
+| **Change multi-field debounced search (ID, Ticket, Phone) or database query logic** | [usePatientsData.ts](file:///home/jensen/Github-Repositories/heart-check-phc/app/dashboard/pages/patients/hooks/usePatientsData.ts) |
+| **Change header banner layout, title block, or service title formatting** | [PatientsHeader.tsx](file:///home/jensen/Github-Repositories/heart-check-phc/app/dashboard/pages/patients/components/PatientsHeader.tsx) |
 | **Change live queue inspection, polling, or active queue subscriptions** | [useServiceQueue.ts](file:///home/jensen/Github-Repositories/heart-check-phc/app/dashboard/pages/patients/hooks/useServiceQueue.ts) |
 | **Change hourly flow chart or historical analytics loading** | [usePatientsAnalyticsData.ts](file:///home/jensen/Github-Repositories/heart-check-phc/app/dashboard/pages/patients/hooks/usePatientsAnalyticsData.ts) |
-| **Change data interfaces for recent patient records or statistics** | [Types.ts](file:///home/jensen/Github-Repositories/heart-check-phc/types/Types.ts) |
+| **Change data interfaces for patient records (RecentPatient, AllRecentPatient)** | [Types.ts](file:///home/jensen/Github-Repositories/heart-check-phc/types/Types.ts) |
 | **Change department filter buttons or service selection handling** | [ServiceFilterBar.tsx](file:///home/jensen/Github-Repositories/heart-check-phc/app/dashboard/pages/patients/components/ServiceFilterBar.tsx) |
 | **Change summary metric cards (Total Today, In Queue, In Service, etc.)** | [PatientStatGrid.tsx](file:///home/jensen/Github-Repositories/heart-check-phc/app/dashboard/pages/patients/components/PatientStatGrid.tsx) |
-| **Change page orchestration, query parameter sync, or grid layout** | [page.tsx](file:///home/jensen/Github-Repositories/heart-check-phc/app/dashboard/pages/patients/page.tsx) |
+| **Change page orchestration, search state wiring, or grid layout** | [page.tsx](file:///home/jensen/Github-Repositories/heart-check-phc/app/dashboard/pages/patients/page.tsx) |
 
 ---
 
@@ -65,9 +66,9 @@ The Patients module adheres strictly to the repository separation-of-concerns ru
 - **Component:** [PatientStatGrid.tsx](file:///home/jensen/Github-Repositories/heart-check-phc/app/dashboard/pages/patients/components/PatientStatGrid.tsx)
 - **Role:** Key performance indicator cards showing queue totals, active services, served patients, and average wait time.
 
-### Recent Patients Table
+### Recent Patients Table & Comprehensive Search
 - **Component:** [RecentPatientTable.tsx](file:///home/jensen/Github-Repositories/heart-check-phc/app/dashboard/pages/patients/components/RecentPatientTable.tsx)
-- **Role:** 30-day patient table featuring real-time client-side search across ticket numbers, services, statuses, and registration times. Includes windowed page number buttons, direct "Go to page" jump input, and rows-per-page selection to eliminate one-by-one paging.
+- **Role:** Comprehensive patient table displaying Patient ID, Ticket #, Service, Status, Phone Number, Time, and Wait Time without truncation. Integrates the primary multi-field search toolbar (ID, Ticket, Phone, Service, Status) with debounced database lookup, loading spinner, clear action, windowed page number buttons, direct jump input, and rows-per-page selection.
 
 ### Service Queue Panel
 - **Component:** [ServiceQueuePanel.tsx](file:///home/jensen/Github-Repositories/heart-check-phc/app/dashboard/pages/patients/components/ServiceQueuePanel.tsx)

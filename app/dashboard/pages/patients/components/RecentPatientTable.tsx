@@ -24,8 +24,14 @@ import { PATIENTS_TEXTS } from '@/app/dashboard/pages/patients/constants/patient
  * Properties for RecentPatientsTable component.
  */
 export interface RecentPatientsTableProps {
-  /** Array of all recent patient records from the past 30 days. */
+  /** Array of all recent patient records from the past 30 days or search query results. */
   patients: AllRecentPatient[];
+  /** Optional external search query for synchronization with page header. */
+  searchQuery?: string;
+  /** Optional callback fired when search query changes. */
+  onSearchChange?: (query: string) => void;
+  /** Flag indicating whether a debounced database search is currently in progress. */
+  isSearching?: boolean;
 }
 
 /**
@@ -76,31 +82,45 @@ function getPaginationWindow(
  * @param props - Component properties containing the recent patients dataset.
  * @returns JSX element.
  */
-export default function RecentPatientsTable({ patients }: RecentPatientsTableProps) {
-  const [searchQuery, setSearchQuery] = useState('');
+export default function RecentPatientsTable({
+  patients,
+  searchQuery: propSearchQuery,
+  onSearchChange,
+  isSearching = false,
+}: RecentPatientsTableProps) {
+  const [internalQuery, setInternalQuery] = useState('');
   const [pageSize, setPageSize] = useState<number>(PATIENTS_PER_PAGE);
   const [currentPage, setCurrentPage] = useState<number>(1);
   const [jumpPageInput, setJumpPageInput] = useState<string>('');
 
+  const isControlled = propSearchQuery !== undefined && onSearchChange !== undefined;
+  const searchQuery = isControlled ? propSearchQuery : internalQuery;
+  const setSearchQuery = isControlled ? onSearchChange : setInternalQuery;
+
   const S = PATIENTS_STYLES.table;
   const T = PATIENTS_TEXTS.recentTable;
 
-  // Filter patients by search query across ticket #, service, status, or date
+  // Filter patients by search query across ticket #, ID, service, status, date, or phone
   const filteredPatients = useMemo(() => {
     const q = searchQuery.trim().toLowerCase();
     if (!q) return patients;
+    const digitsOnly = q.replace(/\D/g, '');
 
     return patients.filter((patient) => {
       const ticket = (patient.patientNum || '').toLowerCase();
+      const patientId = String(patient.id || '').toLowerCase();
       const service = (patient.service || '').toLowerCase();
       const status = (patient.status || '').toLowerCase();
       const time = (patient.time || patient.createdAt || '').toLowerCase();
+      const rawPhone = patient.phoneNum ? String(patient.phoneNum).replace(/\D/g, '') : '';
 
       return (
         ticket.includes(q) ||
+        patientId.includes(q) ||
         service.includes(q) ||
         status.includes(q) ||
-        time.includes(q)
+        time.includes(q) ||
+        (digitsOnly.length > 0 && rawPhone.includes(digitsOnly))
       );
     });
   }, [patients, searchQuery]);
@@ -178,7 +198,11 @@ export default function RecentPatientsTable({ patients }: RecentPatientsTablePro
       {/* Search Filter Toolbar */}
       <div className={S.toolbar}>
         <div className={S.searchWrap}>
-          <i className={`bx bx-search ${S.searchIcon}`} aria-hidden="true" />
+          {isSearching ? (
+            <i className={`bx bx-loader-alt ${S.searchIcon} animate-spin text-brand-accent`} aria-hidden="true" />
+          ) : (
+            <i className={`bx bx-search ${S.searchIcon}`} aria-hidden="true" />
+          )}
           <input
             type="search"
             value={searchQuery}
@@ -254,9 +278,11 @@ export default function RecentPatientsTable({ patients }: RecentPatientsTablePro
             <table className={S.table}>
               <thead>
                 <tr className={S.headRow}>
+                  <th className={S.th}>{T.headers.id}</th>
                   <th className={S.th}>{T.headers.patientNum}</th>
                   <th className={S.th}>{T.headers.service}</th>
                   <th className={S.th}>{T.headers.status}</th>
+                  <th className={S.th}>{T.headers.phone}</th>
                   <th className={S.th}>{T.headers.time}</th>
                   <th className={S.th}>{T.headers.waitTime}</th>
                 </tr>
@@ -269,6 +295,9 @@ export default function RecentPatientsTable({ patients }: RecentPatientsTablePro
 
                   return (
                     <tr key={patient.id} className={S.row}>
+                      <td className={S.td}>
+                        <span className={S.idBadge}>#{patient.id}</span>
+                      </td>
                       <td className={S.td}>
                         <span className={S.ticketBadge}>
                           {patient.patientNum || T.fallbackTicket}
@@ -283,8 +312,15 @@ export default function RecentPatientsTable({ patients }: RecentPatientsTablePro
                           {patient.status}
                         </span>
                       </td>
-                      <td className={S.td}>{patient.time || patient.createdAt}</td>
-                      <td className={`${S.td} font-mono font-bold text-content`}>
+                      <td className={S.td}>
+                        <span className={S.phoneText}>
+                          {patient.phoneNum || T.fallbackPhone}
+                        </span>
+                      </td>
+                      <td className={`${S.td} whitespace-nowrap`}>
+                        {patient.time || patient.createdAt}
+                      </td>
+                      <td className={`${S.td} font-mono font-bold text-content whitespace-nowrap`}>
                         {patient.waitTime !== undefined ? `${patient.waitTime}m` : '-'}
                       </td>
                     </tr>

@@ -13,7 +13,7 @@ export const PATIENTS_TEXTS = {
     defaultTitle: 'Patient Dashboard',
     defaultSubtitle: 'Patient statistics and queue management overview',
     serviceSubtitlePrefix: 'Live queue and statistics for',
-    errorPrefix: '⚠️',
+    errorPrefix: 'Error:',
   },
   filterBar: {
     ariaLabel: 'Filter by service',
@@ -59,7 +59,7 @@ export const PATIENTS_TEXTS = {
   recentTable: {
     title: 'All Recent Patients',
     subtitle: 'Patients from the last 30 days',
-    searchPlaceholder: 'Search by patient #, service, status, or date...',
+    searchPlaceholder: 'Search by ID, ticket #, service, status, or phone...',
     searchAriaLabel: 'Search patient records',
     clearSearchAria: 'Clear search query',
     showingPrefix: 'Showing',
@@ -71,11 +71,13 @@ export const PATIENTS_TEXTS = {
     emptyTitle: 'No recent patients found.',
     emptySubtitle: 'Patient data will appear here as registrations occur.',
     noSearchResultsTitle: 'No matching patients found',
-    noSearchResultsSubtitle: 'Try adjusting your search query or clear the search input.',
+    noSearchResultsSubtitle: 'No patient matches the search query across ID, ticket number, or phone.',
     headers: {
-      patientNum: 'Patient #',
+      id: 'Patient ID',
+      patientNum: 'Ticket #',
       service: 'Service',
       status: 'Status',
+      phone: 'Phone',
       time: 'Time',
       waitTime: 'Wait Time',
     },
@@ -90,6 +92,7 @@ export const PATIENTS_TEXTS = {
       rowsPerPage: 'Rows:',
     },
     fallbackTicket: '---',
+    fallbackPhone: '---',
   },
   serviceQueue: {
     statusActive: 'Active',

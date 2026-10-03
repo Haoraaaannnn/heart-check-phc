@@ -53,9 +53,11 @@ export const PATIENTS_STYLES = {
   header: {
     root: 'flex flex-col gap-2 rounded-2xl border border-line bg-surface p-6 shadow-sm',
     titleRow: 'flex items-center justify-between flex-wrap gap-4',
+    titleBlock: 'flex flex-col min-w-0',
     title: 'text-2xl md:text-3xl font-extrabold text-content',
     subtitle: 'text-sm text-content-muted',
-    errorBadge: 'inline-flex items-center gap-2 rounded-xl bg-red-50 px-4 py-2 text-sm font-semibold text-red-700 dark:bg-red-950/40 dark:text-red-300 border border-red-200 dark:border-red-900',
+    errorBadge:
+      'inline-flex items-center gap-2 rounded-xl bg-red-50 px-4 py-2 text-sm font-semibold text-red-700 dark:bg-red-950/40 dark:text-red-300 border border-red-200 dark:border-red-900',
   },
 
   /** Service filter pill bar. */
@@ -90,10 +92,10 @@ export const PATIENTS_STYLES = {
     root: `${cardSurface} rounded-2xl p-6`,
     header: 'mb-4 flex items-center justify-between flex-wrap gap-3',
     toolbar: 'mb-4 flex flex-col sm:flex-row items-stretch sm:items-center justify-between gap-3',
-    searchWrap: 'relative flex-1 sm:max-w-xs w-full',
+    searchWrap: 'relative flex-1 sm:max-w-sm w-full',
     searchIcon: 'absolute left-3 top-1/2 -translate-y-1/2 text-sm text-content-subtle',
     searchInput:
-      'w-full rounded-xl border border-line bg-surface-muted py-2 pl-9 pr-8 text-xs text-content placeholder:text-content-subtle focus:border-brand-accent focus:outline-none transition',
+      'w-full rounded-xl border border-line bg-surface-muted py-2 pl-9 pr-8 text-xs text-content placeholder:text-content-subtle focus:border-brand-accent focus:bg-surface focus:outline-none transition shadow-2xs',
     clearSearchButton:
       'absolute right-2.5 top-1/2 -translate-y-1/2 text-content-subtle hover:text-content text-sm cursor-pointer',
     title: 'text-base md:text-lg font-extrabold text-content',
@@ -106,9 +108,12 @@ export const PATIENTS_STYLES = {
     th: 'px-4 py-3 text-[11px] font-bold uppercase tracking-wider text-content-muted first:rounded-l-lg last:rounded-r-lg',
     row: 'border-b border-line transition last:border-0 hover:bg-surface-muted',
     td: 'px-4 py-3.5 text-sm text-content-muted',
+    idBadge:
+      'inline-flex items-center rounded-md bg-surface-muted px-2 py-0.5 font-mono text-xs font-semibold text-content-muted border border-line whitespace-nowrap',
     ticketBadge:
-      'inline-block rounded-lg bg-red-50 border border-red-200 px-3 py-1 font-mono text-sm font-extrabold text-red-700 dark:bg-red-950/40 dark:border-red-900 dark:text-red-300',
-    statusBadge: 'inline-flex items-center gap-1.5 rounded-full px-3 py-1 text-xs font-bold',
+      'inline-block rounded-lg bg-red-50 border border-red-200 px-3 py-1 font-mono text-sm font-extrabold text-red-700 dark:bg-red-950/40 dark:border-red-900 dark:text-red-300 whitespace-nowrap',
+    statusBadge: 'inline-flex items-center gap-1.5 rounded-full px-3 py-1 text-xs font-bold whitespace-nowrap',
+    phoneText: 'font-mono text-xs font-medium text-content whitespace-nowrap',
     emptyWrap: 'py-12 text-center',
     emptyTitle: 'text-base font-bold text-content',
     emptySubtitle: 'mt-1 text-xs text-content-muted',
