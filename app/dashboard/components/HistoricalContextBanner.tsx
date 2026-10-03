@@ -180,7 +180,13 @@ export default function HistoricalContextBanner({
               className="text-sm font-semibold bg-surface-muted border border-line rounded-lg px-3 py-1.5 text-content outline-none"
             >
               {years.map((year) => (
-                <option key={year} value={year}>{year}</option>
+                <option
+                  key={year}
+                  value={year}
+                  className="bg-white dark:bg-slate-900 text-slate-900 dark:text-slate-100"
+                >
+                  {year}
+                </option>
               ))}
             </select>
           </div>

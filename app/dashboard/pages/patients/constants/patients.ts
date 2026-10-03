@@ -85,10 +85,17 @@ export const PATIENTS_STYLES = {
   /** Two-column chart grid. */
   chartsGrid: 'grid grid-cols-1 gap-6 lg:grid-cols-2',
 
-  /** Table styling tokens consistent with DASH.table. */
+  /** Table styling tokens consistent with DASH.table and enterprise solid surfaces. */
   table: {
     root: `${cardSurface} rounded-2xl p-6`,
     header: 'mb-4 flex items-center justify-between flex-wrap gap-3',
+    toolbar: 'mb-4 flex flex-col sm:flex-row items-stretch sm:items-center justify-between gap-3',
+    searchWrap: 'relative flex-1 sm:max-w-xs w-full',
+    searchIcon: 'absolute left-3 top-1/2 -translate-y-1/2 text-sm text-content-subtle',
+    searchInput:
+      'w-full rounded-xl border border-line bg-surface-muted py-2 pl-9 pr-8 text-xs text-content placeholder:text-content-subtle focus:border-brand-accent focus:outline-none transition',
+    clearSearchButton:
+      'absolute right-2.5 top-1/2 -translate-y-1/2 text-content-subtle hover:text-content text-sm cursor-pointer',
     title: 'text-base md:text-lg font-extrabold text-content',
     subtitle: 'text-xs text-content-muted',
     countBadge: 'text-xs font-semibold text-content-muted',
@@ -105,10 +112,21 @@ export const PATIENTS_STYLES = {
     emptyWrap: 'py-12 text-center',
     emptyTitle: 'text-base font-bold text-content',
     emptySubtitle: 'mt-1 text-xs text-content-muted',
-    paginationWrap: 'mt-5 flex items-center justify-between border-t border-line pt-4 flex-wrap gap-3',
+    paginationWrap:
+      'mt-5 flex flex-col sm:flex-row items-center justify-between border-t border-line pt-4 gap-3',
+    paginationGroup: 'flex items-center gap-1.5 flex-wrap justify-center',
     paginationButton:
-      'rounded-xl border border-line bg-surface px-4 py-2 text-xs font-semibold text-content transition hover:bg-surface-muted disabled:cursor-not-allowed disabled:opacity-40',
+      'rounded-xl border border-line bg-surface px-3 py-1.5 text-xs font-semibold text-content transition hover:bg-surface-muted disabled:cursor-not-allowed disabled:opacity-40 cursor-pointer',
+    pageButtonActive:
+      'rounded-xl border border-rose-600 bg-rose-600 px-3 py-1.5 text-xs font-bold text-white shadow-2xs',
+    pageButtonIdle:
+      'rounded-xl border border-line bg-surface px-3 py-1.5 text-xs font-semibold text-content transition hover:bg-surface-muted cursor-pointer',
     paginationInfo: 'text-xs font-semibold text-content-muted',
+    pageJumpWrap: 'flex items-center gap-1.5 text-xs text-content-muted',
+    pageJumpInput:
+      'w-14 rounded-lg border border-line bg-surface px-2 py-1 text-center text-xs font-semibold text-content outline-none focus:border-brand-accent',
+    pageJumpButton:
+      'rounded-lg border border-line bg-surface px-2.5 py-1 text-xs font-semibold text-content transition hover:bg-surface-muted disabled:opacity-40 cursor-pointer',
   },
 
   /** Service Queue Panel layout. */

@@ -74,6 +74,9 @@ export const SUPERADMIN_STYLES = {
     td: 'px-6 py-4 text-slate-700 dark:text-slate-300 whitespace-nowrap',
     pagination: 'px-6 py-4 border-t border-slate-200 dark:border-slate-800 flex flex-col sm:flex-row items-center justify-between gap-3 bg-slate-50 dark:bg-slate-900',
     pageButton: 'px-3 py-1.5 text-xs font-medium border border-slate-300 dark:border-slate-700 rounded-lg text-slate-700 dark:text-slate-300 hover:bg-white dark:hover:bg-slate-800 transition disabled:opacity-40 disabled:cursor-not-allowed cursor-pointer',
+    pageButtonActive: 'px-3 py-1.5 text-xs font-bold bg-rose-600 text-white rounded-lg shadow-2xs cursor-pointer',
+    pageJumpInput: 'w-14 rounded-lg border border-slate-300 dark:border-slate-700 bg-white dark:bg-slate-800 px-2 py-1 text-center text-xs font-semibold text-slate-800 dark:text-slate-200 outline-none focus:border-rose-500',
+    pageJumpButton: 'px-2.5 py-1 text-xs font-semibold border border-slate-300 dark:border-slate-700 rounded-lg bg-white dark:bg-slate-800 text-slate-700 dark:text-slate-300 hover:bg-slate-50 dark:hover:bg-slate-700 transition cursor-pointer disabled:opacity-40',
   },
   roles: {
     superadmin: 'bg-purple-100 text-purple-800 dark:bg-purple-950/80 dark:text-purple-300 border border-purple-200 dark:border-purple-800',

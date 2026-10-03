@@ -1,19 +1,45 @@
+/**
+ * @fileoverview Notification dropdown panel for Admin Dashboard bottleneck alerts.
+ *
+ * Displays unread bottleneck alerts, warning messages, and system notices with
+ * mark-as-read, dismiss, and clear-all capabilities. Adheres strictly to the
+ * high-contrast solid surfaces standard.
+ *
+ * @module app/dashboard/components/NotificationDropdown
+ */
+
 'use client';
 
-import { useState, useRef, useEffect } from 'react';
+import React, { useState, useRef, useEffect } from 'react';
 import { Notification } from '@/app/dashboard/hooks/useBottleneckNotifications';
 
-interface NotificationDropdownProps {
+/**
+ * Properties for NotificationDropdown component.
+ */
+export interface NotificationDropdownProps {
+  /** List of real-time notification records */
   notifications: Notification[];
+  /** Count of unread notifications */
   unreadCount: number;
+  /** Whether to render circular icon button mode or pill badge mode */
   showIcon?: boolean;
+  /** Callback to mark a specific notification as read */
   onMarkAsRead: (id: string) => void;
+  /** Callback to mark all notifications as read */
   onMarkAllAsRead: () => void;
+  /** Callback to dismiss an individual notification */
   onDismiss: (id: string) => void;
+  /** Callback to purge all notifications */
   onClearAll: () => void;
 }
 
-export default function NotificationDropdown({
+/**
+ * Enterprise notifications dropdown component.
+ *
+ * @param props - Component configuration properties.
+ * @returns JSX element.
+ */
+export function NotificationDropdown({
   notifications,
   unreadCount,
   showIcon = true,
@@ -28,7 +54,10 @@ export default function NotificationDropdown({
   // Close dropdown when clicking outside
   useEffect(() => {
     function handleClickOutside(event: MouseEvent) {
-      if (dropdownRef.current && !dropdownRef.current.contains(event.target as Node)) {
+      if (
+        dropdownRef.current &&
+        !dropdownRef.current.contains(event.target as Node)
+      ) {
         setIsOpen(false);
       }
     }
@@ -42,13 +71,13 @@ export default function NotificationDropdown({
   const getNotificationColor = (type: string) => {
     switch (type) {
       case 'bottleneck':
-        return 'bg-red-50 dark:bg-red-900/20 border-l-4 border-red-500';
+        return 'bg-red-50 dark:bg-rose-950/40 border-l-4 border-rose-600';
       case 'warning':
-        return 'bg-yellow-50 dark:bg-yellow-900/20 border-l-4 border-yellow-500';
+        return 'bg-amber-50 dark:bg-amber-950/40 border-l-4 border-amber-500';
       case 'info':
-        return 'bg-blue-50 dark:bg-blue-900/20 border-l-4 border-blue-500';
+        return 'bg-blue-50 dark:bg-blue-950/40 border-l-4 border-blue-500';
       default:
-        return 'bg-gray-50 dark:bg-gray-800 border-l-4 border-gray-400';
+        return 'bg-slate-50 dark:bg-slate-800/60 border-l-4 border-slate-400';
     }
   };
 
@@ -70,28 +99,30 @@ export default function NotificationDropdown({
       {/* Notification Bell Button */}
       {showIcon ? (
         <button
+          type="button"
           onClick={() => setIsOpen(!isOpen)}
-          className="relative w-10 h-10 flex items-center justify-center rounded-full bg-white dark:bg-gray-800 text-gray-600 dark:text-gray-300 hover:bg-gray-100 dark:hover:bg-gray-700 transition shadow-sm border border-gray-200 dark:border-gray-700"
+          className="relative w-10 h-10 flex items-center justify-center rounded-xl bg-white dark:bg-slate-800 text-slate-600 dark:text-slate-300 hover:bg-slate-100 dark:hover:bg-slate-700 transition shadow-2xs border border-slate-200 dark:border-slate-700 cursor-pointer"
           aria-label="Notifications"
         >
-          <i className='bx bxs-bell text-2xl'></i>
+          <i className="bx bxs-bell text-xl" aria-hidden="true" />
 
           {/* Unread Count Badge */}
           {unreadCount > 0 && (
-            <span className="absolute top-0 right-0 inline-flex items-center justify-center px-2 py-1 text-xs font-bold leading-none text-white transform translate-x-1/2 -translate-y-1/2 bg-red-600 rounded-full">
+            <span className="absolute -top-1 -right-1 inline-flex items-center justify-center px-1.5 py-0.5 text-[10px] font-bold leading-none text-white bg-rose-600 rounded-full shadow-xs">
               {unreadCount > 9 ? '9+' : unreadCount}
             </span>
           )}
         </button>
       ) : (
         <button
+          type="button"
           onClick={() => setIsOpen(!isOpen)}
           className="relative inline-flex items-center gap-1.5 px-3 py-1.5 rounded-xl text-xs font-bold bg-white hover:bg-slate-50 text-slate-700 border border-slate-200 shadow-2xs transition-all cursor-pointer"
           aria-label="Notifications"
         >
           <span>Alerts</span>
           {unreadCount > 0 && (
-            <span className="px-1.5 py-0.5 rounded-full text-[10px] font-bold bg-red-600 text-white">
+            <span className="px-1.5 py-0.5 rounded-full text-[10px] font-bold bg-rose-600 text-white">
               {unreadCount > 9 ? '9+' : unreadCount}
             </span>
           )}
@@ -100,16 +131,17 @@ export default function NotificationDropdown({
 
       {/* Dropdown Menu */}
       {isOpen && (
-        <div className="absolute right-0 mt-2 w-96 bg-white dark:bg-gray-800 rounded-xl shadow-2xl border border-gray-200 dark:border-gray-700 z-50 overflow-hidden">
+        <div className="absolute right-0 mt-2 w-96 bg-white dark:bg-slate-900 rounded-2xl shadow-xl border border-slate-200 dark:border-slate-800 z-50 overflow-hidden">
           {/* Header */}
-          <div className="bg-gradient-to-r from-gray-50 to-gray-100 dark:from-gray-700 dark:to-gray-800 px-4 py-3 border-b border-gray-200 dark:border-gray-700 flex justify-between items-center">
-            <h3 className="font-semibold text-gray-900 dark:text-white">
+          <div className="bg-slate-50 dark:bg-slate-800/80 px-4 py-3 border-b border-slate-200 dark:border-slate-800 flex justify-between items-center">
+            <h3 className="font-bold text-xs uppercase tracking-wider text-slate-800 dark:text-slate-200">
               Notifications {unreadCount > 0 && `(${unreadCount})`}
             </h3>
             {unreadCount > 0 && (
               <button
+                type="button"
                 onClick={onMarkAllAsRead}
-                className="text-xs text-blue-600 dark:text-blue-400 hover:underline font-medium"
+                className="text-xs text-rose-600 dark:text-rose-400 hover:underline font-semibold cursor-pointer"
               >
                 Mark all as read
               </button>
@@ -117,47 +149,49 @@ export default function NotificationDropdown({
           </div>
 
           {/* Notifications List */}
-          <div className="max-h-96 overflow-y-auto">
+          <div className="max-h-96 overflow-y-auto divide-y divide-slate-100 dark:divide-slate-800 phc-scroll">
             {notifications.length === 0 ? (
-              <div className="px-4 py-8 text-center text-gray-500 dark:text-gray-400">
+              <div className="px-4 py-8 text-center text-xs font-medium text-slate-400">
                 <p>No notifications</p>
               </div>
             ) : (
               notifications.map((notification) => (
                 <div
                   key={notification.id}
-                  className={`px-4 py-3 border-b border-gray-100 dark:border-gray-700 last:border-b-0 ${getNotificationColor(
+                  className={`px-4 py-3 ${getNotificationColor(
                     notification.type
-                  )} ${!notification.read ? 'bg-opacity-100' : 'bg-opacity-50'}`}
+                  )} ${!notification.read ? 'opacity-100' : 'opacity-70'}`}
                 >
                   <div className="flex items-start gap-3">
-                    <span className="text-xs font-bold text-slate-500 flex-shrink-0 pt-0.5">
+                    <span className="text-xs font-bold text-slate-500 shrink-0 pt-0.5">
                       {getNotificationTag(notification.type)}
                     </span>
                     <div className="flex-1 min-w-0">
-                      <p className="font-semibold text-gray-900 dark:text-white text-sm">
+                      <p className="font-semibold text-slate-900 dark:text-slate-100 text-xs">
                         {notification.title}
                       </p>
-                      <p className="text-xs text-gray-600 dark:text-gray-400 mt-1">
+                      <p className="text-xs text-slate-600 dark:text-slate-400 mt-1">
                         {notification.message}
                       </p>
-                      <p className="text-xs text-gray-500 dark:text-gray-500 mt-2">
+                      <p className="text-[11px] text-slate-400 dark:text-slate-500 mt-1.5 font-mono">
                         {notification.timestamp.toLocaleTimeString()}
                       </p>
                     </div>
-                    <div className="flex gap-1 flex-shrink-0">
+                    <div className="flex gap-1 shrink-0">
                       {!notification.read && (
                         <button
+                          type="button"
                           onClick={() => onMarkAsRead(notification.id)}
-                          className="px-1.5 py-0.5 hover:bg-gray-200 dark:hover:bg-gray-600 rounded text-xs text-gray-500 dark:text-gray-400 font-medium"
+                          className="px-1.5 py-0.5 hover:bg-slate-200 dark:hover:bg-slate-700 rounded text-[11px] text-slate-600 dark:text-slate-400 font-medium cursor-pointer"
                           title="Mark as read"
                         >
                           Read
                         </button>
                       )}
                       <button
+                        type="button"
                         onClick={() => onDismiss(notification.id)}
-                        className="px-1.5 py-0.5 hover:bg-gray-200 dark:hover:bg-gray-600 rounded text-xs text-gray-500 dark:text-gray-400 font-medium"
+                        className="px-1.5 py-0.5 hover:bg-slate-200 dark:hover:bg-slate-700 rounded text-[11px] text-slate-600 dark:text-slate-400 font-medium cursor-pointer"
                         title="Dismiss"
                       >
                         Dismiss
@@ -171,10 +205,11 @@ export default function NotificationDropdown({
 
           {/* Footer */}
           {notifications.length > 0 && (
-            <div className="bg-gray-50 dark:bg-gray-700/50 px-4 py-2 border-t border-gray-200 dark:border-gray-700">
+            <div className="bg-slate-50/50 dark:bg-slate-800/40 px-4 py-2 border-t border-slate-200 dark:border-slate-800">
               <button
+                type="button"
                 onClick={onClearAll}
-                className="text-xs text-gray-600 dark:text-gray-400 hover:text-red-600 dark:hover:text-red-400 font-medium w-full text-center py-1"
+                className="text-xs text-slate-500 dark:text-slate-400 hover:text-rose-600 dark:hover:text-rose-400 font-medium w-full text-center py-1 cursor-pointer"
               >
                 Clear all
               </button>
@@ -185,3 +220,5 @@ export default function NotificationDropdown({
     </div>
   );
 }
+
+export default NotificationDropdown;

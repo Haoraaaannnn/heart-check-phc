@@ -67,7 +67,7 @@ The Patients module adheres strictly to the repository separation-of-concerns ru
 
 ### Recent Patients Table
 - **Component:** [RecentPatientTable.tsx](file:///home/jensen/Github-Repositories/heart-check-phc/app/dashboard/pages/patients/components/RecentPatientTable.tsx)
-- **Role:** Paginated 30-day patient list displaying ticket numbers, assigned service, status badge, registration time, and wait durations.
+- **Role:** 30-day patient table featuring real-time client-side search across ticket numbers, services, statuses, and registration times. Includes windowed page number buttons, direct "Go to page" jump input, and rows-per-page selection to eliminate one-by-one paging.
 
 ### Service Queue Panel
 - **Component:** [ServiceQueuePanel.tsx](file:///home/jensen/Github-Repositories/heart-check-phc/app/dashboard/pages/patients/components/ServiceQueuePanel.tsx)

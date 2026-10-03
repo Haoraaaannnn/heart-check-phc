@@ -7,7 +7,7 @@
  * @module app/superadmin/components/UserTable
  */
 
-import React from 'react';
+import React, { useState } from 'react';
 import { SuperadminUser } from '../types/superadmin';
 import { SUPERADMIN_TEXTS } from '../constants/superadminTexts';
 import { SUPERADMIN_STYLES } from '../constants/superadminStyles';
@@ -49,6 +49,44 @@ const ROLE_OPTIONS = [
 ];
 
 /**
+ * Generates an array of page numbers and ellipsis tokens for pagination windowing.
+ */
+function getPaginationWindow(
+  currentPage: number,
+  totalPages: number
+): (number | string)[] {
+  if (totalPages <= 7) {
+    return Array.from({ length: totalPages }, (_, i) => i + 1);
+  }
+
+  if (currentPage <= 4) {
+    return [1, 2, 3, 4, 5, '...', totalPages];
+  }
+
+  if (currentPage >= totalPages - 3) {
+    return [
+      1,
+      '...',
+      totalPages - 4,
+      totalPages - 3,
+      totalPages - 2,
+      totalPages - 1,
+      totalPages,
+    ];
+  }
+
+  return [
+    1,
+    '...',
+    currentPage - 1,
+    currentPage,
+    currentPage + 1,
+    '...',
+    totalPages,
+  ];
+}
+
+/**
  * Staff accounts data table with search and pagination.
  *
  * @param props - Component properties.
@@ -68,9 +106,21 @@ export const UserTable: React.FC<UserTableProps> = ({
   onEditUser,
   onDeleteUser,
 }) => {
+  const [jumpPageInput, setJumpPageInput] = useState('');
   const S = SUPERADMIN_STYLES.table;
   const R = SUPERADMIN_STYLES.roles;
   const T = SUPERADMIN_TEXTS.table;
+
+  const paginationWindow = getPaginationWindow(currentPage, totalPages);
+
+  const handleJumpSubmit = (e: React.FormEvent) => {
+    e.preventDefault();
+    const pageNum = parseInt(jumpPageInput, 10);
+    if (!isNaN(pageNum) && pageNum >= 1 && pageNum <= totalPages) {
+      onPageChange(pageNum);
+      setJumpPageInput('');
+    }
+  };
 
   /**
    * Resolves the styling classes for a specific role string.
@@ -236,27 +286,104 @@ export const UserTable: React.FC<UserTableProps> = ({
               {T.resultsText}
             </span>
 
-            <div className="flex items-center gap-2">
-              <span className="text-xs text-slate-500 dark:text-slate-400 mr-2">
-                {T.pageText} {currentPage} {T.ofText} {totalPages}
-              </span>
+            <div className="flex items-center gap-1.5 flex-wrap justify-center">
+              {/* First Page Button */}
+              <button
+                type="button"
+                onClick={() => onPageChange(1)}
+                disabled={currentPage === 1}
+                className={S.pageButton}
+                title="First page"
+                aria-label="First page"
+              >
+                <i className="bx bx-chevrons-left text-sm" aria-hidden="true" />
+              </button>
+
+              {/* Prev Button */}
               <button
                 type="button"
                 onClick={() => onPageChange(Math.max(1, currentPage - 1))}
                 disabled={currentPage === 1}
                 className={S.pageButton}
+                title={T.prevButton}
+                aria-label={T.prevButton}
               >
-                {T.prevButton}
+                <i className="bx bx-chevron-left text-sm" aria-hidden="true" />
               </button>
+
+              {/* Numbered Page Window */}
+              {paginationWindow.map((item, index) => {
+                if (typeof item === 'string') {
+                  return (
+                    <span
+                      key={`ellipsis-${index}`}
+                      className="px-2 py-1 text-xs text-slate-400 select-none font-semibold"
+                    >
+                      {item}
+                    </span>
+                  );
+                }
+
+                const isActive = item === currentPage;
+                return (
+                  <button
+                    key={`page-${item}`}
+                    type="button"
+                    onClick={() => onPageChange(item)}
+                    aria-current={isActive ? 'page' : undefined}
+                    className={isActive ? S.pageButtonActive : S.pageButton}
+                  >
+                    {item}
+                  </button>
+                );
+              })}
+
+              {/* Next Button */}
               <button
                 type="button"
                 onClick={() => onPageChange(Math.min(totalPages, currentPage + 1))}
                 disabled={currentPage === totalPages}
                 className={S.pageButton}
+                title={T.nextButton}
+                aria-label={T.nextButton}
               >
-                {T.nextButton}
+                <i className="bx bx-chevron-right text-sm" aria-hidden="true" />
+              </button>
+
+              {/* Last Page Button */}
+              <button
+                type="button"
+                onClick={() => onPageChange(totalPages)}
+                disabled={currentPage === totalPages}
+                className={S.pageButton}
+                title="Last page"
+                aria-label="Last page"
+              >
+                <i className="bx bx-chevrons-right text-sm" aria-hidden="true" />
               </button>
             </div>
+
+            {/* Jump to page form */}
+            <form onSubmit={handleJumpSubmit} className="flex items-center gap-1.5 text-xs text-slate-500 dark:text-slate-400">
+              <span>Go to:</span>
+              <input
+                type="number"
+                min={1}
+                max={totalPages}
+                value={jumpPageInput}
+                onChange={(e) => setJumpPageInput(e.target.value)}
+                placeholder={String(currentPage)}
+                className={S.pageJumpInput}
+                aria-label="Go to page"
+              />
+              <button
+                type="submit"
+                disabled={!jumpPageInput}
+                className={S.pageJumpButton}
+              >
+                Go
+              </button>
+            </form>
           </div>
         </>
       )}

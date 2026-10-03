@@ -458,11 +458,19 @@ export default function ExportExcelModal({
                       className={S.dateSelect}
                       aria-label={T.recordedDatesSelectAria}
                     >
-                      <option value="" disabled>
+                      <option
+                        value=""
+                        disabled
+                        className="bg-white dark:bg-slate-900 text-slate-900 dark:text-slate-100"
+                      >
                         {T.selectRecordedDatePlaceholder}
                       </option>
                       {availableDays.map((d) => (
-                        <option key={d} value={d}>
+                        <option
+                          key={d}
+                          value={d}
+                          className="bg-white dark:bg-slate-900 text-slate-900 dark:text-slate-100"
+                        >
                           {formatDisplayDate(d)} ({d})
                         </option>
                       ))}
@@ -526,7 +534,11 @@ export default function ExportExcelModal({
                     className={S.yearSelect}
                   >
                     {yearOptions.map((year) => (
-                      <option key={year} value={year}>
+                      <option
+                        key={year}
+                        value={year}
+                        className="bg-white dark:bg-slate-900 text-slate-900 dark:text-slate-100"
+                      >
                         {year}
                       </option>
                     ))}
@@ -595,7 +607,11 @@ export default function ExportExcelModal({
               className={S.serviceSelect}
             >
               {T.services.map((svc) => (
-                <option key={svc.value} value={svc.value}>
+                <option
+                  key={svc.value}
+                  value={svc.value}
+                  className="bg-white dark:bg-slate-900 text-slate-900 dark:text-slate-100"
+                >
                   {svc.label}
                 </option>
               ))}
