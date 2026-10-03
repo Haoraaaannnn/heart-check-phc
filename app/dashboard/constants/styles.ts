@@ -60,6 +60,25 @@ export const DASH = {
     metricGrid: 'grid grid-cols-1 gap-4 sm:grid-cols-2 xl:grid-cols-4',
   },
 
+  /** Timeframe date filter pill bar adhering to the enterprise solid surfaces standard. */
+  dateFilter: {
+    root: 'flex flex-col sm:flex-row sm:items-center sm:justify-between gap-3 p-3 rounded-2xl border border-line bg-surface shadow-2xs',
+    group: 'flex items-center gap-1.5 flex-wrap',
+    labelWrap: 'flex items-center gap-1.5 text-xs font-bold uppercase tracking-wider text-content-muted px-1.5 select-none',
+    labelIcon: 'text-sm text-content-subtle',
+    pill: 'flex items-center gap-1.5 px-3 py-1.5 rounded-xl text-xs font-semibold transition-all duration-150 cursor-pointer outline-none select-none',
+    pillActive: 'bg-rose-600 text-white shadow-2xs font-bold border border-rose-600',
+    pillIdle:
+      'bg-surface-muted text-content-muted border border-line hover:bg-surface hover:text-content hover:border-slate-300 dark:hover:border-slate-700',
+    badgeLive:
+      'inline-flex items-center gap-1.5 px-2.5 py-1 rounded-lg text-[11px] font-semibold bg-emerald-50 dark:bg-emerald-950/40 border border-emerald-200 dark:border-emerald-900/60 text-emerald-700 dark:text-emerald-400 select-none',
+    badgeLiveDot: 'w-2 h-2 rounded-full bg-emerald-500 animate-pulse',
+    badgeHistorical:
+      'inline-flex items-center gap-1.5 px-2.5 py-1 rounded-lg text-[11px] font-semibold bg-slate-100 dark:bg-slate-800 border border-slate-200 dark:border-slate-700 text-slate-600 dark:text-slate-300 select-none',
+    badgeHistoricalIcon: 'text-xs text-slate-400',
+    spinner: 'h-3 w-3 animate-spin text-current',
+  },
+
   /** Responsive mobile slide-over drawer */
   drawer: {
     backdrop: 'fixed inset-0 z-50 bg-slate-950/60 backdrop-blur-xs lg:hidden transition-opacity',

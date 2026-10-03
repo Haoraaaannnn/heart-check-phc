@@ -1,21 +1,27 @@
 /**
  * @file useOverviewData.ts
- * @description Real-time data hook for the Admin Dashboard overview metrics and live queue.
+ * @description Real-time and historical data hook for the Admin Dashboard overview metrics and live queue.
  *
- * Implements a dual-layer data architecture:
- * 1. Zero-latency Supabase Realtime streaming:
+ * Implements a dual-layer data architecture with timeframe filtering:
+ * 1. Timeframe range selection (Today, Yesterday, Last 7 Days, Month-to-Date):
+ *    - Allows administrative leaders to evaluate executive KPIs across historical ranges
+ *      in addition to today's live streaming queue.
+ *    - Manages session-scoped caching across historical ranges for 0ms re-selection latency.
+ *    - Preserves today's live streaming queue for the Live Queue Table regardless of the
+ *      executive metrics timeframe selected.
+ * 2. Zero-latency Supabase Realtime streaming:
  *    - Subscribes to `postgres_changes` events on the `patients` table.
  *    - On INSERT/UPDATE/DELETE events, instantaneously updates in-memory React state
  *      (patient list, today count, queue status breakdown, department stats, and hourly trends)
  *      with 0ms delay for immediate visual response across KPI cards.
  *    - Schedules a debounced background reconciliation fetch (300ms) to ensure state
  *      consistency with Postgres without query storms.
- * 2. Automatic polling fallback (30s):
+ * 3. Automatic polling fallback (30s):
  *    - Detects channel health (`SUBSCRIBED`, `TIMED_OUT`, `CHANNEL_ERROR`, `CLOSED`).
  *    - Activates a 30-second interval polling fallback only when the WebSocket connection
  *      is degraded or lost, seamlessly maintaining freshness during network anomalies.
  *    - Suspends polling completely when the Realtime WebSocket is healthy.
- * 3. Network connectivity lifecycle:
+ * 4. Network connectivity lifecycle:
  *    - Integrates with `useConnectionStatus` to report channel status and browser online state.
  *    - Reacts to `window.online` events to immediately re-synchronize state.
  *
@@ -32,21 +38,26 @@ import { useCallback, useEffect, useRef, useState } from 'react';
 import { supabase } from '@/lib/supabase';
 import { getStatusGroup } from '@/constants/queueStatus';
 import { useConnectionStatus, type ChannelStatus } from '@/hooks/useConnectionStatus';
-import { DASHBOARD_REALTIME, SERVICE_OVERVIEW } from '@/app/dashboard/constants/content';
+import {
+  DASHBOARD_REALTIME,
+  METRIC_RANGE_CONFIG,
+  SERVICE_OVERVIEW,
+  type OverviewDateRange,
+} from '@/app/dashboard/constants/content';
 
 /**
  * Counts displayed in the dashboard metric cards and ticket breakdown.
  */
 export interface DashboardStats {
-  /** All tickets created today. */
+  /** All tickets created within the selected timeframe. */
   todayCount: number;
   /** Tickets waiting (pending / waiting / assigned). */
   onQueue: number;
   /** Tickets currently being served (on progress / with doctor / ...). */
   inService: number;
-  /** Tickets completed today. */
+  /** Tickets completed within the timeframe. */
   served: number;
-  /** Tickets in the idle state today. */
+  /** Tickets in the idle state within the timeframe. */
   idle: number;
 }
 
@@ -80,14 +91,26 @@ export interface PatientRecord {
 export interface UseOverviewDataResult {
   /** Aggregated operational counters for metric cards and ticket status breakdown */
   stats: DashboardStats;
-  /** Today's active queue tickets, sorted newest first */
+  /** Active queue tickets for the selected timeframe, sorted newest first */
   patientsList: PatientRecord[];
+  /** Today's active queue tickets (guaranteed to reflect today even during historical inspection) */
+  livePatientsList: PatientRecord[];
   /** Service name mapping to count of active tickets (waiting or serving) */
   deptStats: Record<string, number>;
   /** Hourly arrival counts formatted for Recharts (07:00 to 17:00) */
   hourlyData: { time: string; patients: number }[];
   /** Tickets created yesterday up to the current time of day, or null while loading */
   yesterdayCount: number | null;
+  /** Preceding period comparison baseline count for the active timeframe */
+  comparisonCount: number | null;
+  /** Period comparison text label (e.g. 'vs. yesterday', 'vs. prior 7d') */
+  comparisonLabel: string;
+  /** Currently selected timeframe range */
+  range: OverviewDateRange;
+  /** Function to switch between Today, Yesterday, Last 7 Days, and Month-to-Date */
+  setRange: (range: OverviewDateRange) => void;
+  /** Flag indicating whether historical timeframe switch is currently loading */
+  isRangeLoading: boolean;
   /** Flag indicating initial data loading state */
   isLoading: boolean;
   /** Whether the browser reports active internet connectivity */
@@ -112,6 +135,23 @@ const EMPTY_STATS: DashboardStats = {
 };
 
 /**
+ * Cached data payload for a historical timeframe.
+ */
+interface HistoricalCachePayload {
+  patients: PatientRecord[];
+  stats: DashboardStats;
+  deptStats: Record<string, number>;
+  hourlyData: { time: string; patients: number }[];
+  comparisonCount: number | null;
+  fetchedAt: number;
+}
+
+/**
+ * Duration in milliseconds before a cached historical range is considered stale (1 minute).
+ */
+const CACHE_TTL_MS = 60_000;
+
+/**
  * Verifies if an ISO timestamp string falls within the local calendar day.
  *
  * @param dateStr - ISO timestamp string.
@@ -132,7 +172,7 @@ function isDateToday(dateStr: string | null | undefined): boolean {
  * Pure calculation function deriving dashboard counters, department distributions,
  * and hourly arrival histogram from an array of patient records.
  *
- * @param patients - Array of today's patient records.
+ * @param patients - Array of patient records.
  * @returns Derived operational stats, deptStats map, and hourlyData array.
  */
 function calculateOverviewMetrics(patients: PatientRecord[]): {
@@ -190,6 +230,90 @@ function calculateOverviewMetrics(patients: PatientRecord[]): {
 }
 
 /**
+ * Computes ISO timestamp boundaries for a given timeframe range and its comparison baseline.
+ *
+ * @param range - The requested timeframe range.
+ * @param now - Current reference timestamp.
+ * @returns Query boundaries for primary and comparison ranges.
+ */
+function getDateBoundaries(
+  range: OverviewDateRange,
+  now: Date = new Date()
+): {
+  startDate: string;
+  endDate: string;
+  prevStartDate: string;
+  prevEndDate: string;
+} {
+  const currentYear = now.getFullYear();
+  const currentMonth = now.getMonth();
+  const currentDate = now.getDate();
+
+  if (range === 'today') {
+    const start = new Date(currentYear, currentMonth, currentDate, 0, 0, 0, 0);
+    const end = new Date(currentYear, currentMonth, currentDate + 1, 0, 0, 0, 0);
+
+    const prevStart = new Date(currentYear, currentMonth, currentDate - 1, 0, 0, 0, 0);
+    // Fair comparison: compare up to the current hour/minute yesterday
+    const prevEnd = new Date(now.getTime() - 24 * 60 * 60 * 1000);
+
+    return {
+      startDate: start.toISOString(),
+      endDate: end.toISOString(),
+      prevStartDate: prevStart.toISOString(),
+      prevEndDate: prevEnd.toISOString(),
+    };
+  }
+
+  if (range === 'yesterday') {
+    const start = new Date(currentYear, currentMonth, currentDate - 1, 0, 0, 0, 0);
+    const end = new Date(currentYear, currentMonth, currentDate, 0, 0, 0, 0);
+
+    const prevStart = new Date(currentYear, currentMonth, currentDate - 2, 0, 0, 0, 0);
+    const prevEnd = new Date(currentYear, currentMonth, currentDate - 1, 0, 0, 0, 0);
+
+    return {
+      startDate: start.toISOString(),
+      endDate: end.toISOString(),
+      prevStartDate: prevStart.toISOString(),
+      prevEndDate: prevEnd.toISOString(),
+    };
+  }
+
+  if (range === '7d') {
+    // Last 7 full operational days (inclusive of today)
+    const start = new Date(currentYear, currentMonth, currentDate - 6, 0, 0, 0, 0);
+    const end = new Date(currentYear, currentMonth, currentDate + 1, 0, 0, 0, 0);
+
+    // Prior 7-day period for trend comparison
+    const prevStart = new Date(currentYear, currentMonth, currentDate - 13, 0, 0, 0, 0);
+    const prevEnd = new Date(currentYear, currentMonth, currentDate - 6, 0, 0, 0, 0);
+
+    return {
+      startDate: start.toISOString(),
+      endDate: end.toISOString(),
+      prevStartDate: prevStart.toISOString(),
+      prevEndDate: prevEnd.toISOString(),
+    };
+  }
+
+  // Month-to-date ('mtd')
+  const start = new Date(currentYear, currentMonth, 1, 0, 0, 0, 0);
+  const end = new Date(currentYear, currentMonth, currentDate + 1, 0, 0, 0, 0);
+
+  // Prior month up to the equivalent day of the month
+  const prevMonthStart = new Date(currentYear, currentMonth - 1, 1, 0, 0, 0, 0);
+  const prevMonthEnd = new Date(currentYear, currentMonth - 1, currentDate + 1, 0, 0, 0, 0);
+
+  return {
+    startDate: start.toISOString(),
+    endDate: end.toISOString(),
+    prevStartDate: prevMonthStart.toISOString(),
+    prevEndDate: prevMonthEnd.toISOString(),
+  };
+}
+
+/**
  * Shape of real-time Postgres change events emitted by Supabase.
  */
 interface RealtimeRowChange {
@@ -199,18 +323,28 @@ interface RealtimeRowChange {
 }
 
 /**
- * Loads today's queue data for the admin overview with zero-latency Supabase Realtime
- * subscriptions and automatic 30-second polling fallback during connection degradation.
+ * Loads overview queue data for the admin overview with timeframe filtering, zero-latency
+ * Supabase Realtime subscriptions for live data, and automatic 30-second polling fallback.
  *
  * @returns See {@link UseOverviewDataResult}.
  */
 export function useOverviewData(): UseOverviewDataResult {
+  const [range, setRangeState] = useState<OverviewDateRange>('today');
   const [stats, setStats] = useState<DashboardStats>(EMPTY_STATS);
   const [patientsList, setPatientsList] = useState<PatientRecord[]>([]);
+  const [livePatientsList, setLivePatientsList] = useState<PatientRecord[]>([]);
   const [deptStats, setDeptStats] = useState<Record<string, number>>({});
   const [hourlyData, setHourlyData] = useState<{ time: string; patients: number }[]>([]);
   const [yesterdayCount, setYesterdayCount] = useState<number | null>(null);
+  const [comparisonCount, setComparisonCount] = useState<number | null>(null);
+  const [comparisonLabel, setComparisonLabel] = useState<string>(METRIC_RANGE_CONFIG.today.trendLabel);
   const [isLoading, setIsLoading] = useState<boolean>(true);
+  const [isRangeLoading, setIsRangeLoading] = useState<boolean>(false);
+
+  const rangeRef = useRef<OverviewDateRange>('today');
+  const livePatientsRef = useRef<PatientRecord[]>([]);
+  const cacheRef = useRef<Partial<Record<OverviewDateRange, HistoricalCachePayload>>>({});
+  const activeFetchIdRef = useRef<number>(0);
 
   const debounceRef = useRef<ReturnType<typeof setTimeout> | null>(null);
   const pollRef = useRef<ReturnType<typeof setInterval> | null>(null);
@@ -218,12 +352,12 @@ export function useOverviewData(): UseOverviewDataResult {
   const { isOnline, channelStatus, isFullyConnected, setChannelStatus } = useConnectionStatus();
 
   /**
-   * Fetches today's complete patient records from Supabase and derives all metrics.
+   * Fetches today's live patient records and derives all real-time overview metrics.
    */
-  const fetchDashboardStats = useCallback(async () => {
+  const fetchTodayStats = useCallback(async () => {
     const now = new Date();
-    const startOfDay = new Date(now.getFullYear(), now.getMonth(), now.getDate()).toISOString();
-    const endOfDay = new Date(now.getFullYear(), now.getMonth(), now.getDate() + 1).toISOString();
+    const startOfDay = new Date(now.getFullYear(), now.getMonth(), now.getDate(), 0, 0, 0, 0).toISOString();
+    const endOfDay = new Date(now.getFullYear(), now.getMonth(), now.getDate() + 1, 0, 0, 0, 0).toISOString();
 
     const { data, error } = await supabase
       .from('patients')
@@ -235,13 +369,18 @@ export function useOverviewData(): UseOverviewDataResult {
     if (error || !data) return;
 
     const list = data as PatientRecord[];
-    const derived = calculateOverviewMetrics(list);
+    livePatientsRef.current = list;
+    setLivePatientsList(list);
 
-    setPatientsList(list);
-    setStats(derived.stats);
-    setDeptStats(derived.deptStats);
-    setHourlyData(derived.hourlyData);
-    setIsLoading(false);
+    // If currently viewing 'today', update display state
+    if (rangeRef.current === 'today') {
+      const derived = calculateOverviewMetrics(list);
+      setPatientsList(list);
+      setStats(derived.stats);
+      setDeptStats(derived.deptStats);
+      setHourlyData(derived.hourlyData);
+      setIsLoading(false);
+    }
   }, []);
 
   /**
@@ -249,7 +388,7 @@ export function useOverviewData(): UseOverviewDataResult {
    */
   const fetchYesterday = useCallback(async () => {
     const now = new Date();
-    const startOfYesterday = new Date(now.getFullYear(), now.getMonth(), now.getDate() - 1);
+    const startOfYesterday = new Date(now.getFullYear(), now.getMonth(), now.getDate() - 1, 0, 0, 0, 0);
     const sameTimeYesterday = new Date(now.getTime() - 24 * 60 * 60 * 1000);
 
     const { count, error } = await supabase
@@ -260,8 +399,109 @@ export function useOverviewData(): UseOverviewDataResult {
 
     if (!error && count !== null) {
       setYesterdayCount(count);
+      if (rangeRef.current === 'today') {
+        setComparisonCount(count);
+      }
     }
   }, []);
+
+  /**
+   * Fetches historical patient data for a specified non-today timeframe range.
+   *
+   * @param targetRange - The historical range to query.
+   */
+  const fetchHistoricalRange = useCallback(async (targetRange: OverviewDateRange) => {
+    const fetchId = ++activeFetchIdRef.current;
+    setIsRangeLoading(true);
+
+    const boundaries = getDateBoundaries(targetRange);
+
+    // 1. Fetch patient records within timeframe
+    const { data, error } = await supabase
+      .from('patients')
+      .select('id, status, created_at, updated_at, consult_start, consult_end, patientNum, service, cubicleNum')
+      .gte('created_at', boundaries.startDate)
+      .lt('created_at', boundaries.endDate)
+      .order('created_at', { ascending: false });
+
+    // 2. Fetch baseline count for the preceding comparison timeframe
+    const { count: prevCount } = await supabase
+      .from('patients')
+      .select('id', { count: 'exact', head: true })
+      .gte('created_at', boundaries.prevStartDate)
+      .lt('created_at', boundaries.prevEndDate);
+
+    if (fetchId !== activeFetchIdRef.current) return;
+
+    if (error || !data) {
+      setIsRangeLoading(false);
+      return;
+    }
+
+    const list = data as PatientRecord[];
+    const derived = calculateOverviewMetrics(list);
+    const comparisonBaseline = prevCount ?? null;
+
+    // Cache the retrieved dataset
+    cacheRef.current[targetRange] = {
+      patients: list,
+      stats: derived.stats,
+      deptStats: derived.deptStats,
+      hourlyData: derived.hourlyData,
+      comparisonCount: comparisonBaseline,
+      fetchedAt: Date.now(),
+    };
+
+    if (rangeRef.current === targetRange) {
+      setPatientsList(list);
+      setStats(derived.stats);
+      setDeptStats(derived.deptStats);
+      setHourlyData(derived.hourlyData);
+      setComparisonCount(comparisonBaseline);
+      setComparisonLabel(METRIC_RANGE_CONFIG[targetRange].trendLabel);
+      setIsRangeLoading(false);
+    }
+  }, []);
+
+  /**
+   * Timeframe selection handler that swaps state between live queue and historical snapshots.
+   */
+  const setRange = useCallback(
+    (newRange: OverviewDateRange) => {
+      rangeRef.current = newRange;
+      setRangeState(newRange);
+
+      if (newRange === 'today') {
+        const liveList = livePatientsRef.current;
+        const derived = calculateOverviewMetrics(liveList);
+        setPatientsList(liveList);
+        setStats(derived.stats);
+        setDeptStats(derived.deptStats);
+        setHourlyData(derived.hourlyData);
+        setComparisonCount(yesterdayCount);
+        setComparisonLabel(METRIC_RANGE_CONFIG.today.trendLabel);
+        setIsRangeLoading(false);
+        return;
+      }
+
+      // Check session cache for fresh data
+      const cached = cacheRef.current[newRange];
+      const isFresh = cached && Date.now() - cached.fetchedAt < CACHE_TTL_MS;
+
+      if (cached && isFresh) {
+        setPatientsList(cached.patients);
+        setStats(cached.stats);
+        setDeptStats(cached.deptStats);
+        setHourlyData(cached.hourlyData);
+        setComparisonCount(cached.comparisonCount);
+        setComparisonLabel(METRIC_RANGE_CONFIG[newRange].trendLabel);
+        setIsRangeLoading(false);
+      } else {
+        void fetchHistoricalRange(newRange);
+      }
+    },
+    [fetchHistoricalRange, yesterdayCount]
+  );
 
   /**
    * Schedules a debounced server-side query to reconcile client state with PostgreSQL.
@@ -271,9 +511,9 @@ export function useOverviewData(): UseOverviewDataResult {
       clearTimeout(debounceRef.current);
     }
     debounceRef.current = setTimeout(() => {
-      void fetchDashboardStats();
+      void fetchTodayStats();
     }, DASHBOARD_REALTIME.debounceMs);
-  }, [fetchDashboardStats]);
+  }, [fetchTodayStats]);
 
   /**
    * Processes incoming Supabase Realtime payloads with instantaneous in-memory updates
@@ -298,15 +538,20 @@ export function useOverviewData(): UseOverviewDataResult {
             consult_end: raw.consult_end ? String(raw.consult_end) : null,
           };
 
-          setPatientsList((prev) => {
+          setLivePatientsList((prev) => {
             const filtered = prev.filter((p) => p.id !== newPatient.id);
             const updated = [newPatient, ...filtered].sort(
               (a, b) => new Date(b.created_at).getTime() - new Date(a.created_at).getTime()
             );
-            const derived = calculateOverviewMetrics(updated);
-            setStats(derived.stats);
-            setDeptStats(derived.deptStats);
-            setHourlyData(derived.hourlyData);
+            livePatientsRef.current = updated;
+
+            if (rangeRef.current === 'today') {
+              const derived = calculateOverviewMetrics(updated);
+              setPatientsList(updated);
+              setStats(derived.stats);
+              setDeptStats(derived.deptStats);
+              setHourlyData(derived.hourlyData);
+            }
             return updated;
           });
         }
@@ -314,7 +559,7 @@ export function useOverviewData(): UseOverviewDataResult {
         const raw = payload.new as Partial<PatientRecord>;
         const targetId = Number(raw.id);
 
-        setPatientsList((prev) => {
+        setLivePatientsList((prev) => {
           const index = prev.findIndex((p) => p.id === targetId);
           let updated: PatientRecord[];
 
@@ -347,22 +592,32 @@ export function useOverviewData(): UseOverviewDataResult {
             return prev;
           }
 
-          const derived = calculateOverviewMetrics(updated);
-          setStats(derived.stats);
-          setDeptStats(derived.deptStats);
-          setHourlyData(derived.hourlyData);
+          livePatientsRef.current = updated;
+
+          if (rangeRef.current === 'today') {
+            const derived = calculateOverviewMetrics(updated);
+            setPatientsList(updated);
+            setStats(derived.stats);
+            setDeptStats(derived.deptStats);
+            setHourlyData(derived.hourlyData);
+          }
           return updated;
         });
       } else if (eventType === 'DELETE') {
         const targetId = Number(payload.old?.id);
         if (!isNaN(targetId)) {
-          setPatientsList((prev) => {
+          setLivePatientsList((prev) => {
             const updated = prev.filter((p) => p.id !== targetId);
             if (updated.length === prev.length) return prev;
-            const derived = calculateOverviewMetrics(updated);
-            setStats(derived.stats);
-            setDeptStats(derived.deptStats);
-            setHourlyData(derived.hourlyData);
+            livePatientsRef.current = updated;
+
+            if (rangeRef.current === 'today') {
+              const derived = calculateOverviewMetrics(updated);
+              setPatientsList(updated);
+              setStats(derived.stats);
+              setDeptStats(derived.deptStats);
+              setHourlyData(derived.hourlyData);
+            }
             return updated;
           });
         }
@@ -379,9 +634,9 @@ export function useOverviewData(): UseOverviewDataResult {
   const startPolling = useCallback(() => {
     if (pollRef.current) return;
     pollRef.current = setInterval(() => {
-      void fetchDashboardStats();
+      void fetchTodayStats();
     }, DASHBOARD_REALTIME.fallbackPollIntervalMs);
-  }, [fetchDashboardStats]);
+  }, [fetchTodayStats]);
 
   /**
    * Suspends fallback periodic polling when the WebSocket channel is fully subscribed and healthy.
@@ -397,7 +652,7 @@ export function useOverviewData(): UseOverviewDataResult {
   useEffect(() => {
     let disposed = false;
 
-    void fetchDashboardStats();
+    void fetchTodayStats();
     void fetchYesterday();
 
     const channel = supabase
@@ -432,7 +687,7 @@ export function useOverviewData(): UseOverviewDataResult {
       void supabase.removeChannel(channel);
     };
   }, [
-    fetchDashboardStats,
+    fetchTodayStats,
     fetchYesterday,
     handleRealtimePayload,
     setChannelStatus,
@@ -443,26 +698,47 @@ export function useOverviewData(): UseOverviewDataResult {
   // Network recovery: refetch immediately when browser regains online connectivity
   useEffect(() => {
     const handleOnline = () => {
-      void fetchDashboardStats();
+      void fetchTodayStats();
       void fetchYesterday();
+      if (rangeRef.current !== 'today') {
+        void fetchHistoricalRange(rangeRef.current);
+      }
     };
 
     window.addEventListener('online', handleOnline);
     return () => {
       window.removeEventListener('online', handleOnline);
     };
-  }, [fetchDashboardStats, fetchYesterday]);
+  }, [fetchTodayStats, fetchYesterday, fetchHistoricalRange]);
+
+  /**
+   * Imperative refresh method to re-synchronize active timeframe data.
+   */
+  const handleRefresh = useCallback(async () => {
+    if (rangeRef.current === 'today') {
+      await fetchTodayStats();
+      await fetchYesterday();
+    } else {
+      await fetchHistoricalRange(rangeRef.current);
+    }
+  }, [fetchTodayStats, fetchYesterday, fetchHistoricalRange]);
 
   return {
     stats,
     patientsList,
+    livePatientsList,
     deptStats,
     hourlyData,
     yesterdayCount,
+    comparisonCount,
+    comparisonLabel,
+    range,
+    setRange,
+    isRangeLoading,
     isLoading,
     isOnline,
     channelStatus,
     isFullyConnected,
-    refresh: fetchDashboardStats,
+    refresh: handleRefresh,
   };
 }

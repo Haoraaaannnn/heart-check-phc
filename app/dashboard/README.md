@@ -44,6 +44,12 @@ The Admin Dashboard subsystem adheres strictly to the architectural standards de
    - **30-Second Polling Fallback:** Seamlessly activates a 30-second periodic polling interval when the WebSocket channel drops, errors, or times out, terminating the interval immediately upon reconnection.
    - **Connection Health Telemetry:** Exposes `isOnline`, `channelStatus`, and `isFullyConnected` to drive the non-intrusive `ConnectionStatusBanner` during network disruptions.
 
+6. **Timeframe Range Selection & Historical Metrics Evaluation:**
+   - **Multi-Window Operational Inspection:** Supports one-click filtering across Today, Yesterday, Last 7 Days, and Month-to-Date via [OverviewDateFilter.tsx](file:///home/jensen/Github-Repositories/heart-check-phc/app/dashboard/components/OverviewDateFilter.tsx).
+   - **Context-Sensitive KPI Adaptations:** Metric card labels, subtitles, and percentage change indicators adapt dynamically to reflect historical periods ([DashboardMetrics.tsx](file:///home/jensen/Github-Repositories/heart-check-phc/app/dashboard/components/DashboardMetrics.tsx), `METRIC_RANGE_CONFIG`).
+   - **Session-Scoped Caching:** Historical queries are cached client-side for 60 seconds to provide 0ms latency when switching between timeframe tabs.
+   - **Guaranteed Live Queue Visibility:** While executive metrics evaluate the selected historical range, the Live Queue Table and Recent Activity feed continue streaming today's real-time patient queue.
+
 ---
 
 ## 2. "Where to Edit" Quick Reference Matrix
@@ -62,11 +68,17 @@ The Admin Dashboard subsystem adheres strictly to the architectural standards de
 | **Change bottleneck notification dropdown styling, colors, or action handlers** | [NotificationDropdown.tsx](file:///home/jensen/Github-Repositories/heart-check-phc/app/dashboard/components/NotificationDropdown.tsx) |
 | **Change overview metric cards, tones, and status colors** | [styles.ts](file:///home/jensen/Github-Repositories/heart-check-phc/app/dashboard/constants/styles.ts) (`TONES`, `DASH.metric`) |
 | **Change overview card labels, welcome greetings, or activity text** | [content.ts](file:///home/jensen/Github-Repositories/heart-check-phc/app/dashboard/constants/content.ts) |
+| **Change date filter pill presets, labels, or range descriptions** | [content.ts](file:///home/jensen/Github-Repositories/heart-check-phc/app/dashboard/constants/content.ts) (`OVERVIEW_DATE_PRESETS`, `OVERVIEW_DATE_FILTER_TEXTS`) |
+| **Change date filter pill bar styling, active colors, or badges** | [styles.ts](file:///home/jensen/Github-Repositories/heart-check-phc/app/dashboard/constants/styles.ts) (`DASH.dateFilter`) |
+| **Change date filter pill bar component markup or behavior** | [OverviewDateFilter.tsx](file:///home/jensen/Github-Repositories/heart-check-phc/app/dashboard/components/OverviewDateFilter.tsx) |
 | **Change overview realtime channel, debounce delay, or fallback poll interval** | [content.ts](file:///home/jensen/Github-Repositories/heart-check-phc/app/dashboard/constants/content.ts) (`DASHBOARD_REALTIME`) |
 | **Change live queue table styling, ticket badges, or table borders** | [styles.ts](file:///home/jensen/Github-Repositories/heart-check-phc/app/dashboard/constants/styles.ts) (`DASH.table`) |
 | **Change live queue table component or service filter dropdown** | [LiveQueueTable.tsx](file:///home/jensen/Github-Repositories/heart-check-phc/app/dashboard/components/LiveQueueTable.tsx) |
 | **Change hourly arrival chart dimensions, bar radius, or palette colors** | [charts.ts](file:///home/jensen/Github-Repositories/heart-check-phc/app/dashboard/constants/charts.ts) |
-| **Change historical context banner cards, borders, or loading styles** | [HistoricalContextBanner.tsx](file:///home/jensen/Github-Repositories/heart-check-phc/app/dashboard/components/HistoricalContextBanner.tsx) |
+| **Change historical breakdown text copy, card labels, and table columns** | [historicalTexts.ts](file:///home/jensen/Github-Repositories/heart-check-phc/app/dashboard/constants/historicalTexts.ts) |
+| **Change historical breakdown styles, status badges, and table design** | [historicalStyles.ts](file:///home/jensen/Github-Repositories/heart-check-phc/app/dashboard/constants/historicalStyles.ts) |
+| **Change historical context banner cards, year pills, or table markup** | [HistoricalContextBanner.tsx](file:///home/jensen/Github-Repositories/heart-check-phc/app/dashboard/components/HistoricalContextBanner.tsx) |
+| **Change on-demand historical trigger bar markup or behavior** | [HistoricalContextTrigger.tsx](file:///home/jensen/Github-Repositories/heart-check-phc/app/dashboard/components/HistoricalContextTrigger.tsx) |
 | **Change overview data fetching, queue calculations, or Supabase queries** | [useOverviewData.ts](file:///home/jensen/Github-Repositories/heart-check-phc/app/dashboard/hooks/useOverviewData.ts) |
 | **Change historical summary context provider or Supabase caching** | [HistoricalSummaryContext.tsx](file:///home/jensen/Github-Repositories/heart-check-phc/app/dashboard/context/HistoricalSummaryContext.tsx) |
 | **Change cubicles page styles, status colors, and card borders** | [cubicles.ts](file:///home/jensen/Github-Repositories/heart-check-phc/app/dashboard/pages/cubicles/constants/cubicles.ts) |
@@ -96,10 +108,12 @@ app/dashboard/
 │   ├── DashboardCard.tsx                  # Base solid card wrapper
 │   ├── DashboardMetrics.tsx               # 4-column metric summary tiles
 │   ├── DonutChart.tsx                     # CSS mask-based donut chart
-│   ├── HistoricalContextBanner.tsx        # Zero-activity historical fallback panel
+│   ├── HistoricalContextBanner.tsx        # Redesigned historical intelligence banner & monthly table
+│   ├── HistoricalContextTrigger.tsx       # On-demand historical inspection trigger bar
 │   ├── HourlyArrivalChart.tsx             # Recharts hourly arrival visualization
 │   ├── LiveQueueTable.tsx                 # Live patient ticket table
 │   ├── NotificationDropdown.tsx           # Bottleneck alerts dropdown
+│   ├── OverviewDateFilter.tsx             # Timeframe date filter pill bar
 │   ├── QuickLinks.tsx                     # Action shortcut links
 │   ├── RecentActivity.tsx                 # Real-time ticket updates feed
 │   ├── ServiceQueueOverview.tsx           # Breakdown by department
@@ -113,6 +127,8 @@ app/dashboard/
 │   ├── dashNav.ts                         # Navigation contracts
 │   ├── dashNavStyles.ts                   # Sidebar, drawer, and header style tokens
 │   ├── dashNavTexts.ts                    # Navigation copy, brand labels, and breadcrumbs
+│   ├── historicalStyles.ts                # Solid surface tokens for historical breakdown
+│   ├── historicalTexts.ts                 # User copy and labels for historical breakdown
 │   ├── navigation.ts                      # Route hierarchies & categorized groups
 │   └── styles.ts                          # Solid surface class maps (DASH, TONES)
 ├── context/                               # Context providers (HistoricalSummaryContext)
