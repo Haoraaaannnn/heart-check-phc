@@ -87,18 +87,27 @@ This document outlines the mandatory rules and architectural standards that the 
 
 ---
 
+### 10. Enterprise Navigation & Solid Surfaces Standard
+- **Enterprise Navigation Structure:** All administrative and clinical workstations (`app/superadmin/`, `app/dashboard/`, `app/nurse/`) must implement an industry-standard layout featuring a fixed desktop left-rail sidebar (`w-64`), categorized navigation groups, and a sticky top header with dynamic breadcrumbs, live Philippine Standard Time (Manila clock), single-click light/dark theme toggle, user identity profile chip, and direct session sign-out.
+- **Deep-Linking & URL Tab Synchronization:** Subsystem tabs (e.g. rooms vs counters, settings vs security) must synchronize with URL search parameters (`?tab=...`) to allow direct deep-linking from navigation links.
+- **High-Contrast Solid Surfaces (Clinical Ergonomics):** Administrative workstations must eliminate blurry glassmorphism, milky transparent layers, and high-glow gradients in favor of high-contrast solid surfaces (`bg-slate-50 dark:bg-slate-950`, `bg-white dark:bg-slate-900`), crisp 1-pixel borders (`border-slate-200 dark:border-slate-800`), and subtle elevation shadows (`shadow-xs` / `shadow-sm`).
+- **Flawless Dual-Theme Architecture:** All screens must support seamless light and dark mode toggling with zero hydration mismatch (`mounted && resolvedTheme === 'dark'`), transition flashing suppression (`disableTransitionOnChange`), and explicit dark styling on native `<option>` tags inside form dropdowns.
+
+---
+
 ## Agent Pre-Commit / Pre-Completion Checklist
 
 Before completing any refactoring or coding task, verify against these rules:
 - [ ] Every changed/created file has full file-level and symbol-level JSDoc comments.
 - [ ] No raw text copy or inline style objects remain hardcoded in UI components.
 - [ ] Text copy is exported from `<feature>Texts.ts`.
-- [ ] Styles and visual properties are exported from `<feature>.ts`.
+- [ ] Styles and visual properties are exported from `<feature>Styles.ts` or `<feature>.ts`.
 - [ ] Global constants contain only shared/system-level tokens; local constants remain in their feature directory.
 - [ ] Centralized scales (such as kiosk typography in `constants/kiosk.ts`) are referenced by local constants.
 - [ ] If an image reference was provided, the implementation matches the image faithfully.
 - [ ] No unintentional visual or layout regressions were introduced during refactoring.
 - [ ] All kiosk screens, scrollable containers, and card grids are centered both horizontally and vertically.
+- [ ] Enterprise navigation rails, breadcrumbs, Manila clock, and high-contrast solid surfaces are adhered to in administrative workstations.
 - [ ] No emojis are used anywhere in documentation, code, or comments.
 - [ ] All terminal commands and executions received explicit user confirmation prior to running.
 - [ ] Developer guide markdown files (.md) are created or updated with an explicit "where to edit" reference guide so developers can navigate and make changes easily.

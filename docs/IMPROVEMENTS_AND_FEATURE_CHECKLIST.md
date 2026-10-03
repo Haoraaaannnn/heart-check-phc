@@ -129,6 +129,8 @@ The SuperAdmin dashboard manages clinics, services, hardware profiles, staff acc
 
 | Status | Priority | Feature / Improvement | Description | Target Files / Module |
 | :---: | :---: | :--- | :--- | :--- |
+| [x] | P0 | **SuperAdmin Architectural Refactoring & Redesign** | Refactor SuperAdmin into modular components, dedicated text/style dictionaries, custom data/modal hooks, and an enterprise solid surface interface adhering to AGENTS.md. | [app/superadmin/README.md](file:///home/jensen/Github-Repositories/heart-check-phc/app/superadmin/README.md), [app/superadmin/page.tsx](file:///home/jensen/Github-Repositories/heart-check-phc/app/superadmin/page.tsx) |
+| [x] | P0 | **SuperAdmin Enterprise Standard Navigation System** | Industry-standard left-rail sidebar navigation grouped by functional domain (Access & Identity, Clinical Infrastructure, Patient Touchscreen, System Governance) with sticky header bar, dynamic breadcrumbs, live Manila time clock, dark/light theme switch, and user identity chip. | [SuperAdminSidebar.tsx](file:///home/jensen/Github-Repositories/heart-check-phc/app/superadmin/components/navigation/SuperAdminSidebar.tsx), [SuperAdminHeader.tsx](file:///home/jensen/Github-Repositories/heart-check-phc/app/superadmin/components/navigation/SuperAdminHeader.tsx) |
 | [ ] | P0 | **Enforce Role-Based RLS and Secure Anon Key** | Resolve open RLS security issues identified in `docs/OPEN_ISSUES.md`: enforce role check helper functions, eliminate unguarded public write policies, and restrict kiosk intake to authenticated service roles. | [docs/OPEN_ISSUES.md](file:///home/jensen/Github-Repositories/heart-check-phc/docs/OPEN_ISSUES.md), [docs/CHANGES_NEEDED.md](file:///home/jensen/Github-Repositories/heart-check-phc/docs/CHANGES_NEEDED.md) |
 | [ ] | P1 | **Dynamic Service Reordering & Visibility Toggle** | Provide drag-and-drop or rank ordering for kiosk services so administrators can reposition menu items and temporarily deactivate clinics without code changes. | [customization/page.tsx](file:///home/jensen/Github-Repositories/heart-check-phc/app/superadmin/customization/page.tsx) |
 | [ ] | P1 | **Operating Hours & Auto-Kiosk Scheduler** | Set standard hospital outpatient operating hours (e.g. 07:00 to 16:00). Kiosks outside these hours automatically display a polite closed notice. | `app/superadmin/components/`, `app/kiosk/` |
@@ -157,6 +159,7 @@ When contributing new features or addressing items from this checklist, consult 
 | :--- | :--- | :--- |
 | **Kiosk Subsystem** | Screens, navigation, keypad, styles, texts, timeout | [app/kiosk/README.md](file:///home/jensen/Github-Repositories/heart-check-phc/app/kiosk/README.md) |
 | **Admin Dashboard** | Overview, KPI tiles, charts, live tables, metrics | [app/dashboard/README.md](file:///home/jensen/Github-Repositories/heart-check-phc/app/dashboard/README.md) |
+| **SuperAdmin Subsystem** | Users, desk access, facilities, kiosks, settings, passwords | [app/superadmin/README.md](file:///home/jensen/Github-Repositories/heart-check-phc/app/superadmin/README.md) |
 | **Analytics Module** | Bottleneck analysis, forecasts, Excel export modal | [app/dashboard/pages/analytics/README.md](file:///home/jensen/Github-Repositories/heart-check-phc/app/dashboard/pages/analytics/README.md) |
 | **Nurse Station** | Patient calling, vitals, station queues | [app/nurse/README.md](file:///home/jensen/Github-Repositories/heart-check-phc/app/nurse/README.md) |
 | **Transfer Dashboard** | Doctor assignment, rotation, idle management | [docs/TRANSFER_MANUAL_TWEAKING_GUIDE.md](file:///home/jensen/Github-Repositories/heart-check-phc/docs/TRANSFER_MANUAL_TWEAKING_GUIDE.md) |
@@ -165,3 +168,4 @@ When contributing new features or addressing items from this checklist, consult 
 ---
 
 _Note: This document must be updated whenever items are started or completed. When completing an item, change `[ ]` to `[x]` and document the implementation date and corresponding commit in the PR or changelog._
+

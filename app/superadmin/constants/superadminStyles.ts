@@ -1,0 +1,101 @@
+/**
+ * @fileoverview Style dictionary and design tokens for the SuperAdmin module.
+ *
+ * Provides centralized Tailwind class combinations and semantic styling definitions
+ * adhering to the solid enterprise standard of Heart Check PHC.
+ *
+ * @module app/superadmin/constants/superadminStyles
+ */
+
+export const SUPERADMIN_STYLES = {
+  layout: {
+    container: 'min-h-screen bg-slate-50 dark:bg-slate-950 text-slate-900 dark:text-slate-100 font-sans',
+    mainWrapper: 'max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-8 space-y-8',
+    headerRow: 'flex flex-col md:flex-row md:items-center justify-between gap-4 pb-6 border-b border-slate-200 dark:border-slate-800',
+    titleSection: 'space-y-1',
+    heading: 'text-2xl sm:text-3xl font-bold tracking-tight text-slate-900 dark:text-white',
+    subheading: 'text-sm text-slate-500 dark:text-slate-400 max-w-2xl',
+  },
+  navigation: {
+    bar: 'sticky top-0 z-40 bg-white/95 dark:bg-slate-900/95 backdrop-blur-md border-b border-slate-200 dark:border-slate-800 shadow-xs',
+    barInner: 'max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 h-16 flex items-center justify-between gap-4',
+    brandGroup: 'flex items-center gap-3',
+    brandBadge: 'w-10 h-10 rounded-xl bg-rose-700 text-white flex items-center justify-center font-bold text-lg shadow-sm shrink-0',
+    brandTitle: 'text-sm font-bold text-slate-900 dark:text-white uppercase tracking-wider',
+    brandSubtitle: 'text-xs text-rose-600 dark:text-rose-400 font-medium',
+    navLinksGroup: 'hidden md:flex items-center gap-1',
+    navLink: 'px-3.5 py-2 rounded-lg text-sm font-medium transition-all duration-150 flex items-center gap-2',
+    navLinkActive: 'bg-rose-50 text-rose-700 dark:bg-rose-950/50 dark:text-rose-400 font-semibold shadow-xs',
+    navLinkIdle: 'text-slate-600 hover:text-slate-900 hover:bg-slate-100 dark:text-slate-400 dark:hover:text-slate-100 dark:hover:bg-slate-800',
+    userSection: 'flex items-center gap-3',
+    userBadge: 'hidden sm:flex items-center gap-2 pl-3 border-l border-slate-200 dark:border-slate-800',
+    userEmail: 'text-xs text-slate-600 dark:text-slate-300 font-medium',
+    userRolePill: 'px-2 py-0.5 rounded-full text-[11px] font-semibold uppercase tracking-wider bg-rose-100 text-rose-800 dark:bg-rose-950 dark:text-rose-300 border border-rose-200 dark:border-rose-900',
+    signOutButton: 'px-3 py-1.5 rounded-lg text-xs font-semibold text-slate-700 dark:text-slate-200 hover:bg-rose-50 hover:text-rose-700 dark:hover:bg-rose-950 dark:hover:text-rose-400 border border-slate-200 dark:border-slate-700 transition cursor-pointer flex items-center gap-1.5',
+    themeToggleButton: 'p-2 rounded-lg text-slate-500 hover:text-slate-900 hover:bg-slate-100 dark:text-slate-400 dark:hover:text-slate-100 dark:hover:bg-slate-800 transition cursor-pointer flex items-center justify-center text-lg border border-transparent hover:border-slate-200 dark:hover:border-slate-700',
+  },
+  tabs: {
+    container: 'flex items-center gap-2 p-1 bg-slate-100 dark:bg-slate-900 rounded-xl border border-slate-200 dark:border-slate-800 w-fit',
+    tab: 'px-4 py-2 rounded-lg text-sm font-medium transition cursor-pointer flex items-center gap-2',
+    tabActive: 'bg-white dark:bg-slate-800 text-rose-700 dark:text-rose-400 shadow-xs font-semibold',
+    tabIdle: 'text-slate-600 dark:text-slate-400 hover:text-slate-900 dark:hover:text-slate-100',
+  },
+  statsCard: {
+    grid: 'grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4',
+    card: 'bg-white dark:bg-slate-900 border border-slate-200 dark:border-slate-800 rounded-xl p-5 shadow-xs transition hover:shadow-sm',
+    header: 'flex items-center justify-between mb-3',
+    iconWrapper: 'w-10 h-10 rounded-lg flex items-center justify-center text-xl shrink-0',
+    title: 'text-xs font-semibold text-slate-500 dark:text-slate-400 uppercase tracking-wider',
+    value: 'text-2xl font-bold text-slate-900 dark:text-white',
+    description: 'text-xs text-slate-500 dark:text-slate-400 mt-1',
+  },
+  buttons: {
+    primary: 'px-4 py-2.5 rounded-lg bg-rose-600 hover:bg-rose-700 text-white font-medium text-sm transition shadow-xs hover:shadow flex items-center gap-2 cursor-pointer disabled:opacity-50 disabled:cursor-not-allowed',
+    secondary: 'px-4 py-2.5 rounded-lg bg-white dark:bg-slate-800 border border-slate-300 dark:border-slate-700 text-slate-700 dark:text-slate-200 font-medium text-sm hover:bg-slate-100 dark:hover:bg-slate-700 transition cursor-pointer',
+    danger: 'px-4 py-2 rounded-lg bg-red-600 hover:bg-red-700 text-white font-medium text-sm transition shadow-xs cursor-pointer disabled:opacity-50',
+    ghost: 'p-1.5 rounded-lg text-slate-500 hover:text-slate-900 hover:bg-slate-100 dark:hover:bg-slate-800 transition cursor-pointer',
+  },
+  table: {
+    container: 'bg-white dark:bg-slate-900 border border-slate-200 dark:border-slate-800 rounded-xl shadow-xs overflow-hidden',
+    toolbar: 'p-4 border-b border-slate-200 dark:border-slate-800 flex flex-col sm:flex-row sm:items-center justify-between gap-3',
+    searchWrapper: 'relative flex-1 max-w-md',
+    searchInput: 'w-full pl-10 pr-4 py-2 text-sm bg-slate-50 dark:bg-slate-800 border border-slate-300 dark:border-slate-700 rounded-lg text-slate-900 dark:text-white placeholder-slate-400 focus:outline-none focus:ring-2 focus:ring-rose-500',
+    searchIcon: 'absolute left-3 top-2.5 text-slate-400 text-lg',
+    filterGroup: 'flex items-center gap-2 flex-wrap',
+    filterPill: 'px-3 py-1 rounded-lg text-xs font-medium border transition cursor-pointer',
+    filterPillActive: 'bg-rose-100 dark:bg-rose-950 border-rose-300 dark:border-rose-800 text-rose-800 dark:text-rose-300 font-semibold',
+    filterPillIdle: 'bg-white dark:bg-slate-800 border-slate-300 dark:border-slate-700 text-slate-600 dark:text-slate-400 hover:bg-slate-100 dark:hover:bg-slate-700 hover:text-slate-900 dark:hover:text-slate-100',
+    tableWrapper: 'overflow-x-auto',
+    table: 'w-full text-left border-collapse text-sm',
+    thead: 'bg-slate-50 dark:bg-slate-800/60 border-b border-slate-200 dark:border-slate-800 text-xs font-semibold text-slate-500 dark:text-slate-400 uppercase tracking-wider',
+    th: 'px-6 py-3.5',
+    tbody: 'divide-y divide-slate-100 dark:divide-slate-800',
+    tr: 'hover:bg-slate-50/80 dark:hover:bg-slate-800/40 transition',
+    td: 'px-6 py-4 text-slate-700 dark:text-slate-300 whitespace-nowrap',
+    pagination: 'px-6 py-4 border-t border-slate-200 dark:border-slate-800 flex flex-col sm:flex-row items-center justify-between gap-3 bg-slate-50 dark:bg-slate-900',
+    pageButton: 'px-3 py-1.5 text-xs font-medium border border-slate-300 dark:border-slate-700 rounded-lg text-slate-700 dark:text-slate-300 hover:bg-white dark:hover:bg-slate-800 transition disabled:opacity-40 disabled:cursor-not-allowed cursor-pointer',
+  },
+  roles: {
+    superadmin: 'bg-purple-100 text-purple-800 dark:bg-purple-950/80 dark:text-purple-300 border border-purple-200 dark:border-purple-800',
+    admin: 'bg-rose-100 text-rose-800 dark:bg-rose-950/80 dark:text-rose-300 border border-rose-200 dark:border-rose-800',
+    doctor: 'bg-teal-100 text-teal-800 dark:bg-teal-950/80 dark:text-teal-300 border border-teal-200 dark:border-teal-800',
+    nurse: 'bg-emerald-100 text-emerald-800 dark:bg-emerald-950/80 dark:text-emerald-300 border border-emerald-200 dark:border-emerald-800',
+    registration: 'bg-sky-100 text-sky-800 dark:bg-sky-950/80 dark:text-sky-300 border border-sky-200 dark:border-sky-800',
+    basePill: 'px-2.5 py-0.5 rounded-full text-xs font-semibold capitalize inline-flex items-center gap-1',
+  },
+  modal: {
+    backdrop: 'fixed inset-0 z-50 flex items-center justify-center bg-slate-950/60 backdrop-blur-xs p-4 overflow-y-auto',
+    panel: 'w-full max-w-3xl bg-white dark:bg-slate-900 border border-slate-200 dark:border-slate-800 rounded-2xl shadow-xl overflow-hidden my-8',
+    header: 'p-6 border-b border-slate-200 dark:border-slate-800 flex items-start justify-between bg-slate-50/50 dark:bg-slate-800/40',
+    body: 'p-6 space-y-6 max-h-[75vh] overflow-y-auto phc-scroll',
+    footer: 'p-4 sm:p-6 border-t border-slate-200 dark:border-slate-800 flex items-center justify-end gap-3 bg-slate-50/50 dark:bg-slate-800/40',
+    formGrid: 'grid grid-cols-1 sm:grid-cols-2 gap-4',
+    formGroup: 'space-y-1.5',
+    label: 'block text-xs font-semibold text-slate-700 dark:text-slate-300 uppercase tracking-wider',
+    input: 'w-full px-3.5 py-2 text-sm bg-white dark:bg-slate-800 border border-slate-300 dark:border-slate-700 rounded-lg text-slate-900 dark:text-white placeholder-slate-400 focus:outline-none focus:ring-2 focus:ring-rose-500',
+    select: 'w-full px-3.5 py-2 text-sm bg-white dark:bg-slate-800 border border-slate-300 dark:border-slate-700 rounded-lg text-slate-900 dark:text-white focus:outline-none focus:ring-2 focus:ring-rose-500',
+    assignmentSection: 'border-t border-slate-200 dark:border-slate-800 pt-5 space-y-4',
+    sectionHeader: 'flex items-center justify-between',
+    assignmentScrollBox: 'max-h-64 overflow-y-auto rounded-xl border border-slate-200 dark:border-slate-800 bg-slate-50 dark:bg-slate-950 p-3 space-y-3 phc-scroll',
+  },
+} as const;

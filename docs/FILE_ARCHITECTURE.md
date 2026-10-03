@@ -365,17 +365,52 @@ Directory structure:
     │   │   └── confirm/
     │   │       └── page.tsx
     │   ├── superadmin/
+    │   │   ├── README.md
     │   │   ├── layout.tsx
     │   │   ├── page.tsx
     │   │   ├── components/
+    │   │   │   ├── ChangePasswordCard.tsx
     │   │   │   ├── ChangePasswordForm.tsx
+    │   │   │   ├── ClinicalAssignmentsSelector.tsx
+    │   │   │   ├── navigation/
+    │   │   │   │   ├── SuperAdminHeader.tsx
+    │   │   │   │   └── SuperAdminSidebar.tsx
+    │   │   │   ├── CountersPanel.tsx
+    │   │   │   ├── DeleteUserModal.tsx
+    │   │   │   ├── RegistrationAssignmentsSelector.tsx
+    │   │   │   ├── RoomsPanel.tsx
+    │   │   │   ├── SettingsPanel.tsx
     │   │   │   ├── SettingsPannel.tsx
-    │   │   │   └── SuperAdminNav.tsx
+    │   │   │   ├── SuperAdminNav.tsx
+    │   │   │   ├── UserModal.tsx
+    │   │   │   ├── UserStatsCards.tsx
+    │   │   │   └── UserTable.tsx
+    │   │   ├── constants/
+    │   │   │   ├── settingsStyles.ts
+    │   │   │   ├── settingsTexts.ts
+    │   │   │   ├── superadminNav.ts
+    │   │   │   ├── superadminNavStyles.ts
+    │   │   │   ├── superadminStyles.ts
+    │   │   │   └── superadminTexts.ts
     │   │   ├── customization/
-    │   │   │   └── page.tsx
-    │   │   └── hooks/
-    │   │       ├── useIdleTimeout.ts
-    │   │       └── useRequireAuth.ts
+    │   │   │   ├── page.tsx
+    │   │   │   └── constants/
+    │   │   │       ├── customizationStyles.ts
+    │   │   │       └── customizationTexts.ts
+    │   │   ├── facilities/
+    │   │   │   ├── page.tsx
+    │   │   │   └── constants/
+    │   │   │       ├── facilitiesStyles.ts
+    │   │   │       └── facilitiesTexts.ts
+    │   │   ├── hooks/
+    │   │   │   ├── useIdleTimeout.ts
+    │   │   │   ├── useRequireAuth.ts
+    │   │   │   ├── useSuperadminUsers.ts
+    │   │   │   └── useUserModalState.ts
+    │   │   ├── lib/
+    │   │   │   └── adminApi.ts
+    │   │   └── types/
+    │   │       └── superadmin.ts
     │   └── transfer/
     │       ├── page.tsx
     │       ├── components/

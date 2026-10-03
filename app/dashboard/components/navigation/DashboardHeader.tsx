@@ -25,7 +25,7 @@ const S = DASH.header;
  */
 export default function DashboardHeader() {
   const router = useRouter();
-  const { theme, setTheme } = useTheme();
+  const { resolvedTheme, setTheme } = useTheme();
   const [mounted, setMounted] = useState(false);
 
   const {
@@ -39,6 +39,8 @@ export default function DashboardHeader() {
 
   // next-themes and notifications are client-only; render them after mount.
   useEffect(() => setMounted(true), []);
+
+  const isDark = mounted && resolvedTheme === 'dark';
 
   const handleLogout = async () => {
     await supabase.auth.signOut();
@@ -61,11 +63,12 @@ export default function DashboardHeader() {
         {mounted && (
           <button
             type="button"
-            onClick={() => setTheme(theme === 'dark' ? 'light' : 'dark')}
+            onClick={() => setTheme(isDark ? 'light' : 'dark')}
             className={S.iconButton}
-            aria-label="Toggle dark mode"
+            aria-label={isDark ? "Switch to light mode" : "Switch to dark mode"}
+            title={isDark ? "Switch to light mode" : "Switch to dark mode"}
           >
-            <i className={theme === 'dark' ? 'bx bx-sun' : 'bx bx-moon'} />
+            <i className={isDark ? 'bx bx-sun text-amber-400' : 'bx bx-moon'} />
           </button>
         )}
 
