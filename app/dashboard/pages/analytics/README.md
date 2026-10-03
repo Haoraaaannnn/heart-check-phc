@@ -29,7 +29,7 @@ The Analytics module adheres strictly to the repository separation-of-concerns r
 
 5. **Reporting & Workbook Export:**
    - [ExportExcelButton.tsx](file:///home/jensen/Github-Repositories/heart-check-phc/app/dashboard/pages/analytics/components/ExportExcelButton.tsx): Action trigger button.
-   - [ExportExcelModal.tsx](file:///home/jensen/Github-Repositories/heart-check-phc/app/dashboard/pages/analytics/components/ExportExcelModal.tsx): Month, year, and service selection dialog for exporting PHC Time and Motion Analysis workbooks. Queries `/api/available-export-dates` to dynamically display only years and months with actual recorded queue data.
+   - [ExportExcelModal.tsx](file:///home/jensen/Github-Repositories/heart-check-phc/app/dashboard/pages/analytics/components/ExportExcelModal.tsx): Export dialog supporting specific date, all dates, and month/year selection modes for PHC Time and Motion Analysis workbooks. Queries `/api/available-export-dates` to dynamically display available recorded dates, months, and years with actual recorded queue data.
    - Backend endpoints `/api/export-excel` and `/api/available-export-dates` in `python_backend/main.py`, with workbook generation engine in `python_backend/analytics/export.py`.
 
 ---
@@ -39,11 +39,11 @@ The Analytics module adheres strictly to the repository separation-of-concerns r
 | Goal / Intended Change | Where to Edit |
 | :--- | :--- |
 | **Change page titles, table headers, card subtitles, or empty messages** | [analyticsTexts.ts](file:///home/jensen/Github-Repositories/heart-check-phc/app/dashboard/pages/analytics/constants/analyticsTexts.ts) |
-| **Change Excel export modal titles, month labels, or confirmation text** | [analyticsTexts.ts](file:///home/jensen/Github-Repositories/heart-check-phc/app/dashboard/pages/analytics/constants/analyticsTexts.ts) |
+| **Change Excel export modal titles, mode labels, notices, or confirmation text** | [analyticsTexts.ts](file:///home/jensen/Github-Repositories/heart-check-phc/app/dashboard/pages/analytics/constants/analyticsTexts.ts) |
 | **Change visual styling, card layouts, table classes, or badge tokens** | [analytics.ts](file:///home/jensen/Github-Repositories/heart-check-phc/app/dashboard/pages/analytics/constants/analytics.ts) |
-| **Change Excel export modal styles, backdrops, month grid, or button designs** | [analytics.ts](file:///home/jensen/Github-Repositories/heart-check-phc/app/dashboard/pages/analytics/constants/analytics.ts) |
+| **Change Excel export modal styles, backdrops, date inputs, mode tabs, or button designs** | [analytics.ts](file:///home/jensen/Github-Repositories/heart-check-phc/app/dashboard/pages/analytics/constants/analytics.ts) |
 | **Change date range preset durations, polling intervals, or cache timeouts** | [analytics.ts](file:///home/jensen/Github-Repositories/heart-check-phc/app/dashboard/pages/analytics/constants/analytics.ts) |
-| **Change Excel export modal logic, date availability filtering, or download trigger** | [ExportExcelModal.tsx](file:///home/jensen/Github-Repositories/heart-check-phc/app/dashboard/pages/analytics/components/ExportExcelModal.tsx) |
+| **Change Excel export modal logic, date mode selection, availability filtering, or download trigger** | [ExportExcelModal.tsx](file:///home/jensen/Github-Repositories/heart-check-phc/app/dashboard/pages/analytics/components/ExportExcelModal.tsx) |
 | **Change Excel export trigger button appearance or modal invocation** | [ExportExcelButton.tsx](file:///home/jensen/Github-Repositories/heart-check-phc/app/dashboard/pages/analytics/components/ExportExcelButton.tsx) |
 | **Change header banner layout, title presentation, or action alignment** | [AnalyticsHeader.tsx](file:///home/jensen/Github-Repositories/heart-check-phc/app/dashboard/pages/analytics/components/AnalyticsHeader.tsx) |
 | **Change analytics data fetching, polling, or range state management** | [useAnalyticsData.ts](file:///home/jensen/Github-Repositories/heart-check-phc/app/dashboard/pages/analytics/hooks/useAnalyticsData.ts) |
@@ -65,7 +65,7 @@ The Analytics module adheres strictly to the repository separation-of-concerns r
 ### Export to Excel Modal & Trigger
 - **Trigger Component:** [ExportExcelButton.tsx](file:///home/jensen/Github-Repositories/heart-check-phc/app/dashboard/pages/analytics/components/ExportExcelButton.tsx)
 - **Modal Component:** [ExportExcelModal.tsx](file:///home/jensen/Github-Repositories/heart-check-phc/app/dashboard/pages/analytics/components/ExportExcelModal.tsx)
-- **Role:** Allows administrative users to pick a specific calendar month, year, and clinical department to generate and download a compliant PHC Time and Motion Analysis multi-sheet workbook (.xlsx). Dynamically limits selectable years and months strictly to recorded patient data.
+- **Role:** Allows administrative users to pick a specific single date, all recorded dates, or a calendar month/year and clinical department to generate and download a compliant PHC Time and Motion Analysis multi-sheet workbook (.xlsx). Dynamically limits selectable years, months, and dates strictly to recorded patient data.
 
 ### Metric Cards Grid
 - **Component:** [AnalyticsMetricCards.tsx](file:///home/jensen/Github-Repositories/heart-check-phc/app/dashboard/pages/analytics/components/AnalyticsMetricCards.tsx)
