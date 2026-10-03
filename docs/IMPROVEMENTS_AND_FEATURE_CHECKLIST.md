@@ -74,8 +74,8 @@ The Executive Dashboard provides administrative leaders and departmental heads w
 
 | Status | Priority | Feature / Improvement | Description | Target Files / Module |
 | :---: | :---: | :--- | :--- | :--- |
-| [ ] | P1 | **Hourly Throughput Heatmap per Cubicle** | Display a visual heatmap showing patient processing speed and idle intervals for each cubicle across the operational day. | [cubicles/page.tsx](file:///home/jensen/Github-Repositories/heart-check-phc/app/dashboard/cubicles/page.tsx) |
-| [ ] | P1 | **Stalled Consultation Alert Indicator** | Highlight cubicles in amber or red when an active consultation exceeds 45 minutes, signaling potential complications or unrecorded completions. | [cubicles/page.tsx](file:///home/jensen/Github-Repositories/heart-check-phc/app/dashboard/cubicles/page.tsx), `app/dashboard/pages/cubicles/constants/` |
+| [x] | P1 | **Process-Stage Queue Route Visualization** | Display an interactive animated queue process map where each rectangular node is a processing stage (with queue buffer slots and terminal ports) and each connecting line represents an animated route between stages with real-time queue item dots representing actual queue states, with direct branching cubicle examination stations. | [cubicles/page.tsx](file:///home/jensen/Github-Repositories/heart-check-phc/app/dashboard/cubicles/page.tsx), [app/dashboard/pages/cubicles/README.md](file:///home/jensen/Github-Repositories/heart-check-phc/app/dashboard/pages/cubicles/README.md) |
+| [x] | P1 | **Stalled Consultation Alert Indicator** | Highlight cubicles in amber (>35m) or red (>45m) with warning badges when an active consultation is prolonged or stalled, signaling potential complications or unrecorded completions. | [FlowchartCubicleGrid.tsx](file:///home/jensen/Github-Repositories/heart-check-phc/app/dashboard/pages/cubicles/components/FlowchartCubicleGrid.tsx), `app/dashboard/pages/cubicles/constants/` |
 | [ ] | P2 | **Physician-to-Cubicle Roster Integration** | Display the scheduled doctor's name, specialization, and shift hours directly on the live cubicle tile. | [cubicles/page.tsx](file:///home/jensen/Github-Repositories/heart-check-phc/app/dashboard/cubicles/page.tsx) |
 
 ---
@@ -164,6 +164,8 @@ When contributing new features or addressing items from this checklist, consult 
 | **Nurse Station** | Patient calling, vitals, station queues | [app/nurse/README.md](file:///home/jensen/Github-Repositories/heart-check-phc/app/nurse/README.md) |
 | **Transfer Dashboard** | Doctor assignment, rotation, idle management | [docs/TRANSFER_MANUAL_TWEAKING_GUIDE.md](file:///home/jensen/Github-Repositories/heart-check-phc/docs/TRANSFER_MANUAL_TWEAKING_GUIDE.md) |
 | **Security & Schema** | Database schema, policies, role management | [docs/DATABASE_SCHEMA.md](file:///home/jensen/Github-Repositories/heart-check-phc/docs/DATABASE_SCHEMA.md), [docs/OPEN_ISSUES.md](file:///home/jensen/Github-Repositories/heart-check-phc/docs/OPEN_ISSUES.md) |
+| **Security Checklist** | Vulnerability matrix, verification steps, patch guide | [docs/SECURITY_CHECKLIST.md](file:///home/jensen/Github-Repositories/heart-check-phc/docs/SECURITY_CHECKLIST.md), [AGENTS.md](file:///home/jensen/Github-Repositories/heart-check-phc/AGENTS.md) |
+| **UAT Test Cases** | End-to-end verification checklist and remarks | [docs/UAT_USE_CASE_CHECKLIST.md](file:///home/jensen/Github-Repositories/heart-check-phc/docs/UAT_USE_CASE_CHECKLIST.md) |
 
 ---
 

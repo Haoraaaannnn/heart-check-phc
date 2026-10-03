@@ -58,6 +58,8 @@ _Add new items as they surface. Move resolved items to a "Resolved" section belo
 - [x] `carryout_start`/`carryout_end` calculation pipeline — integrated in `python_backend/analytics/preprocessing.py`, including `service_carryout` into `total_time`.
 - [x] Multi-mode Excel export — built in `ExportExcelModal.tsx` and `python_backend/main.py` supporting specific date, all dates, and calendar month exports with dynamic recorded date discovery.
 - [x] Master improvement roadmap and feature checklist created in `docs/IMPROVEMENTS_AND_FEATURE_CHECKLIST.md`.
+- [x] Security vulnerability checklist and patch remediation matrix created in `docs/SECURITY_CHECKLIST.md` and enforced in `AGENTS.md` Rule 12.
+- [x] Comprehensive UAT use case verification checklist created in `docs/UAT_USE_CASE_CHECKLIST.md`.
 
 ## Still Open (Security High Priority)
 

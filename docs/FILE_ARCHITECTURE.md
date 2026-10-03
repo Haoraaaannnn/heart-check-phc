@@ -485,15 +485,18 @@ Directory structure:
     │   ├── COMPONENTS_GUIDE.md
     │   ├── DATABASE_SCHEMA.md
     │   ├── FILE_ARCHITECTURE.md
+    │   ├── IMPROVEMENTS_AND_FEATURE_CHECKLIST.md
     │   ├── NURSE_DASHBOARD_SYSTEM_DESIGN.md
     │   ├── OPEN_ISSUES.md
     │   ├── PRD.md
     │   ├── SCHEMA_REFERENCE.md
     │   ├── SECURITY.md
+    │   ├── SECURITY_CHECKLIST.md
     │   ├── SETUP_AND_SEEDING.md
     │   ├── SYSTEM_DESIGN.md
     │   ├── TRANSFER_DASHBOARD.md
-    │   └── TRANSFER_MANUAL_TWEAKING_GUIDE.md
+    │   ├── TRANSFER_MANUAL_TWEAKING_GUIDE.md
+    │   └── UAT_USE_CASE_CHECKLIST.md
     ├── fonts/
     │   └── fonts.ts
     ├── hooks/

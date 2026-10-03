@@ -14,8 +14,7 @@ import { CUBICLES_STYLES } from '@/app/dashboard/pages/cubicles/constants/cubicl
 import { CUBICLES_TEXTS } from '@/app/dashboard/pages/cubicles/constants/cubiclesTexts';
 import CubiclesHeader from '@/app/dashboard/pages/cubicles/components/CubiclesHeader';
 import CubiclesStatsGrid from '@/app/dashboard/pages/cubicles/components/CubiclesStatsGrid';
-import CubiclesGrid from '@/app/dashboard/pages/cubicles/components/CubiclesGrid';
-import CubiclesLegend from '@/app/dashboard/pages/cubicles/components/CubiclesLegend';
+import CubicleProcessGraph from '@/app/dashboard/pages/cubicles/components/CubicleProcessGraph';
 
 /**
  * Root Cubicles Dashboard page component.
@@ -55,9 +54,9 @@ export default function CubiclesPage() {
 
       <CubiclesStatsGrid stats={stats} />
 
-      <CubiclesGrid cubicles={cubicles} currentTime={currentTime} />
-
-      <CubiclesLegend />
+      {/* Clean, Minimal Process-Graph Map Canvas */}
+      <CubicleProcessGraph />
     </div>
   );
 }
+

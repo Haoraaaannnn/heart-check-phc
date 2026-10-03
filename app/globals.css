@@ -164,3 +164,29 @@ body {
 .phc-badge-pulse {
   animation: phc-badge-pulse 2s infinite cubic-bezier(0.4, 0, 0.6, 1);
 }
+
+/* Real-time queue item dot travel animation along route paths */
+@keyframes phc-queue-travel {
+  0% {
+    left: 2%;
+    opacity: 0;
+    transform: translateY(-50%) scale(0.75);
+  }
+  10% {
+    opacity: 1;
+    transform: translateY(-50%) scale(1);
+  }
+  90% {
+    opacity: 1;
+    transform: translateY(-50%) scale(1);
+  }
+  100% {
+    left: 92%;
+    opacity: 0;
+    transform: translateY(-50%) scale(0.75);
+  }
+}
+
+.phc-queue-dot-motion {
+  animation: phc-queue-travel 3.2s cubic-bezier(0.4, 0, 0.6, 1) infinite;
+}
