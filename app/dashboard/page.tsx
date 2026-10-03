@@ -8,6 +8,7 @@ import { useHistoricalSummary } from '@/app/dashboard/context/HistoricalSummaryC
 import { useIdleTimeout } from '@/app/dashboard/hooks/useIdleTimeout';
 import { useMountedClock } from '@/app/dashboard/hooks/useMountedClock';
 import { calcAvgWaitTime } from '@/utils/waitTime';
+import { ConnectionStatusBanner } from '@/components/reusables/ConnectionStatusBanner';
 import WelcomeBanner from '@/app/dashboard/components/WelcomeBanner';
 import DashboardMetrics from '@/app/dashboard/components/DashboardMetrics';
 import HistoricalContextBanner from '@/app/dashboard/components/HistoricalContextBanner';
@@ -26,6 +27,10 @@ import { DASH } from '@/app/dashboard/constants/styles';
  * superadmin, so no ticket actions live on this page (see QuickLinks, which
  * only navigates elsewhere).
  *
+ * Real-time streaming: powered by Supabase Realtime subscriptions in `useOverviewData`
+ * providing zero-latency ticket updates, instant in-memory KPI adjustments,
+ * and automatic 30s polling fallback when connection is degraded.
+ *
  * Layout: welcome banner + metrics + (service overview | ticket breakdown) +
  * quick links in the main column; live queue, hourly chart and recent
  * activity in the right rail. Falls back to HistoricalContextBanner when
@@ -36,7 +41,16 @@ export default function DashboardPage() {
   const router = useRouter();
   const { isMounted, currentTime } = useMountedClock();
 
-  const { stats, patientsList, deptStats, hourlyData, yesterdayCount } = useOverviewData();
+  const {
+    stats,
+    patientsList,
+    deptStats,
+    hourlyData,
+    yesterdayCount,
+    isOnline,
+    channelStatus,
+    isFullyConnected,
+  } = useOverviewData();
   const { historicalData, historicalLoading } = useHistoricalSummary();
 
   // Session guard only - mount flag and clock now live in useMountedClock.
@@ -54,6 +68,13 @@ export default function DashboardPage() {
 
   return (
     <div className={DASH.layout.page}>
+      <ConnectionStatusBanner
+        isOnline={isOnline}
+        channelStatus={channelStatus}
+        isFullyConnected={isFullyConnected}
+        showIcon={false}
+      />
+
       <WelcomeBanner currentTime={currentTime} isMounted={isMounted} />
 
       <DashboardMetrics

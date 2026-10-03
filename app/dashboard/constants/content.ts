@@ -37,6 +37,22 @@ export const BANNER = {
 export const TREND_LABEL = 'vs. yesterday';
 
 // ---------------------------------------------------------------------------
+// Realtime streaming & connectivity resilience configuration
+// ---------------------------------------------------------------------------
+
+/**
+ * Realtime subscription and fallback polling configuration for overview metrics.
+ */
+export const DASHBOARD_REALTIME = {
+  /** Channel identifier for Supabase postgres_changes subscription */
+  channelName: 'patients-dashboard-realtime',
+  /** Debounce delay in milliseconds for reconciling batch events */
+  debounceMs: 300,
+  /** Fallback polling interval in milliseconds when WebSocket is degraded (30 seconds) */
+  fallbackPollIntervalMs: 30_000,
+} as const;
+
+// ---------------------------------------------------------------------------
 // Metric cards
 // ---------------------------------------------------------------------------
 

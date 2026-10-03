@@ -38,6 +38,12 @@ The Admin Dashboard subsystem adheres strictly to the architectural standards de
    - `app/dashboard/pages/patients/`: Patient flow inspection, department distributions, and queue auditing.
    - `app/dashboard/pages/analytics/`: Computational bottleneck forecasting, ARIMA modeling, and Excel export.
 
+5. **Zero-Latency Realtime Streaming & Degraded Polling Fallback:**
+   - **Instant In-Memory Updates:** Overview KPI cards, live queue table, ticket status breakdown, and department overview derive updates instantaneously from incoming Supabase Realtime `postgres_changes` payloads (INSERT, UPDATE, DELETE) with zero network delay.
+   - **Debounced Server Reconciliation:** Coalesces bursts of incoming database events with a 300ms debounce before executing a background query to synchronize state with PostgreSQL.
+   - **30-Second Polling Fallback:** Seamlessly activates a 30-second periodic polling interval when the WebSocket channel drops, errors, or times out, terminating the interval immediately upon reconnection.
+   - **Connection Health Telemetry:** Exposes `isOnline`, `channelStatus`, and `isFullyConnected` to drive the non-intrusive `ConnectionStatusBanner` during network disruptions.
+
 ---
 
 ## 2. "Where to Edit" Quick Reference Matrix
@@ -56,6 +62,7 @@ The Admin Dashboard subsystem adheres strictly to the architectural standards de
 | **Change bottleneck notification dropdown styling, colors, or action handlers** | [NotificationDropdown.tsx](file:///home/jensen/Github-Repositories/heart-check-phc/app/dashboard/components/NotificationDropdown.tsx) |
 | **Change overview metric cards, tones, and status colors** | [styles.ts](file:///home/jensen/Github-Repositories/heart-check-phc/app/dashboard/constants/styles.ts) (`TONES`, `DASH.metric`) |
 | **Change overview card labels, welcome greetings, or activity text** | [content.ts](file:///home/jensen/Github-Repositories/heart-check-phc/app/dashboard/constants/content.ts) |
+| **Change overview realtime channel, debounce delay, or fallback poll interval** | [content.ts](file:///home/jensen/Github-Repositories/heart-check-phc/app/dashboard/constants/content.ts) (`DASHBOARD_REALTIME`) |
 | **Change live queue table styling, ticket badges, or table borders** | [styles.ts](file:///home/jensen/Github-Repositories/heart-check-phc/app/dashboard/constants/styles.ts) (`DASH.table`) |
 | **Change live queue table component or service filter dropdown** | [LiveQueueTable.tsx](file:///home/jensen/Github-Repositories/heart-check-phc/app/dashboard/components/LiveQueueTable.tsx) |
 | **Change hourly arrival chart dimensions, bar radius, or palette colors** | [charts.ts](file:///home/jensen/Github-Repositories/heart-check-phc/app/dashboard/constants/charts.ts) |
