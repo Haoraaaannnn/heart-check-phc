@@ -17,6 +17,9 @@ export const ANALYTICS_ICONS = {
   download: COMMON_ICONS.download,
   spinner: COMMON_ICONS.spinner,
   calendar: 'bx-calendar',
+  calendarCheck: 'bx-calendar-check',
+  calendarEvent: 'bx-calendar-event',
+  layer: 'bx-layer',
   chevronLeft: 'bx-chevron-left',
   chevronRight: 'bx-chevron-right',
   close: 'bx-x',
@@ -130,6 +133,25 @@ export const ANALYTICS_STYLES = {
     section: 'flex flex-col gap-2',
     sectionLabel:
       'text-xs font-bold uppercase tracking-wider text-content-muted flex items-center gap-1.5',
+    modeSelector: 'grid grid-cols-3 gap-1.5 p-1 rounded-xl bg-surface-muted border border-line',
+    modeBtn:
+      'flex items-center justify-center gap-1.5 py-2 px-2 rounded-lg text-xs font-semibold transition outline-none cursor-pointer',
+    modeBtnActive:
+      'bg-emerald-600 text-white shadow-sm font-bold',
+    modeBtnIdle:
+      'text-content-muted hover:text-content hover:bg-surface/60',
+    dateInputRow: 'flex flex-col gap-2',
+    dateInput:
+      'w-full rounded-xl border border-line bg-surface px-3.5 py-2 text-sm font-semibold text-content outline-none transition focus:border-emerald-500 focus:ring-2 focus:ring-emerald-500/20 [color-scheme:light] dark:[color-scheme:dark]',
+    recordedDateSubLabel: 'text-[11px] font-semibold text-content-muted',
+    dateSelect:
+      'w-full rounded-xl border border-line bg-surface px-3.5 py-2 text-sm font-semibold text-content outline-none transition focus:border-emerald-500 focus:ring-2 focus:ring-emerald-500/20',
+    dateBadgeRow: 'mt-0.5 flex items-center gap-1.5 text-xs font-medium',
+    dateBadgeSuccess: 'text-emerald-600 dark:text-emerald-400 flex items-center gap-1',
+    dateBadgeMuted: 'text-amber-600 dark:text-amber-400 flex items-center gap-1',
+    allDatesNoticeCard:
+      'flex items-start gap-2.5 rounded-xl border border-emerald-200 bg-emerald-50/70 dark:border-emerald-900/60 dark:bg-emerald-950/30 p-3.5 text-xs text-content-muted leading-relaxed',
+    allDatesNoticeIcon: 'text-emerald-600 dark:text-emerald-400 text-lg shrink-0 mt-0.5',
     yearRow: 'flex items-center gap-2',
     yearSelect:
       'w-full rounded-xl border border-line bg-surface px-3.5 py-2 text-sm font-semibold text-content outline-none transition focus:border-emerald-500 focus:ring-2 focus:ring-emerald-500/20',

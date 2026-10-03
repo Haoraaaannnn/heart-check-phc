@@ -1,40 +1,88 @@
+/**
+ * @fileoverview Redesigned Historical Context & Monthly Breakdown component for Dashboard Overview.
+ *
+ * Implements an executive intelligence surface featuring:
+ * 1. Longitudinal system status badge and clinical capacity health indicator.
+ * 2. Three high-contrast solid KPI cards (Primary Bottleneck, Avg. Total Journey, Next-Day Forecast).
+ * 3. Year-filtered monthly performance breakdown table conforming to the Enterprise Solid Surfaces standard.
+ * 4. Longitudinal clinical notice and session-scoped year caching.
+ *
+ * @remarks
+ * Conforms strictly to AGENTS.md: pure assembly and rendering, strict separation of concerns,
+ * high-contrast clinical ergonomics, and zero emojis.
+ *
+ * @module app/dashboard/components/HistoricalContextBanner
+ */
+
 'use client';
 
 import { useEffect, useRef, useState } from 'react';
+import { HISTORICAL_TEXTS } from '@/app/dashboard/constants/historicalTexts';
+import { HISTORICAL_STYLES } from '@/app/dashboard/constants/historicalStyles';
 
-interface MonthEntry {
+/**
+ * Monthly performance record returned from backend analytics.
+ */
+export interface MonthEntry {
+  /** Calendar month number (1 - 12) */
   month: number;
+  /** Full calendar month name (e.g. "January") */
   month_label: string;
+  /** Total patient intake recorded in the month */
   patient_count: number;
+  /** Workflow stage with highest congestion */
   bottleneck_stage: string;
-  system_status: string;
+  /** Operational classification (Normal, Elevated, Overwhelmed) */
+  system_status: 'Normal' | 'Elevated' | 'Overwhelmed' | 'No Data';
+  /** Average total patient journey duration in minutes */
   avg_total_time_min: number;
 }
 
-interface HistoricalContextBannerProps {
+/**
+ * Properties for the {@link HistoricalContextBanner} component.
+ */
+export interface HistoricalContextBannerProps {
+  /** Longitudinal historical data payload fetched from backend analytics */
   historicalData: any;
+  /** Whether the initial background analytics query is actively loading */
   historicalLoading: boolean;
+  /** Whether the banner is shown because today has zero activity or requested on-demand */
+  isTodayEmpty?: boolean;
+  /** Optional callback fired when the user collapses the banner */
+  onClose?: () => void;
 }
 
-const STATUS_BADGE: Record<string, string> = {
-  Overwhelmed: 'bg-red-100 text-red-700 dark:bg-red-900/30 dark:text-red-400',
-  Elevated: 'bg-amber-100 text-amber-700 dark:bg-amber-900/30 dark:text-amber-400',
-  Normal: 'bg-green-100 text-green-700 dark:bg-green-900/30 dark:text-green-400',
-  'No Data': 'bg-gray-100 text-gray-500 dark:bg-gray-800/50 dark:text-gray-400',
-};
-
-function formatDuration(mins: number) {
+/**
+ * Formats a duration in minutes into a human-readable "Xh Ym" or "Ym" string.
+ *
+ * @param mins - Duration in minutes.
+ * @returns Formatted duration string.
+ */
+function formatDuration(mins: number): string {
+  if (mins <= 0) return '--';
   const hrs = Math.floor(mins / 60);
   const remMins = Math.round(mins % 60);
+  if (hrs === 0) return `${remMins}m`;
   return `${hrs}h ${remMins}m`;
 }
 
-const API_BASE = 'http://localhost:8000';
+const API_BASE = process.env.NEXT_PUBLIC_API_URL || 'http://localhost:8000';
 
+/**
+ * Executive historical data breakdown banner and monthly performance inspection table.
+ *
+ * @param props - Component properties.
+ * @returns Rendered JSX element.
+ */
 export default function HistoricalContextBanner({
   historicalData,
   historicalLoading,
+  isTodayEmpty = true,
+  onClose,
 }: HistoricalContextBannerProps) {
+  const S = HISTORICAL_STYLES;
+  const T = HISTORICAL_TEXTS;
+
   const [years, setYears] = useState<number[]>([]);
   const [yearsLoading, setYearsLoading] = useState(true);
   const [activeYear, setActiveYear] = useState<number | null>(null);
@@ -42,11 +90,10 @@ export default function HistoricalContextBanner({
   const [monthsLoading, setMonthsLoading] = useState(false);
   const [monthsError, setMonthsError] = useState<string | null>(null);
 
-  // Client-side cache so re-selecting a year already viewed this session
-  // doesn't refetch from the backend.
+  // Client-side cache to avoid redundant network round-trips when switching years
   const monthCache = useRef<Record<number, MonthEntry[]>>({});
 
-  // Fetch the list of available years once, on mount.
+  // Fetch available archive years once on mount
   useEffect(() => {
     fetch(`${API_BASE}/api/available-years`)
       .then((res) => {
@@ -66,7 +113,7 @@ export default function HistoricalContextBanner({
       });
   }, []);
 
-  // Fetch (or reuse cached) months whenever the selected year changes.
+  // Fetch or retrieve cached monthly records whenever activeYear changes
   useEffect(() => {
     if (activeYear === null) return;
 
@@ -96,151 +143,289 @@ export default function HistoricalContextBanner({
       });
   }, [activeYear]);
 
+  // Loading skeleton state conforming to solid surfaces standard
   if (historicalLoading) {
     return (
-      <div className="rounded-2xl border border-line bg-surface p-6 shadow-sm">
-        <p className="text-sm text-content-muted">Loading historical context...</p>
+      <div className={S.container}>
+        <div className="flex items-center gap-3.5 animate-pulse">
+          <div className="w-11 h-11 rounded-xl bg-surface-muted border border-line" />
+          <div className="flex flex-col gap-2">
+            <div className="w-48 h-5 rounded-md bg-surface-muted" />
+            <div className="w-80 h-3.5 rounded-md bg-surface-muted" />
+          </div>
+        </div>
+        <div className={S.cardsGrid}>
+          <div className="h-28 rounded-xl bg-surface-muted border border-line animate-pulse" />
+          <div className="h-28 rounded-xl bg-surface-muted border border-line animate-pulse" />
+          <div className="h-28 rounded-xl bg-surface-muted border border-line animate-pulse" />
+        </div>
       </div>
     );
   }
 
   if (!historicalData) return null;
 
-  const status = historicalData.bottleneck_analysis?.system_status || 'N/A';
-  const bottleneckStage = historicalData.bottleneck_analysis?.bottleneck_stage || 'None';
+  const rawStatus = (historicalData.bottleneck_analysis?.system_status || 'No Data') as
+    | 'Normal'
+    | 'Elevated'
+    | 'Overwhelmed'
+    | 'No Data';
+
+  const status = S.statusBadge[rawStatus] ? rawStatus : 'No Data';
+  const bottleneckStage =
+    historicalData.bottleneck_analysis?.bottleneck_stage || T.cards.bottleneck.fallback;
   const avgTotalMins = historicalData.system_time?.avg_total_time ?? 0;
   const forecast = historicalData.computational_forecasting?.next_day_forecast ?? null;
   const bestAlgo = historicalData.computational_forecasting?.best_algorithm;
 
-  const isOverwhelmed = status === 'Overwhelmed';
+  const titleText = isTodayEmpty ? T.header.titleIdle : T.header.titleOnDemand;
 
   return (
-    <div className="rounded-2xl border border-line bg-surface p-8 shadow-sm">
-      <div className="flex items-start justify-between flex-wrap gap-4 mb-6">
-        <div>
-          <h2 className="text-xl font-extrabold text-content">
-            No live activity today
-          </h2>
-          <p className="text-sm text-content-muted mt-1">
-            Here's what the historical data shows for this system
-          </p>
-        </div>
-        <span
-          className={`text-xs font-bold px-3 py-1.5 rounded-full uppercase ${
-            isOverwhelmed
-              ? 'bg-red-100 text-red-700 dark:bg-red-950/40 dark:border dark:border-red-900 dark:text-red-300'
-              : 'bg-green-100 text-green-700 dark:bg-green-950/40 dark:border dark:border-green-900 dark:text-green-300'
-          }`}
-        >
-          {status}
-        </span>
-      </div>
-
-      <div className="grid grid-cols-1 sm:grid-cols-3 gap-5 mb-8">
-        <div>
-          <p className="text-xs font-bold text-content-subtle uppercase tracking-widest mb-1">
-            Typical Bottleneck
-          </p>
-          <p className="text-lg font-extrabold text-content">
-            {bottleneckStage}
-          </p>
+    <section className={S.container} aria-label={titleText}>
+      {/* Top Header Row */}
+      <div className={S.header.root}>
+        <div className={S.header.titleBlock}>
+          <div className={S.header.iconBadge}>
+            <i className="bx bx-history" />
+          </div>
+          <div className={S.header.textGroup}>
+            <h2 className={S.header.title}>{titleText}</h2>
+            <p className={S.header.subtitle}>{T.header.subtitle}</p>
+          </div>
         </div>
 
-        <div>
-          <p className="text-xs font-bold text-content-subtle uppercase tracking-widest mb-1">
-            Avg. Total Patient Time
-          </p>
-          <p className="text-lg font-extrabold text-content">
-            {formatDuration(avgTotalMins)}
-          </p>
-        </div>
+        <div className={S.header.actions}>
+          {/* Clinical Status Badge */}
+          <span
+            className={`${S.statusBadge.base} ${S.statusBadge[status]}`}
+            title={T.statusDescriptions[status] ?? status}
+          >
+            <span
+              className={`${S.statusBadge.dot} ${S.statusBadge[`${status}Dot` as keyof typeof S.statusBadge]}`}
+            />
+            <span>
+              {T.header.badgeLabel} {status}
+            </span>
+          </span>
 
-        <div>
-          <p className="text-xs font-bold text-content-subtle uppercase tracking-widest mb-1">
-            Next-Day Forecast
-          </p>
-          <p className="text-lg font-extrabold text-content">
-            {forecast !== null ? `${forecast} patients` : '—'}
-            {bestAlgo && (
-              <span className="text-xs font-normal text-content-muted ml-2">via {bestAlgo}</span>
-            )}
-          </p>
-        </div>
-      </div>
-
-      {!yearsLoading && years.length > 0 && (
-        <div className="border-t border-line pt-6">
-          <div className="flex items-center justify-between flex-wrap gap-3 mb-4">
-            <h3 className="text-sm font-bold text-content">
-              Monthly Breakdown
-            </h3>
-            <select
-              value={activeYear ?? ''}
-              onChange={(e) => setActiveYear(Number(e.target.value))}
-              className="text-sm font-semibold bg-surface-muted border border-line rounded-lg px-3 py-1.5 text-content outline-none"
+          {/* Optional collapse trigger button */}
+          {onClose && (
+            <button
+              type="button"
+              onClick={onClose}
+              className={S.header.collapseBtn}
+              aria-label={T.header.collapseButton}
             >
-              {years.map((year) => (
-                <option key={year} value={year}>{year}</option>
-              ))}
-            </select>
+              <i className="bx bx-chevron-up text-base" />
+              <span>{T.header.collapseButton}</span>
+            </button>
+          )}
+        </div>
+      </div>
+
+      {/* Three Executive Stat Cards */}
+      <div className={S.cardsGrid}>
+        {/* Card 1: Primary Bottleneck */}
+        <div className={`${S.card.tile} ${S.cardTones.amber.tile}`}>
+          <div className={`${S.card.iconWrap} ${S.cardTones.amber.icon}`}>
+            <i className="bx bx-traffic-cone" />
+          </div>
+          <div className={S.card.content}>
+            <p className={S.card.label}>{T.cards.bottleneck.label}</p>
+            <p className={S.card.value}>{bottleneckStage}</p>
+            <p className={S.card.subtitle}>{T.cards.bottleneck.subtitle}</p>
+          </div>
+        </div>
+
+        {/* Card 2: Avg. Total Patient Journey */}
+        <div className={`${S.card.tile} ${S.cardTones.purple.tile}`}>
+          <div className={`${S.card.iconWrap} ${S.cardTones.purple.icon}`}>
+            <i className="bx bx-hourglass" />
+          </div>
+          <div className={S.card.content}>
+            <p className={S.card.label}>{T.cards.journey.label}</p>
+            <p className={S.card.value}>{formatDuration(avgTotalMins)}</p>
+            <p className={S.card.subtitle}>{T.cards.journey.subtitle}</p>
+          </div>
+        </div>
+
+        {/* Card 3: Next-Day Computational Projection */}
+        <div className={`${S.card.tile} ${S.cardTones.emerald.tile}`}>
+          <div className={`${S.card.iconWrap} ${S.cardTones.emerald.icon}`}>
+            <i className="bx bx-line-chart" />
+          </div>
+          <div className={S.card.content}>
+            <p className={S.card.label}>{T.cards.forecast.label}</p>
+            <p className={S.card.value}>
+              {forecast !== null
+                ? `${forecast.toLocaleString()} ${T.cards.forecast.patientsUnit}`
+                : T.cards.forecast.fallback}
+            </p>
+            {bestAlgo && (
+              <span className={S.card.algoTag}>
+                <i className="bx bx-check-shield text-emerald-600 dark:text-emerald-400" />
+                <span>
+                  {T.cards.forecast.modelPrefix} {bestAlgo}
+                </span>
+              </span>
+            )}
+          </div>
+        </div>
+      </div>
+
+      {/* Monthly Breakdown Section */}
+      {!yearsLoading && years.length > 0 && (
+        <div className={S.monthlySection.root}>
+          <div className={S.monthlySection.header}>
+            <div className={S.monthlySection.titleBlock}>
+              <h3 className={S.monthlySection.title}>{T.monthlySection.title}</h3>
+              <p className={S.monthlySection.subtitle}>{T.monthlySection.subtitle}</p>
+            </div>
+
+            {/* Year Selector Pills */}
+            <div className={S.monthlySection.controls}>
+              <span className="text-xs font-bold text-content-muted select-none">
+                {T.monthlySection.yearSelectorLabel}
+              </span>
+
+              <div className={S.monthlySection.pillGroup}>
+                {years.map((year) => (
+                  <button
+                    key={year}
+                    type="button"
+                    onClick={() => setActiveYear(year)}
+                    aria-pressed={activeYear === year}
+                    className={`${S.monthlySection.yearPill} ${
+                      activeYear === year
+                        ? S.monthlySection.yearPillActive
+                        : S.monthlySection.yearPillIdle
+                    }`}
+                  >
+                    {year}
+                  </button>
+                ))}
+              </div>
+            </div>
           </div>
 
-          {monthsLoading && (
-            <p className="text-sm text-gray-400">Loading {activeYear}...</p>
-          )}
-
-          {!monthsLoading && monthsError && (
-            <p className="text-sm text-red-400">Couldn't load {activeYear}: {monthsError}</p>
-          )}
-
-          {!monthsLoading && !monthsError && months.length === 0 && (
-            <p className="text-sm text-gray-400">No records for {activeYear}.</p>
-          )}
-
-          {!monthsLoading && !monthsError && months.length > 0 && (
-            <div className="overflow-x-auto">
-              <table className="w-full text-sm">
-                <thead>
-                  <tr className="text-left text-xs uppercase tracking-wider text-gray-500 border-b border-white/20 dark:border-gray-700/50">
-                    <th className="py-2 pr-4 font-semibold">Month</th>
-                    <th className="py-2 pr-4 font-semibold">Patients</th>
-                    <th className="py-2 pr-4 font-semibold">Typical Bottleneck</th>
-                    <th className="py-2 pr-4 font-semibold">Avg. Total Time</th>
-                    <th className="py-2 pr-4 font-semibold">Status</th>
-                  </tr>
-                </thead>
-                <tbody>
-                  {months.map((m) => (
-                    <tr key={m.month} className="border-b border-white/10 dark:border-gray-800/50 last:border-0">
-                      <td className="py-3 pr-4 font-semibold text-gray-700 dark:text-gray-200 whitespace-nowrap">
-                        {m.month_label}
-                      </td>
-                      <td className="py-3 pr-4 text-gray-500 dark:text-gray-400 whitespace-nowrap">
-                        {m.patient_count}
-                      </td>
-                      <td className="py-3 pr-4 text-gray-600 dark:text-gray-300 whitespace-nowrap">
-                        {m.bottleneck_stage}
-                      </td>
-                      <td className="py-3 pr-4 text-gray-500 dark:text-gray-400 whitespace-nowrap">
-                        {formatDuration(m.avg_total_time_min)}
-                      </td>
-                      <td className="py-3 pr-4 whitespace-nowrap">
-                        <span className={`px-2.5 py-1 rounded-full text-xs font-bold ${STATUS_BADGE[m.system_status] || STATUS_BADGE['No Data']}`}>
-                          {m.system_status}
-                        </span>
+          {/* Table Container */}
+          <div className={S.table.wrap}>
+            <table className={S.table.table}>
+              <thead>
+                <tr className={S.table.headRow}>
+                  <th className={S.table.th}>{T.table.columns.month}</th>
+                  <th className={S.table.th}>{T.table.columns.patients}</th>
+                  <th className={S.table.th}>{T.table.columns.bottleneck}</th>
+                  <th className={S.table.th}>{T.table.columns.journey}</th>
+                  <th className={S.table.th}>{T.table.columns.status}</th>
+                </tr>
+              </thead>
+              <tbody>
+                {monthsLoading && (
+                  <>
+                    <tr className={S.table.skeletonRow}>
+                      <td colSpan={5} className="p-4">
+                        <div className={S.table.skeletonCell} />
                       </td>
                     </tr>
-                  ))}
-                </tbody>
-              </table>
-            </div>
-          )}
+                    <tr className={S.table.skeletonRow}>
+                      <td colSpan={5} className="p-4">
+                        <div className={S.table.skeletonCell} />
+                      </td>
+                    </tr>
+                    <tr className={S.table.skeletonRow}>
+                      <td colSpan={5} className="p-4">
+                        <div className={S.table.skeletonCell} />
+                      </td>
+                    </tr>
+                  </>
+                )}
+
+                {!monthsLoading && monthsError && (
+                  <tr>
+                    <td colSpan={5} className={S.table.errorMessage}>
+                      {T.monthlySection.errorPrefix} {monthsError}
+                    </td>
+                  </tr>
+                )}
+
+                {!monthsLoading && !monthsError && months.length === 0 && (
+                  <tr>
+                    <td colSpan={5} className={S.table.emptyMessage}>
+                      {T.monthlySection.emptyMonths}
+                    </td>
+                  </tr>
+                )}
+
+                {!monthsLoading &&
+                  !monthsError &&
+                  months.map((m) => {
+                    const rowStatus = S.statusBadge[m.system_status]
+                      ? m.system_status
+                      : 'No Data';
+
+                    return (
+                      <tr key={m.month} className={S.table.row}>
+                        {/* Month */}
+                        <td className={S.table.td}>
+                          <span className={S.table.monthName}>
+                            <i className={`bx bx-calendar ${S.table.monthIcon}`} />
+                            <span>{m.month_label}</span>
+                          </span>
+                        </td>
+
+                        {/* Patient Count */}
+                        <td className={S.table.td}>
+                          <span className={S.table.patientBadge}>
+                            {m.patient_count.toLocaleString()}
+                          </span>
+                        </td>
+
+                        {/* Bottleneck Stage */}
+                        <td className={S.table.td}>
+                          <span className={S.table.stageBadge}>
+                            <i className="bx bx-git-commit text-amber-500" />
+                            <span>{m.bottleneck_stage}</span>
+                          </span>
+                        </td>
+
+                        {/* Average Journey Time */}
+                        <td className={S.table.td}>
+                          <span className={S.table.journeyTime}>
+                            <i className={`bx bx-time ${S.table.journeyIcon}`} />
+                            <span>{formatDuration(m.avg_total_time_min)}</span>
+                          </span>
+                        </td>
+
+                        {/* System Status */}
+                        <td className={S.table.td}>
+                          <span
+                            className={`${S.statusBadge.base} ${S.statusBadge[rowStatus]}`}
+                          >
+                            <span
+                              className={`${S.statusBadge.dot} ${
+                                S.statusBadge[
+                                  `${rowStatus}Dot` as keyof typeof S.statusBadge
+                                ]
+                              }`}
+                            />
+                            <span>{m.system_status}</span>
+                          </span>
+                        </td>
+                      </tr>
+                    );
+                  })}
+              </tbody>
+            </table>
+          </div>
         </div>
       )}
 
-      <p className="text-xs text-gray-400 mt-6 italic">
-        Based on all historical patient records. Live figures below will update once today's queue starts.
-      </p>
-    </div>
+      {/* Clinical Telemetry Notice */}
+      <div className={S.footer.root}>
+        <i className={`bx bx-info-circle ${S.footer.icon}`} />
+        <span>{T.footer.notice}</span>
+      </div>
+    </section>
   );
 }

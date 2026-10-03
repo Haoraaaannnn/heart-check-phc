@@ -82,10 +82,20 @@ export function ConnectionStatusBanner({
   const [wasEverDegraded, setWasEverDegraded] = useState(false);
 
   useEffect(() => {
-    if (!isFullyConnected || pendingCount > 0) {
+    // Only flag as degraded if network is offline, channel has an explicit failure,
+    // or there are pending mutations. The normal initial CONNECTING handshake
+    // is expected and must not trigger false-positive recovery banners.
+    const isDegraded =
+      !isOnline ||
+      channelStatus === 'TIMED_OUT' ||
+      channelStatus === 'CHANNEL_ERROR' ||
+      channelStatus === 'CLOSED' ||
+      pendingCount > 0;
+
+    if (isDegraded) {
       setWasEverDegraded(true);
     }
-  }, [isFullyConnected, pendingCount]);
+  }, [isOnline, channelStatus, pendingCount]);
 
   useEffect(() => {
     if (isFullyConnected && wasEverDegraded && pendingCount === 0 && !isSyncingQueue) {

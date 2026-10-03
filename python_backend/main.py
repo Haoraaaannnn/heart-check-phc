@@ -7,11 +7,11 @@ Connects to Supabase and serves the analytics payload to the frontend.
 import os
 import time
 import traceback
-from datetime import date, timedelta
+from datetime import date, datetime, timedelta
 import pandas as pd
 import httpx
 from dotenv import load_dotenv
-from fastapi import FastAPI, HTTPException
+from fastapi import FastAPI, HTTPException, Query
 from fastapi.middleware.cors import CORSMiddleware
 from analytics import generate_report
 from analytics.preprocessing import preprocess_queue_data
@@ -304,6 +304,7 @@ def get_available_export_dates(refresh: bool = False):
         return {"years": [], "dates": {}}
 
     dates_map: dict[int, set[int]] = {}
+    available_days_set: set[str] = set()
 
     for row in data:
         # PHC Time and Motion Analysis export sheets require reg_start
@@ -317,6 +318,7 @@ def get_available_export_dates(refresh: bool = False):
             if y not in dates_map:
                 dates_map[y] = set()
             dates_map[y].add(m)
+            available_days_set.add(m_dt.date().isoformat())
         except Exception:
             continue
 
@@ -325,10 +327,12 @@ def get_available_export_dates(refresh: bool = False):
         str(y): sorted(list(months))
         for y, months in dates_map.items()
     }
+    sorted_days = sorted(list(available_days_set), reverse=True)
 
     result = {
         "years": sorted_years,
         "dates": formatted_dates,
+        "days": sorted_days,
     }
 
     _export_dates_cache = (now, result)
@@ -467,6 +471,7 @@ def get_empty_data():
 def export_excel(
     range: str | None = None,
     month: str | None = None,
+    date_param: str | None = Query(None, alias="date"),
     service: str | None = None,
 ):
     """
@@ -474,13 +479,21 @@ def export_excel(
     one sheet per day, matching the source .xls structure.
 
     Supports date filtering by:
-    1. month="YYYY-MM" (e.g. "2025-11") to export all days in that specific month.
-    2. range="90d" | "180d" | "365d" | "all" for rolling range exports.
+    1. date="YYYY-MM-DD" (e.g. "2025-11-04") to export a single specific day.
+    2. month="YYYY-MM" (e.g. "2025-11") to export all days in that specific month.
+    3. range="90d" | "180d" | "365d" | "all" for rolling range or all-dates exports.
     """
     target_year: int | None = None
     target_month: int | None = None
+    specific_date: date | None = None
 
-    if month:
+    if date_param:
+        try:
+            specific_date = datetime.strptime(date_param.strip(), "%Y-%m-%d").date()
+        except Exception:
+            raise HTTPException(status_code=400, detail="Invalid date format. Expected YYYY-MM-DD.")
+
+    if not specific_date and month:
         parts = month.strip().split("-")
         try:
             if len(parts) == 2:
@@ -496,7 +509,10 @@ def export_excel(
         except Exception:
             raise HTTPException(status_code=400, detail="Invalid month format. Expected YYYY-MM.")
 
-    if target_year and target_month:
+    if specific_date:
+        start_date = (specific_date - timedelta(days=1)).isoformat()
+        end_date = (specific_date + timedelta(days=2)).isoformat()
+    elif target_year and target_month:
         days_in_month = calendar.monthrange(target_year, target_month)[1]
         # Generous date boundaries to ensure UTC / Manila (+8) boundary cases are captured
         start_date = (date(target_year, target_month, 1) - timedelta(days=1)).isoformat()
@@ -520,6 +536,9 @@ def export_excel(
         raise HTTPException(status_code=502, detail="Failed to fetch patient data.")
 
     if not data:
+        if specific_date:
+            date_label = specific_date.strftime("%B %d, %Y")
+            raise HTTPException(status_code=404, detail=f"No patient records found for {date_label}.")
         if target_year and target_month:
             month_label = f"{calendar.month_name[target_month]} {target_year}"
             raise HTTPException(status_code=404, detail=f"No patient records found for {month_label}.")
@@ -531,7 +550,13 @@ def export_excel(
     if service and service.strip().lower() not in ("all", ""):
         df = df[df["service"] == service]
 
-    if target_year and target_month:
+    if specific_date:
+        df["_manila_date"] = df["reg_start"].apply(
+            lambda t: _to_manila(t).date() if pd.notna(t) else None
+        )
+        df = df[df["_manila_date"].notna()]
+        df = df[df["_manila_date"] == specific_date]
+    elif target_year and target_month:
         df["_manila_date"] = df["reg_start"].apply(
             lambda t: _to_manila(t).date() if pd.notna(t) else None
         )
@@ -539,6 +564,9 @@ def export_excel(
         df = df[df["_manila_date"].apply(lambda d: d.year == target_year and d.month == target_month)]
 
     if df.empty:
+        if specific_date:
+            date_label = specific_date.strftime("%B %d, %Y")
+            raise HTTPException(status_code=404, detail=f"No patient records found for {date_label}.")
         if target_year and target_month:
             month_label = f"{calendar.month_name[target_month]} {target_year}"
             raise HTTPException(status_code=404, detail=f"No patient records found for {month_label}.")
@@ -556,8 +584,12 @@ def export_excel(
         print("=" * 60)
         raise HTTPException(status_code=500, detail="Failed to build the export.")
 
-    if target_year and target_month:
+    if specific_date:
+        filename = f"phc_time_motion_export_{specific_date.isoformat()}.xlsx"
+    elif target_year and target_month:
         filename = f"phc_time_motion_export_{target_year}_{target_month:02d}.xlsx"
+    elif range == "all":
+        filename = "phc_time_motion_export_all_dates.xlsx"
     else:
         filename = f"phc_time_motion_export_{range or 'custom'}.xlsx"
 

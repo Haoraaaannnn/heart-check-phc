@@ -1,19 +1,26 @@
+/**
+ * @fileoverview Live Manila Time clock component for the Admin Dashboard header.
+ *
+ * Displays Philippine Standard Time (PST, Asia/Manila) with real-time per-second
+ * updating, safe client hydration mounting, and tabular font styling.
+ *
+ * @module app/dashboard/components/navigation/LiveClock
+ */
+
 'use client';
 
-import { useEffect, useState } from 'react';
+import React, { useEffect, useState } from 'react';
 import { DASH } from '@/app/dashboard/constants/styles';
 import { formatManilaDate, formatManilaTime } from '@/utils/formatDateTime';
 
 const S = DASH.header;
 
 /**
- * Header date + live clock in Manila time, ticking every second.
+ * Live ticking Manila clock display for the top navigation header.
  *
- * Kept as its own component so the per-second re-render doesn't touch the rest
- * of the header. Renders placeholders until mounted to avoid a hydration
- * mismatch (server and browser would otherwise disagree on the time).
+ * @returns JSX element.
  */
-export default function LiveClock() {
+export function LiveClock() {
   const [now, setNow] = useState<Date | null>(null);
 
   useEffect(() => {
@@ -23,9 +30,11 @@ export default function LiveClock() {
   }, []);
 
   return (
-    <div className={S.clock}>
+    <div className={S.clockContainer || S.clock}>
       <p className={S.clockDate}>{now ? formatManilaDate(now) : '--'}</p>
       <p className={S.clockTime}>{now ? formatManilaTime(now, true) : '--:--:--'}</p>
     </div>
   );
 }
+
+export default LiveClock;

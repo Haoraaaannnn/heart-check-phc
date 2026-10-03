@@ -1,6 +1,6 @@
 /**
- * @fileoverview Modal component for selecting date (month and year) and exporting
- * queue data into PHC Time and Motion Analysis Excel workbooks.
+ * @fileoverview Modal component for selecting date (specific date, all dates, or month/year)
+ * and exporting queue data into PHC Time and Motion Analysis Excel workbooks.
  *
  * Renders into document.body via React Portal to ensure the modal displays
  * on top of all application components, headers, and sidebars regardless
@@ -11,13 +11,18 @@
 
 'use client';
 
-import { useEffect, useState, useCallback } from 'react';
+import { useEffect, useState, useCallback, useMemo } from 'react';
 import { createPortal } from 'react-dom';
 import {
   ANALYTICS_STYLES,
   ANALYTICS_ICONS,
 } from '@/app/dashboard/pages/analytics/constants/analytics';
 import { ANALYTICS_TEXTS } from '@/app/dashboard/pages/analytics/constants/analyticsTexts';
+
+/**
+ * Supported date selection modes for Excel export.
+ */
+export type ExportDateMode = 'specific' | 'all' | 'month';
 
 /**
  * Response structure returned by the available-export-dates endpoint.
@@ -27,6 +32,8 @@ interface AvailableExportDatesResponse {
   years?: number[];
   /** Mapping of year string to array of month numbers (1-12) containing data. */
   dates?: Record<string, number[]>;
+  /** Array of distinct dates (YYYY-MM-DD) containing recorded patient data. */
+  days?: string[];
 }
 
 /**
@@ -42,10 +49,31 @@ interface ExportExcelModalProps {
 }
 
 /**
- * Modal dialog for selecting an available calendar month and exporting queue metrics
+ * Formats an ISO date string (YYYY-MM-DD) into a human-readable display string.
+ *
+ * @param dateStr - ISO date string formatted as YYYY-MM-DD.
+ * @returns Human-readable date string e.g. "November 04, 2025".
+ */
+function formatDisplayDate(dateStr: string): string {
+  if (!dateStr) return '';
+  const parts = dateStr.split('-');
+  if (parts.length !== 3) return dateStr;
+  const y = parseInt(parts[0], 10);
+  const m = parseInt(parts[1], 10);
+  const d = parseInt(parts[2], 10);
+  const monthNames = [
+    'January', 'February', 'March', 'April', 'May', 'June',
+    'July', 'August', 'September', 'October', 'November', 'December',
+  ];
+  const monthName = monthNames[m - 1] || '';
+  return `${monthName} ${String(d).padStart(2, '0')}, ${y}`;
+}
+
+/**
+ * Modal dialog for selecting a specific date, all dates, or calendar month and exporting queue metrics
  * formatted to PHC Time and Motion Analysis standards.
  *
- * Only years and months containing recorded patient data are presented to the user,
+ * Years, months, and recorded dates containing patient data are presented to the user,
  * preventing empty export generation requests.
  *
  * @param props - Component properties.
@@ -62,14 +90,23 @@ export default function ExportExcelModal({
 
   const [mounted, setMounted] = useState(false);
 
-  const today = new Date();
+  const today = useMemo(() => new Date(), []);
   const currentYear = today.getFullYear();
   const currentMonth = today.getMonth() + 1; // 1-12
+  const todayIso = useMemo(() => {
+    const y = today.getFullYear();
+    const m = String(today.getMonth() + 1).padStart(2, '0');
+    const d = String(today.getDate()).padStart(2, '0');
+    return `${y}-${m}-${d}`;
+  }, [today]);
 
+  const [mode, setMode] = useState<ExportDateMode>('specific');
   const [availableYears, setAvailableYears] = useState<number[]>([]);
   const [availableDates, setAvailableDates] = useState<Record<string, number[]>>({});
+  const [availableDays, setAvailableDays] = useState<string[]>([]);
   const [isLoadingDates, setIsLoadingDates] = useState<boolean>(true);
 
+  const [selectedDate, setSelectedDate] = useState<string>(todayIso);
   const [selectedYear, setSelectedYear] = useState<number>(currentYear);
   const [selectedMonth, setSelectedMonth] = useState<number>(currentMonth);
   const [selectedService, setSelectedService] = useState<string>(defaultService || 'all');
@@ -99,10 +136,17 @@ export default function ExportExcelModal({
         if (isCancelled) return;
         const fetchedYears = Array.isArray(data.years) ? data.years : [];
         const fetchedDates = data.dates || {};
+        const fetchedDays = Array.isArray(data.days) ? data.days : [];
 
         setAvailableYears(fetchedYears);
         setAvailableDates(fetchedDates);
+        setAvailableDays(fetchedDays);
         setIsLoadingDates(false);
+
+        // Auto-select latest recorded day if available
+        if (fetchedDays.length > 0) {
+          setSelectedDate(fetchedDays[0]);
+        }
 
         if (fetchedYears.length > 0) {
           const defaultYear = fetchedYears.includes(currentYear)
@@ -146,10 +190,6 @@ export default function ExportExcelModal({
     }
   }, [isOpen, handleKeyDown]);
 
-  if (!isOpen || !mounted || typeof document === 'undefined' || !document.body) {
-    return null;
-  }
-
   // Derive year options and previous/next navigation from available years
   const yearOptions = availableYears.length > 0 ? availableYears : [selectedYear];
 
@@ -188,11 +228,54 @@ export default function ExportExcelModal({
     visibleMonths[0] ||
     T.months[0];
 
-  const canExport =
-    !isExporting &&
-    !isLoadingDates &&
-    visibleMonths.length > 0 &&
-    monthsForYear.includes(selectedMonth);
+  // Determine export validity according to active mode
+  const canExport = useMemo(() => {
+    if (isExporting || isLoadingDates) return false;
+    if (mode === 'specific') {
+      return Boolean(selectedDate);
+    }
+    if (mode === 'month') {
+      return visibleMonths.length > 0 && monthsForYear.includes(selectedMonth);
+    }
+    if (mode === 'all') {
+      return availableYears.length > 0 || availableDays.length > 0;
+    }
+    return false;
+  }, [
+    isExporting,
+    isLoadingDates,
+    mode,
+    selectedDate,
+    visibleMonths.length,
+    monthsForYear,
+    selectedMonth,
+    availableYears.length,
+    availableDays.length,
+  ]);
+
+  // Dynamic preview period label based on active mode
+  const previewTargetPeriod = useMemo(() => {
+    if (mode === 'specific') {
+      return selectedDate
+        ? `${formatDisplayDate(selectedDate)} ${T.singleDaySuffix}`
+        : '-';
+    }
+    if (mode === 'all') {
+      return T.allDatesTargetPeriod;
+    }
+    return `${selectedMonthObj.name} ${selectedYear}`;
+  }, [mode, selectedDate, selectedMonthObj.name, selectedYear, T.allDatesTargetPeriod, T.singleDaySuffix]);
+
+  // Dynamic preview structure label based on active mode
+  const previewStructure = useMemo(() => {
+    if (mode === 'specific') {
+      return T.specificDateStructureValue;
+    }
+    if (mode === 'all') {
+      return T.allDatesStructureValue;
+    }
+    return T.monthStructureValue;
+  }, [mode, T.specificDateStructureValue, T.allDatesStructureValue, T.monthStructureValue]);
 
   const handleExport = async () => {
     if (!canExport) return;
@@ -203,8 +286,20 @@ export default function ExportExcelModal({
 
     try {
       const baseUrl = process.env.NEXT_PUBLIC_API_URL || 'http://localhost:8000';
-      const monthParam = `${selectedYear}-${String(selectedMonth).padStart(2, '0')}`;
-      const params = new URLSearchParams({ month: monthParam });
+      const params = new URLSearchParams();
+      let downloadFilename = 'phc_time_motion_export.xlsx';
+
+      if (mode === 'specific') {
+        params.set('date', selectedDate);
+        downloadFilename = `phc_time_motion_export_${selectedDate}.xlsx`;
+      } else if (mode === 'month') {
+        const monthParam = `${selectedYear}-${String(selectedMonth).padStart(2, '0')}`;
+        params.set('month', monthParam);
+        downloadFilename = `phc_time_motion_export_${selectedYear}_${String(selectedMonth).padStart(2, '0')}.xlsx`;
+      } else if (mode === 'all') {
+        params.set('range', 'all');
+        downloadFilename = 'phc_time_motion_export_all_dates.xlsx';
+      }
 
       if (selectedService && selectedService !== 'all') {
         params.set('service', selectedService);
@@ -229,7 +324,7 @@ export default function ExportExcelModal({
       const url = window.URL.createObjectURL(blob);
       const a = document.createElement('a');
       a.href = url;
-      a.download = `phc_time_motion_export_${selectedYear}_${String(selectedMonth).padStart(2, '0')}.xlsx`;
+      a.download = downloadFilename;
       document.body.appendChild(a);
       a.click();
       a.remove();
@@ -245,6 +340,10 @@ export default function ExportExcelModal({
       setIsExporting(false);
     }
   };
+
+  if (!isOpen || !mounted || typeof document === 'undefined' || !document.body) {
+    return null;
+  }
 
   return createPortal(
     <div
@@ -281,82 +380,218 @@ export default function ExportExcelModal({
 
         {/* Modal Form Body */}
         <div className={S.body}>
-          {/* Year Selection */}
+          {/* Mode Selector Tabs */}
           <div className={S.section}>
-            <label htmlFor="export-year-select" className={S.sectionLabel}>
+            <span className={S.sectionLabel}>
               <i className={`bx ${I.calendar}`} aria-hidden="true" />
-              <span>{T.yearLabel}</span>
-            </label>
-            <div className={S.yearRow}>
+              <span>{T.modeLabel}</span>
+            </span>
+            <div className={S.modeSelector} role="tablist" aria-label={T.modeLabel}>
               <button
                 type="button"
-                onClick={handlePrevYear}
-                disabled={isExporting || isLoadingDates || prevYear === null}
-                className={S.yearButton}
-                aria-label={T.prevYearAria}
+                role="tab"
+                aria-selected={mode === 'specific'}
+                onClick={() => setMode('specific')}
+                disabled={isExporting}
+                className={`${S.modeBtn} ${mode === 'specific' ? S.modeBtnActive : S.modeBtnIdle}`}
               >
-                <i className={`bx ${I.chevronLeft} text-lg`} aria-hidden="true" />
+                <i className={`bx ${I.calendarEvent}`} aria-hidden="true" />
+                <span>{T.modes.specific}</span>
               </button>
-              <select
-                id="export-year-select"
-                value={selectedYear}
-                onChange={(e) => handleSelectYear(Number(e.target.value))}
-                disabled={isExporting || isLoadingDates}
-                className={S.yearSelect}
-              >
-                {yearOptions.map((year) => (
-                  <option key={year} value={year}>
-                    {year}
-                  </option>
-                ))}
-              </select>
               <button
                 type="button"
-                onClick={handleNextYear}
-                disabled={isExporting || isLoadingDates || nextYear === null}
-                className={S.yearButton}
-                aria-label={T.nextYearAria}
+                role="tab"
+                aria-selected={mode === 'all'}
+                onClick={() => setMode('all')}
+                disabled={isExporting}
+                className={`${S.modeBtn} ${mode === 'all' ? S.modeBtnActive : S.modeBtnIdle}`}
               >
-                <i className={`bx ${I.chevronRight} text-lg`} aria-hidden="true" />
+                <i className={`bx ${I.layer}`} aria-hidden="true" />
+                <span>{T.modes.all}</span>
+              </button>
+              <button
+                type="button"
+                role="tab"
+                aria-selected={mode === 'month'}
+                onClick={() => setMode('month')}
+                disabled={isExporting}
+                className={`${S.modeBtn} ${mode === 'month' ? S.modeBtnActive : S.modeBtnIdle}`}
+              >
+                <i className={`bx ${I.calendarCheck}`} aria-hidden="true" />
+                <span>{T.modes.month}</span>
               </button>
             </div>
           </div>
 
-          {/* Month Selection */}
-          <div className={S.section}>
-            <span className={S.sectionLabel}>
-              <i className={`bx ${I.calendar}`} aria-hidden="true" />
-              <span>{T.monthLabel}</span>
-            </span>
+          {/* Mode 1: Specific Date Selection */}
+          {mode === 'specific' && (
+            <div className={S.section}>
+              <label htmlFor="export-specific-date" className={S.sectionLabel}>
+                <i className={`bx ${I.calendar}`} aria-hidden="true" />
+                <span>{T.specificDateLabel}</span>
+              </label>
+              <div className={S.dateInputRow}>
+                <input
+                  id="export-specific-date"
+                  type="date"
+                  value={selectedDate}
+                  onChange={(e) => setSelectedDate(e.target.value)}
+                  disabled={isExporting || isLoadingDates}
+                  className={S.dateInput}
+                  aria-label={T.specificDateInputAria}
+                />
 
-            {isLoadingDates ? (
-              <div className={S.loadingDates}>
-                <i className={`bx ${I.spinner} ${S.spinner}`} aria-hidden="true" />
-                <span>{T.loadingDates}</span>
-              </div>
-            ) : visibleMonths.length === 0 ? (
-              <div className={S.emptyState}>
-                <span>{T.noMonthsForYear}</span>
-              </div>
-            ) : (
-              <div className={S.monthGrid}>
-                {visibleMonths.map((m) => {
-                  const isActive = selectedMonth === m.value;
-                  return (
-                    <button
-                      key={m.value}
-                      type="button"
-                      onClick={() => setSelectedMonth(m.value)}
-                      disabled={isExporting}
-                      className={`${S.monthBtn} ${isActive ? S.monthBtnActive : S.monthBtnIdle}`}
+                {availableDays.length > 0 && (
+                  <div className="flex flex-col gap-1.5">
+                    <label htmlFor="export-recorded-date-select" className={S.recordedDateSubLabel}>
+                      <span>{T.recordedDatesLabel}</span>
+                    </label>
+                    <select
+                      id="export-recorded-date-select"
+                      value={availableDays.includes(selectedDate) ? selectedDate : ''}
+                      onChange={(e) => {
+                        if (e.target.value) {
+                          setSelectedDate(e.target.value);
+                        }
+                      }}
+                      disabled={isExporting || isLoadingDates}
+                      className={S.dateSelect}
+                      aria-label={T.recordedDatesSelectAria}
                     >
-                      <span>{m.short}</span>
-                    </button>
-                  );
-                })}
+                      <option
+                        value=""
+                        disabled
+                        className="bg-white dark:bg-slate-900 text-slate-900 dark:text-slate-100"
+                      >
+                        {T.selectRecordedDatePlaceholder}
+                      </option>
+                      {availableDays.map((d) => (
+                        <option
+                          key={d}
+                          value={d}
+                          className="bg-white dark:bg-slate-900 text-slate-900 dark:text-slate-100"
+                        >
+                          {formatDisplayDate(d)} ({d})
+                        </option>
+                      ))}
+                    </select>
+                  </div>
+                )}
               </div>
-            )}
-          </div>
+
+              {selectedDate && (
+                <div className={S.dateBadgeRow}>
+                  {availableDays.includes(selectedDate) ? (
+                    <span className={S.dateBadgeSuccess}>
+                      <i className={`bx ${I.check}`} aria-hidden="true" />
+                      <span>{T.hasRecordsBadge}</span>
+                    </span>
+                  ) : (
+                    <span className={S.dateBadgeMuted}>
+                      <i className={`bx ${I.infoCircle}`} aria-hidden="true" />
+                      <span>{T.noRecordsBadge}</span>
+                    </span>
+                  )}
+                </div>
+              )}
+            </div>
+          )}
+
+          {/* Mode 2: All Dates Notice */}
+          {mode === 'all' && (
+            <div className={S.section}>
+              <div className={S.allDatesNoticeCard}>
+                <i className={`bx ${I.infoCircle} ${S.allDatesNoticeIcon}`} aria-hidden="true" />
+                <span>{T.allDatesNotice}</span>
+              </div>
+            </div>
+          )}
+
+          {/* Mode 3: Month and Year Selection */}
+          {mode === 'month' && (
+            <>
+              {/* Year Selection */}
+              <div className={S.section}>
+                <label htmlFor="export-year-select" className={S.sectionLabel}>
+                  <i className={`bx ${I.calendar}`} aria-hidden="true" />
+                  <span>{T.yearLabel}</span>
+                </label>
+                <div className={S.yearRow}>
+                  <button
+                    type="button"
+                    onClick={handlePrevYear}
+                    disabled={isExporting || isLoadingDates || prevYear === null}
+                    className={S.yearButton}
+                    aria-label={T.prevYearAria}
+                  >
+                    <i className={`bx ${I.chevronLeft} text-lg`} aria-hidden="true" />
+                  </button>
+                  <select
+                    id="export-year-select"
+                    value={selectedYear}
+                    onChange={(e) => handleSelectYear(Number(e.target.value))}
+                    disabled={isExporting || isLoadingDates}
+                    className={S.yearSelect}
+                  >
+                    {yearOptions.map((year) => (
+                      <option
+                        key={year}
+                        value={year}
+                        className="bg-white dark:bg-slate-900 text-slate-900 dark:text-slate-100"
+                      >
+                        {year}
+                      </option>
+                    ))}
+                  </select>
+                  <button
+                    type="button"
+                    onClick={handleNextYear}
+                    disabled={isExporting || isLoadingDates || nextYear === null}
+                    className={S.yearButton}
+                    aria-label={T.nextYearAria}
+                  >
+                    <i className={`bx ${I.chevronRight} text-lg`} aria-hidden="true" />
+                  </button>
+                </div>
+              </div>
+
+              {/* Month Selection */}
+              <div className={S.section}>
+                <span className={S.sectionLabel}>
+                  <i className={`bx ${I.calendar}`} aria-hidden="true" />
+                  <span>{T.monthLabel}</span>
+                </span>
+
+                {isLoadingDates ? (
+                  <div className={S.loadingDates}>
+                    <i className={`bx ${I.spinner} ${S.spinner}`} aria-hidden="true" />
+                    <span>{T.loadingDates}</span>
+                  </div>
+                ) : visibleMonths.length === 0 ? (
+                  <div className={S.emptyState}>
+                    <span>{T.noMonthsForYear}</span>
+                  </div>
+                ) : (
+                  <div className={S.monthGrid}>
+                    {visibleMonths.map((m) => {
+                      const isActive = selectedMonth === m.value;
+                      return (
+                        <button
+                          key={m.value}
+                          type="button"
+                          onClick={() => setSelectedMonth(m.value)}
+                          disabled={isExporting}
+                          className={`${S.monthBtn} ${isActive ? S.monthBtnActive : S.monthBtnIdle}`}
+                        >
+                          <span>{m.short}</span>
+                        </button>
+                      );
+                    })}
+                  </div>
+                )}
+              </div>
+            </>
+          )}
 
           {/* Clinical Service Selection */}
           <div className={S.section}>
@@ -372,7 +607,11 @@ export default function ExportExcelModal({
               className={S.serviceSelect}
             >
               {T.services.map((svc) => (
-                <option key={svc.value} value={svc.value}>
+                <option
+                  key={svc.value}
+                  value={svc.value}
+                  className="bg-white dark:bg-slate-900 text-slate-900 dark:text-slate-100"
+                >
                   {svc.label}
                 </option>
               ))}
@@ -383,9 +622,7 @@ export default function ExportExcelModal({
           <div className={S.infoCard}>
             <div className={S.infoRow}>
               <span className={S.infoLabel}>{T.targetPeriodLabel}</span>
-              <span className={S.infoValue}>
-                {selectedMonthObj.name} {selectedYear}
-              </span>
+              <span className={S.infoValue}>{previewTargetPeriod}</span>
             </div>
             <div className={S.infoRow}>
               <span className={S.infoLabel}>{T.formatLabel}</span>
@@ -393,7 +630,7 @@ export default function ExportExcelModal({
             </div>
             <div className={S.infoRow}>
               <span className={S.infoLabel}>{T.structureLabel}</span>
-              <span className={S.infoValue}>{T.structureValue}</span>
+              <span className={S.infoValue}>{previewStructure}</span>
             </div>
           </div>
 

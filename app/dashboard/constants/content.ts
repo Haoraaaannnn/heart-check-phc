@@ -37,6 +37,127 @@ export const BANNER = {
 export const TREND_LABEL = 'vs. yesterday';
 
 // ---------------------------------------------------------------------------
+// Realtime streaming & connectivity resilience configuration
+// ---------------------------------------------------------------------------
+
+/**
+ * Realtime subscription and fallback polling configuration for overview metrics.
+ */
+export const DASHBOARD_REALTIME = {
+  /** Channel identifier for Supabase postgres_changes subscription */
+  channelName: 'patients-dashboard-realtime',
+  /** Debounce delay in milliseconds for reconciling batch events */
+  debounceMs: 300,
+  /** Fallback polling interval in milliseconds when WebSocket is degraded (30 seconds) */
+  fallbackPollIntervalMs: 30_000,
+} as const;
+
+// ---------------------------------------------------------------------------
+// Overview Date Range Filter presets & configurations
+// ---------------------------------------------------------------------------
+
+/**
+ * Valid timeframe options for filtering overview executive metrics.
+ */
+export type OverviewDateRange = 'today' | 'yesterday' | '7d' | 'mtd';
+
+/**
+ * Configuration for an overview date range preset pill.
+ */
+export interface OverviewDatePreset {
+  /** Identifier matching the range query key */
+  id: OverviewDateRange;
+  /** Primary label displayed on the pill button */
+  label: string;
+  /** Accessibility title and explanatory tooltip */
+  description: string;
+  /** Boxicons class name without the 'bx ' prefix */
+  icon: string;
+}
+
+/**
+ * Available timeframe presets displayed in the date filter pill bar.
+ */
+export const OVERVIEW_DATE_PRESETS: readonly OverviewDatePreset[] = [
+  { id: 'today', label: 'Today', description: "Today's live queue and arrivals", icon: 'bx-time-five' },
+  { id: 'yesterday', label: 'Yesterday', description: 'Previous full operational day', icon: 'bx-calendar-alt' },
+  { id: '7d', label: 'Last 7 Days', description: 'Trailing 7-day operational period', icon: 'bx-calendar-week' },
+  { id: 'mtd', label: 'Month-to-Date', description: 'Current month cumulative metrics', icon: 'bx-calendar' },
+] as const;
+
+/**
+ * Static UI copy for the date filter pill bar.
+ */
+export const OVERVIEW_DATE_FILTER_TEXTS = {
+  label: 'Timeframe:',
+  liveBadge: 'Live Streaming',
+  historicalBadge: 'Historical Snapshot',
+  loadingAria: 'Loading range metrics',
+} as const;
+
+/**
+ * Icon identifiers for the date filter pill bar.
+ */
+export const OVERVIEW_DATE_FILTER_ICONS = {
+  filter: 'bx-slider-alt',
+  history: 'bx-history',
+} as const;
+
+/**
+ * Metric card label and subtitle overrides specific to each timeframe.
+ */
+export const METRIC_RANGE_CONFIG: Record<
+  OverviewDateRange,
+  {
+    totalLabel: string;
+    totalSubtitle?: string;
+    trendLabel: string;
+    onQueueLabel: string;
+    onQueueSubtitle: string;
+    servedLabel: string;
+    servedSubtitle: string;
+    avgWaitSubtitle: string;
+  }
+> = {
+  today: {
+    totalLabel: 'Total Patients Today',
+    trendLabel: 'vs. yesterday',
+    onQueueLabel: 'On Queue',
+    onQueueSubtitle: 'Waiting to be served',
+    servedLabel: 'Served',
+    servedSubtitle: "Today's completed",
+    avgWaitSubtitle: 'Active queue average',
+  },
+  yesterday: {
+    totalLabel: 'Total Patients Yesterday',
+    trendLabel: 'vs. prev day',
+    onQueueLabel: 'Unserved at Close',
+    onQueueSubtitle: 'Ended day waiting',
+    servedLabel: 'Served Yesterday',
+    servedSubtitle: 'Completed consultations',
+    avgWaitSubtitle: 'Full day average',
+  },
+  '7d': {
+    totalLabel: 'Total Patients (7 Days)',
+    trendLabel: 'vs. prior 7d',
+    onQueueLabel: 'Unserved Tickets',
+    onQueueSubtitle: 'Cumulative pending',
+    servedLabel: 'Total Served (7d)',
+    servedSubtitle: 'Completed consultations',
+    avgWaitSubtitle: '7-day rolling average',
+  },
+  mtd: {
+    totalLabel: 'Total Patients (Month-to-Date)',
+    trendLabel: 'vs. prior month',
+    onQueueLabel: 'Unserved Tickets',
+    onQueueSubtitle: 'Month pending tickets',
+    servedLabel: 'Total Served (MTD)',
+    servedSubtitle: 'Month completed consultations',
+    avgWaitSubtitle: 'Month rolling average',
+  },
+};
+
+// ---------------------------------------------------------------------------
 // Metric cards
 // ---------------------------------------------------------------------------
 

@@ -32,6 +32,8 @@ export interface RecentPatient {
   time?: string;
   /** Elapsed or calculated wait duration in minutes, or formatted string. */
   waitTime?: number | string;
+  /** Contact phone number of patient if captured at intake. */
+  phoneNum?: string | null;
 }
 
 /**

@@ -23,6 +23,7 @@ import {
 import DashboardCard from '@/app/dashboard/components/DashboardCard';
 import { useDashboardTheme } from '@/app/dashboard/hooks/useDashboardTheme';
 import AlgorithmComparisonTable from '@/app/dashboard/pages/analytics/components/AlgorithmComparisonTable';
+import { ANALYTICS_STYLES } from '@/app/dashboard/pages/analytics/constants/analytics';
 import { ANALYTICS_TEXTS } from '@/app/dashboard/pages/analytics/constants/analyticsTexts';
 
 interface LRForecastProps {

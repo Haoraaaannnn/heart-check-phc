@@ -53,9 +53,11 @@ export const PATIENTS_STYLES = {
   header: {
     root: 'flex flex-col gap-2 rounded-2xl border border-line bg-surface p-6 shadow-sm',
     titleRow: 'flex items-center justify-between flex-wrap gap-4',
+    titleBlock: 'flex flex-col min-w-0',
     title: 'text-2xl md:text-3xl font-extrabold text-content',
     subtitle: 'text-sm text-content-muted',
-    errorBadge: 'inline-flex items-center gap-2 rounded-xl bg-red-50 px-4 py-2 text-sm font-semibold text-red-700 dark:bg-red-950/40 dark:text-red-300 border border-red-200 dark:border-red-900',
+    errorBadge:
+      'inline-flex items-center gap-2 rounded-xl bg-red-50 px-4 py-2 text-sm font-semibold text-red-700 dark:bg-red-950/40 dark:text-red-300 border border-red-200 dark:border-red-900',
   },
 
   /** Service filter pill bar. */
@@ -85,10 +87,17 @@ export const PATIENTS_STYLES = {
   /** Two-column chart grid. */
   chartsGrid: 'grid grid-cols-1 gap-6 lg:grid-cols-2',
 
-  /** Table styling tokens consistent with DASH.table. */
+  /** Table styling tokens consistent with DASH.table and enterprise solid surfaces. */
   table: {
     root: `${cardSurface} rounded-2xl p-6`,
     header: 'mb-4 flex items-center justify-between flex-wrap gap-3',
+    toolbar: 'mb-4 flex flex-col sm:flex-row items-stretch sm:items-center justify-between gap-3',
+    searchWrap: 'relative flex-1 sm:max-w-sm w-full',
+    searchIcon: 'absolute left-3 top-1/2 -translate-y-1/2 text-sm text-content-subtle',
+    searchInput:
+      'w-full rounded-xl border border-line bg-surface-muted py-2 pl-9 pr-8 text-xs text-content placeholder:text-content-subtle focus:border-brand-accent focus:bg-surface focus:outline-none transition shadow-2xs',
+    clearSearchButton:
+      'absolute right-2.5 top-1/2 -translate-y-1/2 text-content-subtle hover:text-content text-sm cursor-pointer',
     title: 'text-base md:text-lg font-extrabold text-content',
     subtitle: 'text-xs text-content-muted',
     countBadge: 'text-xs font-semibold text-content-muted',
@@ -99,16 +108,30 @@ export const PATIENTS_STYLES = {
     th: 'px-4 py-3 text-[11px] font-bold uppercase tracking-wider text-content-muted first:rounded-l-lg last:rounded-r-lg',
     row: 'border-b border-line transition last:border-0 hover:bg-surface-muted',
     td: 'px-4 py-3.5 text-sm text-content-muted',
+    idBadge:
+      'inline-flex items-center rounded-md bg-surface-muted px-2 py-0.5 font-mono text-xs font-semibold text-content-muted border border-line whitespace-nowrap',
     ticketBadge:
-      'inline-block rounded-lg bg-red-50 border border-red-200 px-3 py-1 font-mono text-sm font-extrabold text-red-700 dark:bg-red-950/40 dark:border-red-900 dark:text-red-300',
-    statusBadge: 'inline-flex items-center gap-1.5 rounded-full px-3 py-1 text-xs font-bold',
+      'inline-block rounded-lg bg-red-50 border border-red-200 px-3 py-1 font-mono text-sm font-extrabold text-red-700 dark:bg-red-950/40 dark:border-red-900 dark:text-red-300 whitespace-nowrap',
+    statusBadge: 'inline-flex items-center gap-1.5 rounded-full px-3 py-1 text-xs font-bold whitespace-nowrap',
+    phoneText: 'font-mono text-xs font-medium text-content whitespace-nowrap',
     emptyWrap: 'py-12 text-center',
     emptyTitle: 'text-base font-bold text-content',
     emptySubtitle: 'mt-1 text-xs text-content-muted',
-    paginationWrap: 'mt-5 flex items-center justify-between border-t border-line pt-4 flex-wrap gap-3',
+    paginationWrap:
+      'mt-5 flex flex-col sm:flex-row items-center justify-between border-t border-line pt-4 gap-3',
+    paginationGroup: 'flex items-center gap-1.5 flex-wrap justify-center',
     paginationButton:
-      'rounded-xl border border-line bg-surface px-4 py-2 text-xs font-semibold text-content transition hover:bg-surface-muted disabled:cursor-not-allowed disabled:opacity-40',
+      'rounded-xl border border-line bg-surface px-3 py-1.5 text-xs font-semibold text-content transition hover:bg-surface-muted disabled:cursor-not-allowed disabled:opacity-40 cursor-pointer',
+    pageButtonActive:
+      'rounded-xl border border-rose-600 bg-rose-600 px-3 py-1.5 text-xs font-bold text-white shadow-2xs',
+    pageButtonIdle:
+      'rounded-xl border border-line bg-surface px-3 py-1.5 text-xs font-semibold text-content transition hover:bg-surface-muted cursor-pointer',
     paginationInfo: 'text-xs font-semibold text-content-muted',
+    pageJumpWrap: 'flex items-center gap-1.5 text-xs text-content-muted',
+    pageJumpInput:
+      'w-14 rounded-lg border border-line bg-surface px-2 py-1 text-center text-xs font-semibold text-content outline-none focus:border-brand-accent',
+    pageJumpButton:
+      'rounded-lg border border-line bg-surface px-2.5 py-1 text-xs font-semibold text-content transition hover:bg-surface-muted disabled:opacity-40 cursor-pointer',
   },
 
   /** Service Queue Panel layout. */

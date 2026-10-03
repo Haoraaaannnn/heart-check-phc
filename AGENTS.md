@@ -87,18 +87,70 @@ This document outlines the mandatory rules and architectural standards that the 
 
 ---
 
+### 10. Enterprise Navigation & Solid Surfaces Standard
+- **Enterprise Navigation Structure:** All administrative and clinical workstations (`app/superadmin/`, `app/dashboard/`, `app/nurse/`) must implement an industry-standard layout featuring a fixed desktop left-rail sidebar (`w-64`), categorized navigation groups, and a sticky top header with dynamic breadcrumbs, live Philippine Standard Time (Manila clock), single-click light/dark theme toggle, user identity profile chip, and direct session sign-out.
+- **Deep-Linking & URL Tab Synchronization:** Subsystem tabs (e.g. rooms vs counters, settings vs security) must synchronize with URL search parameters (`?tab=...`) to allow direct deep-linking from navigation links.
+- **High-Contrast Solid Surfaces (Clinical Ergonomics):** Administrative workstations must eliminate blurry glassmorphism, milky transparent layers, and high-glow gradients in favor of high-contrast solid surfaces (`bg-slate-50 dark:bg-slate-950`, `bg-white dark:bg-slate-900`), crisp 1-pixel borders (`border-slate-200 dark:border-slate-800`), and subtle elevation shadows (`shadow-xs` / `shadow-sm`).
+- **Flawless Dual-Theme Architecture:** All screens must support seamless light and dark mode toggling with zero hydration mismatch (`mounted && resolvedTheme === 'dark'`), transition flashing suppression (`disableTransitionOnChange`), and explicit dark styling on native `<option>` tags inside form dropdowns.
+
+---
+
+### 11. Prohibition of Text Ellipsis & Truncation
+- **Avoid Using Ellipsis on Text:** All text labels, patient queue numbers, doctor names, room identifiers, cubicle labels, service names, statuses, and clinical indicators must display in full without truncation or ellipsis (`...` or `…`).
+- **No Truncation Utility Classes on Informational Content:** Avoid using Tailwind's `truncate` or `text-ellipsis` classes on medical or operational data where truncated text can obscure critical information (such as physician names, cubicle designations, or ticket numbers).
+- **Graceful Text Wrapping & Ergonomic Layouts:** Design containers, cards, and data badges with sufficient space or use natural word-wrapping (`break-words`, `whitespace-normal`) so that labels and identifiers remain fully legible, clear, and unambiguous to healthcare staff.
+
+---
+
+### 12. Mandatory Secure Coding and System Interconnection Standards
+- **Principle of Least Privilege & Service-Role Isolation:**
+  - The Supabase Service Role Key bypasses all Row Level Security (RLS) policies and must NEVER be exposed to client-side code, frontend bundles, or environment variables prefixed with `NEXT_PUBLIC_`.
+  - Service-role usage must be strictly isolated to server-only Route Handlers, background tasks, or internal scripts.
+  - Client components must interact with the database exclusively using the public anon key governed by RLS.
+- **Server-Side Route Guarding & Zero-Trust Session Verification:**
+  - Access control and role checks must always be enforced on the server before rendering UI (`proxy.ts` / server middleware and Supabase RLS).
+  - Client-side checks (e.g., `useRoleGuard` or client state) are cosmetic/visual aids only and must NEVER be treated as security boundaries.
+- **Strict Input Validation & Schema Enforcement:**
+  - Every API route handler, server action, and backend endpoint must strictly validate incoming parameters, headers, and request bodies before processing.
+  - Use Zod schemas in Next.js Route Handlers and Pydantic models in FastAPI endpoints with explicit field types, ranges, and regex constraints.
+  - Never trust client-provided role claims, IDs, or flags without validating them against the authenticated session.
+- **Safe Database Queries & Defense Against Injection:**
+  - All database interactions must use parameterized queries through the Supabase client SDK or parameterized ORM builders. Never concatenate raw strings into SQL queries.
+  - Protect historical research data: Operational mutations (`UPDATE`, `DELETE`) on the `patients` table must strictly filter out historical records (`is_historical = false`). Historical data must remain immutable.
+- **Resilient and Secure Subsystem Interconnection:**
+  - All HTTP communication between Next.js and FastAPI must include explicit timeout configurations (`AbortController` with 10-second timeout) to prevent thread exhaustion.
+  - Sanitize all cross-service error responses: Catch network and backend exceptions gracefully. Never leak raw Python tracebacks, database internal errors, or file system paths to the client.
+  - Enforce CORS restrictions on the backend: Explicitly whitelist verified frontend origins (`ALLOWED_ORIGINS`). Never configure `allow_origins=["*"]` on production endpoints.
+- **Authentication & Account Protection:**
+  - Login endpoints must enforce brute-force rate limiting and account lockout (via `login_attempts`).
+  - Auth cookies must enforce `HttpOnly`, `Secure` (in production), and `SameSite` flags.
+  - Password reset tokens must expire promptly (15-minute lifetime) and be single-use only (via `password_reset_attempts`).
+- **Cross-Site Scripting (XSS) & Content Protection:**
+  - Rely on React's automatic escaping for dynamic content in JSX. Never use `dangerouslySetInnerHTML` or evaluate arbitrary user strings.
+
+---
+
 ## Agent Pre-Commit / Pre-Completion Checklist
 
 Before completing any refactoring or coding task, verify against these rules:
 - [ ] Every changed/created file has full file-level and symbol-level JSDoc comments.
 - [ ] No raw text copy or inline style objects remain hardcoded in UI components.
 - [ ] Text copy is exported from `<feature>Texts.ts`.
-- [ ] Styles and visual properties are exported from `<feature>.ts`.
+- [ ] Styles and visual properties are exported from `<feature>Styles.ts` or `<feature>.ts`.
 - [ ] Global constants contain only shared/system-level tokens; local constants remain in their feature directory.
 - [ ] Centralized scales (such as kiosk typography in `constants/kiosk.ts`) are referenced by local constants.
 - [ ] If an image reference was provided, the implementation matches the image faithfully.
 - [ ] No unintentional visual or layout regressions were introduced during refactoring.
 - [ ] All kiosk screens, scrollable containers, and card grids are centered both horizontally and vertically.
+- [ ] Enterprise navigation rails, breadcrumbs, Manila clock, and high-contrast solid surfaces are adhered to in administrative workstations.
 - [ ] No emojis are used anywhere in documentation, code, or comments.
+- [ ] No ellipsis or truncated text (`...`, `…`, `truncate`, `text-ellipsis`) is used on labels, names, or clinical data.
 - [ ] All terminal commands and executions received explicit user confirmation prior to running.
 - [ ] Developer guide markdown files (.md) are created or updated with an explicit "where to edit" reference guide so developers can navigate and make changes easily.
+- [ ] No private secrets, backend credentials, or service role keys are exposed to client code or `NEXT_PUBLIC_` variables.
+- [ ] Server-side route guarding and role validation (`proxy.ts`) protect administrative and clinical endpoints.
+- [ ] All API inputs and request bodies are strictly validated with schemas (Zod / Pydantic) before processing.
+- [ ] Database queries are parameterized; no raw SQL string concatenation exists; historical records (`is_historical = true`) are protected from mutation.
+- [ ] Inter-service calls between Next.js and FastAPI have explicit timeouts and sanitized error responses (no raw tracebacks).
+
+
