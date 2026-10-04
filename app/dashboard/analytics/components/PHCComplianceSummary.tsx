@@ -60,18 +60,18 @@ function ThresholdRow({
   gt: number;
 }) {
   return (
-    <div className="grid grid-cols-2 gap-3 py-2 border-b border-gray-100 dark:border-gray-700/50 last:border-0">
+    <div className="grid grid-cols-2 gap-3 py-2 border-b border-slate-200 dark:border-[#2e2e2e] last:border-0">
       <div className="flex items-center justify-between gap-2">
-        <span className="text-xs text-gray-500 dark:text-gray-400">
+        <span className="text-xs text-slate-500 dark:text-[#a3a3a3]">
           {label} ≤ {thresholdLabel} =
         </span>
-        <span className="text-sm font-bold text-gray-800 dark:text-gray-200">{le}</span>
+        <span className="text-sm font-bold text-slate-900 dark:text-[#f5f5f5]">{le}</span>
       </div>
       <div className="flex items-center justify-between gap-2">
-        <span className="text-xs text-gray-500 dark:text-gray-400">
+        <span className="text-xs text-slate-500 dark:text-[#a3a3a3]">
           {label} &gt; {thresholdLabel} =
         </span>
-        <span className="text-sm font-bold text-gray-800 dark:text-gray-200">{gt}</span>
+        <span className="text-sm font-bold text-slate-900 dark:text-[#f5f5f5]">{gt}</span>
       </div>
     </div>
   );
@@ -79,9 +79,9 @@ function ThresholdRow({
 
 function StatBlock({ label, value }: { label: string; value: React.ReactNode }) {
   return (
-    <div className="flex items-center justify-between gap-4 py-2 border-b border-gray-100 dark:border-gray-700/50 last:border-0">
-      <span className="text-xs font-semibold text-gray-500 dark:text-gray-400">{label}</span>
-      <span className="text-base font-extrabold text-red-500">{value}</span>
+    <div className="flex items-center justify-between gap-4 py-2 border-b border-slate-200 dark:border-[#2e2e2e] last:border-0">
+      <span className="text-xs font-semibold text-slate-500 dark:text-[#a3a3a3]">{label}</span>
+      <span className="text-base font-extrabold text-[#a8071a] dark:text-[#f87171]">{value}</span>
     </div>
   );
 }
@@ -103,10 +103,10 @@ export default function PHCComplianceSummary({ data }: Props) {
   if (!data) {
     return (
       <AnalyticsMetricCards>
-        <h2 className="text-xl font-extrabold mb-2 text-gray-800 dark:text-gray-200">
+        <h2 className="text-xl font-extrabold mb-2 text-slate-900 dark:text-[#f5f5f5]">
           PHC Tracking Sheet Summary
         </h2>
-        <p className="text-sm text-gray-400">No data available for this range.</p>
+        <p className="text-sm text-slate-400 dark:text-[#737373]">No data available for this range.</p>
       </AnalyticsMetricCards>
     );
   }
@@ -117,10 +117,10 @@ export default function PHCComplianceSummary({ data }: Props) {
     <AnalyticsMetricCards>
       <div className="flex items-center justify-between mb-6 flex-wrap gap-2">
         <div>
-          <h2 className="text-xl font-extrabold text-gray-800 dark:text-gray-200">
+          <h2 className="text-xl font-extrabold text-slate-900 dark:text-[#f5f5f5]">
             PHC Tracking Sheet Summary
           </h2>
-          <p className="text-xs text-gray-400 mt-0.5">
+          <p className="text-xs text-slate-400 dark:text-[#737373] mt-0.5">
             Mirrors PHC OPD's manual daily tracking form, for direct cross-check.
           </p>
         </div>
@@ -160,15 +160,15 @@ export default function PHCComplianceSummary({ data }: Props) {
         </div>
 
         {/* Right: summary stats, matches paper form's right column */}
-        <div className="md:border-l md:border-gray-100 dark:md:border-gray-700/50 md:pl-6">
+        <div className="md:border-l md:border-slate-200 dark:md:border-[#2e2e2e] md:pl-6">
           <StatBlock
             label="Average Patient's Total Waiting Time"
             value={formatMinutesToHMS(data.avg_total_waiting_time_min)}
           />
           <StatBlock label="Number of Patients Seen" value={patientsSeen} />
 
-          <div className="flex items-center justify-between gap-4 py-2 border-b border-gray-100 dark:border-gray-700/50">
-            <label htmlFor="doctors-on-duty" className="text-xs font-semibold text-gray-500 dark:text-gray-400">
+          <div className="flex items-center justify-between gap-4 py-2 border-b border-slate-200 dark:border-[#2e2e2e]">
+            <label htmlFor="doctors-on-duty" className="text-xs font-semibold text-slate-500 dark:text-[#a3a3a3]">
               Number of Doctors on Duty
             </label>
             <input
@@ -177,13 +177,13 @@ export default function PHCComplianceSummary({ data }: Props) {
               min={1}
               value={doctorsOnDuty}
               onChange={(e) => setDoctorsOnDuty(Math.max(1, Number(e.target.value) || 1))}
-              className="w-16 text-right text-base font-extrabold text-red-500 bg-transparent border border-gray-200 dark:border-gray-600 rounded px-2 py-0.5 focus:outline-none focus:ring-1 focus:ring-red-400"
+              className="w-16 text-right text-base font-extrabold text-[#a8071a] dark:text-[#f87171] bg-slate-50 dark:bg-[#1f1f1f] border border-slate-200 dark:border-[#2e2e2e] rounded px-2 py-0.5 focus:outline-none focus:ring-1 focus:ring-[#a8071a]"
             />
           </div>
 
           <StatBlock label="Patient to Doctor Ratio Per Hour" value={ratioPerHour} />
 
-          <p className="text-[10px] text-gray-400 mt-2 leading-snug">
+          <p className="text-[10px] text-slate-400 dark:text-[#737373] mt-2 leading-snug">
             Doctors on duty is a manual entry — ratio recalculates automatically.
           </p>
         </div>

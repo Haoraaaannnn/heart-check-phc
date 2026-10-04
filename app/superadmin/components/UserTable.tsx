@@ -138,7 +138,7 @@ export const UserTable: React.FC<UserTableProps> = ({
       case 'registration':
         return R.registration;
       default:
-        return 'bg-slate-100 text-slate-800 dark:bg-slate-800 dark:text-slate-300';
+        return 'bg-slate-100 text-slate-800 dark:bg-[#2e2e2e] dark:text-[#a3a3a3]';
     }
   };
 
@@ -158,7 +158,7 @@ export const UserTable: React.FC<UserTableProps> = ({
         </div>
 
         <div className={S.filterGroup}>
-          <span className="text-xs text-slate-500 dark:text-slate-400 font-medium hidden sm:inline">
+          <span className="text-xs text-slate-500 dark:text-[#a3a3a3] font-medium hidden sm:inline">
             {T.filterLabel}
           </span>
           {ROLE_OPTIONS.map((opt) => {
@@ -182,20 +182,20 @@ export const UserTable: React.FC<UserTableProps> = ({
       {/* Table Data */}
       {loading ? (
         <div className="py-16 text-center space-y-3">
-          <div className="inline-block animate-spin rounded-full h-8 w-8 border-2 border-rose-600 border-t-transparent" />
-          <p className="text-xs text-slate-500 dark:text-slate-400 font-medium">
+          <div className="inline-block animate-spin rounded-full h-8 w-8 border-2 border-[#a8071a] border-t-transparent" />
+          <p className="text-xs text-slate-500 dark:text-[#a3a3a3] font-medium">
             {T.loadingUsers}
           </p>
         </div>
       ) : users.length === 0 ? (
         <div className="py-16 text-center space-y-2">
-          <div className="w-12 h-12 rounded-full bg-slate-100 dark:bg-slate-800 text-slate-400 mx-auto flex items-center justify-center text-2xl">
+          <div className="w-12 h-12 rounded-full bg-slate-100 dark:bg-[#242424] text-slate-400 mx-auto flex items-center justify-center text-2xl">
             <i className="bx bx-user-x" aria-hidden="true" />
           </div>
-          <p className="text-sm font-bold text-slate-700 dark:text-slate-200">
+          <p className="text-sm font-bold text-slate-700 dark:text-[#f5f5f5]">
             {T.emptyTitle}
           </p>
-          <p className="text-xs text-slate-500 dark:text-slate-400">
+          <p className="text-xs text-slate-500 dark:text-[#a3a3a3]">
             {T.emptyDesc}
           </p>
         </div>
@@ -216,15 +216,15 @@ export const UserTable: React.FC<UserTableProps> = ({
                 {users.map((user) => (
                   <tr key={user.auth_id} className={S.tr}>
                     <td className={S.td}>
-                      <div className="flex items-center gap-2.5 font-medium text-slate-900 dark:text-white">
-                        <span className="w-7 h-7 rounded-full bg-slate-100 dark:bg-slate-800 text-slate-600 dark:text-slate-300 flex items-center justify-center text-xs font-bold">
+                      <div className="flex items-center gap-2.5 font-medium text-slate-900 dark:text-[#f5f5f5]">
+                        <span className="w-7 h-7 rounded-full bg-slate-100 dark:bg-[#242424] text-slate-600 dark:text-[#a3a3a3] flex items-center justify-center text-xs font-bold">
                           {user.email.charAt(0).toUpperCase()}
                         </span>
                         <span>{user.email}</span>
                       </div>
                     </td>
                     <td className={S.td}>
-                      <span className="font-mono text-xs text-slate-600 dark:text-slate-400">
+                      <span className="font-mono text-xs text-slate-600 dark:text-[#a3a3a3]">
                         {user.username}
                       </span>
                     </td>
@@ -234,7 +234,7 @@ export const UserTable: React.FC<UserTableProps> = ({
                       </span>
                     </td>
                     <td className={S.td}>
-                      <span className="text-xs text-slate-500 dark:text-slate-400">
+                      <span className="text-xs text-slate-500 dark:text-[#a3a3a3]">
                         {new Date(user.created_at).toLocaleDateString(undefined, {
                           year: 'numeric',
                           month: 'short',
@@ -247,7 +247,7 @@ export const UserTable: React.FC<UserTableProps> = ({
                         <button
                           type="button"
                           onClick={() => onEditUser(user)}
-                          className="px-2.5 py-1 rounded-lg text-xs font-semibold text-rose-600 dark:text-rose-400 hover:bg-rose-50 dark:hover:bg-rose-950/60 transition cursor-pointer flex items-center gap-1"
+                          className="px-2.5 py-1 rounded-lg text-xs font-semibold text-[#a8071a] dark:text-[#f87171] hover:bg-[#a8071a]/10 dark:hover:bg-[#a8071a]/20 transition cursor-pointer flex items-center gap-1"
                         >
                           <i className="bx bx-edit-alt text-sm" aria-hidden="true" />
                           <span>{T.editButton}</span>
@@ -270,17 +270,17 @@ export const UserTable: React.FC<UserTableProps> = ({
 
           {/* Pagination Controls */}
           <div className={S.pagination}>
-            <span className="text-xs text-slate-500 dark:text-slate-400">
+            <span className="text-xs text-slate-500 dark:text-[#a3a3a3]">
               {T.showingText}{' '}
-              <span className="font-semibold text-slate-800 dark:text-slate-200">
+              <span className="font-semibold text-slate-800 dark:text-[#f5f5f5]">
                 {users.length > 0 ? (currentPage - 1) * 8 + 1 : 0}
               </span>{' '}
               {T.toText}{' '}
-              <span className="font-semibold text-slate-800 dark:text-slate-200">
+              <span className="font-semibold text-slate-800 dark:text-[#f5f5f5]">
                 {Math.min(currentPage * 8, totalUsers)}
               </span>{' '}
               {T.ofText}{' '}
-              <span className="font-semibold text-slate-800 dark:text-slate-200">
+              <span className="font-semibold text-slate-800 dark:text-[#f5f5f5]">
                 {totalUsers}
               </span>{' '}
               {T.resultsText}
@@ -364,7 +364,7 @@ export const UserTable: React.FC<UserTableProps> = ({
             </div>
 
             {/* Jump to page form */}
-            <form onSubmit={handleJumpSubmit} className="flex items-center gap-1.5 text-xs text-slate-500 dark:text-slate-400">
+            <form onSubmit={handleJumpSubmit} className="flex items-center gap-1.5 text-xs text-slate-500 dark:text-[#a3a3a3]">
               <span>Go to:</span>
               <input
                 type="number"

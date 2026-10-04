@@ -179,7 +179,7 @@ export function DashboardHeader({ onOpenMobileDrawer }: DashboardHeaderProps) {
         )}
 
         <nav aria-label="Breadcrumbs" className={S.breadcrumbs}>
-          <span className="font-semibold text-slate-400 dark:text-slate-500">
+          <span className="font-semibold text-slate-400 dark:text-[#737373]">
             {T.breadcrumbs.root}
           </span>
           <span className={S.breadcrumbSeparator}>/</span>
@@ -210,7 +210,7 @@ export function DashboardHeader({ onOpenMobileDrawer }: DashboardHeaderProps) {
               className={`bx ${
                 isDark
                   ? 'bx-sun text-amber-400'
-                  : 'bx-moon text-slate-600 dark:text-slate-300'
+                  : 'bx-moon text-slate-600 dark:text-[#a3a3a3]'
               }`}
               aria-hidden="true"
             />

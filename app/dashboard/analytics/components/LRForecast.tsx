@@ -47,7 +47,7 @@ export default function LRForecast({
     <AnalyticsMetricCards>
       {/* Header */}
       <div className="flex items-center justify-between mb-3 flex-wrap gap-2">
-        <h2 className="text-xl font-extrabold text-gray-800 dark:text-gray-200">
+        <h2 className="text-xl font-extrabold text-slate-900 dark:text-[#f5f5f5]">
           Linear Regression Forecast
         </h2>
         <div className="flex items-center gap-3">
@@ -57,19 +57,19 @@ export default function LRForecast({
           >
             {lrRaw.trend}
           </span>
-          <span className="text-sm px-2 py-1 text-gray-600 dark:text-gray-400">
+          <span className="text-sm px-2 py-1 text-slate-600 dark:text-[#a3a3a3]">
             slope:{" "}
-            <span className="font-semibold text-gray-800 dark:text-gray-200">
+            <span className="font-semibold text-slate-900 dark:text-[#f5f5f5]">
               {lrRaw.slope?.toFixed(2)} patients/day
             </span>
           </span>
         </div>
       </div>
 
-      <p className="text-xs text-gray-400 mb-6">
+      <p className="text-xs text-slate-400 dark:text-[#737373] mb-6">
         Forecast for{" "}
-        <span className="font-semibold text-gray-600 dark:text-gray-300">{lrRaw.forecast_date}</span>:{" "}
-        <span className="font-semibold text-green-600">{lrRaw.forecast_value} patients</span>
+        <span className="font-semibold text-slate-700 dark:text-[#f5f5f5]">{lrRaw.forecast_date}</span>:{" "}
+        <span className="font-semibold text-emerald-600 dark:text-emerald-400">{lrRaw.forecast_value} patients</span>
       </p>
 
       {/* Stat cards */}
@@ -80,8 +80,8 @@ export default function LRForecast({
           { label: "Trend",    value: lrRaw.trend, color: trendColor },
           { label: "R² score", value: lrRaw.r2 ?? "—" },
         ].map(({ label, value, color }) => (
-          <div key={label} className="p-4 text-center border border-gray-100 dark:border-gray-700 rounded-lg">
-            <p className="text-xs mb-2 uppercase font-bold text-gray-400">{label}</p>
+          <div key={label} className="p-4 text-center border border-slate-200 dark:border-[#2e2e2e] rounded-lg">
+            <p className="text-xs mb-2 uppercase font-bold text-slate-400 dark:text-[#737373]">{label}</p>
             <p className={`text-2xl font-bold ${textLight} ${textDark}`}>
               {value}
             </p>
@@ -94,7 +94,7 @@ export default function LRForecast({
         <div className="flex-1 min-w-0">
           <div className="flex gap-5 mb-4 text-[10px] font-bold uppercase tracking-widest">
             <span className="flex items-center gap-2">
-              <span className="w-2.5 h-2.5 rounded-full bg-blue-500" /> Actual
+              <span className="w-2.5 h-2.5 rounded-full bg-[#a8071a] dark:bg-[#f87171]" /> Actual
             </span>
             <span className="flex items-center gap-2">
               <span style={{ width: 20, height: 0, borderTop: "2px dashed #f97316" }} /> Trend
@@ -107,7 +107,7 @@ export default function LRForecast({
           <div className="h-80 w-full mb-4">
             <ResponsiveContainer width="100%" height="100%">
               <ComposedChart data={lrChartData} margin={{ top: 10, right: 10, left: -20, bottom: 20 }}>
-                <CartesianGrid strokeDasharray="3 3" stroke={isDark ? '#374151' : '#f3f4f6'} vertical={false} />
+                <CartesianGrid strokeDasharray="3 3" stroke={isDark ? '#2e2e2e' : '#f3f4f6'} vertical={false} />
                 <XAxis dataKey="date" tick={{ fontSize: 10 }} angle={-45} textAnchor="end" height={60} />
                 <YAxis tick={{ fontSize: 10 }} allowDecimals={false} />
                 <Tooltip
@@ -116,11 +116,11 @@ export default function LRForecast({
                     borderRadius: '8px',
                     border: 'none',
                     boxShadow: '0 4px 6px -1px rgb(0 0 0 / 0.1)',
-                    backgroundColor: isDark ? '#1f2937' : '#ffffff',
-                    color: isDark ? '#e5e7eb' : '#111827',
+                    backgroundColor: isDark ? '#1a1a1a' : '#ffffff',
+                    color: isDark ? '#f5f5f5' : '#111827',
                   }}
                 />
-                <Scatter name="actual" dataKey="actual" fill="#3b82f6" />
+                <Scatter name="actual" dataKey="actual" fill={isDark ? '#f87171' : '#a8071a'} />
                 <Line
                   type="monotone" dataKey="lr_line"
                   stroke="#f97316" strokeWidth={3}
@@ -140,7 +140,7 @@ export default function LRForecast({
             </ResponsiveContainer>
           </div>
 
-          <p className="text-xs text-gray-400 leading-relaxed">
+          <p className="text-xs text-slate-400 dark:text-[#737373] leading-relaxed">
             Each dot is one day's actual patient count. The dashed line is the
             linear regression fit across all historical days. The green point
             is tomorrow's forecast — the trend line extended one step forward.
@@ -156,12 +156,12 @@ export default function LRForecast({
           />
 
           <div>
-            <p className="text-[10px] font-bold text-gray-400 uppercase tracking-widest mb-3">
+            <p className="text-[10px] font-bold text-slate-400 dark:text-[#737373] uppercase tracking-widest mb-3">
               Historical vs Fit
             </p>
             <div className={`${darkTheme} ${lightTheme} overflow-hidden max-h-64`}>
               <table className="w-full text-xs">
-                <thead className={`${darkTheme} ${lightTheme} font-bold uppercase text-[9px] text-gray-400 sticky top-0`}>
+                <thead className={`${darkTheme} ${lightTheme} font-bold uppercase text-[9px] text-slate-400 dark:text-[#737373] sticky top-0`}>
                   <tr>
                     <th className="px-3 py-2 text-left">Date</th>
                     <th className="px-3 py-2 text-right">Actual</th>
@@ -170,9 +170,9 @@ export default function LRForecast({
                 </thead>
                 <tbody>
                   {lrRaw.labels.map((date: string, i: number) => (
-                    <tr key={date} className="border-t border-gray-100 dark:border-gray-700">
-                      <td className="px-3 py-2 text-gray-500 dark:text-gray-400 text-[10px]">{date}</td>
-                      <td className="px-3 py-2 text-right font-bold text-gray-700 dark:text-gray-300">
+                    <tr key={date} className="border-t border-slate-200 dark:border-[#2e2e2e]">
+                      <td className="px-3 py-2 text-slate-500 dark:text-[#a3a3a3] text-[10px]">{date}</td>
+                      <td className="px-3 py-2 text-right font-bold text-slate-700 dark:text-[#f5f5f5]">
                         {lrRaw.actual[i]}
                       </td>
                       <td className="px-3 py-2 text-right text-orange-600 dark:text-orange-400 font-mono font-semibold">

@@ -10,6 +10,7 @@
  */
 
 import { cardSurface } from '@/constants/themes';
+import { themeTokens } from '@/constants/themeTokens';
 
 /** Distinct color palette for charts matching PHC aesthetic. */
 export const COLORS: readonly string[] = [
@@ -132,6 +133,7 @@ export const PATIENTS_STYLES = {
       'w-14 rounded-lg border border-line bg-surface px-2 py-1 text-center text-xs font-semibold text-content outline-none focus:border-brand-accent',
     pageJumpButton:
       'rounded-lg border border-line bg-surface px-2.5 py-1 text-xs font-semibold text-content transition hover:bg-surface-muted disabled:opacity-40 cursor-pointer',
+    selectOption: themeTokens.surface.selectOption,
   },
 
   /** Service Queue Panel layout. */
@@ -176,14 +178,14 @@ export const PATIENT_STATUS_COLORS: Record<string, { bg: string; text: string; d
     dot: 'bg-amber-500',
   },
   serving: {
-    bg: 'bg-blue-100 border border-blue-300 dark:bg-blue-950/50 dark:border-blue-800',
-    text: 'text-blue-800 dark:text-blue-300',
-    dot: 'bg-blue-500 animate-pulse',
+    bg: 'bg-teal-100 border border-teal-300 dark:bg-teal-950/50 dark:border-teal-800',
+    text: 'text-teal-800 dark:text-teal-300',
+    dot: 'bg-teal-500 animate-pulse',
   },
   'in service': {
-    bg: 'bg-blue-100 border border-blue-300 dark:bg-blue-950/50 dark:border-blue-800',
-    text: 'text-blue-800 dark:text-blue-300',
-    dot: 'bg-blue-500 animate-pulse',
+    bg: 'bg-teal-100 border border-teal-300 dark:bg-teal-950/50 dark:border-teal-800',
+    text: 'text-teal-800 dark:text-teal-300',
+    dot: 'bg-teal-500 animate-pulse',
   },
   completed: {
     bg: 'bg-emerald-100 border border-emerald-300 dark:bg-emerald-950/50 dark:border-emerald-800',

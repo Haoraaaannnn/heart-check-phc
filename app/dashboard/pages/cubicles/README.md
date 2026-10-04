@@ -11,10 +11,10 @@ The Cubicles Dashboard provides real-time operational visibility into outpatient
 ### Minimal Process-Graph Specifications
 
 The dashboard canvas is built as a focused, uncluttered process network:
-- **Rectangular Stage Nodes:** Thin-bordered solid cards (`1px border-slate-200 dark:border-slate-800`) representing each discrete processing stage in the outpatient pipeline.
+- **Rectangular Stage Nodes:** Thin-bordered solid cards (`1px border-slate-200 dark:border-[#2e2e2e]`) representing each discrete processing stage in the outpatient pipeline.
 - **Horizontal & Vertical Orthogonal Connectors:** Strict 90-degree right-angle lines connecting stages with zero angled crossovers or diagonal segments. 1:1 pixel coordinate matching ensures connector lines connect seamlessly to card borders without gaps.
 - **Directional Arrowheads:** SVG marker arrowheads (`#ortho-arrow` and `#ortho-arrow-active`) explicitly indicating directional flow into each stage entrance.
-- **Clean Neutral Canvas:** High-contrast neutral background (`bg-slate-50/50 dark:bg-slate-950/60`) with crisp borders.
+- **Clean Neutral Canvas:** High-contrast neutral background (`bg-slate-50/50 dark:bg-[#0d0d0d]/60`) with crisp borders.
 - **Dynamic Services Architecture (Not Hardcoded):**
   - Clinical services are fetched directly from the Supabase `services` table configured in Superadmin (`/superadmin/customization`).
   - When administrators add a new service, rename a service, change its icon (`icon_src`), adjust display order, or remove a service, the process graph updates dynamically without code modification.

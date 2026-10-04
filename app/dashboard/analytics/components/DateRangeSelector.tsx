@@ -29,8 +29,8 @@ export default function DateRangeSelector({ value, onChange, isLoading }: Props)
             disabled={isLoading}
             className={`text-xs font-semibold px-3 py-1.5 rounded-lg border transition-colors flex items-center gap-1.5 ${
               isActive
-                ? "bg-blue-600 text-white border-blue-600"
-                : "border-gray-200 dark:border-gray-700 text-gray-500 dark:text-gray-400 hover:border-blue-400"
+                ? "bg-[#a8071a] text-white border-[#a8071a]"
+                : "border-slate-200 dark:border-[#2e2e2e] text-slate-600 dark:text-[#a3a3a3] hover:border-[#a8071a]/50"
             } ${isLoading ? "opacity-60 cursor-not-allowed" : ""}`}
           >
             {isActiveLoading && (

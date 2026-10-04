@@ -14,16 +14,16 @@ export default function ServiceDistributionChart({ data, historicalFallback }: P
   return (
     <AnalyticsMetricCards>
       <div className="mb-6">
-        <h2 className="text-xl font-extrabold text-gray-800 dark:text-gray-200">Service Distribution</h2>
+        <h2 className="text-xl font-extrabold text-slate-900 dark:text-[#f5f5f5]">Service Distribution</h2>
         {!hasLiveData && displayData.length > 0 && (
-          <p className="text-xs text-gray-400 mt-1">
+          <p className="text-xs text-slate-400 dark:text-[#737373] mt-1">
             No patients today — showing historical service mix
           </p>
         )}
       </div>
 
       {displayData.length === 0 ? (
-        <div className="h-[300px] flex items-center justify-center text-sm text-gray-400 italic">
+        <div className="h-[300px] flex items-center justify-center text-sm text-slate-400 dark:text-[#737373] italic">
           No service data available.
         </div>
       ) : (
@@ -36,14 +36,16 @@ export default function ServiceDistributionChart({ data, historicalFallback }: P
               labelLine={false}
               label={({ name, percent }) => `${name} ${percent ? (percent * 100).toFixed(0) : 0}%`}
               outerRadius={80}
-              fill="#8884d8"
+              fill="#a8071a"
               dataKey="value"
             >
               {displayData.map((_, index) => (
                 <Cell key={`cell-${index}`} fill={COLORS[index % COLORS.length]} />
               ))}
             </Pie>
-            <Tooltip />
+            <Tooltip
+              contentStyle={{ borderRadius: '8px', border: '1px solid #2e2e2e', backgroundColor: '#1a1a1a', color: '#f5f5f5' }}
+            />
           </PieChart>
         </ResponsiveContainer>
       )}

@@ -10,9 +10,9 @@ interface ServiceFilterBarProps {
 
 const chipBase =
     'shrink-0 px-4 py-2 rounded-full text-sm font-bold border transition whitespace-nowrap';
-const chipActive = 'bg-red-600 border-red-600 text-white';
+const chipActive = 'bg-[#a8071a] border-[#a8071a] text-white shadow-2xs font-bold';
 const chipIdle =
-    'bg-gray-50 dark:bg-gray-800 border-gray-200 dark:border-gray-700 text-gray-600 dark:text-gray-300 hover:bg-gray-100 dark:hover:bg-gray-700';
+    'bg-slate-50 dark:bg-[#1f1f1f] border-slate-200 dark:border-[#2e2e2e] text-slate-600 dark:text-[#a3a3a3] hover:bg-slate-100 dark:hover:bg-[#242424]';
 
 export default function ServiceFilterBar({ selected, onSelect }: ServiceFilterBarProps) {
     const [services, setServices] = useState<string[]>([]);

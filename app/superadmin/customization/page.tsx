@@ -264,13 +264,13 @@ export default function AdminServicePage() {
                     }
                     className={S.select}
                   >
-                    <option value="both" className="bg-white dark:bg-slate-900 text-slate-900 dark:text-white">
+                    <option value="both" className={S.selectOption}>
                       {T.form.patientTypeBoth}
                     </option>
-                    <option value="new" className="bg-white dark:bg-slate-900 text-slate-900 dark:text-white">
+                    <option value="new" className={S.selectOption}>
                       {T.form.patientTypeNew}
                     </option>
-                    <option value="old" className="bg-white dark:bg-slate-900 text-slate-900 dark:text-white">
+                    <option value="old" className={S.selectOption}>
                       {T.form.patientTypeOld}
                     </option>
                   </select>
@@ -312,7 +312,7 @@ export default function AdminServicePage() {
                         className={`bx ${resolveServiceIcon(form.icon_src)} text-2xl text-rose-600 dark:text-rose-400`}
                         aria-hidden="true"
                       />
-                      <span className="text-xs font-mono text-slate-600 dark:text-slate-300">
+                      <span className="text-xs font-mono text-slate-600 dark:text-[#a3a3a3]">
                         {form.icon_src}
                       </span>
                     </div>
@@ -341,7 +341,7 @@ export default function AdminServicePage() {
             </div>
 
             {/* Form Actions */}
-            <div className="flex items-center justify-end gap-2 pt-4 border-t border-slate-200 dark:border-slate-800">
+            <div className="flex items-center justify-end gap-2 pt-4 border-t border-slate-200 dark:border-[#2e2e2e]">
               <button
                 type="button"
                 onClick={cancelEdit}
@@ -367,7 +367,7 @@ export default function AdminServicePage() {
           {loading ? (
             <div className="py-16 text-center space-y-3">
               <div className="w-8 h-8 border-2 border-rose-600 border-t-transparent rounded-full animate-spin mx-auto" />
-              <p className="text-xs text-slate-500 dark:text-slate-400">
+              <p className="text-xs text-slate-500 dark:text-[#a3a3a3]">
                 Loading services...
               </p>
             </div>
@@ -388,15 +388,15 @@ export default function AdminServicePage() {
                   return (
                     <tr key={service.id} className={S.tr}>
                       <td className={S.td}>
-                        <div className="w-10 h-10 rounded-xl bg-slate-100 dark:bg-slate-800 text-rose-600 dark:text-rose-400 flex items-center justify-center text-2xl shadow-2xs">
+                        <div className="w-10 h-10 rounded-xl bg-slate-100 dark:bg-[#242424] text-[#a8071a] dark:text-[#f87171] flex items-center justify-center text-2xl shadow-2xs">
                           <i className={`bx ${iconClass}`} aria-hidden="true" />
                         </div>
                       </td>
                       <td className={S.td}>
-                        <div className="font-semibold text-slate-900 dark:text-white">
+                        <div className="font-semibold text-slate-900 dark:text-[#f5f5f5]">
                           {service.label_en}
                         </div>
-                        <div className="text-xs text-slate-500 dark:text-slate-400 italic">
+                        <div className="text-xs text-slate-500 dark:text-[#a3a3a3] italic">
                           {service.label_fil}
                         </div>
                       </td>
@@ -407,14 +407,14 @@ export default function AdminServicePage() {
                               ? 'bg-purple-50 text-purple-700 border-purple-200 dark:bg-purple-950/60 dark:text-purple-300'
                               : service.patient_type === 'new'
                               ? 'bg-emerald-50 text-emerald-700 border-emerald-200 dark:bg-emerald-950/60 dark:text-emerald-300'
-                              : 'bg-sky-50 text-sky-700 border-sky-200 dark:bg-sky-950/60 dark:text-sky-300'
+                              : 'bg-slate-100 text-slate-700 border-slate-200 dark:bg-[#242424] dark:text-[#f5f5f5] dark:border-[#2e2e2e]'
                           }`}
                         >
                           {service.patient_type}
                         </span>
                       </td>
                       <td className={S.td}>
-                        <span className="font-mono text-xs font-semibold px-2 py-1 bg-slate-100 dark:bg-slate-800 rounded-md">
+                        <span className="font-mono text-xs font-semibold px-2 py-1 bg-slate-100 dark:bg-[#242424] text-slate-700 dark:text-[#a3a3a3] rounded-md">
                           #{service.display_order}
                         </span>
                       </td>
@@ -423,7 +423,7 @@ export default function AdminServicePage() {
                           <button
                             type="button"
                             onClick={() => startEdit(service)}
-                            className="px-2.5 py-1 rounded-lg text-xs font-semibold text-rose-600 dark:text-rose-400 hover:bg-rose-50 dark:hover:bg-rose-950/60 transition cursor-pointer flex items-center gap-1"
+                            className="px-2.5 py-1 rounded-lg text-xs font-semibold text-[#a8071a] dark:text-[#f87171] hover:bg-[#a8071a]/10 dark:hover:bg-[#a8071a]/20 transition cursor-pointer flex items-center gap-1"
                           >
                             <i className="bx bx-edit-alt text-sm" aria-hidden="true" />
                             <span>{T.table.editButton}</span>

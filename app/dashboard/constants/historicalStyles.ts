@@ -126,10 +126,10 @@ export const HISTORICAL_STYLES = {
     iconBadge:
       'w-10 h-10 rounded-xl bg-rose-50 dark:bg-rose-950/60 border border-rose-200 dark:border-rose-900 text-rose-600 dark:text-rose-400 flex items-center justify-center text-xl shrink-0 shadow-2xs',
     titleWrap: 'flex flex-col min-w-0',
-    title: 'text-sm font-extrabold text-content truncate',
-    subtitle: 'text-xs text-content-muted truncate hidden sm:inline mt-0.5',
+    title: 'text-sm font-extrabold text-content whitespace-nowrap',
+    subtitle: 'text-xs text-content-muted whitespace-nowrap hidden sm:inline mt-0.5',
     toggleBtn:
-      'inline-flex items-center gap-1.5 px-3 py-1.5 rounded-xl bg-rose-600 hover:bg-rose-700 active:scale-95 text-white text-xs font-bold transition shrink-0 cursor-pointer shadow-2xs',
+      'inline-flex items-center gap-1.5 px-3 py-1.5 rounded-xl bg-[#a8071a] hover:bg-[#8e0616] active:scale-95 text-white text-xs font-bold transition shrink-0 cursor-pointer shadow-2xs',
   },
 
   /** Bottom clinical notice strip */

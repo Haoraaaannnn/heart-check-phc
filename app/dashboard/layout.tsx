@@ -64,14 +64,14 @@ export default function DashboardLayout({ children }: DashboardLayoutProps) {
 
   if (isLoading) {
     return (
-      <div className="min-h-screen bg-slate-50 dark:bg-slate-950 flex items-center justify-center font-sans">
+      <div className="min-h-screen bg-slate-50 dark:bg-[#0d0d0d] flex items-center justify-center font-sans">
         <div className="text-center space-y-3">
           <div className="w-12 h-12 border-3 border-rose-200 border-t-rose-600 rounded-full animate-spin mx-auto" />
           <div>
-            <p className="text-sm font-bold text-slate-800 dark:text-slate-200">
+            <p className="text-sm font-bold text-slate-800 dark:text-[#f5f5f5]">
               {T.verifyingSession}
             </p>
-            <p className="text-xs text-slate-500 dark:text-slate-400">
+            <p className="text-xs text-slate-500 dark:text-[#a3a3a3]">
               {T.verifyingSubtext}
             </p>
           </div>
@@ -91,7 +91,7 @@ export default function DashboardLayout({ children }: DashboardLayoutProps) {
           {/* 1. Desktop Fixed Left Rail */}
           <Suspense
             fallback={
-              <div className="hidden lg:block w-64 bg-white dark:bg-slate-900 border-r border-slate-200 dark:border-slate-800 h-screen" />
+              <div className="hidden lg:block w-64 bg-white dark:bg-[#141414] border-r border-slate-200 dark:border-[#2e2e2e] h-screen" />
             }
           >
             <DashSideNavigation />
@@ -109,7 +109,7 @@ export default function DashboardLayout({ children }: DashboardLayoutProps) {
                 role="dialog"
                 aria-modal="true"
               >
-                <div className="p-4 border-b border-slate-200 dark:border-slate-800 flex items-center justify-between">
+                <div className="p-4 border-b border-slate-200 dark:border-[#2e2e2e] flex items-center justify-between">
                   <span className="text-xs font-bold text-slate-500 uppercase tracking-wider">
                     {T.menuDrawerTitle}
                   </span>
@@ -138,7 +138,7 @@ export default function DashboardLayout({ children }: DashboardLayoutProps) {
           <div className={DASH.layout.stage}>
             <Suspense
               fallback={
-                <div className="h-16 bg-white dark:bg-slate-900 border-b border-slate-200 dark:border-slate-800" />
+                <div className="h-16 bg-white dark:bg-[#141414] border-b border-slate-200 dark:border-[#2e2e2e]" />
               }
             >
               <DashboardHeader

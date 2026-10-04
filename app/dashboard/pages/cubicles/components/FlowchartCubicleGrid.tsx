@@ -119,8 +119,8 @@ export default function FlowchartCubicleGrid({
 
                 {/* Physician Assignment */}
                 <div className="flex items-center gap-1 text-[11px] text-content-muted mb-3">
-                  <i className="bx bx-user-pin text-xs text-rose-500" />
-                  <span className="truncate">
+                  <i className="bx bx-user-pin text-xs text-[#a8071a] dark:text-[#f87171] shrink-0" />
+                  <span className="break-words">
                     {station.assignedDoctor
                       ? `Dr. ${station.assignedDoctor}`
                       : 'No physician rostered'}
@@ -129,7 +129,7 @@ export default function FlowchartCubicleGrid({
               </div>
 
               {/* Station Body */}
-              <div className="flex flex-col gap-2 rounded-xl bg-white/80 dark:bg-slate-900/80 p-3 border border-line">
+              <div className="flex flex-col gap-2 rounded-xl bg-white/80 dark:bg-[#1a1a1a]/90 p-3 border border-line">
                 {isOccupied && station.currentPatient ? (
                   <>
                     <div className="flex items-center justify-between">

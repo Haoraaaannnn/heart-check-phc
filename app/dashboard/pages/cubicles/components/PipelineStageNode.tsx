@@ -70,7 +70,7 @@ export default function PipelineStageNode({
         {/* Terminal Connection Ports (Left = Incoming, Right = Outgoing) */}
         {stage.key !== 'waiting' && (
           <div className={S.nodePortIn} title="Incoming Queue Route Port">
-            <span className={`${S.nodePortDot} bg-slate-400 dark:bg-slate-500`} />
+            <span className={`${S.nodePortDot} bg-slate-400 dark:bg-[#52525b]`} />
           </div>
         )}
         {stage.key !== 'completed' && (

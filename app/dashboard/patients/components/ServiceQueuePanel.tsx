@@ -34,18 +34,18 @@ export default function ServiceQueuePanel({ service }: ServiceQueuePanelProps) {
       {/* Status strip */}
       <div className="flex items-center gap-3">
         {isActive ? (
-          <span className="px-3 py-1 bg-green-100 dark:bg-green-900/30 text-green-700 dark:text-green-400 text-xs font-extrabold uppercase rounded-full flex items-center gap-2">
-            <span className="w-2 h-2 rounded-full bg-green-500 animate-pulse" /> Active
+          <span className="px-3 py-1 bg-emerald-100 dark:bg-emerald-950/40 text-emerald-700 dark:text-emerald-400 text-xs font-extrabold uppercase rounded-full flex items-center gap-2">
+            <span className="w-2 h-2 rounded-full bg-emerald-500 animate-pulse" /> Active
           </span>
         ) : (
-          <span className="px-3 py-1 bg-gray-100 dark:bg-gray-800 text-gray-500 dark:text-gray-400 text-xs font-extrabold uppercase rounded-full flex items-center gap-2">
-            <span className="w-2 h-2 rounded-full bg-gray-400 dark:bg-gray-500" /> Standby
+          <span className="px-3 py-1 bg-slate-100 dark:bg-[#242424] text-slate-500 dark:text-[#a3a3a3] text-xs font-extrabold uppercase rounded-full flex items-center gap-2">
+            <span className="w-2 h-2 rounded-full bg-slate-400 dark:bg-[#737373]" /> Standby
           </span>
         )}
         {stats.activeRooms.length > 0 && (
-          <span className="text-sm font-semibold text-gray-500 dark:text-gray-400">
+          <span className="text-sm font-semibold text-slate-500 dark:text-[#a3a3a3]">
             Rooms:{' '}
-            <span className="text-gray-800 dark:text-gray-200">
+            <span className="text-slate-800 dark:text-[#f5f5f5]">
               {stats.activeRooms.join(', ')}
             </span>
           </span>
@@ -55,7 +55,7 @@ export default function ServiceQueuePanel({ service }: ServiceQueuePanelProps) {
       <div className="grid grid-cols-1 lg:grid-cols-3 gap-6">
         {/* Up Next */}
         <ServiceMetricCard className="lg:col-span-2">
-          <h2 className="text-xl font-extrabold text-gray-800 dark:text-gray-200 mb-6">
+          <h2 className="text-xl font-extrabold text-slate-900 dark:text-[#f5f5f5] mb-6">
             Up Next Queue
           </h2>
 
@@ -71,35 +71,35 @@ export default function ServiceQueuePanel({ service }: ServiceQueuePanelProps) {
                     key={patient.id}
                     className={`flex items-center justify-between p-4 rounded-2xl border transition ${
                       isNext
-                        ? 'bg-red-50 dark:bg-red-900/20 border-red-100 dark:border-red-800'
-                        : 'bg-gray-50 dark:bg-gray-800 border-gray-100 dark:border-gray-700'
+                        ? 'bg-[#a8071a]/5 dark:bg-[#a8071a]/15 border-[#a8071a]/25 dark:border-[#a8071a]/30'
+                        : 'bg-slate-50 dark:bg-[#1a1a1a] border-slate-200 dark:border-[#2e2e2e]'
                     }`}
                   >
                     <div className="flex items-center gap-4">
                       <span
                         className={`text-2xl font-extrabold ${
                           isNext
-                            ? 'text-red-600 dark:text-red-400'
-                            : 'text-gray-700 dark:text-gray-300'
+                            ? 'text-[#a8071a] dark:text-[#f87171]'
+                            : 'text-slate-800 dark:text-[#f5f5f5]'
                         }`}
                       >
                         {idx + 1}. {patient.ticket}
                       </span>
                       {isNext && (
-                        <span className="px-2 py-1 bg-red-600 dark:bg-red-700 text-white text-xs font-bold rounded uppercase">
+                        <span className="px-2 py-1 bg-[#a8071a] text-white text-xs font-bold rounded uppercase">
                           Next
                         </span>
                       )}
                     </div>
                     <div className="flex flex-col items-end">
-                      <span className="text-xs font-bold text-gray-400 dark:text-gray-500 uppercase mb-1">
+                      <span className="text-xs font-bold text-slate-400 dark:text-[#737373] uppercase mb-1">
                         Waiting For
                       </span>
                       <span
                         className={`text-lg font-extrabold ${
                           overdue
-                            ? 'text-red-600 dark:text-red-400'
-                            : 'text-gray-800 dark:text-gray-200'
+                            ? 'text-[#a8071a] dark:text-[#f87171]'
+                            : 'text-slate-900 dark:text-[#f5f5f5]'
                         }`}
                       >
                         {mins} mins
@@ -109,7 +109,7 @@ export default function ServiceQueuePanel({ service }: ServiceQueuePanelProps) {
                 );
               })
             ) : (
-              <div className="py-12 text-center text-gray-400 dark:text-gray-500 italic">
+              <div className="py-12 text-center text-slate-400 dark:text-[#737373] italic">
                 No patients waiting in this queue.
               </div>
             )}
@@ -118,37 +118,37 @@ export default function ServiceQueuePanel({ service }: ServiceQueuePanelProps) {
 
         {/* Time stats */}
         <ServiceMetricCard>
-          <h3 className="text-sm font-bold uppercase tracking-wider mb-6 text-gray-500 dark:text-gray-400">
+          <h3 className="text-sm font-bold uppercase tracking-wider mb-6 text-slate-500 dark:text-[#a3a3a3]">
             Time Stats
           </h3>
 
           <div className="flex flex-col gap-6">
             <div>
-              <span className="text-gray-500 dark:text-gray-400 font-semibold block mb-1">
+              <span className="text-slate-500 dark:text-[#a3a3a3] font-semibold block mb-1">
                 Average Wait Time
               </span>
-              <span className="text-3xl font-extrabold text-gray-800 dark:text-gray-200">
+              <span className="text-3xl font-extrabold text-slate-900 dark:text-[#f5f5f5]">
                 {stats.avgWaitMins !== null ? `${stats.avgWaitMins} min` : '--'}
               </span>
             </div>
 
-            <hr className="border-gray-100 dark:border-gray-700" />
+            <hr className="border-slate-200 dark:border-[#2e2e2e]" />
 
             <div>
-              <span className="text-gray-500 dark:text-gray-400 font-semibold block mb-1">
+              <span className="text-slate-500 dark:text-[#a3a3a3] font-semibold block mb-1">
                 Longest Wait (Bottleneck)
               </span>
               <span
                 className={`text-3xl font-extrabold ${
                   isBottleneck
-                    ? 'text-red-600 dark:text-red-400'
-                    : 'text-gray-800 dark:text-gray-200'
+                    ? 'text-[#a8071a] dark:text-[#f87171]'
+                    : 'text-slate-900 dark:text-[#f5f5f5]'
                 }`}
               >
                 {stats.longestWaitMins > 0 ? `${stats.longestWaitMins} min` : '--'}
               </span>
               {isBottleneck && (
-                <p className="text-xs text-red-500 dark:text-red-400 font-bold mt-2">
+                <p className="text-xs text-[#a8071a] dark:text-[#f87171] font-bold mt-2">
                   Alert: Patient waiting over 1 hour!
                 </p>
               )}
@@ -160,10 +160,10 @@ export default function ServiceQueuePanel({ service }: ServiceQueuePanelProps) {
       {/* Demand trend */}
       <ServiceMetricCard>
         <div className="mb-6">
-          <h2 className="text-xl font-extrabold text-gray-800 dark:text-gray-200">
+          <h2 className="text-xl font-extrabold text-slate-900 dark:text-[#f5f5f5]">
             Service Demand Trend
           </h2>
-          <p className="text-sm text-gray-400 dark:text-gray-500 mt-1">
+          <p className="text-sm text-slate-400 dark:text-[#737373] mt-1">
             Hourly patient arrivals for {service} today
           </p>
         </div>
@@ -173,32 +173,32 @@ export default function ServiceQueuePanel({ service }: ServiceQueuePanelProps) {
             <AreaChart data={hourlyTrend} margin={{ top: 10, right: 10, left: -20, bottom: 0 }}>
               <defs>
                 <linearGradient id="colorPatients" x1="0" y1="0" x2="0" y2="1">
-                  <stop offset="5%" stopColor="#ef4444" stopOpacity={0.3} />
-                  <stop offset="95%" stopColor="#ef4444" stopOpacity={0} />
+                  <stop offset="5%" stopColor="#a8071a" stopOpacity={0.3} />
+                  <stop offset="95%" stopColor="#a8071a" stopOpacity={0} />
                 </linearGradient>
               </defs>
-              <CartesianGrid strokeDasharray="3 3" vertical={false} stroke="rgba(148,163,184,0.15)" />
-              <XAxis dataKey="time" tick={{ fontSize: 12, fill: '#9ca3af' }} axisLine={false} tickLine={false} />
+              <CartesianGrid strokeDasharray="3 3" vertical={false} stroke="rgba(115,115,115,0.15)" />
+              <XAxis dataKey="time" tick={{ fontSize: 12, fill: '#a3a3a3' }} axisLine={false} tickLine={false} />
               <YAxis
                 allowDecimals={false}
-                tick={{ fontSize: 12, fill: '#9ca3af' }}
+                tick={{ fontSize: 12, fill: '#a3a3a3' }}
                 axisLine={false}
                 tickLine={false}
                 domain={[0, (dataMax: number) => Math.max(dataMax, 4)]}
               />
               <Tooltip
-                cursor={{ stroke: '#fca5a5', strokeWidth: 2, strokeDasharray: '3 3' }}
-                contentStyle={{ borderRadius: '8px', border: 'none', boxShadow: '0 4px 6px -1px rgb(0 0 0 / 0.1)' }}
+                cursor={{ stroke: '#a8071a', strokeWidth: 1.5, strokeDasharray: '3 3' }}
+                contentStyle={{ borderRadius: '8px', border: '1px solid #2e2e2e', backgroundColor: '#1a1a1a', color: '#f5f5f5', boxShadow: '0 4px 6px -1px rgb(0 0 0 / 0.1)' }}
                 formatter={(value) => [`${value} patients`, 'Arrivals'] as [string, string]}
               />
               <Area
                 type="monotone"
                 dataKey="patients"
-                stroke="#ef4444"
+                stroke="#a8071a"
                 strokeWidth={3}
                 fillOpacity={1}
                 fill="url(#colorPatients)"
-                activeDot={{ r: 6, fill: '#ef4444', stroke: '#fff', strokeWidth: 2 }}
+                activeDot={{ r: 6, fill: '#a8071a', stroke: '#fff', strokeWidth: 2 }}
               />
             </AreaChart>
           </ResponsiveContainer>

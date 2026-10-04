@@ -72,10 +72,10 @@ export const STATUS_STYLES: Record<StatusGroup, StatusStyle> = {
   },
   done: {
     label: 'Done',
-    badge: 'bg-blue-100 text-blue-700 dark:bg-blue-500/15 dark:text-blue-400',
-    dot: 'bg-blue-500',
-    text: 'text-blue-600 dark:text-blue-400',
-    hex: '#3b82f6',
+    badge: 'bg-emerald-100 text-emerald-700 dark:bg-[#242424] dark:text-emerald-400',
+    dot: 'bg-emerald-500',
+    text: 'text-emerald-600 dark:text-emerald-400',
+    hex: '#10b981',
   },
   cancelled: {
     label: 'Cancelled',

@@ -198,7 +198,7 @@ export default function HeatmapTable({
                   )}
 
                   {viewMode === 'idle' && (
-                    <span className="font-mono text-[10px] text-indigo-700 dark:text-indigo-300">
+                    <span className="font-mono text-[10px] text-teal-700 dark:text-teal-300">
                       {summary.avgIdleMinutes > 0 ? `${summary.avgIdleMinutes}m idle` : '—'}
                     </span>
                   )}

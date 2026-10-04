@@ -75,9 +75,9 @@ export function NotificationDropdown({
       case 'warning':
         return 'bg-amber-50 dark:bg-amber-950/40 border-l-4 border-amber-500';
       case 'info':
-        return 'bg-blue-50 dark:bg-blue-950/40 border-l-4 border-blue-500';
+        return 'bg-slate-100 dark:bg-[#242424] border-l-4 border-slate-500 dark:border-[#737373]';
       default:
-        return 'bg-slate-50 dark:bg-slate-800/60 border-l-4 border-slate-400';
+        return 'bg-slate-50 dark:bg-[#242424] border-l-4 border-slate-400 dark:border-[#737373]';
     }
   };
 
@@ -101,7 +101,7 @@ export function NotificationDropdown({
         <button
           type="button"
           onClick={() => setIsOpen(!isOpen)}
-          className="relative w-10 h-10 flex items-center justify-center rounded-xl bg-white dark:bg-slate-800 text-slate-600 dark:text-slate-300 hover:bg-slate-100 dark:hover:bg-slate-700 transition shadow-2xs border border-slate-200 dark:border-slate-700 cursor-pointer"
+          className={`relative w-10 h-10 flex items-center justify-center rounded-xl bg-white dark:bg-[#141414] text-slate-600 dark:text-[#a3a3a3] hover:bg-slate-100 dark:hover:bg-[#242424] transition shadow-2xs border border-slate-200 dark:border-[#2e2e2e] cursor-pointer`}
           aria-label="Notifications"
         >
           <i className="bx bxs-bell text-xl" aria-hidden="true" />
@@ -131,17 +131,17 @@ export function NotificationDropdown({
 
       {/* Dropdown Menu */}
       {isOpen && (
-        <div className="absolute right-0 mt-2 w-96 bg-white dark:bg-slate-900 rounded-2xl shadow-xl border border-slate-200 dark:border-slate-800 z-50 overflow-hidden">
+        <div className="absolute right-0 mt-2 w-96 bg-white dark:bg-[#1a1a1a] rounded-2xl shadow-xl border border-slate-200 dark:border-[#2e2e2e] z-50 overflow-hidden">
           {/* Header */}
-          <div className="bg-slate-50 dark:bg-slate-800/80 px-4 py-3 border-b border-slate-200 dark:border-slate-800 flex justify-between items-center">
-            <h3 className="font-bold text-xs uppercase tracking-wider text-slate-800 dark:text-slate-200">
+          <div className="bg-slate-50 dark:bg-[#242424] px-4 py-3 border-b border-slate-200 dark:border-[#2e2e2e] flex justify-between items-center">
+            <h3 className="font-bold text-xs uppercase tracking-wider text-slate-800 dark:text-[#f5f5f5]">
               Notifications {unreadCount > 0 && `(${unreadCount})`}
             </h3>
             {unreadCount > 0 && (
               <button
                 type="button"
                 onClick={onMarkAllAsRead}
-                className="text-xs text-rose-600 dark:text-rose-400 hover:underline font-semibold cursor-pointer"
+                className="text-xs text-[#a8071a] dark:text-[#f87171] hover:underline font-semibold cursor-pointer"
               >
                 Mark all as read
               </button>
@@ -149,9 +149,9 @@ export function NotificationDropdown({
           </div>
 
           {/* Notifications List */}
-          <div className="max-h-96 overflow-y-auto divide-y divide-slate-100 dark:divide-slate-800 phc-scroll">
+          <div className="max-h-96 overflow-y-auto divide-y divide-slate-100 dark:divide-[#2e2e2e] phc-scroll">
             {notifications.length === 0 ? (
-              <div className="px-4 py-8 text-center text-xs font-medium text-slate-400">
+              <div className="px-4 py-8 text-center text-xs font-medium text-slate-400 dark:text-[#737373]">
                 <p>No notifications</p>
               </div>
             ) : (
@@ -163,17 +163,17 @@ export function NotificationDropdown({
                   )} ${!notification.read ? 'opacity-100' : 'opacity-70'}`}
                 >
                   <div className="flex items-start gap-3">
-                    <span className="text-xs font-bold text-slate-500 shrink-0 pt-0.5">
+                    <span className="text-xs font-bold text-slate-500 dark:text-[#a3a3a3] shrink-0 pt-0.5">
                       {getNotificationTag(notification.type)}
                     </span>
                     <div className="flex-1 min-w-0">
-                      <p className="font-semibold text-slate-900 dark:text-slate-100 text-xs">
+                      <p className="font-semibold text-slate-900 dark:text-[#f5f5f5] text-xs">
                         {notification.title}
                       </p>
-                      <p className="text-xs text-slate-600 dark:text-slate-400 mt-1">
+                      <p className="text-xs text-slate-600 dark:text-[#a3a3a3] mt-1">
                         {notification.message}
                       </p>
-                      <p className="text-[11px] text-slate-400 dark:text-slate-500 mt-1.5 font-mono">
+                      <p className="text-[11px] text-slate-400 dark:text-[#737373] mt-1.5 font-mono">
                         {notification.timestamp.toLocaleTimeString()}
                       </p>
                     </div>
@@ -182,7 +182,7 @@ export function NotificationDropdown({
                         <button
                           type="button"
                           onClick={() => onMarkAsRead(notification.id)}
-                          className="px-1.5 py-0.5 hover:bg-slate-200 dark:hover:bg-slate-700 rounded text-[11px] text-slate-600 dark:text-slate-400 font-medium cursor-pointer"
+                          className="px-1.5 py-0.5 hover:bg-slate-200 dark:hover:bg-[#242424] rounded text-[11px] text-slate-600 dark:text-[#a3a3a3] font-medium cursor-pointer"
                           title="Mark as read"
                         >
                           Read
@@ -191,7 +191,7 @@ export function NotificationDropdown({
                       <button
                         type="button"
                         onClick={() => onDismiss(notification.id)}
-                        className="px-1.5 py-0.5 hover:bg-slate-200 dark:hover:bg-slate-700 rounded text-[11px] text-slate-600 dark:text-slate-400 font-medium cursor-pointer"
+                        className="px-1.5 py-0.5 hover:bg-slate-200 dark:hover:bg-[#242424] rounded text-[11px] text-slate-600 dark:text-[#a3a3a3] font-medium cursor-pointer"
                         title="Dismiss"
                       >
                         Dismiss
@@ -205,11 +205,11 @@ export function NotificationDropdown({
 
           {/* Footer */}
           {notifications.length > 0 && (
-            <div className="bg-slate-50/50 dark:bg-slate-800/40 px-4 py-2 border-t border-slate-200 dark:border-slate-800">
+            <div className="bg-slate-50/50 dark:bg-[#141414]/50 px-4 py-2 border-t border-slate-200 dark:border-[#2e2e2e]">
               <button
                 type="button"
                 onClick={onClearAll}
-                className="text-xs text-slate-500 dark:text-slate-400 hover:text-rose-600 dark:hover:text-rose-400 font-medium w-full text-center py-1 cursor-pointer"
+                className="text-xs text-slate-500 dark:text-[#a3a3a3] hover:text-[#a8071a] dark:hover:text-[#f87171] font-medium w-full text-center py-1 cursor-pointer"
               >
                 Clear all
               </button>

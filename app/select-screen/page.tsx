@@ -5,11 +5,17 @@
  * for their physical screen or terminal, filtering available operational modules
  * according to their role while providing access to public kiosks and monitors.
  *
+ * @remarks
+ * Conforms strictly to AGENTS.md enterprise navigation and solid surfaces standards:
+ * high-contrast solid surfaces, crisp 1-pixel borders, unified design system across modules,
+ * flawless dual-theme compatibility, and zero emojis.
+ *
  * @module app/select-screen/page
  */
 
 'use client';
 
+import React from 'react';
 import { useCurrentStaff } from './hooks/useCurrentStaff';
 import { SCREEN_OPTIONS, SELECT_SCREEN_STYLES } from './constants/selectScreen';
 import { SELECT_SCREEN_TEXTS } from './constants/selectScreenTexts';
@@ -29,12 +35,10 @@ export default function SelectScreenPage() {
   if (loading) {
     return (
       <div className={S.page}>
-        <div className={S.blurBlobs.blob1} />
-        <div className={S.blurBlobs.blob2} />
         <div className={S.container}>
           <div className={S.loadingWrap}>
             <div className={S.spinner} />
-            <p className="mt-4 text-sm font-medium text-gray-500">
+            <p className={S.loadingText}>
               {T.loading.verifyingAuth}
             </p>
           </div>
@@ -57,24 +61,20 @@ export default function SelectScreenPage() {
 
   return (
     <div className={S.page}>
-      <div className={S.blurBlobs.blob1} />
-      <div className={S.blurBlobs.blob2} />
-      <div className={S.blurBlobs.blob3} />
+      <SelectScreenHeader staff={staff} onSignOut={signOut} />
 
       <main className={S.container}>
-        <SelectScreenHeader staff={staff} onSignOut={signOut} />
-
         {error && (
           <div className={S.errorWrap} role="alert">
             <p>{error}</p>
           </div>
         )}
 
-        {/* Public Terminal Displays */}
+        {/* Public Terminal Displays Section */}
         <section className={S.section.container}>
           <div className={S.section.headerRow}>
             <h2 className={S.section.title}>
-              <i className="bx bx-broadcast text-[#cc3535]" />
+              <i className={`bx bx-broadcast ${S.section.titleIcon}`} />
               <span>{T.sections.displaysTitle}</span>
             </h2>
             <p className={S.section.subtitle}>{T.sections.displaysSubtitle}</p>
@@ -87,19 +87,21 @@ export default function SelectScreenPage() {
           </div>
         </section>
 
-        {/* Staff Operational Workstations */}
+        {/* Staff Operational Workstations Section */}
         <section className={S.section.container}>
           <div className={S.section.headerRow}>
             <h2 className={S.section.title}>
-              <i className="bx bx-briefcase-alt-2 text-[#cc3535]" />
+              <i className={`bx bx-briefcase-alt-2 ${S.section.titleIcon}`} />
               <span>{T.sections.workstationsTitle}</span>
             </h2>
             <p className={S.section.subtitle}>{T.sections.workstationsSubtitle}</p>
           </div>
 
           {workstationOptions.length === 0 ? (
-            <div className="rounded-3xl border border-white/70 bg-white/40 p-8 text-center backdrop-blur-xl">
-              <p className="text-sm text-gray-500">{T.empty.noWorkstations}</p>
+            <div className={S.emptyWrap}>
+              <p className={S.emptyText}>
+                {T.empty.noWorkstations}
+              </p>
             </div>
           ) : (
             <div className={S.section.workstationsGrid}>

@@ -36,25 +36,25 @@ export default function ArimaForecast({ arimaRaw, arimaChartData }: Props) {
     <AnalyticsMetricCards>
       {/* Header */}
       <div className="flex items-center justify-between mb-3 flex-wrap gap-2">
-        <h2 className="text-xl font-extrabold text-gray-800 dark:text-gray-200">ARIMA Forecast</h2>
+        <h2 className="text-xl font-extrabold text-slate-900 dark:text-[#f5f5f5]">ARIMA Forecast</h2>
         <div className="flex items-center gap-3">
           {arimaRaw.aic !== null && (
-            <span className="text-sm text-gray-600 dark:text-gray-400 bg-gray-100 dark:bg-gray-800 px-3 py-1 rounded-lg">
+            <span className="text-sm text-slate-600 dark:text-[#a3a3a3] bg-slate-100 dark:bg-[#242424] px-3 py-1 rounded-lg">
               AIC:{" "}
-              <span className="font-semibold text-gray-800 dark:text-gray-200">
+              <span className="font-semibold text-slate-900 dark:text-[#f5f5f5]">
                 {arimaRaw.aic.toFixed(1)}
               </span>
             </span>
           )}
-          <span className="text-xs font-bold px-3 py-1 rounded-full uppercase text-purple-600 bg-purple-100 dark:bg-purple-900/30 dark:text-purple-400">
+          <span className="text-xs font-bold px-3 py-1 rounded-full uppercase text-purple-600 bg-purple-100 dark:bg-purple-950/40 dark:text-purple-300">
             ARIMA (1,1,1)
           </span>
         </div>
       </div>
 
-      <p className="text-xs text-gray-400 mb-6">
+      <p className="text-xs text-slate-400 dark:text-[#737373] mb-6">
         Forecast for{" "}
-        <span className="font-semibold text-gray-600 dark:text-gray-300">{arimaRaw.forecast_date}</span>:{" "}
+        <span className="font-semibold text-slate-700 dark:text-[#f5f5f5]">{arimaRaw.forecast_date}</span>:{" "}
         <span className="font-semibold text-purple-600 dark:text-purple-400">
           {arimaRaw.forecast_value} patients
         </span>
@@ -62,31 +62,31 @@ export default function ArimaForecast({ arimaRaw, arimaChartData }: Props) {
 
       {/* Stat cards */}
       <div className="grid grid-cols-2 md:grid-cols-3 gap-3 mb-6">
-        <div className="p-4 text-center border border-gray-100 dark:border-gray-700 rounded-lg">
-          <p className="text-xs text-gray-400 mb-2 uppercase font-bold">Forecast</p>
+        <div className="p-4 text-center border border-slate-200 dark:border-[#2e2e2e] rounded-lg">
+          <p className="text-xs text-slate-400 dark:text-[#737373] mb-2 uppercase font-bold">Forecast</p>
           <p className={`text-2xl font-bold ${textLight} ${textDark}`}>
             {arimaRaw.forecast_value}{" "}
-            <span className="text-sm font-normal text-gray-400">patients</span>
+            <span className="text-sm font-normal text-slate-400 dark:text-[#737373]">patients</span>
           </p>
         </div>
-        <div className="p-4 text-center border border-gray-100 dark:border-gray-700 rounded-lg">
-          <p className="text-xs text-gray-400 mb-2 uppercase font-bold">AIC Score</p>
+        <div className="p-4 text-center border border-slate-200 dark:border-[#2e2e2e] rounded-lg">
+          <p className="text-xs text-slate-400 dark:text-[#737373] mb-2 uppercase font-bold">AIC Score</p>
           <p className={`text-2xl font-bold ${textLight} ${textDark}`}>
             {arimaRaw.aic?.toFixed(1) ?? "—"}
           </p>
         </div>
-        <div className="p-4 text-center border border-gray-100 dark:border-gray-700 rounded-lg">
-          <p className="text-xs text-gray-400 mb-2 uppercase font-bold">Model</p>
-          <p className="text-2xl font-bold text-purple-600 dark:text-purple-400">ARIMA</p>
+        <div className="p-4 text-center border border-slate-200 dark:border-[#2e2e2e] rounded-lg">
+          <p className="text-xs text-slate-400 dark:text-[#737373] mb-2 uppercase font-bold">Model</p>
+          <p className="text-2xl font-bold text-purple-600 dark:text-purple-300">ARIMA</p>
         </div>
       </div>
 
       <div className="flex flex-col xl:flex-row gap-6">
         {/* Chart */}
         <div className="flex-1 min-w-0">
-          <div className="flex gap-5 mb-4 text-[10px] font-bold text-gray-400 uppercase tracking-widest">
+          <div className="flex gap-5 mb-4 text-[10px] font-bold text-slate-400 dark:text-[#737373] uppercase tracking-widest">
             <span className="flex items-center gap-2">
-              <span className="w-2.5 h-2.5 rounded-full bg-blue-500" /> Actual
+              <span className="w-2.5 h-2.5 rounded-full bg-[#a8071a] dark:bg-[#f87171]" /> Actual
             </span>
             <span className="flex items-center gap-2">
               <span style={{ width: 20, height: 0, borderTop: "2px solid #a855f7" }} /> ARIMA Fit
@@ -99,7 +99,7 @@ export default function ArimaForecast({ arimaRaw, arimaChartData }: Props) {
           <div className="h-80 w-full mb-1">
             <ResponsiveContainer width="100%" height="100%">
               <ComposedChart data={arimaChartData} margin={{ top: 10, right: 10, left: -20, bottom: 20 }}>
-                <CartesianGrid strokeDasharray="3 3" stroke={isDark ? '#374151' : '#f3f4f6'} vertical={false} />
+                <CartesianGrid strokeDasharray="3 3" stroke={isDark ? '#2e2e2e' : '#f3f4f6'} vertical={false} />
                 <XAxis dataKey="date" tick={{ fontSize: 10 }} angle={-45} textAnchor="end" height={60} />
                 <YAxis tick={{ fontSize: 10 }} allowDecimals={false} />
                 <Tooltip
@@ -108,8 +108,8 @@ export default function ArimaForecast({ arimaRaw, arimaChartData }: Props) {
                     borderRadius: '8px',
                     border: 'none',
                     boxShadow: '0 4px 6px -1px rgb(0 0 0 / 0.1)',
-                    backgroundColor: isDark ? '#1f2937' : '#ffffff',
-                    color: isDark ? '#e5e7eb' : '#111827',
+                    backgroundColor: isDark ? '#1a1a1a' : '#ffffff',
+                    color: isDark ? '#f5f5f5' : '#111827',
                   }}
                   formatter={((value: any, name: any) => {
                     const labels: any = {
@@ -120,7 +120,7 @@ export default function ArimaForecast({ arimaRaw, arimaChartData }: Props) {
                     return [value, labels[name] ?? name];
                   }) as any}
                 />
-                <Scatter name="actual" dataKey="actual" fill="#3b82f6" />
+                <Scatter name="actual" dataKey="actual" fill={isDark ? '#f87171' : '#a8071a'} />
                 <Line
                   type="monotone" dataKey="fitted"
                   stroke="#a855f7" strokeWidth={2.5}
@@ -140,7 +140,7 @@ export default function ArimaForecast({ arimaRaw, arimaChartData }: Props) {
             </ResponsiveContainer>
           </div>
 
-          <p className="text-xs text-gray-400 leading-relaxed">
+          <p className="text-xs text-slate-400 dark:text-[#737373] leading-relaxed">
             ARIMA (AutoRegressive Integrated Moving Average) captures
             short-term autocorrelation and weekly seasonality patterns
             in patient volume. The purple line shows how well the model
@@ -150,12 +150,12 @@ export default function ArimaForecast({ arimaRaw, arimaChartData }: Props) {
 
         {/* Historical fitted table */}
         <div className="xl:w-80 shrink-0">
-          <p className="text-[10px] font-bold text-gray-400 uppercase tracking-widest mb-3">
+          <p className="text-[10px] font-bold text-slate-400 dark:text-[#737373] uppercase tracking-widest mb-3">
             Historical vs ARIMA Fit
           </p>
-          <div className={`${darkTheme} ${lightTheme} overflow-hidden max-h-64 overflow-y-auto rounded-lg border border-gray-100 dark:border-gray-700`}>
+          <div className={`${darkTheme} ${lightTheme} overflow-hidden max-h-64 overflow-y-auto rounded-lg border border-slate-200 dark:border-[#2e2e2e]`}>
             <table className="w-full text-xs">
-              <thead className="text-gray-400 uppercase sticky top-0 font-bold text-[9px]">
+              <thead className="text-slate-400 dark:text-[#737373] uppercase sticky top-0 font-bold text-[9px]">
                 <tr>
                   <th className="px-3 py-2 text-left">Date</th>
                   <th className="px-3 py-2 text-right">Actual</th>
@@ -169,13 +169,13 @@ export default function ArimaForecast({ arimaRaw, arimaChartData }: Props) {
                   const fitted = arimaRaw.fitted[i];
                   const error  = fitted != null ? Math.abs(actual - fitted).toFixed(1) : "—";
                   return (
-                    <tr key={date} className="border-t border-gray-100 dark:border-gray-700">
-                      <td className="px-3 py-2 text-gray-500 dark:text-gray-400 text-[10px]">{date}</td>
-                      <td className="px-3 py-2 text-right font-bold text-gray-700 dark:text-gray-300">{actual}</td>
+                    <tr key={date} className="border-t border-slate-200 dark:border-[#2e2e2e]">
+                      <td className="px-3 py-2 text-slate-500 dark:text-[#a3a3a3] text-[10px]">{date}</td>
+                      <td className="px-3 py-2 text-right font-bold text-slate-700 dark:text-[#f5f5f5]">{actual}</td>
                       <td className="px-3 py-2 text-right text-purple-600 dark:text-purple-400 font-mono font-semibold">
                         {fitted?.toFixed(1)}
                       </td>
-                      <td className="px-3 py-2 text-right text-gray-500 dark:text-gray-400 font-mono text-[10px]">
+                      <td className="px-3 py-2 text-right text-slate-500 dark:text-[#a3a3a3] font-mono text-[10px]">
                         {error}
                       </td>
                     </tr>
@@ -185,11 +185,11 @@ export default function ArimaForecast({ arimaRaw, arimaChartData }: Props) {
                   <td className="px-3 py-2 text-purple-700 dark:text-purple-400 text-[10px] font-bold">
                     {arimaRaw.forecast_date} ★
                   </td>
-                  <td className="px-3 py-2 text-right text-gray-500 dark:text-gray-400 text-[10px]">—</td>
+                  <td className="px-3 py-2 text-right text-slate-500 dark:text-[#a3a3a3] text-[10px]">—</td>
                   <td className="px-3 py-2 text-right font-bold text-purple-700 dark:text-purple-400">
                     {arimaRaw.forecast_value}
                   </td>
-                  <td className="px-3 py-2 text-right text-gray-500 dark:text-gray-400 text-[10px]">—</td>
+                  <td className="px-3 py-2 text-right text-slate-500 dark:text-[#a3a3a3] text-[10px]">—</td>
                 </tr>
               </tbody>
             </table>

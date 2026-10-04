@@ -25,7 +25,7 @@ export interface DashboardBgProps {
  */
 export default function DashboardBg({ children }: DashboardBgProps) {
   return (
-    <div className="relative min-h-screen font-sans bg-slate-50 dark:bg-slate-950 transition-colors duration-200">
+    <div className="relative min-h-screen font-sans bg-slate-50 dark:bg-[#0d0d0d] transition-colors duration-200">
       <div className="relative z-10 flex min-h-screen w-full">
         {children}
       </div>

@@ -234,19 +234,19 @@ export default function RecentPatientsTable({
           >
             <option
               value={25}
-              className="bg-white dark:bg-slate-900 text-slate-900 dark:text-slate-100"
+              className={S.selectOption}
             >
               25
             </option>
             <option
               value={50}
-              className="bg-white dark:bg-slate-900 text-slate-900 dark:text-slate-100"
+              className={S.selectOption}
             >
               50
             </option>
             <option
               value={100}
-              className="bg-white dark:bg-slate-900 text-slate-900 dark:text-slate-100"
+              className={S.selectOption}
             >
               100
             </option>

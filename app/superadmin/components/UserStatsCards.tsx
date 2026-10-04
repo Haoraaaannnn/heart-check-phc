@@ -47,7 +47,7 @@ export const UserStatsCards: React.FC<UserStatsCardsProps> = ({ stats }) => {
       value: stats.registrationStaff,
       desc: T.registrationDesc,
       icon: 'bx-id-card',
-      iconBg: 'bg-sky-100 text-sky-700 dark:bg-sky-950 dark:text-sky-400',
+      iconBg: 'bg-slate-100 text-slate-700 dark:bg-[#242424] dark:text-[#f5f5f5]',
     },
     {
       title: T.adminsTitle,

@@ -61,7 +61,7 @@ export default function PipelineConnector({
             y2="12"
             stroke="currentColor"
             strokeWidth="2.5"
-            className="text-slate-200 dark:text-slate-800"
+            className="text-slate-200 dark:text-[#2e2e2e]"
           />
 
           {/* Flowing Traffic Line when actual items are active on route */}
@@ -93,7 +93,7 @@ export default function PipelineConnector({
             className={
               hasItems
                 ? 'text-rose-500 dark:text-rose-400'
-                : 'text-slate-300 dark:text-slate-700'
+                : 'text-slate-300 dark:text-[#404040]'
             }
           />
         </svg>

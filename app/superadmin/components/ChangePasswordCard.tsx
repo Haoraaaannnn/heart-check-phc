@@ -101,7 +101,7 @@ export const ChangePasswordCard: React.FC = () => {
 
       <form onSubmit={handleSubmit} className={S.passwordForm}>
         <div className="space-y-1">
-          <label className="block text-xs font-semibold text-slate-700 dark:text-slate-300 uppercase tracking-wider">
+          <label className="block text-xs font-semibold text-slate-700 dark:text-[#a3a3a3] uppercase tracking-wider">
             {T.currentPasswordLabel}
           </label>
           <input
@@ -116,7 +116,7 @@ export const ChangePasswordCard: React.FC = () => {
 
         <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
           <div className="space-y-1">
-            <label className="block text-xs font-semibold text-slate-700 dark:text-slate-300 uppercase tracking-wider">
+            <label className="block text-xs font-semibold text-slate-700 dark:text-[#a3a3a3] uppercase tracking-wider">
               {T.newPasswordLabel}
             </label>
             <input
@@ -130,7 +130,7 @@ export const ChangePasswordCard: React.FC = () => {
           </div>
 
           <div className="space-y-1">
-            <label className="block text-xs font-semibold text-slate-700 dark:text-slate-300 uppercase tracking-wider">
+            <label className="block text-xs font-semibold text-slate-700 dark:text-[#a3a3a3] uppercase tracking-wider">
               {T.confirmPasswordLabel}
             </label>
             <input

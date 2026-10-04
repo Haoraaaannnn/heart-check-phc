@@ -28,10 +28,10 @@
  * - /login       - public
  *
  * The join column for the `users` table is `auth_id` (matches `auth.uid()`),
- * NOT the `id` primary key. See `docs/DATABASE_SCHEMA.md`.
+ * NOT the `id` primary key. See `docs/specifications/DATABASE_SCHEMA.md`.
  *
- * @see docs/SECURITY.md
- * @see docs/CHANGES_NEEDED.md
+ * @see docs/specifications/SECURITY.md
+ * @see docs/checklists/CHANGES_NEEDED.md
  * @module proxy
  */
 
@@ -152,7 +152,7 @@ export async function proxy(request: NextRequest) {
         /**
          * User is authenticated. Fetch their role from the `users` table.
          * Join must use `auth_id` (matches `auth.uid()`), NOT the table's `id`
-         * primary key. See docs/DATABASE_SCHEMA.md.
+         * primary key. See docs/specifications/DATABASE_SCHEMA.md.
          */
         const { data: userRow } = await supabase
             .from("users")

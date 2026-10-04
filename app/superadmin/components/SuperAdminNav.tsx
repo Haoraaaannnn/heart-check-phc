@@ -141,7 +141,7 @@ export default function SuperAdminNav() {
                 className={`bx ${
                   isDark
                     ? 'bx-sun text-amber-400'
-                    : 'bx-moon text-slate-600 dark:text-slate-300'
+                    : 'bx-moon text-slate-600 dark:text-[#a3a3a3]'
                 }`}
                 aria-hidden="true"
               />
@@ -152,9 +152,9 @@ export default function SuperAdminNav() {
 
           {/* User Badge */}
           <div className={S.userBadge}>
-            <div className="w-8 h-8 rounded-full bg-slate-100 dark:bg-slate-800 text-slate-700 dark:text-slate-200 flex items-center justify-center font-bold text-xs">
+            <div className="w-8 h-8 rounded-full bg-slate-100 dark:bg-[#242424] text-slate-700 dark:text-[#f5f5f5] flex items-center justify-center font-bold text-xs">
               <i
-                className="bx bxs-user-badge text-base text-rose-600 dark:text-rose-400"
+                className="bx bxs-user-badge text-base text-[#a8071a] dark:text-[#f87171]"
                 aria-hidden="true"
               />
             </div>
@@ -180,7 +180,7 @@ export default function SuperAdminNav() {
           <button
             type="button"
             onClick={() => setMobileMenuOpen(!mobileMenuOpen)}
-            className="md:hidden p-2 rounded-lg text-slate-600 dark:text-slate-300 hover:bg-slate-100 dark:hover:bg-slate-800"
+            className="md:hidden p-2 rounded-lg text-slate-600 dark:text-[#a3a3a3] hover:bg-slate-100 dark:hover:bg-[#242424]"
             aria-label="Toggle navigation menu"
           >
             <i
@@ -193,7 +193,7 @@ export default function SuperAdminNav() {
 
       {/* Mobile Menu Dropdown */}
       {mobileMenuOpen && (
-        <div className="md:hidden border-t border-slate-200 dark:border-slate-800 bg-white dark:bg-slate-900 px-4 py-3 space-y-1">
+        <div className={S.mobileMenu}>
           {navLinks.map((link) => (
             <Link
               key={link.href}
@@ -208,8 +208,8 @@ export default function SuperAdminNav() {
             </Link>
           ))}
 
-          <div className="pt-2 border-t border-slate-200 dark:border-slate-800 flex items-center justify-between px-3 py-2">
-            <span className="text-xs text-slate-500 dark:text-slate-400 font-medium">
+          <div className={S.mobileDivider}>
+            <span className="text-xs text-slate-500 dark:text-[#a3a3a3] font-medium">
               Theme Mode
             </span>
             <button
@@ -224,7 +224,7 @@ export default function SuperAdminNav() {
                   className={`bx ${
                     isDark
                       ? 'bx-sun text-amber-400'
-                      : 'bx-moon text-slate-600 dark:text-slate-300'
+                      : 'bx-moon text-slate-600 dark:text-[#a3a3a3]'
                   }`}
                   aria-hidden="true"
                 />
