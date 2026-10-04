@@ -42,6 +42,7 @@ The Admin Dashboard subsystem adheres strictly to the architectural standards de
    - **Instant In-Memory Updates:** Overview KPI cards, live queue table, ticket status breakdown, and department overview derive updates instantaneously from incoming Supabase Realtime `postgres_changes` payloads (INSERT, UPDATE, DELETE) with zero network delay.
    - **Debounced Server Reconciliation:** Coalesces bursts of incoming database events with a 300ms debounce before executing a background query to synchronize state with PostgreSQL.
    - **30-Second Polling Fallback:** Seamlessly activates a 30-second periodic polling interval when the WebSocket channel drops, errors, or times out, terminating the interval immediately upon reconnection.
+   - **Request Sequence Guard & Hysteresis:** Uses `todayFetchIdRef` monotonic request sequencing to discard delayed out-of-order responses, 500ms reconciliation throttle, 2s channel hysteresis, and stabilized dependencies breaking channel teardown loops.
    - **Connection Health Telemetry:** Exposes `isOnline`, `channelStatus`, and `isFullyConnected` to drive the non-intrusive `ConnectionStatusBanner` during network disruptions.
 
 6. **Timeframe Range Selection & Historical Metrics Evaluation:**
@@ -71,7 +72,7 @@ The Admin Dashboard subsystem adheres strictly to the architectural standards de
 | **Change date filter pill presets, labels, or range descriptions** | [content.ts](file:///home/jensen/Github-Repositories/heart-check-phc/app/dashboard/constants/content.ts) (`OVERVIEW_DATE_PRESETS`, `OVERVIEW_DATE_FILTER_TEXTS`) |
 | **Change date filter pill bar styling, active colors, or badges** | [styles.ts](file:///home/jensen/Github-Repositories/heart-check-phc/app/dashboard/constants/styles.ts) (`DASH.dateFilter`) |
 | **Change date filter pill bar component markup or behavior** | [OverviewDateFilter.tsx](file:///home/jensen/Github-Repositories/heart-check-phc/app/dashboard/components/OverviewDateFilter.tsx) |
-| **Change overview realtime channel, debounce delay, or fallback poll interval** | [content.ts](file:///home/jensen/Github-Repositories/heart-check-phc/app/dashboard/constants/content.ts) (`DASHBOARD_REALTIME`) |
+| **Change overview data fetching, sequence guards, or realtime hook logic** | [useOverviewData.ts](file:///home/jensen/Github-Repositories/heart-check-phc/app/dashboard/hooks/useOverviewData.ts) / [content.ts](file:///home/jensen/Github-Repositories/heart-check-phc/app/dashboard/constants/content.ts) (`DASHBOARD_REALTIME`) |
 | **Change live queue table styling, ticket badges, or table borders** | [styles.ts](file:///home/jensen/Github-Repositories/heart-check-phc/app/dashboard/constants/styles.ts) (`DASH.table`) |
 | **Change live queue table component or service filter dropdown** | [LiveQueueTable.tsx](file:///home/jensen/Github-Repositories/heart-check-phc/app/dashboard/components/LiveQueueTable.tsx) |
 | **Change hourly arrival chart dimensions, bar radius, or palette colors** | [charts.ts](file:///home/jensen/Github-Repositories/heart-check-phc/app/dashboard/constants/charts.ts) |

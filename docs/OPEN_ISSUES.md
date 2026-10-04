@@ -60,6 +60,7 @@ _Add new items as they surface. Move resolved items to a "Resolved" section belo
 - [x] Master improvement roadmap and feature checklist created in `docs/IMPROVEMENTS_AND_FEATURE_CHECKLIST.md`.
 - [x] Security vulnerability checklist and patch remediation matrix created in `docs/SECURITY_CHECKLIST.md` and enforced in `AGENTS.md` Rule 12.
 - [x] Comprehensive UAT use case verification checklist created in `docs/UAT_USE_CASE_CHECKLIST.md`.
+- [x] Real-time queue synchronization stabilization under weak signal — implemented across all hooks (`app/nurse/`, `app/transfer/`, `app/monitor/`, `app/dashboard/hooks/useOverviewData.ts`, `app/dashboard/patients/hooks/useServiceQueue.ts`) and client socket tuning (`lib/supabase.ts`): monotonic fetch sequence guards, 300ms event debouncing, 2s channel hysteresis, 500ms overlap throttling, and subsystem-tailored polling fallbacks.
 
 ## Still Open (Security High Priority)
 

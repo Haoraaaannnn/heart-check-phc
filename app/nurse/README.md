@@ -40,7 +40,7 @@ Use this table to quickly identify the exact file to modify for any given requir
 | Offline synchronization React hook | `hooks/useOfflineQueue.ts` | Handles re-sync triggers on reconnect and boot |
 | Drag-and-drop pointer interactions | `app/nurse/hooks/useNurseDragAndDrop.ts` | Pointer events and stage validation rules |
 | Tablet tap-to-select interactions | `app/nurse/hooks/useNurseSelection.ts` | Mobile/tablet selection workflow |
-| Realtime subscription and polling | `app/nurse/hooks/useRealtimeSubscription.ts` | Supabase Realtime channel coordination |
+| Realtime subscription and polling | `app/nurse/hooks/useRealtimeSubscription.ts` | Supabase Realtime channel coordination with 5s polling fallback, 2s hysteresis, 500ms overlap throttle, and immediate recovery reconciliation |
 | Main page coordination | `app/nurse/page.tsx` | Main orchestrator assembling subcomponents |
 | Board columns and cards | `app/nurse/components/NurseBoard.tsx` | 3-column clinical pipeline Kanban |
 | Header bar & desktop cubicle dropdown | `app/nurse/components/NurseHeader.tsx` | Header bar, sync indicators, station dropdown |

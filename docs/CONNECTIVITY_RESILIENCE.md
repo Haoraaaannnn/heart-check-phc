@@ -21,122 +21,97 @@ At PHC's Outpatient Department, dropped connectivity during peak hours directly 
 
 ## 2. Root Cause Analysis
 
-The system's real-time layer relies on Supabase Realtime, which maintains persistent WebSocket connections from every browser session to Supabase's cloud servers. These connections:
+The system's real-time layer relies on Supabase Realtime, which maintains persistent WebSocket connections from every browser session to Supabase's cloud servers. Under weak WiFi or high packet loss conditions, multiple failure modes compounded to cause visual glitches:
 
-- Drop when internet is unstable or packet loss is high.
-- Do not automatically re-deliver missed events after reconnection.
-- Require a full re-subscribe cycle after a disconnect.
-
-Currently, none of the three `useRealtimeSubscription` hooks (`app/nurse/`, `app/transfer/`, `app/monitor/`) implement:
-- Connection state tracking.
-- Automatic reconnection with backoff.
-- A polling fallback when the WebSocket channel is degraded.
+1. **Queue "Teleportation" (Out-of-Order Responses):** Under packet delay, an older HTTP fetch initiated during high latency could return *after* a newer fetch had already updated state. Because responses lacked monotonic sequence tracking, the older stale data overwrote the fresh data, causing patients to appear to jump backward or disappear.
+2. **Channel Thrashing (Ping Jitter):** Transient packet drops caused channel status to cycle rapidly between `SUBSCRIBED` and `TIMED_OUT`. Without a hysteresis buffer, polling intervals were repeatedly started, destroyed, and restarted within milliseconds.
+3. **Event Burst Collisions:** Reconnecting channels frequently delivered multiple backlog Postgres changes in rapid succession. In un-debounced hooks (such as Transfer), each event triggered an independent network query, overwhelming the weak uplink.
+4. **Concurrent Poll and Realtime Collisions:** Fallback timers and WebSocket events could fire simultaneously, initiating parallel overlapping database queries that competed for limited bandwidth.
+5. **Premature Socket Teardowns:** Default Supabase heartbeat timeouts (40s) were shorter than typical round-trip delays on congested mobile hotspots, triggering premature disconnections and aggressive reconnect loops.
 
 ---
 
 ## 3. Solution Architecture: Dual-Mode Resilience
 
-The strategy operates in two layers: a short-term resilience improvement for the current cloud deployment, and the long-term LAN-first architecture for PHC's on-premises handoff.
+The strategy operates in two layers: the implemented short-term resilience improvements (Layer A) running on the cloud deployment, and the long-term LAN-first architecture (Layer B) for PHC's on-premises handoff.
 
-### Layer A: Short-Term — Polling Fallback + Channel Health Guard
+### Layer A: Implemented — Weak-Signal Resilience & Dual-Mode Fallback
 
-This layer improves the existing cloud-based system without architectural changes.
+Layer A stabilizes queue presentation across all clinical and administrative workstations without requiring infrastructural changes.
 
-#### A1. Connection State Detection
+#### A1. Supabase Client Socket Tuning (`lib/supabase.ts`)
 
-Each `useRealtimeSubscription` hook should track whether the Supabase Realtime channel is actually connected. The `subscribe()` method accepts a status callback:
+The centralized Supabase browser client is tuned specifically for high-latency, packet-loss environments:
+
+- `heartbeatIntervalMs: 25_000`: Sends WebSocket keep-alive pings every 25 seconds (slightly faster than the server-side 30s cadence) so the client detects genuine connection drops promptly.
+- `timeout: 60_000`: Increases heartbeat acknowledgment grace from 40 seconds to 60 seconds, preventing premature channel teardown when a single ping is delayed by a congested uplink.
+- `reconnectAfterMs: (attempts) => Math.min(2_000 * Math.pow(1.5, attempts), 10_000)`: Implements stepped exponential backoff with a 2-second floor and 10-second ceiling, eliminating aggressive reconnect loops that compete with polling requests for bandwidth.
+
+#### A2. Fetch Sequence Guard (Anti-Teleportation)
+
+Every state-fetching hook maintains a monotonic request identifier (`fetchSequenceRef` or `todayFetchIdRef`). When a fetch completes, the hook verifies that the returning response corresponds to the latest issued request. Stale out-of-order responses from earlier slow requests are discarded, ensuring patients never jump to obsolete queue positions:
+
+```typescript
+const fetchSeqRef = useRef<number>(0);
+
+const guardedFetch = async () => {
+    const currentSeq = ++fetchSeqRef.current;
+    const data = await queryDatabase();
+    if (currentSeq !== fetchSeqRef.current) {
+        // Discard: a newer fetch was initiated while this one was in flight
+        return;
+    }
+    applyState(data);
+};
+```
+
+#### A3. Channel Health Guard & 2-Second Hysteresis Buffer
+
+To prevent poll start/stop thrashing when channel status flickers during temporary packet jitter, hooks implement a 2-second hysteresis grace timer before degrading to polling:
 
 ```typescript
 channel.subscribe((status) => {
+    setChannelStatus(status);
     if (status === 'SUBSCRIBED') {
-        // WebSocket live — pause polling fallback
-    }
-    if (status === 'CHANNEL_ERROR' || status === 'TIMED_OUT' || status === 'CLOSED') {
-        // WebSocket dead — activate polling fallback
-    }
-});
-```
-
-Supabase channels emit one of these status strings:
-- `SUBSCRIBED` — connected and receiving events.
-- `CHANNEL_ERROR` — connection failure.
-- `TIMED_OUT` — server did not respond in time.
-- `CLOSED` — channel was removed or connection was terminated.
-
-#### A2. Polling Fallback Mechanism
-
-When the channel status is not `SUBSCRIBED`, each hook activates an `setInterval` polling fallback that directly queries the database on a fixed cadence (e.g., every 5-10 seconds). When the channel recovers to `SUBSCRIBED`, the polling interval is cleared.
-
-Pseudocode pattern for all three subscription hooks:
-
-```typescript
-useEffect(() => {
-    let pollInterval: ReturnType<typeof setInterval> | null = null;
-
-    const startPolling = () => {
-        if (pollInterval) return; // Already polling
-        pollInterval = setInterval(() => onFetchRef.current(), POLL_INTERVAL_MS);
-    };
-
-    const stopPolling = () => {
-        if (pollInterval) {
-            clearInterval(pollInterval);
-            pollInterval = null;
+        if (degradeTimerRef.current) {
+            clearTimeout(degradeTimerRef.current);
+            degradeTimerRef.current = null;
         }
-    };
-
-    const channel = supabase
-        .channel('patients-nurse-realtime')
-        .on('postgres_changes', { event: '*', schema: 'public', table: 'patients' }, () => {
-            handleUpdate();
-        })
-        .subscribe((status) => {
-            if (status === 'SUBSCRIBED') {
-                stopPolling(); // Realtime is live — no need to poll
-            } else {
-                startPolling(); // Connection degraded — activate polling
-            }
-        });
-
-    return () => {
         stopPolling();
-        void supabase.removeChannel(channel);
-    };
-}, [debounceMs]);
-```
-
-#### A3. Recommended Poll Intervals by Page
-
-| Page | Recommended Interval | Rationale |
-| :--- | :--- | :--- |
-| Nurse Dashboard (`/nurse`) | 5 seconds | Staff must see queue changes quickly |
-| Transfer Dashboard (`/transfer`) | 5 seconds | Drag-and-drop assignments require near-live state |
-| Monitor Display (`/monitor`) | 8 seconds | Public display, slight delay acceptable |
-| Analytics Dashboard (`/dashboard`) | 30 seconds | Aggregated data, not operationally critical |
-
-#### A4. Browser `navigator.onLine` Guard
-
-Wrap all fetch operations in a guard that checks `navigator.onLine` before making a network request. Register `window` event listeners for `online` and `offline` events to reactively start or stop polling and surface a status banner to the user.
-
-```typescript
-window.addEventListener('online', () => {
-    // Attempt to re-subscribe and trigger a fresh fetch
-});
-
-window.addEventListener('offline', () => {
-    // Notify user; activate local state / last-known data display
+        // Immediately reconcile missed mutations
+        void guardedFetch();
+    } else {
+        if (!degradeTimerRef.current) {
+            degradeTimerRef.current = setTimeout(() => {
+                startPolling();
+                degradeTimerRef.current = null;
+            }, 2000);
+        }
+    }
 });
 ```
 
-#### A5. Optimistic UI for Kiosk Writes
+#### A4. Concurrency & Overlap Throttle (500ms Lock)
 
-The kiosk's patient creation flow (`KioskPhoneEntry.tsx` → Supabase RPC `create_patient`) currently fails hard if the network is down. An optimistic approach:
+To prevent simultaneous requests from fallback timers and WebSocket events colliding on weak connections, `guardedFetch()` enforces a 500ms throttle lock (`isFetchingRef` and `lastFetchTimeRef`). If a trigger occurs within 500ms of an active or recent query, the duplicate invocation is dropped.
 
-1. The kiosk writes the patient record to `localStorage` as a pending entry.
-2. A `navigator.onLine` check determines whether to flush immediately or queue.
-3. A `service worker` background sync (or a simple `setInterval` retry) attempts to flush the pending entries to Supabase when connectivity returns.
+#### A5. Inbound Event Debouncing (300ms Window)
 
-This is the acceptable interim design. The definitive fix is the LAN-first architecture below.
+In high-throughput hooks (`app/transfer/hooks/useRealtimeSubscription.ts` and `app/monitor/hooks/useRealtimeSubscription.ts`), database events are debounced with a 300ms timer. A burst of 10 simultaneous patient assignments coalesces into a single database query.
+
+#### A6. Immediate Resubscription Reconciliation
+
+When a degraded channel recovers to `SUBSCRIBED`, hooks immediately fire a reconciliation fetch (`guardedFetch()`). Any patient status transitions that occurred while the client was disconnected are synchronized on the first render.
+
+#### A7. Production Polling Cadence by Subsystem
+
+| Workstation / Hook | Fallback Poll Cadence | Debounce Window | Overlap Throttle | Monotonic Guard | Rationale |
+| :--- | :--- | :--- | :--- | :--- | :--- |
+| Nurse Station (`app/nurse/hooks/useRealtimeSubscription.ts`) | 5 seconds | Direct (UI debounce) | 500ms | In-flight flag + disposed check | Rapid response for consultation room intake |
+| Transfer Dashboard (`app/transfer/hooks/useRealtimeSubscription.ts`) | 5 seconds | 300ms | 500ms | In-flight flag + timestamp lock | Critical live state for drag-and-drop counter flow |
+| Public Monitor (`app/monitor/hooks/useRealtimeSubscription.ts`) | 8 seconds | 300ms | 500ms | In-flight flag + category filter | Public waiting display; audio chime trigger |
+| Service Queue Panel (`app/dashboard/patients/hooks/useServiceQueue.ts`) | 10 seconds | Direct | 500ms | `fetchSequenceRef` | Active service department queue auditing |
+| Admin Overview (`app/dashboard/hooks/useOverviewData.ts`) | 30 seconds | 300ms reconciliation | 500ms | `todayFetchIdRef` | Executive KPI cards and daily flow aggregates |
 
 ---
 
@@ -250,17 +225,18 @@ The current `next.config.ts` already defines `allowedDevOrigins: ['192.168.1.42'
 
 ---
 
-## 4. Implementation Priority
+## 4. Implementation Priority & Status
 
-| Priority | Item | Effort | Impact |
-| :--- | :--- | :--- | :--- |
-| 1 | Add polling fallback to all three `useRealtimeSubscription` hooks | Low | Immediate resilience improvement |
-| 2 | Add `navigator.onLine` banner / connection status indicator to nurse and transfer dashboards | Low | User awareness, reduces confusion during outages |
-| 3 | Kiosk optimistic write with `localStorage` queue and retry | Medium | Kiosk survives short network blips |
-| 4 | FastAPI `/ws/patients` WebSocket endpoint | Medium | Prerequisite for LAN-first architecture |
-| 5 | Replace `useRealtimeSubscription` with native WebSocket hook | Medium | Removes Supabase Realtime dependency |
-| 6 | Docker packaging for PHC on-premises deployment | Medium | Enables clean LAN handoff to PHC MIS |
-| 7 | Middleware config update for local FastAPI URL | Low | Finalizes LAN handoff |
+| Priority | Item | Effort | Impact | Status |
+| :--- | :--- | :--- | :--- | :--- |
+| 1 | Polling fallback, debounce, hysteresis, and sequence guards on all subscription hooks | Low | Immediate resilience improvement across all displays | Completed |
+| 2 | Supabase client socket timeout and exponential backoff reconnect tuning (`lib/supabase.ts`) | Low | Eliminates premature timeout teardowns and reconnect storms | Completed |
+| 3 | Add `navigator.onLine` banner / connection status indicator to nurse and transfer dashboards | Low | User awareness, reduces confusion during outages | Completed |
+| 4 | Kiosk optimistic write with `localStorage` queue and retry | Medium | Kiosk survives short network blips | Planned (Layer B interim) |
+| 5 | FastAPI `/ws/patients` WebSocket endpoint | Medium | Prerequisite for LAN-first architecture | Planned (Layer B on-prem) |
+| 6 | Replace `useRealtimeSubscription` with native WebSocket hook | Medium | Removes Supabase Realtime dependency | Planned (Layer B on-prem) |
+| 7 | Docker packaging for PHC on-premises deployment | Medium | Enables clean LAN handoff to PHC MIS | Planned (Layer B on-prem) |
+| 8 | Middleware config update for local FastAPI URL | Low | Finalizes LAN handoff | Planned (Layer B on-prem) |
 
 ---
 
@@ -280,22 +256,45 @@ Auth is the one component where Supabase cloud may be retained even in the on-pr
 
 ---
 
-## 6. Short-Term Action Plan (Before PHC Handoff)
+## 6. Implementation Record: Layer A Stabilization
 
-These are the minimum changes required to make the current cloud-based deployment tolerant of weak internet conditions:
+The weak-signal resilience enhancements have been implemented across all real-time ingestion paths:
 
-1. **Update `app/nurse/hooks/useRealtimeSubscription.ts`** to track channel status and activate a polling fallback at 5-second intervals when the WebSocket is not `SUBSCRIBED`.
+1. **`lib/supabase.ts`:**
+   - Client-level `heartbeatIntervalMs: 25_000` for proactive disconnect detection.
+   - `timeout: 60_000` heartbeat acknowledgment window preventing premature disconnects on congested uplinks.
+   - `reconnectAfterMs`: Exponential backoff (`2s` floor, `10s` cap) suppressing reconnect storms.
 
-2. **Update `app/transfer/hooks/useRealtimeSubscription.ts`** with the same dual-mode pattern.
+2. **`app/nurse/hooks/useRealtimeSubscription.ts`:**
+   - 5-second polling fallback activated upon channel degradation.
+   - 2-second hysteresis grace period preventing poll oscillation on transient packet drops.
+   - 500ms overlap throttle eliminating concurrent poll and realtime executions.
+   - Immediate reconciliation fetch upon reconnecting to `SUBSCRIBED`.
+   - `disposed` cleanup guard preventing state updates on unmounted workstations.
 
-3. **Update `app/monitor/hooks/useRealtimeSubscription.ts`** with the same dual-mode pattern (8-second poll interval).
+3. **`app/transfer/hooks/useRealtimeSubscription.ts`:**
+   - 300ms event debounce coalescing burst Postgres changes into a single database query.
+   - 5-second polling fallback with 2-second channel hysteresis.
+   - 500ms overlap throttle lock.
+   - Immediate reconciliation on recovery.
 
-4. **Add a `ConnectionStatusBanner` component** to the nurse and transfer layout shells — a slim, non-intrusive bar that reads "Reconnecting..." when `navigator.onLine` is false or the Supabase channel status is not `SUBSCRIBED`, and disappears when restored.
+4. **`app/monitor/hooks/useRealtimeSubscription.ts`:**
+   - 300ms event debounce for waiting room displays.
+   - 8-second polling fallback with 2-second hysteresis.
+   - Category filtering preserved with 500ms overlap throttling.
+   - Immediate reconciliation upon reconnect.
 
-5. **Add the `online`/`offline` event listeners** in each hook to trigger a fresh fetch on reconnect and suppress fetch attempts while offline.
+5. **`app/dashboard/hooks/useOverviewData.ts`:**
+   - `todayFetchIdRef` monotonic request sequence guard discarding stale out-of-order network responses.
+   - 500ms reconciliation throttle.
+   - 2-second hysteresis before activating the 30-second polling fallback.
+   - Hook dependency stabilization breaking channel teardown loops caused by callback identity changes.
 
-These five changes require no new packages and no architectural changes to the existing codebase. They can be implemented incrementally, one hook at a time, without breaking existing behavior.
+6. **`app/dashboard/patients/hooks/useServiceQueue.ts`:**
+   - 10-second polling fallback for active department queue auditing.
+   - Monotonic `fetchSequenceRef` sequence guard preventing queue teleportation.
+   - 500ms overlap throttle and 2-second channel hysteresis.
 
 ---
 
-_Last updated: reflects the current cloud-based Supabase Realtime architecture with the documented LAN-first handoff plan for PHC on-premises production deployment._
+_Last updated: reflects the implemented Layer A weak-signal stabilization and documented Layer B LAN-first handoff plan for PHC on-premises deployment._

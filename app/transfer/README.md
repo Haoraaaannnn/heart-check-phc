@@ -57,7 +57,7 @@ Use this table to quickly identify the exact file to modify for any given requir
 | Registration window drag & drop | `app/transfer/hooks/useRegistrationDragAndDrop.ts` | Counter allocation interactions |
 | Auto-assignment algorithm | `app/transfer/hooks/useAutoAssign.ts` | Least-occupied cubicle distribution |
 | Queue rotation timers | `app/transfer/hooks/useAutoRotate.ts` | Idle rotation and timeout management |
-| Realtime subscription | `app/transfer/hooks/useRealtimeSubscription.ts` | Supabase Realtime channel handler |
+| Realtime subscription | `app/transfer/hooks/useRealtimeSubscription.ts` | Supabase Realtime channel handler with 300ms event debounce, 5s polling fallback, 2s hysteresis, and 500ms overlap throttle |
 | Patient types and contracts | `types/Types.ts` | Global patient record interface |
 
 ---

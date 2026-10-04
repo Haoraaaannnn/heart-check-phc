@@ -349,12 +349,34 @@ export function useOverviewData(): UseOverviewDataResult {
   const debounceRef = useRef<ReturnType<typeof setTimeout> | null>(null);
   const pollRef = useRef<ReturnType<typeof setInterval> | null>(null);
 
+  /**
+   * Monotonically increasing counter for today-stats fetches.
+   * Each fetch increments this before querying; stale responses whose
+   * captured ID no longer matches the current value are silently discarded.
+   * Prevents queue teleporting when slow responses overwrite newer data.
+   */
+  const todayFetchIdRef = useRef<number>(0);
+
+  /**
+   * Timestamp of the last reconciliation fetch start. Used by the throttle
+   * guard to suppress overlapping concurrent reconciliations from realtime
+   * events colliding with poll ticks during weak-signal recovery bursts.
+   */
+  const lastReconcileAtRef = useRef<number>(0);
+
+  /**
+   * Timer handle for the channel degradation grace period. Delays polling
+   * activation so brief channel status flickers do not cause start/stop storms.
+   */
+  const degradeTimerRef = useRef<ReturnType<typeof setTimeout> | null>(null);
+
   const { isOnline, channelStatus, isFullyConnected, setChannelStatus } = useConnectionStatus();
 
   /**
    * Fetches today's live patient records and derives all real-time overview metrics.
    */
   const fetchTodayStats = useCallback(async () => {
+    const myFetchId = ++todayFetchIdRef.current;
     const now = new Date();
     const startOfDay = new Date(now.getFullYear(), now.getMonth(), now.getDate(), 0, 0, 0, 0).toISOString();
     const endOfDay = new Date(now.getFullYear(), now.getMonth(), now.getDate() + 1, 0, 0, 0, 0).toISOString();
@@ -367,6 +389,9 @@ export function useOverviewData(): UseOverviewDataResult {
       .order('created_at', { ascending: false });
 
     if (error || !data) return;
+
+    // Stale response guard: discard if a newer fetch was started while this one was in flight
+    if (myFetchId !== todayFetchIdRef.current) return;
 
     const list = data as PatientRecord[];
     livePatientsRef.current = list;
@@ -506,11 +531,23 @@ export function useOverviewData(): UseOverviewDataResult {
   /**
    * Schedules a debounced server-side query to reconcile client state with PostgreSQL.
    */
+  /**
+   * Minimum interval in milliseconds between consecutive reconciliation fetches.
+   * Prevents overlapping concurrent fetches from realtime events and poll ticks
+   * colliding during signal recovery bursts.
+   */
+  const RECONCILE_THROTTLE_MS = 500;
+
   const scheduleReconciliation = useCallback(() => {
     if (debounceRef.current) {
       clearTimeout(debounceRef.current);
     }
     debounceRef.current = setTimeout(() => {
+      const now = Date.now();
+      if (now - lastReconcileAtRef.current < RECONCILE_THROTTLE_MS) {
+        return;
+      }
+      lastReconcileAtRef.current = now;
       void fetchTodayStats();
     }, DASHBOARD_REALTIME.debounceMs);
   }, [fetchTodayStats]);
@@ -629,31 +666,54 @@ export function useOverviewData(): UseOverviewDataResult {
   );
 
   /**
-   * Activates fallback periodic polling (every 30 seconds) when the WebSocket channel is degraded.
+   * Grace period in milliseconds before activating the polling fallback after
+   * the channel status degrades. Prevents rapid start/stop cycling when the
+   * channel flickers between SUBSCRIBED and TIMED_OUT on weak signal.
    */
-  const startPolling = useCallback(() => {
-    if (pollRef.current) return;
-    pollRef.current = setInterval(() => {
-      void fetchTodayStats();
-    }, DASHBOARD_REALTIME.fallbackPollIntervalMs);
-  }, [fetchTodayStats]);
+  const CHANNEL_DEGRADED_GRACE_MS = 2_000;
 
-  /**
-   * Suspends fallback periodic polling when the WebSocket channel is fully subscribed and healthy.
-   */
-  const stopPolling = useCallback(() => {
-    if (pollRef.current) {
-      clearInterval(pollRef.current);
-      pollRef.current = null;
-    }
-  }, []);
+  // Keep callback refs stable so the subscription effect does not re-run
+  // when these functions change identity — that was causing channel teardown
+  // loops on weak signal.
+  const fetchTodayStatsRef = useRef(fetchTodayStats);
+  fetchTodayStatsRef.current = fetchTodayStats;
+  const fetchYesterdayRef = useRef(fetchYesterday);
+  fetchYesterdayRef.current = fetchYesterday;
+  const handleRealtimePayloadRef = useRef(handleRealtimePayload);
+  handleRealtimePayloadRef.current = handleRealtimePayload;
 
-  // Primary Realtime subscription lifecycle with fallback polling
+  // Primary Realtime subscription lifecycle with fallback polling and hysteresis
   useEffect(() => {
     let disposed = false;
 
-    void fetchTodayStats();
-    void fetchYesterday();
+    /**
+     * Activates fallback periodic polling (every 30 seconds) when the WebSocket
+     * channel remains degraded beyond the grace period.
+     */
+    const startPolling = () => {
+      if (pollRef.current) return;
+      pollRef.current = setInterval(() => {
+        void fetchTodayStatsRef.current();
+      }, DASHBOARD_REALTIME.fallbackPollIntervalMs);
+    };
+
+    /**
+     * Suspends fallback periodic polling and cancels any pending degradation
+     * grace timer when the WebSocket channel is fully subscribed and healthy.
+     */
+    const stopPolling = () => {
+      if (degradeTimerRef.current) {
+        clearTimeout(degradeTimerRef.current);
+        degradeTimerRef.current = null;
+      }
+      if (pollRef.current) {
+        clearInterval(pollRef.current);
+        pollRef.current = null;
+      }
+    };
+
+    void fetchTodayStatsRef.current();
+    void fetchYesterdayRef.current();
 
     const channel = supabase
       .channel(DASHBOARD_REALTIME.channelName)
@@ -662,7 +722,7 @@ export function useOverviewData(): UseOverviewDataResult {
         { event: '*', schema: 'public', table: 'patients' },
         (payload) => {
           if (!disposed) {
-            handleRealtimePayload(payload as unknown as RealtimeRowChange);
+            handleRealtimePayloadRef.current(payload as unknown as RealtimeRowChange);
           }
         }
       )
@@ -673,8 +733,19 @@ export function useOverviewData(): UseOverviewDataResult {
 
         if (status === 'SUBSCRIBED') {
           stopPolling();
+          // Reconcile immediately on resubscription to catch any events
+          // missed while the channel was degraded
+          void fetchTodayStatsRef.current();
         } else {
-          startPolling();
+          // Channel degraded: apply hysteresis grace period before activating polling
+          if (!pollRef.current && !degradeTimerRef.current) {
+            degradeTimerRef.current = setTimeout(() => {
+              degradeTimerRef.current = null;
+              if (!disposed) {
+                startPolling();
+              }
+            }, CHANNEL_DEGRADED_GRACE_MS);
+          }
         }
       });
 
@@ -686,14 +757,9 @@ export function useOverviewData(): UseOverviewDataResult {
       stopPolling();
       void supabase.removeChannel(channel);
     };
-  }, [
-    fetchTodayStats,
-    fetchYesterday,
-    handleRealtimePayload,
-    setChannelStatus,
-    startPolling,
-    stopPolling,
-  ]);
+  // Stable dependency: setChannelStatus identity never changes (from useCallback([]))
+  // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [setChannelStatus]);
 
   // Network recovery: refetch immediately when browser regains online connectivity
   useEffect(() => {
