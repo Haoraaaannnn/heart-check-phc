@@ -58,7 +58,7 @@ The Executive Dashboard provides administrative leaders and departmental heads w
 | [x] | P0 | **Multi-Mode Excel Export (Specific Date, All Dates, Month)** | Allow administrative users to export official PHC Time and Motion Analysis workbooks by exact date, complete historical archive, or calendar month. | [ExportExcelModal.tsx](file:///home/jensen/Github-Repositories/heart-check-phc/app/dashboard/pages/analytics/components/ExportExcelModal.tsx), `python_backend/main.py` |
 | [ ] | P1 | **Dynamic Per-Patient Wait-Time Predictive Model** | Compute and expose real-time estimated wait times per individual ticket based on current queue depth, active cubicles, and historical service durations. | [useAnalyticsData.ts](file:///home/jensen/Github-Repositories/heart-check-phc/app/dashboard/pages/analytics/hooks/useAnalyticsData.ts), `python_backend/analytics/` |
 | [ ] | P1 | **Automated Congestion Spike Anomaly Detection** | Add automated statistical anomaly detection to alert administrators when arrival rates or stage bottlenecks diverge significantly from predicted distributions. | [BottleneckStageTable.tsx](file:///home/jensen/Github-Repositories/heart-check-phc/app/dashboard/pages/analytics/components/BottleneckStageTable.tsx), `python_backend/analytics/` |
-| [ ] | P2 | **Interactive Chart Drill-Down** | Allow clicking on any date or bar in the Daily Volume Chart to instantly load that day's hourly distribution and bottleneck breakdown. | [VolumeAndWaitCharts.tsx](file:///home/jensen/Github-Repositories/heart-check-phc/app/dashboard/pages/analytics/components/VolumeAndWaitCharts.tsx) |
+| [x] | P2 | **Interactive Chart Drill-Down** | Allow clicking on any date or bar in the Daily Volume Chart to instantly load that day's hourly distribution and bottleneck breakdown. | [VolumeAndWaitCharts.tsx](file:///home/jensen/Github-Repositories/heart-check-phc/app/dashboard/pages/analytics/components/VolumeAndWaitCharts.tsx), [DailyDrillDownDetail.tsx](file:///home/jensen/Github-Repositories/heart-check-phc/app/dashboard/pages/analytics/components/DailyDrillDownDetail.tsx), `python_backend/main.py` |
 | [ ] | P2 | **Custom Arbitrary Date Range Picker for Excel Export** | Expand the Excel export dialog with start-date and end-date datepickers for arbitrary custom reporting windows. | [ExportExcelModal.tsx](file:///home/jensen/Github-Repositories/heart-check-phc/app/dashboard/pages/analytics/components/ExportExcelModal.tsx), `python_backend/main.py` |
 
 ### 2.3 Patients Records Page (`app/dashboard/pages/patients/`)
@@ -151,7 +151,22 @@ The Python backend powers statistical forecasting, ARIMA time-series modeling, b
 
 ---
 
-## 8. "Where to Edit" Quick Directory Map
+## 8. Security Hardening & Remediation Roadmap
+
+Remediation tasks addressing vulnerabilities identified during the comprehensive system security audit. See [docs/API_LEAKS_AND_INJECTION_RISKS_AUDIT.md](file:///home/jensen/Github-Repositories/heart-check-phc/docs/API_LEAKS_AND_INJECTION_RISKS_AUDIT.md) and [docs/SECURITY_CHECKLIST.md](file:///home/jensen/Github-Repositories/heart-check-phc/docs/SECURITY_CHECKLIST.md) for full vulnerability mechanics and patch details:
+
+| Status | Priority | Feature / Improvement | Description | Target Files / Module |
+| :---: | :---: | :--- | :--- | :--- |
+| [ ] | P0 | **Eliminate Printer OS Command Injection (SEC-024)** | Remove or refactor `lib/printer.ts` to prevent remote command injection via `child_process.exec()`. Direct output to `fs.writeFile` or rely exclusively on `/api/print-ticket`. | [lib/printer.ts](file:///home/jensen/Github-Repositories/heart-check-phc/lib/printer.ts) |
+| [ ] | P0 | **Guard SuperAdmin User Sync Endpoint (SEC-026)** | Add server-side `requireSuperadmin` authorization check to prevent unauthenticated database mutation and service-role abuse. | [sync-users/route.ts](file:///home/jensen/Github-Repositories/heart-check-phc/app/api/superadmin/sync-users/route.ts) |
+| [ ] | P1 | **Server-Side TTS Gateway (SEC-025)** | Create `POST /api/tts` proxy endpoint to protect Deepgram credentials and remove `NEXT_PUBLIC_DEEPGRAM_KEY` from client bundles. | `app/api/tts/route.ts`, [useMonitorData.ts](file:///home/jensen/Github-Repositories/heart-check-phc/app/monitor/hooks/useMonitorData.ts) |
+| [ ] | P1 | **Harden `/api/rotate` Endpoint (SEC-027)** | Implement Zod schema whitelist for patient updates, enforce clinical role checks, and append `.eq('is_historical', false)` to protect research records. | [app/api/rotate/route.ts](file:///home/jensen/Github-Repositories/heart-check-phc/app/api/rotate/route.ts) |
+| [ ] | P1 | **Authenticate & Rate-Limit SMS Dispatch (SEC-028)** | Enforce session validation, Philippine phone number regex checks, and caller rate limits on `sendSMS` Server Action to prevent toll fraud. | [app/actions/sendSMS.ts](file:///home/jensen/Github-Repositories/heart-check-phc/app/actions/sendSMS.ts) |
+| [ ] | P2 | **Validate Thermal Printer Intake (SEC-029)** | Require verified patient record in database before sending bytes to thermal printer; sanitize ESC/POS control sequences. | [app/api/print-ticket/route.ts](file:///home/jensen/Github-Repositories/heart-check-phc/app/api/print-ticket/route.ts) |
+
+---
+
+## 9. "Where to Edit" Quick Directory Map
 
 When contributing new features or addressing items from this checklist, consult the following dedicated guide files:
 
@@ -165,6 +180,7 @@ When contributing new features or addressing items from this checklist, consult 
 | **Transfer Dashboard** | Doctor assignment, rotation, idle management | [docs/TRANSFER_MANUAL_TWEAKING_GUIDE.md](file:///home/jensen/Github-Repositories/heart-check-phc/docs/TRANSFER_MANUAL_TWEAKING_GUIDE.md) |
 | **Security & Schema** | Database schema, policies, role management | [docs/DATABASE_SCHEMA.md](file:///home/jensen/Github-Repositories/heart-check-phc/docs/DATABASE_SCHEMA.md), [docs/OPEN_ISSUES.md](file:///home/jensen/Github-Repositories/heart-check-phc/docs/OPEN_ISSUES.md) |
 | **Security Checklist** | Vulnerability matrix, verification steps, patch guide | [docs/SECURITY_CHECKLIST.md](file:///home/jensen/Github-Repositories/heart-check-phc/docs/SECURITY_CHECKLIST.md), [AGENTS.md](file:///home/jensen/Github-Repositories/heart-check-phc/AGENTS.md) |
+| **API & Injection Audit** | Vulnerability mechanics, exploit proofs, technical patches | [docs/API_LEAKS_AND_INJECTION_RISKS_AUDIT.md](file:///home/jensen/Github-Repositories/heart-check-phc/docs/API_LEAKS_AND_INJECTION_RISKS_AUDIT.md) |
 | **UAT Test Cases** | End-to-end verification checklist and remarks | [docs/UAT_USE_CASE_CHECKLIST.md](file:///home/jensen/Github-Repositories/heart-check-phc/docs/UAT_USE_CASE_CHECKLIST.md) |
 
 ---

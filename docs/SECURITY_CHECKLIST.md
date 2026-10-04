@@ -85,59 +85,84 @@ Physical self-service kiosks and waiting room TV displays introduce physical att
 
 ---
 
-## 6. Developer Secure Coding Guidelines & Interconnection Standards
+## 6. API Security, Injection Vulnerabilities & Server Actions (Next.js & Microservices)
+
+Next.js Route Handlers and Server Actions process server-side mutations, integrate hardware peripherals, and dispatch notifications. Unauthenticated routes or unsanitized command inputs create severe vulnerabilities. See the detailed vulnerability report in [docs/API_LEAKS_AND_INJECTION_RISKS_AUDIT.md](file:///home/jensen/Github-Repositories/heart-check-phc/docs/API_LEAKS_AND_INJECTION_RISKS_AUDIT.md).
+
+| Vulnerability ID | Layer / Category | OWASP Reference | Threat Vector & Description | Severity | Verification / Exploit Test Steps | Remediation / Patch Status | Patch Implementation & Required Action | Developer Notes & Verification Proof |
+| :--- | :--- | :--- | :--- | :--- | :--- | :--- | :---: | :--- | :--- |
+| **SEC-024** | Command Injection | A03: Injection | **OS Command Injection via Shell Interpolation in Printer Module:** `lib/printer.ts` formats patient ticket strings and passes them directly to `child_process.exec("echo -e ... > /dev/usb/lp2")` without shell escaping. | **CRITICAL** | 1. Review `lib/printer.ts` line 41.<br>2. Inspect invocation of `exec()`.<br>3. Passing ticket content with shell metacharacters (`;`, `|`, `` ` ``) executes arbitrary shell commands under Node.js process UID. | [VULN] | Delete [lib/printer.ts](file:///home/jensen/Github-Repositories/heart-check-phc/lib/printer.ts) (legacy unused module) or replace `child_process.exec()` with direct binary file streaming via `fs/promises.writeFile('/dev/usb/lp2', buffer)`. | Discovered during system security audit. Superseded by Route Handler in `app/api/print-ticket/route.ts`. |
+| **SEC-025** | Credential Exposure | A02: Cryptographic Failures | **Third-Party Deepgram API Token Leaked to Browser Client Bundle:** `NEXT_PUBLIC_DEEPGRAM_KEY` is embedded into client components for Text-to-Speech audio callouts, exposing the token to any client visiting the monitor or nurse screens. | **HIGH** | 1. Open browser DevTools on `/monitor` or `/nurse`.<br>2. Inspect network requests or search compiled JavaScript bundle for Deepgram token.<br>3. The raw API key is directly viewable in plain text. | [VULN] | Remove `NEXT_PUBLIC_` prefix from environment variable (`DEEPGRAM_API_KEY`). Create a server-side route handler at `app/api/tts/route.ts` that proxies audio generation server-side without leaking credentials to client browsers. | Affects [useMonitorData.ts](file:///home/jensen/Github-Repositories/heart-check-phc/app/monitor/hooks/useMonitorData.ts#L31), [RegistrationLayout.tsx](file:///home/jensen/Github-Repositories/heart-check-phc/app/monitor/components/RegistrationLayout.tsx#L37), [transfer/page.tsx](file:///home/jensen/Github-Repositories/heart-check-phc/app/transfer/page.tsx#L391), and [nurse/page.tsx](file:///home/jensen/Github-Repositories/heart-check-phc/app/nurse/page.tsx#L192). |
+| **SEC-026** | Broken Access Control | A01: Broken Access Control | **Unauthenticated SuperAdmin User Sync Route Using Service Role Key:** `app/api/superadmin/sync-users/route.ts` omits authentication checks while utilizing `supabaseAdmin` with full service-role privileges to synchronize users from Supabase Auth into the `users` table. | **HIGH** | 1. Send unauthenticated POST request: `curl -X POST http://localhost:3000/api/superadmin/sync-users`.<br>2. Observe response.<br>3. Endpoint executes administrative user reconciliation without session validation. | [VULN] | Import and execute `await requireSuperadmin(request)` at the start of the `POST` handler in [app/api/superadmin/sync-users/route.ts](file:///home/jensen/Github-Repositories/heart-check-phc/app/api/superadmin/sync-users/route.ts). | `proxy.ts` bypasses all `/api/*` endpoints from middleware checks, requiring each API handler to enforce authentication explicitly. |
+| **SEC-027** | Mass Assignment / BOLA | A01: Broken Access Control / A08: Integrity | **Mass Assignment and Historical Data Tampering in `/api/rotate`:** Endpoint accepts unvalidated `changes` objects, runs via `supabaseAdmin` (bypassing RLS), lacks clinical role validation, and omits the mandatory `.eq('is_historical', false)` clause. | **HIGH** | 1. Send authenticated POST request to `/api/rotate` with a historical patient ID and arbitrary column modifications (e.g. `medical_notes`, `status`).<br>2. Endpoint updates record regardless of historical status or column boundaries. | [VULN] | 1. Whitelist permitted mutation fields using a Zod schema.<br>2. Restrict caller to verified clinical roles.<br>3. Explicitly enforce `.eq('is_historical', false)` on all updates. | Target file: [app/api/rotate/route.ts](file:///home/jensen/Github-Repositories/heart-check-phc/app/api/rotate/route.ts). |
+| **SEC-028** | Toll Fraud / Rate Limiting | A04: Insecure Design | **Unauthenticated, Unthrottled SMS Dispatcher Server Action:** `sendSMS` Server Action sends messages through UniSMS gateway without verifying session cookies, caller authorization, or rate limits. | **MEDIUM** | 1. Invoke `sendSMS` Server Action directly via forged HTTP POST request with an arbitrary destination phone number.<br>2. UniSMS API dispatches SMS and consumes hospital balance without verification. | [VULN] | 1. Enforce active user session verification in [app/actions/sendSMS.ts](file:///home/jensen/Github-Repositories/heart-check-phc/app/actions/sendSMS.ts).<br>2. Validate destination phone number format via Philippine mobile carrier regex.<br>3. Implement caller IP and destination rate limiting. | Threat of external toll fraud or quota exhaustion if action ID is discovered. |
+| **SEC-029** | Hardware Abuse / DoS | A04: Insecure Design | **Unauthenticated Thermal Printer Route & Unsanitized ESC/POS Buffer:** `POST /api/print-ticket` accepts unauthenticated requests and prints tickets even when no patient record matches the provided queue number, and lacks ESC/POS control character escaping. | **MEDIUM** | 1. Send POST to `/api/print-ticket` with fictitious `queueNumber: "99999"`.<br>2. Thermal printer attempts to write blank/partial ticket to `/dev/usb/lp*`.<br>3. Flooding endpoint causes paper roll exhaustion or device state lock. | [VULN] | Require verified patient record in database prior to printing (return 404 if absent); sanitize input fields to alphanumeric characters only to prevent binary ESC/POS escape code injection. | Target file: [app/api/print-ticket/route.ts](file:///home/jensen/Github-Repositories/heart-check-phc/app/api/print-ticket/route.ts). |
+
+---
+
+## 7. Developer Secure Coding Guidelines & Interconnection Standards
 
 When developing new features, connecting subsystems, or refactoring code in Heart Check PHC, all developers and AI agents must strictly comply with the following mandatory security rules:
 
-### 6.1 Principle of Least Privilege
+### 7.1 Principle of Least Privilege
 - **Never expose the Supabase Service Role Key:** The service role key bypasses all RLS checks and must never appear in client-side code, git repositories, or `.env` variables prefixed with `NEXT_PUBLIC_`.
 - **Scope database queries strictly:** When querying data for staff workstations, always apply user/cubicle scoping at the query level in addition to database RLS.
 
-### 6.2 Zero-Trust Input Validation & Sanitization
+### 7.2 Zero-Trust Input Validation & Sanitization
 - **Validate all API inputs on the server:** Never trust client-provided data. Use Zod schemas in Next.js Route Handlers and Pydantic models in FastAPI endpoints.
 - **Enforce strict regex patterns:** Validate patient numbers, phone numbers, and date parameters against strict character sets.
 - **Prevent SQL Injection:** Never use string formatting (`f"SELECT ... {user_input}"`) to construct database queries. Always use parameterized query builders provided by Supabase or SQLAlchemy.
 
-### 6.3 Secure Route & Session Verification
+### 7.3 Secure Route & Session Verification
 - **Enforce server-side route guards:** All access control must be evaluated on the server before rendering UI. Client-side role hooks (`useRoleGuard`) exist only to optimize visual transitions, never as a security boundary.
 - **Verify session validity:** Check for authenticated session cookies and evaluate roles on every protected server route.
 
-### 6.4 Defensive Subsystem Interconnection
+### 7.4 Defensive Subsystem Interconnection
 - **Set explicit HTTP timeouts:** All requests between Next.js and FastAPI must include explicit timeout configurations (`AbortController` with 10-second timeout) to prevent thread exhaustion when services are slow.
 - **Sanitize cross-service error responses:** Catch network and backend exceptions gracefully. Never propagate raw Python tracebacks or database error codes to client interfaces.
 - **Enforce CORS domain restrictions:** Never configure `allow_origins=["*"]` on production backend endpoints. Explicitly whitelist verified frontend origins.
 
-### 6.5 Data Integrity & Audit Protection
+### 7.5 Data Integrity & Audit Protection
 - **Protect historical research records:** Operational write policies must strictly enforce `is_historical = false`. Historical records used for capstone modeling must never be mutated or deleted by operational actions.
 - **Log all administrative overrides:** Any manual queue intervention, patient deletion, or role change must record the operator's auth ID, timestamp, and rationale.
 
 ---
 
-## 7. Security Patch Priority Matrix & Action Plan
+## 8. Security Patch Priority Matrix & Action Plan
 
 The following checklist prioritizes remediation tasks to prepare Heart Check PHC for technical defense and PHC MIS evaluation:
 
 | Priority | Action Item | Affected Component | Target File / Location | Status |
 | :---: | :--- | :--- | :--- | :---: |
+| **P0** | Eliminate OS command injection by deleting or rewriting printer helper | Hardware Integration | [lib/printer.ts](file:///home/jensen/Github-Repositories/heart-check-phc/lib/printer.ts) | [ ] Pending |
+| **P0** | Enforce `requireSuperadmin` guard on SuperAdmin user sync route | SuperAdmin Route | [app/api/superadmin/sync-users/route.ts](file:///home/jensen/Github-Repositories/heart-check-phc/app/api/superadmin/sync-users/route.ts) | [ ] Pending |
 | **P0** | Drop wide-open `true` policies on `patients` table | Database RLS | Supabase SQL / `docs/CHANGES_NEEDED.md` Step 5 | [ ] Pending |
 | **P0** | Lock down `services` writes to `is_superadmin()` only | Database RLS | Supabase SQL / `docs/CHANGES_NEEDED.md` Step 3 | [ ] Pending |
 | **P0** | Drop public `SELECT` on `users` table to protect staff accounts | Database RLS | Supabase SQL / `docs/CHANGES_NEEDED.md` Step 4 | [ ] Pending |
 | **P0** | Enforce brute-force lockout threshold in login API | Auth Handler | [app/api/auth/login/route.ts](file:///home/jensen/Github-Repositories/heart-check-phc/app/api/auth/login/route.ts) | [ ] Pending |
+| **P1** | Move Deepgram TTS calls server-side and eliminate `NEXT_PUBLIC_` key | Voice Callout | [useMonitorData.ts](file:///home/jensen/Github-Repositories/heart-check-phc/app/monitor/hooks/useMonitorData.ts), [RegistrationLayout.tsx](file:///home/jensen/Github-Repositories/heart-check-phc/app/monitor/components/RegistrationLayout.tsx), `app/api/tts/` | [ ] Pending |
+| **P1** | Apply schema whitelisting, role checks, and `is_historical = false` in `/api/rotate` | Patient Transfer Route | [app/api/rotate/route.ts](file:///home/jensen/Github-Repositories/heart-check-phc/app/api/rotate/route.ts) | [ ] Pending |
+| **P1** | Add session authentication, phone number regex validation, and rate limiting to `sendSMS` | SMS Notification | [app/actions/sendSMS.ts](file:///home/jensen/Github-Repositories/heart-check-phc/app/actions/sendSMS.ts) | [ ] Pending |
 | **P1** | Apply `slowapi` rate limiting to Python analytics endpoints | FastAPI Backend | [python_backend/main.py](file:///home/jensen/Github-Repositories/heart-check-phc/python_backend/main.py) | [ ] Pending |
 | **P1** | Enforce CORS domain whitelist for production handoff | FastAPI Backend | [python_backend/main.py](file:///home/jensen/Github-Repositories/heart-check-phc/python_backend/main.py) | [ ] Pending |
 | **P1** | Add database trigger preventing updates to `is_historical = true` rows | Database Triggers | Supabase SQL | [ ] Pending |
+| **P2** | Enforce verified `patientRecord` validation and input sanitization before printing | Thermal Printing | [app/api/print-ticket/route.ts](file:///home/jensen/Github-Repositories/heart-check-phc/app/api/print-ticket/route.ts) | [ ] Pending |
+| **P2** | Append `.eq('is_historical', false)` to all operational client update mutations | Clinical Workstations | `app/nurse/hooks/`, `app/transfer/hooks/` | [ ] Pending |
 | **P2** | Implement administrative audit log for user role and queue mutations | System Governance | `app/superadmin/`, Supabase SQL | [ ] Pending |
 | **P2** | Configure Nginx reverse proxy with TLS/HTTPS for PHC LAN deployment | Infrastructure | `docker-compose.yml`, Nginx conf | [ ] Pending |
 
 ---
 
-## 8. Where to Edit Security Configurations
+## 9. Where to Edit Security Configurations
 
 | Security Domain | Target Subsystem | File & Configuration Path |
 | :--- | :--- | :--- |
+| **Full Security Audit Report** | Complete Vulnerability Analysis & Proofs | [docs/API_LEAKS_AND_INJECTION_RISKS_AUDIT.md](file:///home/jensen/Github-Repositories/heart-check-phc/docs/API_LEAKS_AND_INJECTION_RISKS_AUDIT.md) |
 | **Server Route Proxy** | Next.js Server-Side Guard | [proxy.ts](file:///home/jensen/Github-Repositories/heart-check-phc/proxy.ts) |
 | **Auth API Endpoints** | Login, Lockout, Password Reset | `app/api/auth/` ([app/api/auth/login/route.ts](file:///home/jensen/Github-Repositories/heart-check-phc/app/api/auth/login/route.ts)) |
-| **SuperAdmin API** | Role assignment, user creation | `app/api/superadmin/` |
+| **SuperAdmin API** | Role assignment, user creation, user sync | `app/api/superadmin/` ([app/api/superadmin/sync-users/route.ts](file:///home/jensen/Github-Repositories/heart-check-phc/app/api/superadmin/sync-users/route.ts)) |
+| **Hardware Printers** | Thermal printer device buffer writing | [app/api/print-ticket/route.ts](file:///home/jensen/Github-Repositories/heart-check-phc/app/api/print-ticket/route.ts), [lib/printer.ts](file:///home/jensen/Github-Repositories/heart-check-phc/lib/printer.ts) |
+| **Server Actions** | UniSMS dispatch server action | [app/actions/sendSMS.ts](file:///home/jensen/Github-Repositories/heart-check-phc/app/actions/sendSMS.ts) |
 | **FastAPI Backend Security** | CORS, Rate Limiting, Input Models | [python_backend/main.py](file:///home/jensen/Github-Repositories/heart-check-phc/python_backend/main.py) |
 | **Supabase Client Adapters**| SSR Cookies, Anon/Admin Clients | [lib/supabase/server.ts](file:///home/jensen/Github-Repositories/heart-check-phc/lib/supabase/server.ts), [lib/supabase/admin.ts](file:///home/jensen/Github-Repositories/heart-check-phc/lib/supabase/admin.ts) |
 | **Database Policies & SQL** | RLS, Triggers, Helper Functions | [docs/CHANGES_NEEDED.md](file:///home/jensen/Github-Repositories/heart-check-phc/docs/CHANGES_NEEDED.md), [docs/SECURITY.md](file:///home/jensen/Github-Repositories/heart-check-phc/docs/SECURITY.md) |

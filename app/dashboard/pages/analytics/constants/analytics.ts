@@ -204,6 +204,43 @@ export const ANALYTICS_STYLES = {
   /** Reusable solid card pill and strip containers. */
   phcKpiCard: 'flex flex-col rounded-xl border border-line bg-surface-muted p-4',
   forecastPill: 'flex items-center justify-between rounded-xl border border-line bg-surface-muted p-4 flex-wrap gap-2',
+
+  /** Daily drilldown panel styling tokens. */
+  drilldown: {
+    banner: 'flex flex-col gap-5 rounded-2xl border border-line bg-surface p-6 shadow-sm transition',
+    header: 'flex flex-col gap-3 md:flex-row md:items-center md:justify-between border-b border-line pb-4',
+    titleBlock: 'flex flex-col gap-1',
+    title: 'text-lg md:text-xl font-extrabold text-content flex items-center gap-2.5',
+    dateBadge: 'inline-flex items-center gap-1.5 rounded-lg bg-blue-50 text-blue-700 dark:bg-blue-950/60 dark:text-blue-300 px-3 py-1 text-xs font-bold border border-blue-200 dark:border-blue-800',
+    subtitle: 'text-xs text-content-muted leading-relaxed',
+    headerActions: 'flex items-center gap-2 flex-wrap',
+    resetBtn: 'inline-flex items-center gap-1.5 rounded-xl border border-line bg-surface px-3.5 py-2 text-xs font-semibold text-content hover:bg-surface-muted active:scale-95 transition cursor-pointer shadow-xs',
+    kpiGrid: 'grid grid-cols-2 gap-3 lg:grid-cols-4',
+    kpiCard: 'flex flex-col rounded-xl border border-line bg-surface-muted p-4 transition',
+    kpiLabel: 'text-[11px] font-bold uppercase tracking-wider text-content-muted',
+    kpiValue: 'mt-1 text-2xl font-extrabold text-content',
+    kpiSub: 'mt-0.5 text-xs text-content-subtle',
+    systemStatusBadge: 'mt-2 inline-flex items-center rounded-full px-2.5 py-0.5 text-xs font-bold w-fit',
+    hintBanner: 'flex items-center justify-between gap-3 rounded-xl border border-blue-200/70 bg-blue-50/50 dark:border-blue-900/40 dark:bg-blue-950/20 px-4 py-3 text-xs text-blue-800 dark:text-blue-200',
+    hintContent: 'flex items-center gap-2.5',
+    hintIcon: 'text-lg text-blue-600 dark:text-blue-400 shrink-0',
+    emptyNotice: 'flex flex-col items-center justify-center p-8 text-center text-xs text-content-muted rounded-xl border border-line bg-surface-muted gap-2',
+    loadingNotice: 'flex items-center justify-center gap-2.5 p-8 text-center text-xs text-content-muted rounded-xl border border-line bg-surface-muted font-medium',
+    spinner: 'h-4 w-4 animate-spin text-brand-accent',
+    errorBanner: 'flex items-center justify-between gap-3 rounded-xl border border-rose-200 bg-rose-50 dark:border-rose-900/50 dark:bg-rose-950/30 p-4 text-xs font-medium text-rose-700 dark:text-rose-300',
+    retryBtn: 'rounded-lg border border-rose-300 bg-surface px-2.5 py-1 text-xs font-semibold text-rose-700 hover:bg-rose-100 transition cursor-pointer dark:border-rose-800 dark:bg-rose-900 dark:text-rose-200',
+  },
+} as const;
+
+/** Chart color tokens for interactive drill-downs. */
+export const DRILLDOWN_CHART_COLORS = {
+  barNormal: '#3b82f6',
+  barActive: '#1d4ed8',
+  barHover: '#2563eb',
+  movingAvg: '#f59e0b',
+  hourlyDayIntake: '#2563eb',
+  hourlyRangeAvg: '#cc3535',
+  referenceLine: '#2563eb',
 } as const;
 
 /** Queue stage line colors for wait-time trend charts. */

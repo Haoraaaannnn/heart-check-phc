@@ -13,9 +13,9 @@ import httpx
 from dotenv import load_dotenv
 from fastapi import FastAPI, HTTPException, Query
 from fastapi.middleware.cors import CORSMiddleware
-from analytics import generate_report
+from analytics.report import generate_report, convert_to_native
 from analytics.preprocessing import preprocess_queue_data
-from analytics.descriptive import monthly_breakdown
+from analytics.descriptive import monthly_breakdown, hourly_pattern, bottleneck_report
 
 import calendar
 from fastapi.responses import StreamingResponse
@@ -66,6 +66,7 @@ CACHE_TTL_SECONDS = 300
 _monthly_cache: dict[int, tuple[float, list[dict]]] = {}
 _years_cache: tuple[float, list[int]] | None = None
 _export_dates_cache: tuple[float, dict] | None = None
+_daily_drilldown_cache: dict[str, tuple[float, dict]] = {}
 
 
 def _supabase_headers() -> dict:
@@ -240,6 +241,133 @@ def get_dashboard_data(range: str = DEFAULT_RANGE):
         fallback["bottleneck_analysis"]["system_status"] = "Error"
         fallback["_debug_error"] = True  # remove before thesis defense / production
         return fallback
+
+
+@app.get("/api/daily-drilldown")
+def get_daily_drilldown(date_param: str = Query(..., alias="date")):
+    """
+    Returns granular hourly distribution, bottleneck breakdown,
+    stage dwell times, and operational metrics for a specific calendar date (Asia/Manila).
+    """
+    cleaned_date = date_param.strip()
+    try:
+        target_date = datetime.strptime(cleaned_date, "%Y-%m-%d").date()
+    except Exception:
+        raise HTTPException(
+            status_code=400,
+            detail="Invalid date format. Expected YYYY-MM-DD.",
+        )
+
+    now = time.time()
+    cached = _daily_drilldown_cache.get(cleaned_date)
+    if cached and (now - cached[0]) < CACHE_TTL_SECONDS:
+        return cached[1]
+
+    # Query with 1-day padding to safely cover UTC-to-Manila (UTC+8) offset
+    start_date = (target_date - timedelta(days=1)).isoformat()
+    end_date = (target_date + timedelta(days=2)).isoformat()
+
+    try:
+        data = fetch_supabase_table(
+            "patients",
+            select=(
+                "id,created_at,patientNum,service,status,"
+                "reg_start,reg_end,consult_start,consult_end,"
+                "carryout_start,carryout_end,cubicleNum,is_historical"
+            ),
+            start_date=start_date,
+            end_date=end_date,
+        )
+    except Exception as e:
+        print(f"daily-drilldown fetch error: {e}")
+        raise HTTPException(status_code=502, detail="Failed to fetch patient data from database.")
+
+    empty_res = {
+        "date": cleaned_date,
+        "total_patients": 0,
+        "hourly_pattern": [],
+        "bottleneck_analysis": {
+            "stages": [],
+            "bottleneck_stage": "None",
+            "system_status": "No Data",
+            "system_reason": f"No patient records recorded on {cleaned_date}.",
+        },
+        "summary": {
+            "total_patients": 0,
+            "avg_total_time": None,
+            "avg_wait_registration": None,
+            "avg_wait_consultation": None,
+            "system_status": "No Data",
+            "bottleneck_stage": "None",
+            "system_reason": f"No patient records recorded on {cleaned_date}.",
+            "peak_hour": None,
+        },
+    }
+
+    if not data:
+        return empty_res
+
+    df = pd.DataFrame(data)
+    df = normalize_dataframe(df)
+
+    date_col = "kiosk_time" if "kiosk_time" in df.columns else "created_at"
+    if date_col in df.columns:
+        df["_manila_date"] = df[date_col].apply(
+            lambda t: _to_manila(t).date() if pd.notna(t) else None
+        )
+        df = df[df["_manila_date"] == target_date]
+    else:
+        return empty_res
+
+    if df.empty:
+        return empty_res
+
+    df_clean = preprocess_queue_data(df)
+    hourly = hourly_pattern(df_clean).to_dict(orient="records")
+    bottlenecks = bottleneck_report(df_clean)
+
+    avg_tot = (
+        round(float(df_clean["total_time"].dropna().mean()), 2)
+        if "total_time" in df_clean.columns and not df_clean["total_time"].dropna().empty
+        else None
+    )
+    avg_reg = (
+        round(float(df_clean["wait_registration"].dropna().mean()), 2)
+        if "wait_registration" in df_clean.columns and not df_clean["wait_registration"].dropna().empty
+        else None
+    )
+    avg_con = (
+        round(float(df_clean["wait_consultation"].dropna().mean()), 2)
+        if "wait_consultation" in df_clean.columns and not df_clean["wait_consultation"].dropna().empty
+        else None
+    )
+
+    peak_hour = None
+    if hourly:
+        sorted_hours = sorted(hourly, key=lambda x: x.get("avg_patients", 0), reverse=True)
+        if sorted_hours and sorted_hours[0].get("avg_patients", 0) > 0:
+            peak_hour = sorted_hours[0].get("time_label")
+
+    payload = {
+        "date": cleaned_date,
+        "total_patients": len(df_clean),
+        "hourly_pattern": hourly,
+        "bottleneck_analysis": bottlenecks,
+        "summary": {
+            "total_patients": len(df_clean),
+            "avg_total_time": avg_tot,
+            "avg_wait_registration": avg_reg,
+            "avg_wait_consultation": avg_con,
+            "system_status": bottlenecks.get("system_status", "Normal"),
+            "bottleneck_stage": bottlenecks.get("bottleneck_stage", "None"),
+            "system_reason": bottlenecks.get("system_reason", ""),
+            "peak_hour": peak_hour,
+        },
+    }
+
+    sanitized = convert_to_native(payload)
+    _daily_drilldown_cache[cleaned_date] = (now, sanitized)
+    return sanitized
 
 
 @app.get("/api/available-years")
