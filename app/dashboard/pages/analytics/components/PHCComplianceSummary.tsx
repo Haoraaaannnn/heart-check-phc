@@ -40,17 +40,14 @@ interface PHCComplianceSummaryProps {
   data: PHCComplianceData | undefined | null;
 }
 
-function formatThresholdLabel(
-  minutes: number,
-  units: typeof ANALYTICS_TEXTS.compliance.units
-): string {
-  if (minutes % 60 === 0) return `${minutes / 60} ${units.hours}`;
+function formatThresholdLabel(minutes: number): string {
+  if (minutes % 60 === 0) return `${minutes / 60} hrs`;
   if (minutes > 60) {
     const hrs = Math.floor(minutes / 60);
     const mins = minutes % 60;
-    return `${hrs}.${Math.round((mins / 60) * 100)} ${units.hours}`;
+    return `${hrs}.${Math.round((mins / 60) * 100)} hrs`;
   }
-  return `${minutes} ${units.minutes}`;
+  return `${minutes} mins`;
 }
 
 /**
@@ -60,7 +57,7 @@ function formatThresholdLabel(
  * @returns JSX element.
  */
 export default function PHCComplianceSummary({ data }: PHCComplianceSummaryProps) {
-  const C = ANALYTICS_STYLES.compliance;
+  const S = ANALYTICS_STYLES.table;
   const T = ANALYTICS_TEXTS.compliance;
 
   if (!data) return null;
@@ -76,28 +73,28 @@ export default function PHCComplianceSummary({ data }: PHCComplianceSummaryProps
     {
       key: 'waiting_time',
       label: T.stages.waitingTime,
-      threshold: formatThresholdLabel(thresholds.waiting_time, T.units),
+      threshold: formatThresholdLabel(thresholds.waiting_time),
       le: data.waiting_time_le,
       gt: data.waiting_time_gt,
     },
     {
       key: 'evaluate',
       label: T.stages.evaluate,
-      threshold: formatThresholdLabel(thresholds.evaluate, T.units),
+      threshold: formatThresholdLabel(thresholds.evaluate),
       le: data.evaluate_le,
       gt: data.evaluate_gt,
     },
     {
       key: 'examine_treat',
       label: T.stages.examineTreat,
-      threshold: formatThresholdLabel(thresholds.examine_treat, T.units),
+      threshold: formatThresholdLabel(thresholds.examine_treat),
       le: data.examine_treat_le,
       gt: data.examine_treat_gt,
     },
     {
       key: 'carryout',
       label: T.stages.carryout,
-      threshold: formatThresholdLabel(thresholds.carryout, T.units),
+      threshold: formatThresholdLabel(thresholds.carryout),
       le: data.carryout_le,
       gt: data.carryout_gt,
     },
@@ -105,37 +102,37 @@ export default function PHCComplianceSummary({ data }: PHCComplianceSummaryProps
 
   return (
     <DashboardCard title={T.title} subtitle={T.subtitle} icon="bx-check-shield">
-      <div className={C.container}>
+      <div className="flex flex-col gap-6">
         {/* KPI Strip */}
-        <div className={C.kpiGrid}>
-          <div className={C.kpiCard}>
-            <span className={C.kpiLabel}>{T.patientsSeenLabel}</span>
-            <span className={C.kpiValue}>{data.patients_seen}</span>
+        <div className="grid grid-cols-1 gap-4 sm:grid-cols-3">
+          <div className={ANALYTICS_STYLES.phcKpiCard}>
+            <span className="text-xs font-semibold text-content-muted">{T.patientsSeenLabel}</span>
+            <span className="text-2xl font-extrabold text-content">{data.patients_seen}</span>
           </div>
-          <div className={C.kpiCard}>
-            <span className={C.kpiLabel}>{T.operatingHoursLabel}</span>
-            <span className={C.kpiValue}>
-              {data.opd_hours} <span className={C.kpiUnit}>{T.operatingHoursUnit}</span>
+          <div className={ANALYTICS_STYLES.phcKpiCard}>
+            <span className="text-xs font-semibold text-content-muted">{T.operatingHoursLabel}</span>
+            <span className="text-2xl font-extrabold text-content">
+              {data.opd_hours} <span className="text-sm font-normal text-content-muted">{T.operatingHoursUnit}</span>
             </span>
           </div>
-          <div className={C.kpiCard}>
-            <span className={C.kpiLabel}>{T.avgTotalWaitLabel}</span>
-            <span className={C.kpiValueMono}>
+          <div className={ANALYTICS_STYLES.phcKpiCard}>
+            <span className="text-xs font-semibold text-content-muted">{T.avgTotalWaitLabel}</span>
+            <span className="text-2xl font-extrabold font-mono text-content">
               {formatMinutesToHMS(data.avg_total_waiting_time_min)}
             </span>
           </div>
         </div>
 
         {/* Detailed Table */}
-        <div className={C.tableWrap}>
-          <table className={C.table}>
+        <div className={S.wrap}>
+          <table className={S.table}>
             <thead>
-              <tr className={C.headRow}>
-                <th className={C.th}>{T.headers.stage}</th>
-                <th className={C.th}>{T.headers.standard}</th>
-                <th className={C.th}>{T.headers.withinStandard}</th>
-                <th className={C.th}>{T.headers.exceededStandard}</th>
-                <th className={C.th}>{T.headers.complianceRate}</th>
+              <tr className={S.headRow}>
+                <th className={S.th}>{T.headers.stage}</th>
+                <th className={S.th}>{T.headers.standard}</th>
+                <th className={S.th}>{T.headers.withinStandard}</th>
+                <th className={S.th}>{T.headers.exceededStandard}</th>
+                <th className={S.th}>{T.headers.complianceRate}</th>
               </tr>
             </thead>
             <tbody>
@@ -145,19 +142,23 @@ export default function PHCComplianceSummary({ data }: PHCComplianceSummaryProps
                 const rateNum = parseFloat(rate);
                 const rateColor =
                   rateNum >= 90
-                    ? C.rateOptimal
+                    ? 'text-emerald-600 dark:text-emerald-400'
                     : rateNum >= 75
-                    ? C.rateWarning
-                    : C.rateCritical;
+                    ? 'text-amber-600 dark:text-amber-400'
+                    : 'text-rose-600 dark:text-rose-400';
 
                 return (
-                  <tr key={row.key} className={C.row}>
-                    <td className={C.tdStage}>{row.label}</td>
-                    <td className={C.tdStandard}>{row.threshold}</td>
-                    <td className={C.tdWithin}>{row.le}</td>
-                    <td className={C.tdExceeded}>{row.gt}</td>
-                    <td className={`${C.tdRate} ${rateColor}`}>
-                      {rate}{T.units.percent}
+                  <tr key={row.key} className={S.row}>
+                    <td className={`${S.td} font-bold text-content`}>{row.label}</td>
+                    <td className={`${S.td} font-medium text-content-muted`}>{row.threshold}</td>
+                    <td className={`${S.td} font-mono text-emerald-600 dark:text-emerald-400`}>
+                      {row.le}
+                    </td>
+                    <td className={`${S.td} font-mono text-rose-600 dark:text-rose-400`}>
+                      {row.gt}
+                    </td>
+                    <td className={`${S.td} font-mono font-bold ${rateColor}`}>
+                      {rate}%
                     </td>
                   </tr>
                 );

@@ -207,64 +207,6 @@ export const ANALYTICS_STYLES = {
   phcKpiCard: 'flex flex-col rounded-xl border border-line bg-surface-muted p-4',
   forecastPill: 'flex items-center justify-between rounded-xl border border-line bg-surface-muted p-4 flex-wrap gap-2',
 
-  /** PHC compliance summary section tokens */
-  compliance: {
-    container: 'flex flex-col gap-6',
-    kpiGrid: 'grid grid-cols-1 gap-4 sm:grid-cols-3',
-    kpiCard: 'flex flex-col rounded-xl border border-line bg-surface-muted p-4',
-    kpiLabel: 'text-xs font-semibold text-content-muted',
-    kpiValue: 'text-2xl font-extrabold text-content',
-    kpiValueMono: 'text-2xl font-extrabold font-mono text-content',
-    kpiUnit: 'text-sm font-normal text-content-muted',
-    tableWrap: 'overflow-x-auto',
-    table: 'w-full border-collapse text-left',
-    headRow: 'border-b border-line bg-surface-muted',
-    th: 'px-4 py-3 text-[11px] font-bold uppercase tracking-wider text-content-muted first:rounded-l-lg last:rounded-r-lg',
-    row: 'border-b border-line transition last:border-0 hover:bg-surface-muted',
-    tdStage: 'px-4 py-3.5 text-sm font-bold text-content',
-    tdStandard: 'px-4 py-3.5 text-sm font-medium text-content-muted',
-    tdWithin: 'px-4 py-3.5 text-sm font-mono text-emerald-600 dark:text-emerald-400',
-    tdExceeded: 'px-4 py-3.5 text-sm font-mono text-rose-600 dark:text-rose-400',
-    tdRate: 'px-4 py-3.5 text-sm font-mono font-bold',
-    rateOptimal: 'text-emerald-600 dark:text-emerald-400',
-    rateWarning: 'text-amber-600 dark:text-amber-400',
-    rateCritical: 'text-rose-600 dark:text-rose-400',
-  },
-
-  /** Forecast card and predictive chart styling tokens */
-  forecasts: {
-    container: 'flex flex-col gap-6',
-    headerActions: 'flex items-center gap-2 flex-wrap',
-    trendBadgeWrapper: 'flex items-center gap-3 flex-wrap',
-    pillBanner: 'flex items-center justify-between rounded-xl border border-line bg-surface-muted p-4 flex-wrap gap-2',
-    pillLabel: 'text-xs font-semibold text-content-muted',
-    pillValueBold: 'font-bold text-content',
-    pillValueAccent: 'text-base font-extrabold text-[#a8071a] dark:text-[#f87171]',
-    pillValuePurple: 'text-base font-extrabold text-purple-600 dark:text-purple-400',
-    chartWrapper: 'h-[280px] w-full',
-    aicBadge: 'rounded-lg border border-line bg-surface-muted px-2.5 py-1 text-xs font-semibold text-content-muted',
-    aicValue: 'font-mono font-bold text-content',
-    modelTag: 'rounded-full bg-purple-500/15 border border-purple-500/30 px-3 py-1 text-xs font-bold uppercase text-purple-600 dark:text-purple-400',
-    slopeLabel: 'text-xs font-semibold text-content-muted hidden sm:inline',
-    r2Label: 'text-xs font-semibold text-content-muted',
-    monoBold: 'font-mono font-bold text-content',
-    trendPill: 'rounded-full px-3 py-1 text-xs font-bold uppercase',
-  },
-
-  /** Algorithm comparison evaluation table styling tokens */
-  comparisonTable: {
-    container: 'flex flex-col gap-2',
-    title: 'text-xs font-bold uppercase tracking-wider text-content-muted',
-    thRight: 'text-right',
-    tdName: 'text-content',
-    tdMono: 'text-right font-mono text-content-muted',
-    tdAic: 'text-right font-mono font-bold text-purple-600 dark:text-purple-400',
-    tdArima: 'text-purple-600 dark:text-purple-400',
-    rowBest: 'bg-[#a8071a]/10 font-bold',
-    rowArima: 'bg-purple-500/10 font-semibold',
-    bestBadge: 'ml-1.5 text-xs text-brand-accent',
-  },
-
   /** Daily drilldown panel styling tokens. */
   drilldown: {
     banner: 'flex flex-col gap-5 rounded-2xl border border-line bg-surface p-6 shadow-sm transition',
@@ -272,8 +214,6 @@ export const ANALYTICS_STYLES = {
     titleBlock: 'flex flex-col gap-1',
     title: 'text-lg md:text-xl font-extrabold text-content flex items-center gap-2.5',
     dateBadge: 'inline-flex items-center gap-1.5 rounded-lg bg-slate-100 text-slate-800 dark:bg-[#242424] dark:text-[#f5f5f5] px-3 py-1 text-xs font-bold border border-slate-200 dark:border-[#2e2e2e]',
-    activeSelectionBadge: 'inline-flex items-center gap-1.5 rounded-lg bg-slate-100 text-slate-800 dark:bg-[#242424] dark:text-[#f5f5f5] px-2.5 py-1 text-xs font-bold border border-slate-200 dark:border-[#2e2e2e]',
-    clearSelectedBtn: 'inline-flex items-center gap-1 text-[11px] font-semibold text-content-muted hover:text-content transition cursor-pointer underline',
     subtitle: 'text-xs text-content-muted leading-relaxed',
     headerActions: 'flex items-center gap-2 flex-wrap',
     resetBtn: 'inline-flex items-center gap-1.5 rounded-xl border border-line bg-surface px-3.5 py-2 text-xs font-semibold text-content hover:bg-surface-muted active:scale-95 transition cursor-pointer shadow-xs',
@@ -298,7 +238,6 @@ export const ANALYTICS_STYLES = {
 export const DRILLDOWN_CHART_COLORS = {
   barNormal: '#3b82f6',
   barActive: '#1d4ed8',
-  barSelectedStroke: '#1d4ed8',
   barHover: '#2563eb',
   movingAvg: '#f59e0b',
   hourlyDayIntake: '#2563eb',

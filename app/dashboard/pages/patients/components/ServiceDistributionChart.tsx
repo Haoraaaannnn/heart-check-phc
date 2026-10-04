@@ -11,11 +11,7 @@
 
 import { PieChart, Pie, Cell, Tooltip, ResponsiveContainer } from 'recharts';
 import DashboardCard from '@/app/dashboard/components/DashboardCard';
-import {
-  COLORS,
-  PATIENTS_STYLES,
-  PATIENTS_TOOLTIP_STYLE,
-} from '@/app/dashboard/pages/patients/constants/patients';
+import { COLORS } from '@/app/dashboard/pages/patients/constants/patients';
 import { PATIENTS_TEXTS } from '@/app/dashboard/pages/patients/constants/patientsTexts';
 
 interface ServiceDistributionChartProps {
@@ -36,7 +32,6 @@ export default function ServiceDistributionChart({
   historicalFallback,
 }: ServiceDistributionChartProps) {
   const T = PATIENTS_TEXTS.charts.distribution;
-  const C = PATIENTS_STYLES.charts;
   const hasLiveData = data.length > 0;
   const displayData = hasLiveData ? data : (historicalFallback ?? []);
 
@@ -51,11 +46,11 @@ export default function ServiceDistributionChart({
       icon="bx-pie-chart-alt-2"
     >
       {displayData.length === 0 ? (
-        <div className={C.emptyWrap}>
+        <div className="flex h-[300px] items-center justify-center text-sm italic text-content-subtle">
           {T.empty}
         </div>
       ) : (
-        <div className={C.chartWrap}>
+        <div className="h-[300px] w-full">
           <ResponsiveContainer width="100%" height="100%">
             <PieChart>
               <Pie
@@ -79,7 +74,17 @@ export default function ServiceDistributionChart({
                   />
                 ))}
               </Pie>
-              <Tooltip contentStyle={PATIENTS_TOOLTIP_STYLE} />
+              <Tooltip
+                contentStyle={{
+                  backgroundColor: 'var(--color-surface, #ffffff)',
+                  borderColor: 'var(--color-line, #e5e7eb)',
+                  borderRadius: '12px',
+                  boxShadow: '0 10px 25px -5px rgba(0, 0, 0, 0.1)',
+                  color: 'var(--color-content, #1f2937)',
+                  fontSize: '12px',
+                  fontWeight: 600,
+                }}
+              />
             </PieChart>
           </ResponsiveContainer>
         </div>

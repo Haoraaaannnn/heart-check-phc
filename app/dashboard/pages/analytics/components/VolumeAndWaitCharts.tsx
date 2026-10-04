@@ -214,11 +214,11 @@ export default function VolumeAndWaitCharts({
                   formatter={(val: any, name: any, item: any) => {
                     const row = item?.payload;
                     const rowDate = row?.date || row?.visit_date;
-                    const label = name === T.series.dailyPatients ? `${val} ${T.patientsUnit}` : val;
+                    const label = name === T.series.dailyPatients ? `${val} patients` : val;
                     return [
                       label,
                       rowDate === selectedDate
-                        ? `${name} ${T.activeSelectionSuffix}`
+                        ? `${name} (Active Selection)`
                         : `${name} — ${T.chartClickTooltip} ${rowDate}`,
                     ];
                   }}
@@ -246,7 +246,7 @@ export default function VolumeAndWaitCharts({
                             : DRILLDOWN_CHART_COLORS.barNormal
                         }
                         fillOpacity={selectedDate ? (isSelected ? 1 : 0.45) : 0.85}
-                        stroke={isSelected ? DRILLDOWN_CHART_COLORS.barSelectedStroke : undefined}
+                        stroke={isSelected ? '#1e40af' : undefined}
                         strokeWidth={isSelected ? 1.5 : 0}
                       />
                     );
@@ -286,14 +286,14 @@ export default function VolumeAndWaitCharts({
         >
           {selectedDate && (
             <div className="mb-2 flex items-center justify-between text-xs">
-              <span className={ANALYTICS_STYLES.drilldown.activeSelectionBadge}>
+              <span className="inline-flex items-center gap-1.5 rounded-lg bg-slate-100 text-slate-800 dark:bg-[#242424] dark:text-[#f5f5f5] px-2.5 py-1 font-bold border border-slate-200 dark:border-[#2e2e2e]">
                 <i className="bx bx-calendar text-xs" />
-                <span>{T.drillDownBadgePrefix} {selectedDate}</span>
+                <span>Drill-Down: {selectedDate}</span>
               </span>
               <button
                 type="button"
                 onClick={clearSelectedDate}
-                className={ANALYTICS_STYLES.drilldown.clearSelectedBtn}
+                className="inline-flex items-center gap-1 text-[11px] font-semibold text-content-muted hover:text-content transition cursor-pointer underline"
               >
                 <i className="bx bx-reset text-xs" />
                 <span>{T.resetButton}</span>
@@ -417,7 +417,7 @@ export default function VolumeAndWaitCharts({
                   return [
                     durationStr,
                     rowDate === selectedDate
-                      ? `${name} ${T.activeSelectionSuffix}`
+                      ? `${name} (Active Selection)`
                       : `${name} — ${T.chartClickTooltip} ${rowDate}`,
                   ];
                 }}

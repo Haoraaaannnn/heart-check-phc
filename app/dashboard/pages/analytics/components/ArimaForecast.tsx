@@ -48,19 +48,17 @@ export default function ArimaForecast({
   const axisColor = isDark ? '#9ca3af' : '#6b7280';
   const gridColor = isDark ? 'rgba(255, 255, 255, 0.08)' : 'rgba(0, 0, 0, 0.08)';
 
-  const F = ANALYTICS_STYLES.forecasts;
-
   const headerAction = (
-    <div className={F.headerActions}>
+    <div className="flex items-center gap-2">
       {typeof arimaRaw?.aic === 'number' && (
-        <span className={F.aicBadge}>
+        <span className="rounded-lg border border-line bg-surface-muted px-2.5 py-1 text-xs font-semibold text-content-muted">
           {T.aicPrefix}{' '}
-          <span className={F.aicValue}>
+          <span className="font-mono font-bold text-content">
             {arimaRaw.aic.toFixed(1)}
           </span>
         </span>
       )}
-      <span className={F.modelTag}>
+      <span className="rounded-full bg-purple-500/15 border border-purple-500/30 px-3 py-1 text-xs font-bold uppercase text-purple-600 dark:text-purple-400">
         {T.modelTag}
       </span>
     </div>
@@ -73,20 +71,20 @@ export default function ArimaForecast({
       icon="bx-analyse"
       action={headerAction}
     >
-      <div className={F.container}>
+      <div className="flex flex-col gap-6">
         {/* Next Day Pill Banner */}
-        <div className={F.pillBanner}>
-          <span className={F.pillLabel}>
+        <div className={ANALYTICS_STYLES.forecastPill}>
+          <span className="text-xs font-semibold text-content-muted">
             {T.forecastForPrefix}{' '}
-            <span className={F.pillValueBold}>{arimaRaw?.forecast_date || T.emptyDash}</span>
+            <span className="font-bold text-content">{arimaRaw?.forecast_date || '—'}</span>
           </span>
-          <span className={F.pillValuePurple}>
+          <span className="text-base font-extrabold text-purple-600 dark:text-purple-400">
             {arimaRaw?.forecast_value ?? 0} {T.patientsUnit}
           </span>
         </div>
 
         {/* ARIMA Chart */}
-        <div className={F.chartWrapper}>
+        <div className="h-[280px] w-full">
           <ResponsiveContainer width="100%" height="100%">
             <ComposedChart
               data={arimaChartData}

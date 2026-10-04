@@ -19,10 +19,6 @@ import {
   ResponsiveContainer,
 } from 'recharts';
 import DashboardCard from '@/app/dashboard/components/DashboardCard';
-import {
-  PATIENTS_STYLES,
-  PATIENTS_TOOLTIP_STYLE,
-} from '@/app/dashboard/pages/patients/constants/patients';
 import { PATIENTS_TEXTS } from '@/app/dashboard/pages/patients/constants/patientsTexts';
 
 interface HourlyPatientFlowChartProps {
@@ -38,7 +34,6 @@ interface HourlyPatientFlowChartProps {
  */
 export default function HourlyPatientFlowChart({ data }: HourlyPatientFlowChartProps) {
   const T = PATIENTS_TEXTS.charts.hourlyFlow;
-  const C = PATIENTS_STYLES.charts;
 
   return (
     <DashboardCard
@@ -46,7 +41,7 @@ export default function HourlyPatientFlowChart({ data }: HourlyPatientFlowChartP
       subtitle={T.subtitle}
       icon="bx-line-chart"
     >
-      <div className={C.chartWrap}>
+      <div className="h-[300px] w-full">
         <ResponsiveContainer width="100%" height="100%">
           <LineChart data={data} margin={{ top: 10, right: 10, left: -20, bottom: 0 }}>
             <CartesianGrid strokeDasharray="3 3" stroke="var(--color-line, #e5e7eb)" opacity={0.6} />
@@ -62,7 +57,17 @@ export default function HourlyPatientFlowChart({ data }: HourlyPatientFlowChartP
               axisLine={{ stroke: 'var(--color-line, #e5e7eb)' }}
               tickLine={false}
             />
-            <Tooltip contentStyle={PATIENTS_TOOLTIP_STYLE} />
+            <Tooltip
+              contentStyle={{
+                backgroundColor: 'var(--color-surface, #ffffff)',
+                borderColor: 'var(--color-line, #e5e7eb)',
+                borderRadius: '12px',
+                boxShadow: '0 10px 25px -5px rgba(0, 0, 0, 0.1)',
+                color: 'var(--color-content, #1f2937)',
+                fontSize: '12px',
+                fontWeight: 600,
+              }}
+            />
             <Line
               type="monotone"
               dataKey="patients"

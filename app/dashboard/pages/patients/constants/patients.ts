@@ -158,28 +158,11 @@ export const PATIENTS_STYLES = {
     patientNumber:
       'inline-block rounded-lg bg-red-50 border border-red-200 px-3 py-1 font-mono text-sm font-extrabold text-red-700 dark:bg-red-950/40 dark:border-red-900 dark:text-red-300',
     patientMeta: 'flex flex-col',
-    patientName: 'text-sm font-semibold text-content whitespace-normal break-words',
+    patientName: 'text-sm font-semibold text-content truncate',
     patientWait: 'text-xs text-content-muted',
     overduePill:
       'inline-flex items-center gap-1 rounded-full bg-amber-100 border border-amber-300 px-2.5 py-0.5 text-[11px] font-bold text-amber-800 dark:bg-amber-950/60 dark:border-amber-800 dark:text-amber-300',
   },
-
-  /** Shared chart wrapper and empty state styles */
-  charts: {
-    chartWrap: 'h-[300px] w-full',
-    emptyWrap: 'flex h-[300px] items-center justify-center text-sm italic text-content-subtle',
-  },
-} as const;
-
-/** Centralized Recharts tooltip styling for Patients dashboard */
-export const PATIENTS_TOOLTIP_STYLE = {
-  backgroundColor: 'var(--color-surface, #ffffff)',
-  borderColor: 'var(--color-line, #e5e7eb)',
-  borderRadius: '12px',
-  boxShadow: '0 10px 25px -5px rgba(0, 0, 0, 0.1)',
-  color: 'var(--color-content, #1f2937)',
-  fontSize: '12px',
-  fontWeight: 600,
 } as const;
 
 /** Status color tokens for patient list badges. */
