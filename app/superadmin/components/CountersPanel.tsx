@@ -82,28 +82,28 @@ export function CountersPanel() {
 
   if (loading) {
     return (
-      <div className="py-16 text-center space-y-3">
-        <div className="w-8 h-8 border-2 border-rose-600 border-t-transparent rounded-full animate-spin mx-auto" />
-        <p className="text-xs text-slate-500 dark:text-[#a3a3a3]">{T.loadingText}</p>
+      <div className={S.loadingWrapper}>
+        <div className={S.loadingSpinner} />
+        <p className={S.loadingText}>{T.loadingText}</p>
       </div>
     );
   }
 
   return (
-    <div className="flex flex-col gap-6 max-w-3xl">
+    <div className={S.countersContainer}>
       {error && (
-        <div className="p-3 rounded-lg bg-red-50 dark:bg-red-950 border border-red-200 dark:border-red-900 text-red-700 dark:text-red-300 text-xs">
+        <div className={S.errorBanner}>
           {error}
         </div>
       )}
 
       {/* Add Counter Station Card */}
-      <div className="bg-white dark:bg-[#1a1a1a] border border-slate-200 dark:border-[#2e2e2e] rounded-xl p-5 shadow-xs">
-        <h3 className="text-sm font-bold text-slate-900 dark:text-[#f5f5f5] mb-3 flex items-center gap-2">
+      <div className={S.counterAddCard}>
+        <h3 className={S.counterAddTitle}>
           <i className="bx bx-plus-circle text-[#a8071a] dark:text-[#f87171]" aria-hidden="true" />
           <span>{T.addCounterTitle}</span>
         </h3>
-        <div className="flex flex-col sm:flex-row items-center gap-3">
+        <div className={S.counterAddForm}>
           <input
             type="number"
             min="1"
@@ -111,14 +111,14 @@ export function CountersPanel() {
             value={newNumber}
             onChange={(e) => setNewNumber(e.target.value)}
             placeholder={T.counterNumberPlaceholder}
-            className="w-full sm:w-28 px-3.5 py-2 text-sm bg-slate-50 dark:bg-[#1f1f1f] border border-slate-300 dark:border-[#2e2e2e] rounded-lg text-slate-900 dark:text-[#f5f5f5]"
+            className={S.counterNumInput}
           />
           <input
             type="text"
             value={newLabel}
             onChange={(e) => setNewLabel(e.target.value)}
             placeholder={T.counterLabelPlaceholder}
-            className="w-full flex-1 px-3.5 py-2 text-sm bg-slate-50 dark:bg-[#1f1f1f] border border-slate-300 dark:border-[#2e2e2e] rounded-lg text-slate-900 dark:text-[#f5f5f5]"
+            className={S.counterLabelInput}
           />
           <button
             type="button"
@@ -132,16 +132,16 @@ export function CountersPanel() {
       </div>
 
       {/* List of Registered Counters */}
-      <div className="bg-white dark:bg-[#1a1a1a] border border-slate-200 dark:border-[#2e2e2e] rounded-xl shadow-xs divide-y divide-slate-100 dark:divide-[#2e2e2e] overflow-hidden">
+      <div className={S.countersListCard}>
         {counters.length === 0 ? (
-          <div className="p-8 text-center text-xs text-slate-500 dark:text-[#a3a3a3]">
-            {T.emptyState}
+          <div className={S.emptyCard}>
+            <p className={S.emptyText}>{T.emptyState}</p>
           </div>
         ) : (
           counters.map((c) => (
             <div
               key={c.counter_number}
-              className="flex items-center gap-3 p-4 hover:bg-slate-50/50 dark:hover:bg-[#242424]/40 transition"
+              className={S.counterItem}
             >
               <span className={S.counterBadge}>
                 {c.counter_number}
@@ -165,11 +165,11 @@ export function CountersPanel() {
                   }
                 }}
                 placeholder={`${T.counterPrefix} ${c.counter_number}`}
-                className="flex-1 px-3 py-1.5 text-sm bg-transparent hover:bg-slate-50 dark:hover:bg-[#242424] focus:bg-white dark:focus:bg-[#1f1f1f] border border-transparent hover:border-slate-300 dark:hover:border-[#2e2e2e] focus:border-rose-500 rounded-lg text-slate-900 dark:text-[#f5f5f5] font-medium focus:outline-none focus:ring-1 focus:ring-rose-500 transition"
+                className={S.counterInlineInput}
               />
 
               {c.inUse > 0 && (
-                <span className="text-[11px] font-bold px-2.5 py-0.5 rounded-full bg-amber-100 dark:bg-amber-950 text-amber-800 dark:text-amber-300 border border-amber-200 dark:border-amber-800 shrink-0">
+                <span className={S.counterInUseBadge}>
                   {c.inUse} {T.inUseBadge}
                 </span>
               )}
@@ -185,10 +185,8 @@ export function CountersPanel() {
                     })
                   )
                 }
-                className={`text-xs font-semibold px-3 py-1 rounded-full transition cursor-pointer shrink-0 ${
-                  c.active
-                    ? 'bg-emerald-100 text-emerald-800 dark:bg-emerald-950/80 dark:text-emerald-300 border border-emerald-200 dark:border-emerald-800'
-                    : 'bg-slate-100 text-slate-500 dark:bg-[#242424] dark:text-[#a3a3a3] border border-slate-200 dark:border-[#2e2e2e]'
+                className={`${S.counterStatusBtn} ${
+                  c.active ? S.counterStatusActive : S.counterStatusInactive
                 }`}
               >
                 {c.active ? T.activeStatus : T.inactiveStatus}
@@ -205,8 +203,8 @@ export function CountersPanel() {
                     );
                   }
                 }}
-                className="p-1.5 text-slate-400 hover:text-red-600 transition cursor-pointer"
-                title="Delete counter station"
+                className={S.counterDeleteBtn}
+                title={T.deleteCounterStationAria}
               >
                 <i className="bx bx-trash text-lg" aria-hidden="true" />
               </button>

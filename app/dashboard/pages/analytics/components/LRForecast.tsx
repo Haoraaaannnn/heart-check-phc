@@ -61,34 +61,36 @@ export default function LRForecast({
   const axisColor = isDark ? '#9ca3af' : '#6b7280';
   const gridColor = isDark ? 'rgba(255, 255, 255, 0.08)' : 'rgba(0, 0, 0, 0.08)';
 
+  const F = ANALYTICS_STYLES.forecasts;
+
   const r2Value = lrRaw?.r2 ?? lrRaw?.r_squared;
   const r2Display =
     typeof r2Value === 'number'
       ? r2Value.toFixed(2)
       : r2Value !== undefined && r2Value !== null
       ? String(r2Value)
-      : '—';
+      : T.emptyDash;
 
   const slopeDisplay =
     typeof lrRaw?.slope === 'number' ? `${lrRaw.slope.toFixed(2)}` : null;
 
   const trendBadge = (
-    <div className="flex items-center gap-3">
+    <div className={F.trendBadgeWrapper}>
       {lrRaw?.trend && (
         <span
-          className="rounded-full px-3 py-1 text-xs font-bold uppercase"
+          className={F.trendPill}
           style={{ background: trendBg, color: trendColor }}
         >
           {lrRaw.trend}
         </span>
       )}
       {slopeDisplay && (
-        <span className="text-xs font-semibold text-content-muted hidden sm:inline">
-          slope: <span className="font-mono font-bold text-content">{slopeDisplay}</span>
+        <span className={F.slopeLabel}>
+          {T.slopePrefix} <span className={F.monoBold}>{slopeDisplay}</span>
         </span>
       )}
-      <span className="text-xs font-semibold text-content-muted">
-        {T.r2Label} <span className="font-mono font-bold text-content">{r2Display}</span>
+      <span className={F.r2Label}>
+        {T.r2Label} <span className={F.monoBold}>{r2Display}</span>
       </span>
     </div>
   );
@@ -100,20 +102,20 @@ export default function LRForecast({
       icon="bx-line-chart-down"
       action={trendBadge}
     >
-      <div className="flex flex-col gap-6">
+      <div className={F.container}>
         {/* Next Day Pill Banner */}
-        <div className={ANALYTICS_STYLES.forecastPill}>
-          <span className="text-xs font-semibold text-content-muted">
+        <div className={F.pillBanner}>
+          <span className={F.pillLabel}>
             {T.nextDayLabel}{' '}
-            <span className="font-bold text-content">{lrRaw?.forecast_date || '—'}</span>
+            <span className={F.pillValueBold}>{lrRaw?.forecast_date || T.emptyDash}</span>
           </span>
-          <span className="text-base font-extrabold text-brand-accent">
+          <span className={F.pillValueAccent}>
             {lrRaw?.forecast_value ?? 0} {T.patientsUnit}
           </span>
         </div>
 
         {/* Forecast Chart */}
-        <div className="h-[280px] w-full">
+        <div className={F.chartWrapper}>
           <ResponsiveContainer width="100%" height="100%">
             <ComposedChart
               data={lrChartData}

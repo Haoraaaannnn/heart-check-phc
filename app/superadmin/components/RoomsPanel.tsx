@@ -175,11 +175,11 @@ export function RoomsPanel() {
   const confirmDeleteRoom = (g: Group) =>
     openModal({
       type: 'confirm',
-      title: `Delete Room ${g.room}?`,
-      message: `This permanently deletes Room ${g.room} (${sectionLabel(
+      title: `${T.deleteRoomTitlePrefix} ${g.room}?`,
+      message: `${T.deleteRoomMessagePrefix} ${g.room} (${sectionLabel(
         g.category,
         g.subcategory
-      )}) and its ${g.cubicles.length} cubicle(s).`,
+      )}) and its ${g.cubicles.length} ${T.cubiclesCountSuffix}.`,
       run: async () => {
         await adminApi('/api/superadmin/rooms', 'DELETE', {
           category: g.category,
@@ -192,8 +192,8 @@ export function RoomsPanel() {
   const confirmDeleteCubicle = (c: Cubicle) =>
     openModal({
       type: 'confirm',
-      title: 'Delete Cubicle?',
-      message: `This permanently deletes ${c.cubicleNum}.`,
+      title: T.deleteCubicleTitle,
+      message: `${T.deleteCubicleMessagePrefix} ${c.cubicleNum}.`,
       run: async () => {
         await adminApi('/api/superadmin/cubicles', 'DELETE', { id: c.id });
       },
@@ -201,9 +201,9 @@ export function RoomsPanel() {
 
   if (loading) {
     return (
-      <div className="py-16 text-center space-y-3">
-        <div className="w-8 h-8 border-2 border-rose-600 border-t-transparent rounded-full animate-spin mx-auto" />
-        <p className="text-xs text-slate-500 dark:text-[#a3a3a3]">{T.loadingText}</p>
+      <div className={S.loadingWrapper}>
+        <div className={S.loadingSpinner} />
+        <p className={S.loadingText}>{T.loadingText}</p>
       </div>
     );
   }
@@ -215,10 +215,10 @@ export function RoomsPanel() {
         <div>
           <h2 className={S.sectionTitle}>
             <i className="bx bx-door-open text-rose-600 dark:text-rose-400" aria-hidden="true" />
-            <span>Consultation Rooms & Cubicles</span>
+            <span>{T.sectionTitle}</span>
           </h2>
-          <p className="text-xs text-slate-500 dark:text-[#a3a3a3] mt-0.5">
-            Organized by clinical specialty and physical outpatient examination rooms.
+          <p className={S.sectionSubtitle}>
+            {T.sectionSubtitle}
           </p>
         </div>
         <button
@@ -232,14 +232,14 @@ export function RoomsPanel() {
       </div>
 
       {error && (
-        <div className="p-3 rounded-lg bg-red-50 dark:bg-red-950 border border-red-200 dark:border-red-900 text-red-700 dark:text-red-300 text-xs">
+        <div className={S.errorBanner}>
           {error}
         </div>
       )}
 
       {sections.length === 0 ? (
         <div className={S.emptyCard}>
-          <p className="text-sm font-semibold text-slate-600 dark:text-[#a3a3a3]">
+          <p className={S.emptyText}>
             {T.emptyState}
           </p>
         </div>
@@ -247,39 +247,39 @@ export function RoomsPanel() {
         sections.map(([label, groups]) => (
           <div key={label} className="space-y-4">
             <div className="flex items-center gap-2">
-              <span className="text-xs font-bold uppercase tracking-wider text-[#a8071a] dark:text-[#f87171] px-3 py-1 rounded-lg bg-[#a8071a]/10 dark:bg-[#a8071a]/20 border border-[#a8071a]/25">
+              <span className={S.categoryPill}>
                 {label}
               </span>
               <div className={S.sectionDivider} />
             </div>
 
-            <div className="grid grid-cols-1 lg:grid-cols-2 gap-4">
+            <div className={S.roomsGrid}>
               {groups.map((g) => (
                 <div key={g.room} className={S.roomCard}>
                   {/* Room Header */}
                   <div className={S.roomCardHeader}>
                     <div className={S.roomTitle}>
-                      <span className="w-8 h-8 rounded-lg bg-rose-100 dark:bg-rose-950 text-rose-700 dark:text-rose-300 flex items-center justify-center font-bold text-xs">
+                      <span className={S.roomBadge}>
                         R{g.room}
                       </span>
-                      <span>Room {g.room}</span>
-                      <span className="text-xs font-normal text-slate-500 dark:text-[#a3a3a3]">
-                        ({g.cubicles.length} cubicles)
+                      <span>{T.roomPrefix} {g.room}</span>
+                      <span className={S.roomCountBadge}>
+                        ({g.cubicles.length} {T.cubiclesCountSuffix})
                       </span>
                     </div>
 
-                    <div className="flex items-center gap-1.5">
+                    <div className={S.roomActionsGroup}>
                       <button
                         type="button"
                         onClick={() => openModal({ type: 'renameRoom', group: g })}
-                        className="px-2 py-1 rounded text-xs font-medium text-slate-600 dark:text-[#a3a3a3] hover:bg-slate-200 dark:hover:bg-[#242424] transition"
+                        className={S.roomRenameBtn}
                       >
                         {T.renameRoomButton}
                       </button>
                       <button
                         type="button"
                         onClick={() => confirmDeleteRoom(g)}
-                        className="px-2 py-1 rounded text-xs font-medium text-red-600 dark:text-red-400 hover:bg-red-50 dark:hover:bg-red-950/40 transition"
+                        className={S.roomDeleteBtn}
                       >
                         {T.deleteRoomButton}
                       </button>
@@ -290,21 +290,21 @@ export function RoomsPanel() {
                   <div className={S.cubicleGrid}>
                     {g.cubicles.map((c) => (
                       <div key={c.id} className={S.cubicleChip}>
-                        <span className="whitespace-normal break-words font-medium">{c.cubicleNum}</span>
-                        <div className="flex items-center gap-1 shrink-0 ml-1">
+                        <span className={S.cubicleLabel}>{c.cubicleNum}</span>
+                        <div className={S.cubicleActions}>
                           <button
                             type="button"
                             onClick={() => openModal({ type: 'editCubicle', cubicle: c })}
-                            className="p-1 hover:text-[#a8071a] dark:hover:text-[#f87171] transition"
-                            title="Edit cubicle"
+                            className={S.cubicleEditBtn}
+                            title={T.editCubicleAria}
                           >
                             <i className="bx bx-edit text-sm" aria-hidden="true" />
                           </button>
                           <button
                             type="button"
                             onClick={() => confirmDeleteCubicle(c)}
-                            className="p-1 hover:text-red-600 transition"
-                            title="Delete cubicle"
+                            className={S.cubicleDeleteBtn}
+                            title={T.deleteCubicleAria}
                           >
                             <i className="bx bx-trash text-sm" aria-hidden="true" />
                           </button>
@@ -315,7 +315,7 @@ export function RoomsPanel() {
                     <button
                       type="button"
                       onClick={() => openModal({ type: 'addCubicle', group: g })}
-                      className="p-2.5 rounded-lg border border-dashed border-slate-300 dark:border-[#2e2e2e] hover:border-[#a8071a] hover:bg-rose-50/50 dark:hover:bg-[#a8071a]/10 text-xs font-semibold text-[#a8071a] dark:text-[#f87171] flex items-center justify-center gap-1 transition cursor-pointer"
+                      className={S.cubicleAddBtn}
                     >
                       <i className="bx bx-plus" aria-hidden="true" />
                       <span>{T.addCubicleButton}</span>
@@ -335,24 +335,24 @@ export function RoomsPanel() {
             {modal.type === 'confirm' ? (
               <div className="space-y-4">
                 <div className="flex items-center gap-3">
-                  <div className="w-10 h-10 rounded-xl bg-red-100 dark:bg-red-950 text-red-600 flex items-center justify-center text-xl shrink-0">
+                  <div className={S.confirmIconBox}>
                     <i className="bx bx-error" aria-hidden="true" />
                   </div>
                   <div>
-                    <h3 className="text-base font-bold text-slate-900 dark:text-[#f5f5f5]">
+                    <h3 className={S.modalHeader}>
                       {modal.title}
                     </h3>
                   </div>
                 </div>
-                <p className="text-xs text-slate-600 dark:text-[#a3a3a3]">
+                <p className={S.confirmMessage}>
                   {modal.message}
                 </p>
                 {modalError && (
-                  <div className="p-3 rounded-lg bg-red-50 dark:bg-red-950/60 border border-red-200 dark:border-red-900 text-red-700 dark:text-red-300 text-xs">
+                  <div className={S.modalErrorBanner}>
                     {modalError}
                   </div>
                 )}
-                <div className="flex justify-end gap-2 pt-2">
+                <div className={S.modalFooter}>
                   <button
                     type="button"
                     onClick={() => setModal(null)}
@@ -367,13 +367,13 @@ export function RoomsPanel() {
                     disabled={saving}
                     className={B.danger}
                   >
-                    {saving ? T.savingButton : 'Confirm Delete'}
+                    {saving ? T.savingButton : T.confirmDelete}
                   </button>
                 </div>
               </div>
             ) : (
               <form onSubmit={submit} className="space-y-4">
-                <h3 className="text-base font-bold text-slate-900 dark:text-[#f5f5f5] flex items-center gap-2">
+                <h3 className={S.modalHeader}>
                   <i className="bx bx-edit text-[#a8071a] dark:text-[#f87171]" aria-hidden="true" />
                   <span>
                     {modal.type === 'addRoom' && T.modalAddTitle}
@@ -384,15 +384,15 @@ export function RoomsPanel() {
                 </h3>
 
                 {modalError && (
-                  <div className="p-3 rounded-lg bg-red-50 dark:bg-red-950/60 border border-red-200 dark:border-red-900 text-red-700 dark:text-red-300 text-xs">
+                  <div className={S.modalErrorBanner}>
                     {modalError}
                   </div>
                 )}
 
                 {modal.type === 'addRoom' && (
                   <>
-                    <div className="space-y-1">
-                      <label className="block text-xs font-semibold text-slate-700 dark:text-[#a3a3a3]">
+                    <div className={S.fieldGroup}>
+                      <label className={S.fieldLabel}>
                         {T.categoryLabel}
                       </label>
                       <select
@@ -409,8 +409,8 @@ export function RoomsPanel() {
                     </div>
 
                     {needsSub && (
-                      <div className="space-y-1">
-                        <label className="block text-xs font-semibold text-slate-700 dark:text-[#a3a3a3]">
+                      <div className={S.fieldGroup}>
+                        <label className={S.fieldLabel}>
                           {T.subcategoryLabel}
                         </label>
                         <select
@@ -427,8 +427,8 @@ export function RoomsPanel() {
                       </div>
                     )}
 
-                    <div className="space-y-1">
-                      <label className="block text-xs font-semibold text-slate-700 dark:text-[#a3a3a3]">
+                    <div className={S.fieldGroup}>
+                      <label className={S.fieldLabel}>
                         {T.roomNumberLabel}
                       </label>
                       <input
@@ -442,8 +442,8 @@ export function RoomsPanel() {
                       />
                     </div>
 
-                    <div className="space-y-1">
-                      <label className="block text-xs font-semibold text-slate-700 dark:text-[#a3a3a3]">
+                    <div className={S.fieldGroup}>
+                      <label className={S.fieldLabel}>
                         {T.cubicleCountLabel}
                       </label>
                       <input
@@ -460,9 +460,9 @@ export function RoomsPanel() {
                 )}
 
                 {modal.type === 'renameRoom' && (
-                  <div className="space-y-1">
-                    <label className="block text-xs font-semibold text-slate-700 dark:text-[#a3a3a3]">
-                      New Room Number
+                  <div className={S.fieldGroup}>
+                    <label className={S.fieldLabel}>
+                      {T.newRoomNumberLabel}
                     </label>
                     <input
                       type="number"
@@ -476,8 +476,8 @@ export function RoomsPanel() {
                 )}
 
                 {(modal.type === 'addCubicle' || modal.type === 'editCubicle') && (
-                  <div className="space-y-1">
-                    <label className="block text-xs font-semibold text-slate-700 dark:text-[#a3a3a3]">
+                  <div className={S.fieldGroup}>
+                    <label className={S.fieldLabel}>
                       {T.cubicleNameLabel}
                     </label>
                     <input
@@ -490,7 +490,7 @@ export function RoomsPanel() {
                   </div>
                 )}
 
-                <div className="flex justify-end gap-2 pt-2">
+                <div className={S.modalFooter}>
                   <button
                     type="button"
                     onClick={() => setModal(null)}

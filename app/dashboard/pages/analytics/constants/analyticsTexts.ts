@@ -155,6 +155,9 @@ export const ANALYTICS_TEXTS = {
     chartClickTooltip: 'Click to drill down into',
     resetButton: 'Reset to Overall Pattern',
     activeBadge: 'Drill-Down Active',
+    activeSelectionSuffix: '(Active Selection)',
+    drillDownBadgePrefix: 'Drill-Down:',
+    patientsUnit: 'patients',
     series: {
       dailyPatients: 'Daily Patients',
       movingAvg: '7-Day Moving Avg',
@@ -203,6 +206,14 @@ export const ANALYTICS_TEXTS = {
     operatingHoursUnit: 'hrs/day',
     avgTotalWaitLabel: "Avg. Patient's Total Waiting Time",
     thresholdTableTitle: 'Compliance Breakdown Against Department Standard',
+    units: {
+      percent: '%',
+      hours: 'hrs',
+      minutes: 'mins',
+      thresholdLe: '≤',
+      thresholdGt: '>',
+      dash: '—',
+    },
     headers: {
       stage: 'Queue Stage',
       standard: 'PHC Standard',
@@ -224,6 +235,8 @@ export const ANALYTICS_TEXTS = {
       r2Label: 'R² =',
       nextDayLabel: 'Next Day =',
       patientsUnit: 'patients',
+      slopePrefix: 'slope:',
+      emptyDash: '—',
     },
     arima: {
       title: 'ARIMA Forecast',
@@ -234,6 +247,7 @@ export const ANALYTICS_TEXTS = {
       patientsUnit: 'patients',
       residualVariance: 'Residual Variance (σ²):',
       forecastDateLabel: 'Forecast Date',
+      emptyDash: '—',
     },
     comparison: {
       title: 'Algorithm Comparison',
@@ -244,6 +258,8 @@ export const ANALYTICS_TEXTS = {
       },
       arimaLabel: 'ARIMA',
       bestIndicator: '✓',
+      aicPrefix: 'AIC:',
+      emptyDash: '—',
     },
   },
 } as const;

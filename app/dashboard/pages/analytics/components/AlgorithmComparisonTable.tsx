@@ -33,20 +33,19 @@ export default function AlgorithmComparisonTable({
   arimaAic,
 }: AlgorithmComparisonTableProps) {
   const S = ANALYTICS_STYLES.table;
+  const C = ANALYTICS_STYLES.comparisonTable;
   const T = ANALYTICS_TEXTS.forecasts.comparison;
 
   return (
-    <div className="flex flex-col gap-2">
-      <span className="text-xs font-bold uppercase tracking-wider text-content-muted">
-        {T.title}
-      </span>
+    <div className={C.container}>
+      <span className={C.title}>{T.title}</span>
       <div className={S.wrap}>
         <table className={S.table}>
           <thead>
             <tr className={S.headRow}>
               <th className={S.th}>{T.headers.algorithm}</th>
-              <th className={`${S.th} text-right`}>{T.headers.mae}</th>
-              <th className={`${S.th} text-right`}>{T.headers.rmse}</th>
+              <th className={`${S.th} ${C.thRight}`}>{T.headers.mae}</th>
+              <th className={`${S.th} ${C.thRight}`}>{T.headers.rmse}</th>
             </tr>
           </thead>
           <tbody>
@@ -57,33 +56,33 @@ export default function AlgorithmComparisonTable({
                 return (
                   <tr
                     key={algo}
-                    className={`${S.row} ${isBest ? 'bg-red-500/10 font-bold' : ''}`}
+                    className={`${S.row} ${isBest ? C.rowBest : ''}`}
                   >
-                    <td className={`${S.td} text-content`}>
+                    <td className={`${S.td} ${C.tdName}`}>
                       {algo}
                       {isBest && (
-                        <span className="ml-1.5 text-xs text-brand-accent">
+                        <span className={C.bestBadge}>
                           {T.bestIndicator}
                         </span>
                       )}
                     </td>
-                    <td className={`${S.td} text-right font-mono text-content-muted`}>
-                      {typeof m?.MAE === 'number' ? m.MAE.toFixed(2) : '—'}
+                    <td className={`${S.td} ${C.tdMono}`}>
+                      {typeof m?.MAE === 'number' ? m.MAE.toFixed(2) : T.emptyDash}
                     </td>
-                    <td className={`${S.td} text-right font-mono text-content-muted`}>
-                      {typeof m?.RMSE === 'number' ? m.RMSE.toFixed(2) : '—'}
+                    <td className={`${S.td} ${C.tdMono}`}>
+                      {typeof m?.RMSE === 'number' ? m.RMSE.toFixed(2) : T.emptyDash}
                     </td>
                   </tr>
                 );
               })}
             {typeof arimaAic === 'number' && (
-              <tr className={`${S.row} bg-purple-500/10 font-semibold`}>
-                <td className={`${S.td} text-purple-600 dark:text-purple-400`}>
+              <tr className={`${S.row} ${C.rowArima}`}>
+                <td className={`${S.td} ${C.tdArima}`}>
                   {T.arimaLabel}
                 </td>
-                <td className={`${S.td} text-right font-mono text-content-muted`}>—</td>
-                <td className={`${S.td} text-right font-mono font-bold text-purple-600 dark:text-purple-400`}>
-                  AIC: {arimaAic.toFixed(1)}
+                <td className={`${S.td} ${C.tdMono}`}>{T.emptyDash}</td>
+                <td className={`${S.td} ${C.tdAic}`}>
+                  {T.aicPrefix} {arimaAic.toFixed(1)}
                 </td>
               </tr>
             )}
