@@ -52,7 +52,8 @@ export function useIdlePatients() {
         cooldown_until: null,
         idle_at: null,
       })
-      .eq('id', patient.id);
+      .eq('id', patient.id)
+      .eq('is_historical', false);
   }, []);
 
     const removePatient = useCallback(async (patient: Patient) => {
@@ -61,7 +62,8 @@ export function useIdlePatients() {
     const { error } = await supabase
         .from('patients')
         .update({ status: 'Removed', removed_at: new Date().toISOString() })
-        .eq('id', patient.id);
+        .eq('id', patient.id)
+        .eq('is_historical', false);
 
     if (error) {
         console.error('Failed to remove idle patient:', {

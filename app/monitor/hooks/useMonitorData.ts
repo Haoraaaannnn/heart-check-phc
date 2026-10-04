@@ -23,17 +23,13 @@ export function useMonitorData(category: string, subcategory: string | null, cat
       
       const playNext = async () => {
         try {
-          const response = await fetch(
-            'https://api.deepgram.com/v1/speak?model=aura-2-amalthea-en',
-            {
-              method: 'POST',
-              headers: {
-                'Authorization': `Token ${process.env.NEXT_PUBLIC_DEEPGRAM_KEY}`,
-                'Content-Type': 'application/json',
-              },
-              body: JSON.stringify({ text }),
-            }
-          );
+          const response = await fetch('/api/tts', {
+            method: 'POST',
+            headers: {
+              'Content-Type': 'application/json',
+            },
+            body: JSON.stringify({ text }),
+          });
           if (!response.ok) { resolve(); return; }
           const arrayBuffer = await response.arrayBuffer();
           const audioBlob = new Blob([arrayBuffer], { type: 'audio/mp3' });

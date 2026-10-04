@@ -69,7 +69,8 @@ export function useRegistrationDragAndDrop(
         await supabase
           .from('patients')
           .update({ counter: targetCounter })
-          .eq('id', draggedPatient.id);
+          .eq('id', draggedPatient.id)
+          .eq('is_historical', false);
       }
 
       setDraggedPatient(null);

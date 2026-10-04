@@ -168,7 +168,8 @@ export function useDragAndDrop(
           cubicle_top_started_at: null,
           queue_position: frontPosition,
         })
-        .eq('id', patient.id);
+        .eq('id', patient.id)
+        .eq('is_historical', false);
 
       await fetchData();
     } catch (err) {

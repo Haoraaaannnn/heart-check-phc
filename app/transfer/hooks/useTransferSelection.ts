@@ -221,7 +221,8 @@ export function useTransferSelection({
         await supabase
           .from('patients')
           .update({ counter: targetCounter })
-          .eq('id', patient.id);
+          .eq('id', patient.id)
+          .eq('is_historical', false);
         return true;
       } catch (err) {
         console.error('Failed to update patient counter via selection:', err);
