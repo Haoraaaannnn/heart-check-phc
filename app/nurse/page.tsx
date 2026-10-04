@@ -28,7 +28,7 @@ import { Patient } from '@/types/Types';
 import { NurseSidebar } from './components/NurseSidebar';
 import { NurseHeader } from './components/NurseHeader';
 import { NurseBoard } from './components/NurseBoard';
-import { NurseSelectionBanner } from './components/NurseSelectionBanner';
+import { NurseQuickActionDropdown } from './components/NurseQuickActionDropdown';
 import { NurseDragGhost } from './components/NurseDragGhost';
 import { FinishedDrawer } from './components/FinishedDrawer';
 
@@ -88,6 +88,9 @@ export default function NursePage() {
     setCarryoutPatients,
     fetchData,
     fetchFinished,
+    pinInFlightMutation,
+    unpinMutation,
+    applyRealtimeUpdate,
   } = useNurseData();
 
   // State Mutation Actions Hook
@@ -104,7 +107,9 @@ export default function NursePage() {
     setAssignedPatients,
     setWithDoctorPatients,
     setCarryoutPatients,
-    fetchFinished
+    fetchFinished,
+    pinInFlightMutation,
+    unpinMutation
   );
 
   // Pointer Events Drag-and-Drop Hook
@@ -152,7 +157,7 @@ export default function NursePage() {
   // Persistent offline mutation queue (handles sudden power loss & network drops)
   const { pendingCount, isSyncing: isSyncingQueue } = useOfflineQueue(handleRealtimeUpdate);
 
-  useRealtimeSubscription(handleRealtimeUpdate, 300, setChannelStatus);
+  useRealtimeSubscription(handleRealtimeUpdate, 150, setChannelStatus, applyRealtimeUpdate);
 
   // Initial Data Load
   useEffect(() => {
@@ -440,10 +445,17 @@ export default function NursePage() {
         )}
       </div>
 
-      {/* Click-to-Select Tablet Mode Guidance Banner */}
-      <NurseSelectionBanner
+      {/* Tap-to-Act Quick Action Popover Dropdown */}
+      <NurseQuickActionDropdown
         selectedPatient={selectedPatient}
-        onCancel={clearSelection}
+        speakingId={speakingId}
+        onMoveToWithDoctor={handleMoveToWithDoctor}
+        onMoveBackFromDoctor={handleMoveBackFromDoctor}
+        onMoveToCarryout={handleMoveToCarryout}
+        onMoveBackFromCarryout={handleMoveBackFromCarryout}
+        onFinish={handleFinish}
+        onCall={handleCall}
+        onClose={clearSelection}
       />
 
       {/* Pointer Events Drag Ghost Preview Card */}

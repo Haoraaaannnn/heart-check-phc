@@ -31,6 +31,10 @@ export interface UseTransferSelectionOptions {
   setPendingUpdates: Dispatch<SetStateAction<Patient[]>>;
   /** React state dispatcher for updating registration counter patient list. */
   setRegistrationPatients: Dispatch<SetStateAction<Patient[]>>;
+  /** Synchronous ref storing active unconfirmed pending updates to guard against Realtime echo overwrites. */
+  pendingUpdatesRef?: React.MutableRefObject<Patient[]>;
+  /** Callback to clear any confirmed mutation pin if reassigning a patient. */
+  unpinConfirmedPatient?: (patientId: number) => void;
 }
 
 /**
@@ -45,6 +49,13 @@ export interface UseTransferSelectionReturn {
   clearSelection: () => void;
   /** Transfers the currently selected patient to the specified destination cubicle. */
   assignSelectedToCubicle: (targetCubicle: string) => boolean;
+  /** Directly assigns a patient entity to a destination cubicle. */
+  assignPatientToCubicle: (
+    patient: Patient,
+    targetCubicle: string,
+    sourceType?: TransferSourceType,
+    sourceId?: string | number
+  ) => boolean;
   /** Moves the currently selected registration counter patient to the specified target counter. */
   moveSelectedToCounter: (targetCounter: number) => Promise<boolean>;
 }
@@ -65,6 +76,8 @@ export function useTransferSelection({
   setAssignedPatients,
   setPendingUpdates,
   setRegistrationPatients,
+  pendingUpdatesRef,
+  unpinConfirmedPatient,
 }: UseTransferSelectionOptions): UseTransferSelectionReturn {
   const [selectedPatient, setSelectedPatient] = useState<SelectedTransferPatient | null>(null);
 
@@ -95,18 +108,21 @@ export function useTransferSelection({
   );
 
   /**
-   * Assigns the actively selected patient to a destination cubicle.
+   * Directly assigns a specific patient to a destination cubicle.
    *
-   * @param targetCubicle - The destination cubicle identifier string.
-   * @returns True if assignment was successfully committed, false otherwise.
+   * @param patient - Target patient entity.
+   * @param targetCubicle - Destination cubicle number string.
+   * @param sourceType - Domain origin ('queue' or 'cubicle').
+   * @param sourceId - Source cubicle number if moving between cubicles.
+   * @returns True if assigned successfully, false if at capacity.
    */
-  const assignSelectedToCubicle = useCallback(
-    (targetCubicle: string): boolean => {
-      if (!selectedPatient) return false;
-
-      const { patient, sourceType, sourceId } = selectedPatient;
-
-      // Check destination capacity
+  const assignPatientToCubicle = useCallback(
+    (
+      patient: Patient,
+      targetCubicle: string,
+      sourceType: TransferSourceType = 'queue',
+      sourceId?: string | number
+    ): boolean => {
       const currentOccupants = (assignedPatients && assignedPatients[targetCubicle]?.length) || 0;
       if (currentOccupants >= MAX_PATIENTS_PER_CUBICLE) {
         return false;
@@ -116,13 +132,13 @@ export function useTransferSelection({
 
       if (sourceType === 'cubicle') {
         const sourceCubicleStr = String(sourceId);
-        // If target is the same as source, cancel without state changes
         if (sourceCubicleStr === targetCubicle) {
           clearSelection();
           return false;
         }
 
-        // Reassign between cubicles
+        unpinConfirmedPatient?.(patient.id);
+
         setAssignedPatients(prev => {
           const safePrev = prev || {};
           return {
@@ -139,57 +155,81 @@ export function useTransferSelection({
           };
         });
 
-        setPendingUpdates(prev => [
-          ...(prev || []).filter(p => p.id !== patient.id),
+        const nextPending = [
+          ...(pendingUpdatesRef?.current || []).filter(p => p.id !== patient.id),
           {
             ...patient,
             cubicleNum: targetCubicle,
             status: 'Assigned',
           },
-        ]);
+        ];
+        if (pendingUpdatesRef) {
+          pendingUpdatesRef.current = nextPending;
+        }
+        setPendingUpdates(nextPending);
 
         clearSelection();
         return true;
       }
 
-      if (sourceType === 'queue') {
-        // Assign from Active Queue to Cubicle
-        setOnProgressPatients(prev => (prev || []).filter(p => p.id !== patient.id));
-        setAssignedPatients(prev => {
-          const safePrev = prev || {};
-          return {
-            ...safePrev,
-            [targetCubicle]: [
-              ...(safePrev[targetCubicle] || []),
-              {
-                ...patient,
-                cubicleNum: targetCubicle,
-                status: 'Assigned',
-                reg_end: patient.reg_end || now,
-                called_at: patient.called_at || now,
-              },
-            ],
-          };
-        });
+      // Default: Queue to cubicle
+      unpinConfirmedPatient?.(patient.id);
+      setOnProgressPatients(prev => (prev || []).filter(p => p.id !== patient.id));
+      setAssignedPatients(prev => {
+        const safePrev = prev || {};
+        return {
+          ...safePrev,
+          [targetCubicle]: [
+            ...(safePrev[targetCubicle] || []),
+            {
+              ...patient,
+              cubicleNum: targetCubicle,
+              status: 'Assigned',
+              reg_end: patient.reg_end || now,
+              called_at: patient.called_at || now,
+            },
+          ],
+        };
+      });
 
-        setPendingUpdates(prev => [
-          ...(prev || []).filter(p => p.id !== patient.id),
-          {
-            ...patient,
-            cubicleNum: targetCubicle,
-            status: 'Assigned',
-            reg_end: patient.reg_end || now,
-            called_at: patient.called_at || now,
-          },
-        ]);
-
-        clearSelection();
-        return true;
+      const nextPending = [
+        ...(pendingUpdatesRef?.current || []).filter(p => p.id !== patient.id),
+        {
+          ...patient,
+          cubicleNum: targetCubicle,
+          status: 'Assigned',
+          reg_end: patient.reg_end || now,
+          called_at: patient.called_at || now,
+        },
+      ];
+      if (pendingUpdatesRef) {
+        pendingUpdatesRef.current = nextPending;
       }
+      setPendingUpdates(nextPending);
 
-      return false;
+      clearSelection();
+      return true;
     },
-    [selectedPatient, assignedPatients, clearSelection, setAssignedPatients, setOnProgressPatients, setPendingUpdates]
+    [assignedPatients, clearSelection, setAssignedPatients, setOnProgressPatients, setPendingUpdates, pendingUpdatesRef, unpinConfirmedPatient]
+  );
+
+  /**
+   * Assigns the actively selected patient to a destination cubicle.
+   *
+   * @param targetCubicle - The destination cubicle identifier string.
+   * @returns True if assignment was successfully committed, false otherwise.
+   */
+  const assignSelectedToCubicle = useCallback(
+    (targetCubicle: string): boolean => {
+      if (!selectedPatient) return false;
+      return assignPatientToCubicle(
+        selectedPatient.patient,
+        targetCubicle,
+        selectedPatient.sourceType,
+        selectedPatient.sourceId
+      );
+    },
+    [selectedPatient, assignPatientToCubicle]
   );
 
   /**

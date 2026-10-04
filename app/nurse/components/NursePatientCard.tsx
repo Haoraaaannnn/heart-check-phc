@@ -12,7 +12,7 @@
 
 'use client';
 
-import React from 'react';
+import React, { useState } from 'react';
 import { Patient } from '@/types/Types';
 import { ClinicalStage } from '../types/nurse';
 import { nurseTexts } from '../constants/nurseTexts';
@@ -71,6 +71,22 @@ export function NursePatientCard({
   onFinish,
 }: NursePatientCardProps) {
   const isSpeaking = speakingId === patient.id;
+  const [pendingAction, setPendingAction] = useState<string | null>(null);
+
+  const handleTriggerAction = async (
+    actionKey: string,
+    fn?: (p: Patient) => void | Promise<boolean | void>
+  ) => {
+    if (!fn || pendingAction) return;
+    setPendingAction(actionKey);
+    try {
+      await fn(patient);
+    } catch (err) {
+      console.error('Failed to trigger patient action:', err);
+    } finally {
+      setPendingAction(null);
+    }
+  };
 
   // Determine timer start timestamp and warning threshold based on clinical stage
   let timerStartedAt: string | null | undefined = null;
@@ -151,10 +167,12 @@ export function NursePatientCard({
                   e.stopPropagation();
                   onCall(patient);
                 }}
-                disabled={isSpeaking}
-                className={`flex-1 flex items-center justify-center py-1.5 px-2 rounded-xl text-xs font-semibold transition cursor-pointer ${
+                disabled={isSpeaking || pendingAction !== null}
+                className={`flex-1 flex items-center justify-center py-1.5 px-2 rounded-xl text-xs font-semibold transition cursor-pointer select-none ${
                   isSpeaking
                     ? 'bg-blue-100 text-blue-400 cursor-not-allowed'
+                    : pendingAction !== null
+                    ? 'opacity-40 cursor-not-allowed bg-blue-50 text-blue-400'
                     : 'bg-blue-50 hover:bg-blue-100 text-blue-600 active:bg-blue-200'
                 }`}
               >
@@ -165,13 +183,30 @@ export function NursePatientCard({
             {onMoveToWithDoctor && (
               <button
                 type="button"
+                disabled={pendingAction !== null}
                 onClick={(e) => {
                   e.stopPropagation();
-                  onMoveToWithDoctor(patient);
+                  handleTriggerAction('with_doctor', onMoveToWithDoctor);
                 }}
-                className="flex-1 flex items-center justify-center py-1.5 px-2 rounded-xl text-xs font-semibold bg-purple-50 hover:bg-purple-100 text-purple-700 active:bg-purple-200 transition cursor-pointer"
+                className={`flex-1 flex items-center justify-center py-1.5 px-2 rounded-xl text-xs font-semibold transition cursor-pointer select-none ${
+                  pendingAction === 'with_doctor'
+                    ? 'bg-purple-200 text-purple-900 cursor-wait'
+                    : pendingAction !== null
+                    ? 'opacity-40 cursor-not-allowed bg-purple-50 text-purple-400'
+                    : 'bg-purple-50 hover:bg-purple-100 text-purple-700 active:bg-purple-200'
+                }`}
               >
-                <span>{nurseTexts.btnWithDoctor}</span>
+                {pendingAction === 'with_doctor' ? (
+                  <span className="flex items-center gap-1.5 animate-pulse">
+                    <svg className="w-3.5 h-3.5 animate-spin" fill="none" viewBox="0 0 24 24">
+                      <circle className="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" strokeWidth="4" />
+                      <path className="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4zm2 5.291A7.962 7.962 0 014 12H0c0 3.042 1.135 5.824 3 7.938l3-2.647z" />
+                    </svg>
+                    <span>{nurseTexts.updatingAction}</span>
+                  </span>
+                ) : (
+                  <span>{nurseTexts.btnWithDoctor}</span>
+                )}
               </button>
             )}
           </>
@@ -182,27 +217,58 @@ export function NursePatientCard({
             {onMoveBackFromDoctor && (
               <button
                 type="button"
+                disabled={pendingAction !== null}
                 onClick={(e) => {
                   e.stopPropagation();
-                  onMoveBackFromDoctor(patient);
+                  handleTriggerAction('back_doctor', onMoveBackFromDoctor);
                 }}
-                className="flex items-center justify-center py-1.5 px-2.5 rounded-xl text-xs font-semibold bg-slate-100 hover:bg-slate-200 text-slate-600 active:bg-slate-300 transition cursor-pointer"
+                className={`flex items-center justify-center py-1.5 px-2.5 rounded-xl text-xs font-semibold transition cursor-pointer select-none ${
+                  pendingAction === 'back_doctor'
+                    ? 'bg-slate-300 text-slate-800 cursor-wait'
+                    : pendingAction !== null
+                    ? 'opacity-40 cursor-not-allowed bg-slate-100 text-slate-400'
+                    : 'bg-slate-100 hover:bg-slate-200 text-slate-600 active:bg-slate-300'
+                }`}
                 title={nurseTexts.btnBack}
               >
-                <span>{nurseTexts.btnBack}</span>
+                {pendingAction === 'back_doctor' ? (
+                  <svg className="w-3.5 h-3.5 animate-spin" fill="none" viewBox="0 0 24 24">
+                    <circle className="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" strokeWidth="4" />
+                    <path className="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4zm2 5.291A7.962 7.962 0 014 12H0c0 3.042 1.135 5.824 3 7.938l3-2.647z" />
+                  </svg>
+                ) : (
+                  <span>{nurseTexts.btnBack}</span>
+                )}
               </button>
             )}
 
             {onMoveToCarryout && (
               <button
                 type="button"
+                disabled={pendingAction !== null}
                 onClick={(e) => {
                   e.stopPropagation();
-                  onMoveToCarryout(patient);
+                  handleTriggerAction('carryout', onMoveToCarryout);
                 }}
-                className="flex-1 flex items-center justify-center py-1.5 px-2 rounded-xl text-xs font-semibold bg-orange-50 hover:bg-orange-100 text-orange-700 active:bg-orange-200 transition cursor-pointer"
+                className={`flex-1 flex items-center justify-center py-1.5 px-2 rounded-xl text-xs font-semibold transition cursor-pointer select-none ${
+                  pendingAction === 'carryout'
+                    ? 'bg-orange-200 text-orange-900 cursor-wait'
+                    : pendingAction !== null
+                    ? 'opacity-40 cursor-not-allowed bg-orange-50 text-orange-400'
+                    : 'bg-orange-50 hover:bg-orange-100 text-orange-700 active:bg-orange-200'
+                }`}
               >
-                <span>{nurseTexts.btnCarryout}</span>
+                {pendingAction === 'carryout' ? (
+                  <span className="flex items-center gap-1.5 animate-pulse">
+                    <svg className="w-3.5 h-3.5 animate-spin" fill="none" viewBox="0 0 24 24">
+                      <circle className="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" strokeWidth="4" />
+                      <path className="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4zm2 5.291A7.962 7.962 0 014 12H0c0 3.042 1.135 5.824 3 7.938l3-2.647z" />
+                    </svg>
+                    <span>{nurseTexts.updatingAction}</span>
+                  </span>
+                ) : (
+                  <span>{nurseTexts.btnCarryout}</span>
+                )}
               </button>
             )}
           </>
@@ -213,27 +279,58 @@ export function NursePatientCard({
             {onMoveBackFromCarryout && (
               <button
                 type="button"
+                disabled={pendingAction !== null}
                 onClick={(e) => {
                   e.stopPropagation();
-                  onMoveBackFromCarryout(patient);
+                  handleTriggerAction('back_carryout', onMoveBackFromCarryout);
                 }}
-                className="flex items-center justify-center py-1.5 px-2.5 rounded-xl text-xs font-semibold bg-slate-100 hover:bg-slate-200 text-slate-600 active:bg-slate-300 transition cursor-pointer"
+                className={`flex items-center justify-center py-1.5 px-2.5 rounded-xl text-xs font-semibold transition cursor-pointer select-none ${
+                  pendingAction === 'back_carryout'
+                    ? 'bg-slate-300 text-slate-800 cursor-wait'
+                    : pendingAction !== null
+                    ? 'opacity-40 cursor-not-allowed bg-slate-100 text-slate-400'
+                    : 'bg-slate-100 hover:bg-slate-200 text-slate-600 active:bg-slate-300'
+                }`}
                 title={nurseTexts.btnBack}
               >
-                <span>{nurseTexts.btnBack}</span>
+                {pendingAction === 'back_carryout' ? (
+                  <svg className="w-3.5 h-3.5 animate-spin" fill="none" viewBox="0 0 24 24">
+                    <circle className="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" strokeWidth="4" />
+                    <path className="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4zm2 5.291A7.962 7.962 0 014 12H0c0 3.042 1.135 5.824 3 7.938l3-2.647z" />
+                  </svg>
+                ) : (
+                  <span>{nurseTexts.btnBack}</span>
+                )}
               </button>
             )}
 
             {onFinish && (
               <button
                 type="button"
+                disabled={pendingAction !== null}
                 onClick={(e) => {
                   e.stopPropagation();
-                  onFinish(patient);
+                  handleTriggerAction('finish', onFinish);
                 }}
-                className="flex-1 flex items-center justify-center py-1.5 px-2 rounded-xl text-xs font-semibold bg-emerald-50 hover:bg-emerald-100 text-emerald-700 active:bg-emerald-200 transition cursor-pointer"
+                className={`flex-1 flex items-center justify-center py-1.5 px-2 rounded-xl text-xs font-semibold transition cursor-pointer select-none ${
+                  pendingAction === 'finish'
+                    ? 'bg-emerald-200 text-emerald-900 cursor-wait'
+                    : pendingAction !== null
+                    ? 'opacity-40 cursor-not-allowed bg-emerald-50 text-emerald-400'
+                    : 'bg-emerald-50 hover:bg-emerald-100 text-emerald-700 active:bg-emerald-200'
+                }`}
               >
-                <span>{nurseTexts.btnDone}</span>
+                {pendingAction === 'finish' ? (
+                  <span className="flex items-center gap-1.5 animate-pulse">
+                    <svg className="w-3.5 h-3.5 animate-spin" fill="none" viewBox="0 0 24 24">
+                      <circle className="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" strokeWidth="4" />
+                      <path className="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4zm2 5.291A7.962 7.962 0 014 12H0c0 3.042 1.135 5.824 3 7.938l3-2.647z" />
+                    </svg>
+                    <span>{nurseTexts.completingAction}</span>
+                  </span>
+                ) : (
+                  <span>{nurseTexts.btnDone}</span>
+                )}
               </button>
             )}
           </>

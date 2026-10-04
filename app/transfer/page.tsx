@@ -101,7 +101,10 @@ export default function TransferPage() {
     setOnProgressPatients,
     setAssignedPatients,
     fetchData,
-  } = usePatientData();
+    pinConfirmedPatient,
+    unpinConfirmedPatient,
+    getConfirmedPin,
+  } = usePatientData(pendingUpdatesRef);
 
   const { cubicles, fetchCubicles, cubicleDoctorMap } = useCubicleData();
 
@@ -124,7 +127,9 @@ export default function TransferPage() {
     assignedPatients,
     setOnProgressPatients,
     setAssignedPatients,
-    fetchData
+    fetchData,
+    pendingUpdatesRef,
+    unpinConfirmedPatient
   );
 
   // Click-to-Select transfer hook (Tablet-friendly interaction)
@@ -140,6 +145,8 @@ export default function TransferPage() {
     setAssignedPatients,
     setPendingUpdates,
     setRegistrationPatients,
+    pendingUpdatesRef,
+    unpinConfirmedPatient,
   });
 
   const handleSelectQueuePatient = useCallback(
@@ -194,9 +201,12 @@ export default function TransferPage() {
   }, [draggedPatient, resetDrag]);
 
   const savingPendingUpdates = useRef<boolean>(false);
+  const regFetchSeqRef = useRef<number>(0);
+  const lastRegWriteAtRef = useRef<number>(0);
 
-  // Fetch registration window patients
+  // Fetch registration window patients with sequence guard and throttled write-backs
   const fetchRegistrationPatients = useCallback(async () => {
+    const requestId = ++regFetchSeqRef.current;
     const today = new Date();
     today.setHours(0, 0, 0, 0);
     const tomorrow = new Date(today);
@@ -215,6 +225,8 @@ export default function TransferPage() {
       .lt('created_at', tomorrow.toISOString())
       .order('counter', { ascending: true, nullsFirst: false })
       .order('created_at', { ascending: true });
+
+    if (requestId !== regFetchSeqRef.current) return;
 
     if (!error && data) {
       const sortKey = (p: Patient) =>
@@ -246,14 +258,21 @@ export default function TransferPage() {
         }
       }
 
-      if (startUpdates.length > 0) {
-        await supabase.from('patients').upsert(startUpdates, { onConflict: 'id' });
-      }
-      if (clearUpdates.length > 0) {
-        await supabase.from('patients').upsert(clearUpdates, { onConflict: 'id' });
+      // Throttle write-backs to avoid WebSocket echo storm
+      const nowMs = Date.now();
+      if (nowMs - lastRegWriteAtRef.current > 4_000) {
+        lastRegWriteAtRef.current = nowMs;
+        if (startUpdates.length > 0) {
+          void supabase.from('patients').upsert(startUpdates, { onConflict: 'id' });
+        }
+        if (clearUpdates.length > 0) {
+          void supabase.from('patients').upsert(clearUpdates, { onConflict: 'id' });
+        }
       }
 
-      setRegistrationPatients(data as Patient[]);
+      if (requestId === regFetchSeqRef.current) {
+        setRegistrationPatients(data as Patient[]);
+      }
     }
   }, []);
 
@@ -261,20 +280,41 @@ export default function TransferPage() {
     if (pending.length === 0) return;
     const pendingMap = new Map(pending.map(p => [p.id, p]));
 
-    setOnProgressPatients(prev =>
-      prev.filter(p => {
+    setOnProgressPatients(prev => {
+      let nextQueue = prev.filter(p => {
         const u = pendingMap.get(p.id);
         return !u || u.status !== 'Assigned';
-      })
-    );
+      });
+      for (const p of pending) {
+        if (p.status !== 'Assigned' || !p.cubicleNum) {
+          if (!nextQueue.some(x => x.id === p.id)) {
+            nextQueue = [...nextQueue, p];
+          } else {
+            nextQueue = nextQueue.map(x => (x.id === p.id ? p : x));
+          }
+        }
+      }
+      return nextQueue;
+    });
 
     setAssignedPatients(prev => {
-      const next = { ...prev };
+      const next: Record<string, Patient[]> = {};
+      for (const [k, list] of Object.entries(prev)) {
+        next[k] = list.filter(p => {
+          const u = pendingMap.get(p.id);
+          if (!u) return true;
+          return u.status === 'Assigned' && String(u.cubicleNum) === String(k);
+        });
+      }
+
       for (const p of pending) {
         if (p.status === 'Assigned' && p.cubicleNum) {
-          const list = next[p.cubicleNum] || [];
+          const targetKey = String(p.cubicleNum);
+          const list = next[targetKey] || [];
           if (!list.some(x => x.id === p.id)) {
-            next[p.cubicleNum] = [...list, p];
+            next[targetKey] = [...list, p];
+          } else {
+            next[targetKey] = list.map(x => (x.id === p.id ? p : x));
           }
         }
       }
@@ -312,16 +352,104 @@ export default function TransferPage() {
     }
   }, [fetchData, fetchRegistrationPatients, fetchIdlePatients, reapplyPendingUpdates]);
 
-  const debounceRef = useRef<NodeJS.Timeout | null>(null);
-
   const handleRealtimeUpdate = useCallback(() => {
     if (dragInProgressRef.current) return;
-    if (debounceRef.current) clearTimeout(debounceRef.current);
-
-    debounceRef.current = setTimeout(() => {
-      void syncNow();
-    }, 400);
+    void syncNow();
   }, [syncNow]);
+
+  /**
+   * Directly patches incoming Supabase Realtime payloads into local state in 0ms,
+   * completely eliminating wait delays and preventing column jumpiness in Transfer.
+   */
+  const handleRealtimePayload = useCallback((payload: any) => {
+    if (dragInProgressRef.current) return;
+    const eventType = payload.eventType;
+    const newRow = payload.new as Patient | undefined;
+    const oldRow = payload.old as { id: number } | undefined;
+
+    if (!newRow && !oldRow) return;
+
+    if (eventType === 'DELETE' && oldRow?.id) {
+      const deletedId = oldRow.id;
+      unpinConfirmedPatient(deletedId);
+      setOnProgressPatients(prev => prev.filter(p => p.id !== deletedId));
+      setAssignedPatients(prev => {
+        const next = { ...prev };
+        for (const key of Object.keys(next)) {
+          next[key] = next[key].filter(p => p.id !== deletedId);
+        }
+        return next;
+      });
+      setRegistrationPatients(prev => prev.filter(p => p.id !== deletedId));
+      return;
+    }
+
+    if (!newRow) return;
+    const patient = newRow;
+
+    // 1. If the patient is part of active unconfirmed drag/selection, do not overwrite
+    if (pendingUpdatesRef.current.some(p => p.id === patient.id)) {
+      return;
+    }
+
+    // 2. If the patient has an active confirmed pin, guard against stale lagging echoes
+    const pin = getConfirmedPin(patient.id);
+    if (pin) {
+      const isMatchingPin =
+        patient.status === pin.status && String(patient.cubicleNum) === String(pin.cubicleNum);
+      if (!isMatchingPin) {
+        // Discard stale or outdated echo packet (e.g. status was On Progress or cubicleNum was null/old)
+        return;
+      }
+    }
+
+    if (patient.status === 'Assigned' && patient.cubicleNum) {
+      setOnProgressPatients(prev => prev.filter(p => p.id !== patient.id));
+      setAssignedPatients(prev => {
+        const cubicleKey = String(patient.cubicleNum);
+        const cubicleList = prev[cubicleKey] || [];
+        const exists = cubicleList.some(p => p.id === patient.id);
+        const nextList = exists
+          ? cubicleList.map(p => (p.id === patient.id ? patient : p))
+          : [...cubicleList, patient];
+        const next = { ...prev, [cubicleKey]: nextList };
+        for (const [k, v] of Object.entries(next)) {
+          if (String(k) !== cubicleKey) {
+            next[k] = v.filter(p => p.id !== patient.id);
+          }
+        }
+        return next;
+      });
+    } else if (
+      patient.status === 'With Doctor' ||
+      patient.status === 'Carryout' ||
+      patient.status === 'Done' ||
+      patient.status === 'Idle' ||
+      patient.status === 'Removed'
+    ) {
+      unpinConfirmedPatient(patient.id);
+      setOnProgressPatients(prev => prev.filter(p => p.id !== patient.id));
+      setAssignedPatients(prev => {
+        const next = { ...prev };
+        for (const key of Object.keys(next)) {
+          next[key] = next[key].filter(p => p.id !== patient.id);
+        }
+        return next;
+      });
+    } else if (!patient.cubicleNum && patient.status !== 'Assigned') {
+      setAssignedPatients(prev => {
+        const next = { ...prev };
+        for (const key of Object.keys(next)) {
+          next[key] = next[key].filter(p => p.id !== patient.id);
+        }
+        return next;
+      });
+      setOnProgressPatients(prev => {
+        const exists = prev.some(p => p.id === patient.id);
+        return exists ? prev.map(p => (p.id === patient.id ? patient : p)) : [...prev, patient];
+      });
+    }
+  }, [setOnProgressPatients, setAssignedPatients, setRegistrationPatients, getConfirmedPin, unpinConfirmedPatient]);
 
   // Connection status tracking for weak-signal / offline resilience.
   const { isOnline, channelStatus, isFullyConnected, setChannelStatus } = useConnectionStatus();
@@ -329,7 +457,7 @@ export default function TransferPage() {
   // Persistent offline mutation queue (handles sudden power loss & network drops)
   const { pendingCount, isSyncing: isSyncingQueue } = useOfflineQueue(syncNow);
 
-  useRealtimeSubscription(handleRealtimeUpdate, setChannelStatus);
+  useRealtimeSubscription(handleRealtimeUpdate, setChannelStatus, handleRealtimePayload);
 
 
   const autoAssignBusy = useRef<boolean>(false);
@@ -471,8 +599,8 @@ export default function TransferPage() {
       };
     });
 
-    setPendingUpdates(prev => [
-      ...prev.filter(p => p.id !== patient.id),
+    const nextPending = [
+      ...pendingUpdatesRef.current.filter(p => p.id !== patient.id),
       {
         ...patient,
         cubicleNum: bestCubicle.cubicleNum,
@@ -480,7 +608,9 @@ export default function TransferPage() {
         called_at: now,
         reg_end: patient.reg_end ?? now,
       },
-    ]);
+    ];
+    pendingUpdatesRef.current = nextPending;
+    setPendingUpdates(nextPending);
   };
 
   /**
@@ -551,6 +681,13 @@ export default function TransferPage() {
     confirmingRef.current = true;
     setIsConfirming(true);
 
+    // Pin confirmed patients in local state so lagging fetches do not flicker them back to the queue
+    for (const p of snapshot) {
+      if (p.cubicleNum) {
+        pinConfirmedPatient(p.id, p.cubicleNum, p.status || 'Assigned');
+      }
+    }
+
     try {
       const now = new Date().toISOString();
 
@@ -588,22 +725,29 @@ export default function TransferPage() {
           await removeMutation(queuedId);
         }
 
-        await Promise.all(
-          snapshot
-            .filter(p => p.phoneNum && p.status === 'Assigned' && p.cubicleNum)
-            .map(p => sendSMS(String(p.phoneNum), p.patientNum, p.cubicleNum!))
-        );
+        // Execute outbound SMS alerts and queue renumbering as non-blocking background tasks
+        void (async () => {
+          try {
+            await Promise.all(
+              snapshot
+                .filter(p => p.phoneNum && p.status === 'Assigned' && p.cubicleNum)
+                .map(p => sendSMS(String(p.phoneNum), p.patientNum, p.cubicleNum!))
+            );
 
-        const { data: queue } = await supabase
-          .from('patients')
-          .select('id')
-          .neq('status', 'Assigned')
-          .order('queue_position');
+            const { data: queue } = await supabase
+              .from('patients')
+              .select('id')
+              .neq('status', 'Assigned')
+              .order('queue_position');
 
-        if (queue && queue.length > 0) {
-          const reorder = queue.map((row, i) => ({ id: row.id, queue_position: i + 1 }));
-          await supabase.from('patients').upsert(reorder, { onConflict: 'id' });
-        }
+            if (queue && queue.length > 0) {
+              const reorder = queue.map((row, i) => ({ id: row.id, queue_position: i + 1 }));
+              await supabase.from('patients').upsert(reorder, { onConflict: 'id' });
+            }
+          } catch (bgErr) {
+            console.warn('Background SMS or queue reorder warning:', bgErr);
+          }
+        })();
       }
 
       setPendingUpdates([]);
@@ -613,22 +757,28 @@ export default function TransferPage() {
       await syncNow();
     } catch (err) {
       console.warn('Offline outbox saved transfer assignments; network sync deferred:', err);
+      for (const p of snapshot) {
+        unpinConfirmedPatient(p.id);
+      }
     } finally {
       savingPendingUpdates.current = false;
       confirmingRef.current = false;
       setIsConfirming(false);
     }
-  }, [pendingUpdates, setPendingUpdates, syncNow]);
+  }, [pendingUpdates, setPendingUpdates, syncNow, pinConfirmedPatient, unpinConfirmedPatient]);
 
   /**
    * Reverts all pending manual cubicle assignments and restores server queue state.
    */
   const handleCancelPending = useCallback(() => {
+    for (const p of pendingUpdatesRef.current) {
+      unpinConfirmedPatient(p.id);
+    }
     setPendingUpdates([]);
     pendingUpdatesRef.current = [];
     pendingAutoRotateIdsRef.current = new Set();
     void fetchData();
-  }, [fetchData, setPendingUpdates]);
+  }, [fetchData, setPendingUpdates, unpinConfirmedPatient]);
 
   // Back navigation handler
   const handleBack = () => {

@@ -128,6 +128,26 @@ export const transferTexts = {
   assignedToLabel: "Assigned To",
   patientNumberLabel: "Patient",
   smsNotificationNotice: "SMS notification will be sent upon confirmation",
+
+  // Quick-Assign Dropdown Copy
+  quickAssignTitle: "Assign to Station",
+  quickAssignSubtitle: "Select a cubicle to assign this patient",
+  managePatientTitle: "Patient Options",
+  managePatientSubtitle: "Choose an action for this patient",
+  noCubiclesConfigured: "No stations available for this service.",
+  moveToQueueBtn: "Move Back to Queue",
+  moveToQueueSubtitle: "Return patient to the waiting list",
+  moveToOtherCubicleHeading: "Or transfer to another cubicle:",
+  callPatientAudioBtn: "Call Patient",
+  callPatientAudioSubtitle: "Broadcast number on speaker",
+  occupancyLabel: (current: number, max: number) => `${current}/${max} Patients`,
+  occupancyFull: "Station Full",
+  badgeAssign: "Assign",
+  assigningStation: "Assigning...",
+  movingToQueue: "Moving...",
+  badgeReturn: "Return",
+  badgeSpeaker: "Speaker",
+  dismissHint: "Tap outside or press Esc to close",
 } as const;
 
 export default transferTexts;

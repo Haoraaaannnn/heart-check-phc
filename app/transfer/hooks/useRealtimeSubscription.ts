@@ -44,7 +44,7 @@ const TRANSFER_POLL_INTERVAL_MS = 5_000;
  * at once — without debouncing, each event triggers a separate fetch, creating
  * race conditions that cause queue teleporting.
  */
-const TRANSFER_DEBOUNCE_MS = 300;
+const TRANSFER_DEBOUNCE_MS = 150;
 
 /**
  * Grace period in milliseconds before activating the polling fallback after
@@ -68,15 +68,19 @@ const FETCH_THROTTLE_MS = 500;
  * @param onFetch - Callback function invoked when patient data should be re-fetched.
  * @param onStatusChange - Optional callback receiving the raw Supabase channel status string,
  *   used by the parent page to update `ConnectionStatusBanner` state.
+ * @param onPayload - Optional callback receiving raw Supabase Realtime payloads for 0ms in-memory patching.
  */
 export function useRealtimeSubscription(
     onFetch: () => void,
     onStatusChange?: (status: ChannelStatus) => void,
+    onPayload?: (payload: any) => void,
 ): void {
     const pollRef = useRef<ReturnType<typeof setInterval> | null>(null);
     const debounceRef = useRef<ReturnType<typeof setTimeout> | null>(null);
+    const trailingTimerRef = useRef<ReturnType<typeof setTimeout> | null>(null);
     const onFetchRef = useRef(onFetch);
     const onStatusChangeRef = useRef(onStatusChange);
+    const onPayloadRef = useRef(onPayload);
 
     /**
      * Monotonically increasing counter used to detect and discard stale fetch
@@ -106,19 +110,35 @@ export function useRealtimeSubscription(
     }, [onStatusChange]);
 
     useEffect(() => {
+        onPayloadRef.current = onPayload;
+    }, [onPayload]);
+
+    useEffect(() => {
         let disposed = false;
 
         /**
-         * Guarded fetch executor. Increments the fetch sequence counter and
-         * checks elapsed time since the last fetch to prevent overlapping
-         * concurrent requests from different trigger sources.
+         * Guarded fetch executor with trailing-edge execution. Increments the fetch
+         * sequence counter and ensures events arriving during the throttle window
+         * execute promptly once the window closes, rather than being dropped.
          *
          * @param _source - Debug label for the fetch trigger origin (realtime, poll, online).
          */
         const guardedFetch = (_source: string) => {
             const now = Date.now();
-            if (now - lastFetchAtRef.current < FETCH_THROTTLE_MS) {
+            const elapsed = now - lastFetchAtRef.current;
+            if (elapsed < FETCH_THROTTLE_MS) {
+                // If within throttle window, schedule trailing edge execution so events are never dropped
+                if (!trailingTimerRef.current) {
+                    trailingTimerRef.current = setTimeout(() => {
+                        trailingTimerRef.current = null;
+                        guardedFetch(_source);
+                    }, FETCH_THROTTLE_MS - elapsed);
+                }
                 return;
+            }
+            if (trailingTimerRef.current) {
+                clearTimeout(trailingTimerRef.current);
+                trailingTimerRef.current = null;
             }
             lastFetchAtRef.current = now;
             fetchIdRef.current++;
@@ -200,7 +220,8 @@ export function useRealtimeSubscription(
             .on(
                 "postgres_changes",
                 { event: "*", schema: "public", table: "patients" },
-                () => {
+                (payload) => {
+                    onPayloadRef.current?.(payload);
                     handleUpdate();
                 },
             )
@@ -218,6 +239,7 @@ export function useRealtimeSubscription(
         return () => {
             disposed = true;
             if (debounceRef.current) clearTimeout(debounceRef.current);
+            if (trailingTimerRef.current) clearTimeout(trailingTimerRef.current);
             stopPolling();
             window.removeEventListener("online", handleOnline);
             void supabase.removeChannel(channel);

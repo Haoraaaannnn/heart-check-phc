@@ -43,7 +43,7 @@ const MONITOR_POLL_INTERVAL_MS = 8_000;
  * at once — without debouncing, each event triggers a separate fetch, creating
  * race conditions that cause queue teleporting on the waiting area display.
  */
-const MONITOR_DEBOUNCE_MS = 300;
+const MONITOR_DEBOUNCE_MS = 100;
 
 /**
  * Grace period in milliseconds before activating the polling fallback after
@@ -77,6 +77,7 @@ export function useRealtimeSubscription(
 ): void {
     const pollRef = useRef<ReturnType<typeof setInterval> | null>(null);
     const debounceRef = useRef<ReturnType<typeof setTimeout> | null>(null);
+    const trailingTimerRef = useRef<ReturnType<typeof setTimeout> | null>(null);
     const onFetchRef = useRef(onFetch);
     const onStatusChangeRef = useRef(onStatusChange);
 
@@ -111,16 +112,28 @@ export function useRealtimeSubscription(
         let disposed = false;
 
         /**
-         * Guarded fetch executor. Increments the fetch sequence counter and
-         * checks elapsed time since the last fetch to prevent overlapping
-         * concurrent requests from different trigger sources.
+         * Guarded fetch executor with trailing-edge execution. Increments the fetch
+         * sequence counter and ensures events arriving during the throttle window
+         * execute promptly once the window closes, rather than being dropped.
          *
          * @param _source - Debug label for the fetch trigger origin (realtime, poll, online).
          */
         const guardedFetch = (_source: string) => {
             const now = Date.now();
-            if (now - lastFetchAtRef.current < FETCH_THROTTLE_MS) {
+            const elapsed = now - lastFetchAtRef.current;
+            if (elapsed < FETCH_THROTTLE_MS) {
+                // If within throttle window, schedule trailing edge execution so events are never dropped
+                if (!trailingTimerRef.current) {
+                    trailingTimerRef.current = setTimeout(() => {
+                        trailingTimerRef.current = null;
+                        guardedFetch(_source);
+                    }, FETCH_THROTTLE_MS - elapsed);
+                }
                 return;
+            }
+            if (trailingTimerRef.current) {
+                clearTimeout(trailingTimerRef.current);
+                trailingTimerRef.current = null;
             }
             lastFetchAtRef.current = now;
             fetchIdRef.current++;
@@ -220,6 +233,7 @@ export function useRealtimeSubscription(
         return () => {
             disposed = true;
             if (debounceRef.current) clearTimeout(debounceRef.current);
+            if (trailingTimerRef.current) clearTimeout(trailingTimerRef.current);
             stopPolling();
             window.removeEventListener("online", handleOnline);
             void supabase.removeChannel(channel);
