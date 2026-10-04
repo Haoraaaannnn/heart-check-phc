@@ -184,17 +184,13 @@ export default function NursePage() {
     async (text: string, patientId: number, repeatTimes: number = 3) => {
       setSpeakingId(patientId);
       try {
-        const response = await fetch(
-          'https://api.deepgram.com/v1/speak?model=aura-2-amalthea-en',
-          {
-            method: 'POST',
-            headers: {
-              Authorization: `Token ${process.env.NEXT_PUBLIC_DEEPGRAM_KEY}`,
-              'Content-Type': 'application/json',
-            },
-            body: JSON.stringify({ text }),
-          }
-        );
+        const response = await fetch('/api/tts', {
+          method: 'POST',
+          headers: {
+            'Content-Type': 'application/json',
+          },
+          body: JSON.stringify({ text }),
+        });
 
         if (!response.ok) {
           setSpeakingId(null);

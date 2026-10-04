@@ -122,7 +122,9 @@ export async function POST(request: Request) {
       session: signInData.session,
       user: signInData.user,
     })
-  } catch (error: any) {
-    return NextResponse.json({ error: error.message }, { status: 500 })
+  } catch (error: unknown) {
+    const message = error instanceof Error ? error.message : 'Unknown login error';
+    console.error('[LOGIN SERVER ERROR]:', message);
+    return NextResponse.json({ error: 'Authentication service temporarily unavailable.' }, { status: 500 });
   }
 }

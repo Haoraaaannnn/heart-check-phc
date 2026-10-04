@@ -26,16 +26,22 @@ env_path = os.path.join(BASE_DIR, "..", ".env.local")
 load_dotenv(env_path)
 app = FastAPI()
 
-app.add_middleware(
-    CORSMiddleware,
-    allow_origins=[
+allowed_origins_raw = os.environ.get("ALLOWED_ORIGINS")
+if allowed_origins_raw:
+    allowed_origins = [o.strip() for o in allowed_origins_raw.split(",") if o.strip()]
+else:
+    allowed_origins = [
         "http://localhost:3000",
         "http://127.0.0.1:3000",
         "http://localhost:3001",
         "http://127.0.0.1:3001",
-    ],
+    ]
+
+app.add_middleware(
+    CORSMiddleware,
+    allow_origins=allowed_origins,
     allow_credentials=True,
-    allow_methods=["*"],
+    allow_methods=["GET", "POST", "OPTIONS"],
     allow_headers=["*"],
 )
 
@@ -239,7 +245,6 @@ def get_dashboard_data(range: str = DEFAULT_RANGE):
         print("=" * 60)
         fallback = get_empty_data()
         fallback["bottleneck_analysis"]["system_status"] = "Error"
-        fallback["_debug_error"] = True  # remove before thesis defense / production
         return fallback
 
 

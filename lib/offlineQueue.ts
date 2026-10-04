@@ -296,10 +296,16 @@ async function syncMutationToSupabase(item: PendingMutation): Promise<boolean> {
         return false;
       }
 
-      const { error } = await supabase
+      let updateQuery = supabase
         .from(item.table)
         .update(item.payload)
         .eq(item.matchKey, item.matchValue);
+
+      if (item.table === 'patients') {
+        updateQuery = updateQuery.eq('is_historical', false);
+      }
+
+      const { error } = await updateQuery;
 
       if (error) {
         console.error(`Supabase update error for mutation ${item.id}:`, error.message);

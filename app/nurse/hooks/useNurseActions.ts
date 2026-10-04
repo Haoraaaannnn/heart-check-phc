@@ -97,7 +97,8 @@ export function useNurseActions(
       const { error } = await supabase
         .from('patients')
         .update(updates)
-        .eq('id', patientId);
+        .eq('id', patientId)
+        .eq('is_historical', false);
 
       if (error) {
         // If server rules or RLS rejected it, discard queued mutation and rollback

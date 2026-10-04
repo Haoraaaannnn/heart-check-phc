@@ -42,15 +42,15 @@ async function persistDerivedFields(w: DerivedWrites): Promise<void> {
   const table = () => supabase.from('patients');
 
   if (w.progressIds.length)
-    jobs.push(table().update({ progress_started_at: w.nowIso }).in('id', w.progressIds).is('progress_started_at', null));
+    jobs.push(table().update({ progress_started_at: w.nowIso }).in('id', w.progressIds).eq('is_historical', false).is('progress_started_at', null));
   if (w.statusIds.length)
-    jobs.push(table().update({ status: 'On Progress' }).in('id', w.statusIds).is('cubicleNum', null).neq('status', 'Assigned').neq('status', 'On Progress'));
+    jobs.push(table().update({ status: 'On Progress' }).in('id', w.statusIds).eq('is_historical', false).is('cubicleNum', null).neq('status', 'Assigned').neq('status', 'On Progress'));
   for (const r of w.registration)
-    jobs.push(table().update({ reg_start: w.nowIso, counter: r.counter }).eq('id', r.id).is('reg_start', null));
+    jobs.push(table().update({ reg_start: w.nowIso, counter: r.counter }).eq('id', r.id).eq('is_historical', false).is('reg_start', null));
   if (w.topIds.length)
-    jobs.push(table().update({ cubicle_top_started_at: w.nowIso }).in('id', w.topIds).is('cubicle_top_started_at', null));
+    jobs.push(table().update({ cubicle_top_started_at: w.nowIso }).in('id', w.topIds).eq('is_historical', false).is('cubicle_top_started_at', null));
   if (w.clearTopIds.length)
-    jobs.push(table().update({ cubicle_top_started_at: null }).in('id', w.clearTopIds).not('cubicle_top_started_at', 'is', null));
+    jobs.push(table().update({ cubicle_top_started_at: null }).in('id', w.clearTopIds).eq('is_historical', false).not('cubicle_top_started_at', 'is', null));
 
   await Promise.allSettled(jobs);
 }

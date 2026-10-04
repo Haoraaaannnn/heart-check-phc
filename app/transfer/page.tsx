@@ -383,17 +383,13 @@ export default function TransferPage() {
   const speak = async (text: string, patientId: number, times: number = 3) => {
     setSpeaking(patientId);
     try {
-      const response = await fetch(
-        'https://api.deepgram.com/v1/speak?model=aura-2-amalthea-en',
-        {
-          method: 'POST',
-          headers: {
-            Authorization: `Token ${process.env.NEXT_PUBLIC_DEEPGRAM_KEY}`,
-            'Content-Type': 'application/json',
-          },
-          body: JSON.stringify({ text }),
-        }
-      );
+      const response = await fetch('/api/tts', {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json',
+        },
+        body: JSON.stringify({ text }),
+      });
       if (!response.ok) {
         setSpeaking(null);
         return;
@@ -514,7 +510,8 @@ export default function TransferPage() {
         const { error } = await supabase
           .from('patients')
           .update({ reg_end: now })
-          .eq('id', patient.id);
+          .eq('id', patient.id)
+          .eq('is_historical', false);
 
         if (!error && queuedId) {
           await removeMutation(queuedId);
