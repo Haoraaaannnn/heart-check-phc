@@ -122,7 +122,7 @@ export default function ConfirmationModal({
                     <button
                         type="button"
                         onClick={onCancel}
-                        className="flex-1 min-h-[48px] py-3 px-4 rounded-2xl font-bold text-base sm:text-xl bg-white border-2 border-gray-300 text-gray-700 transition-all active:scale-95 hover:bg-gray-100 text-center break-words flex items-center justify-center"
+                        className="flex-1 py-3.5 px-4 rounded-2xl font-bold text-lg sm:text-xl bg-white border-2 border-gray-300 text-gray-700 transition-all active:scale-95 hover:bg-gray-100"
                     >
                         {cancelText}
                     </button>
@@ -130,7 +130,7 @@ export default function ConfirmationModal({
                     <button
                         type="button"
                         onClick={onConfirm}
-                        className="flex-1 min-h-[48px] py-3 px-4 rounded-2xl font-bold text-base sm:text-xl text-white transition-all active:scale-95 shadow-md hover:brightness-105 text-center break-words flex items-center justify-center"
+                        className="flex-1 py-3.5 px-4 rounded-2xl font-bold text-lg sm:text-xl text-white transition-all active:scale-95 shadow-md hover:brightness-105"
                         style={{ backgroundColor: themeColors.brandRed }}
                     >
                         {confirmText}

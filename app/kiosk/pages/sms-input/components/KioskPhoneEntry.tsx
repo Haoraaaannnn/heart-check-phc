@@ -20,11 +20,6 @@ import {
     SMS_SERVICE_PREFIXES,
     NUMERIC_PREFIX_RULES,
 } from "@/app/kiosk/pages/sms-input/constants/smsInput";
-import {
-    getNextPhoneValue,
-    validatePhMobileNumber,
-} from "@/app/kiosk/pages/sms-input/utils/phoneValidation";
-import { SMSValidationTexts } from "@/app/kiosk/pages/sms-input/constants/smsValidationTexts";
 
 /** Props for {@link KioskPhoneEntry}. */
 interface KioskPhoneEntryProps {
@@ -120,7 +115,7 @@ function buildCancelHref(
 
 /**
  * Interactive phone entry controller coordinating keypad input, formatting,
- * Philippine mobile number validation, and database ticket creation via Supabase RPC (`create_patient`).
+ * and database ticket creation via Supabase RPC (`create_patient`).
  *
  * @param props - Component props.
  * @returns The complete phone number input layout with keypad and action triggers.
@@ -133,7 +128,6 @@ export default function KioskPhoneEntry({
 }: KioskPhoneEntryProps) {
     const preferredList = preferredCubicleNums ? preferredCubicleNums.split(",") : null;
     const [phone, setPhone] = useState("");
-    const [inputWarning, setInputWarning] = useState<{ fil: string; en: string } | null>(null);
     const [showContinueModal, setShowContinueModal] = useState(false);
     const [showSkipModal, setShowSkipModal] = useState(false);
     const [patientNum, setPatientNum] = useState<string | undefined>(initialPatientNum);
@@ -145,23 +139,10 @@ export default function KioskPhoneEntry({
     const cancelHref = buildCancelHref(service, patientType, subcategory);
 
     const addDigit = (digit: string) => {
-        const nextVal = getNextPhoneValue(phone, digit);
-        if (nextVal !== null) {
-            setPhone(nextVal);
-            setInputWarning(null);
-        } else if (phone.length === 0 || phone.length === 1) {
-            // Display guidance when the patient taps a non-09 starting digit
-            setInputWarning({
-                fil: SMSValidationTexts.mustStartWith09Fil,
-                en: SMSValidationTexts.mustStartWith09En,
-            });
-        }
+        if (phone.length < SMS_PHONE_MAX_LENGTH) setPhone((p) => p + digit);
     };
 
-    const deleteLast = () => {
-        setPhone((p) => p.slice(0, -1));
-        setInputWarning(null);
-    };
+    const deleteLast = () => setPhone((p) => p.slice(0, -1));
 
     /**
      * Executes the `create_patient` stored procedure in Supabase.
@@ -286,65 +267,54 @@ export default function KioskPhoneEntry({
         }
     };
 
-    const validation = validatePhMobileNumber(phone);
-    const isComplete = phone.length === SMS_PHONE_MAX_LENGTH;
-
-    let errorMessageFil: string | undefined;
-    let errorMessageEn: string | undefined;
-
-    if (inputWarning) {
-        errorMessageFil = inputWarning.fil;
-        errorMessageEn = inputWarning.en;
-    } else if (isComplete && !validation.isValid && validation.errorReason) {
-        const err = SMSValidationTexts.errors[validation.errorReason];
-        errorMessageFil = err.fil;
-        errorMessageEn = err.en;
-    }
-
     return (
-        <div style={SMSLayoutStyle.contentWrapper} className={SMSLayoutClasses.contentWrapper}>
-            <SMSHeader service={service} subcategory={subcategory} />
+        <div
+            className={SMSLayoutClasses.container}
+            style={SMSLayoutStyle.container}
+        >
+            <div
+                className={SMSLayoutClasses.contentWrapper}
+                style={SMSLayoutStyle.contentWrapper}
+            >
+                {/* Header Instructions */}
+                <SMSHeader service={service} subcategory={subcategory} />
 
-            {/* Entry Grid (Left: Phone & Actions, Right: NumPad) */}
-            <div className={SMSLayoutClasses.entryGrid}>
-                {/* Left Column (Landscape): Instructions, Phone Display & Actions */}
-                <div className={SMSLayoutClasses.entryLeftCol}>
-                    <div className={SMSLayoutClasses.phoneInputWrapper}>
-                        <PhoneInput
-                            phone={phone}
-                            onDelete={deleteLast}
-                            service={service}
-                            isValid={validation.isValid}
-                            errorMessageFil={errorMessageFil}
-                            errorMessageEn={errorMessageEn}
-                        />
+                {/* Entry Grid (Left: Phone & Actions, Right: NumPad) */}
+                <div className={SMSLayoutClasses.entryGrid}>
+                    <div className={SMSLayoutClasses.entryLeftCol}>
+                        <div className={SMSLayoutClasses.phoneInputWrapper}>
+                            <PhoneInput
+                                phone={phone}
+                                onDelete={deleteLast}
+                                service={service}
+                            />
+                        </div>
+
+                        <div className={SMSLayoutClasses.instructionWrapper}>
+                            <SMSInstruction />
+                        </div>
+
+                        <div className={SMSLayoutClasses.continueWrapper}>
+                            <ContinueButton
+                                disabled={phone.length !== SMS_PHONE_MAX_LENGTH}
+                                onContinue={() => setShowContinueModal(true)}
+                                onSkip={() => setShowSkipModal(true)}
+                                service={service}
+                                phone={phone}
+                                showContinueModal={showContinueModal}
+                                showSkipModal={showSkipModal}
+                                onContinueConfirm={handleContinueConfirm}
+                                onSkipConfirm={handleSkipConfirm}
+                                onContinueCancel={() => setShowContinueModal(false)}
+                                onSkipCancel={() => setShowSkipModal(false)}
+                                href={cancelHref}
+                            />
+                        </div>
                     </div>
 
-                    <div className={SMSLayoutClasses.instructionWrapper}>
-                        <SMSInstruction />
+                    <div className={SMSLayoutClasses.entryRightCol}>
+                        <NumPad onDigit={addDigit} />
                     </div>
-
-                    <div className={SMSLayoutClasses.continueWrapper}>
-                        <ContinueButton
-                            disabled={!validation.isValid}
-                            onContinue={() => setShowContinueModal(true)}
-                            onSkip={() => setShowSkipModal(true)}
-                            service={service}
-                            phone={phone}
-                            showContinueModal={showContinueModal}
-                            showSkipModal={showSkipModal}
-                            onContinueConfirm={handleContinueConfirm}
-                            onSkipConfirm={handleSkipConfirm}
-                            onContinueCancel={() => setShowContinueModal(false)}
-                            onSkipCancel={() => setShowSkipModal(false)}
-                            href={cancelHref}
-                        />
-                    </div>
-                </div>
-
-                {/* Right Column: Keypad */}
-                <div className={SMSLayoutClasses.entryRightCol}>
-                    <NumPad onDigit={addDigit} />
                 </div>
             </div>
         </div>

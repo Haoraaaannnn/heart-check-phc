@@ -83,6 +83,10 @@ export async function GET(request: Request) {
             countersError,
         });
 
+        assignedServices = (services ?? []).map(s => s.service);
+        assignedRooms = (rooms ?? []) as typeof assignedRooms;
+        assignedCounters = (counters ?? []).map(c => c.counter);
+
         return NextResponse.json(
             {
             error:
@@ -94,9 +98,6 @@ export async function GET(request: Request) {
             { status: 400 }
         );
         }
-        assignedServices = (services ?? []).map(s => s.service);
-        assignedRooms = (rooms ?? []) as typeof assignedRooms;
-        assignedCounters = (counters ?? []).map(c => c.counter);
     }
   }
 

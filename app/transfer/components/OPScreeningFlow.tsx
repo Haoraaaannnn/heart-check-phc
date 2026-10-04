@@ -120,8 +120,8 @@ export function OPScreeningFlow({
     });
 
     const ALL_SUBCATEGORIES = [
-      { sub: 'Adult' },
-      { sub: 'Pedia' },
+      { sub: 'Adult', icon: 'bx-male' },
+      { sub: 'Pedia', icon: 'bx-child' },
     ];
 
     const visibleSubcategories = ALL_SUBCATEGORIES;

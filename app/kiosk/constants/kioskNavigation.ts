@@ -1,9 +1,16 @@
 /**
- * Canonical route paths across the kiosk patient flow.
+ * @fileoverview Central route and timing configuration for the kiosk flow.
+ *
+ * Keeps navigation destinations and shared kiosk delays in one feature-scoped
+ * constants module for layouts, route components, and behavior hooks.
  */
+
+/** Canonical route paths across the kiosk patient flow. */
 export const KIOSK_ROUTES = {
     /** Entrance patient type selection: new vs old patient. */
     NEW_OLD_SELECTION: "/kiosk/pages/kiosk-new-old-selection",
+    /** Full-screen screen shown after kiosk inactivity. */
+    SLIDESHOW: "/kiosk/slideshow",
     /** Service menu list filtered by patient type. */
     SERVICES: "/kiosk/pages/kiosk-services",
     /** Unified age category selection (Adult vs Pedia) — used by both Consultation and OPD Screening. */
@@ -20,6 +27,10 @@ export const KIOSK_ROUTES = {
 
 /** Shared timeout and delay constants for the kiosk. */
 export const KIOSK_TIMING = {
+    /** Idle delay before kiosk pages return to the slideshow (25 seconds). */
+    IDLE_REDIRECT_MS: 25 * 1000,
+    /** Delay between images on the idle slideshow (3 seconds). */
+    SLIDESHOW_INTERVAL_MS: 3000,
     /** Auto-redirect timeout after printing ticket (5 seconds). */
     PRINT_REDIRECT_MS: 5000,
     /** Page fade-in transition duration (300ms). */

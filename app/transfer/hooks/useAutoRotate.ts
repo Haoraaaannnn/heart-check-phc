@@ -60,16 +60,12 @@ export function useAutoRotate(
 
       busyRef.current = true;
       try {
-      const startOfDay = new Date(); startOfDay.setHours(0, 0, 0, 0);
-      const { data: maxRow } = await supabase
-        .from('patients')
-        .select('queue_position')
-        .not('queue_position', 'is', null)
-        .neq('status', 'Assigned')
-        .gte('created_at', startOfDay.toISOString())
-        .order('queue_position', { ascending: false })
-        .limit(1)
-        .maybeSingle();
+        const { data: maxRow } = await supabase
+          .from('patients')
+          .select('queue_position')
+          .order('queue_position', { ascending: false })
+          .limit(1)
+          .single();
 
         let nextPosition = (maxRow?.queue_position ?? 0) + 1;
         const nowIso = new Date().toISOString();
@@ -114,12 +110,8 @@ export function useAutoRotate(
             ...extra,
           };
         };
-        
-        const withExpected = (p: Patient, update: Record<string, unknown>) => ({
-          ...update,
-          expected: { status: p.status, cubicleNum: p.cubicleNum ?? null },
-        });
-        const onProgressUpdates = timedOutOnProgress.map(p => withExpected(p, buildUpdate(p, {})));
+
+        const onProgressUpdates = timedOutOnProgress.map(p => buildUpdate(p, {}));
         const assignedUpdates = timedOutAssigned.map(p => {
           const reorderedPreferred =
             p.cubicleNum && p.preferredCubicleNums

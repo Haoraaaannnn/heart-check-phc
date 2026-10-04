@@ -13,12 +13,11 @@ export interface DragHandleProps {
 }
 
 /**
- * Dedicated drag handle grip for touch and pointer-based dragging.
+ * Dedicated drag handle grip icon for touch and pointer-based dragging.
  *
  * @remarks
  * On touch screens and tablets, dragging is gated to this handle (`data-drag-handle="true"`)
  * so users can freely scroll panels with normal touch gestures without triggering accidental drags.
- * Uses pure CSS grip bars instead of font icons.
  *
  * @param props - Customization props for the handle.
  * @returns The rendered grip handle element.
@@ -28,12 +27,10 @@ export function DragHandle({ className = '', title = 'Drag to move patient' }: D
     <span
       data-drag-handle="true"
       title={title}
-      className={`inline-flex flex-col items-center justify-center gap-[3px] w-7 h-7 rounded-lg hover:bg-gray-100 cursor-grab active:cursor-grabbing touch-none select-none transition-colors ${className}`.trim()}
+      className={`inline-flex items-center justify-center w-7 h-7 rounded-lg text-gray-400 hover:text-gray-700 hover:bg-gray-100 cursor-grab active:cursor-grabbing touch-none select-none transition-colors ${className}`.trim()}
       aria-label={title}
     >
-      <span className="w-3.5 h-[2px] bg-slate-300 rounded-full" />
-      <span className="w-3.5 h-[2px] bg-slate-300 rounded-full" />
-      <span className="w-3.5 h-[2px] bg-slate-300 rounded-full" />
+      <i className="bx bx-grid-vertical text-lg" aria-hidden="true" />
     </span>
   );
 }

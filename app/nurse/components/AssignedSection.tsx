@@ -64,6 +64,7 @@ export function AssignedSection({
     <StageColumn
       stage="assigned"
       title={nurseTexts.stageAssignedHeading}
+      icon="bx-user-check"
       badgeColorClass="bg-blue-100 text-blue-700"
       count={patients.length}
       emptyText={nurseTexts.emptyAssigned}

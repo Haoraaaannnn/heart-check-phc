@@ -117,9 +117,7 @@ The following utilities are defined in `app/globals.css` to provide consistent h
 ## 5. Architectural Standards Enforcement (`AGENTS.md`)
 
 When adding new components to Heart Check PHC, developers must adhere to the following checklist:
-1. **No Hardcoded Copy:** Extract all strings, labels, and placeholders to `<feature>Texts.ts`.
-2. **No Inline Styling Bloat:** Extract CSS properties and token maps to `<feature>Styles.ts` or `<feature>.ts`.
-3. **Comprehensive JSDoc:** File-level overview and symbol-level `@param`, `@returns`, and `@remarks` annotations on every exported symbol.
+1. **No Hardcoded Copy:** Extract all strings to `<feature>Texts.ts`.
+2. **No Inline Styling Bloat:** Extract CSS properties and token maps to `<feature>.ts`.
+3. **Comprehensive JSDoc:** File-level overview and symbol-level `@param`, `@returns`, and `@remarks` annotations.
 4. **Touch-Safe Targets:** All interactive buttons and handles must have a minimum hit target of 44×44px.
-5. **No Emojis:** Zero emojis across code, documentation, commit messages, or UI copy.
-6. **Master Design System Reference:** For complete details on enterprise navigation layouts, color palettes, dark/light theme standards, and solid surfaces, refer to [docs/SYSTEM_DESIGN.md](file:///home/jensen/Github-Repositories/heart-check-phc/docs/SYSTEM_DESIGN.md).

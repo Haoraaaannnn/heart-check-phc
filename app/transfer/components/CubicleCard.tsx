@@ -119,17 +119,22 @@ export function CubicleCard({
           : 'border-slate-200 bg-slate-50/60 hover:bg-slate-50'
       }`}
     >
-      {/* Cubicle Tile Header: Cubicle Num + Doctor + Assign / Capacity */}
+      {/* Cubicle Tile Header: Badge + Cubicle Num + Doctor + Assign / Capacity */}
       <div className="flex items-center justify-between gap-1 mb-1">
-        <div className="min-w-0">
-          <span className="text-[11px] font-bold text-slate-800 truncate block leading-none">
+        <div className="flex items-center gap-1.5 min-w-0">
+          <span className="w-5 h-5 rounded-md bg-slate-900 text-white font-bold text-[10px] flex items-center justify-center shrink-0 shadow-2xs">
             {cubicle.cubicleNum}
           </span>
-          <span className="text-[9px] text-slate-500 font-medium truncate block leading-none mt-0.5">
-            {doctorName
-              ? `${transferTexts.doctorPrefix} ${doctorName}`
-              : transferTexts.unassignedDoctor}
-          </span>
+          <div className="min-w-0">
+            <span className="text-[11px] font-bold text-slate-800 truncate block leading-none">
+              {cubicle.cubicleNum}
+            </span>
+            <span className="text-[9px] text-slate-500 font-medium truncate block leading-none mt-0.5">
+              {doctorName
+                ? `${transferTexts.doctorPrefix} ${doctorName}`
+                : transferTexts.unassignedDoctor}
+            </span>
+          </div>
         </div>
 
         {/* Right side of header: "+ Assign" button if target eligible, or capacity pill */}
@@ -188,8 +193,8 @@ export function CubicleCard({
               <div className="flex items-center gap-1 min-w-0">
                 {isDraggable && (
                   isTopSelected ? (
-                    <span className="px-1 py-0.5 rounded bg-[#cc3535] text-white text-[9px] font-bold shrink-0">
-                      SEL
+                    <span className="w-4 h-4 rounded bg-[#cc3535] text-white flex items-center justify-center shrink-0">
+                      <i className="bx bx-check text-[10px] font-bold" aria-hidden="true" />
                     </span>
                   ) : (
                     <DragHandle title={transferTexts.tapToSelectHint} />
@@ -225,13 +230,20 @@ export function CubicleCard({
                   }}
                   disabled={speakingId === topPatient.id}
                   title={transferTexts.callPatientTooltip}
-                  className={`px-1.5 py-0.5 rounded text-[10px] font-semibold transition-colors cursor-pointer ${
+                  className={`w-5 h-5 rounded flex items-center justify-center transition-colors cursor-pointer ${
                     speakingId === topPatient.id
                       ? 'bg-blue-100 text-blue-300 cursor-not-allowed'
                       : 'bg-blue-50 hover:bg-blue-100 text-blue-600'
                   }`}
                 >
-                  {speakingId === topPatient.id ? transferTexts.callingBtn : transferTexts.callBtn}
+                  <i
+                    className={`bx ${
+                      speakingId === topPatient.id
+                        ? 'bx-loader-alt animate-spin'
+                        : 'bxs-volume-full'
+                    } text-[11px]`}
+                    aria-hidden="true"
+                  />
                 </button>
 
                 {/* Return to queue button */}
@@ -244,9 +256,9 @@ export function CubicleCard({
                     onMoveBack(topPatient, cubicle.cubicleNum);
                   }}
                   title={transferTexts.moveToQueueTooltip}
-                  className="px-1.5 py-0.5 rounded text-[10px] font-semibold bg-amber-50 hover:bg-amber-100 text-amber-700 transition-colors cursor-pointer"
+                  className="w-5 h-5 rounded flex items-center justify-center bg-amber-50 hover:bg-amber-100 text-amber-700 transition-colors cursor-pointer"
                 >
-                  {transferTexts.backBtn}
+                  <i className="bx bx-undo text-xs" aria-hidden="true" />
                 </button>
               </div>
             </div>

@@ -33,15 +33,8 @@ function PatientsContent() {
   const service = searchParams.get('service'); // null = All Services
 
   const { stats, setStats, hourlyData, fetchAnalyticsData } = usePatientsAnalyticsData();
-  const {
-    allRecentPatients,
-    serviceDistribution,
-    error,
-    fetchPatientData,
-    searchQuery,
-    setSearchQuery,
-    isSearching,
-  } = usePatientData(setStats, service);
+  const { allRecentPatients, serviceDistribution, error, fetchPatientData } =
+    usePatientData(setStats, service);
   const { historicalData } = useHistoricalSummary();
 
   // Hourly pattern comes from the FastAPI report and isn't per-service, so load it once
@@ -91,12 +84,7 @@ function PatientsContent() {
         </div>
       )}
 
-      <RecentPatientsTable
-        patients={allRecentPatients}
-        searchQuery={searchQuery}
-        onSearchChange={setSearchQuery}
-        isSearching={isSearching}
-      />
+      <RecentPatientsTable patients={allRecentPatients} />
     </div>
   );
 }

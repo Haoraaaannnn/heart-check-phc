@@ -7,15 +7,15 @@ Connects to Supabase and serves the analytics payload to the frontend.
 import os
 import time
 import traceback
-from datetime import date, datetime, timedelta
+from datetime import date, timedelta
 import pandas as pd
 import httpx
 from dotenv import load_dotenv
-from fastapi import FastAPI, HTTPException, Query
+from fastapi import FastAPI, HTTPException
 from fastapi.middleware.cors import CORSMiddleware
-from analytics.report import generate_report, convert_to_native
+from analytics import generate_report
 from analytics.preprocessing import preprocess_queue_data
-from analytics.descriptive import monthly_breakdown, hourly_pattern, bottleneck_report
+from analytics.descriptive import monthly_breakdown
 
 import calendar
 from fastapi.responses import StreamingResponse
@@ -26,22 +26,16 @@ env_path = os.path.join(BASE_DIR, "..", ".env.local")
 load_dotenv(env_path)
 app = FastAPI()
 
-allowed_origins_raw = os.environ.get("ALLOWED_ORIGINS")
-if allowed_origins_raw:
-    allowed_origins = [o.strip() for o in allowed_origins_raw.split(",") if o.strip()]
-else:
-    allowed_origins = [
+app.add_middleware(
+    CORSMiddleware,
+    allow_origins=[
         "http://localhost:3000",
         "http://127.0.0.1:3000",
         "http://localhost:3001",
         "http://127.0.0.1:3001",
-    ]
-
-app.add_middleware(
-    CORSMiddleware,
-    allow_origins=allowed_origins,
+    ],
     allow_credentials=True,
-    allow_methods=["GET", "POST", "OPTIONS"],
+    allow_methods=["*"],
     allow_headers=["*"],
 )
 
@@ -72,7 +66,6 @@ CACHE_TTL_SECONDS = 300
 _monthly_cache: dict[int, tuple[float, list[dict]]] = {}
 _years_cache: tuple[float, list[int]] | None = None
 _export_dates_cache: tuple[float, dict] | None = None
-_daily_drilldown_cache: dict[str, tuple[float, dict]] = {}
 
 
 def _supabase_headers() -> dict:
@@ -245,134 +238,8 @@ def get_dashboard_data(range: str = DEFAULT_RANGE):
         print("=" * 60)
         fallback = get_empty_data()
         fallback["bottleneck_analysis"]["system_status"] = "Error"
+        fallback["_debug_error"] = True  # remove before thesis defense / production
         return fallback
-
-
-@app.get("/api/daily-drilldown")
-def get_daily_drilldown(date_param: str = Query(..., alias="date")):
-    """
-    Returns granular hourly distribution, bottleneck breakdown,
-    stage dwell times, and operational metrics for a specific calendar date (Asia/Manila).
-    """
-    cleaned_date = date_param.strip()
-    try:
-        target_date = datetime.strptime(cleaned_date, "%Y-%m-%d").date()
-    except Exception:
-        raise HTTPException(
-            status_code=400,
-            detail="Invalid date format. Expected YYYY-MM-DD.",
-        )
-
-    now = time.time()
-    cached = _daily_drilldown_cache.get(cleaned_date)
-    if cached and (now - cached[0]) < CACHE_TTL_SECONDS:
-        return cached[1]
-
-    # Query with 1-day padding to safely cover UTC-to-Manila (UTC+8) offset
-    start_date = (target_date - timedelta(days=1)).isoformat()
-    end_date = (target_date + timedelta(days=2)).isoformat()
-
-    try:
-        data = fetch_supabase_table(
-            "patients",
-            select=(
-                "id,created_at,patientNum,service,status,"
-                "reg_start,reg_end,consult_start,consult_end,"
-                "carryout_start,carryout_end,cubicleNum,is_historical"
-            ),
-            start_date=start_date,
-            end_date=end_date,
-        )
-    except Exception as e:
-        print(f"daily-drilldown fetch error: {e}")
-        raise HTTPException(status_code=502, detail="Failed to fetch patient data from database.")
-
-    empty_res = {
-        "date": cleaned_date,
-        "total_patients": 0,
-        "hourly_pattern": [],
-        "bottleneck_analysis": {
-            "stages": [],
-            "bottleneck_stage": "None",
-            "system_status": "No Data",
-            "system_reason": f"No patient records recorded on {cleaned_date}.",
-        },
-        "summary": {
-            "total_patients": 0,
-            "avg_total_time": None,
-            "avg_wait_registration": None,
-            "avg_wait_consultation": None,
-            "system_status": "No Data",
-            "bottleneck_stage": "None",
-            "system_reason": f"No patient records recorded on {cleaned_date}.",
-            "peak_hour": None,
-        },
-    }
-
-    if not data:
-        return empty_res
-
-    df = pd.DataFrame(data)
-    df = normalize_dataframe(df)
-
-    date_col = "kiosk_time" if "kiosk_time" in df.columns else "created_at"
-    if date_col in df.columns:
-        df["_manila_date"] = df[date_col].apply(
-            lambda t: _to_manila(t).date() if pd.notna(t) else None
-        )
-        df = df[df["_manila_date"] == target_date]
-    else:
-        return empty_res
-
-    if df.empty:
-        return empty_res
-
-    df_clean = preprocess_queue_data(df)
-    hourly = hourly_pattern(df_clean).to_dict(orient="records")
-    bottlenecks = bottleneck_report(df_clean)
-
-    avg_tot = (
-        round(float(df_clean["total_time"].dropna().mean()), 2)
-        if "total_time" in df_clean.columns and not df_clean["total_time"].dropna().empty
-        else None
-    )
-    avg_reg = (
-        round(float(df_clean["wait_registration"].dropna().mean()), 2)
-        if "wait_registration" in df_clean.columns and not df_clean["wait_registration"].dropna().empty
-        else None
-    )
-    avg_con = (
-        round(float(df_clean["wait_consultation"].dropna().mean()), 2)
-        if "wait_consultation" in df_clean.columns and not df_clean["wait_consultation"].dropna().empty
-        else None
-    )
-
-    peak_hour = None
-    if hourly:
-        sorted_hours = sorted(hourly, key=lambda x: x.get("avg_patients", 0), reverse=True)
-        if sorted_hours and sorted_hours[0].get("avg_patients", 0) > 0:
-            peak_hour = sorted_hours[0].get("time_label")
-
-    payload = {
-        "date": cleaned_date,
-        "total_patients": len(df_clean),
-        "hourly_pattern": hourly,
-        "bottleneck_analysis": bottlenecks,
-        "summary": {
-            "total_patients": len(df_clean),
-            "avg_total_time": avg_tot,
-            "avg_wait_registration": avg_reg,
-            "avg_wait_consultation": avg_con,
-            "system_status": bottlenecks.get("system_status", "Normal"),
-            "bottleneck_stage": bottlenecks.get("bottleneck_stage", "None"),
-            "system_reason": bottlenecks.get("system_reason", ""),
-            "peak_hour": peak_hour,
-        },
-    }
-
-    sanitized = convert_to_native(payload)
-    _daily_drilldown_cache[cleaned_date] = (now, sanitized)
-    return sanitized
 
 
 @app.get("/api/available-years")
@@ -437,7 +304,6 @@ def get_available_export_dates(refresh: bool = False):
         return {"years": [], "dates": {}}
 
     dates_map: dict[int, set[int]] = {}
-    available_days_set: set[str] = set()
 
     for row in data:
         # PHC Time and Motion Analysis export sheets require reg_start
@@ -451,7 +317,6 @@ def get_available_export_dates(refresh: bool = False):
             if y not in dates_map:
                 dates_map[y] = set()
             dates_map[y].add(m)
-            available_days_set.add(m_dt.date().isoformat())
         except Exception:
             continue
 
@@ -460,12 +325,10 @@ def get_available_export_dates(refresh: bool = False):
         str(y): sorted(list(months))
         for y, months in dates_map.items()
     }
-    sorted_days = sorted(list(available_days_set), reverse=True)
 
     result = {
         "years": sorted_years,
         "dates": formatted_dates,
-        "days": sorted_days,
     }
 
     _export_dates_cache = (now, result)
@@ -604,7 +467,6 @@ def get_empty_data():
 def export_excel(
     range: str | None = None,
     month: str | None = None,
-    date_param: str | None = Query(None, alias="date"),
     service: str | None = None,
 ):
     """
@@ -612,21 +474,13 @@ def export_excel(
     one sheet per day, matching the source .xls structure.
 
     Supports date filtering by:
-    1. date="YYYY-MM-DD" (e.g. "2025-11-04") to export a single specific day.
-    2. month="YYYY-MM" (e.g. "2025-11") to export all days in that specific month.
-    3. range="90d" | "180d" | "365d" | "all" for rolling range or all-dates exports.
+    1. month="YYYY-MM" (e.g. "2025-11") to export all days in that specific month.
+    2. range="90d" | "180d" | "365d" | "all" for rolling range exports.
     """
     target_year: int | None = None
     target_month: int | None = None
-    specific_date: date | None = None
 
-    if date_param:
-        try:
-            specific_date = datetime.strptime(date_param.strip(), "%Y-%m-%d").date()
-        except Exception:
-            raise HTTPException(status_code=400, detail="Invalid date format. Expected YYYY-MM-DD.")
-
-    if not specific_date and month:
+    if month:
         parts = month.strip().split("-")
         try:
             if len(parts) == 2:
@@ -642,10 +496,7 @@ def export_excel(
         except Exception:
             raise HTTPException(status_code=400, detail="Invalid month format. Expected YYYY-MM.")
 
-    if specific_date:
-        start_date = (specific_date - timedelta(days=1)).isoformat()
-        end_date = (specific_date + timedelta(days=2)).isoformat()
-    elif target_year and target_month:
+    if target_year and target_month:
         days_in_month = calendar.monthrange(target_year, target_month)[1]
         # Generous date boundaries to ensure UTC / Manila (+8) boundary cases are captured
         start_date = (date(target_year, target_month, 1) - timedelta(days=1)).isoformat()
@@ -669,9 +520,6 @@ def export_excel(
         raise HTTPException(status_code=502, detail="Failed to fetch patient data.")
 
     if not data:
-        if specific_date:
-            date_label = specific_date.strftime("%B %d, %Y")
-            raise HTTPException(status_code=404, detail=f"No patient records found for {date_label}.")
         if target_year and target_month:
             month_label = f"{calendar.month_name[target_month]} {target_year}"
             raise HTTPException(status_code=404, detail=f"No patient records found for {month_label}.")
@@ -683,13 +531,7 @@ def export_excel(
     if service and service.strip().lower() not in ("all", ""):
         df = df[df["service"] == service]
 
-    if specific_date:
-        df["_manila_date"] = df["reg_start"].apply(
-            lambda t: _to_manila(t).date() if pd.notna(t) else None
-        )
-        df = df[df["_manila_date"].notna()]
-        df = df[df["_manila_date"] == specific_date]
-    elif target_year and target_month:
+    if target_year and target_month:
         df["_manila_date"] = df["reg_start"].apply(
             lambda t: _to_manila(t).date() if pd.notna(t) else None
         )
@@ -697,9 +539,6 @@ def export_excel(
         df = df[df["_manila_date"].apply(lambda d: d.year == target_year and d.month == target_month)]
 
     if df.empty:
-        if specific_date:
-            date_label = specific_date.strftime("%B %d, %Y")
-            raise HTTPException(status_code=404, detail=f"No patient records found for {date_label}.")
         if target_year and target_month:
             month_label = f"{calendar.month_name[target_month]} {target_year}"
             raise HTTPException(status_code=404, detail=f"No patient records found for {month_label}.")
@@ -717,12 +556,8 @@ def export_excel(
         print("=" * 60)
         raise HTTPException(status_code=500, detail="Failed to build the export.")
 
-    if specific_date:
-        filename = f"phc_time_motion_export_{specific_date.isoformat()}.xlsx"
-    elif target_year and target_month:
+    if target_year and target_month:
         filename = f"phc_time_motion_export_{target_year}_{target_month:02d}.xlsx"
-    elif range == "all":
-        filename = "phc_time_motion_export_all_dates.xlsx"
     else:
         filename = f"phc_time_motion_export_{range or 'custom'}.xlsx"
 

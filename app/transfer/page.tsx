@@ -18,7 +18,6 @@ import { OPScreeningFlow } from './components/OPScreeningFlow';
 import { OtherServicesFlow } from './components/OtherServicesFlow';
 import { DragGhost } from './components/DragGhost';
 import { DoctorsModal } from './components/DoctorsModal';
-import { ConfirmAssignmentModal } from './components/ConfirmAssignmentModal';
 import { usePatientData } from './hooks/usePatientData';
 import { useCubicleData } from './hooks/useCubicleData';
 import { useAutoAssign } from './hooks/useAutoAssign';
@@ -36,12 +35,9 @@ import { useRequireAuth } from './hooks/useRequireAuth';
 import { MAX_PATIENTS_PER_CUBICLE } from './lib/constants';
 import { useIdlePatients } from './hooks/useIdlePatients';
 import { useRegistrationRotate } from './hooks/useRegistrationRotate';
-import { useConnectionStatus } from '@/hooks/useConnectionStatus';
-import { useOfflineQueue } from '@/hooks/useOfflineQueue';
-import { enqueueMutation, removeMutation } from '@/lib/offlineQueue';
-import { ConnectionStatusBanner } from '@/components/reusables/ConnectionStatusBanner';
 import { NotificationBadge } from '@/components/reusables/NotificationBadge';
-import { transferTexts } from './constants/transferTexts';
+import { useConnectionStatus } from '@/hooks/useConnectionStatus';
+import { ConnectionStatusBanner } from '@/components/reusables/ConnectionStatusBanner';
 
 
 /**
@@ -60,8 +56,7 @@ export default function TransferPage() {
   const [selectedOPSubcategory, setSelectedOPSubcategory] = useState<string | null>(null);
   const [selectedRoom, setSelectedRoom] = useState<number | null>(null);
 
-  // Audio, Sidebar, and Modal State
-  const [isSidebarExpanded, setIsSidebarExpanded] = useState<boolean>(false);
+  // Audio and Modal State
   const [speaking, setSpeaking] = useState<number | null>(null);
   const [showDoctorsModal, setShowDoctorsModal] = useState<boolean>(false);
   const [showUnassignedMenu, setShowUnassignedMenu] = useState<boolean>(false);
@@ -326,9 +321,6 @@ export default function TransferPage() {
   // Connection status tracking for weak-signal / offline resilience.
   const { isOnline, channelStatus, isFullyConnected, setChannelStatus } = useConnectionStatus();
 
-  // Persistent offline mutation queue (handles sudden power loss & network drops)
-  const { pendingCount, isSyncing: isSyncingQueue } = useOfflineQueue(syncNow);
-
   useRealtimeSubscription(handleRealtimeUpdate, setChannelStatus);
 
 
@@ -383,13 +375,17 @@ export default function TransferPage() {
   const speak = async (text: string, patientId: number, times: number = 3) => {
     setSpeaking(patientId);
     try {
-      const response = await fetch('/api/tts', {
-        method: 'POST',
-        headers: {
-          'Content-Type': 'application/json',
-        },
-        body: JSON.stringify({ text }),
-      });
+      const response = await fetch(
+        'https://api.deepgram.com/v1/speak?model=aura-2-amalthea-en',
+        {
+          method: 'POST',
+          headers: {
+            Authorization: `Token ${process.env.NEXT_PUBLIC_DEEPGRAM_KEY}`,
+            'Content-Type': 'application/json',
+          },
+          body: JSON.stringify({ text }),
+        }
+      );
       if (!response.ok) {
         setSpeaking(null);
         return;
@@ -465,7 +461,6 @@ export default function TransferPage() {
             cubicleNum: bestCubicle.cubicleNum,
             status: 'Assigned',
             called_at: now,
-            reg_end: patient.reg_end ?? now,
           },
         ],
       };
@@ -478,46 +473,25 @@ export default function TransferPage() {
         cubicleNum: bestCubicle.cubicleNum,
         status: 'Assigned',
         called_at: now,
-        reg_end: patient.reg_end ?? now,
       },
     ]);
   };
 
   /**
-   * Releases a patient from the registration window into the queue with offline outbox persistence.
+   * Releases a patient from the registration window into the queue.
    */
   const handleReleaseFromCounter = async (patient: Patient) => {
     const now = new Date().toISOString();
-    let queuedId: string | null = null;
 
     try {
-      const queued = await enqueueMutation({
-        table: 'patients',
-        type: 'update',
-        payload: { reg_end: now },
-        matchKey: 'id',
-        matchValue: patient.id,
-        clientTimestamp: now,
-        description: `Release patient #${patient.id} from counter`,
-      });
-      queuedId = queued.id;
-    } catch (e) {
-      console.warn('Offline outbox enqueue warning:', e);
-    }
+      const { error } = await supabase
+        .from('patients')
+        .update({ reg_end: now })
+        .eq('id', patient.id);
 
-    try {
-      if (typeof navigator !== 'undefined' && navigator.onLine) {
-        const { error } = await supabase
-          .from('patients')
-          .update({ reg_end: now })
-          .eq('id', patient.id)
-          .eq('is_historical', false);
-
-        if (!error && queuedId) {
-          await removeMutation(queuedId);
-        } else if (error) {
-          console.error('Failed to release patient from counter:', error);
-        }
+      if (error) {
+        console.error('Failed to release patient from counter:', error);
+        return;
       }
 
       setRegistrationPatients(prev => prev.filter(p => p.id !== patient.id));
@@ -525,7 +499,7 @@ export default function TransferPage() {
         prev.map(p => (p.id === patient.id ? { ...p, reg_end: now } : p))
       );
     } catch (err: unknown) {
-      console.warn('Network offline releasing patient from counter; saved to local outbox:', err);
+      console.error('Network error releasing patient from counter:', err);
       void syncNow();
     }
   };
@@ -541,7 +515,7 @@ export default function TransferPage() {
   };
 
   /**
-   * Commits all pending manual assignments to Supabase with durable offline outbox persistence.
+   * Commits all pending manual assignments to Supabase and sends SMS alerts.
    */
   const handleConfirm = useCallback(async () => {
     if (pendingUpdates.length === 0 || savingPendingUpdates.current) return;
@@ -558,52 +532,32 @@ export default function TransferPage() {
         id: patient.id,
         cubicleNum: patient.cubicleNum,
         status: patient.status,
-        ...(patient.reg_end ? { reg_end: patient.reg_end } : {}),
-        called_at: patient.called_at ?? (patient.status === 'Assigned' ? now : null),
+        reg_end: patient.reg_end,
+        called_at:
+          patient.called_at ??
+          (patient.status === 'Assigned' ? now : null),
         queue_position: 9999,
         cooldown_until: patient.cooldown_until ?? null,
         progress_started_at: patient.progress_started_at ?? null,
       }));
 
-      // 1. Immediately log to non-volatile IndexedDB outbox
-      let queuedId: string | null = null;
-      try {
-        const queued = await enqueueMutation({
-          table: 'patients',
-          type: 'upsert',
-          payload: patientUpdates,
-          matchKey: 'id',
-          clientTimestamp: now,
-          description: `Transfer confirm assignments for ${patientUpdates.length} patients`,
-        });
-        queuedId = queued.id;
-      } catch (e) {
-        console.warn('Offline outbox enqueue warning:', e);
-      }
+      await supabase.from('patients').upsert(patientUpdates, { onConflict: 'id' });
 
-      // 2. If online, push directly to Supabase
-      if (typeof navigator !== 'undefined' && navigator.onLine) {
-        const { error: upsertErr } = await supabase.from('patients').upsert(patientUpdates, { onConflict: 'id' });
-        if (!upsertErr && queuedId) {
-          await removeMutation(queuedId);
-        }
+      await Promise.all(
+        snapshot
+          .filter(p => p.phoneNum && p.status === 'Assigned' && p.cubicleNum)
+          .map(p => sendSMS(String(p.phoneNum), p.patientNum, p.cubicleNum!))
+      );
 
-        await Promise.all(
-          snapshot
-            .filter(p => p.phoneNum && p.status === 'Assigned' && p.cubicleNum)
-            .map(p => sendSMS(String(p.phoneNum), p.patientNum, p.cubicleNum!))
-        );
+      const { data: queue } = await supabase
+        .from('patients')
+        .select('id')
+        .neq('status', 'Assigned')
+        .order('queue_position');
 
-        const { data: queue } = await supabase
-          .from('patients')
-          .select('id')
-          .neq('status', 'Assigned')
-          .order('queue_position');
-
-        if (queue && queue.length > 0) {
-          const reorder = queue.map((row, i) => ({ id: row.id, queue_position: i + 1 }));
-          await supabase.from('patients').upsert(reorder, { onConflict: 'id' });
-        }
+      if (queue && queue.length > 0) {
+        const reorder = queue.map((row, i) => ({ id: row.id, queue_position: i + 1 }));
+        await supabase.from('patients').upsert(reorder, { onConflict: 'id' });
       }
 
       setPendingUpdates([]);
@@ -612,23 +566,13 @@ export default function TransferPage() {
 
       await syncNow();
     } catch (err) {
-      console.warn('Offline outbox saved transfer assignments; network sync deferred:', err);
+      console.error('Failed to confirm assignments:', err);
     } finally {
       savingPendingUpdates.current = false;
       confirmingRef.current = false;
       setIsConfirming(false);
     }
   }, [pendingUpdates, setPendingUpdates, syncNow]);
-
-  /**
-   * Reverts all pending manual cubicle assignments and restores server queue state.
-   */
-  const handleCancelPending = useCallback(() => {
-    setPendingUpdates([]);
-    pendingUpdatesRef.current = [];
-    pendingAutoRotateIdsRef.current = new Set();
-    void fetchData();
-  }, [fetchData, setPendingUpdates]);
 
   // Back navigation handler
   const handleBack = () => {
@@ -843,9 +787,12 @@ export default function TransferPage() {
       return (
         <div className="flex items-center justify-center h-[65vh]">
           <div className="text-center max-w-sm">
-            <h2 className="text-base font-bold text-slate-800">{transferTexts.noServiceSelectedTitle}</h2>
+            <div className="w-16 h-16 bg-red-50 text-[#cc3535] rounded-2xl flex items-center justify-center mx-auto mb-4 shadow-xs">
+              <i className="bx bx-folder-open text-3xl" aria-hidden="true" />
+            </div>
+            <h2 className="text-base font-bold text-slate-800">No Service Selected</h2>
             <p className="text-slate-500 text-xs mt-1">
-              {transferTexts.noServiceSelectedDesc}
+              Select a service from the sidebar navigation to view and manage patient queues.
             </p>
           </div>
         </div>
@@ -971,23 +918,19 @@ export default function TransferPage() {
     );
   };
 
-  const showConfirmModal = (isConsultation || isOPScreening) && pendingUpdates.length > 0;
+  const showConfirmButton = (isConsultation || isOPScreening) && pendingUpdates.length > 0;
 
   return (
     <div className="flex h-screen overflow-hidden bg-slate-50 font-sans text-slate-800">
-      {/* Connection status banner — visible on weak signal, offline, or pending sync */}
+      {/* Connection status banner — visible only on weak signal or offline */}
       <ConnectionStatusBanner
         isOnline={isOnline}
         channelStatus={channelStatus}
         isFullyConnected={isFullyConnected}
-        pendingCount={pendingCount}
-        isSyncingQueue={isSyncingQueue}
-        showIcon={false}
       />
 
-      {/* Expandable/Collapsible Sidebar (Icon-only vs Expanded with text) */}
+      {/* Fixed Sidebar */}
       <Sidebar
-        isExpanded={isSidebarExpanded}
         selectedCategory={selectedCategory}
         queueCounts={queueCounts}
         idleCounts={idleCounts}
@@ -1000,29 +943,11 @@ export default function TransferPage() {
         }}
       />
 
-      {/* Main Content Area: Offset for icon rail (ml-18) or expanded panel (ml-64) */}
-      <div
-        className={`flex-1 flex flex-col h-screen overflow-hidden min-w-0 transition-all duration-300 ${
-          isSidebarExpanded ? 'ml-64' : 'ml-18'
-        }`}
-      >
+      {/* Main Content Area: Offset for icon rail (< 2xl) and full sidebar (>= 2xl) */}
+      <div className="flex-1 ml-18 2xl:ml-64 flex flex-col h-screen overflow-hidden min-w-0 transition-all duration-200">
         {/* Top Header Bar (Fixed) */}
         <header className="h-16 px-4 sm:px-6 bg-white border-b border-slate-200 flex items-center justify-between gap-3 sm:gap-4 shrink-0 z-30 shadow-2xs">
-          <div className="flex items-center gap-2 sm:gap-3 min-w-0">
-            {/* Sidebar Expand / Collapse Toggle Button */}
-            <button
-              type="button"
-              onClick={() => setIsSidebarExpanded(prev => !prev)}
-              className="p-1.5 sm:p-2 rounded-xl text-slate-500 hover:text-slate-800 hover:bg-slate-100 active:bg-slate-200 transition-colors cursor-pointer shrink-0"
-              title={isSidebarExpanded ? transferTexts.collapseSidebar : transferTexts.expandSidebar}
-              aria-label={isSidebarExpanded ? transferTexts.collapseSidebar : transferTexts.expandSidebar}
-            >
-              <i
-                className={`bx ${isSidebarExpanded ? 'bx-chevron-left' : 'bx-menu'} text-xl block`}
-                aria-hidden="true"
-              />
-            </button>
-
+          <div className="flex items-center gap-3 min-w-0">
             <span className="text-xs font-bold text-slate-400 uppercase tracking-widest hidden sm:inline">
               PHC Transfer
             </span>
@@ -1034,14 +959,21 @@ export default function TransferPage() {
               <button
                 type="button"
                 onClick={() => setShowUnassignedMenu(v => !v)}
-                className={`flex items-center gap-1.5 px-3 py-1.5 rounded-xl border text-xs font-bold transition-all cursor-pointer ${
+                className={`flex items-center gap-2 px-3 py-1.5 rounded-xl border text-xs font-bold transition-all cursor-pointer ${
                   totalUnassigned > 0
                     ? 'bg-red-50 border-red-200 text-[#cc3535] hover:bg-red-100'
                     : 'bg-slate-50 border-slate-200 text-slate-400'
                 }`}
                 title="Patients waiting to be assigned"
               >
+                <i className="bx bx-user-voice text-base" aria-hidden="true" />
                 <span>{totalUnassigned} Unassigned</span>
+                <i
+                  className={`bx bx-chevron-down text-sm transition-transform ${
+                    showUnassignedMenu ? 'rotate-180' : ''
+                  }`}
+                  aria-hidden="true"
+                />
               </button>
 
               {showUnassignedMenu && (
@@ -1059,7 +991,7 @@ export default function TransferPage() {
                         .filter(([cat]) => myServices.includes(cat))
                         .filter(([, n]) => n > 0).length === 0 ? (
                         <p className="px-4 py-6 text-xs text-slate-400 text-center">
-                          {transferTexts.allCaughtUp}
+                          All caught up — nobody waiting.
                         </p>
                       ) : (
                         Object.entries(queueCounts)
@@ -1084,6 +1016,31 @@ export default function TransferPage() {
               )}
             </div>
 
+            {/* Manual Assignment Confirm Button */}
+            {showConfirmButton && (
+              <button
+                type="button"
+                onClick={() => void handleConfirm()}
+                disabled={isConfirming}
+                className="flex items-center gap-2 px-4 py-1.5 rounded-xl bg-[#cc3535] text-white text-xs font-bold shadow-xs hover:bg-red-700 active:bg-red-800 transition-colors disabled:opacity-50 cursor-pointer"
+              >
+                {isConfirming ? (
+                  <>
+                    <div className="w-3 h-3 border-2 border-white/40 border-t-white rounded-full animate-spin" />
+                    <span>Saving...</span>
+                  </>
+                ) : (
+                  <>
+                    <i className="bx bx-check-circle text-sm" aria-hidden="true" />
+                    <span>
+                      Confirm {pendingUpdates.length} Assignment
+                      {pendingUpdates.length > 1 ? 's' : ''}
+                    </span>
+                  </>
+                )}
+              </button>
+            )}
+
             {/* Syncing Indicator */}
             {isSyncing && !isConfirming && (
               <div className="flex items-center gap-2 px-3 py-1 bg-blue-50 text-blue-700 border border-blue-200 rounded-xl text-xs font-semibold">
@@ -1096,10 +1053,10 @@ export default function TransferPage() {
             <button
               type="button"
               onClick={() => setShowDoctorsModal(true)}
-              className="px-3 py-1.5 bg-slate-100 hover:bg-slate-200 active:bg-slate-300 rounded-xl text-xs font-bold transition-colors text-slate-700 cursor-pointer shadow-2xs"
+              className="w-9 h-9 bg-slate-100 hover:bg-slate-200 active:bg-slate-300 rounded-xl flex items-center justify-center transition-colors text-slate-600 cursor-pointer shadow-2xs"
               title="Manage Doctors"
             >
-              {transferTexts.doctorsBtn}
+              <i className="bx bx-plus-medical text-base" aria-hidden="true" />
             </button>
           </div>
         </header>
@@ -1171,15 +1128,6 @@ export default function TransferPage() {
             : null
         }
         isValidDropTarget={Boolean(dragOverCubicle || dragOverCounter)}
-      />
-
-      {/* Confirm Assignment Modal */}
-      <ConfirmAssignmentModal
-        isOpen={Boolean(showConfirmModal)}
-        pendingPatients={pendingUpdates}
-        isConfirming={isConfirming}
-        onConfirm={handleConfirm}
-        onCancel={handleCancelPending}
       />
 
       {/* Doctors Assignment Modal */}

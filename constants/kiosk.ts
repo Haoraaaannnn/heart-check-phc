@@ -36,60 +36,58 @@ export const fontSizeBody = {
  * kiosk module. Feature-scoped constants import and alias these values,
  * ensuring all typography can be tuned or scaled from this single root file.
  */
-// Kiosk min 30 max 40
-// 28 min 48max
 export const kioskTypography = {
   // Page / Section Headings
-  pageTitle: "clamp(40px, 4.5vw, 50px)",
-  pageSubtitle: "clamp(18px, 2.2vw, 28px)",
-  heroTitle: "clamp(34px, 4vw, 56px)",
+  pageTitle: "clamp(28px, 3.2vw, 44px)",
+  pageSubtitle: "clamp(18px, 2vw, 28px)",
+  heroTitle: "clamp(32px, 3.5vw, 54px)",
 
   // Selection & Service Cards
-  cardTitle: "clamp(30px, 3.4vw, 40px)",
-  cardSubtitle: "clamp(20px, 2.5vw, 30px)",
-  cardCategoryTitle: "clamp(24px, 2.8vw, 36px)",
-  cardCubicleTitle: "clamp(20px, 2.2vw, 30px)",
-  cardBadge: "clamp(14px, 1.4vw, 18px)",
+  cardTitle: "clamp(22px, 2vw, 30px)",
+  cardSubtitle: "clamp(14px, 1.4vw, 18px)",
+  cardCategoryTitle: "clamp(24px, 2.6vw, 34px)",
+  cardCubicleTitle: "clamp(20px, 2vw, 28px)",
+  cardBadge: "clamp(13px, 1.2vw, 18px)",
 
   // Pills, Badges & Small Tags
-  badgeSmall: "clamp(13px, 1.3vw, 16px)",
-  badgeMedium: "clamp(15px, 1.5vw, 18px)",
-  badgeLarge: "clamp(16px, 1.8vw, 24px)",
+  badgeSmall: "clamp(12px, 1.2vw, 16px)",
+  badgeMedium: "clamp(14px, 1.4vw, 18px)",
+  badgeLarge: "clamp(16px, 1.6vw, 24px)",
 
   // Banners & Section Headers
-  bannerTitle: "clamp(24px, 3.2vw, 42px)",
-  bannerBadge: "clamp(16px, 1.8vw, 24px)",
-  bannerSubtitle: "clamp(14px, 1.4vw, 18px)",
+  bannerTitle: "clamp(24px, 3vw, 42px)",
+  bannerBadge: "clamp(16px, 1.6vw, 24px)",
+  bannerSubtitle: "clamp(12px, 1.2vw, 16px)",
 
   // Modals & Descriptions
-  modalTitle: "clamp(22px, 2.5vw, 28px)",
-  modalBadge: 14,
-  descriptionTitle: "clamp(18px, 1.8vw, 24px)",
-  descriptionText: "clamp(16px, 1.8vw, 22px)",
-  descriptionBadge: "clamp(14px, 1.5vw, 18px)",
+  modalTitle: "clamp(20px, 2.2vw, 24px)",
+  modalBadge: 13,
+  descriptionTitle: "clamp(16px, 1.6vw, 22px)",
+  descriptionText: "clamp(16px, 1.6vw, 22px)",
+  descriptionBadge: "clamp(14px, 1.4vw, 18px)",
 
   // Action Buttons & CTAs
-  buttonText: "clamp(18px, 2vw, 26px)",
-  buttonSmall: "clamp(15px, 1.6vw, 20px)",
-  ctaText: 22,
+  buttonText: "clamp(18px, 1.8vw, 24px)",
+  buttonSmall: "clamp(15px, 1.4vw, 18px)",
+  ctaText: 20,
 
   // Numeric Input, Phone & Keypad
-  phoneDigits: "clamp(28px, 3.8vw, 44px)",
-  numPadKey: "clamp(32px, 4.2vw, 52px)",
-  instructionPrimary: "clamp(20px, 2.4vw, 32px)",
-  instructionSecondary: "clamp(16px, 1.8vw, 22px)",
+  phoneDigits: "clamp(24px, 3.2vw, 36px)",
+  numPadKey: "clamp(30px, 3.8vw, 48px)",
+  instructionPrimary: "clamp(20px, 2.2vw, 30px)",
+  instructionSecondary: "clamp(15px, 1.5vw, 20px)",
 
   // Ticket Printing & Queue Numbers
-  ticketServiceTitle: "clamp(26px, 3.8vw, 40px)",
-  ticketQueueLabel: "clamp(16px, 1.6vw, 18px)",
-  ticketQueueNumber: "clamp(54px, 8vw, 108px)",
-  ticketNoticePrimary: "clamp(16px, 1.6vw, 22px)",
-  ticketNoticeSecondary: "clamp(13px, 1.3vw, 18px)",
+  ticketServiceTitle: "clamp(24px, 3.5vw, 36px)",
+  ticketQueueLabel: "clamp(14px, 1.4vw, 16px)",
+  ticketQueueNumber: "clamp(48px, 7vw, 96px)",
+  ticketNoticePrimary: "clamp(14px, 1.4vw, 20px)",
+  ticketNoticeSecondary: "clamp(12px, 1.2vw, 16px)",
 
   // Footer & Status Bar
   footerBrand: "clamp(20px, 2.4vw, 34px)",
   footerTime: "clamp(20px, 2.4vw, 34px)",
-  footerDate: "clamp(13px, 1.4vw, 18px)",
+  footerDate: "clamp(12px, 1.4vw, 18px)",
 } as const;
 
 /**

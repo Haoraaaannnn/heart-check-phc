@@ -79,6 +79,7 @@ export function ElapsedTimer({
       } ${className}`.trim()}
       title={isOverdue ? `Stage duration exceeds ${Math.floor(warnAfterSeconds / 60)} minutes` : 'Active duration'}
     >
+      <i className="bx bx-time-five text-[11px]" aria-hidden="true" />
       {String(mins).padStart(2, '0')}:{String(secs).padStart(2, '0')}
     </span>
   );

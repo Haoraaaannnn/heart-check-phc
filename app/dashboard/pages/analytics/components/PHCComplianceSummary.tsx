@@ -105,17 +105,17 @@ export default function PHCComplianceSummary({ data }: PHCComplianceSummaryProps
       <div className="flex flex-col gap-6">
         {/* KPI Strip */}
         <div className="grid grid-cols-1 gap-4 sm:grid-cols-3">
-          <div className={ANALYTICS_STYLES.phcKpiCard}>
+          <div className="flex flex-col rounded-xl border border-line bg-surface-muted/40 p-4">
             <span className="text-xs font-semibold text-content-muted">{T.patientsSeenLabel}</span>
             <span className="text-2xl font-extrabold text-content">{data.patients_seen}</span>
           </div>
-          <div className={ANALYTICS_STYLES.phcKpiCard}>
+          <div className="flex flex-col rounded-xl border border-line bg-surface-muted/40 p-4">
             <span className="text-xs font-semibold text-content-muted">{T.operatingHoursLabel}</span>
             <span className="text-2xl font-extrabold text-content">
               {data.opd_hours} <span className="text-sm font-normal text-content-muted">{T.operatingHoursUnit}</span>
             </span>
           </div>
-          <div className={ANALYTICS_STYLES.phcKpiCard}>
+          <div className="flex flex-col rounded-xl border border-line bg-surface-muted/40 p-4">
             <span className="text-xs font-semibold text-content-muted">{T.avgTotalWaitLabel}</span>
             <span className="text-2xl font-extrabold font-mono text-content">
               {formatMinutesToHMS(data.avg_total_waiting_time_min)}

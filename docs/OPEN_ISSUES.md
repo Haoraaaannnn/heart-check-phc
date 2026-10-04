@@ -23,7 +23,7 @@ Running list of known follow-ups that aren't urgent enough to block progress, bu
 - [ ] Run `is_historical` migration + backfill on `patients` (see `CHANGES_NEEDED.md` step 1) — not yet applied as of this doc's writing
 - [ ] `distribution_tests.py` — statistical validation of Poisson/exponential assumptions, pending real PHC data to run meaningfully
 - [ ] New `patients` columns not yet documented in narrative form: `preferredCubicleNums`, `subcategory`, `cooldown_until`, `rotation_count`, `counter_rejoin_at`, `counter_top_started_at`, `idle_at`, `removed_at` — need actual semantics, currently only flagged as "not yet documented" in `DATABASE_SCHEMA.md`
-- [x] `carryout_start`/`carryout_end` schema columns — confirmed: `python_backend/analytics/preprocessing.py` computes `service_carryout` and includes it in `total_time` (lines 153-167), closing the ~7-minute tracking discrepancy against PHC's manual analysis sheet.
+- [ ] `carryout_start`/`carryout_end` now exist as real `patients` columns — confirm whether the computed `avg_total_time` pipeline includes them now, which would change or close the previously-documented ~4-minute discrepancy vs. PHC's recorded average
 - [ ] `users.assigned_room` — new column, purpose not yet documented against the `user_rooms` join table
 
 ## Analytics / ML (Planned, Post-Current-Priorities)
@@ -33,7 +33,7 @@ Running list of known follow-ups that aren't urgent enough to block progress, bu
 
 ## Documentation
 
-- [x] Synchronize guidelines and module developer guides into `AGENTS.md`, `app/kiosk/README.md`, `app/dashboard/README.md`, `app/nurse/README.md`, and `docs/IMPROVEMENTS_AND_FEATURE_CHECKLIST.md`
+- [ ] Merge relevant sections of this doc set into the team's existing `CLAUDE.md` once reviewed
 - [x] Re-verify `ARCHITECTURE.md`'s file/endpoint structure against the actual repo — updated to reflect modular `app/dashboard/pages/` refactor and backend endpoints
 - [x] `PRD.md` scope/objectives updated with password-reset auth flow, superadmin cubicle management, modular dashboard presentation, and Excel export (`export.py`, `ExportExcelButton.tsx`)
 - [x] `python_backend/analytics/export.py` documented in `ARCHITECTURE.md` and `PRD.md`
@@ -54,16 +54,10 @@ _Add new items as they surface. Move resolved items to a "Resolved" section belo
 - [x] Import script used anon key and never marked rows historical — fixed: uses service role key and sets `is_historical = true`
 - [x] CORS on FastAPI backend — configured via `CORSMiddleware` in `python_backend/main.py` allowing frontend origins (localhost/127.0.0.1:3000/3001)
 - [x] Architecture & PRD documentation — synchronized with latest codebase refactorings and title standardization
-- [x] Route-level proxy guard — built (`proxy.ts` at project root, formerly `middleware.ts`). Enforces role-based session validation for `/superadmin`, `/dashboard`, `/nurse`, `/transfer`.
-- [x] `carryout_start`/`carryout_end` calculation pipeline — integrated in `python_backend/analytics/preprocessing.py`, including `service_carryout` into `total_time`.
-- [x] Multi-mode Excel export — built in `ExportExcelModal.tsx` and `python_backend/main.py` supporting specific date, all dates, and calendar month exports with dynamic recorded date discovery.
-- [x] Master improvement roadmap and feature checklist created in `docs/IMPROVEMENTS_AND_FEATURE_CHECKLIST.md`.
-- [x] Security vulnerability checklist and patch remediation matrix created in `docs/SECURITY_CHECKLIST.md` and enforced in `AGENTS.md` Rule 12.
-- [x] Comprehensive UAT use case verification checklist created in `docs/UAT_USE_CASE_CHECKLIST.md`.
-- [x] Real-time queue synchronization stabilization under weak signal — implemented across all hooks (`app/nurse/`, `app/transfer/`, `app/monitor/`, `app/dashboard/hooks/useOverviewData.ts`, `app/dashboard/patients/hooks/useServiceQueue.ts`) and client socket tuning (`lib/supabase.ts`): monotonic fetch sequence guards, 300ms event debouncing, 2s channel hysteresis, 500ms overlap throttling, and subsystem-tailored polling fallbacks.
 
-## Still Open (Security High Priority)
+## Not Resolved
 
 - [ ] `patients` RLS wide open (all policies `true`) — a fix was designed (`is_historical`-scoped policies) but does not appear applied; live schema also shows a separate, newer, undocumented scoped-access model layered on top — needs full re-audit
 - [ ] `services` table — anon could INSERT/DELETE the kiosk service menu — fix designed (superadmin-only writes) but does not appear applied per latest live pull
 - [ ] `users` table — public (no-login) read access to accounts — fix designed (self-read + superadmin-all) but does not appear applied per latest live pull
+- [x] Route-level middleware — built (`middleware.ts` at project root). See Security section above for full detail.

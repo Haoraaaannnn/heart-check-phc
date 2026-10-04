@@ -53,7 +53,7 @@ export const COMMON_ICONS = {
   arrowRight: 'bx-right-arrow-alt',
   chevronRight: 'bx-chevron-right',
   chevronDown: 'bx-chevron-down',
-  backspace: 'bxs-tag-x',
+  backspace: 'bx-arrow-back',
   download: 'bx-download',
   spinner: 'bx-loader-alt',
   stethoscope: 'bx-pulse',
@@ -64,24 +64,6 @@ export const COMMON_ICONS = {
   close: 'bx-x',
   fallback: 'bx-folder',
 } as const;
-
-/**
- * Centralized Boxicons for sidebar navigation across Nurse Station and Patient Transfer dashboards.
- */
-export const SIDEBAR_ICONS = {
-  brand: 'bx-heart',
-  brandSolid: 'bxs-heart',
-  allCubicles: 'bx-grid-alt',
-  collapse: 'bx-chevron-left',
-  expand: 'bx-chevron-right',
-  logout: 'bx-log-out',
-  fallbackCategory: 'bx-folder',
-} as const;
-
-/**
- * Semantic alias for sidebar navigation icons.
- */
-export const NAVIGATION_ICONS = SIDEBAR_ICONS;
 
 /**
  * Curated list of Boxicons available for service customization in Superadmin.

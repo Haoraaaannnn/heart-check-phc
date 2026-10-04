@@ -1,207 +1,103 @@
-/**
- * @fileoverview Hardware Thermal Receipt Printer Route Handler.
- *
- * Receives print dispatch requests from the kiosk confirmation workflow, verifies
- * patient queue ticket registration in the database, formats the layout using ESC/POS
- * control commands, and writes the raw binary stream to physical USB printer device
- * nodes (/dev/usb/lp*).
- *
- * Security Enhancements (SEC-029 / SEC-AUD-006):
- * - Database Record Verification: Requires matching patient record in the database before printing,
- *   rejecting unauthorized or fictitious ticket floods with HTTP 404.
- * - Input Sanitization: Strips non-printable characters and illegal ESC/POS control sequences.
- * - Hardware Lock: Maintains single-threaded serial write lock to prevent device buffer collisions.
- *
- * @module app/api/print-ticket/route
- */
-
 import { NextResponse } from 'next/server';
 import fs from 'fs/promises';
 import { existsSync } from 'fs';
 import { getTimestamp } from '@/lib/logger';
 import { supabase } from '@/lib/supabase';
 
-/**
- * Global mutex flag to prevent overlapping concurrent writes to hardware USB device nodes.
- */
-let isPrinterBusy = false;
+// 🔒 GLOBAL HARDWARE LOCK
+// Prevents the server from trying to write to the USB port twice simultaneously.
+let isPrinterBusy = false; 
 
-/**
- * Sanitizes input string to prevent binary ESC/POS control code injection.
- * Removes non-printable characters while preserving standard alphanumeric and punctuation.
- *
- * @param input - The raw string value to sanitize.
- * @returns Sanitized string safe for ESC/POS printing.
- */
-function sanitizeText(input: unknown): string {
-  if (typeof input !== 'string') return '';
-  return input.replace(/[\x00-\x1f\x7f-\x9f]/g, '').trim();
-}
-
-/**
- * Handles POST requests to print a physical patient queue ticket.
- *
- * @param request - Next.js Request object with JSON body containing queueNumber, serviceName, cubicle.
- * @returns NextResponse with status and operation result.
- */
 export async function POST(request: Request) {
-  // Guard clause: Reject overlapping requests cleanly to prevent hardware state lock
+  // Guard clause: Reject overlapping requests cleanly
   if (isPrinterBusy) {
-    console.warn(
-      `${getTimestamp()} [PRINTER BUSY] Duplicate print request received - rejecting to prevent hardware conflict.`
-    );
-    return NextResponse.json({ success: true, message: 'Printer busy, skipped.' });
+    console.warn(`${getTimestamp()} ⚠️ [PRINTER BUSY] Duplicate print request received - Queue: pending, rejecting to prevent hardware conflict.`);
+    return NextResponse.json({ success: true, message: "Printer busy, skipped." });
   }
 
-  isPrinterBusy = true; // Acquire hardware lock
+  isPrinterBusy = true; // Lock the printer
 
   try {
     const body = await request.json();
-    const rawQueueNumber = body?.queueNumber;
-    const rawServiceName = body?.serviceName;
-    const rawCubicle = body?.cubicle;
+    const { queueNumber, serviceName, cubicle } = body;
 
-    const queueNumber = sanitizeText(rawQueueNumber);
-    const serviceName = sanitizeText(rawServiceName);
-    const cubicle = sanitizeText(rawCubicle);
+    // Fetch patient record from database
+    const { data: patientRecord } = await supabase.from('patients').select().eq('patientNum', queueNumber).single();
+    console.log(`${getTimestamp()} 📋 [PRINT REQUEST] Received print job:`, { id: patientRecord?.id, created_at: patientRecord?.created_at, patientNum: patientRecord?.patientNum, phoneNum: patientRecord?.phoneNum, service: patientRecord?.service });
 
     if (!queueNumber) {
-      console.error(`${getTimestamp()} [PRINT VALIDATION] Missing or invalid queue number`);
-      return NextResponse.json({ error: 'Valid queue number is required' }, { status: 400 });
+      console.error(`${getTimestamp()} ❌ [PRINT VALIDATION] Missing queue number in request body`);
+      return NextResponse.json({ error: 'Queue number is required' }, { status: 400 });
     }
-
-    // Defensive Verification (SEC-029): Verify ticket exists in active patients table
-    const { data: patientRecord, error: dbError } = await supabase
-      .from('patients')
-      .select('id, created_at, patientNum, phoneNum, service')
-      .eq('patientNum', queueNumber)
-      .eq('is_historical', false)
-      .maybeSingle();
-
-    if (dbError) {
-      console.error(
-        `${getTimestamp()} [PRINT DB ERROR] Error fetching patient ticket: ${dbError.message}`
-      );
-      return NextResponse.json(
-        { error: 'Database verification failed prior to print.' },
-        { status: 500 }
-      );
-    }
-
-    if (!patientRecord) {
-      console.warn(
-        `${getTimestamp()} [PRINT REJECTED] Unregistered queue ticket: ${queueNumber}`
-      );
-      return NextResponse.json(
-        { error: 'Queue ticket not found or invalid for printing.' },
-        { status: 404 }
-      );
-    }
-
-    console.log(`${getTimestamp()} [PRINT REQUEST] Verified print job:`, {
-      id: patientRecord.id,
-      patientNum: patientRecord.patientNum,
-      service: patientRecord.service,
-    });
 
     const date = new Date().toLocaleDateString();
     const time = new Date().toLocaleTimeString();
 
-    // Standard ESC/POS Control Sequences
+    // ESC/POS Commands
     const ESC = '\x1b';
     const GS = '\x1d';
     const RESET = ESC + '@';
-    const CENTER = ESC + 'a\x01';
-    const LEFT = ESC + 'a\x00';
-    const BOLD_ON = ESC + 'E\x01';
-    const BOLD_OFF = ESC + 'E\x00';
-    const LARGE_FONT = GS + '!\x11';
-    const NORMAL_FONT = GS + '!\x00';
-    const CUT = GS + 'V\x00';
+    const CENTER = ESC + 'a' + '\x01';
+    const LEFT = ESC + 'a' + '\x00';
+    const BOLD_ON = ESC + 'E' + '\x01';
+    const BOLD_OFF = ESC + 'E' + '\x00';
+    const LARGE_FONT = GS + '!' + '\x11'; 
+    const NORMAL_FONT = GS + '!' + '\x00';
+    const CUT = GS + 'V' + '\x00';
 
-    // Construct the ticket layout
-    const ticketData =
-      RESET +
-      CENTER +
-      BOLD_ON +
-      'HEART CHECK PHC' +
-      BOLD_OFF +
-      '\n' +
+    // Construct the actual ticket layout
+    const ticketData = 
+      RESET + 
+      CENTER + BOLD_ON + 'HEART CHECK PHC' + BOLD_OFF + '\n' +
       '--------------------------------\n' +
-      LEFT +
+      LEFT + 
       `Date: ${date}\n` +
       `Time: ${time}\n` +
-      `Service: ${serviceName || patientRecord.service || 'General'}\n` +
+      `Service: ${serviceName}\n` +
       `Location: ${cubicle || 'Waiting Area'}\n\n` +
-      CENTER +
-      LARGE_FONT +
-      BOLD_ON +
-      `${queueNumber}` +
-      BOLD_OFF +
-      NORMAL_FONT +
-      '\n' +
+      CENTER + 
+      LARGE_FONT + BOLD_ON + `${queueNumber}` + BOLD_OFF + NORMAL_FONT + '\n' +
       '\nPlease wait for your number.\n' +
       '--------------------------------\n' +
-      '\n\n\n\n\n' +
-      CUT;
+      '\n\n\n\n\n' + 
+      CUT;    
 
-    // Convert string to latin1 printer buffer
+    // Convert string to printer buffer
     const buffer = Buffer.from(ticketData, 'latin1');
-
-    // Candidate thermal printer USB device nodes
+    
+    // Printer paths - Checking lp2 first
     const printerPaths = ['/dev/usb/lp2', '/dev/usb/lp0', '/dev/usb/lp1'];
     let printedSuccessfully = false;
-    let lastError = '';
+    let lastError = "";
 
     for (const path of printerPaths) {
       if (existsSync(path)) {
         try {
           await fs.writeFile(path, buffer);
-          console.log(
-            `${getTimestamp()} [PRINT SUCCESS] Ticket printed to device - Queue: ${queueNumber}, Service: ${serviceName}, Device: ${path}, Size: ${buffer.length} bytes`
-          );
+          console.log(`${getTimestamp()} [PRINT SUCCESS] Ticket printed to device - Queue: ${queueNumber}, Service: ${serviceName}, Device: ${path}, Size: ${buffer.length} bytes`);
           printedSuccessfully = true;
-          break;
-        } catch (e: unknown) {
-          const message = e instanceof Error ? e.message : String(e);
-          lastError = `Access denied on ${path}: ${message}`;
-          console.warn(
-            `${getTimestamp()} [PRINTER DEVICE ERROR] Failed to write to device - Path: ${path}, Queue: ${queueNumber}, Error: ${message}`
-          );
+          break; 
+        } catch (e: any) {
+          lastError = `Access denied on ${path}.`;
+          console.warn(`${getTimestamp()} [PRINTER DEVICE ERROR] Failed to write to device - Path: ${path}, Queue: ${queueNumber}, Error: ${e.message}`);
         }
       }
     }
 
     if (!printedSuccessfully) {
-      console.error(
-        `${getTimestamp()} [PRINT FAILURE] No printer device available - Queue: ${queueNumber}, Service: ${serviceName}, Attempted paths: ${printerPaths.join(', ')}`
-      );
-      return NextResponse.json(
-        { success: false, error: lastError || 'No printer device found.' },
-        { status: 500 }
-      );
+      console.error(`${getTimestamp()} [PRINT FAILURE] No printer device available - Queue: ${queueNumber}, Service: ${serviceName}, Attempted paths: ${printerPaths.join(', ')}`);
+      return NextResponse.json({ success: false, error: lastError || "No printer device found." }, { status: 500 });
     }
 
-    return NextResponse.json({
-      success: true,
-      data: {
-        queueNumber,
-        serviceName,
-        cubicle,
-        timestamp: new Date().toISOString(),
-      },
-    });
-  } catch (error: unknown) {
-    const message = error instanceof Error ? error.message : 'Unexpected server error';
-    console.error(
-      `${getTimestamp()} [PRINT SERVER ERROR] Unexpected error in print route:`,
-      message
-    );
-    return NextResponse.json({ success: false, error: 'Internal server print error.' }, { status: 500 });
+    return NextResponse.json({ success: true, data: { queueNumber, serviceName, cubicle, timestamp: new Date().toISOString() } });
+
+  } catch (error: any) {
+    console.error(`${getTimestamp()} [PRINT SERVER ERROR] Unexpected error in print route - Error: ${error.message}, Stack: ${error.stack}`);
+    return NextResponse.json({ success: false, error: error.message }, { status: 500 });
   } finally {
-    // Release printer lock after cooldown delay
+
     setTimeout(() => {
       isPrinterBusy = false;
-    }, 500);
+    }, 500); 
   }
 }

@@ -13,10 +13,8 @@ export const nurseTexts = {
   syncingBadge: "Syncing...",
   liveStatus: "Live",
   logoutLabel: "Logout",
-  collapseSidebar: "Collapse to icons",
-  expandSidebar: "Expand with text",
-  hideSidebar: "Collapse to icons",
-  openSidebar: "Expand with text",
+  collapseSidebar: "Collapse sidebar",
+  expandSidebar: "Expand sidebar",
   allMyCubicles: "All My Cubicles",
   myCoverage: "My Coverage",
   roomPrefix: "Room",
@@ -27,8 +25,6 @@ export const nurseTexts = {
   closeFinishedLedger: "Close Ledger",
   filteredByPrefix: "Filtered by:",
   clearFilter: "Clear filter",
-  cubicleSelectLabel: "Station:",
-  selectCubicleDropdown: "Select Cubicle",
 
   // Clinical Stage Headings
   stageAssignedHeading: "In Queue / Assigned",
@@ -91,12 +87,6 @@ export const nurseTexts = {
   // Toast & Error Messages
   errorUpdateFailed: "Unable to update patient status. Please check your network connection.",
   errorUnauthorizedCubicle: "You are not authorized to update patients in this cubicle.",
-  dismiss: "Dismiss",
-  allShort: "ALL",
-  noMatchingPatients: "No matching patients found",
-  alerts: "Alerts",
-  collapse: "Collapse",
-  expand: "Expand",
 } as const;
 
 export default nurseTexts;

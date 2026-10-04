@@ -1,12 +1,3 @@
-/**
- * @fileoverview Live ticket table component for the Admin Dashboard overview.
- *
- * Renders real-time patient queue tickets with dynamic service filtering, wait times,
- * and status badges adhering to the enterprise solid surfaces standard.
- *
- * @module app/dashboard/components/LiveQueueTable
- */
-
 'use client';
 
 import { useMemo, useState } from 'react';
@@ -20,15 +11,9 @@ import { getPatientWaitTime } from '@/utils/waitTime';
 const S = DASH.table;
 const C = SECTIONS.liveQueue;
 
-/**
- * Properties for LiveQueueTable component.
- */
-export interface LiveQueueTableProps {
-  /** Array of active patient records today */
+interface LiveQueueTableProps {
   patients: PatientRecord[];
-  /** Current Manila time reference for calculating active wait durations */
   currentTime: Date;
-  /** Flag indicating whether component has completed client hydration */
   isMounted: boolean;
 }
 
@@ -36,9 +21,6 @@ export interface LiveQueueTableProps {
  * Live ticket list for the admin dashboard: today's patients, newest first,
  * with a client-side service filter. Row count is capped at
  * SECTIONS.liveQueue.limit; "View All Queues" links to the full patients page.
- *
- * @param props - Component properties.
- * @returns JSX element.
  */
 export default function LiveQueueTable({ patients, currentTime, isMounted }: LiveQueueTableProps) {
   const [serviceFilter, setServiceFilter] = useState<string>('all');
@@ -59,18 +41,9 @@ export default function LiveQueueTable({ patients, currentTime, isMounted }: Liv
       className={DASH.card.filterSelect}
       aria-label="Filter live queue by service"
     >
-      <option
-        value="all"
-        className="bg-white dark:bg-slate-900 text-slate-900 dark:text-slate-100"
-      >
-        {C.allServicesLabel}
-      </option>
+      <option value="all">{C.allServicesLabel}</option>
       {services.map((service) => (
-        <option
-          key={service}
-          value={service}
-          className="bg-white dark:bg-slate-900 text-slate-900 dark:text-slate-100"
-        >
+        <option key={service} value={service}>
           {service}
         </option>
       ))}

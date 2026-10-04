@@ -11,8 +11,8 @@ import { Cubicle, Patient } from '@/types/Types';
 export interface SelectionCardProps {
   /** Card heading text. */
   title: string;
-  /** Optional icon identifier (retained for backward compatibility). */
-  icon?: string;
+  /** Boxicon icon class name (e.g. 'bx-male'). */
+  icon: string;
   /** Primary total count for badge. */
   totalCount?: number;
   /** Detailed breakdown counts. */
@@ -30,6 +30,7 @@ export interface SelectionCardProps {
  */
 export function SelectionCard({
   title,
+  icon,
   totalCount = 0,
   counts,
   onClick,
@@ -38,12 +39,12 @@ export function SelectionCard({
     <button
       type="button"
       onClick={onClick}
-      className="w-full bg-white border-2 border-slate-200 hover:border-[#cc3535] rounded-2xl p-6 flex flex-col justify-between gap-3 shadow-xs hover:shadow-md hover:-translate-y-0.5 transition-all duration-200 text-left group cursor-pointer min-h-[116px]"
+      className="bg-white border-2 border-slate-200 hover:border-[#cc3535] rounded-2xl p-5 flex flex-col gap-3 shadow-xs hover:shadow-md transition-all duration-150 text-left group cursor-pointer"
     >
-      <div className="flex items-center justify-between gap-4 w-full">
-        <h3 className="text-slate-800 group-hover:text-[#cc3535] font-bold text-lg transition-colors">
-          {title}
-        </h3>
+      <div className="flex items-start justify-between gap-2">
+        <div className="w-12 h-12 bg-red-50 group-hover:bg-[#cc3535] text-[#cc3535] group-hover:text-white rounded-xl flex items-center justify-center transition-colors">
+          <i className={`bx ${icon} text-2xl`} aria-hidden="true" />
+        </div>
         {totalCount > 0 && (
           <NotificationBadge
             count={totalCount}
@@ -53,15 +54,20 @@ export function SelectionCard({
         )}
       </div>
 
-      {counts && (
-        <p className="text-xs text-slate-500 font-medium leading-relaxed">
-          {counts.queue !== undefined && counts.queue > 0 && `${counts.queue} ${transferTexts.inQueueSuffix}`}
-          {counts.queue !== undefined && counts.queue > 0 && (counts.registration || counts.idle) ? ' · ' : ''}
-          {counts.registration !== undefined && counts.registration > 0 && `${counts.registration} ${transferTexts.atCounterSuffix}`}
-          {counts.registration !== undefined && counts.registration > 0 && counts.idle ? ' · ' : ''}
-          {counts.idle !== undefined && counts.idle > 0 && `${counts.idle} ${transferTexts.idleSuffix}`}
-        </p>
-      )}
+      <div>
+        <h3 className="text-slate-800 group-hover:text-[#cc3535] font-bold text-base transition-colors">
+          {title}
+        </h3>
+        {counts && (
+          <p className="text-[11px] text-slate-400 mt-1 font-medium leading-relaxed">
+            {counts.queue !== undefined && counts.queue > 0 && `${counts.queue} ${transferTexts.inQueueSuffix}`}
+            {counts.queue !== undefined && counts.queue > 0 && (counts.registration || counts.idle) ? ' · ' : ''}
+            {counts.registration !== undefined && counts.registration > 0 && `${counts.registration} ${transferTexts.atCounterSuffix}`}
+            {counts.registration !== undefined && counts.registration > 0 && counts.idle ? ' · ' : ''}
+            {counts.idle !== undefined && counts.idle > 0 && `${counts.idle} ${transferTexts.idleSuffix}`}
+          </p>
+        )}
+      </div>
     </button>
   );
 }
@@ -71,7 +77,7 @@ export function SelectionCard({
  */
 export interface SubcategoryPickerProps {
   /** Available subcategories list. */
-  subcategories: Array<{ sub: string; icon?: string }>;
+  subcategories: Array<{ sub: string; icon: string }>;
   /** Callback when user selects a subcategory. */
   onSelect: (sub: string) => void;
   /** Function calculating counts for a given subcategory. */
@@ -95,6 +101,7 @@ export function SubcategoryPicker({
   if (subcategories.length === 0) {
     return (
       <div className="bg-amber-50 border-2 border-amber-200 rounded-2xl p-8 text-center max-w-md mx-auto mt-8 shadow-xs">
+        <i className="bx bx-info-circle text-4xl text-amber-500 mb-2 block" aria-hidden="true" />
         <h4 className="text-slate-700 font-bold text-sm">{emptyTitle}</h4>
         <p className="text-slate-500 text-xs mt-1">{emptyMessage}</p>
       </div>
@@ -102,12 +109,12 @@ export function SubcategoryPicker({
   }
 
   return (
-    <div className="w-full max-w-4xl mx-auto mt-8 px-4">
-      <h2 className="text-sm font-bold text-slate-700 uppercase tracking-wider mb-5 text-center">
+    <div className="max-w-xl mx-auto mt-8">
+      <h2 className="text-sm font-bold text-slate-700 uppercase tracking-wider mb-4 text-center">
         {transferTexts.selectSubcategoryTitle}
       </h2>
-      <div className="grid grid-cols-1 sm:grid-cols-2 gap-6">
-        {subcategories.map(({ sub }) => {
+      <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
+        {subcategories.map(({ sub, icon }) => {
           const counts = countFor(sub);
           const total = counts.queue + counts.registration + counts.idle;
 
@@ -115,6 +122,7 @@ export function SubcategoryPicker({
             <SelectionCard
               key={sub}
               title={sub}
+              icon={icon}
               totalCount={total}
               counts={counts}
               onClick={() => onSelect(sub)}
@@ -158,6 +166,7 @@ export function RoomPicker({
   if (rooms.length === 0) {
     return (
       <div className="bg-amber-50 border-2 border-amber-200 rounded-2xl p-8 text-center max-w-md mx-auto mt-8 shadow-xs">
+        <i className="bx bx-info-circle text-4xl text-amber-500 mb-2 block" aria-hidden="true" />
         <h4 className="text-slate-700 font-bold text-sm">
           {transferTexts.noRoomsConfiguredTitle} {serviceContext ? `(${serviceContext})` : ''}
         </h4>
@@ -168,14 +177,12 @@ export function RoomPicker({
     );
   }
 
-  const isTwoRooms = rooms.length === 2;
-
   return (
-    <div className={`w-full ${isTwoRooms ? 'max-w-4xl' : 'max-w-5xl'} mx-auto mt-8 px-4`}>
-      <h2 className="text-sm font-bold text-slate-700 uppercase tracking-wider mb-5 text-center">
+    <div className="max-w-3xl mx-auto mt-8">
+      <h2 className="text-sm font-bold text-slate-700 uppercase tracking-wider mb-4 text-center">
         {transferTexts.selectRoomTitle}
       </h2>
-      <div className={`grid grid-cols-1 sm:grid-cols-2 ${isTwoRooms ? '' : 'lg:grid-cols-3'} gap-6`}>
+      <div className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 gap-4">
         {rooms.map(room => {
           const safeCubicles = Array.isArray(visibleCubicles) ? visibleCubicles : [];
           const safeAssignedPatients = assignedPatients || {};
@@ -218,12 +225,12 @@ export function RoomPicker({
               key={room}
               type="button"
               onClick={() => onSelectRoom(room)}
-              className="w-full bg-white border-2 border-slate-200 hover:border-[#cc3535] rounded-2xl p-6 flex flex-col justify-between gap-3 shadow-xs hover:shadow-md hover:-translate-y-0.5 transition-all duration-200 text-left group cursor-pointer min-h-[116px]"
+              className="bg-white border-2 border-slate-200 hover:border-[#cc3535] rounded-2xl p-5 flex flex-col gap-3 shadow-xs hover:shadow-md transition-all duration-150 text-left group cursor-pointer"
             >
-              <div className="flex items-center justify-between gap-4 w-full">
-                <h3 className="text-slate-800 group-hover:text-[#cc3535] font-bold text-lg transition-colors">
-                  {transferTexts.roomPrefix} {room}
-                </h3>
+              <div className="flex items-center justify-between">
+                <div className="w-12 h-12 bg-red-50 group-hover:bg-[#cc3535] text-[#cc3535] group-hover:text-white rounded-xl flex items-center justify-center transition-colors">
+                  <i className="bx bx-door-open text-2xl" aria-hidden="true" />
+                </div>
                 {totalCount > 0 && (
                   <NotificationBadge
                     count={totalCount}
@@ -233,11 +240,16 @@ export function RoomPicker({
                 )}
               </div>
 
-              <p className="text-xs text-slate-500 font-medium leading-relaxed">
-                {roomCubicles.length} {roomCubicles.length === 1 ? 'cubicle' : 'cubicles'}
-                {totalQueued > 0 && ` · ${totalQueued} ${transferTexts.inQueueSuffix}`}
-                {totalAssigned > 0 && ` · ${totalAssigned} ${transferTexts.assignedSuffix}`}
-              </p>
+              <div>
+                <h3 className="text-slate-800 group-hover:text-[#cc3535] font-bold text-base transition-colors">
+                  {transferTexts.roomPrefix} {room}
+                </h3>
+                <p className="text-[11px] text-slate-400 mt-1 font-medium">
+                  {roomCubicles.length} {roomCubicles.length === 1 ? 'cubicle' : 'cubicles'}
+                  {totalQueued > 0 && ` · ${totalQueued} ${transferTexts.inQueueSuffix}`}
+                  {totalAssigned > 0 && ` · ${totalAssigned} ${transferTexts.assignedSuffix}`}
+                </p>
+              </div>
             </button>
           );
         })}

@@ -9,10 +9,8 @@ export const transferTexts = {
   // Navigation & Headers
   dashboardTitle: "Patient Transfer",
   logoutLabel: "Logout",
-  collapseSidebar: "Collapse to icons",
-  expandSidebar: "Expand with text",
-  hideSidebar: "Collapse to icons",
-  openSidebar: "Expand with text",
+  collapseSidebar: "Collapse sidebar",
+  expandSidebar: "Expand sidebar",
   servicesCrumb: "Services",
   roomCrumbPrefix: "Room",
 
@@ -96,38 +94,6 @@ export const transferTexts = {
   viewToggleCounters: "Registration Counters",
   viewToggleBoth: "Split View",
   stationsSectionTitle: "Service Stations",
-
-  // Action Buttons & Labels (Icon-Free Typography)
-  activateBtn: "Activate",
-  removeBtn: "Remove",
-  doctorsBtn: "Doctors",
-  closeBtn: "Close",
-  callBtn: "Call",
-  callingBtn: "Calling...",
-  backBtn: "Back",
-  assignBtn: "Assign",
-  show: "Show",
-  hide: "Hide",
-  noServiceSelectedTitle: "No Service Selected",
-  noServiceSelectedDesc: "Select a service from the sidebar navigation to view and manage patient queues.",
-  allCaughtUp: "All caught up — nobody waiting.",
-  brandLogoText: "PHC",
-  deactivateBtn: "Deactivate",
-  editBtn: "Edit",
-  deleteBtn: "Delete",
-  editingDoctorNotice: "Editing this doctor's cubicles below",
-
-  // Confirm Assignment Modal Copy
-  confirmAssignmentModalTitle: "Confirm Assignment",
-  confirmAssignmentsModalTitle: "Confirm Assignments",
-  confirmAssignmentModalDesc: "Review and confirm patient station assignments before updating live queues and dispatching notifications.",
-  confirmAssignmentBtn: "Confirm Assignment",
-  confirmAssignmentsBtn: "Confirm Assignments",
-  cancelAssignmentBtn: "Cancel",
-  savingAssignment: "Saving...",
-  assignedToLabel: "Assigned To",
-  patientNumberLabel: "Patient",
-  smsNotificationNotice: "SMS notification will be sent upon confirmation",
 } as const;
 
 export default transferTexts;

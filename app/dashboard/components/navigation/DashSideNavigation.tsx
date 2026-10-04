@@ -1,163 +1,115 @@
-/**
- * @fileoverview Enterprise Sidebar navigation component for the Admin Dashboard.
- *
- * Implements an industry-standard left rail navigation grouped by Overview & Monitoring,
- * Queue Operations, Clinical Services, and Intelligence & Reports. Supports both desktop
- * fixed rail and responsive mobile slide-over drawer modes.
- *
- * @module app/dashboard/components/navigation/DashSideNavigation
- */
-
 'use client';
 
-import React from 'react';
+import { useState } from 'react';
 import Link from 'next/link';
-import { usePathname, useSearchParams } from 'next/navigation';
+import { usePathname } from 'next/navigation';
 import 'boxicons/css/boxicons.min.css';
 import {
-  DASHBOARD_NAV_GROUPS,
-  DashboardNavLink,
+  DASHBOARD_HOME,
+  NAV_ITEMS,
+  type NavGroup,
+  type NavItem,
+  type NavLink,
 } from '@/app/dashboard/constants/navigation';
-import { DASHBOARD_NAV_TEXTS } from '@/app/dashboard/constants/dashNavTexts';
 import { DASH } from '@/app/dashboard/constants/styles';
+import { APP_INFO } from '@/constants/app';
+
+const S = DASH.sidebar;
 
 /**
- * Properties for the DashSideNavigation component.
+ * Whether `href` is the current page.
+ * The dashboard home is matched exactly; every other route also matches its
+ * sub-paths (e.g. /dashboard/patients/123 keeps "Patients" highlighted).
  */
-export interface DashSideNavigationProps {
-  /** Optional callback invoked when a link is clicked, used to close mobile drawers. */
-  onNavigate?: () => void;
-  /** Whether rendering inside a mobile slide-over drawer instead of the desktop rail. */
-  isMobileDrawer?: boolean;
+function isRouteActive(href: string, pathname: string): boolean {
+  if (href === DASHBOARD_HOME) return pathname === href;
+  const normHref = href.replace('/dashboard/pages/', '/dashboard/');
+  const normPath = pathname.replace('/dashboard/pages/', '/dashboard/');
+  return normPath === normHref || normPath.startsWith(`${normHref}/`);
+}
+
+/** Type guard: is this nav entry a collapsible group? */
+function isGroup(item: NavItem): item is NavGroup {
+  return 'children' in item;
 }
 
 /**
- * Enterprise left-rail navigation sidebar for the Admin Dashboard.
+ * Left navigation for the admin dashboard.
  *
- * @param props - Component configuration properties.
- * @returns JSX element containing the complete navigation rail.
+ * Menu structure is defined in constants/navigation.ts; styling in
+ * constants/styles.ts (DASH.sidebar). Color-only design - no images.
+ * Hidden below the `md` breakpoint (desktop-first admin tool).
  */
-export function DashSideNavigation({
-  onNavigate,
-  isMobileDrawer = false,
-}: DashSideNavigationProps) {
+export default function Sidebar() {
   const pathname = usePathname();
-  const searchParams = useSearchParams();
 
-  const S = DASH.sidebar;
-  const T = DASHBOARD_NAV_TEXTS;
+  // Manual open/closed overrides per group. When a group has no override it is
+  // open exactly when one of its children is the current page.
+  const [openGroups, setOpenGroups] = useState<Record<string, boolean>>({});
 
-  /**
-   * Evaluates whether a navigation link matches the current path and query parameters.
-   *
-   * @param item - Navigation link contract to test.
-   * @returns True if the navigation link represents the active page/tab.
-   */
-  const isLinkActive = (item: DashboardNavLink): boolean => {
-    // Exact dashboard home matching
-    if (item.matchPrefix === '/dashboard') {
-      return pathname === '/dashboard' || pathname === '/dashboard/';
-    }
+  const toggleGroup = (key: string, currentlyOpen: boolean) =>
+    setOpenGroups((prev) => ({ ...prev, [key]: !currentlyOpen }));
 
-    // Cubicles route matching (canonical and legacy forwarding)
-    if (item.matchPrefix === '/dashboard/pages/cubicles') {
-      return (
-        pathname.startsWith('/dashboard/pages/cubicles') ||
-        pathname.startsWith('/dashboard/cubicles')
-      );
-    }
-
-    // Analytics route matching (canonical and legacy forwarding)
-    if (item.matchPrefix === '/dashboard/pages/analytics') {
-      return (
-        pathname.startsWith('/dashboard/pages/analytics') ||
-        pathname.startsWith('/dashboard/analytics')
-      );
-    }
-
-    // Patients and clinical services matching
-    if (
-      pathname.startsWith('/dashboard/pages/patients') ||
-      pathname.startsWith('/dashboard/patients')
-    ) {
-      if (item.matchQueryParam) {
-        return (
-          searchParams.get(item.matchQueryParam.key) ===
-          item.matchQueryParam.value
-        );
-      }
-      // General patients page is only active when no specific service is selected
-      if (item.matchPrefix === '/dashboard/pages/patients') {
-        return !searchParams.get('service');
-      }
-    }
-
-    if (item.matchPrefix) {
-      return pathname.startsWith(item.matchPrefix);
-    }
-
-    return pathname === item.href;
+  const renderLink = (item: NavLink) => {
+    const active = isRouteActive(item.href, pathname);
+    return (
+      <Link
+        key={item.key}
+        href={item.href}
+        aria-current={active ? 'page' : undefined}
+        className={`${S.item} ${active ? S.itemActive : S.itemIdle}`}
+      >
+        <i className={`bx ${item.icon} ${S.icon}`} />
+        <span>{item.label}</span>
+      </Link>
+    );
   };
 
-  const navContent = (
-    <>
-      {/* Brand Header */}
-      <div className={S.brandHeader}>
-        <div className={S.brandBadge}>{T.brand.badge}</div>
-        <div>
-          <div className={S.brandTitle}>{T.brand.title}</div>
-          <div className={S.brandSubtitle}>{T.brand.subtitle}</div>
-        </div>
-      </div>
+  const renderGroup = (group: NavGroup) => {
+    const childActive = group.children.some((c) => isRouteActive(c.href, pathname));
+    const isOpen = openGroups[group.key] ?? childActive;
 
-      {/* Nav Groups Scroll Area */}
-      <div className={S.navScrollArea}>
-        {DASHBOARD_NAV_GROUPS.map((group) => (
-          <div key={group.key} className={S.groupSection}>
-            <div className={S.groupTitle}>{group.title}</div>
-            <div className="space-y-1">
-              {group.items.map((item) => {
-                const active = isLinkActive(item);
-                return (
-                  <Link
-                    key={item.key}
-                    href={item.href}
-                    onClick={onNavigate}
-                    className={`${S.navLink} ${
-                      active ? S.navLinkActive : S.navLinkIdle
-                    }`}
-                  >
-                    <i
-                      className={`bx ${item.icon} ${S.navIcon} ${
-                        active ? S.navIconActive : ''
-                      }`}
-                      aria-hidden="true"
-                    />
-                    <span>{item.label}</span>
-                  </Link>
-                );
-              })}
-            </div>
+    return (
+      <div key={group.key}>
+        <button
+          type="button"
+          aria-expanded={isOpen}
+          onClick={() => toggleGroup(group.key, isOpen)}
+          className={`${S.item} ${childActive ? S.itemGroupActive : S.itemIdle}`}
+        >
+          <i className={`bx ${group.icon} ${S.icon}`} />
+          <span>{group.label}</span>
+          <i className={`bx bx-chevron-down ${S.chevron} ${isOpen ? S.chevronOpen : ''}`} />
+        </button>
+
+        {isOpen && (
+          <div className={S.subList}>
+            {group.children.map((child) => {
+              const active = isRouteActive(child.href, pathname);
+              return (
+                <Link
+                  key={child.href}
+                  href={child.href}
+                  aria-current={active ? 'page' : undefined}
+                  className={`${S.subItem} ${active ? S.subActive : S.subIdle}`}
+                >
+                  {child.label}
+                </Link>
+              );
+            })}
           </div>
-        ))}
+        )}
       </div>
+    );
+  };
 
-      {/* Footer System Status */}
-      <div className={S.footer}>
-        <div className={S.statusBadge}>
-          <span className={S.statusDot} />
-          <span>{T.system.statusOnline}</span>
-        </div>
-        <div className={S.footerText}>{T.system.footerAttribution}</div>
-      </div>
-    </>
+  return (
+    <aside className={S.root}>
+      <nav className={S.nav} aria-label="Dashboard navigation">
+        {NAV_ITEMS.map((item) => (isGroup(item) ? renderGroup(item) : renderLink(item)))}
+      </nav>
+
+      <p className={S.footer}>{APP_INFO.pillars.join(' · ')}</p>
+    </aside>
   );
-
-  if (isMobileDrawer) {
-    return <div className="h-full flex flex-col justify-between">{navContent}</div>;
-  }
-
-  return <aside className={S.root}>{navContent}</aside>;
 }
-
-export default DashSideNavigation;

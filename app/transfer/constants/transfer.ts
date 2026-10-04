@@ -20,31 +20,6 @@ export const transferLayoutTokens = {
   cubicleMinHeight: '130px',
   queueMaxHeight: '440px',
   touchTargetMin: '44px',
-  selectionButtonMinWidth: '320px',
-  selectionButtonMaxWidth: '480px',
-  selectionButtonMinHeight: '116px',
-} as const;
-
-/**
- * System-wide standard dimension and layout tokens for step selection cards and buttons.
- * Normalizes touch targets, widths, and responsive grid rules across patient group
- * and room selection workflows.
- */
-export const selectionCardTokens = {
-  /** Minimum normalized card width */
-  minCardWidth: '320px',
-  /** Maximum normalized card width */
-  maxCardWidth: '480px',
-  /** Minimum normalized card height for spacious touch interaction */
-  minCardHeight: '116px',
-  /** Standard container width for 2-column pickers (Patient Group) */
-  patientGroupContainer: 'max-w-4xl',
-  /** Standard container width for multi-room pickers (Room Selection) */
-  roomPickerContainer: 'max-w-5xl',
-  /** Standard grid gap */
-  gridGap: 'gap-6',
-  /** Normalized internal padding */
-  padding: 'p-6',
 } as const;
 
 /** Color tokens specific to transfer dashboard status indicators */

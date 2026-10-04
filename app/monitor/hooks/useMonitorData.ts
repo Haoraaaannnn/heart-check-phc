@@ -23,13 +23,17 @@ export function useMonitorData(category: string, subcategory: string | null, cat
       
       const playNext = async () => {
         try {
-          const response = await fetch('/api/tts', {
-            method: 'POST',
-            headers: {
-              'Content-Type': 'application/json',
-            },
-            body: JSON.stringify({ text }),
-          });
+          const response = await fetch(
+            'https://api.deepgram.com/v1/speak?model=aura-2-amalthea-en',
+            {
+              method: 'POST',
+              headers: {
+                'Authorization': `Token ${process.env.NEXT_PUBLIC_DEEPGRAM_KEY}`,
+                'Content-Type': 'application/json',
+              },
+              body: JSON.stringify({ text }),
+            }
+          );
           if (!response.ok) { resolve(); return; }
           const arrayBuffer = await response.arrayBuffer();
           const audioBlob = new Blob([arrayBuffer], { type: 'audio/mp3' });
@@ -156,32 +160,21 @@ export function useMonitorData(category: string, subcategory: string | null, cat
     }
   };
 
-  const patientsFetchId = useRef(0);
-  const registrationFetchId = useRef(0);
-
   const fetchPatients = async () => {
-    const requestId = ++patientsFetchId.current;
     const today = new Date();
     today.setHours(0, 0, 0, 0);
     const tomorrow = new Date(today);
     tomorrow.setDate(today.getDate() + 1);
 
-    let query = supabase
-      .from('patients')
-      .select('*')
-      .eq('service', category)
-      .eq('status', 'Assigned')
-      .not('cubicleNum', 'is', null)
-      .gte('created_at', today.toISOString())
-      .lt('created_at', tomorrow.toISOString());
-
-    if (subcategory) {
-      query = query.eq('subcategory', subcategory);
-    }
-
-    const { data, error } = await query.order('called_at', { ascending: true });
-
-    if (requestId !== patientsFetchId.current) return;
+    const { data, error } = await supabase
+    .from('patients')
+    .select('*')
+    .eq('service', category)
+    .eq('status', 'Assigned')
+    .not('cubicleNum', 'is', null)
+    .gte('created_at', today.toISOString())
+    .lt('created_at', tomorrow.toISOString())
+    .order('called_at', { ascending: true });
 
     if (!error && data) {
       setAssignedPatients(data);
@@ -250,7 +243,6 @@ export function useMonitorData(category: string, subcategory: string | null, cat
   };
 
   const fetchRegistrationPatients = async () => {
-    const requestId = ++registrationFetchId.current;
     const today = new Date();
     today.setHours(0, 0, 0, 0);
     const tomorrow = new Date(today);
@@ -265,15 +257,12 @@ export function useMonitorData(category: string, subcategory: string | null, cat
       .gte('created_at', today.toISOString())
       .lt('created_at', tomorrow.toISOString())
       .order('counter', { ascending: true })
-      .in('status', ['On Progress', 'Waiting'])
-      .is('reg_end', null)
-      .not('counter', 'is', null)
       .order('created_at', { ascending: true });  
 
-   if (requestId !== registrationFetchId.current) return;
-   if (!error && data) setRegistrationPatients(data);
-   };
-
+    if (!error && data) {
+      setRegistrationPatients(data);
+    }
+  };
 
   const setupRegistrationSubscription = (onUpdate: () => void) => {
     const channel = supabase

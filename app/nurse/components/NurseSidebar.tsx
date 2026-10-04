@@ -1,15 +1,12 @@
 /**
- * @fileoverview Expandable / Collapsible navigation sidebar rail for the Nurse Dashboard.
+ * @fileoverview Collapsible navigation sidebar rail for the Nurse Dashboard.
  *
- * Supports two distinct display modes:
- * - Icon-only rail (`w-18` / 72px): Hides text labels, maximizing screen area for the 3-column clinical Kanban board.
- * - Expanded panel (`w-64` / 256px): Displays full text labels, patient count badges, and room/cubicle hierarchies.
+ * Provides room and cubicle level filtering, coverage metrics, and session logout.
  *
  * Adheres strictly to AGENTS.md guidelines:
  * - 100% copy isolated in nurseTexts
+ * - Layout tokens isolated in nurseLayoutTokens
  * - Full JSDoc and zero emojis
- *
- * @module app/nurse/components/NurseSidebar
  */
 
 'use client';
@@ -18,14 +15,16 @@ import React from 'react';
 import { useRouter } from 'next/navigation';
 import { supabase } from '@/lib/supabase';
 import { AssignedNurseCubicle } from '../types/nurse';
+import { CATEGORY_ICONS } from '../lib/constants';
 import { nurseTexts } from '../constants/nurseTexts';
-import { NotificationBadge } from '@/components/reusables/NotificationBadge';
-import { SIDEBAR_ICONS, resolveServiceIcon } from '@/constants/icons';
+import { nurseLayoutTokens } from '../constants/nurse';
 
 /**
  * Props for the NurseSidebar component.
  */
 export interface NurseSidebarProps {
+  /** Whether the sidebar is expanded or collapsed. */
+  sidebarOpen: boolean;
   /** Currently selected service category filter, or null for all. */
   selectedCategory: string | null;
   /** Currently selected cubicle filter, or null for all. */
@@ -38,24 +37,25 @@ export interface NurseSidebarProps {
   onSelectCategory: (category: string | null) => void;
   /** Handler to select an individual cubicle filter. */
   onSelectCubicle: (cubicleNum: string) => void;
-  /** Whether the sidebar is expanded with text labels. When false, displays icon-only. Defaults to false. */
-  isExpanded?: boolean;
+  /** Handler to toggle sidebar between expanded and collapsed states. */
+  onToggleSidebar: () => void;
 }
 
 /**
- * Clean, expandable/collapsible sidebar navigation for the Nurse Dashboard.
+ * Navigation rail component for filtering nurse workstation view by room and cubicle.
  *
- * @param props - Filter states, counts, and expansion state.
- * @returns The rendered sidebar component.
+ * @param props - Filter states, counts, and toggle callbacks.
+ * @returns The rendered sidebar element.
  */
 export function NurseSidebar({
+  sidebarOpen,
   selectedCategory,
   selectedCubicleNum,
   categoryCounts,
   assignedCubicles,
   onSelectCategory,
   onSelectCubicle,
-  isExpanded = false,
+  onToggleSidebar,
 }: NurseSidebarProps) {
   const router = useRouter();
 
@@ -81,177 +81,131 @@ export function NurseSidebar({
 
   return (
     <aside
-      className={`fixed left-0 top-0 h-full bg-white border-r border-slate-200 shadow-xs z-30 flex flex-col transition-all duration-300 select-none ${
-        isExpanded ? 'w-64' : 'w-18'
-      }`}
-      aria-label="Nurse Station navigation"
+      className="fixed left-0 top-0 z-30 flex h-full flex-col border-r border-slate-200 bg-white shadow-lg transition-all duration-300"
+      style={{
+        width: sidebarOpen
+          ? nurseLayoutTokens.sidebarWidthExpanded
+          : nurseLayoutTokens.sidebarWidthCollapsed,
+      }}
     >
-      {/* Brand Header */}
+      {/* Top Toggle Header */}
       <div
-        className={`h-16 flex items-center border-b border-slate-100 shrink-0 transition-all duration-300 ${
-          isExpanded ? 'px-4' : 'justify-center px-2'
+        className={`flex items-center border-b border-slate-200 ${
+          sidebarOpen ? 'justify-between p-4' : 'justify-center p-2.5'
         }`}
       >
-        <div className="flex items-center gap-3 min-w-0">
-          <div className="w-10 h-10 rounded-xl bg-[#cc3535] text-white flex items-center justify-center text-lg shadow-xs shrink-0">
-            <i className={`bx ${SIDEBAR_ICONS.brandSolid}`} aria-hidden="true" />
-          </div>
-          {isExpanded && (
-            <div className="min-w-0 animate-in fade-in duration-200">
-              <h1 className="text-sm font-bold text-slate-800 tracking-tight truncate">
-                {nurseTexts.dashboardTitle}
-              </h1>
-              <p className="text-[11px] font-medium text-slate-400">PHC Clinical</p>
+        {sidebarOpen && (
+          <div className="flex items-center gap-2">
+            <div className="w-8 h-8 rounded-lg bg-[#cc3535] text-white flex items-center justify-center font-black text-sm shadow-2xs">
+              HC
             </div>
-          )}
-        </div>
+            <span className="font-bold text-slate-800 text-sm tracking-tight">
+              {nurseTexts.dashboardTitle}
+            </span>
+          </div>
+        )}
+
+        <button
+          type="button"
+          onClick={onToggleSidebar}
+          className="rounded-lg p-2 text-slate-500 hover:bg-slate-100 transition cursor-pointer"
+          title={sidebarOpen ? nurseTexts.collapseSidebar : nurseTexts.expandSidebar}
+          aria-label={sidebarOpen ? nurseTexts.collapseSidebar : nurseTexts.expandSidebar}
+        >
+          <i
+            className={`bx ${
+              sidebarOpen ? 'bx-chevron-left' : 'bx-chevron-right'
+            } text-xl`}
+            aria-hidden="true"
+          />
+        </button>
       </div>
 
       {/* Navigation Links */}
-      <nav className="flex-1 overflow-y-auto py-4 px-2 space-y-1 phc-scroll">
+      <nav className="flex-1 overflow-y-auto p-3 phc-scroll">
         {/* All Cubicles Reset Button */}
         <button
           type="button"
           onClick={() => onSelectCategory(null)}
-          title={`${nurseTexts.allMyCubicles}${totalPatients > 0 ? ` — ${totalPatients} active` : ''}`}
-          aria-current={!selectedCategory && !selectedCubicleNum ? 'page' : undefined}
-          className={`w-full relative flex items-center ${
-            isExpanded ? 'justify-between px-3' : 'justify-center px-0'
-          } py-2.5 rounded-xl transition-all duration-150 group cursor-pointer ${
+          className={`mb-4 flex w-full items-center ${
+            sidebarOpen ? 'justify-between px-3.5' : 'justify-center px-0'
+          } rounded-xl py-2.5 text-left transition cursor-pointer ${
             !selectedCategory && !selectedCubicleNum
-              ? 'bg-[#cc3535] text-white shadow-xs font-semibold'
-              : 'text-slate-600 hover:bg-slate-100 hover:text-slate-900 font-medium'
+              ? 'bg-[#cc3535] text-white shadow-xs font-bold'
+              : 'text-slate-700 hover:bg-slate-100 font-medium'
           }`}
+          title={nurseTexts.allMyCubicles}
         >
-          <div className="flex items-center gap-3 min-w-0">
-            <i
-              className={`bx ${SIDEBAR_ICONS.allCubicles} text-xl shrink-0 ${
-                !selectedCategory && !selectedCubicleNum
-                  ? 'text-white'
-                  : 'text-slate-400 group-hover:text-[#cc3535]'
-              }`}
-              aria-hidden="true"
-            />
-            {isExpanded && (
-              <span className="text-sm truncate animate-in fade-in duration-200">
-                {nurseTexts.allMyCubicles}
-              </span>
+          <div className="flex items-center gap-2.5">
+            <i className="bx bx-grid-alt text-lg" aria-hidden="true" />
+            {sidebarOpen && (
+              <span className="text-xs font-bold">{nurseTexts.allMyCubicles}</span>
             )}
           </div>
 
-          {/* Full Badge for Expanded View */}
-          {isExpanded && totalPatients > 0 && (
-            <div className="hidden 2xl:flex items-center shrink-0 ml-2 animate-in fade-in duration-200">
-              <NotificationBadge
-                count={totalPatients}
-                color={!selectedCategory && !selectedCubicleNum ? 'brand' : 'gray'}
-                className={
-                  !selectedCategory && !selectedCubicleNum
-                    ? '!bg-white !text-[#cc3535] ring-transparent'
-                    : ''
-                }
-              />
-            </div>
-          )}
-
-          {/* Indicator Dot for Icon-Only Rail View */}
-          {!isExpanded && totalPatients > 0 && (
-            <span className="absolute top-1.5 right-1.5">
-              <NotificationBadge
-                variant="dot"
-                color={!selectedCategory && !selectedCubicleNum ? 'brand' : 'gray'}
-                className={
-                  !selectedCategory && !selectedCubicleNum
-                    ? '!bg-white ring-[#cc3535]'
-                    : ''
-                }
-              />
+          {sidebarOpen && totalPatients > 0 && (
+            <span
+              className={`rounded-full px-2 py-0.5 text-xs font-bold ${
+                !selectedCategory && !selectedCubicleNum
+                  ? 'bg-white text-[#cc3535]'
+                  : 'bg-slate-100 text-slate-700'
+              }`}
+            >
+              {totalPatients}
             </span>
           )}
         </button>
 
-        {isExpanded && (
-          <p className="mb-2 px-2 text-[10px] font-bold uppercase tracking-wider text-slate-400 animate-in fade-in duration-200">
+        {sidebarOpen && (
+          <p className="mb-2 px-2 text-[10px] font-bold uppercase tracking-wider text-slate-400">
             {nurseTexts.myCoverage}
           </p>
         )}
 
         {/* Grouped Service Categories & Cubicles */}
-        <div className="space-y-1 pt-1">
+        <div className="space-y-2">
           {Object.entries(services).map(([service, cubicles]) => {
-            const count = categoryCounts[service] || 0;
-            const isCategoryActive = selectedCategory === service && !selectedCubicleNum;
-            const isServiceSelected = selectedCategory === service;
-            const icon = resolveServiceIcon(service);
-            const tooltip = `${service}${count > 0 ? ` — ${count} active` : ''}`;
+            const isServiceActive =
+              selectedCategory === service && !selectedCubicleNum;
 
             return (
-              <div key={service} className="space-y-1">
+              <div key={service}>
                 <button
                   type="button"
                   onClick={() => onSelectCategory(service)}
-                  title={tooltip}
-                  aria-current={isCategoryActive ? 'page' : undefined}
-                  className={`w-full relative flex items-center ${
-                    isExpanded ? 'justify-between px-3' : 'justify-center px-0'
-                  } py-2.5 rounded-xl transition-all duration-150 group cursor-pointer ${
-                    isCategoryActive
-                      ? 'bg-[#cc3535] text-white shadow-xs font-semibold'
-                      : isServiceSelected
-                      ? 'bg-red-50/80 text-[#cc3535] font-semibold'
-                      : 'text-slate-600 hover:bg-slate-100 hover:text-slate-900 font-medium'
+                  className={`flex w-full items-center ${
+                    sidebarOpen ? 'justify-between px-3' : 'justify-center px-0'
+                  } rounded-xl py-2 text-left transition cursor-pointer ${
+                    isServiceActive
+                      ? 'bg-red-50 text-[#cc3535] font-bold'
+                      : 'text-slate-700 hover:bg-slate-50 font-medium'
                   }`}
+                  title={service}
                 >
-                  <div className="flex items-center gap-3 min-w-0">
+                  <div className="flex items-center gap-2.5 min-w-0">
                     <i
-                      className={`bx ${icon} text-xl shrink-0 ${
-                        isCategoryActive
-                          ? 'text-white'
-                          : isServiceSelected
-                          ? 'text-[#cc3535]'
-                          : 'text-slate-400 group-hover:text-[#cc3535]'
-                      }`}
+                      className={`bx ${
+                        CATEGORY_ICONS[service] || 'bx-folder'
+                      } text-lg text-slate-500 shrink-0`}
                       aria-hidden="true"
                     />
-                    {isExpanded && (
-                      <span className="text-sm truncate animate-in fade-in duration-200">
+                    {sidebarOpen && (
+                      <span className="text-xs font-semibold truncate">
                         {service}
                       </span>
                     )}
                   </div>
 
-                  {/* Full Badge for Expanded View */}
-                  {isExpanded && count > 0 && (
-                    <div className="flex items-center shrink-0 ml-2 animate-in fade-in duration-200">
-                      <NotificationBadge
-                        count={count}
-                        color={isCategoryActive ? 'brand' : 'gray'}
-                        pulse={count > 3}
-                        className={
-                          isCategoryActive
-                            ? '!bg-white !text-[#cc3535] ring-transparent'
-                            : ''
-                        }
-                      />
-                    </div>
-                  )}
-
-                  {/* Indicator Dot for Icon-Only Rail View */}
-                  {!isExpanded && count > 0 && (
-                    <span className="absolute top-1.5 right-1.5">
-                      <NotificationBadge
-                        variant="dot"
-                        pulse={count > 3}
-                        color={isCategoryActive ? 'brand' : 'gray'}
-                        className={isCategoryActive ? '!bg-white ring-[#cc3535]' : ''}
-                      />
+                  {sidebarOpen && (
+                    <span className="rounded-full bg-slate-100 px-2 py-0.5 text-[10px] font-bold text-slate-600 shrink-0">
+                      {categoryCounts[service] || 0}
                     </span>
                   )}
                 </button>
 
-                {/* Expanded Cubicles under active service */}
-                {isExpanded && isServiceSelected && cubicles.length > 0 && (
-                  <div className="ml-5 space-y-1 border-l-2 border-slate-200 pl-2.5 pt-1 animate-in fade-in duration-200">
+                {/* Expanded Cubicle Sub-buttons */}
+                {sidebarOpen && (
+                  <div className="ml-4 mt-1 space-y-1 border-l border-slate-200 pl-2.5">
                     {cubicles.map((cubicle) => {
                       const active = selectedCubicleNum === cubicle.cubicleNum;
 
@@ -262,16 +216,16 @@ export function NurseSidebar({
                           onClick={() => onSelectCubicle(cubicle.cubicleNum)}
                           className={`w-full rounded-lg px-2.5 py-1.5 text-left transition cursor-pointer ${
                             active
-                              ? 'bg-[#cc3535] text-white font-bold shadow-xs'
+                              ? 'bg-blue-600 text-white font-bold shadow-xs'
                               : 'text-slate-600 hover:bg-slate-100 hover:text-slate-900'
                           }`}
                         >
                           <p className="text-xs font-bold leading-tight">
-                            {nurseTexts.cubiclePrefix} {cubicle.cubicleNum}
+                            {cubicle.cubicleNum}
                           </p>
                           <p
                             className={`text-[10px] leading-tight ${
-                              active ? 'text-white/80' : 'text-slate-400'
+                              active ? 'text-blue-100' : 'text-slate-400'
                             }`}
                           >
                             {nurseTexts.roomPrefix} {cubicle.room}
@@ -288,22 +242,20 @@ export function NurseSidebar({
         </div>
       </nav>
 
-      {/* Footer / Logout */}
-      <div className="p-2 border-t border-slate-100 space-y-1 shrink-0">
+      {/* Logout Footer */}
+      <div className="border-t border-slate-200 p-3">
         <button
           type="button"
           onClick={handleLogout}
+          className={`flex w-full items-center gap-2.5 rounded-xl px-3 py-2 text-slate-600 hover:bg-red-50 hover:text-[#cc3535] transition cursor-pointer ${
+            !sidebarOpen ? 'justify-center' : ''
+          }`}
           title={nurseTexts.logoutLabel}
           aria-label={nurseTexts.logoutLabel}
-          className={`w-full flex items-center ${
-            isExpanded ? 'justify-start px-3' : 'justify-center px-0'
-          } py-2 rounded-xl text-slate-500 hover:text-[#cc3535] hover:bg-red-50 transition-colors font-medium text-sm cursor-pointer`}
         >
-          <i className={`bx ${SIDEBAR_ICONS.logout} text-xl shrink-0`} aria-hidden="true" />
-          {isExpanded && (
-            <span className="text-xs font-semibold ml-3 truncate animate-in fade-in duration-200">
-              {nurseTexts.logoutLabel}
-            </span>
+          <i className="bx bx-log-out text-lg" aria-hidden="true" />
+          {sidebarOpen && (
+            <span className="text-xs font-semibold">{nurseTexts.logoutLabel}</span>
           )}
         </button>
       </div>

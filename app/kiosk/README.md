@@ -35,19 +35,22 @@ The kiosk interface strictly enforces a four-layer separation of concerns:
 
 Use this lookup table to immediately find the file you need:
 
-| Goal / Intended Change | Where to Edit |
-| :--- | :--- |
-| **Change global typography scales or kiosk font sizes** | [constants/kiosk.ts](file:///home/jensen/Github-Repositories/heart-check-phc/constants/kiosk.ts) (`kioskTypography` / `fontSizeKiosk`). All kiosk screen styles alias these root tokens. |
-| **Change text copy, titles, or button labels** | Look for the matching `constants/<component>Texts.ts` in that route. |
-| **Change colors, dimensions, or card padding** | Look for the matching `constants/<component>.ts` in that route. |
-| **Change icons or resolve service/category Boxicons** | [constants/icons.ts](file:///home/jensen/Github-Repositories/heart-check-phc/constants/icons.ts) (central icon map and resolvers) or local `<component>.ts` (page-specific icon tokens). |
-| **Change layout dimensions, padding, or orientation behavior** | Look for `constants/<feature>Layout.ts` or the route's `layout.tsx`. |
-| **Change navigation flow or routing destinations** | Check the page component (`page.tsx`) or `app/kiosk/hooks/useKioskNavigate.ts`. |
-| **Change loading overlay message or animation** | [kioskLoadingOverlayTexts.ts](file:///home/jensen/Github-Repositories/heart-check-phc/app/kiosk/constants/kioskLoadingOverlayTexts.ts) / [kioskLoadingOverlay.ts](file:///home/jensen/Github-Repositories/heart-check-phc/app/kiosk/constants/kioskLoadingOverlay.ts). |
-| **Change the universal back button appearance or label** | [kioskBackButtonTexts.ts](file:///home/jensen/Github-Repositories/heart-check-phc/app/kiosk/constants/kioskBackButtonTexts.ts) / [kioskBackButton.ts](file:///home/jensen/Github-Repositories/heart-check-phc/app/kiosk/constants/kioskBackButton.ts). |
-| **Change the hardware ticket print API payload** | [QueuePrintContent.tsx](file:///home/jensen/Github-Repositories/heart-check-phc/app/kiosk/pages/queue-print/components/QueuePrintContent.tsx) and `/api/print-ticket/route.ts`. |
-| **Change mobile phone number validation rules** | [phoneValidation.ts](file:///home/jensen/Github-Repositories/heart-check-phc/app/kiosk/pages/sms-input/utils/phoneValidation.ts) (NTC prefixes, sequential runs, repetition limits) and [KioskPhoneEntry.tsx](file:///home/jensen/Github-Repositories/heart-check-phc/app/kiosk/pages/sms-input/components/KioskPhoneEntry.tsx). |
-| **Change queue ticket prefixes and numeric rules** | [smsPrefixRules.ts](file:///home/jensen/Github-Repositories/heart-check-phc/app/kiosk/pages/sms-input/constants/smsPrefixRules.ts). |
+| Goal / Intended Change                                                 | Where to Edit                                                                                                                                                                                                                                                          |
+| :--------------------------------------------------------------------- | :--------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
+| **Change global typography scales or kiosk font sizes**                | [constants/kiosk.ts](file:///home/jensen/Github-Repositories/heart-check-phc/constants/kiosk.ts) (`kioskTypography` / `fontSizeKiosk`). All kiosk screen styles alias these root tokens.                                                                               |
+| **Change text copy, titles, or button labels**                         | Look for the matching `constants/<component>Texts.ts` in that route.                                                                                                                                                                                                   |
+| **Change colors, dimensions, or card padding**                         | Look for the matching `constants/<component>.ts` in that route.                                                                                                                                                                                                        |
+| **Change icons or resolve service/category Boxicons**                  | [constants/icons.ts](file:///home/jensen/Github-Repositories/heart-check-phc/constants/icons.ts) (central icon map and resolvers) or local `<component>.ts` (page-specific icon tokens).                                                                               |
+| **Change layout dimensions, padding, or orientation behavior**         | Look for `constants/<feature>Layout.ts` or the route's `layout.tsx`.                                                                                                                                                                                                   |
+| **Change navigation flow or routing destinations**                     | Check the page component (`page.tsx`) or `app/kiosk/hooks/useKioskNavigate.ts`.                                                                                                                                                                                        |
+| **Change kiosk idle timeout or redirect activity events**              | [IdleRedirectWrapper.tsx](components/IdleRedirectWrapper.tsx) and [kioskNavigation.ts](constants/kioskNavigation.ts).                                                                                                                                                  |
+| **Change the idle slideshow image, presentation, or activation label** | [page.tsx](slideshow/page.tsx), [idleRedirect.ts](constants/idleRedirect.ts), and [idleRedirectTexts.ts](constants/idleRedirectTexts.ts).                                                                                                                              |
+| **Change loading overlay message or animation**                        | [kioskLoadingOverlayTexts.ts](file:///home/jensen/Github-Repositories/heart-check-phc/app/kiosk/constants/kioskLoadingOverlayTexts.ts) / [kioskLoadingOverlay.ts](file:///home/jensen/Github-Repositories/heart-check-phc/app/kiosk/constants/kioskLoadingOverlay.ts). |
+| **Change the universal back button appearance or label**               | [kioskBackButtonTexts.ts](file:///home/jensen/Github-Repositories/heart-check-phc/app/kiosk/constants/kioskBackButtonTexts.ts) / [kioskBackButton.ts](file:///home/jensen/Github-Repositories/heart-check-phc/app/kiosk/constants/kioskBackButton.ts).                 |
+| **Change the hardware ticket print API payload**                       | [QueuePrintContent.tsx](file:///home/jensen/Github-Repositories/heart-check-phc/app/kiosk/pages/queue-print/components/QueuePrintContent.tsx) and `/api/print-ticket/route.ts`.                                                                                        |
+| **Change ticket redirect countdown delay**                             | [queuePrintTicket.ts](file:///home/jensen/Github-Repositories/heart-check-phc/app/kiosk/pages/queue-print/constants/queuePrintTicket.ts) (`QUEUE_PRINT_REDIRECT_DELAY_MS`).                                                                                            |
+| **Change mobile phone number validation rules**                        | [KioskPhoneEntry.tsx](file:///home/jensen/Github-Repositories/heart-check-phc/app/kiosk/pages/sms-input/components/KioskPhoneEntry.tsx).                                                                                                                               |
+| **Change queue ticket prefixes and numeric rules**                     | [smsPrefixRules.ts](file:///home/jensen/Github-Repositories/heart-check-phc/app/kiosk/pages/sms-input/constants/smsPrefixRules.ts).                                                                                                                                    |
 
 ---
 
@@ -64,7 +67,7 @@ The root layout wraps all kiosk subroutes with client-side hydration awareness, 
 - **Unified Navigation Hook:** [useKioskNavigate.ts](file:///home/jensen/Github-Repositories/heart-check-phc/app/kiosk/hooks/useKioskNavigate.ts)
 - **Constants:**
   - [kioskBackButtonTexts.ts](file:///home/jensen/Github-Repositories/heart-check-phc/app/kiosk/constants/kioskBackButtonTexts.ts): Back button text and ARIA labels (`KioskBackButtonTexts`).
-  - [kioskBackButton.ts](file:///home/jensen/Github-Repositories/heart-check-phc/app/kiosk/constants/kioskBackButton.ts): Back button styles with tactile white background, brand red typography and enlarged icon (`clamp(24px, 2.4vmin, 32px)`), generous vertical padding (`clamp(12px, 1.4vh, 18px)`), and touch active border feedback (`KioskBackButtonStyles`, `KioskBackButtonClasses`).
+  - [kioskBackButton.ts](file:///home/jensen/Github-Repositories/heart-check-phc/app/kiosk/constants/kioskBackButton.ts): Back button styles with tactile white background, brand red typography and icon, generous vertical padding, and touch active border feedback (`KioskBackButtonStyles`, `KioskBackButtonClasses`).
   - [kioskLoadingOverlayTexts.ts](file:///home/jensen/Github-Repositories/heart-check-phc/app/kiosk/constants/kioskLoadingOverlayTexts.ts): Default loading spinner status strings (`KioskLoadingOverlayTexts`).
   - [kioskLoadingOverlay.ts](file:///home/jensen/Github-Repositories/heart-check-phc/app/kiosk/constants/kioskLoadingOverlay.ts): Loading overlay styling and elevated z-index (200) backdrop filters (`KioskLoadingOverlayStyles`, `KioskLoadingOverlayClasses`).
   - [kioskLayoutTexts.ts](file:///home/jensen/Github-Repositories/heart-check-phc/app/kiosk/constants/kioskLayoutTexts.ts): Composite barrel re-export for layout text strings.
@@ -87,11 +90,12 @@ The welcome screen where patients indicate whether they are a "New Patient" or "
 - **Where to Edit Texts:**
   - [kioskTitleTexts.ts](file:///home/jensen/Github-Repositories/heart-check-phc/app/kiosk/pages/kiosk-new-old-selection/constants/kioskTitleTexts.ts): Heading copy (`KioskTitleTexts`).
   - [patientTypeBannerTexts.ts](file:///home/jensen/Github-Repositories/heart-check-phc/app/kiosk/pages/kiosk-new-old-selection/constants/patientTypeBannerTexts.ts): Banner instructions (`PatientTypeBannerTexts`).
-  - *Note:* Card labels (`Bagong Pasyente`, `Dating Pasyente`) are fetched dynamically from the `patient_category` database table.
+  - _Note:_ Card labels (`Bagong Pasyente`, `Dating Pasyente`) are fetched dynamically from the `patient_category` database table.
 - **Where to Edit Styles:**
   - [kioskTitle.ts](file:///home/jensen/Github-Repositories/heart-check-phc/app/kiosk/pages/kiosk-new-old-selection/constants/kioskTitle.ts): Title font size (referencing `kioskTypography.heroTitle`) and alignments (`KioskTitleStyle`).
-  - [patientTypeBanner.ts](file:///home/jensen/Github-Repositories/heart-check-phc/app/kiosk/pages/kiosk-new-old-selection/constants/patientTypeBanner.ts): Banner container, badge styles, and fluid typography (`clamp(28px, 3.2vmin, 44px)`) (`PatientTypeBannerStyle`).
-  - [kioskNewOldLayout.ts](file:///home/jensen/Github-Repositories/heart-check-phc/app/kiosk/pages/kiosk-new-old-selection/constants/kioskNewOldLayout.ts): Page layout classes (`KioskNewOldLayoutClasses`) providing a strictly non-scrollable container (`cardsArea`) fitted completely within the viewport, as patient types (New vs Old) are fixed and do not increase.
+  - [patientTypeBanner.ts](file:///home/jensen/Github-Repositories/heart-check-phc/app/kiosk/pages/kiosk-new-old-selection/constants/patientTypeBanner.ts): Banner container and badge styles (`PatientTypeBannerStyle`).
+  - [patientTypeCards.ts](file:///home/jensen/Github-Repositories/heart-check-phc/app/kiosk/pages/kiosk-new-old-selection/constants/patientTypeCards.ts): Card dimensions, touch-optimized active border and arrow color feedback (`active:!border-[#ED1C24]`, `group-active:!text-[#ED1C24]`), gray line divider (`divider`), clean borderless brand red icon styling, and typography referencing `kioskTypography` (`PatientTypeCardStyle`, `PatientTypeCardsClasses`).
+  - [kioskNewOldLayout.ts](file:///home/jensen/Github-Repositories/heart-check-phc/app/kiosk/pages/kiosk-new-old-selection/constants/kioskNewOldLayout.ts): Page layout classes (`KioskNewOldLayoutClasses`).
 
 ---
 
@@ -101,22 +105,21 @@ Presents clinical services (Consultation, OPD Screening, Med Cert, etc.) fetched
 
 - **Route:** `/kiosk/pages/kiosk-services?type=<new|old>`
 - **Page File:** [page.tsx](file:///home/jensen/Github-Repositories/heart-check-phc/app/kiosk/pages/kiosk-services/page.tsx)
-- **Layout File:** [layout.tsx](file:///home/jensen/Github-Repositories/heart-check-phc/app/kiosk/pages/kiosk-services/layout.tsx) (clean pass-through layout)
+- **Layout File:** [layout.tsx](file:///home/jensen/Github-Repositories/heart-check-phc/app/kiosk/pages/kiosk-services/layout.tsx)
 - **Components:**
   - [KioskHeader.tsx](file:///home/jensen/Github-Repositories/heart-check-phc/app/kiosk/pages/kiosk-services/components/KioskHeader.tsx): Top institutional logo and title header.
-  - [KioskBanner.tsx](file:///home/jensen/Github-Repositories/heart-check-phc/app/kiosk/pages/kiosk-services/components/KioskBanner.tsx): Instructional banner above services, aligned with the category-selection header scale.
-  - [KioskServicesGrid.tsx](file:///home/jensen/Github-Repositories/heart-check-phc/app/kiosk/pages/kiosk-services/components/KioskServicesGrid.tsx): Unified container with sticky greetings banner (`headerWrapper`) on top, widened card grid across an expansive container (`max-w-[1650px]`), and dynamic scroll indicators (floating badge with bounce chevron and top/bottom gradient shadows).
-  - [ServiceCard.tsx](file:///home/jensen/Github-Repositories/heart-check-phc/app/kiosk/pages/kiosk-services/components/ServiceCard.tsx): Widened interactive service card with Filipino title, gray divider line, English subtitle, brand red icon, and active feedback arrow.
+  - [KioskBanner.tsx](file:///home/jensen/Github-Repositories/heart-check-phc/app/kiosk/pages/kiosk-services/components/KioskBanner.tsx): Instructional banner above services.
+  - [KioskServicesGrid.tsx](file:///home/jensen/Github-Repositories/heart-check-phc/app/kiosk/pages/kiosk-services/components/KioskServicesGrid.tsx): 2-to-3 column grid of service cards.
+  - [ServiceCard.tsx](file:///home/jensen/Github-Repositories/heart-check-phc/app/kiosk/pages/kiosk-services/components/ServiceCard.tsx): Individual interactive service card with Filipino title, gray divider line, English subtitle, brand red icon, and active feedback arrow.
   - [KioskFooterWave.tsx](file:///home/jensen/Github-Repositories/heart-check-phc/app/kiosk/pages/kiosk-services/components/KioskFooterWave.tsx): Decorative bottom wave graphic.
 - **Where to Edit Texts:**
   - [kioskHeaderTexts.ts](file:///home/jensen/Github-Repositories/heart-check-phc/app/kiosk/pages/kiosk-services/constants/kioskHeaderTexts.ts): Header institutional title (`KioskHeaderTexts`).
   - [kioskBannerTexts.ts](file:///home/jensen/Github-Repositories/heart-check-phc/app/kiosk/pages/kiosk-services/constants/kioskBannerTexts.ts): Banner instructions (`KioskBannerTexts`).
-  - [kioskServicesTexts.ts](file:///home/jensen/Github-Repositories/heart-check-phc/app/kiosk/pages/kiosk-services/constants/kioskServicesTexts.ts): Scroll-down indicator badge copy and accessibility ARIA labels (`KioskServicesTexts`).
-  - *Note:* Service titles (`label_fil`) and English subtitles (`label_en`) are fetched from the `services` database table.
+  - _Note:_ Service titles (`label_fil`) and English subtitles (`label_en`) are fetched from the `services` database table.
 - **Where to Edit Styles:**
   - [kioskHeader.ts](file:///home/jensen/Github-Repositories/heart-check-phc/app/kiosk/pages/kiosk-services/constants/kioskHeader.ts): Header dimensions, logo sizing, and footer typography referencing `kioskTypography` (`KioskHeaderStyle`, `kioskHeaderFontSize`).
-  - [kioskBanner.ts](file:///home/jensen/Github-Repositories/heart-check-phc/app/kiosk/pages/kiosk-services/constants/kioskBanner.ts): Banner styling referencing `kioskTypography.pageTitle` and `pageSubtitle` (`KioskBannerStyle`, `kioskBannerTypography`).
-  - [kioskServices.ts](file:///home/jensen/Github-Repositories/heart-check-phc/app/kiosk/pages/kiosk-services/constants/kioskServices.ts): Layout container and widened content wrapper styles (`maxWidth: "1650px"`), centered layout classes (`justifyContent: "center"` on container and `maxHeight: "100%"` on `contentWrapper` with `m-auto` ensuring vertical and horizontal centering in both portrait and landscape), widened card styling (`KioskServicesCardStyle`, `cardPaddingX: "clamp(20px, 2.6vmin, 36px)"`), scroll indicator pill (`scrollIndicator`), scroll shadows (`scrollTopShadow`, `scrollBottomShadow`), text overflow protection with break-word wrapping (`overflowWrap: "anywhere"`), enlarged fluid icon sizing (`clamp(48px, 5.2vmin, 76px)`), gray divider line (`divider`), English subtitle (`subtitle`), typography referencing `kioskTypography`, grid spacing (`KioskServicesGridStyle`), sticky greetings banner (`headerWrapper`), and scrollable card area (`cardsScrollArea`).
+  - [kioskBanner.ts](file:///home/jensen/Github-Repositories/heart-check-phc/app/kiosk/pages/kiosk-services/constants/kioskBanner.ts): Banner styling (`KioskBannerStyle`).
+  - [kioskServices.ts](file:///home/jensen/Github-Repositories/heart-check-phc/app/kiosk/pages/kiosk-services/constants/kioskServices.ts): Card styling (`KioskServicesCardStyle`), gray divider line (`divider`), English subtitle (`subtitle`), brand red icon styling without tile background, typography referencing `kioskTypography`, grid spacing (`KioskServicesGridStyle`), and touch active classes (`KioskServicesClasses`).
 
 ---
 
@@ -131,8 +134,8 @@ Unified age-bracket selector for services requiring Adult (19+) vs Pedia (18 and
   - [categoryCardsTexts.ts](file:///home/jensen/Github-Repositories/heart-check-phc/app/kiosk/pages/category-selection/constants/categoryCardsTexts.ts): Adult / Pedia bilingual labels (`CategoryCardsTexts`).
 - **Where to Edit Styles:**
   - [categoryHeader.ts](file:///home/jensen/Github-Repositories/heart-check-phc/app/kiosk/pages/category-selection/constants/categoryHeader.ts): Heading typography referencing `kioskTypography` and margins (`CategoryHeaderStyle`).
-  - [categoryCards.ts](file:///home/jensen/Github-Repositories/heart-check-phc/app/kiosk/pages/category-selection/constants/categoryCards.ts): Brand red icon styling (`adultIcon`, `pediaIcon`), enlarged fluid clamp icon (`clamp(48px, 5vmin, 70px)`) and arrow sizing, responsive min-height (`clamp(100px, 11vh, 150px)`), word wrapping on titles without clipping (`overflowWrap: "anywhere"`), horizontal card button layout (icon on left, Filipino title, gray divider line, English subtitle in middle, directional arrow on right), touch active border/arrow highlight classes, typography referencing `kioskTypography`, card grid layout with dynamic `m-auto` centering and bottom padding, card styles, and animations (`CategoryCardsStyle`, `CategoryCardsClasses`).
-  - [categoryLayout.ts](file:///home/jensen/Github-Repositories/heart-check-phc/app/kiosk/pages/category-selection/constants/categoryLayout.ts): Page container styles and responsive padding (`CategoryLayoutStyle`, `CategoryLayoutClasses`) providing sticky greetings header and scrollable buttons area with `cardsScrollArea`.
+  - [categoryCards.ts](file:///home/jensen/Github-Repositories/heart-check-phc/app/kiosk/pages/category-selection/constants/categoryCards.ts): Brand red icon styling (`adultIcon`, `pediaIcon`), horizontal card button layout (icon on left, Filipino title, gray divider line, English subtitle in middle, directional arrow on right), touch active border/arrow highlight classes, typography referencing `kioskTypography`, card grid layout, card styles, and animations (`CategoryCardsStyle`, `CategoryCardsClasses`).
+  - [categoryLayout.ts](file:///home/jensen/Github-Repositories/heart-check-phc/app/kiosk/pages/category-selection/constants/categoryLayout.ts): Page container styles and responsive padding (`CategoryLayoutStyle`, `CategoryLayoutClasses`).
 
 ---
 
@@ -142,17 +145,17 @@ Consultation doctor / room selection step.
 
 - **Route:** `/kiosk/pages/kiosk-cubicle-selection?serviceId=...&type=...&subcategory=...`
 - **Page File:** [page.tsx](file:///home/jensen/Github-Repositories/heart-check-phc/app/kiosk/pages/kiosk-cubicle-selection/page.tsx)
-- **Layout File:** [layout.tsx](file:///home/jensen/Github-Repositories/heart-check-phc/app/kiosk/pages/kiosk-cubicle-selection/layout.tsx) (clean pass-through layout)
+- **Layout File:** [layout.tsx](file:///home/jensen/Github-Repositories/heart-check-phc/app/kiosk/pages/kiosk-cubicle-selection/layout.tsx)
 - **Components:**
   - [CubicleHeader.tsx](file:///home/jensen/Github-Repositories/heart-check-phc/app/kiosk/pages/kiosk-cubicle-selection/components/CubicleHeader.tsx): Top header prompt.
   - [CubicleCard.tsx](file:///home/jensen/Github-Repositories/heart-check-phc/app/kiosk/pages/kiosk-cubicle-selection/components/CubicleCard.tsx): Cubicle button that maps preferred cubicle numbers.
 - **Where to Edit Texts:**
   - [cubicleHeaderTexts.ts](file:///home/jensen/Github-Repositories/heart-check-phc/app/kiosk/pages/kiosk-cubicle-selection/constants/cubicleHeaderTexts.ts): Header title and subtitle (`CubicleHeaderTexts`).
-  - *Note:* Cubicle names are fetched from the database (`cubicle_selector_groups`).
+  - _Note:_ Cubicle names are fetched from the database (`cubicle_selector_groups`).
 - **Where to Edit Styles:**
   - [cubicleHeader.ts](file:///home/jensen/Github-Repositories/heart-check-phc/app/kiosk/pages/kiosk-cubicle-selection/constants/cubicleHeader.ts): Header styles and typography referencing `kioskTypography` (`CubicleHeaderStyle`).
-  - [cubicleCard.ts](file:///home/jensen/Github-Repositories/heart-check-phc/app/kiosk/pages/kiosk-cubicle-selection/constants/cubicleCard.ts): Card styles with enlarged responsive minHeight (`clamp(100px, 11vh, 130px)`) and fluid padding, multi-line wrapping for long cubicle names without ellipsis truncation (`whiteSpace: "normal"`, `overflowWrap: "break-word"`), brand red icon with enlarged fluid clamp sizing (`clamp(44px, 4.5vmin, 60px)`), typography referencing `kioskTypography`, touch active border/arrow highlight classes, dynamic `m-auto` centering, and generous bottom padding (`CubicleCardStyle`, `CubicleCardClasses`).
-  - [cubicleLayout.ts](file:///home/jensen/Github-Repositories/heart-check-phc/app/kiosk/pages/kiosk-cubicle-selection/constants/cubicleLayout.ts): Layout wrapper styles (`CubicleLayoutStyle`, `CubicleLayoutClasses`) providing centered prompt and cubicle cards container with `justifyContent: "center"` and `maxHeight: "100%"` ensuring vertical and horizontal centering in both portrait and landscape modes.
+  - [cubicleCard.ts](file:///home/jensen/Github-Repositories/heart-check-phc/app/kiosk/pages/kiosk-cubicle-selection/constants/cubicleCard.ts): Card styles, brand red icon without background tile, typography referencing `kioskTypography`, and touch active border/arrow highlight classes (`CubicleCardStyle`, `CubicleCardClasses`).
+  - [cubicleLayout.ts](file:///home/jensen/Github-Repositories/heart-check-phc/app/kiosk/pages/kiosk-cubicle-selection/constants/cubicleLayout.ts): Layout wrapper classes (`CubicleLayoutClasses`).
 
 ---
 
@@ -175,15 +178,12 @@ Keypad screen for entering the patient's Philippine mobile number (`09XX XXX XXX
   - [smsInstructionTexts.ts](file:///home/jensen/Github-Repositories/heart-check-phc/app/kiosk/pages/sms-input/constants/smsInstructionTexts.ts): Input title, subtitle, and hint card message (`SMSInstructionTexts`).
   - [smsContinueButtonTexts.ts](file:///home/jensen/Github-Repositories/heart-check-phc/app/kiosk/pages/sms-input/constants/smsContinueButtonTexts.ts): Continue and Skip button labels (`SMSContinueButtonTexts`).
   - [smsModalTexts.ts](file:///home/jensen/Github-Repositories/heart-check-phc/app/kiosk/pages/sms-input/constants/smsModalTexts.ts): Verification modal and skip confirmation modal texts (`SMSModalTexts`).
-  - [smsValidationTexts.ts](file:///home/jensen/Github-Repositories/heart-check-phc/app/kiosk/pages/sms-input/constants/smsValidationTexts.ts): Phone number format warnings and troll rejection messages (`SMSValidationTexts`).
 - **Where to Edit Styles:**
   - [smsInstruction.ts](file:///home/jensen/Github-Repositories/heart-check-phc/app/kiosk/pages/sms-input/constants/smsInstruction.ts): Header, subtitle, service badge, and hint card styles referencing `kioskTypography` (`SMSInstructionStyle`).
-  - [smsPhoneInput.ts](file:///home/jensen/Github-Repositories/heart-check-phc/app/kiosk/pages/sms-input/constants/smsPhoneInput.ts): Number box border, enlarged height (`clamp(70px, 8.5vh, 88px)`), colors, and typography referencing `kioskTypography.phoneDigits` (`SMSPhoneInputStyle`, `SMSPhoneInputClasses`).
-  - [smsNumPad.ts](file:///home/jensen/Github-Repositories/heart-check-phc/app/kiosk/pages/sms-input/constants/smsNumPad.ts): Touch keypad button sizing with enlarged height (`clamp(70px, 8.5vh, 90px)`) and comfortable touch grid, colors, typography referencing `kioskTypography.numPadKey`, and active press states with red border (`SMSNumPadStyle`, `SMSNumPadClasses`).
-  - [smsContinueButton.ts](file:///home/jensen/Github-Repositories/heart-check-phc/app/kiosk/pages/sms-input/constants/smsContinueButton.ts): Primary continue and secondary skip button styles referencing `kioskTypography.buttonText` with enlarged touch heights (`clamp(54px, 6.8vh, 68px)`), fluid padding, and word-wrap protection (`SMSContinueButtonStyle`, `SMSContinueButtonClasses`).
-  - [smsLayout.ts](file:///home/jensen/Github-Repositories/heart-check-phc/app/kiosk/pages/sms-input/constants/smsLayout.ts): Keypad screen layout and column wrappers (`SMSLayoutStyle`, `SMSLayoutClasses`), strictly non-scrollable (`overflow: hidden`) with balanced padding and gaps, portrait column width constraints (`max-w-[540px]`), and centered alignment.
-- **Where to Edit Phone Validation & Anti-Troll Rules:**
-  - [phoneValidation.ts](file:///home/jensen/Github-Repositories/heart-check-phc/app/kiosk/pages/sms-input/utils/phoneValidation.ts): Strict Philippine mobile number rules, 09 keypad constraint, NTC telco prefix verification, sequential run detection (`123456...`), and repetitive number limits (`09111111111`).
+  - [smsPhoneInput.ts](file:///home/jensen/Github-Repositories/heart-check-phc/app/kiosk/pages/sms-input/constants/smsPhoneInput.ts): Number box border, colors, and typography referencing `kioskTypography.phoneDigits` (`SMSPhoneInputStyle`, `SMSPhoneInputClasses`).
+  - [smsNumPad.ts](file:///home/jensen/Github-Repositories/heart-check-phc/app/kiosk/pages/sms-input/constants/smsNumPad.ts): Touch keypad button sizing, colors, typography referencing `kioskTypography.numPadKey`, and active press states with red border (`SMSNumPadStyle`, `SMSNumPadClasses`).
+  - [smsContinueButton.ts](file:///home/jensen/Github-Repositories/heart-check-phc/app/kiosk/pages/sms-input/constants/smsContinueButton.ts): Primary continue and secondary skip button styles referencing `kioskTypography.buttonText` (`SMSContinueButtonStyle`, `SMSContinueButtonClasses`).
+  - [smsLayout.ts](file:///home/jensen/Github-Repositories/heart-check-phc/app/kiosk/pages/sms-input/constants/smsLayout.ts): Keypad screen layout and column wrappers (`SMSLayoutStyle`, `SMSLayoutClasses`).
 - **Where to Edit Queue Ticket Prefixes & Rules:**
   - [smsPrefixRules.ts](file:///home/jensen/Github-Repositories/heart-check-phc/app/kiosk/pages/sms-input/constants/smsPrefixRules.ts): Service ticket prefix mappings (`SMS_SERVICE_PREFIXES`) and numeric subcategory routing rules (`NUMERIC_PREFIX_RULES`).
 
@@ -209,7 +209,7 @@ Review screen displaying the patient's selected service, category, and phone num
 - **Where to Edit Styles:**
   - [confirmationBanner.ts](file:///home/jensen/Github-Repositories/heart-check-phc/app/kiosk/pages/confirmation/constants/confirmationBanner.ts): Banner styles (`ConfirmationBannerStyle`).
   - [confirmationDescription.ts](file:///home/jensen/Github-Repositories/heart-check-phc/app/kiosk/pages/confirmation/constants/confirmationDescription.ts): Summary card styles (`ConfirmationDescriptionStyle`).
-  - [confirmationActions.ts](file:///home/jensen/Github-Repositories/heart-check-phc/app/kiosk/pages/confirmation/constants/confirmationActions.ts): Action button styles with enlarged touch minHeight (`clamp(54px, 6.5vh, 66px)`), fluid clamp padding, and break-word wrapping (`ConfirmationActionsStyle`).
+  - [confirmationActions.ts](file:///home/jensen/Github-Repositories/heart-check-phc/app/kiosk/pages/confirmation/constants/confirmationActions.ts): Action button styles (`ConfirmationActionsStyle`).
   - [confirmationModal.ts](file:///home/jensen/Github-Repositories/heart-check-phc/app/kiosk/pages/confirmation/constants/confirmationModal.ts): Modal overlay styles (`zIndex: 100`, `backdropFilter: blur(8px)`) and dialog styles (`ConfirmationModalStyle`, `ConfirmationModalClasses`).
   - [confirmationLayout.ts](file:///home/jensen/Github-Repositories/heart-check-phc/app/kiosk/pages/confirmation/constants/confirmationLayout.ts): Layout wrappers (`ConfirmationLayoutClasses`).
 
@@ -259,21 +259,3 @@ Whenever you create or edit code in `app/kiosk/`:
 
 6. **Comprehensive Documentation:**
    Every new or refactored file must include a top-level JSDoc `@file` comment and symbol-level JSDoc annotations for all components, interfaces, and exported constants.
-
-7. **Scrolling Architecture Policy (Dynamic Lists vs. Fixed Screens):**
-   - **Unified Centered Content Wrapper:** All selection screens ([category-selection](file:///home/jensen/Github-Repositories/heart-check-phc/app/kiosk/pages/category-selection/page.tsx), [kiosk-services](file:///home/jensen/Github-Repositories/heart-check-phc/app/kiosk/pages/kiosk-services/page.tsx), and [kiosk-cubicle-selection](file:///home/jensen/Github-Repositories/heart-check-phc/app/kiosk/pages/kiosk-cubicle-selection/page.tsx)) bundle the greetings banner or prompt directly with the button cards inside `contentWrapper` with zero gaps or spaces between greetings and selection buttons.
-   - **Fixed Screens (Items Do Not Increase):** Screens with fixed options ([kiosk-new-old-selection](file:///home/jensen/Github-Repositories/heart-check-phc/app/kiosk/pages/kiosk-new-old-selection/layout.tsx), [category-selection](file:///home/jensen/Github-Repositories/heart-check-phc/app/kiosk/pages/category-selection/page.tsx), [sms-input](file:///home/jensen/Github-Repositories/heart-check-phc/app/kiosk/pages/sms-input/page.tsx), [queue-print](file:///home/jensen/Github-Repositories/heart-check-phc/app/kiosk/pages/queue-print/page.tsx)) must be strictly non-scrollable (`overflow-hidden`). All elements and cards must fit comfortably within the available viewport on all screen sizes in both portrait and landscape modes.
-
-8. **Always Center Kiosk UI & Non-Overflow Navigation:**
-   Every kiosk screen, whether fixed or scrollable, must ALWAYS center its content both vertically and horizontally in the available viewport.
-   - **Non-Overflow Navigation (In-Flow):** The universal back button is rendered in its own dedicated in-flow top navigation row (`topNavWrapper`) in `app/kiosk/layout.tsx`. It is strictly `inline-flex` and never absolute, guaranteeing that no headers, banners, or instruction texts ever share a row or collide with the back button.
-   - **Centered Content Area (`<main>`):** All page contents (headers, banners, cards, instructions, numeric keypads) are rendered inside `<main>`, vertically and horizontally centered in the available space between the top navigation bar and the footer wave.
-   - **Greetings Directly on Top of Selection Buttons:** On every selection screen, the greetings banner or instruction prompt sits directly on top of the selection cards with zero empty space or gap separating them. No vertical auto-margins (`m-auto`) inside scroll containers may pull or push cards away from the header.
-   - **Unified Content Wrapper Centering:** Across [kiosk-services](file:///home/jensen/Github-Repositories/heart-check-phc/app/kiosk/pages/kiosk-services/page.tsx), [category-selection](file:///home/jensen/Github-Repositories/heart-check-phc/app/kiosk/pages/category-selection/page.tsx), and [kiosk-cubicle-selection](file:///home/jensen/Github-Repositories/heart-check-phc/app/kiosk/pages/kiosk-cubicle-selection/page.tsx), the container and `contentWrapper` use `m-auto flex flex-col items-center justify-center` so that the greetings prompt and cards are centered cleanly on the page as one block directly between the top navigation back button and the footer.
-   - **Fixed Screens Centering:** On fixed screens ([kiosk-new-old-selection](file:///home/jensen/Github-Repositories/heart-check-phc/app/kiosk/pages/kiosk-new-old-selection/layout.tsx), [category-selection](file:///home/jensen/Github-Repositories/heart-check-phc/app/kiosk/pages/category-selection/page.tsx), [sms-input](file:///home/jensen/Github-Repositories/heart-check-phc/app/kiosk/pages/sms-input/page.tsx), [queue-print](file:///home/jensen/Github-Repositories/heart-check-phc/app/kiosk/pages/queue-print/page.tsx)), content is centered vertically and horizontally within the viewport above the kiosk wave footer.
-
-9. **Constant Card Dimensions Standard:**
-   All interactive cards (services menu cards, cubicle selector cards, patient category cards) must have strictly constant, uniform sizes across all columns and rows:
-   - **Full Grid Fill:** Cards must define `width: "100%"`, `height: "100%"`, and `boxSizing: "border-box"`.
-   - **Equal Row Heights:** Grids must enforce `gridAutoRows: "1fr"` and `auto-rows-fr` so that all rows have identical height regardless of variations in text length.
-   - **Fixed Icon Alignment:** Icon wrappers must define explicit fixed clamp widths (`width: clamp(...)`, `flexShrink: 0`) so that icons, text labels, and navigation arrows align perfectly across all cards.

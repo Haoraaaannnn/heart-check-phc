@@ -9,41 +9,39 @@ import { kioskTypography } from "@/constants/kiosk";
 
 /** Spacing values for cubicle header. */
 export const cubicleHeaderSpacing = {
-    headerPaddingX: 0,
-    headerPaddingBottom: 0,
-    headerSubtitleMarginTop: 4,
+    headerPaddingX: 24,
+    headerPaddingBottom: "clamp(24px, 3vh, 40px)",
+    headerSubtitleMarginTop: 12,
 } as const;
 
 /** Typography tokens for cubicle header, referencing centralized root typography scale. */
 export const cubicleHeaderTypography = {
     titleSize: kioskTypography.pageTitle,
     subtitleSize: kioskTypography.pageSubtitle,
-    titleWeight: 900,
-    subtitleWeight: 500,
 } as const;
 
 /** Inline styles for `CubicleHeader`. */
 export const CubicleHeaderStyle = {
     container: {
         width: "100%",
+        paddingLeft: cubicleHeaderSpacing.headerPaddingX,
+        paddingRight: cubicleHeaderSpacing.headerPaddingX,
+        paddingBottom: cubicleHeaderSpacing.headerPaddingBottom,
         textAlign: "center",
-        paddingBottom: 0,
-        marginBottom: 0,
     },
     title: {
         fontSize: cubicleHeaderTypography.titleSize,
-        fontWeight: cubicleHeaderTypography.titleWeight,
-        lineHeight: 1.2,
+        fontWeight: 900,
+        lineHeight: 1.25,
         color: themeColors.black,
         margin: 0,
     },
     subtitle: {
-        margin: 0,
         marginTop: cubicleHeaderSpacing.headerSubtitleMarginTop,
-        marginBottom: 0,
         fontSize: cubicleHeaderTypography.subtitleSize,
-        fontWeight: cubicleHeaderTypography.subtitleWeight,
+        fontWeight: 400,
         lineHeight: 1.25,
-        color: "#4B5563",
+        color: "#1F2937",
+        margin: 0,
     },
 } satisfies Record<string, CSSProperties>;

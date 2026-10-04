@@ -1,4 +1,10 @@
-// app/kiosk/layout.tsx
+/**
+ * @fileoverview Shared application shell for kiosk routes.
+ *
+ * Composes kiosk navigation chrome, the loading provider and overlay, and the
+ * inactivity redirect wrapper around the active kiosk route.
+ */
+
 "use client";
 
 import { usePathname, useSearchParams } from "next/navigation";
@@ -7,19 +13,20 @@ import KioskHeader from "@/app/kiosk/pages/kiosk-services/components/KioskHeader
 import KioskBackButton from "@/components/reusables/KioskBackButton";
 import { useIsMounted } from "@/hooks/useIsMounted";
 import {
-    KioskLoadingProvider,
-    useKioskLoading,
+  KioskLoadingProvider,
+  useKioskLoading,
 } from "@/app/kiosk/context/KioskLoadingContext";
 import KioskLoadingOverlay from "@/app/kiosk/components/KioskLoadingOverlay";
+import IdleRedirectWrapper from "@/app/kiosk/components/IdleRedirectWrapper";
 import {
-    KioskLayoutClasses,
-    KioskLayoutStyle,
+  KioskLayoutClasses,
+  KioskLayoutStyle,
 } from "@/app/kiosk/constants/kioskLayout";
 
 /** Props for {@link MainKioskLayout}. */
 interface MainKioskLayoutProps {
-    /** The current kiosk page (or nested kiosk layout). */
-    children: React.ReactNode;
+  /** The current kiosk page (or nested kiosk layout). */
+  children: React.ReactNode;
 }
 
 /**
@@ -51,50 +58,49 @@ interface MainKioskLayoutProps {
  * Must be rendered inside {@link KioskLoadingProvider}.
  */
 function KioskRouteChangeIndicator({ pathname }: { pathname: string }) {
-    const { showLoading, hideLoading } = useKioskLoading();
-    const previousPathname = useRef(pathname);
+  const { showLoading, hideLoading } = useKioskLoading();
+  const previousPathname = useRef(pathname);
 
-    // Show the overlay immediately on click, before Next.js starts fetching.
-    useEffect(() => {
-        function handleClick(event: MouseEvent) {
-            const target = event.target as HTMLElement;
-            const anchor = target.closest("a");
-            if (!anchor) return;
+  // Show the overlay immediately on click, before Next.js starts fetching.
+  useEffect(() => {
+    function handleClick(event: MouseEvent) {
+      const target = event.target as HTMLElement;
+      const anchor = target.closest("a");
+      if (!anchor) return;
 
-            const isModifiedClick =
-                event.button !== 0 ||
-                event.metaKey ||
-                event.ctrlKey ||
-                event.shiftKey ||
-                event.altKey;
-            const isExternal =
-                anchor.target === "_blank" || anchor.hasAttribute("download");
-            const isSameOrigin =
-                anchor.origin === window.location.origin;
+      const isModifiedClick =
+        event.button !== 0 ||
+        event.metaKey ||
+        event.ctrlKey ||
+        event.shiftKey ||
+        event.altKey;
+      const isExternal =
+        anchor.target === "_blank" || anchor.hasAttribute("download");
+      const isSameOrigin = anchor.origin === window.location.origin;
 
-            if (isModifiedClick || isExternal || !isSameOrigin) return;
-            // Clicking the current page's own link (e.g. a logo) — no
-            // navigation will actually happen, so don't show the overlay.
-            if (anchor.pathname === pathname) return;
+      if (isModifiedClick || isExternal || !isSameOrigin) return;
+      // Clicking the current page's own link (e.g. a logo) — no
+      // navigation will actually happen, so don't show the overlay.
+      if (anchor.pathname === pathname) return;
 
-            showLoading();
-        }
+      showLoading();
+    }
 
-        // Capture phase so this runs before Next.js's own Link click handler.
-        document.addEventListener("click", handleClick, true);
-        return () => document.removeEventListener("click", handleClick, true);
-    }, [pathname, showLoading]);
+    // Capture phase so this runs before Next.js's own Link click handler.
+    document.addEventListener("click", handleClick, true);
+    return () => document.removeEventListener("click", handleClick, true);
+  }, [pathname, showLoading]);
 
-    // Hide the overlay once the path has actually changed — regardless of
-    // whether the navigation was started by the click listener above or by
-    // an imperative router.push() (e.g. via useKioskNavigate).
-    useEffect(() => {
-        if (previousPathname.current === pathname) return;
-        previousPathname.current = pathname;
-        hideLoading();
-    }, [pathname, hideLoading]);
+  // Hide the overlay once the path has actually changed — regardless of
+  // whether the navigation was started by the click listener above or by
+  // an imperative router.push() (e.g. via useKioskNavigate).
+  useEffect(() => {
+    if (previousPathname.current === pathname) return;
+    previousPathname.current = pathname;
+    hideLoading();
+  }, [pathname, hideLoading]);
 
-    return null;
+  return null;
 }
 
 /**
@@ -117,108 +123,105 @@ function KioskRouteChangeIndicator({ pathname }: { pathname: string }) {
  * @returns The kiosk shell wrapping the current page.
  */
 export default function MainKioskLayout({ children }: MainKioskLayoutProps) {
-    // False on the server and first paint, true after hydration (drives the fade-in).
-    const mounted = useIsMounted();
+  // False on the server and first paint, true after hydration (drives the fade-in).
+  const mounted = useIsMounted();
 
-    const pathname = usePathname();
-    const searchParams = useSearchParams();
+  const pathname = usePathname();
+  const searchParams = useSearchParams();
 
-    // Selected patient type ("new" | "old") from the URL, if present.
-    const patientType = searchParams.get("type");
+  // Selected patient type ("new" | "old") from the URL, if present.
+  const patientType = searchParams.get("type");
 
-    const shouldShowBackButton =
-        pathname === "/kiosk/pages/kiosk-services" ||
-        pathname === "/kiosk/pages/kiosk-cubicle-selection" ||
-        pathname === "/kiosk/pages/category-selection" ||
-        pathname === "/kiosk/pages/sms-input";
+  const shouldShowBackButton =
+    pathname === "/kiosk/pages/kiosk-services" ||
+    pathname === "/kiosk/pages/kiosk-cubicle-selection" ||
+    pathname === "/kiosk/pages/category-selection" ||
+    pathname === "/kiosk/pages/sms-input";
 
-    // Where the back button goes; undefined means no back target on this page.
-    let backHref: string | undefined = undefined;
+  // Where the back button goes; undefined means no back target on this page.
+  let backHref: string | undefined = undefined;
 
-    if (pathname === "/kiosk/pages/kiosk-services") {
-        backHref = "/kiosk/pages/kiosk-new-old-selection";
+  if (pathname === "/kiosk/pages/kiosk-services") {
+    backHref = "/kiosk/pages/kiosk-new-old-selection";
+  }
+
+  if (pathname === "/kiosk/pages/kiosk-cubicle-selection") {
+    const serviceId = searchParams.get("serviceId");
+    if (serviceId) {
+      const params = new URLSearchParams();
+      if (patientType) params.set("type", patientType);
+      params.set("serviceId", serviceId);
+      params.set("serviceLabel", "Consultation");
+      backHref = `/kiosk/pages/category-selection?${params.toString()}`;
+    } else {
+      backHref = patientType
+        ? `/kiosk/pages/kiosk-services?type=${encodeURIComponent(patientType)}`
+        : "/kiosk/pages/kiosk-services";
     }
+  }
 
-    if (pathname === "/kiosk/pages/kiosk-cubicle-selection") {
-        const serviceId = searchParams.get("serviceId");
-        if (serviceId) {
-            const params = new URLSearchParams();
-            if (patientType) params.set("type", patientType);
-            params.set("serviceId", serviceId);
-            params.set("serviceLabel", "Consultation");
-            backHref = `/kiosk/pages/category-selection?${params.toString()}`;
-        } else {
-            backHref = patientType
-                ? `/kiosk/pages/kiosk-services?type=${encodeURIComponent(patientType)}`
-                : "/kiosk/pages/kiosk-services";
-        }
+  if (pathname === "/kiosk/pages/category-selection") {
+    const serviceId = searchParams.get("serviceId");
+    const params = new URLSearchParams();
+    if (patientType) params.set("type", patientType);
+    if (serviceId) params.set("serviceId", serviceId);
+    const query = params.toString();
+    backHref = `/kiosk/pages/kiosk-services${query ? `?${query}` : ""}`;
+  }
+
+  if (pathname === "/kiosk/pages/sms-input") {
+    const serviceId = searchParams.get("serviceId");
+    const subcategory = searchParams.get("subcategory");
+    const preferredCubicleNums = searchParams.get("preferredCubicleNums");
+    const serviceLabel = searchParams.get("serviceLabel");
+
+    const params = new URLSearchParams();
+    if (serviceId) params.set("serviceId", serviceId);
+    if (patientType) params.set("type", patientType);
+
+    if (preferredCubicleNums) {
+      if (subcategory) params.set("subcategory", subcategory);
+      backHref = `/kiosk/pages/kiosk-cubicle-selection?${params.toString()}`;
+    } else if (subcategory) {
+      if (serviceLabel) params.set("serviceLabel", serviceLabel);
+      backHref = `/kiosk/pages/category-selection?${params.toString()}`;
+    } else {
+      backHref = `/kiosk/pages/kiosk-services?${params.toString()}`;
     }
+  }
 
-    if (pathname === "/kiosk/pages/category-selection") {
-        const serviceId = searchParams.get("serviceId");
-        const params = new URLSearchParams();
-        if (patientType) params.set("type", patientType);
-        if (serviceId) params.set("serviceId", serviceId);
-        const query = params.toString();
-        backHref = `/kiosk/pages/kiosk-services${query ? `?${query}` : ""}`;
-    }
+  return (
+    <IdleRedirectWrapper>
+      <KioskLoadingProvider>
+        <KioskRouteChangeIndicator pathname={pathname} />
 
-    if (pathname === "/kiosk/pages/sms-input") {
-        const serviceId = searchParams.get("serviceId");
-        const subcategory = searchParams.get("subcategory");
-        const preferredCubicleNums = searchParams.get("preferredCubicleNums");
-        const serviceLabel = searchParams.get("serviceLabel");
+        <div
+          className={KioskLayoutClasses.container(mounted)}
+          style={KioskLayoutStyle.container}
+        >
+          {shouldShowBackButton && backHref && (
+            <KioskBackButton href={backHref} />
+          )}
 
-        const params = new URLSearchParams();
-        if (serviceId) params.set("serviceId", serviceId);
-        if (patientType) params.set("type", patientType);
+          {/* Main content: fills all remaining space, no fixed dimensions. */}
+          <main
+            className={KioskLayoutClasses.main}
+            style={KioskLayoutStyle.main}
+          >
+            {children}
+          </main>
 
-        if (preferredCubicleNums) {
-            if (subcategory) params.set("subcategory", subcategory);
-            backHref = `/kiosk/pages/kiosk-cubicle-selection?${params.toString()}`;
-        } else if (subcategory) {
-            if (serviceLabel) params.set("serviceLabel", serviceLabel);
-            backHref = `/kiosk/pages/category-selection?${params.toString()}`;
-        } else {
-            backHref = `/kiosk/pages/kiosk-services?${params.toString()}`;
-        }
-    }
+          {/* Footer: sized by its own content. */}
+          <div
+            className={KioskLayoutClasses.footerWrapper}
+            style={KioskLayoutStyle.footerWrapper}
+          >
+            <KioskHeader />
+          </div>
+        </div>
 
-    return (
-        <KioskLoadingProvider>
-            <KioskRouteChangeIndicator pathname={pathname} />
-
-            <div
-                className={KioskLayoutClasses.container(mounted)}
-                style={KioskLayoutStyle.container}
-            >
-                {shouldShowBackButton && backHref ? (
-                    <header
-                        className={KioskLayoutClasses.topNavWrapper}
-                        style={KioskLayoutStyle.topNavWrapper}
-                    >
-                        <KioskBackButton href={backHref} />
-                    </header>
-                ) : null}
-
-                {/* Main content: fills all remaining space, no fixed dimensions. */}
-                <main
-                    className={KioskLayoutClasses.main}
-                    style={KioskLayoutStyle.main}
-                >
-                    {children}
-                </main>
-
-                {/* Footer: sized by its own content. */}
-                <div
-                    className={KioskLayoutClasses.footerWrapper}
-                    style={KioskLayoutStyle.footerWrapper}
-                >
-                    <KioskHeader />
-                </div>
-            </div>
-
-            <KioskLoadingOverlay />
-        </KioskLoadingProvider>
-    );
+        <KioskLoadingOverlay />
+      </KioskLoadingProvider>
+    </IdleRedirectWrapper>
+  );
 }

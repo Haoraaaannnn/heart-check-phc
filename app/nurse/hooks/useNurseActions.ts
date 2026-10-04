@@ -9,7 +9,6 @@
 
 import { useState, useCallback } from 'react';
 import { supabase } from '@/lib/supabase';
-import { enqueueMutation, removeMutation } from '@/lib/offlineQueue';
 import { Patient } from '@/types/Types';
 import { ClinicalStage } from '../types/nurse';
 import { nurseTexts } from '../constants/nurseTexts';
@@ -58,68 +57,29 @@ export function useNurseActions(
   }, []);
 
   /**
-   * Persists patient column mutations with durable offline outbox logging.
-   *
-   * @remarks
-   * Commits the mutation to IndexedDB first to guarantee survival across power outages.
-   * If the network is offline or drops, retains the mutation in local storage without
-   * rolling back optimistic state. Only rolls back on genuine database authorization errors.
+   * Persists patient column mutations to Supabase with error reporting.
    */
   const persistPatientUpdate = async (
     patientId: number,
     updates: Record<string, string | null>
   ): Promise<boolean> => {
-    let queuedMutationId: string | null = null;
-
-    try {
-      // 1. Immediately log mutation to non-volatile IndexedDB disk storage
-      const queued = await enqueueMutation({
-        table: 'patients',
-        type: 'update',
-        payload: updates,
-        matchKey: 'id',
-        matchValue: patientId,
-        clientTimestamp: new Date().toISOString(),
-        description: `Nurse update patient #${patientId}`,
-      });
-      queuedMutationId = queued.id;
-    } catch (storageErr) {
-      console.warn('IndexedDB unavailable, falling back to direct network call:', storageErr);
-    }
-
-    // 2. If browser is currently offline, keep optimistic state and leave item in outbox
-    if (typeof navigator !== 'undefined' && !navigator.onLine) {
-      return true;
-    }
-
-    // 3. Attempt immediate network persistence to Supabase
     try {
       const { error } = await supabase
         .from('patients')
         .update(updates)
-        .eq('id', patientId)
-        .eq('is_historical', false);
+        .eq('id', patientId);
 
       if (error) {
-        // If server rules or RLS rejected it, discard queued mutation and rollback
         console.error('NURSE MUTATION ERROR:', error.message);
-        if (queuedMutationId) {
-          await removeMutation(queuedMutationId);
-        }
         setActionError(nurseTexts.errorUnauthorizedCubicle);
         return false;
       }
 
-      // Successfully pushed to Supabase! Dequeue from local storage
-      if (queuedMutationId) {
-        await removeMutation(queuedMutationId);
-      }
-
       return true;
     } catch (err) {
-      // Network drop or timeout: keep item in outbox queue, DO NOT rollback optimistic state
-      console.warn('Nurse mutation network drop - saved to offline outbox for automatic sync:', err);
-      return true;
+      console.error('NURSE NETWORK EXCEPTION:', err);
+      setActionError(nurseTexts.errorUpdateFailed);
+      return false;
     }
   };
 

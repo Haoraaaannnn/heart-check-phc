@@ -148,12 +148,12 @@ export function OnProgressSection({
               >
                 {/* Left Patient Details */}
                 <div className="flex items-center gap-2 min-w-0">
-                  {/* Grip, Status Label, or Selection Indicator */}
+                  {/* Grip, Lock Icon, or Selection Indicator */}
                   {isDraggable && (
                     isTop ? (
                       isSelected ? (
-                        <span className="px-1.5 py-0.5 rounded-md bg-[#cc3535] text-white text-[10px] font-bold shrink-0 shadow-2xs">
-                          SEL
+                        <span className="w-6 h-6 rounded-md bg-[#cc3535] text-white flex items-center justify-center shrink-0 shadow-2xs">
+                          <i className="bx bx-check text-sm font-bold" aria-hidden="true" />
                         </span>
                       ) : (
                         <DragHandle title={transferTexts.tapToSelectHint} />
@@ -161,9 +161,9 @@ export function OnProgressSection({
                     ) : (
                       <span
                         title={transferTexts.lockedInStack}
-                        className="inline-flex items-center justify-center px-1 py-0.5 rounded text-[10px] font-bold text-slate-400 bg-slate-100"
+                        className="inline-flex items-center justify-center w-6 h-6 text-slate-400"
                       >
-                        WAIT
+                        <i className="bx bx-lock-alt text-sm" aria-hidden="true" />
                       </span>
                     )
                   )}
@@ -236,13 +236,20 @@ export function OnProgressSection({
                     }}
                     disabled={speakingId === p.id}
                     title={transferTexts.callPatientTooltip}
-                    className={`px-2 py-0.5 rounded-md text-xs font-semibold transition-colors cursor-pointer ${
+                    className={`w-6 h-6 flex items-center justify-center rounded-md text-xs transition-colors cursor-pointer ${
                       speakingId === p.id
                         ? 'bg-blue-100 text-blue-300 cursor-not-allowed'
                         : 'bg-blue-50 hover:bg-blue-100 text-blue-600'
                     }`}
                   >
-                    {speakingId === p.id ? transferTexts.callingBtn : transferTexts.callBtn}
+                    <i
+                      className={`bx ${
+                        speakingId === p.id
+                          ? 'bx-loader-alt animate-spin'
+                          : 'bxs-volume-full'
+                      } text-xs`}
+                      aria-hidden="true"
+                    />
                   </button>
 
                   {/* Assign Now Button (Top patient only) */}
@@ -256,9 +263,9 @@ export function OnProgressSection({
                         onAssignNow(p);
                       }}
                       title={transferTexts.assignNowTooltip}
-                      className="px-2 py-0.5 rounded-md text-xs font-semibold bg-emerald-50 hover:bg-emerald-100 text-emerald-700 transition-colors cursor-pointer"
+                      className="w-6 h-6 flex items-center justify-center rounded-md text-xs bg-emerald-50 hover:bg-emerald-100 text-emerald-700 transition-colors cursor-pointer"
                     >
-                      {transferTexts.assignBtn}
+                      <i className="bx bx-check-circle text-sm" aria-hidden="true" />
                     </button>
                   )}
                 </div>

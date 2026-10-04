@@ -1,14 +1,9 @@
 import { createClient } from "@/lib/supabase/server";
 import { redirect } from "next/navigation";
 import CubicleCard from "@/app/kiosk/pages/kiosk-cubicle-selection/components/CubicleCard";
-import CubicleHeader from "@/app/kiosk/pages/kiosk-cubicle-selection/components/CubicleHeader";
 import { CubicleSelectorType } from "@/app/kiosk/pages/kiosk-cubicle-selection/types/CubicleSelectorType";
 import { getTimestamp } from "@/lib/logger";
 import { CubicleCardClasses } from "@/app/kiosk/pages/kiosk-cubicle-selection/constants/cubicleCard";
-import {
-    CubicleLayoutStyle,
-    CubicleLayoutClasses,
-} from "@/app/kiosk/pages/kiosk-cubicle-selection/constants/cubicleLayout";
 
 /** Props Next.js passes to the cubicle selection page. */
 interface KioskCubicleSelectionPageProps {
@@ -34,11 +29,6 @@ interface KioskCubicleSelectionPageProps {
  * If accessed without a `serviceId` or for a non-consultation service (such as
  * OPD Screening), patients are automatically redirected to the appropriate
  * downstream screen (`sms-input` or `kiosk-services`).
- *
- * Follows the single-container layout pattern of `category-selection`:
- * - Outer container centers all content vertically and horizontally within `<main>`.
- * - Inner content wrapper bundles the greetings prompt (`CubicleHeader`) directly above
- *   the cubicle cards grid with tight spacing as one cohesive unit.
  *
  * @param props - Page props provided by Next.js.
  * @returns The grid of cubicle selector options.
@@ -97,40 +87,16 @@ export default async function KioskCubicleSelectionPage({
     }
 
     return (
-        <div
-            className={CubicleLayoutClasses.container}
-            style={CubicleLayoutStyle.container}
-        >
-            <div
-                className={CubicleLayoutClasses.contentWrapper}
-                style={CubicleLayoutStyle.contentWrapper}
-            >
-                {/* Greetings and instruction header: sticky at top */}
-                <header
-                    className={CubicleLayoutClasses.headerWrapper}
-                    style={CubicleLayoutStyle.headerWrapper}
-                >
-                    <CubicleHeader />
-                </header>
-
-                {/* Cubicle cards scroll area */}
-                <div
-                    className={CubicleLayoutClasses.cardsScrollArea}
-                    style={CubicleLayoutStyle.cardsScrollArea}
-                >
-                    <div className={CubicleCardClasses.grid}>
-                        {cubicles?.map((cubicle: CubicleSelectorType) => (
-                            <CubicleCard
-                                key={cubicle.id}
-                                cubicle={cubicle}
-                                serviceId={serviceId}
-                                patientType={type}
-                                subcategory={subcategory}
-                            />
-                        ))}
-                    </div>
-                </div>
-            </div>
+        <div className={CubicleCardClasses.grid}>
+            {cubicles?.map((cubicle: CubicleSelectorType) => (
+                <CubicleCard
+                    key={cubicle.id}
+                    cubicle={cubicle}
+                    serviceId={serviceId}
+                    patientType={type}
+                    subcategory={subcategory}
+                />
+            ))}
         </div>
     );
 }

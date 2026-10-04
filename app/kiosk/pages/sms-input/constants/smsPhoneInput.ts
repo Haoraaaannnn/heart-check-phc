@@ -11,8 +11,6 @@ import { kioskTypography } from "@/constants/kiosk";
 /** Boxicons class tokens for SMS phone input display. */
 export const SMSPhoneInputIcons = {
     backspace: COMMON_ICONS.backspace,
-    warning: "bx-error-circle",
-    check: COMMON_ICONS.check,
 } as const;
 
 /** Max phone number digits for PH mobile format (e.g. 09XXXXXXXXX). */
@@ -29,7 +27,7 @@ export const SMSPhoneInputTypography = {
 /** Inline styles for `PhoneInput`. */
 export const SMSPhoneInputStyle = {
     backspaceIcon: {
-        fontSize: 32,
+        fontSize: 28,
         lineHeight: 1,
     },
     container: {
@@ -43,17 +41,8 @@ export const SMSPhoneInputStyle = {
         borderRadius: 20,
         boxShadow: "0 2px 4px rgba(0, 0, 0, 0.05)",
         paddingLeft: "clamp(16px, 2.5vw, 24px)",
-        paddingRight: "clamp(16px, 2.5vw, 24px)",
-        height: "clamp(70px, 8.5vh, 88px)",
-        transition: "border-color 0.2s ease, background-color 0.2s ease",
-    },
-    containerError: {
-        borderColor: "#EF4444",
-        backgroundColor: "#FEF2F2",
-    },
-    containerValid: {
-        borderColor: "#10B981",
-        backgroundColor: "#F0FDF4",
+        paddingRight: "clamp(12px, 2vw, 16px)",
+        height: "clamp(68px, 8.5vh, 84px)",
     },
     digitsWrapper: {
         flex: 1,
@@ -77,43 +66,9 @@ export const SMSPhoneInputStyle = {
         borderRadius: 14,
         paddingLeft: "clamp(16px, 2vw, 22px)",
         paddingRight: "clamp(16px, 2vw, 22px)",
-        height: "clamp(50px, 6.5vh, 58px)",
+        height: "clamp(46px, 6vh, 54px)",
         border: "none",
         cursor: "pointer",
-    },
-    feedbackContainer: {
-        width: "100%",
-        display: "flex",
-        alignItems: "flex-start",
-        gap: 8,
-        paddingTop: 8,
-        paddingLeft: 4,
-        paddingRight: 4,
-    },
-    feedbackIcon: {
-        fontSize: 20,
-        color: "#DC2626",
-        flexShrink: 0,
-        marginTop: 2,
-    },
-    feedbackTextWrapper: {
-        display: "flex",
-        flexDirection: "column",
-        gap: 2,
-    },
-    feedbackFil: {
-        fontSize: "clamp(13px, 1.6vmin, 15px)",
-        fontWeight: 600,
-        color: "#DC2626",
-        lineHeight: 1.3,
-        margin: 0,
-    },
-    feedbackEn: {
-        fontSize: "clamp(12px, 1.4vmin, 14px)",
-        fontWeight: 400,
-        color: "#6B7280",
-        lineHeight: 1.3,
-        margin: 0,
     },
 } satisfies Record<string, CSSProperties>;
 

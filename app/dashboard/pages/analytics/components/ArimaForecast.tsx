@@ -22,7 +22,6 @@ import {
 } from 'recharts';
 import DashboardCard from '@/app/dashboard/components/DashboardCard';
 import { useDashboardTheme } from '@/app/dashboard/hooks/useDashboardTheme';
-import { ANALYTICS_STYLES } from '@/app/dashboard/pages/analytics/constants/analytics';
 import { ANALYTICS_TEXTS } from '@/app/dashboard/pages/analytics/constants/analyticsTexts';
 
 interface ArimaForecastProps {
@@ -73,7 +72,7 @@ export default function ArimaForecast({
     >
       <div className="flex flex-col gap-6">
         {/* Next Day Pill Banner */}
-        <div className={ANALYTICS_STYLES.forecastPill}>
+        <div className="flex items-center justify-between rounded-xl border border-line bg-surface-muted/40 p-4 flex-wrap gap-2">
           <span className="text-xs font-semibold text-content-muted">
             {T.forecastForPrefix}{' '}
             <span className="font-bold text-content">{arimaRaw?.forecast_date || '—'}</span>

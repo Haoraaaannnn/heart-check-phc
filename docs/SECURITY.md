@@ -97,12 +97,10 @@ An `/unauthorized` page has also been created. Middleware redirects unauthentica
 - **HTTPS/reverse proxy** — required for the PHC on-premises handoff; not yet addressed.
 - **New staff-assignment tables** (`user_cubicles`, `user_services`, `user_rooms`, `user_counters`, `cubicle_selector`, `cubicle_selector_cubicle`) — not yet covered in this document at all; the `patients` scoped-RLS model above depends on these. Needs its own section once the intended design is confirmed.
 
-## Related Security & Testing Documentation
+## Why This Matters for the Thesis Defense
 
-- **[Security Vulnerability Checklist & Patch Matrix](file:///home/jensen/Github-Repositories/heart-check-phc/docs/SECURITY_CHECKLIST.md):** Complete vulnerability assessment, OWASP threat mapping, verification test steps, patch statuses, and developer guidelines.
-- **[User Acceptance Testing (UAT) Use Case Checklist](file:///home/jensen/Github-Repositories/heart-check-phc/docs/UAT_USE_CASE_CHECKLIST.md):** End-to-end UAT test cases, verification steps, pass/fail indicators, and remarks fields across all system modules.
-- **[Mandatory Agent Guidelines & Secure Coding Standards](file:///home/jensen/Github-Repositories/heart-check-phc/AGENTS.md):** Mandatory rules for agent development, least-privilege key isolation, server-side route guards, and input validation.
+A technical evaluator — particularly PHC MIS staff conducting UAT — can trivially check Supabase's policy list and immediately spot an all-`true` RLS configuration. Closing this before UAT is both a genuine security improvement and a defensible answer if questioned directly on data protection during defense. The two-layer design (RLS + middleware) is also a legitimate "defense in depth" talking point — once middleware is actually built — even if one layer is misconfigured or bypassed, the other still holds.
 
 ---
 
-_Last updated: reflects the full schema audit and RLS cleanup across `patients`/`services`/`users` as originally planned. Route-level middleware is built in `proxy.ts`. See `docs/SECURITY_CHECKLIST.md` for the comprehensive vulnerability and patch matrix, and `docs/OPEN_ISSUES.md` for open item tracking._
+_Last updated: reflects the full schema audit and RLS cleanup across `patients`/`services`/`users` as originally planned. Route-level middleware is still an open item, not yet built — see `CHANGES_NEEDED.md`. A newer live schema pull shows `patients`/`doctors`/`cubicle` policies have diverged further from this document's "Current design" section — flagged inline above, needs a follow-up audit pass. Remaining follow-ups tracked in `OPEN_ISSUES.md`._

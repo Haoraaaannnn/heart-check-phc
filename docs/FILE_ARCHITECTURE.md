@@ -365,52 +365,17 @@ Directory structure:
     │   │   └── confirm/
     │   │       └── page.tsx
     │   ├── superadmin/
-    │   │   ├── README.md
     │   │   ├── layout.tsx
     │   │   ├── page.tsx
     │   │   ├── components/
-    │   │   │   ├── ChangePasswordCard.tsx
     │   │   │   ├── ChangePasswordForm.tsx
-    │   │   │   ├── ClinicalAssignmentsSelector.tsx
-    │   │   │   ├── navigation/
-    │   │   │   │   ├── SuperAdminHeader.tsx
-    │   │   │   │   └── SuperAdminSidebar.tsx
-    │   │   │   ├── CountersPanel.tsx
-    │   │   │   ├── DeleteUserModal.tsx
-    │   │   │   ├── RegistrationAssignmentsSelector.tsx
-    │   │   │   ├── RoomsPanel.tsx
-    │   │   │   ├── SettingsPanel.tsx
     │   │   │   ├── SettingsPannel.tsx
-    │   │   │   ├── SuperAdminNav.tsx
-    │   │   │   ├── UserModal.tsx
-    │   │   │   ├── UserStatsCards.tsx
-    │   │   │   └── UserTable.tsx
-    │   │   ├── constants/
-    │   │   │   ├── settingsStyles.ts
-    │   │   │   ├── settingsTexts.ts
-    │   │   │   ├── superadminNav.ts
-    │   │   │   ├── superadminNavStyles.ts
-    │   │   │   ├── superadminStyles.ts
-    │   │   │   └── superadminTexts.ts
+    │   │   │   └── SuperAdminNav.tsx
     │   │   ├── customization/
-    │   │   │   ├── page.tsx
-    │   │   │   └── constants/
-    │   │   │       ├── customizationStyles.ts
-    │   │   │       └── customizationTexts.ts
-    │   │   ├── facilities/
-    │   │   │   ├── page.tsx
-    │   │   │   └── constants/
-    │   │   │       ├── facilitiesStyles.ts
-    │   │   │       └── facilitiesTexts.ts
-    │   │   ├── hooks/
-    │   │   │   ├── useIdleTimeout.ts
-    │   │   │   ├── useRequireAuth.ts
-    │   │   │   ├── useSuperadminUsers.ts
-    │   │   │   └── useUserModalState.ts
-    │   │   ├── lib/
-    │   │   │   └── adminApi.ts
-    │   │   └── types/
-    │   │       └── superadmin.ts
+    │   │   │   └── page.tsx
+    │   │   └── hooks/
+    │   │       ├── useIdleTimeout.ts
+    │   │       └── useRequireAuth.ts
     │   └── transfer/
     │       ├── page.tsx
     │       ├── components/
@@ -485,18 +450,15 @@ Directory structure:
     │   ├── COMPONENTS_GUIDE.md
     │   ├── DATABASE_SCHEMA.md
     │   ├── FILE_ARCHITECTURE.md
-    │   ├── IMPROVEMENTS_AND_FEATURE_CHECKLIST.md
     │   ├── NURSE_DASHBOARD_SYSTEM_DESIGN.md
     │   ├── OPEN_ISSUES.md
     │   ├── PRD.md
     │   ├── SCHEMA_REFERENCE.md
     │   ├── SECURITY.md
-    │   ├── SECURITY_CHECKLIST.md
     │   ├── SETUP_AND_SEEDING.md
     │   ├── SYSTEM_DESIGN.md
     │   ├── TRANSFER_DASHBOARD.md
-    │   ├── TRANSFER_MANUAL_TWEAKING_GUIDE.md
-    │   └── UAT_USE_CASE_CHECKLIST.md
+    │   └── TRANSFER_MANUAL_TWEAKING_GUIDE.md
     ├── fonts/
     │   └── fonts.ts
     ├── hooks/

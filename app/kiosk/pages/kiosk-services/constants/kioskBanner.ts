@@ -1,23 +1,15 @@
 import { CSSProperties } from "react";
+import { fontSizeHeader } from "@/constants/kiosk";
 import { themeColors } from "@/constants/colors";
-import { kioskTypography, fontSizeHeader } from "@/constants/kiosk";
 
 /** Spacing values in px for the kiosk banner. */
 export const kioskBannerSpacing = {
-  bannerPaddingX: 0,
-  bannerBottom: 0,
-  bannerSubtitleMarginGap: 4,
+  bannerPaddingX: 40,
+  bannerBottom: 40,
+  bannerSubtitleMarginGap: 15,
 } as const;
 
-/** Typography tokens for kiosk banner, referencing centralized root typography scale. */
-export const kioskBannerTypography = {
-  titleSize: kioskTypography.pageTitle,
-  subtitleSize: kioskTypography.pageSubtitle,
-  titleWeight: 900,
-  subtitleWeight: 500,
-} as const;
-
-/** Banner font sizes, preserving backwards compatibility. */
+/** Banner font sizes, reusing the global header sizes. */
 export const kioskBannerFontSize = {
   Text1: fontSizeHeader.Header1,
   Text2: fontSizeHeader.Header2,
@@ -25,48 +17,43 @@ export const kioskBannerFontSize = {
 
 /** Unitless line-heights (`tight` matches Tailwind's `leading-tight`). */
 export const kioskBannerLineHeight = {
-  tight: 1.2,
-  relaxed: 1.25,
+  tight: 1.25,
 } as const;
 
 /** Numeric font weights (`bold` here is the heaviest, matching Tailwind's `font-black`). */
 export const kioskBannerFontWeight = {
   normal: 400,
-  medium: 500,
   bold: 900,
 } as const;
 
 /** Banner text colors — references the centralized palette. */
 export const kioskBannerTextColor = {
   black: themeColors.black,
-  subtitle: "#4B5563",
 } as const;
 
 /**
- * Inline styles for `KioskBanner`, aligned with the CategoryHeaderStyle pattern.
- * Provides clean zero-padding banner layout that sits tight against the services grid.
+ * Inline styles for `KioskBanner`, composed from the tokens above.
+ * Every value here must be valid CSS, since it is applied via the `style` prop.
  */
 export const KioskBannerStyle = {
   container: {
     width: "100%",
+    paddingLeft: kioskBannerSpacing.bannerPaddingX,
+    paddingRight: kioskBannerSpacing.bannerPaddingX,
+    paddingBottom: kioskBannerSpacing.bannerBottom,
     textAlign: "center",
-    paddingBottom: 0,
-    marginBottom: 0,
   },
   Title: {
-    fontSize: kioskBannerTypography.titleSize,
-    fontWeight: kioskBannerTypography.titleWeight,
+    fontSize: kioskBannerFontSize.Text1,
+    fontWeight: kioskBannerFontWeight.bold,
     lineHeight: kioskBannerLineHeight.tight,
     color: kioskBannerTextColor.black,
-    margin: 0,
   },
   subtitle: {
-    margin: 0,
     marginTop: kioskBannerSpacing.bannerSubtitleMarginGap,
-    marginBottom: 0,
-    fontSize: kioskBannerTypography.subtitleSize,
-    fontWeight: kioskBannerTypography.subtitleWeight,
-    lineHeight: kioskBannerLineHeight.relaxed,
-    color: kioskBannerTextColor.subtitle,
+    fontSize: kioskBannerFontSize.Text2,
+    fontWeight: kioskBannerFontWeight.normal,
+    lineHeight: kioskBannerLineHeight.tight,
+    color: kioskBannerTextColor.black,
   },
 } satisfies Record<string, CSSProperties>;

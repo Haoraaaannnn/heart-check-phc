@@ -20,8 +20,6 @@ export const CategoryHeaderStyle = {
     header: {
         textAlign: "center",
         width: "100%",
-        paddingBottom: 0,
-        marginBottom: 0,
     },
     title: {
         fontSize: categoryHeaderTypography.titleSize,
@@ -31,10 +29,10 @@ export const CategoryHeaderStyle = {
         margin: 0,
     },
     subtitle: {
-        marginTop: 4,
-        marginBottom: 0,
+        marginTop: 8,
         fontSize: categoryHeaderTypography.subtitleSize,
         fontWeight: categoryHeaderTypography.subtitleWeight,
         color: "#4B5563",
+        margin: 0,
     },
 } satisfies Record<string, CSSProperties>;

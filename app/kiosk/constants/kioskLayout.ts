@@ -34,25 +34,7 @@ export const KioskLayoutStyle = {
     },
 
     /**
-     * Dedicated in-flow top navigation row for the back button.
-     * Prevents the back button from overflowing or sitting alongside page header texts.
-     */
-    topNavWrapper: {
-        width: "100%",
-        display: "flex",
-        alignItems: "center",
-        justifyContent: "flex-start",
-        flexShrink: 0,
-        paddingTop: "clamp(12px, 1.8vh, 24px)",
-        paddingBottom: "clamp(4px, 0.8vh, 12px)",
-        paddingLeft: "clamp(16px, 2.5vw, 32px)",
-        paddingRight: "clamp(16px, 2.5vw, 32px)",
-        zIndex: 20,
-    },
-
-    /**
-     * Flexible content area taking up all available room between top nav and footer,
-     * centering page contents both vertically and horizontally.
+     * Flexible content area taking up all available vertical room between back button and footer.
      */
     main: {
         display: "flex",
@@ -60,8 +42,6 @@ export const KioskLayoutStyle = {
         width: "100%",
         flex: 1,
         flexDirection: "column",
-        alignItems: "center",
-        justifyContent: "center",
         overflow: "hidden",
     },
 
@@ -90,14 +70,9 @@ export const KioskLayoutClasses = {
         }`,
 
     /**
-     * Dedicated top navigation wrapper utility classes.
+     * Main scroll and flex container utility classes.
      */
-    topNavWrapper: "w-full flex-shrink-0 flex items-center justify-start px-4 sm:px-8 pt-3 sm:pt-6 pb-1 sm:pb-2 z-20",
-
-    /**
-     * Main scroll and flex container utility classes, centering page content.
-     */
-    main: "flex min-h-0 w-full flex-1 flex-col items-center justify-center overflow-hidden",
+    main: "flex min-h-0 w-full flex-1 flex-col overflow-hidden",
 
     /**
      * Footer structural wrapper utility classes.

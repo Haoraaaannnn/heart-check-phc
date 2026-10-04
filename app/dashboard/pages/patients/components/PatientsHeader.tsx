@@ -12,10 +12,7 @@
 import { PATIENTS_STYLES } from '@/app/dashboard/pages/patients/constants/patients';
 import { PATIENTS_TEXTS } from '@/app/dashboard/pages/patients/constants/patientsTexts';
 
-/**
- * Properties for the {@link PatientsHeader} component.
- */
-export interface PatientsHeaderProps {
+interface PatientsHeaderProps {
   /** The selected service name, or null when viewing all services. */
   service: string | null;
   /** Error message to display, if any. */
@@ -23,7 +20,7 @@ export interface PatientsHeaderProps {
 }
 
 /**
- * Top header banner for the Patients dashboard page following enterprise dashboard design patterns.
+ * Top header banner for the Patients dashboard page following dashboard design patterns.
  *
  * @param props - Component properties.
  * @returns JSX element.
@@ -40,12 +37,11 @@ export default function PatientsHeader({ service, error }: PatientsHeaderProps) 
   return (
     <div className={S.root}>
       <div className={S.titleRow}>
-        <div className={S.titleBlock}>
+        <div>
           <h1 className={S.title}>{title}</h1>
           <p className={S.subtitle}>{subtitle}</p>
         </div>
       </div>
-
       {error && (
         <div className={S.errorBadge} role="alert">
           <span>{T.errorPrefix}</span>
@@ -55,4 +51,3 @@ export default function PatientsHeader({ service, error }: PatientsHeaderProps) 
     </div>
   );
 }
-
