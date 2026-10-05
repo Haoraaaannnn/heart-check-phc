@@ -55,7 +55,7 @@ export const sendToPrinter = async (
   // Fetch patient record from database to verify existence
   const { data: patientRecord, error: dbError } = await supabase
     .from('patients')
-    .select('id, created_at, patientNum, phoneNum, service')
+    .select('id, created_at, patientNum, phoneNum, service, cubicleNum, preferredCubicleNums')
     .eq('patientNum', cleanPatientNum)
     .maybeSingle();
 
@@ -79,30 +79,66 @@ export const sendToPrinter = async (
   const NORMAL_FONT = `${GS}!\x00`;
   const CUT = `${GS}V\x00`;
 
-  const date = new Date().toLocaleDateString();
-  const time = new Date().toLocaleTimeString();
+  const now = new Date();
+  const dateStr = new Intl.DateTimeFormat('en-PH', {
+    timeZone: 'Asia/Manila',
+    year: 'numeric',
+    month: '2-digit',
+    day: '2-digit',
+  }).format(now);
 
-  // Construct receipt ticket payload
+  const timeStr = new Intl.DateTimeFormat('en-PH', {
+    timeZone: 'Asia/Manila',
+    hour: '2-digit',
+    minute: '2-digit',
+    second: '2-digit',
+    hour12: true,
+  }).format(now);
+
+  const displayService = cleanServiceName || patientRecord?.service || 'General Service';
+  const fallbackDbCubicle =
+    patientRecord?.cubicleNum ||
+    (Array.isArray(patientRecord?.preferredCubicleNums) && patientRecord.preferredCubicleNums[0]) ||
+    'Waiting Area';
+
+  const rawCubicle =
+    !cleanCubicle || cleanCubicle === '---' || cleanCubicle.toLowerCase() === 'waiting area'
+      ? fallbackDbCubicle
+      : cleanCubicle;
+  const displayCubicle =
+    rawCubicle === 'Waiting Area'
+      ? rawCubicle
+      : rawCubicle.replace(/^cubicle\s*/i, '');
+
+  // Construct receipt ticket payload (institutional header removed per user requirement)
   const ticket =
     RESET +
     CENTER +
     BOLD_ON +
-    'HEART CHECK PHC' +
+    'QUEUE TICKET' +
     BOLD_OFF +
     '\n' +
-    '--------------------------------\n' +
+    '================================\n' +
     LEFT +
-    `Date: ${date}\n` +
-    `Time: ${time}\n` +
-    `Service: ${cleanServiceName}\n` +
-    `Location: ${cleanCubicle}\n\n` +
+    `Date: ${dateStr}\n` +
+    `Time: ${timeStr} (PHT)\n` +
+    `Service: ${displayService}\n` +
+    `Cubicle: ${displayCubicle}\n` +
+    '--------------------------------\n' +
     CENTER +
     BIG_FONT +
+    BOLD_ON +
     cleanPatientNum +
+    BOLD_OFF +
     NORMAL_FONT +
-    '\n\n' +
-    'Please wait for your number.\n' +
+    '\n' +
     '--------------------------------\n' +
+    'Mangyaring maghintay na tawagin\n' +
+    'ang inyong numero sa\n' +
+    'Rehistrasyon.\n\n' +
+    'Please wait for your number\n' +
+    'to be called at Registration.\n' +
+    '================================\n' +
     '\n\n\n\n\n' +
     CUT;
 

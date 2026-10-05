@@ -36,6 +36,8 @@ interface KioskPhoneEntryProps {
     preferredCubicleNums?: string;
     /** Subcategory selected (e.g. "Adult" or "Pedia"). */
     subcategory?: string;
+    /** Selected cubicle name or number from cubicle selection step. */
+    cubicleNum?: string;
 }
 
 /**
@@ -130,6 +132,7 @@ export default function KioskPhoneEntry({
     patientNum: initialPatientNum,
     preferredCubicleNums,
     subcategory,
+    cubicleNum,
 }: KioskPhoneEntryProps) {
     const preferredList = preferredCubicleNums ? preferredCubicleNums.split(",") : null;
     const [phone, setPhone] = useState("");
@@ -143,6 +146,27 @@ export default function KioskPhoneEntry({
 
     const patientType = searchParams.get("type");
     const cancelHref = buildCancelHref(service, patientType, subcategory);
+
+    const resolvedCubicleParam =
+        cubicleNum ||
+        searchParams.get("cubicleNum") ||
+        (preferredCubicleNums ? preferredCubicleNums.split(",")[0] : undefined);
+
+    /**
+     * Constructs the destination URL for the queue ticket printing screen with all metadata.
+     *
+     * @param generatedPatientNum - The assigned patient ticket code.
+     * @returns The relative route path with query parameters.
+     */
+    const buildQueuePrintUrl = (generatedPatientNum: string): string => {
+        const params = new URLSearchParams();
+        params.set("patientNum", generatedPatientNum);
+        params.set("serviceId", String(service.id));
+        if (resolvedCubicleParam) {
+            params.set("cubicleNum", resolvedCubicleParam);
+        }
+        return `/kiosk/pages/queue-print?${params.toString()}`;
+    };
 
     const addDigit = (digit: string) => {
         const nextVal = getNextPhoneValue(phone, digit);
@@ -257,7 +281,7 @@ export default function KioskPhoneEntry({
         try {
             const finalPatientNum = patientNum ?? (await createPatient(phone));
             setPatientNum(finalPatientNum);
-            router.push(`/kiosk/pages/queue-print?patientNum=${finalPatientNum}&serviceId=${service.id}`);
+            router.push(buildQueuePrintUrl(finalPatientNum));
         } catch (e) {
             hideLoading();
             console.error(`${getTimestamp()} [SMS CONTINUE ERROR] raw:`, e);
@@ -278,7 +302,7 @@ export default function KioskPhoneEntry({
                 patientNum: finalPatientNum,
                 service: service.label_en,
             });
-            router.push(`/kiosk/pages/queue-print?patientNum=${finalPatientNum}&serviceId=${service.id}`);
+            router.push(buildQueuePrintUrl(finalPatientNum));
         } catch (e) {
             hideLoading();
             console.error(`${getTimestamp()} [SMS SKIP ERROR] raw:`, e);

@@ -11,6 +11,7 @@ interface SMSPageProps {
         serviceColor?: string;
         preferredCubicleNums?: string;
         subcategory?: string;
+        cubicleNum?: string;
     }>;
 }
 
@@ -24,7 +25,7 @@ interface SMSPageProps {
  * @returns The rendered SMS input screen.
  */
 export default async function SMSPage({ searchParams }: SMSPageProps) {
-    const { serviceId, patientNum, preferredCubicleNums, subcategory } =
+    const { serviceId, patientNum, preferredCubicleNums, subcategory, cubicleNum } =
         await searchParams;
     const supabase = await createClient();
 
@@ -45,6 +46,7 @@ export default async function SMSPage({ searchParams }: SMSPageProps) {
             patientNum={patientNum}
             preferredCubicleNums={preferredCubicleNums}
             subcategory={subcategory}
+            cubicleNum={cubicleNum}
         />
     );
 }

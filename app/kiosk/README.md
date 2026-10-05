@@ -45,7 +45,7 @@ Use this lookup table to immediately find the file you need:
 | **Change navigation flow or routing destinations** | Check the page component (`page.tsx`) or `app/kiosk/hooks/useKioskNavigate.ts`. |
 | **Change loading overlay message or animation** | [kioskLoadingOverlayTexts.ts](file:///home/jensen/Github-Repositories/heart-check-phc/app/kiosk/constants/kioskLoadingOverlayTexts.ts) / [kioskLoadingOverlay.ts](file:///home/jensen/Github-Repositories/heart-check-phc/app/kiosk/constants/kioskLoadingOverlay.ts). |
 | **Change the universal back button appearance or label** | [kioskBackButtonTexts.ts](file:///home/jensen/Github-Repositories/heart-check-phc/app/kiosk/constants/kioskBackButtonTexts.ts) / [kioskBackButton.ts](file:///home/jensen/Github-Repositories/heart-check-phc/app/kiosk/constants/kioskBackButton.ts). |
-| **Change the hardware ticket print API payload** | [QueuePrintContent.tsx](file:///home/jensen/Github-Repositories/heart-check-phc/app/kiosk/pages/queue-print/components/QueuePrintContent.tsx) and `/api/print-ticket/route.ts`. |
+| **Change the hardware ticket print API payload or format** | [QueuePrintContent.tsx](file:///home/jensen/Github-Repositories/heart-check-phc/app/kiosk/pages/queue-print/components/QueuePrintContent.tsx), [route.ts](file:///home/jensen/Github-Repositories/heart-check-phc/app/api/print-ticket/route.ts), and [printer.ts](file:///home/jensen/Github-Repositories/heart-check-phc/lib/printer.ts). |
 | **Change mobile phone number validation rules** | [phoneValidation.ts](file:///home/jensen/Github-Repositories/heart-check-phc/app/kiosk/pages/sms-input/utils/phoneValidation.ts) (NTC prefixes, sequential runs, repetition limits) and [KioskPhoneEntry.tsx](file:///home/jensen/Github-Repositories/heart-check-phc/app/kiosk/pages/sms-input/components/KioskPhoneEntry.tsx). |
 | **Change queue ticket prefixes and numeric rules** | [smsPrefixRules.ts](file:///home/jensen/Github-Repositories/heart-check-phc/app/kiosk/pages/sms-input/constants/smsPrefixRules.ts). |
 
@@ -145,7 +145,7 @@ Consultation doctor / room selection step.
 - **Layout File:** [layout.tsx](file:///home/jensen/Github-Repositories/heart-check-phc/app/kiosk/pages/kiosk-cubicle-selection/layout.tsx) (clean pass-through layout)
 - **Components:**
   - [CubicleHeader.tsx](file:///home/jensen/Github-Repositories/heart-check-phc/app/kiosk/pages/kiosk-cubicle-selection/components/CubicleHeader.tsx): Top header prompt.
-  - [CubicleCard.tsx](file:///home/jensen/Github-Repositories/heart-check-phc/app/kiosk/pages/kiosk-cubicle-selection/components/CubicleCard.tsx): Cubicle button that maps preferred cubicle numbers.
+  - [CubicleCard.tsx](file:///home/jensen/Github-Repositories/heart-check-phc/app/kiosk/pages/kiosk-cubicle-selection/components/CubicleCard.tsx): Cubicle button that forwards preferred cubicle numbers and `cubicleNum` selection identifier to SMS input.
 - **Where to Edit Texts:**
   - [cubicleHeaderTexts.ts](file:///home/jensen/Github-Repositories/heart-check-phc/app/kiosk/pages/kiosk-cubicle-selection/constants/cubicleHeaderTexts.ts): Header title and subtitle (`CubicleHeaderTexts`).
   - *Note:* Cubicle names are fetched from the database (`cubicle_selector_groups`).
@@ -160,7 +160,7 @@ Consultation doctor / room selection step.
 
 Keypad screen for entering the patient's Philippine mobile number (`09XX XXX XXXX`) for SMS queue notifications. Cleaned and redesigned to match the borderless white aesthetic of other kiosk screens with the universal top-left back button.
 
-- **Route:** `/kiosk/pages/sms-input?serviceId=...&type=...&subcategory=...`
+- **Route:** `/kiosk/pages/sms-input?serviceId=...&type=...&subcategory=...&preferredCubicleNums=...&cubicleNum=...`
 - **Page File:** [page.tsx](file:///home/jensen/Github-Repositories/heart-check-phc/app/kiosk/pages/sms-input/page.tsx)
 - **Layout File:** [layout.tsx](file:///home/jensen/Github-Repositories/heart-check-phc/app/kiosk/pages/sms-input/layout.tsx)
 - **Universal Back Button:** Supported via [app/kiosk/layout.tsx](file:///home/jensen/Github-Repositories/heart-check-phc/app/kiosk/layout.tsx) routing dynamically back to cubicle selection (for Consultation), category selection (for OPD Screening), or the main services catalog (for direct services).
@@ -170,7 +170,7 @@ Keypad screen for entering the patient's Philippine mobile number (`09XX XXX XXX
   - [PhoneInput.tsx](file:///home/jensen/Github-Repositories/heart-check-phc/app/kiosk/pages/sms-input/components/PhoneInput.tsx): Formatted phone number display box with backspace button and touch scaling.
   - [NumPad.tsx](file:///home/jensen/Github-Repositories/heart-check-phc/app/kiosk/pages/sms-input/components/NumPad.tsx): On-screen touch keypad with clean white card keys, 2px borders, and tactile active red border feedback (`active:!border-[#ED1C24]`).
   - [ContinueButton.tsx](file:///home/jensen/Github-Repositories/heart-check-phc/app/kiosk/pages/sms-input/components/ContinueButton.tsx): Primary "Magpatuloy - Continue" button and secondary "Laktawan - Skip" button with confirmation modals.
-  - [KioskPhoneEntry.tsx](file:///home/jensen/Github-Repositories/heart-check-phc/app/kiosk/pages/sms-input/components/KioskPhoneEntry.tsx): State orchestration for number input, responsive layout, and database patient ticket creation via RPC (`create_patient`).
+  - [KioskPhoneEntry.tsx](file:///home/jensen/Github-Repositories/heart-check-phc/app/kiosk/pages/sms-input/components/KioskPhoneEntry.tsx): State orchestration for number input, responsive layout, database patient ticket creation via RPC (`create_patient`), and cubicle-aware forwarding to queue print.
 - **Where to Edit Texts:**
   - [smsInstructionTexts.ts](file:///home/jensen/Github-Repositories/heart-check-phc/app/kiosk/pages/sms-input/constants/smsInstructionTexts.ts): Input title, subtitle, and hint card message (`SMSInstructionTexts`).
   - [smsContinueButtonTexts.ts](file:///home/jensen/Github-Repositories/heart-check-phc/app/kiosk/pages/sms-input/constants/smsContinueButtonTexts.ts): Continue and Skip button labels (`SMSContinueButtonTexts`).
@@ -217,7 +217,7 @@ Review screen displaying the patient's selected service, category, and phone num
 
 ### Screen 7: Queue Ticket Printing (`app/kiosk/pages/queue-print/`)
 
-Final completion screen showing the generated queue number, triggering the hardware printer API, and returning to the entrance after a countdown.
+Final completion screen presenting the physical queue ticket preview, triggering the hardware thermal printer API (`/api/print-ticket`), and returning to the entrance after a 5-second countdown. Optimized for elderly patient accessibility with enlarged typography, high-contrast text without pillboxes, Philippine Standard Time (PHT), destination cubicle ("Cubicle:"), prominent queue number, and clear bilingual registration guidance.
 
 - **Route:** `/kiosk/pages/queue-print?patientNum=...&serviceId=...&cubicleNum=...`
 - **Page File:** [page.tsx](file:///home/jensen/Github-Repositories/heart-check-phc/app/kiosk/pages/queue-print/page.tsx)
@@ -229,11 +229,11 @@ Final completion screen showing the generated queue number, triggering the hardw
 - **Where to Edit Texts:**
   - [printHeaderTexts.ts](file:///home/jensen/Github-Repositories/heart-check-phc/app/kiosk/pages/queue-print/constants/printHeaderTexts.ts): Header thank you copy (`PrintHeaderTexts`).
   - [printFooterTexts.ts](file:///home/jensen/Github-Repositories/heart-check-phc/app/kiosk/pages/queue-print/constants/printFooterTexts.ts): Footer waiting instructions (`PrintFooterTexts`).
-  - [queuePrintTicketTexts.ts](file:///home/jensen/Github-Repositories/heart-check-phc/app/kiosk/pages/queue-print/constants/queuePrintTicketTexts.ts): Ticket card label (`QueuePrintTicketTexts`).
+  - [queuePrintTicketTexts.ts](file:///home/jensen/Github-Repositories/heart-check-phc/app/kiosk/pages/queue-print/constants/queuePrintTicketTexts.ts): Ticket card labels, metadata prefixes, default destination, and accessible copy (`QueuePrintTicketTexts`).
 - **Where to Edit Styles:**
   - [printHeader.ts](file:///home/jensen/Github-Repositories/heart-check-phc/app/kiosk/pages/queue-print/constants/printHeader.ts): Header typography (`PrintHeaderStyle`).
   - [printFooter.ts](file:///home/jensen/Github-Repositories/heart-check-phc/app/kiosk/pages/queue-print/constants/printFooter.ts): Footer notice typography (`PrintFooterStyle`).
-  - [queuePrintTicket.ts](file:///home/jensen/Github-Repositories/heart-check-phc/app/kiosk/pages/queue-print/constants/queuePrintTicket.ts): Ticket border, badge, queue number size (`QueuePrintTicketStyle`), and redirect delay (`QUEUE_PRINT_REDIRECT_DELAY_MS`).
+  - [queuePrintTicket.ts](file:///home/jensen/Github-Repositories/heart-check-phc/app/kiosk/pages/queue-print/constants/queuePrintTicket.ts): Ticket card dimensions, senior-friendly typography scales without pillboxes, queue callout, dividers, Manila timestamp, cubicle row (`QueuePrintTicketStyle`), and redirect delay (`QUEUE_PRINT_REDIRECT_DELAY_MS`).
   - [queuePrintLayout.ts](file:///home/jensen/Github-Repositories/heart-check-phc/app/kiosk/pages/queue-print/constants/queuePrintLayout.ts): Print screen layout classes (`QueuePrintLayoutClasses`).
 
 ---
