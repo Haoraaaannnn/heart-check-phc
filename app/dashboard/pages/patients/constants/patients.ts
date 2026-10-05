@@ -113,8 +113,9 @@ export const PATIENTS_STYLES = {
       'inline-flex items-center rounded-md bg-surface-muted px-2 py-0.5 font-mono text-xs font-semibold text-content-muted border border-line whitespace-nowrap',
     ticketBadge:
       'inline-block rounded-lg bg-red-50 border border-red-200 px-3 py-1 font-mono text-sm font-extrabold text-red-700 dark:bg-red-950/40 dark:border-red-900 dark:text-red-300 whitespace-nowrap',
-    statusBadge: 'inline-flex items-center gap-1.5 rounded-full px-3 py-1 text-xs font-bold whitespace-nowrap',
     phoneText: 'font-mono text-xs font-medium text-content whitespace-nowrap',
+    phoneProtectedBadge:
+      'inline-flex items-center gap-1 rounded-md bg-emerald-50 border border-emerald-200 px-2 py-0.5 font-mono text-xs font-semibold text-emerald-700 dark:bg-emerald-950/40 dark:border-emerald-800 dark:text-emerald-300 transition hover:bg-emerald-100 dark:hover:bg-emerald-900/50 cursor-pointer whitespace-nowrap',
     emptyWrap: 'py-12 text-center',
     emptyTitle: 'text-base font-bold text-content',
     emptySubtitle: 'mt-1 text-xs text-content-muted',

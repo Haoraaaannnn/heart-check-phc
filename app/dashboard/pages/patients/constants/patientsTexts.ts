@@ -93,6 +93,8 @@ export const PATIENTS_TEXTS = {
     },
     fallbackTicket: '---',
     fallbackPhone: '---',
+    protectedPhone: 'Protected',
+    revealPhone: 'Click to reveal phone',
   },
   serviceQueue: {
     statusActive: 'Active',

@@ -15,7 +15,7 @@
  * @module app/transfer/hooks/usePatientData
  */
 
-import { useState, useRef, useCallback } from 'react';
+import { useState, useEffect, useRef, useCallback } from 'react';
 import { supabase } from '@/lib/supabase';
 import { Patient } from '@/types/Types';
 import { fetchActiveCounters } from '@/lib/counters';

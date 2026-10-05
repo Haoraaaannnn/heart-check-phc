@@ -16,6 +16,7 @@
 'use server';
 
 import { createClient } from '@/lib/supabase/server';
+import { decryptPhoneNumber } from '@/lib/crypto/phoneEncryption';
 
 /**
  * Sliding window rate limiter state stored in-memory per Node process.
@@ -43,7 +44,8 @@ const DUPLICATE_COOLDOWN_MS = 10 * 1000;
  */
 function normalizePhilippinePhone(phone: unknown): string | null {
   if (typeof phone !== 'string' && typeof phone !== 'number') return null;
-  const cleaned = String(phone).replace(/[\s-]/g, '').trim();
+  const rawOrDecrypted = decryptPhoneNumber(phone as string | number) ?? String(phone);
+  const cleaned = rawOrDecrypted.replace(/[\s-]/g, '').trim();
 
   let normalized = cleaned;
   if (normalized.startsWith('+63')) {

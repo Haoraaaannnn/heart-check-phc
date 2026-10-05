@@ -188,6 +188,10 @@ Keypad screen for entering the patient's Philippine mobile number (`09XX XXX XXX
   - [smsLayout.ts](file:///home/jensen/Github-Repositories/heart-check-phc/app/kiosk/pages/sms-input/constants/smsLayout.ts): Keypad screen layout and column wrappers (`SMSLayoutStyle`, `SMSLayoutClasses`), strictly non-scrollable (`overflow: hidden`) with balanced padding and gaps, portrait column width constraints (`max-w-[540px]`), and centered alignment.
 - **Where to Edit Phone Validation & Anti-Troll Rules:**
   - [phoneValidation.ts](file:///home/jensen/Github-Repositories/heart-check-phc/app/kiosk/pages/sms-input/utils/phoneValidation.ts): Strict Philippine mobile number rules, 09 keypad constraint, NTC telco prefix verification, sequential run detection (`123456...`), and repetitive number limits (`09111111111`).
+- **Where to Edit Phone Encryption & Security:**
+  - [phoneSecurity.ts](file:///c:/Users/ficti/Desktop/main/app/actions/phoneSecurity.ts): Server actions isolating phone encryption and masking logic.
+  - [phoneEncryption.ts](file:///c:/Users/ficti/Desktop/main/lib/crypto/phoneEncryption.ts): Core AES-256-GCM cipher and key management.
+  - [DATA_ENCRYPTION_GUIDE.md](file:///c:/Users/ficti/Desktop/main/docs/specifications/DATA_ENCRYPTION_GUIDE.md): Architecture specifications and database migration guide.
 - **Where to Edit Queue Ticket Prefixes & Rules:**
   - [smsPrefixRules.ts](file:///home/jensen/Github-Repositories/heart-check-phc/app/kiosk/pages/sms-input/constants/smsPrefixRules.ts): Service ticket prefix mappings (`SMS_SERVICE_PREFIXES`) and numeric subcategory routing rules (`NUMERIC_PREFIX_RULES`).
 
