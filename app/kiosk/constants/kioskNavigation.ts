@@ -16,6 +16,8 @@ export const KIOSK_ROUTES = {
     QUEUE_PRINT: "/kiosk/pages/queue-print",
     /** Standalone service confirmation fallback. */
     CONFIRMATION: "/kiosk/pages/confirmation",
+    /** Full-screen destination shown after kiosk inactivity. */
+    SLIDESHOW: "/kiosk/slideshow",
 } as const;
 
 /** Shared timeout and delay constants for the kiosk. */
@@ -24,4 +26,8 @@ export const KIOSK_TIMING = {
     PRINT_REDIRECT_MS: 5000,
     /** Page fade-in transition duration (300ms). */
     TRANSITION_DURATION_MS: 300,
+    /** Patient-flow inactivity period before showing the slideshow (3 minutes). */
+    IDLE_REDIRECT_MS: 25 * 1000,
+    /** Time each idle slideshow image remains visible. */
+    SLIDESHOW_INTERVAL_MS: 3000,
 } as const;
