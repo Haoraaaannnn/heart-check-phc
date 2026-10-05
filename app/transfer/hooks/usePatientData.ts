@@ -106,8 +106,11 @@ export function usePatientData(pendingRef?: React.MutableRefObject<Patient[]>) {
   const fetchIdRef = useRef(0);
   const assignedRef = useRef(assignedPatients);
   const onProgressRef = useRef(onProgressPatients);
-  assignedRef.current = assignedPatients;
-  onProgressRef.current = onProgressPatients;
+
+  useEffect(() => {
+    assignedRef.current = assignedPatients;
+    onProgressRef.current = onProgressPatients;
+  }, [assignedPatients, onProgressPatients]);
 
   // In-flight confirmed assignment pins protecting recently confirmed moves
   const inFlightConfirmedRef = useRef<Map<number, ConfirmedPin>>(new Map());

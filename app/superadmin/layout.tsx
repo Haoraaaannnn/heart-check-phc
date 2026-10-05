@@ -37,24 +37,39 @@ export default function SuperAdminLayout({ children }: SuperAdminLayoutProps) {
   const D = SUPERADMIN_NAV_STYLES.drawer;
 
   useEffect(() => {
+    let active = true;
+
+    const handlePageShow = (event: PageTransitionEvent) => {
+      if (event.persisted) {
+        window.location.reload();
+      }
+    };
+    window.addEventListener('pageshow', handlePageShow);
+
     const checkAuth = async () => {
       const {
         data: { session },
       } = await supabase.auth.getSession();
 
+      if (!active) return;
+
       if (!session) {
-        router.push('/login');
+        window.location.replace('/login');
         return;
       }
 
-      const { data: userData } = await supabase
+      const { data: userData, error: roleError } = await supabase
         .from('users')
         .select('role')
-        .eq('email', session.user.email)
-        .single();
+        .eq('auth_id', session.user.id)
+        .maybeSingle();
 
-      if (userData?.role !== 'superadmin') {
-        router.push('/login');
+      if (!active) return;
+
+      const userRole = (userData?.role || '').toLowerCase().trim();
+
+      if (roleError || !userData || userRole !== 'superadmin') {
+        window.location.replace('/unauthorized');
         return;
       }
 
@@ -62,8 +77,20 @@ export default function SuperAdminLayout({ children }: SuperAdminLayoutProps) {
       setIsLoading(false);
     };
 
-    checkAuth();
-  }, [router]);
+    void checkAuth();
+
+    const { data: listener } = supabase.auth.onAuthStateChange((_event, session) => {
+      if (!session) {
+        window.location.replace('/login');
+      }
+    });
+
+    return () => {
+      active = false;
+      window.removeEventListener('pageshow', handlePageShow);
+      listener.subscription.unsubscribe();
+    };
+  }, []);
 
   if (isLoading) {
     return (

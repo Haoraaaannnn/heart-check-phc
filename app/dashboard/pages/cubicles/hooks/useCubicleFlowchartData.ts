@@ -463,7 +463,7 @@ export function useCubicleFlowchartData() {
       setServices(finalServices);
       setTodayRawPatients(todayPatients);
 
-      let effectiveStations: FlowchartCubicleStation[] = [...stations];
+      const effectiveStations: FlowchartCubicleStation[] = [...stations];
 
       // If no cubicles exist in the DB at all (fresh setup), generate representative stations for each resolved service
       if (effectiveStations.length === 0) {

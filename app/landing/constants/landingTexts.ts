@@ -25,7 +25,6 @@ export const LANDING_TEXTS = {
 
   /** Hero section texts */
   hero: {
-    institutionTag: 'Philippine Heart Center • Out-Patient Department',
     mainTitle: 'Heart Check',
     mainTitleAccent: 'PHC',
     subheading:

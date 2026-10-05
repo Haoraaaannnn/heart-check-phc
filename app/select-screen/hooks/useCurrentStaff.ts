@@ -8,8 +8,8 @@
  */
 
 import { useState, useEffect, useCallback } from 'react';
-import { useRouter } from 'next/navigation';
 import { supabase } from '@/lib/supabase';
+import { handleSignOut } from '@/lib/supabase/signOut';
 import { CurrentStaffProfile } from '../types/selectScreen';
 
 /**
@@ -18,13 +18,28 @@ import { CurrentStaffProfile } from '../types/selectScreen';
  * @returns An object containing the current staff profile, loading state, error, and signOut callback.
  */
 export function useCurrentStaff() {
-  const router = useRouter();
   const [staff, setStaff] = useState<CurrentStaffProfile | null>(null);
   const [loading, setLoading] = useState<boolean>(true);
   const [error, setError] = useState<string | null>(null);
 
   useEffect(() => {
     let isMounted = true;
+
+    const handlePageShow = (event: PageTransitionEvent) => {
+      if (event.persisted) {
+        window.location.reload();
+      }
+    };
+    window.addEventListener('pageshow', handlePageShow);
+
+    // Push an initial history entry to absorb back-button navigation away from select-screen
+    window.history.pushState(null, '', window.location.href);
+
+    const handlePopState = () => {
+      // Re-push history entry to retain user on select-screen while authenticated
+      window.history.pushState(null, '', window.location.href);
+    };
+    window.addEventListener('popstate', handlePopState);
 
     async function loadStaffProfile() {
       try {
@@ -34,7 +49,7 @@ export function useCurrentStaff() {
         } = await supabase.auth.getUser();
 
         if (authError || !user) {
-          router.replace('/login');
+          window.location.replace('/login');
           return;
         }
 
@@ -73,21 +88,17 @@ export function useCurrentStaff() {
 
     return () => {
       isMounted = false;
+      window.removeEventListener('pageshow', handlePageShow);
+      window.removeEventListener('popstate', handlePopState);
     };
-  }, [router]);
+  }, []);
 
   /**
-   * Clears the current Supabase session and redirects back to the login page.
+   * Clears the current Supabase session, destroys cookies, and replaces history to login.
    */
   const signOut = useCallback(async () => {
-    try {
-      await supabase.auth.signOut();
-    } catch (err) {
-      console.error('Sign out error:', err);
-    } finally {
-      router.push('/login');
-    }
-  }, [router]);
+    await handleSignOut();
+  }, []);
 
   return { staff, loading, error, signOut };
 }

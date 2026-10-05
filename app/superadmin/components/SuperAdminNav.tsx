@@ -12,6 +12,7 @@
 
 import { useState, useEffect } from 'react';
 import { supabase } from '@/lib/supabase';
+import { handleSignOut as executeSignOut } from '@/lib/supabase/signOut';
 import { useRouter, usePathname, useSearchParams } from 'next/navigation';
 import Link from 'next/link';
 import { useTheme } from 'next-themes';
@@ -56,8 +57,7 @@ export default function SuperAdminNav() {
   }, []);
 
   const handleSignOut = async () => {
-    await supabase.auth.signOut();
-    router.push('/login');
+    await executeSignOut();
   };
 
   const activeTab = searchParams.get('tab') || 'users';

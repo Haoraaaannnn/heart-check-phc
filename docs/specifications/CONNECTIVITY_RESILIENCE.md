@@ -112,7 +112,7 @@ When a degraded channel recovers to `SUBSCRIBED`, hooks immediately fire a recon
 | Nurse Station (`app/nurse/hooks/useRealtimeSubscription.ts`) | 5 seconds | Direct 0ms payload dispatch + 50ms fallback | 500ms trailing lock | Monotonic sequence guard + 5s in-flight mutation pinning + metadata memoization | Instantaneous response for consultation room intake without UI bounce |
 | Transfer Dashboard (`app/transfer/hooks/useRealtimeSubscription.ts`) | 5 seconds | 150ms debounce + 0ms direct payload patch | 500ms trailing lock | Monotonic sequence guard + 8s confirmed pin (2.5s post-match grace) + getConfirmedPin guard + 4s write throttle | Critical live state for drag-and-drop counter flow |
 | Public Monitor (`app/monitor/hooks/useRealtimeSubscription.ts`) | 8 seconds | 100ms | 500ms trailing lock | In-flight flag + category filter | Public waiting display; audio chime trigger |
-| Service Queue Panel (`app/dashboard/patients/hooks/useServiceQueue.ts`) | 10 seconds | Direct | 500ms | `fetchSequenceRef` | Active service department queue auditing |
+| Service Queue Panel (`app/dashboard/pages/patients/hooks/useServiceQueue.ts`) | 10 seconds | Direct | 500ms | `fetchSequenceRef` | Active service department queue auditing |
 | Admin Overview (`app/dashboard/hooks/useOverviewData.ts`) | 30 seconds | 300ms reconciliation | 500ms | `todayFetchIdRef` | Executive KPI cards and daily flow aggregates |
 
 #### A8. In-Flight Mutation Pinning & Confirmed Pin Guard (Anti-Teleportation State Lock)

@@ -26,7 +26,7 @@ export default function ForgotPasswordPage() {
       <div className="w-full max-w-md rounded-[32px] border border-white/40 bg-white/35 px-10 py-10 shadow-lg backdrop-blur-2xl">
         <h1 className="text-2xl font-bold text-black-800 mb-2 text-center">Reset your password</h1>
         <p className="text-sm text-black-500 mb-6 text-center">
-          Enter your work email and we'll send you a reset link.
+          Enter your work email and we&apos;ll send you a reset link.
         </p>
 
         {submitted ? (

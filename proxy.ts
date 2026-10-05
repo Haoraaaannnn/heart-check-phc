@@ -114,9 +114,27 @@ export async function proxy(request: NextRequest) {
                         request.cookies.set(name, value),
                     );
                     response = NextResponse.next({ request });
-                    cookiesToSet.forEach(({ name, value, options }) =>
-                        response.cookies.set(name, value, options),
-                    );
+                    cookiesToSet.forEach(({ name, value, options }) => {
+                        if (!value || options?.maxAge === 0) {
+                            response.cookies.set(name, '', {
+                                path: '/',
+                                maxAge: 0,
+                                expires: new Date(0),
+                                sameSite: 'lax',
+                                secure: process.env.NODE_ENV === 'production',
+                            });
+                        } else {
+                            const sessionOptions = { ...options };
+                            delete sessionOptions.maxAge;
+                            delete sessionOptions.expires;
+                            response.cookies.set(name, value, {
+                                ...sessionOptions,
+                                path: '/',
+                                sameSite: 'lax',
+                                secure: process.env.NODE_ENV === 'production',
+                            });
+                        }
+                    });
                 },
             },
         },
@@ -134,6 +152,25 @@ export async function proxy(request: NextRequest) {
     const path = request.nextUrl.pathname;
 
     /**
+     * If an already authenticated user accesses the public landing page, login page,
+     * or password reset request, redirect them to the screen selector.
+     * Authenticated users must not navigate back into unauthenticated public screens.
+     */
+    const isPublicAuthOrLandingPath =
+        path === '/' ||
+        path === '/login' ||
+        path === '/forgot-password' ||
+        path.startsWith('/landing');
+
+    if (isPublicAuthOrLandingPath && user) {
+        const redirectRes = NextResponse.redirect(new URL('/select-screen', request.url));
+        redirectRes.headers.set('Cache-Control', 'no-store, no-cache, must-revalidate, proxy-revalidate');
+        redirectRes.headers.set('Pragma', 'no-cache');
+        redirectRes.headers.set('Expires', '0');
+        return redirectRes;
+    }
+
+    /**
      * Find the first matching protected route prefix for the current request path.
      * If no prefix matches, the route is public and no auth check is performed.
      */
@@ -146,7 +183,11 @@ export async function proxy(request: NextRequest) {
          * Route is protected. If there is no authenticated user, redirect to login.
          */
         if (!user) {
-            return NextResponse.redirect(new URL("/login", request.url));
+            const redirectRes = NextResponse.redirect(new URL("/login", request.url));
+            redirectRes.headers.set('Cache-Control', 'no-store, no-cache, must-revalidate, proxy-revalidate');
+            redirectRes.headers.set('Pragma', 'no-cache');
+            redirectRes.headers.set('Expires', '0');
+            return redirectRes;
         }
 
         /**
@@ -164,8 +205,20 @@ export async function proxy(request: NextRequest) {
         const allowedRoles = (ROLE_ROUTES[matchedPrefix] || []).map((r) => r.toLowerCase().trim());
 
         if (!userRow || !allowedRoles.includes(userRole)) {
-            return NextResponse.redirect(new URL("/unauthorized", request.url));
+            const unauthorizedRes = NextResponse.redirect(new URL("/unauthorized", request.url));
+            unauthorizedRes.headers.set('Cache-Control', 'no-store, no-cache, must-revalidate, proxy-revalidate');
+            unauthorizedRes.headers.set('Pragma', 'no-cache');
+            unauthorizedRes.headers.set('Expires', '0');
+            return unauthorizedRes;
         }
+
+        /**
+         * Ensure downstream client response disallows bfcache and browser caching
+         * so back/forward navigation is always validated against server session state.
+         */
+        response.headers.set('Cache-Control', 'no-store, no-cache, must-revalidate, proxy-revalidate');
+        response.headers.set('Pragma', 'no-cache');
+        response.headers.set('Expires', '0');
     }
 
     return response;
@@ -175,17 +228,20 @@ export async function proxy(request: NextRequest) {
  * Next.js proxy route matcher configuration.
  *
  * @remarks
- * Limits the proxy to only run on protected route segments.
- * Public routes (`/kiosk`, `/monitor`, `/login`, `/auth`, API routes,
- * and static assets) are excluded entirely to avoid unnecessary session
- * lookups on every public page load.
+ * Limits the proxy to only run on protected route segments and login.
+ * Public routes (`/kiosk`, `/monitor`, static assets) are excluded
+ * entirely to avoid unnecessary session lookups on public displays.
  */
 export const config = {
     matcher: [
+        "/",
+        "/landing/:path*",
         "/superadmin/:path*",
         "/dashboard/:path*",
         "/nurse/:path*",
         "/transfer/:path*",
         "/select-screen/:path*",
+        "/login",
+        "/forgot-password",
     ],
 };

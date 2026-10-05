@@ -13,6 +13,7 @@ import React, { useState, useEffect } from 'react';
 import { useRouter, usePathname, useSearchParams } from 'next/navigation';
 import { useTheme } from 'next-themes';
 import { supabase } from '@/lib/supabase';
+import { handleSignOut as executeSignOut } from '@/lib/supabase/signOut';
 import { formatManilaDate, formatManilaTime } from '@/utils/formatDateTime';
 import { SUPERADMIN_TEXTS } from '../../constants/superadminTexts';
 import { SUPERADMIN_NAV_STYLES } from '../../constants/superadminNavStyles';
@@ -62,8 +63,7 @@ export function SuperAdminHeader({ onOpenMobileDrawer }: SuperAdminHeaderProps) 
   }, []);
 
   const handleSignOut = async () => {
-    await supabase.auth.signOut();
-    router.push('/login');
+    await executeSignOut();
   };
 
   const isDark = mounted && resolvedTheme === 'dark';

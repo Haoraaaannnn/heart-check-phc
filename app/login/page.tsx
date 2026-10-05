@@ -65,6 +65,36 @@ function LoginPageInner() {
   const T = LOGIN_TEXTS;
 
   /**
+   * Automatically redirects to select-screen if user is already authenticated,
+   * preventing unnecessary re-login or back-navigation loops into login form.
+   */
+  useEffect(() => {
+    let active = true;
+    const checkActiveSession = async () => {
+      const {
+        data: { session },
+      } = await supabase.auth.getSession();
+      if (!active) return;
+      if (session) {
+        window.location.replace('/select-screen');
+      }
+    };
+    void checkActiveSession();
+
+    const handlePageShow = (event: PageTransitionEvent) => {
+      if (event.persisted) {
+        void checkActiveSession();
+      }
+    };
+
+    window.addEventListener('pageshow', handlePageShow);
+    return () => {
+      active = false;
+      window.removeEventListener('pageshow', handlePageShow);
+    };
+  }, []);
+
+  /**
    * Captures idle session expiration notices from route query parameters.
    */
   useEffect(() => {
@@ -171,8 +201,7 @@ function LoginPageInner() {
       }
 
       setEmail('');
-      router.push('/select-screen');
-      router.refresh();
+      window.location.replace('/select-screen');
     } catch (err) {
       setPassword('');
       if (passwordInputRef.current) {

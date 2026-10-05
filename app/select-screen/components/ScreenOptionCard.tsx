@@ -15,7 +15,7 @@
 
 import React, { useState } from 'react';
 import { useRouter } from 'next/navigation';
-import { supabase } from '@/lib/supabase';
+import { handleSignOut } from '@/lib/supabase/signOut';
 import { ScreenOption } from '../types/selectScreen';
 import { SELECT_SCREEN_STYLES } from '../constants/selectScreen';
 import { SELECT_SCREEN_TEXTS } from '../constants/selectScreenTexts';
@@ -42,13 +42,14 @@ export default function ScreenOptionCard({ option }: ScreenOptionCardProps) {
 
     try {
       if (option.requiresSignOut) {
-        // Sign out authenticated staff before launching patient-facing kiosk to prevent session misuse
-        await supabase.auth.signOut();
+        // Fully terminate authenticated staff session and destroy cookies before launching kiosk
+        await handleSignOut(option.route);
+        return;
       }
-    } catch (err) {
-      console.error('Session clearance error during display setup:', err);
-    } finally {
       router.push(option.route);
+    } catch (err) {
+      console.error('Navigation error during display setup:', err);
+      setNavigating(false);
     }
   };
 

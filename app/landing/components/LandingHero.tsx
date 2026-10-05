@@ -27,11 +27,6 @@ export function LandingHero() {
   return (
     <section className={S.section}>
       <div className={S.container}>
-        {/* Department Identification Pill */}
-        <div className={S.tagPill}>
-          <span className={S.pulseDot} />
-          <span>{T.institutionTag}</span>
-        </div>
 
         {/* Main Heading: Heart Check PHC */}
         <h1 className={S.title}>

@@ -20,7 +20,8 @@
 
 'use client';
 
-import React from 'react';
+import React, { useEffect } from 'react';
+import { supabase } from '@/lib/supabase';
 import { LANDING_STYLES } from './landing/constants/landingStyles';
 import { LandingHeader } from './landing/components/LandingHeader';
 import { LandingHero } from './landing/components/LandingHero';
@@ -35,6 +36,40 @@ import { LandingFooter } from './landing/components/LandingFooter';
  */
 export default function LandingPage() {
   const S = LANDING_STYLES;
+
+  /**
+   * Automatically redirects to /select-screen if user is already authenticated,
+   * preventing authenticated staff from viewing or falling back to the public landing page.
+   */
+  useEffect(() => {
+    let active = true;
+
+    const checkActiveSession = async () => {
+      const {
+        data: { session },
+      } = await supabase.auth.getSession();
+
+      if (!active) return;
+
+      if (session) {
+        window.location.replace('/select-screen');
+      }
+    };
+
+    void checkActiveSession();
+
+    const handlePageShow = (event: PageTransitionEvent) => {
+      if (event.persisted) {
+        void checkActiveSession();
+      }
+    };
+
+    window.addEventListener('pageshow', handlePageShow);
+    return () => {
+      active = false;
+      window.removeEventListener('pageshow', handlePageShow);
+    };
+  }, []);
 
   return (
     <div className={S.page}>

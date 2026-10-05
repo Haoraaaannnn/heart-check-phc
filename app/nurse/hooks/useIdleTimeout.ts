@@ -11,7 +11,7 @@
 
 import { useEffect, useRef, useCallback } from 'react';
 import { useRouter } from 'next/navigation';
-import { supabase } from '@/lib/supabase';
+import { handleSignOut } from '@/lib/supabase/signOut';
 
 /** Inactivity limit in milliseconds (20 minutes) */
 const IDLE_LIMIT_MS = 20 * 60 * 1000;
@@ -27,9 +27,8 @@ export function useIdleTimeout(): void {
   const timerRef = useRef<ReturnType<typeof setTimeout> | null>(null);
 
   const logout = useCallback(async () => {
-    await supabase.auth.signOut();
-    router.push('/login?reason=idle');
-  }, [router]);
+    await handleSignOut('/login?reason=idle');
+  }, []);
 
   const resetTimer = useCallback(() => {
     if (timerRef.current) {

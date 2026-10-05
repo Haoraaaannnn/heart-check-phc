@@ -17,6 +17,7 @@
 import React from 'react';
 import { useRouter } from 'next/navigation';
 import { supabase } from '@/lib/supabase';
+import { handleSignOut } from '@/lib/supabase/signOut';
 import { CATEGORIES } from '../lib/constants';
 import { transferTexts } from '../constants/transferTexts';
 import { NotificationBadge } from '@/components/reusables/NotificationBadge';
@@ -60,8 +61,7 @@ export function Sidebar({
     : CATEGORIES;
 
   const handleLogout = async () => {
-    await supabase.auth.signOut();
-    router.replace('/login');
+    await handleSignOut();
   };
 
   return (

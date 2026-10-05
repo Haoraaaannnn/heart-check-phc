@@ -14,6 +14,7 @@ import React, { useState, useEffect } from 'react';
 import { useRouter, usePathname, useSearchParams } from 'next/navigation';
 import { useTheme } from 'next-themes';
 import { supabase } from '@/lib/supabase';
+import { handleSignOut } from '@/lib/supabase/signOut';
 import { useBottleneckNotifications } from '@/app/dashboard/hooks/useBottleneckNotifications';
 import NotificationDropdown from '../NotificationDropdown';
 import HeaderSearch from './HeaderSearch';
@@ -90,9 +91,8 @@ export function DashboardHeader({ onOpenMobileDrawer }: DashboardHeaderProps) {
   /**
    * Handles user session termination and route redirection to login.
    */
-  const handleSignOut = async () => {
-    await supabase.auth.signOut();
-    router.push('/login');
+  const onSignOut = async () => {
+    await handleSignOut();
   };
 
   const isDark = mounted && resolvedTheme === 'dark';
@@ -245,7 +245,7 @@ export function DashboardHeader({ onOpenMobileDrawer }: DashboardHeaderProps) {
         {/* Direct Session Sign-Out Button */}
         <button
           type="button"
-          onClick={handleSignOut}
+          onClick={onSignOut}
           className={S.signOutButton}
           title={T.actions.signOut}
           aria-label={T.actions.signOut}

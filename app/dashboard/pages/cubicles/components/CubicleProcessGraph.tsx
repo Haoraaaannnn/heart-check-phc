@@ -162,15 +162,16 @@ export default function CubicleProcessGraph() {
   // Compute layout for each service block dynamically based on collapse state
   const serviceLayouts = useMemo(() => {
     let currentY = 35;
+    const layouts = [];
 
-    return serviceBlocks.map((block) => {
+    for (const block of serviceBlocks) {
       const isCollapsed = Boolean(collapsedBlocks[block.key]);
       const height = isCollapsed ? 44 : 155;
       const top = currentY;
       const mid = top + height / 2;
       currentY += height + blockGap;
 
-      return {
+      layouts.push({
         ...block,
         isCollapsed,
         top,
@@ -178,8 +179,10 @@ export default function CubicleProcessGraph() {
         left: blockStartX,
         width: blockWidth,
         height,
-      };
-    });
+      });
+    }
+
+    return layouts;
   }, [serviceBlocks, collapsedBlocks, blockStartX, blockWidth, blockGap]);
 
   // Dynamic canvas height to accommodate all open blocks without clipping

@@ -14,12 +14,30 @@ export async function createClient() {
         },
         setAll(cookiesToSet) {
           try {
-            cookiesToSet.forEach(({ name, value, options }) =>
-              cookieStore.set(name, value, options)
-            )
+            cookiesToSet.forEach(({ name, value, options }) => {
+              if (!value || options?.maxAge === 0) {
+                cookieStore.set(name, '', {
+                  path: '/',
+                  maxAge: 0,
+                  expires: new Date(0),
+                  sameSite: 'lax',
+                  secure: process.env.NODE_ENV === 'production',
+                })
+              } else {
+                const sessionOptions = { ...options }
+                delete sessionOptions.maxAge
+                delete sessionOptions.expires
+                cookieStore.set(name, value, {
+                  ...sessionOptions,
+                  path: '/',
+                  sameSite: 'lax',
+                  secure: process.env.NODE_ENV === 'production',
+                })
+              }
+            })
           } catch {
             // The `setAll` method was called from a Server Component.
-            // This can be ignored if you have middleware refreshing sessions.
+            // Handled via proxy.ts session refresh.
           }
         },
       },
@@ -27,4 +45,3 @@ export async function createClient() {
   )
 }
 
-//need ata middle ware

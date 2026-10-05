@@ -127,12 +127,15 @@ export function ConnectionStatusBanner({
   // 3. Only show reconnection banner if a confirmed outage actually occurred.
   useEffect(() => {
     if (isFullyConnected && hadConfirmedOutage && !isSyncingQueue) {
-      setShowRecovery(true);
+      const showTimer = setTimeout(() => setShowRecovery(true), 0);
       const timer = setTimeout(() => {
         setShowRecovery(false);
         setHadConfirmedOutage(false);
       }, 2500);
-      return () => clearTimeout(timer);
+      return () => {
+        clearTimeout(showTimer);
+        clearTimeout(timer);
+      };
     }
   }, [isFullyConnected, hadConfirmedOutage, isSyncingQueue]);
 

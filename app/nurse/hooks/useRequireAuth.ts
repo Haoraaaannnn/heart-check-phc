@@ -22,11 +22,17 @@ const PERMITTED_NURSE_ROLES = ['nurse', 'staff', 'doctor', 'superadmin', 'admin'
  * @returns Boolean `checking` indicating if authentication validation is still in progress.
  */
 export function useRequireAuth(): boolean {
-  const router = useRouter();
   const [checking, setChecking] = useState(true);
 
   useEffect(() => {
     let active = true;
+
+    const handlePageShow = (event: PageTransitionEvent) => {
+      if (event.persisted) {
+        window.location.reload();
+      }
+    };
+    window.addEventListener('pageshow', handlePageShow);
 
     const verifyAccess = async () => {
       const {
@@ -34,8 +40,10 @@ export function useRequireAuth(): boolean {
         error: sessionError,
       } = await supabase.auth.getSession();
 
+      if (!active) return;
+
       if (sessionError || !session) {
-        router.replace('/login');
+        window.location.replace('/login');
         return;
       }
 
@@ -62,31 +70,32 @@ export function useRequireAuth(): boolean {
         }
       }
 
-      if (!userRole || !PERMITTED_NURSE_ROLES.includes(userRole as any)) {
-        console.warn('Unauthorized role access attempt to Nurse Station:', userRole);
-        await supabase.auth.signOut();
-        router.replace('/login');
+      if (!active) return;
+
+      const normalizedRole = (userRole || '').toLowerCase().trim();
+
+      if (!userRole || !PERMITTED_NURSE_ROLES.includes(normalizedRole as any)) {
+        window.location.replace('/unauthorized');
         return;
       }
 
-      if (active) {
-        setChecking(false);
-      }
+      setChecking(false);
     };
 
     void verifyAccess();
 
     const { data: listener } = supabase.auth.onAuthStateChange((_event, session) => {
       if (!session) {
-        router.replace('/login');
+        window.location.replace('/login');
       }
     });
 
     return () => {
       active = false;
+      window.removeEventListener('pageshow', handlePageShow);
       listener.subscription.unsubscribe();
     };
-  }, [router]);
+  }, []);
 
   return checking;
 }

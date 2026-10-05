@@ -8,12 +8,16 @@
  * @module lib/supabase
  */
 
-import { createClient } from '@supabase/supabase-js';
+import { createBrowserClient } from '@supabase/ssr';
 
 /**
- * Supabase client instance configured for weak-signal resilience.
+ * Supabase browser client instance configured for session-scoped cookies and weak-signal resilience.
  *
  * @remarks
+ * Uses true HTTP session cookies (omitting maxAge and expires on active tokens) so that authentication
+ * is bounded strictly to the active browser session, preventing lingering credentials on shared hospital
+ * terminals. When cookies are removed (maxAge === 0 or empty value), they are explicitly expired immediately.
+ *
  * The `realtime` block is tuned specifically for the PHC demo environment where
  * all devices share a single WiFi access point with a degraded internet uplink.
  *
@@ -32,13 +36,39 @@ import { createClient } from '@supabase/supabase-js';
  *   saturated. The 2-second floor avoids tight reconnect loops that would
  *   compete with polling for bandwidth.
  */
-export const supabase = createClient(
+export const supabase = createBrowserClient(
   process.env.NEXT_PUBLIC_SUPABASE_URL!,
   process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY!,
   {
-    auth: {
-      persistSession: true,
-      autoRefreshToken: true,
+    isSingleton: true,
+    cookies: {
+      getAll() {
+        if (typeof document === 'undefined') return [];
+        return document.cookie
+          .split(';')
+          .filter(Boolean)
+          .map((c) => {
+            const [name, ...val] = c.trim().split('=');
+            return { name, value: decodeURIComponent(val.join('=')) };
+          });
+      },
+      setAll(cookiesToSet) {
+        if (typeof document === 'undefined') return;
+        cookiesToSet.forEach(({ name, value, options }) => {
+          const restOptions = { ...options };
+          delete restOptions.maxAge;
+          delete restOptions.expires;
+          if (!value || options?.maxAge === 0) {
+            document.cookie = `${name}=; path=${restOptions.path || '/'}; Max-Age=0; expires=Thu, 01 Jan 1970 00:00:00 GMT; SameSite=Lax${process.env.NODE_ENV === 'production' ? '; Secure' : ''}`;
+          } else {
+            let cookieStr = `${name}=${encodeURIComponent(value)}; path=${restOptions.path || '/'}; SameSite=${restOptions.sameSite || 'Lax'}`;
+            if (process.env.NODE_ENV === 'production' || restOptions.secure) {
+              cookieStr += '; Secure';
+            }
+            document.cookie = cookieStr;
+          }
+        });
+      },
     },
     realtime: {
       heartbeatIntervalMs: 25_000,
