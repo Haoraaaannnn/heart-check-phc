@@ -892,10 +892,27 @@ export default function TransferPage() {
     return p.service === selectedCategory;
   };
 
-  const visibleOnProgress = onProgressPatients.filter(p => matchesSelectedService(p, true));
+  /**
+   * Returns true when the patient's counter is within the current user's allowed counter list.
+   * Patients that have no counter value (walk-in or non-registered pathways) always pass through.
+   * When the user has no counter restrictions (myCounters is empty), all patients pass through.
+   *
+   * @param p - Patient record to evaluate.
+   * @returns Whether the patient belongs to one of the user's assigned counters.
+   */
+  const matchesMyCounters = (p: Patient): boolean => {
+    if (myCounters.length === 0) return true;
+    if (p.counter == null) return true;
+    return myCounters.includes(p.counter);
+  };
+
+  const visibleOnProgress = onProgressPatients.filter(
+    p => matchesSelectedService(p, true) && matchesMyCounters(p)
+  );
   const visibleIdlePatients = idlePatients.filter(p => matchesSelectedService(p, true));
 
   const visibleRegistrationPatients = registrationPatients.filter(p => {
+    if (!matchesMyCounters(p)) return false;
     if (isConsultation) {
       if (p.service !== 'Consultation') return false;
       if (selectedSubcategory) return p.subcategory === selectedSubcategory;
