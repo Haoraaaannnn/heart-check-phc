@@ -114,12 +114,12 @@ export default function CubicleProcessGraph() {
     () => [
       { badge: S.groupBadgeOpd, accent: 'text-rose-500' },
       { badge: S.groupBadgeSpecialized, accent: 'text-amber-500' },
-      { badge: S.groupBadgeWarfarin, accent: 'text-blue-500' },
+      { badge: S.groupBadgeWarfarin, accent: 'text-slate-600 dark:text-[#a3a3a3]' },
       { badge: S.groupBadgeSpecialized, accent: 'text-purple-500' },
       { badge: S.groupBadgeEcg, accent: 'text-emerald-500' },
       { badge: S.groupBadgeRefill, accent: 'text-teal-500' },
-      { badge: S.groupBadgeBenzathine, accent: 'text-indigo-500' },
-      { badge: S.groupBadgeReschedule, accent: 'text-cyan-500' },
+      { badge: S.groupBadgeBenzathine, accent: 'text-rose-600 dark:text-rose-400' },
+      { badge: S.groupBadgeReschedule, accent: 'text-slate-600 dark:text-[#a3a3a3]' },
     ],
     [S]
   );
@@ -162,15 +162,16 @@ export default function CubicleProcessGraph() {
   // Compute layout for each service block dynamically based on collapse state
   const serviceLayouts = useMemo(() => {
     let currentY = 35;
+    const layouts = [];
 
-    return serviceBlocks.map((block) => {
+    for (const block of serviceBlocks) {
       const isCollapsed = Boolean(collapsedBlocks[block.key]);
       const height = isCollapsed ? 44 : 155;
       const top = currentY;
       const mid = top + height / 2;
       currentY += height + blockGap;
 
-      return {
+      layouts.push({
         ...block,
         isCollapsed,
         top,
@@ -178,8 +179,10 @@ export default function CubicleProcessGraph() {
         left: blockStartX,
         width: blockWidth,
         height,
-      };
-    });
+      });
+    }
+
+    return layouts;
   }, [serviceBlocks, collapsedBlocks, blockStartX, blockWidth, blockGap]);
 
   // Dynamic canvas height to accommodate all open blocks without clipping
@@ -670,7 +673,7 @@ export default function CubicleProcessGraph() {
       {/* Main Process Diagram Board */}
       <div className="overflow-x-auto phc-scroll pb-2">
         <div
-          className="relative select-none border border-line/50 rounded-xl bg-slate-50/40 dark:bg-slate-950/40 m-auto"
+          className="relative select-none border border-line/50 rounded-xl bg-slate-50/40 dark:bg-[#0d0d0d]/60 m-auto"
           style={{ width: `${CANVAS_WIDTH}px`, height: `${CANVAS_HEIGHT}px` }}
         >
           {/* SVG ORTHOGONAL CONNECTORS LAYER */}
@@ -690,7 +693,7 @@ export default function CubicleProcessGraph() {
                 markerHeight="6"
                 orient="auto-start-reverse"
               >
-                <path d="M 0 1 L 8 5 L 0 9 z" className="fill-slate-400 dark:fill-slate-600" />
+                <path d="M 0 1 L 8 5 L 0 9 z" className="fill-slate-400 dark:fill-[#52525b]" />
               </marker>
 
               <marker
@@ -715,7 +718,7 @@ export default function CubicleProcessGraph() {
               className={
                 isDispatchActive
                   ? 'text-rose-500 dark:text-rose-400'
-                  : 'text-slate-300 dark:text-slate-700'
+                  : 'text-slate-300 dark:text-[#3f3f46]'
               }
               markerEnd={
                 isDispatchActive ? 'url(#ortho-arrow-active)' : 'url(#ortho-arrow)'
@@ -728,7 +731,7 @@ export default function CubicleProcessGraph() {
               stroke="currentColor"
               strokeWidth="1.5"
               fill="none"
-              className="text-slate-300 dark:text-slate-700"
+              className="text-slate-300 dark:text-[#3f3f46]"
             />
 
             {/* PATH 2: Branch Bus Vertical Spine (Orthogonal) */}
@@ -737,7 +740,7 @@ export default function CubicleProcessGraph() {
               stroke="currentColor"
               strokeWidth="1.5"
               fill="none"
-              className="text-slate-300 dark:text-slate-700"
+              className="text-slate-300 dark:text-[#3f3f46]"
             />
 
             {/* PATH 2: Horizontal Branches into each Service Rectangle Block */}
@@ -756,7 +759,7 @@ export default function CubicleProcessGraph() {
                   className={
                     hasTravelingPatient
                       ? 'text-rose-500 dark:text-rose-400'
-                      : 'text-slate-300 dark:text-slate-700'
+                      : 'text-slate-300 dark:text-[#3f3f46]'
                   }
                   markerEnd={
                     hasTravelingPatient
@@ -776,7 +779,7 @@ export default function CubicleProcessGraph() {
                   stroke="currentColor"
                   strokeWidth="1.5"
                   fill="none"
-                  className="text-slate-300 dark:text-slate-700"
+                  className="text-slate-300 dark:text-[#3f3f46]"
                 />
               );
             })}
@@ -787,7 +790,7 @@ export default function CubicleProcessGraph() {
               stroke="currentColor"
               strokeWidth="1.5"
               fill="none"
-              className="text-slate-300 dark:text-slate-700"
+              className="text-slate-300 dark:text-[#3f3f46]"
             />
 
             {/* PATH 3: Merge Bus into Carryout (Horizontal with Arrowhead) */}
@@ -799,7 +802,7 @@ export default function CubicleProcessGraph() {
               className={
                 isCarryoutActive
                   ? 'text-rose-500 dark:text-rose-400'
-                  : 'text-slate-300 dark:text-slate-700'
+                  : 'text-slate-300 dark:text-[#3f3f46]'
               }
               markerEnd={
                 isCarryoutActive ? 'url(#ortho-arrow-active)' : 'url(#ortho-arrow)'
@@ -812,7 +815,7 @@ export default function CubicleProcessGraph() {
               stroke="currentColor"
               strokeWidth="1.5"
               fill="none"
-              className="text-slate-300 dark:text-slate-700"
+              className="text-slate-300 dark:text-[#3f3f46]"
               markerEnd="url(#ortho-arrow)"
             />
 
@@ -830,7 +833,7 @@ export default function CubicleProcessGraph() {
                     cx={item.x}
                     cy={item.y}
                     r="5"
-                    className="fill-rose-500 stroke-white dark:stroke-slate-900"
+                    className="fill-rose-500 stroke-white dark:stroke-[#1a1a1a]"
                     strokeWidth="1.5"
                   />
                   <g transform={`translate(${item.x}, ${item.y - 12})`}>
@@ -845,7 +848,7 @@ export default function CubicleProcessGraph() {
                     <text
                       textAnchor="middle"
                       y="2"
-                      className="fill-white dark:fill-slate-900 font-mono text-[8px] font-extrabold"
+                      className="fill-white dark:fill-[#1a1a1a] font-mono text-[8px] font-extrabold"
                     >
                       {item.patientNum}
                     </text>
@@ -911,10 +914,10 @@ export default function CubicleProcessGraph() {
             <div>
               <div className={S.nodeHeader}>
                 <span className={S.nodeTitle}>
-                  <i className="bx bx-user-check text-blue-500" />
+                  <i className="bx bx-user-check text-[#a8071a] dark:text-[#f87171]" />
                   <span>{stages.dispatch.title}</span>
                 </span>
-                <span className={`${S.nodeBadge} bg-blue-50 dark:bg-blue-950/40 text-blue-700 dark:text-blue-300 border-blue-200 dark:border-blue-900`}>
+                <span className={`${S.nodeBadge} bg-[#a8071a]/10 text-[#a8071a] dark:text-[#f87171] border-[#a8071a]/30`}>
                   {stages.dispatch.count}
                 </span>
               </div>

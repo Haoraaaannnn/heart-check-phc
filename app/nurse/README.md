@@ -35,14 +35,17 @@ Use this table to quickly identify the exact file to modify for any given requir
 | Navigation rail sidebar | `app/nurse/components/NurseSidebar.tsx` | Fixed responsive rail matching Transfer standard (`w-18 2xl:w-64`) |
 | Banner messages & offline sync alerts | `constants/connectionTexts.ts` | Shared across nurse and transfer dashboards |
 | Inline styles and layout tokens | `app/nurse/constants/nurse.ts` | CSSProperties and column dimension tokens |
-| Clinical stage progression actions | `app/nurse/hooks/useNurseActions.ts` | Optimistic mutations with outbox persistence |
+| Clinical stage progression actions | `app/nurse/hooks/useNurseActions.ts` | Optimistic mutations with in-flight stage pinning and outbox persistence |
+| Patient data loading & cubicle scoping | `app/nurse/hooks/useNurseData.ts` | Cached cubicle discovery, request sequencing, in-flight mutation overlay, and 0ms realtime patching |
 | Offline queue outbox engine | `lib/offlineQueue.ts` | IndexedDB persistent outbox queue and flush worker |
 | Offline synchronization React hook | `hooks/useOfflineQueue.ts` | Handles re-sync triggers on reconnect and boot |
 | Drag-and-drop pointer interactions | `app/nurse/hooks/useNurseDragAndDrop.ts` | Pointer events and stage validation rules |
 | Tablet tap-to-select interactions | `app/nurse/hooks/useNurseSelection.ts` | Mobile/tablet selection workflow |
-| Realtime subscription and polling | `app/nurse/hooks/useRealtimeSubscription.ts` | Supabase Realtime channel coordination with 5s polling fallback, 2s hysteresis, 500ms overlap throttle, and immediate recovery reconciliation |
+| Realtime subscription and polling | `app/nurse/hooks/useRealtimeSubscription.ts` | Supabase Realtime channel coordination with 0ms payload dispatch, 50ms debounce, 5s polling fallback, 2s hysteresis, and 500ms trailing-edge throttle |
 | Main page coordination | `app/nurse/page.tsx` | Main orchestrator assembling subcomponents |
 | Board columns and cards | `app/nurse/components/NurseBoard.tsx` | 3-column clinical pipeline Kanban |
+| Patient card & quick actions | `app/nurse/components/NursePatientCard.tsx` | Clinical card with in-button loading spinners for weak signal feedback |
+| Quick-action dropdown (tap-to-act) | `app/nurse/components/NurseQuickActionDropdown.tsx` | Contextual popover for direct 1-tap stage progression with in-button loading spinners and auto-dismiss |
 | Header bar & desktop cubicle dropdown | `app/nurse/components/NurseHeader.tsx` | Header bar, sync indicators, station dropdown |
 | Finished patient archive drawer | `app/nurse/components/FinishedDrawer.tsx` | Slide-over drawer for completed patients |
 | Audio announcements (TTS) | `app/nurse/page.tsx` | Deepgram Text-to-Speech integration |

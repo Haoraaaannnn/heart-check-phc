@@ -2,6 +2,7 @@
 import { useState, useEffect } from 'react';
 import { useRouter } from 'next/navigation';
 import { createClient } from '@/lib/supabase/client'; 
+import { handleSignOut } from '@/lib/supabase/signOut';
 
 const supabase = createClient();
 
@@ -39,9 +40,10 @@ export default function ResetPasswordPage() {
       const data = await response.json();
       if (!response.ok) { setError(data.error || 'Unable to reset password.'); setLoading(false); return; }
 
-      await supabase.auth.signOut();
       setDone(true);
-      setTimeout(() => router.push('/login'), 2000);
+      setTimeout(() => {
+        void handleSignOut('/login');
+      }, 2000);
     } catch {
       setError('Something went wrong. Please try again.');
       setLoading(false);

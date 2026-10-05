@@ -17,6 +17,7 @@
 import React from 'react';
 import { useRouter } from 'next/navigation';
 import { supabase } from '@/lib/supabase';
+import { handleSignOut } from '@/lib/supabase/signOut';
 import { AssignedNurseCubicle } from '../types/nurse';
 import { nurseTexts } from '../constants/nurseTexts';
 import { NotificationBadge } from '@/components/reusables/NotificationBadge';
@@ -75,8 +76,7 @@ export function NurseSidebar({
   );
 
   const handleLogout = async () => {
-    await supabase.auth.signOut();
-    router.replace('/login');
+    await handleSignOut();
   };
 
   return (

@@ -1,9 +1,38 @@
+/**
+ * @fileoverview Staff Authentication Orchestrator page (/login).
+ *
+ * Implements clinical workstation sign-in for Philippine Heart Center staff,
+ * featuring rate-limiting protection, brute-force lockout countdowns,
+ * session establishment, and automatic workstation routing to /select-screen.
+ *
+ * Subcomponents:
+ * 1. Top navigation with Manila clock and theme switch via {@link LoginHeader}.
+ * 2. High-contrast solid credential card and form controls via {@link LoginForm}.
+ * 3. Clinical IT regulatory disclaimers via {@link LoginFooter}.
+ *
+ * @remarks
+ * Conforms strictly to AGENTS.md: pure assembly and rendering, strict separation of concerns,
+ * high-contrast solid surfaces, zero emojis, and zero truncated text.
+ *
+ * @module app/login/page
+ */
+
 'use client';
 
-import { useState, useEffect, useRef, Suspense } from 'react';
+import React, { useState, useEffect, useRef, Suspense } from 'react';
 import { useRouter, useSearchParams } from 'next/navigation';
 import { supabase } from '@/lib/supabase';
+import { LOGIN_STYLES } from './constants/loginStyles';
+import { LOGIN_TEXTS } from './constants/loginTexts';
+import { LoginHeader } from './components/LoginHeader';
+import { LoginForm } from './components/LoginForm';
+import { LoginFooter } from './components/LoginFooter';
 
+/**
+ * Root login page component wrapped with Suspense boundary.
+ *
+ * @returns JSX element.
+ */
 export default function LoginPage() {
   return (
     <Suspense fallback={null}>
@@ -12,6 +41,12 @@ export default function LoginPage() {
   );
 }
 
+/**
+ * Internal login page orchestrator managing form state, security lockouts,
+ * and session handshakes.
+ *
+ * @returns JSX element.
+ */
 function LoginPageInner() {
   const router = useRouter();
   const searchParams = useSearchParams();
@@ -26,18 +61,60 @@ function LoginPageInner() {
   const passwordInputRef = useRef<HTMLInputElement>(null);
   const emailInputRef = useRef<HTMLInputElement>(null);
 
+  const S = LOGIN_STYLES;
+  const T = LOGIN_TEXTS;
+
+  /**
+   * Automatically redirects to select-screen if user is already authenticated,
+   * preventing unnecessary re-login or back-navigation loops into login form.
+   */
+  useEffect(() => {
+    let active = true;
+    const checkActiveSession = async () => {
+      const {
+        data: { session },
+      } = await supabase.auth.getSession();
+      if (!active) return;
+      if (session) {
+        window.location.replace('/select-screen');
+      }
+    };
+    void checkActiveSession();
+
+    const handlePageShow = (event: PageTransitionEvent) => {
+      if (event.persisted) {
+        void checkActiveSession();
+      }
+    };
+
+    window.addEventListener('pageshow', handlePageShow);
+    return () => {
+      active = false;
+      window.removeEventListener('pageshow', handlePageShow);
+    };
+  }, []);
+
+  /**
+   * Captures idle session expiration notices from route query parameters.
+   */
   useEffect(() => {
     if (searchParams.get('reason') === 'idle') {
-      setError('You were logged out due to inactivity.');
+      setError(T.alerts.idleLogout);
     }
-  }, [searchParams]);
+  }, [searchParams, T.alerts.idleLogout]);
 
+  /**
+   * Automatically clears temporary error messages after 5 seconds (excluding lockouts).
+   */
   useEffect(() => {
     if (!error || lockoutSecondsRemaining !== null) return;
     const timer = setTimeout(() => setError(''), 5000);
     return () => clearTimeout(timer);
   }, [error, lockoutSecondsRemaining]);
 
+  /**
+   * Counts down the rate-limit security lockout window.
+   */
   useEffect(() => {
     if (lockoutSecondsRemaining === null) return;
     if (lockoutSecondsRemaining <= 0) {
@@ -46,18 +123,26 @@ function LoginPageInner() {
       return;
     }
     const interval = setInterval(() => {
-      setLockoutSecondsRemaining(prev => (prev !== null ? prev - 1 : null));
+      setLockoutSecondsRemaining((prev) => (prev !== null ? prev - 1 : null));
     }, 1000);
     return () => clearInterval(interval);
   }, [lockoutSecondsRemaining]);
 
+  /**
+   * Updates formatted lockout message string as seconds decrease.
+   */
   useEffect(() => {
     if (lockoutSecondsRemaining === null) return;
     const mins = Math.floor(lockoutSecondsRemaining / 60);
     const secs = lockoutSecondsRemaining % 60;
-    setError(`Too many failed attempts. Try again in ${mins}m ${secs}s.`);
-  }, [lockoutSecondsRemaining]);
+    setError(T.alerts.lockoutTemplate(mins, secs));
+  }, [lockoutSecondsRemaining, T.alerts]);
 
+  /**
+   * Submits credentials to the server-side authentication endpoint.
+   *
+   * @param e - React form submission event.
+   */
   const handleSubmit = async (e: React.FormEvent<HTMLFormElement>) => {
     e.preventDefault();
     if (lockoutSecondsRemaining !== null) return;
@@ -85,7 +170,7 @@ function LoginPageInner() {
           setLockoutSecondsRemaining(data.secondsRemaining);
         } else {
           setLockoutSecondsRemaining(null);
-          setError(data.error || 'Invalid email or password');
+          setError(data.error || T.alerts.invalidCredentials);
         }
         setLoading(false);
         return;
@@ -97,7 +182,7 @@ function LoginPageInner() {
       });
 
       if (setSessionError) {
-        setError('Failed to establish session. Please try again.');
+        setError(T.alerts.sessionEstablishmentFailed);
         setLoading(false);
         return;
       }
@@ -111,136 +196,53 @@ function LoginPageInner() {
       setLoading(false);
 
       if (dbError || !roleData) {
-        setError('User role not found');
+        setError(T.alerts.userRoleNotFound);
         return;
       }
 
       setEmail('');
-
-      router.push('/select-screen');
-      router.refresh();
-    } catch (error) {
+      window.location.replace('/select-screen');
+    } catch (err) {
       setPassword('');
       if (passwordInputRef.current) {
         passwordInputRef.current.value = '';
       }
       setLoading(false);
-      setError('An error occurred during login');
-      console.error('Login error:', error);
+      setError(T.alerts.genericError);
+      console.error('Login error:', err);
     }
   };
 
+  /**
+   * Toggles visibility of the password input while retaining keyboard focus.
+   */
   const togglePasswordVisibility = () => {
-    setShowPassword(!showPassword);
+    setShowPassword((prev) => !prev);
     setTimeout(() => {
       passwordInputRef.current?.focus();
     }, 0);
   };
 
   return (
-    <div className="relative flex h-screen w-full items-center justify-center overflow-hidden bg-gradient-to-br from-[#fffdfd] via-[#fff5f5] to-[#ffeaea] px-5 font-sans">
-
-      <div className="pointer-events-none absolute inset-0 z-0">
-        <div className="absolute top-[-100px] right-[-100px] h-[450px] w-[450px] rounded-full bg-[#ff6b6b]/20 blur-[130px]" />
-        <div className="absolute bottom-[-120px] left-[-80px] h-[400px] w-[400px] rounded-full bg-[#ff8a8a]/20 blur-[130px]" />
-        <div className="absolute left-1/2 top-1/2 h-[600px] w-[600px] -translate-x-1/2 -translate-y-1/2 rounded-full bg-[#ffd4d4]/30 blur-[160px]" />
-      </div>
-
-      <button
-        onClick={() => router.push('/')}
-        className="fixed left-8 top-8 z-20 flex items-center gap-2 rounded-xl border border-white/40 bg-white/40 px-4 py-2 text-gray-600 backdrop-blur-xl transition hover:bg-white/60 hover:text-[#cc3535]"
-        aria-label="Back to Home"
-      >
-        <i className="bx bx-arrow-back text-xl"></i>
-        <span className="text-sm font-medium">Back to Home</span>
-      </button>
-
-      <div className="relative z-10 w-full max-w-md rounded-[32px] border border-white/40 bg-white/35 px-10 pb-8 pt-10 shadow-[0_10px_50px_rgba(255,120,120,0.10)] backdrop-blur-2xl">
-
-        <h1 className="mb-2 text-center text-3xl font-bold text-gray-800">
-          Staff Login
-        </h1>
-
-        <p className="mb-8 text-center text-sm text-gray-500">
-          Enter your credentials to access your account
-        </p>
-
-        <form onSubmit={handleSubmit} noValidate>
-          <div className="mb-5">
-            <label htmlFor="email" className="mb-2 block text-sm font-medium text-gray-700">
-              Email Address
-            </label>
-            <input
-              id="email"
-              ref={emailInputRef}
-              type="email"
-              value={email}
-              onChange={(e) => setEmail(e.target.value)}
-              required
-              autoComplete="username"
-              className="w-full rounded-2xl border border-white/50 bg-white/60 px-4 py-3 text-sm text-black backdrop-blur-xl transition-all duration-300 focus:border-[#cc3535] focus:outline-none focus:ring-4 focus:ring-red-100"
-              placeholder="your@email.com"
-            />
-          </div>
-
-          <div className="mb-6">
-            <label htmlFor="password" className="mb-2 block text-sm font-medium text-gray-700">
-              Password
-            </label>
-            <div className="relative">
-              <input
-                id="password"
-                ref={passwordInputRef}
-                type={showPassword ? 'text' : 'password'}
-                value={password}
-                onChange={(e) => setPassword(e.target.value)}
-                required
-                autoComplete="current-password"
-                className="w-full rounded-2xl border border-white/50 bg-white/60 px-4 py-3 pr-12 text-sm text-black backdrop-blur-xl transition-all duration-300 focus:border-[#cc3535] focus:outline-none focus:ring-4 focus:ring-red-100"
-                placeholder="Enter your password"
-              />
-              <button
-                type="button"
-                onClick={togglePasswordVisibility}
-                className="absolute right-3 top-1/2 -translate-y-1/2 text-gray-500 hover:text-[#cc3535] transition-colors focus:outline-none"
-                aria-label={showPassword ? 'Hide password' : 'Show password'}
-              >
-                <i className={`bx ${showPassword ? 'bx-hide' : 'bx-show'} text-xl`}></i>
-              </button>
-            </div>
-            <a href="/forgot-password" className="text-sm text-gray-500 hover:text-[#cc3535]">
-              Forgot password?
-            </a>
-          </div>
-
-          <button
-            type="submit"
-            disabled={loading || lockoutSecondsRemaining !== null}
-            className="w-full rounded-2xl bg-[#cc3535] py-3 text-base font-semibold text-white shadow-[0_10px_30px_rgba(204,53,53,0.20)] transition-all duration-300 hover:bg-red-700 hover:shadow-lg active:scale-95 disabled:opacity-60 disabled:cursor-not-allowed"
-            aria-label="Login to your account"
-          >
-            {loading ? (
-              <span className="flex items-center justify-center gap-2">
-                <i className="bx bx-loader-alt animate-spin"></i>
-                Checking...
-              </span>
-            ) : (
-              'Login'
-            )}
-          </button>
-        </form>
-
-        {error && (
-          <div 
-            className="mt-5 rounded-2xl border border-red-200 bg-red-50/80 px-4 py-3 text-center text-sm text-[#dc3545] backdrop-blur-md"
-            role="alert"
-            aria-live="polite"
-          >
-            <i className="bx bx-error-circle mr-2"></i>
-            {error}
-          </div>
-        )}
-      </div>
+    <div className={S.page}>
+      <LoginHeader />
+      <main className={S.main}>
+        <LoginForm
+          email={email}
+          setEmail={setEmail}
+          password={password}
+          setPassword={setPassword}
+          error={error}
+          lockoutSecondsRemaining={lockoutSecondsRemaining}
+          loading={loading}
+          showPassword={showPassword}
+          onTogglePasswordVisibility={togglePasswordVisibility}
+          onSubmit={handleSubmit}
+          emailInputRef={emailInputRef}
+          passwordInputRef={passwordInputRef}
+        />
+      </main>
+      <LoginFooter />
     </div>
   );
 }

@@ -401,7 +401,7 @@ All developers and automated agents contributing to Heart Check PHC must follow 
    Whenever a new component-scoped constant file is introduced, re-export it in the route's central barrel files (`<feature>Texts.ts` and `<feature>.ts`) to ensure backward compatibility.
 5. **Kiosk UI Centering & Non-Overflow Navigation:**
    All kiosk screens, scrollable containers, and card grids must be centered both horizontally and vertically. Universal back buttons must reside in-flow within `topNavWrapper` without overlapping interactive elements.
-6. **Explicit User Permission Required for Terminal Commands:**
-   Automated agents must propose terminal commands and receive explicit user confirmation before executing any terminal operations, builds, or migrations.
+6. **Terminal Commands & Token-Saving Scans:**
+   Automated agents may execute token-saving search, scanning, and inspection commands autonomously to conserve context tokens. For executing operational terminal commands (package managers, linters, builds, migrations, process management), the agent must always state the exact command and receive explicit user permission first.
 7. **Continuous Documentation Updates:**
    Whenever a module, feature folder, component, or constants file is refactored, restructured, or expanded, the corresponding `.md` developer guide must be updated simultaneously so developers always have an accurate, unambiguous reference on where to make changes without guessing.

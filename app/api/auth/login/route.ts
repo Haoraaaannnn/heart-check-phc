@@ -72,9 +72,27 @@ export async function POST(request: Request) {
             return cookieStore.getAll()
           },
           setAll(cookiesToSet) {
-            cookiesToSet.forEach(({ name, value, options }) =>
-              cookieStore.set(name, value, options)
-            )
+            cookiesToSet.forEach(({ name, value, options }) => {
+              if (!value || options?.maxAge === 0) {
+                cookieStore.set(name, '', {
+                  path: '/',
+                  maxAge: 0,
+                  expires: new Date(0),
+                  sameSite: 'lax',
+                  secure: process.env.NODE_ENV === 'production',
+                })
+              } else {
+                const sessionOptions = { ...options }
+                delete sessionOptions.maxAge
+                delete sessionOptions.expires
+                cookieStore.set(name, value, {
+                  ...sessionOptions,
+                  path: '/',
+                  sameSite: 'lax',
+                  secure: process.env.NODE_ENV === 'production',
+                })
+              }
+            })
           },
         },
       }
@@ -118,10 +136,14 @@ export async function POST(request: Request) {
       updated_at: new Date().toISOString(),
     }, { onConflict: 'email' })
 
-    return NextResponse.json({
+    const response = NextResponse.json({
       session: signInData.session,
       user: signInData.user,
     })
+    response.headers.set('Cache-Control', 'no-store, no-cache, must-revalidate, proxy-revalidate')
+    response.headers.set('Pragma', 'no-cache')
+    response.headers.set('Expires', '0')
+    return response
   } catch (error: unknown) {
     const message = error instanceof Error ? error.message : 'Unknown login error';
     console.error('[LOGIN SERVER ERROR]:', message);

@@ -43,13 +43,17 @@ export interface UseNurseActionsReturn {
  * @param setWithDoctorPatients - React dispatcher for active consultation state.
  * @param setCarryoutPatients - React dispatcher for carryout state.
  * @param fetchFinished - Callback to re-synchronize the finished patient ledger.
+ * @param pinInFlightMutation - Optional function to pin target stage in local state during network flight.
+ * @param unpinMutation - Optional function to release in-flight pin upon failure.
  * @returns Action handlers and error indicators.
  */
 export function useNurseActions(
   setAssignedPatients: React.Dispatch<React.SetStateAction<Patient[]>>,
   setWithDoctorPatients: React.Dispatch<React.SetStateAction<Patient[]>>,
   setCarryoutPatients: React.Dispatch<React.SetStateAction<Patient[]>>,
-  fetchFinished: () => Promise<void>
+  fetchFinished: () => Promise<void>,
+  pinInFlightMutation?: (patientId: number, targetStage: ClinicalStage) => void,
+  unpinMutation?: (patientId: number) => void
 ): UseNurseActionsReturn {
   const [actionError, setActionError] = useState<string | null>(null);
 
@@ -130,6 +134,9 @@ export function useNurseActions(
     async (patient: Patient): Promise<boolean> => {
       const now = new Date().toISOString();
 
+      // Pin mutation locally so background polling never rolls back this patient
+      pinInFlightMutation?.(patient.id, 'With Doctor');
+
       // Optimistic state update
       setAssignedPatients((prev) => prev.filter((item) => item.id !== patient.id));
       setWithDoctorPatients((prev) => [
@@ -144,6 +151,7 @@ export function useNurseActions(
 
       // Rollback on failure
       if (!success) {
+        unpinMutation?.(patient.id);
         setWithDoctorPatients((prev) => prev.filter((item) => item.id !== patient.id));
         setAssignedPatients((prev) => [...prev, patient]);
         return false;
@@ -151,7 +159,7 @@ export function useNurseActions(
 
       return true;
     },
-    [setAssignedPatients, setWithDoctorPatients]
+    [setAssignedPatients, setWithDoctorPatients, pinInFlightMutation, unpinMutation]
   );
 
   /**
@@ -159,6 +167,8 @@ export function useNurseActions(
    */
   const handleMoveBackFromDoctor = useCallback(
     async (patient: Patient): Promise<boolean> => {
+      pinInFlightMutation?.(patient.id, 'Assigned');
+
       // Optimistic state update
       setWithDoctorPatients((prev) => prev.filter((item) => item.id !== patient.id));
       setAssignedPatients((prev) => [
@@ -173,6 +183,7 @@ export function useNurseActions(
 
       // Rollback on failure
       if (!success) {
+        unpinMutation?.(patient.id);
         setAssignedPatients((prev) => prev.filter((item) => item.id !== patient.id));
         setWithDoctorPatients((prev) => [...prev, patient]);
         return false;
@@ -180,7 +191,7 @@ export function useNurseActions(
 
       return true;
     },
-    [setAssignedPatients, setWithDoctorPatients]
+    [setAssignedPatients, setWithDoctorPatients, pinInFlightMutation, unpinMutation]
   );
 
   /**
@@ -189,6 +200,8 @@ export function useNurseActions(
   const handleMoveToCarryout = useCallback(
     async (patient: Patient): Promise<boolean> => {
       const now = new Date().toISOString();
+
+      pinInFlightMutation?.(patient.id, 'Carryout');
 
       // Optimistic state update
       setWithDoctorPatients((prev) => prev.filter((item) => item.id !== patient.id));
@@ -212,6 +225,7 @@ export function useNurseActions(
 
       // Rollback on failure
       if (!success) {
+        unpinMutation?.(patient.id);
         setCarryoutPatients((prev) => prev.filter((item) => item.id !== patient.id));
         setWithDoctorPatients((prev) => [...prev, patient]);
         return false;
@@ -219,7 +233,7 @@ export function useNurseActions(
 
       return true;
     },
-    [setWithDoctorPatients, setCarryoutPatients]
+    [setWithDoctorPatients, setCarryoutPatients, pinInFlightMutation, unpinMutation]
   );
 
   /**
@@ -227,6 +241,8 @@ export function useNurseActions(
    */
   const handleMoveBackFromCarryout = useCallback(
     async (patient: Patient): Promise<boolean> => {
+      pinInFlightMutation?.(patient.id, 'With Doctor');
+
       // Optimistic state update
       setCarryoutPatients((prev) => prev.filter((item) => item.id !== patient.id));
       setWithDoctorPatients((prev) => [
@@ -249,6 +265,7 @@ export function useNurseActions(
 
       // Rollback on failure
       if (!success) {
+        unpinMutation?.(patient.id);
         setWithDoctorPatients((prev) => prev.filter((item) => item.id !== patient.id));
         setCarryoutPatients((prev) => [...prev, patient]);
         return false;
@@ -256,7 +273,7 @@ export function useNurseActions(
 
       return true;
     },
-    [setCarryoutPatients, setWithDoctorPatients]
+    [setCarryoutPatients, setWithDoctorPatients, pinInFlightMutation, unpinMutation]
   );
 
   /**
@@ -265,6 +282,8 @@ export function useNurseActions(
   const handleFinish = useCallback(
     async (patient: Patient): Promise<boolean> => {
       const now = new Date().toISOString();
+
+      pinInFlightMutation?.(patient.id, 'Done');
 
       // Optimistic state update
       setCarryoutPatients((prev) => prev.filter((item) => item.id !== patient.id));
@@ -276,6 +295,7 @@ export function useNurseActions(
 
       // Rollback on failure
       if (!success) {
+        unpinMutation?.(patient.id);
         setCarryoutPatients((prev) => [...prev, patient]);
         return false;
       }
@@ -283,7 +303,7 @@ export function useNurseActions(
       await fetchFinished();
       return true;
     },
-    [setCarryoutPatients, fetchFinished]
+    [setCarryoutPatients, fetchFinished, pinInFlightMutation, unpinMutation]
   );
 
   /**

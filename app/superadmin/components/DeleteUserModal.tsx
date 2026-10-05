@@ -46,35 +46,35 @@ export const DeleteUserModal: React.FC<DeleteUserModalProps> = ({
 
   return (
     <div className={S.backdrop} role="dialog" aria-modal="true">
-      <div className="w-full max-w-md bg-white dark:bg-slate-900 border border-slate-200 dark:border-slate-800 rounded-2xl shadow-xl overflow-hidden p-6 space-y-4">
+      <div className={S.confirmPanel}>
         {/* Warning Icon & Header */}
         <div className="flex items-center gap-3">
-          <div className="w-10 h-10 rounded-xl bg-red-100 dark:bg-red-950 text-red-600 dark:text-red-400 flex items-center justify-center text-xl shrink-0">
+          <div className="w-10 h-10 rounded-xl bg-red-100 dark:bg-red-950/60 text-red-600 dark:text-red-400 flex items-center justify-center text-xl shrink-0">
             <i className="bx bx-error text-2xl" aria-hidden="true" />
           </div>
           <div>
-            <h3 className="text-base font-bold text-slate-900 dark:text-white">
+            <h3 className="text-base font-bold text-slate-900 dark:text-[#f5f5f5]">
               {T.title}
             </h3>
-            <p className="text-xs text-slate-500 dark:text-slate-400">
+            <p className="text-xs text-slate-500 dark:text-[#a3a3a3]">
               {T.warning}
             </p>
           </div>
         </div>
 
         {error && (
-          <div className="p-3 rounded-lg bg-red-50 dark:bg-red-950 border border-red-200 dark:border-red-900 text-red-700 dark:text-red-300 text-xs">
+          <div className="p-3 rounded-lg bg-red-50 dark:bg-red-950/60 border border-red-200 dark:border-red-900 text-red-700 dark:text-red-300 text-xs">
             {error}
           </div>
         )}
 
         {/* User Details Callout */}
-        <div className="p-4 rounded-xl bg-slate-50 dark:bg-slate-800/60 border border-slate-200 dark:border-slate-800 space-y-1">
-          <div className="text-xs text-slate-500 dark:text-slate-400">Target Account:</div>
-          <div className="text-sm font-bold text-slate-900 dark:text-white">{user.email}</div>
-          <div className="text-xs text-slate-500 dark:text-slate-400">
-            Username: <span className="font-medium text-slate-700 dark:text-slate-300">{user.username}</span> · Role:{' '}
-            <span className="font-semibold uppercase text-rose-600 dark:text-rose-400">{user.role}</span>
+        <div className={S.callout}>
+          <div className="text-xs text-slate-500 dark:text-[#a3a3a3]">Target Account:</div>
+          <div className="text-sm font-bold text-slate-900 dark:text-[#f5f5f5]">{user.email}</div>
+          <div className="text-xs text-slate-500 dark:text-[#a3a3a3]">
+            Username: <span className="font-medium text-slate-700 dark:text-[#f5f5f5]">{user.username}</span> · Role:{' '}
+            <span className="font-semibold uppercase text-[#a8071a] dark:text-[#f87171]">{user.role}</span>
           </div>
         </div>
 

@@ -16,7 +16,7 @@
 
 'use client';
 
-import { useEffect, useState } from 'react';
+import { useEffect, useState, useRef } from 'react';
 import { ChannelStatus } from '@/hooks/useConnectionStatus';
 import { connectionTexts } from '@/constants/connectionTexts';
 
@@ -79,34 +79,65 @@ export function ConnectionStatusBanner({
   showIcon = true,
 }: ConnectionStatusBannerProps) {
   const [showRecovery, setShowRecovery] = useState(false);
-  const [wasEverDegraded, setWasEverDegraded] = useState(false);
+  const [hadConfirmedOutage, setHadConfirmedOutage] = useState(false);
+  const isInitialConnectionEstablished = useRef(false);
+  const outageDebounceTimer = useRef<ReturnType<typeof setTimeout> | null>(null);
 
+  // 1. Mark initial connection as established once isFullyConnected is true.
+  // Initial page load or startup handshake must NEVER trigger a recovery banner.
   useEffect(() => {
-    // Only flag as degraded if network is offline, channel has an explicit failure,
-    // or there are pending mutations. The normal initial CONNECTING handshake
-    // is expected and must not trigger false-positive recovery banners.
-    const isDegraded =
+    if (isFullyConnected && !isInitialConnectionEstablished.current) {
+      isInitialConnectionEstablished.current = true;
+    }
+  }, [isFullyConnected]);
+
+  // 2. Only flag as a genuine outage if connection drops AFTER initial connection was already established.
+  // Only actual network offline or sustained channel errors count as genuine outages.
+  // 'CLOSED' during channel cleanup, 'CONNECTING' during startup, or pending mutations do NOT count.
+  useEffect(() => {
+    if (!isInitialConnectionEstablished.current) return;
+
+    const isGenuineDisconnect =
       !isOnline ||
       channelStatus === 'TIMED_OUT' ||
-      channelStatus === 'CHANNEL_ERROR' ||
-      channelStatus === 'CLOSED' ||
-      pendingCount > 0;
+      channelStatus === 'CHANNEL_ERROR';
 
-    if (isDegraded) {
-      setWasEverDegraded(true);
+    if (isGenuineDisconnect) {
+      if (!outageDebounceTimer.current && !hadConfirmedOutage) {
+        outageDebounceTimer.current = setTimeout(() => {
+          setHadConfirmedOutage(true);
+          outageDebounceTimer.current = null;
+        }, 1500);
+      }
+    } else {
+      if (outageDebounceTimer.current) {
+        clearTimeout(outageDebounceTimer.current);
+        outageDebounceTimer.current = null;
+      }
     }
-  }, [isOnline, channelStatus, pendingCount]);
 
+    return () => {
+      if (outageDebounceTimer.current) {
+        clearTimeout(outageDebounceTimer.current);
+        outageDebounceTimer.current = null;
+      }
+    };
+  }, [isOnline, channelStatus, hadConfirmedOutage]);
+
+  // 3. Only show reconnection banner if a confirmed outage actually occurred.
   useEffect(() => {
-    if (isFullyConnected && wasEverDegraded && pendingCount === 0 && !isSyncingQueue) {
-      setShowRecovery(true);
+    if (isFullyConnected && hadConfirmedOutage && !isSyncingQueue) {
+      const showTimer = setTimeout(() => setShowRecovery(true), 0);
       const timer = setTimeout(() => {
         setShowRecovery(false);
-        setWasEverDegraded(false);
-      }, 3000);
-      return () => clearTimeout(timer);
+        setHadConfirmedOutage(false);
+      }, 2500);
+      return () => {
+        clearTimeout(showTimer);
+        clearTimeout(timer);
+      };
     }
-  }, [isFullyConnected, wasEverDegraded, pendingCount, isSyncingQueue]);
+  }, [isFullyConnected, hadConfirmedOutage, isSyncingQueue]);
 
   /**
    * Determine the appropriate label, styling, and icon for the current connection state.

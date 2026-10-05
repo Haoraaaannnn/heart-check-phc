@@ -48,16 +48,16 @@ export const UserModal: React.FC<UserModalProps> = ({ modalState, onSuccess }) =
         {/* Header */}
         <div className={S.header}>
           <div>
-            <h2 className="text-lg font-bold text-slate-900 dark:text-white flex items-center gap-2">
+            <h2 className="text-lg font-bold text-slate-900 dark:text-[#f5f5f5] flex items-center gap-2">
               <i
                 className={`bx ${
                   modalState.isEditing ? 'bx-user-pin' : 'bx-user-plus'
-                } text-rose-600 dark:text-rose-400 text-xl`}
+                } text-[#a8071a] dark:text-[#f87171] text-xl`}
                 aria-hidden="true"
               />
               {modalState.isEditing ? T.editTitle : T.addTitle}
             </h2>
-            <p className="text-xs text-slate-500 dark:text-slate-400 mt-0.5">
+            <p className="text-xs text-slate-500 dark:text-[#a3a3a3] mt-0.5">
               {modalState.isEditing ? T.editSubtitle : T.addSubtitle}
             </p>
           </div>
@@ -142,19 +142,19 @@ export const UserModal: React.FC<UserModalProps> = ({ modalState, onSuccess }) =
                   onChange={(e) => modalState.setFormRole(e.target.value as SuperadminRole)}
                   className={S.select}
                 >
-                  <option value="registration" className="bg-white dark:bg-slate-800 text-slate-900 dark:text-white">
+                  <option value="registration" className={S.selectOption}>
                     {T.roleRegistration}
                   </option>
-                  <option value="nurse" className="bg-white dark:bg-slate-800 text-slate-900 dark:text-white">
+                  <option value="nurse" className={S.selectOption}>
                     {T.roleNurse}
                   </option>
-                  <option value="doctor" className="bg-white dark:bg-slate-800 text-slate-900 dark:text-white">
+                  <option value="doctor" className={S.selectOption}>
                     {T.roleDoctor}
                   </option>
-                  <option value="admin" className="bg-white dark:bg-slate-800 text-slate-900 dark:text-white">
+                  <option value="admin" className={S.selectOption}>
                     {T.roleAdmin}
                   </option>
-                  <option value="superadmin" className="bg-white dark:bg-slate-800 text-slate-900 dark:text-white">
+                  <option value="superadmin" className={S.selectOption}>
                     {T.roleSuperadmin}
                   </option>
                 </select>

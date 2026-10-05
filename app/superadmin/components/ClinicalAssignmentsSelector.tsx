@@ -53,10 +53,10 @@ export const ClinicalAssignmentsSelector: React.FC<ClinicalAssignmentsSelectorPr
     <div className={S.assignmentSection}>
       <div className={S.sectionHeader}>
         <div>
-          <label className="block text-sm font-bold text-slate-900 dark:text-white">
+          <label className="block text-sm font-bold text-slate-900 dark:text-[#f5f5f5]">
             {T.clinicalSectionTitle}
           </label>
-          <p className="text-xs text-slate-500 dark:text-slate-400 mt-0.5">
+          <p className="text-xs text-slate-500 dark:text-[#a3a3a3] mt-0.5">
             {T.clinicalSectionDesc}
           </p>
         </div>
@@ -68,7 +68,7 @@ export const ClinicalAssignmentsSelector: React.FC<ClinicalAssignmentsSelectorPr
       <div className={S.assignmentScrollBox}>
         {Object.entries(groupedCubicles).map(([category, categoryCubicles]) => (
           <div key={category} className="space-y-2">
-            <div className="rounded-md border border-slate-200 dark:border-slate-800 bg-slate-100 dark:bg-slate-900 px-3 py-1.5 text-xs font-bold uppercase tracking-wider text-slate-700 dark:text-slate-300">
+            <div className="rounded-md border border-slate-200 dark:border-[#2e2e2e] bg-slate-100 dark:bg-[#242424] px-3 py-1.5 text-xs font-bold uppercase tracking-wider text-slate-700 dark:text-[#f5f5f5]">
               {category}
             </div>
 
@@ -83,8 +83,8 @@ export const ClinicalAssignmentsSelector: React.FC<ClinicalAssignmentsSelectorPr
                     onClick={() => onToggleCubicle(cubicle.id)}
                     className={`rounded-xl border p-3 text-left transition cursor-pointer ${
                       isSelected
-                        ? 'border-rose-500 bg-rose-50 dark:bg-rose-950/40 text-rose-900 dark:text-rose-200 shadow-xs'
-                        : 'border-slate-200 dark:border-slate-800 bg-white dark:bg-slate-900 text-slate-700 dark:text-slate-300 hover:border-rose-300 dark:hover:border-rose-800 hover:bg-rose-50/50 dark:hover:bg-rose-950/30'
+                        ? 'border-[#a8071a] bg-[#a8071a]/10 dark:bg-[#a8071a]/20 text-[#a8071a] dark:text-[#f87171] shadow-xs'
+                        : 'border-slate-200 dark:border-[#2e2e2e] bg-white dark:bg-[#1f1f1f] text-slate-700 dark:text-[#a3a3a3] hover:border-[#a8071a] hover:bg-[#a8071a]/10 dark:hover:bg-[#a8071a]/20'
                     }`}
                   >
                     <div className="flex items-start justify-between gap-2">
@@ -94,7 +94,7 @@ export const ClinicalAssignmentsSelector: React.FC<ClinicalAssignmentsSelectorPr
                           className={`mt-0.5 text-xs ${
                             isSelected
                               ? 'text-rose-700 dark:text-rose-300 font-medium'
-                              : 'text-slate-500 dark:text-slate-400'
+                              : 'text-slate-500 dark:text-[#a3a3a3]'
                           }`}
                         >
                           {T.clinicalRoomPrefix} {cubicle.room}
@@ -106,7 +106,7 @@ export const ClinicalAssignmentsSelector: React.FC<ClinicalAssignmentsSelectorPr
                         className={`flex h-5 w-5 shrink-0 items-center justify-center rounded-full border text-xs font-bold transition ${
                           isSelected
                             ? 'border-rose-600 bg-rose-600 text-white'
-                            : 'border-slate-300 dark:border-slate-700 text-transparent'
+                            : 'border-slate-300 dark:border-[#2e2e2e] text-transparent'
                         }`}
                       >
                         {isSelected && <i className="bx bx-check text-xs" aria-hidden="true" />}

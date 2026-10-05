@@ -162,63 +162,49 @@ For automated periodic seeding, refer to [`docs/SETUP_AND_SEEDING.md`](file:///h
 
 ## Project Documentation Directory
 
-Comprehensive documentation is structured into functional domains. For the complete master portal and reading index, see [`docs/README.md`](file:///home/jensen/Github-Repositories/heart-check-phc/docs/README.md).
+Comprehensive documentation is structured into functional domains. For the complete master portal and reading index, see [`docs/README.md`](file:///home/jensen/Github-Repositories/Heart_Check_PHC/docs/README.md).
 
-### 1. System Architecture & Platform Design
+### 1. Quality Assurance, Security Audits & Checklists (`docs/checklists/`)
 | Document | Purpose |
 |---|---|
-| [`docs/ARCHITECTURE.md`](file:///home/jensen/Github-Repositories/heart-check-phc/docs/ARCHITECTURE.md) | High-level system architecture, queueing model, data flows, and tech stack |
-| [`docs/SYSTEM_DESIGN.md`](file:///home/jensen/Github-Repositories/heart-check-phc/docs/SYSTEM_DESIGN.md) | Comprehensive system design, service contracts, and state machine transitions |
-| [`docs/FILE_ARCHITECTURE.md`](file:///home/jensen/Github-Repositories/heart-check-phc/docs/FILE_ARCHITECTURE.md) | Complete directory tree mapping every file in the repository |
-| [`docs/COMPONENTS_GUIDE.md`](file:///home/jensen/Github-Repositories/heart-check-phc/docs/COMPONENTS_GUIDE.md) | Design system catalog & reusable UI components reference (`BackButton`, `ScrollArea`, etc.) |
+| [`docs/checklists/IMPROVEMENTS_AND_FEATURE_CHECKLIST.md`](file:///home/jensen/Github-Repositories/Heart_Check_PHC/docs/checklists/IMPROVEMENTS_AND_FEATURE_CHECKLIST.md) | Master improvement roadmap, completed refactoring milestones, and feature backlog |
+| [`docs/checklists/SECURITY_CHECKLIST.md`](file:///home/jensen/Github-Repositories/Heart_Check_PHC/docs/checklists/SECURITY_CHECKLIST.md) | Comprehensive security controls, service-role isolation, rate limits, session security |
+| [`docs/checklists/UAT_USE_CASE_CHECKLIST.md`](file:///home/jensen/Github-Repositories/Heart_Check_PHC/docs/checklists/UAT_USE_CASE_CHECKLIST.md) | User Acceptance Testing (UAT) verification matrix for all clinical and kiosk workflows |
+| [`docs/checklists/API_LEAKS_AND_INJECTION_RISKS_AUDIT.md`](file:///home/jensen/Github-Repositories/Heart_Check_PHC/docs/checklists/API_LEAKS_AND_INJECTION_RISKS_AUDIT.md) | Security audit covering route handlers, SQL injection defenses, and credential isolation |
+| [`docs/checklists/CHANGES_NEEDED.md`](file:///home/jensen/Github-Repositories/Heart_Check_PHC/docs/checklists/CHANGES_NEEDED.md) | Actionable checklist for database migrations, role helpers, and security patches |
+| [`docs/checklists/OPEN_ISSUES.md`](file:///home/jensen/Github-Repositories/Heart_Check_PHC/docs/checklists/OPEN_ISSUES.md) | Issue tracker documenting ongoing tasks and recently resolved bug fixes |
 
-### 2. Network Connectivity & Real-Time Resilience
+### 2. Technical Specifications & Architecture (`docs/specifications/`)
 | Document | Purpose |
 |---|---|
-| [`docs/CONNECTIVITY_RESILIENCE.md`](file:///home/jensen/Github-Repositories/heart-check-phc/docs/CONNECTIVITY_RESILIENCE.md) | Weak-signal resilience strategy: polling fallbacks, anti-teleportation guards, and LAN-first on-prem migration |
+| [`docs/specifications/ARCHITECTURE.md`](file:///home/jensen/Github-Repositories/Heart_Check_PHC/docs/specifications/ARCHITECTURE.md) | High-level system architecture, queueing model, data flows, and tech stack |
+| [`docs/specifications/SYSTEM_DESIGN.md`](file:///home/jensen/Github-Repositories/Heart_Check_PHC/docs/specifications/SYSTEM_DESIGN.md) | Comprehensive system design, service contracts, and state machine transitions |
+| [`docs/specifications/FILE_ARCHITECTURE.md`](file:///home/jensen/Github-Repositories/Heart_Check_PHC/docs/specifications/FILE_ARCHITECTURE.md) | Complete directory tree mapping every file in the repository |
+| [`docs/specifications/COMPONENTS_GUIDE.md`](file:///home/jensen/Github-Repositories/Heart_Check_PHC/docs/specifications/COMPONENTS_GUIDE.md) | Design system catalog & reusable UI components reference (`BackButton`, `ScrollArea`, etc.) |
+| [`docs/specifications/CONNECTIVITY_RESILIENCE.md`](file:///home/jensen/Github-Repositories/Heart_Check_PHC/docs/specifications/CONNECTIVITY_RESILIENCE.md) | Weak-signal resilience strategy: polling fallbacks, anti-teleportation guards, and LAN-first on-prem migration |
+| [`docs/specifications/DATABASE_SCHEMA.md`](file:///home/jensen/Github-Repositories/Heart_Check_PHC/docs/specifications/DATABASE_SCHEMA.md) | Table structures, column dictionaries, primary keys, and import pipeline details |
+| [`docs/specifications/SCHEMA_REFERENCE.md`](file:///home/jensen/Github-Repositories/Heart_Check_PHC/docs/specifications/SCHEMA_REFERENCE.md) | Raw schema dump, data types, and live PostgreSQL RLS policy table |
+| [`docs/specifications/SECURITY.md`](file:///home/jensen/Github-Repositories/Heart_Check_PHC/docs/specifications/SECURITY.md) | Two-layer access control: Supabase Row-Level Security (RLS) + Next.js Middleware (`proxy.ts`) |
+| [`docs/specifications/SETUP_AND_SEEDING.md`](file:///home/jensen/Github-Repositories/Heart_Check_PHC/docs/specifications/SETUP_AND_SEEDING.md) | Installation, local configuration, and automated queue data seeding guide |
+| [`docs/specifications/PRD.md`](file:///home/jensen/Github-Repositories/Heart_Check_PHC/docs/specifications/PRD.md) | Product Requirements Document: problem statement, scope, roles, and thesis criteria |
+| [`docs/specifications/NURSE_DASHBOARD_SYSTEM_DESIGN.md`](file:///home/jensen/Github-Repositories/Heart_Check_PHC/docs/specifications/NURSE_DASHBOARD_SYSTEM_DESIGN.md) | Consultation cubicle intake, Kanban boards, and offline IndexedDB outbox queue |
+| [`docs/specifications/TRANSFER_DASHBOARD.md`](file:///home/jensen/Github-Repositories/Heart_Check_PHC/docs/specifications/TRANSFER_DASHBOARD.md) | Comprehensive architecture & clinical workflow guide for the Transfer Dashboard |
+| [`docs/specifications/TRANSFER_MANUAL_TWEAKING_GUIDE.md`](file:///home/jensen/Github-Repositories/Heart_Check_PHC/docs/specifications/TRANSFER_MANUAL_TWEAKING_GUIDE.md) | Operational tuning handbook for queue limits, rotation rules, and doctor assignments |
 
-### 3. Clinical Workstations & Department Operations
-| Document | Purpose |
-|---|---|
-| [`docs/TRANSFER_DASHBOARD.md`](file:///home/jensen/Github-Repositories/heart-check-phc/docs/TRANSFER_DASHBOARD.md) | Comprehensive architecture & clinical workflow guide for the Transfer Dashboard |
-| [`docs/TRANSFER_MANUAL_TWEAKING_GUIDE.md`](file:///home/jensen/Github-Repositories/heart-check-phc/docs/TRANSFER_MANUAL_TWEAKING_GUIDE.md) | Operational tuning handbook for queue limits, rotation rules, and doctor assignments |
-| [`docs/NURSE_DASHBOARD_SYSTEM_DESIGN.md`](file:///home/jensen/Github-Repositories/heart-check-phc/docs/NURSE_DASHBOARD_SYSTEM_DESIGN.md) | Consultation cubicle intake, Kanban boards, and offline IndexedDB outbox queue |
-
-### 4. Database Models, Schema & Data Pipeline
-| Document | Purpose |
-|---|---|
-| [`docs/DATABASE_SCHEMA.md`](file:///home/jensen/Github-Repositories/heart-check-phc/docs/DATABASE_SCHEMA.md) | Table structures, column dictionaries, primary keys, and import pipeline details |
-| [`docs/SCHEMA_REFERENCE.md`](file:///home/jensen/Github-Repositories/heart-check-phc/docs/SCHEMA_REFERENCE.md) | Raw schema dump, data types, and live PostgreSQL RLS policy table |
-| [`docs/SETUP_AND_SEEDING.md`](file:///home/jensen/Github-Repositories/heart-check-phc/docs/SETUP_AND_SEEDING.md) | Installation, local configuration, and automated queue data seeding guide |
-
-### 5. Security Architecture, Access Controls & Audits
-| Document | Purpose |
-|---|---|
-| [`docs/SECURITY.md`](file:///home/jensen/Github-Repositories/heart-check-phc/docs/SECURITY.md) | Two-layer access control: Supabase Row-Level Security (RLS) + Next.js Middleware (`proxy.ts`) |
-| [`docs/SECURITY_CHECKLIST.md`](file:///home/jensen/Github-Repositories/heart-check-phc/docs/SECURITY_CHECKLIST.md) | Comprehensive security controls, service-role isolation, rate limits, session security |
-| [`docs/API_LEAKS_AND_INJECTION_RISKS_AUDIT.md`](file:///home/jensen/Github-Repositories/heart-check-phc/docs/API_LEAKS_AND_INJECTION_RISKS_AUDIT.md) | Security audit covering route handlers, SQL injection defenses, and credential isolation |
-
-### 6. Product Scope, Quality Assurance & Issue Tracking
-| Document | Purpose |
-|---|---|
-| [`docs/PRD.md`](file:///home/jensen/Github-Repositories/heart-check-phc/docs/PRD.md) | Product Requirements Document: problem statement, scope, roles, and thesis criteria |
-| [`docs/UAT_USE_CASE_CHECKLIST.md`](file:///home/jensen/Github-Repositories/heart-check-phc/docs/UAT_USE_CASE_CHECKLIST.md) | User Acceptance Testing (UAT) verification matrix for all clinical and kiosk workflows |
-| [`docs/IMPROVEMENTS_AND_FEATURE_CHECKLIST.md`](file:///home/jensen/Github-Repositories/heart-check-phc/docs/IMPROVEMENTS_AND_FEATURE_CHECKLIST.md) | Master improvement roadmap, completed refactoring milestones, and feature backlog |
-| [`docs/CHANGES_NEEDED.md`](file:///home/jensen/Github-Repositories/heart-check-phc/docs/CHANGES_NEEDED.md) | Actionable checklist for database migrations, role helpers, and security patches |
-| [`docs/OPEN_ISSUES.md`](file:///home/jensen/Github-Repositories/heart-check-phc/docs/OPEN_ISSUES.md) | Issue tracker documenting ongoing tasks and recently resolved bug fixes |
-
-### 7. Subsystem Developer Guides ("Where to Edit" Maps)
+### 3. Subsystem Developer Guides ("Where to Edit" Maps)
 Exhaustive developer lookup tables located within each application module:
-- [`app/kiosk/README.md`](file:///home/jensen/Github-Repositories/heart-check-phc/app/kiosk/README.md) — Kiosk touchscreen flow and thermal ticket printing
-- [`app/nurse/README.md`](file:///home/jensen/Github-Repositories/heart-check-phc/app/nurse/README.md) — Nurse station Kanban board and offline outbox
-- [`app/transfer/README.md`](file:///home/jensen/Github-Repositories/heart-check-phc/app/transfer/README.md) — Transfer station drag-and-drop and counter routing
-- [`app/monitor/README.md`](file:///home/jensen/Github-Repositories/heart-check-phc/app/monitor/README.md) — Public display monitor layouts and audio chime
-- [`app/dashboard/README.md`](file:///home/jensen/Github-Repositories/heart-check-phc/app/dashboard/README.md) — Admin overview, enterprise navigation, and KPI charts
-- [`app/dashboard/pages/patients/README.md`](file:///home/jensen/Github-Repositories/heart-check-phc/app/dashboard/pages/patients/README.md) — Patient queue auditing, search, and department queues
-- [`app/dashboard/pages/analytics/README.md`](file:///home/jensen/Github-Repositories/heart-check-phc/app/dashboard/pages/analytics/README.md) — Predictive analytics, ARIMA forecasting, and Excel export
-- [`app/dashboard/pages/cubicles/README.md`](file:///home/jensen/Github-Repositories/heart-check-phc/app/dashboard/pages/cubicles/README.md) — Real-time cubicle monitoring and counter tracking
-- [`app/superadmin/README.md`](file:///home/jensen/Github-Repositories/heart-check-phc/app/superadmin/README.md) — User administration, access control, and cubicle management
-- [`app/select-screen/README.md`](file:///home/jensen/Github-Repositories/heart-check-phc/app/select-screen/README.md) — Workstation gateway and screen selector
+- [`app/landing/README.md`](file:///home/jensen/Github-Repositories/Heart_Check_PHC/app/landing/README.md) — Public landing page layout and capabilities catalog
+- [`app/login/README.md`](file:///home/jensen/Github-Repositories/Heart_Check_PHC/app/login/README.md) — Staff login module and security lockout handling
+- [`app/select-screen/README.md`](file:///home/jensen/Github-Repositories/Heart_Check_PHC/app/select-screen/README.md) — Workstation gateway and screen selector
+- [`app/kiosk/README.md`](file:///home/jensen/Github-Repositories/Heart_Check_PHC/app/kiosk/README.md) — Kiosk touchscreen flow and thermal ticket printing
+- [`app/nurse/README.md`](file:///home/jensen/Github-Repositories/Heart_Check_PHC/app/nurse/README.md) — Nurse station Kanban board and offline outbox
+- [`app/transfer/README.md`](file:///home/jensen/Github-Repositories/Heart_Check_PHC/app/transfer/README.md) — Transfer station drag-and-drop and counter routing
+- [`app/monitor/README.md`](file:///home/jensen/Github-Repositories/Heart_Check_PHC/app/monitor/README.md) — Public display monitor layouts and audio chime
+- [`app/dashboard/README.md`](file:///home/jensen/Github-Repositories/Heart_Check_PHC/app/dashboard/README.md) — Admin overview, enterprise navigation, and KPI charts
+- [`app/dashboard/pages/patients/README.md`](file:///home/jensen/Github-Repositories/Heart_Check_PHC/app/dashboard/pages/patients/README.md) — Patient queue auditing, search, and department queues
+- [`app/dashboard/pages/analytics/README.md`](file:///home/jensen/Github-Repositories/Heart_Check_PHC/app/dashboard/pages/analytics/README.md) — Predictive analytics, ARIMA forecasting, and Excel export
+- [`app/dashboard/pages/cubicles/README.md`](file:///home/jensen/Github-Repositories/Heart_Check_PHC/app/dashboard/pages/cubicles/README.md) — Real-time cubicle monitoring and counter tracking
+- [`app/superadmin/README.md`](file:///home/jensen/Github-Repositories/Heart_Check_PHC/app/superadmin/README.md) — User administration, access control, and cubicle management
 
 ---
 

@@ -24,12 +24,12 @@ export const CHART_PALETTES: Record<'light' | 'dark', ChartPalette> = {
     tooltipText: '#111827',
   },
   dark: {
-    grid: '#374151',
-    axis: '#9ca3af',
+    grid: '#2e2e2e',
+    axis: '#737373',
     bar: '#f87171',
     cursor: 'rgba(255,255,255,0.06)',
-    tooltipBg: '#1f2937',
-    tooltipText: '#e5e7eb',
+    tooltipBg: '#1a1a1a',
+    tooltipText: '#f5f5f5',
   },
 };
 

@@ -13,6 +13,7 @@ import React, { useState, useEffect } from 'react';
 import { useRouter, usePathname, useSearchParams } from 'next/navigation';
 import { useTheme } from 'next-themes';
 import { supabase } from '@/lib/supabase';
+import { handleSignOut as executeSignOut } from '@/lib/supabase/signOut';
 import { formatManilaDate, formatManilaTime } from '@/utils/formatDateTime';
 import { SUPERADMIN_TEXTS } from '../../constants/superadminTexts';
 import { SUPERADMIN_NAV_STYLES } from '../../constants/superadminNavStyles';
@@ -62,8 +63,7 @@ export function SuperAdminHeader({ onOpenMobileDrawer }: SuperAdminHeaderProps) 
   }, []);
 
   const handleSignOut = async () => {
-    await supabase.auth.signOut();
-    router.push('/login');
+    await executeSignOut();
   };
 
   const isDark = mounted && resolvedTheme === 'dark';
@@ -125,7 +125,7 @@ export function SuperAdminHeader({ onOpenMobileDrawer }: SuperAdminHeaderProps) 
         </button>
 
         <div className={S.breadcrumbs}>
-          <span className="font-semibold text-slate-400 dark:text-slate-500">
+          <span className="font-semibold text-slate-400 dark:text-[#737373]">
             SuperAdmin
           </span>
           <span className={S.breadcrumbSeparator}>/</span>
@@ -160,7 +160,7 @@ export function SuperAdminHeader({ onOpenMobileDrawer }: SuperAdminHeaderProps) 
               className={`bx ${
                 isDark
                   ? 'bx-sun text-amber-400'
-                  : 'bx-moon text-slate-600 dark:text-slate-300'
+                  : 'bx-moon text-slate-600 dark:text-[#a3a3a3]'
               }`}
               aria-hidden="true"
             />

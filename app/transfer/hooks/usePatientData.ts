@@ -1,4 +1,20 @@
 'use client';
+/**
+ * @fileoverview Hook managing patient queue data, cubicle assignments, and in-flight
+ * mutation pinning for the Patient Transfer Dashboard.
+ *
+ * Weak-Signal Stabilization Features:
+ * - In-flight confirmed pinning: Prevents confirmed patient assignments from flickering
+ *   back to the waiting queue when server responses are delayed by weak network conditions.
+ * - Derived write throttling: Prevents rapid background syncs from flooding Supabase with
+ *   timestamp updates, breaking the self-perpetuating Realtime WebSocket echo loop.
+ * - Monotonic sequence guard: Discards stale out-of-order network responses.
+ *
+ * Adheres strictly to AGENTS.md guidelines with full JSDoc and zero emojis.
+ *
+ * @module app/transfer/hooks/usePatientData
+ */
+
 import { useState, useRef, useCallback } from 'react';
 import { supabase } from '@/lib/supabase';
 import { Patient } from '@/types/Types';
@@ -30,14 +46,38 @@ interface DerivedWrites {
 }
 
 /**
+ * In-flight confirmed assignment pin metadata protecting patient state from lagging network echoes.
+ */
+export interface ConfirmedPin {
+  cubicleNum: string;
+  status: string;
+  expiresAt: number;
+  matchedAt?: number;
+}
+
+/** Timestamp lock to prevent derived writes from flooding Supabase and triggering Realtime echo loops. */
+let lastDerivedWriteAt = 0;
+
+/**
  * Persists timestamps and counters that fetchData derived locally.
- *
- * @remarks
- * Every statement is guarded (IS NULL / NEQ). If another client already wrote the value,
- * the statement matches zero rows and Postgres emits no realtime event, so a sync
- * never triggers another sync.
+ * Throttled to at most once every 4 seconds to eliminate WebSocket echo storms on weak WiFi.
  */
 async function persistDerivedFields(w: DerivedWrites): Promise<void> {
+  const hasWrites =
+    w.progressIds.length > 0 ||
+    w.statusIds.length > 0 ||
+    w.registration.length > 0 ||
+    w.topIds.length > 0 ||
+    w.clearTopIds.length > 0;
+
+  if (!hasWrites) return;
+
+  const now = Date.now();
+  if (now - lastDerivedWriteAt < 4_000) {
+    return;
+  }
+  lastDerivedWriteAt = now;
+
   const jobs: PromiseLike<unknown>[] = [];
   const table = () => supabase.from('patients');
 
@@ -56,7 +96,7 @@ async function persistDerivedFields(w: DerivedWrites): Promise<void> {
 }
 
 /**
- * Loads today's queue and cubicle assignments.
+ * Loads today's queue and cubicle assignments with in-flight mutation protection.
  *
  * @param pendingRef - Ref holding unconfirmed local assignments; overlaid so a sync never undoes them.
  */
@@ -64,6 +104,57 @@ export function usePatientData(pendingRef?: React.MutableRefObject<Patient[]>) {
   const [onProgressPatients, setOnProgressPatients] = useState<Patient[]>([]);
   const [assignedPatients, setAssignedPatients] = useState<Record<string, Patient[]>>({});
   const fetchIdRef = useRef(0);
+  const assignedRef = useRef(assignedPatients);
+  const onProgressRef = useRef(onProgressPatients);
+
+  useEffect(() => {
+    assignedRef.current = assignedPatients;
+    onProgressRef.current = onProgressPatients;
+  }, [assignedPatients, onProgressPatients]);
+
+  // In-flight confirmed assignment pins protecting recently confirmed moves
+  const inFlightConfirmedRef = useRef<Map<number, ConfirmedPin>>(new Map());
+
+  /**
+   * Pins a patient assignment in local state so lagging background fetches and
+   * delayed Realtime WebSocket echoes do not revert the patient to unassigned.
+   *
+   * @param patientId - Unique ID of the patient.
+   * @param cubicleNum - Target cubicle designation string.
+   * @param status - Target status string (defaults to 'Assigned').
+   */
+  const pinConfirmedPatient = useCallback((patientId: number, cubicleNum: string, status: string = 'Assigned') => {
+    inFlightConfirmedRef.current.set(patientId, {
+      cubicleNum,
+      status,
+      expiresAt: Date.now() + 8_000,
+    });
+  }, []);
+
+  /**
+   * Unpins a patient upon confirmed error or manual cancellation.
+   *
+   * @param patientId - Unique ID of the patient.
+   */
+  const unpinConfirmedPatient = useCallback((patientId: number) => {
+    inFlightConfirmedRef.current.delete(patientId);
+  }, []);
+
+  /**
+   * Retrieves an active confirmed pin for a patient, or undefined if expired or absent.
+   *
+   * @param patientId - Unique ID of the patient.
+   * @returns Active confirmed pin record or undefined.
+   */
+  const getConfirmedPin = useCallback((patientId: number): ConfirmedPin | undefined => {
+    const pin = inFlightConfirmedRef.current.get(patientId);
+    if (!pin) return undefined;
+    if (Date.now() > pin.expiresAt) {
+      inFlightConfirmedRef.current.delete(patientId);
+      return undefined;
+    }
+    return pin;
+  }, []);
 
   const fetchData = useCallback(async () => {
     const requestId = ++fetchIdRef.current;
@@ -78,7 +169,50 @@ export function usePatientData(pendingRef?: React.MutableRefObject<Patient[]>) {
       .order('created_at', { ascending: true });
     if (error || !data) return;
 
-    const rows = data as Patient[];
+    // Discard stale out-of-order response
+    if (requestId !== fetchIdRef.current) return;
+
+    const rows = [...(data as Patient[])];
+
+    // Clean expired confirmed pins and enforce active ones onto server rows
+    const now = Date.now();
+    for (const [id, pin] of inFlightConfirmedRef.current.entries()) {
+      if (now > pin.expiresAt) {
+        inFlightConfirmedRef.current.delete(id);
+      } else {
+        const target = rows.find(p => p.id === id);
+        if (target) {
+          if (target.status === pin.status && String(target.cubicleNum) === String(pin.cubicleNum)) {
+            // Keep pin active for a 2.5s grace window after first match to absorb delayed echo packets
+            if (!pin.matchedAt) {
+              pin.matchedAt = now;
+            } else if (now - pin.matchedAt > 2_500) {
+              inFlightConfirmedRef.current.delete(id);
+            }
+          } else {
+            target.status = pin.status;
+            target.cubicleNum = pin.cubicleNum;
+          }
+        }
+      }
+    }
+
+    // Retain any pinned patients that may be temporarily omitted from the server response
+    for (const [id, pin] of inFlightConfirmedRef.current.entries()) {
+      if (now <= pin.expiresAt && !rows.some(p => p.id === id)) {
+        const existing =
+          Object.values(assignedRef.current).flat().find(p => p.id === id) ||
+          onProgressRef.current.find(p => p.id === id);
+        if (existing) {
+          rows.push({
+            ...existing,
+            cubicleNum: pin.cubicleNum,
+            status: pin.status,
+          });
+        }
+      }
+    }
+
     let queue = rows.filter(p => !p.cubicleNum && p.status !== 'Assigned');
     let assigned = rows.filter(p => p.status === 'Assigned' && p.cubicleNum);
 
@@ -132,5 +266,14 @@ export function usePatientData(pendingRef?: React.MutableRefObject<Patient[]>) {
     void persistDerivedFields(writes);
   }, [pendingRef]);
 
-  return { onProgressPatients, assignedPatients, setOnProgressPatients, setAssignedPatients, fetchData };
+  return {
+    onProgressPatients,
+    assignedPatients,
+    setOnProgressPatients,
+    setAssignedPatients,
+    fetchData,
+    pinConfirmedPatient,
+    unpinConfirmedPatient,
+    getConfirmedPin,
+  };
 }

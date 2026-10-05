@@ -434,7 +434,7 @@ export function DoctorsPanel() {
               Are you sure you want to delete <span className="font-semibold">{showDeleteConfirm.full_name}</span>?
               <br />
               <span className="text-sm text-red-500">
-                They'll be unassigned from {cubicleCountByDoctor[showDeleteConfirm.id] || 0} cubicle
+                They&apos;ll be unassigned from {cubicleCountByDoctor[showDeleteConfirm.id] || 0} cubicle
                 {(cubicleCountByDoctor[showDeleteConfirm.id] || 0) === 1 ? '' : 's'}. This cannot be undone.
               </span>
             </p>

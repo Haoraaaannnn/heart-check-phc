@@ -100,14 +100,14 @@ export default function DailyDrillDownDetail({
         <div className={S.titleBlock}>
           <div className="flex items-center gap-2.5 flex-wrap">
             <h3 className={S.title}>
-              <i className="bx bx-calendar-check text-blue-600 dark:text-blue-400 text-2xl" />
+              <i className="bx bx-calendar-check text-[#a8071a] dark:text-[#f87171] text-2xl" />
               <span>{T.title}</span>
             </h3>
             <span className={S.dateBadge}>
               <i className="bx bx-target-lock text-sm" />
               <span>{date}</span>
             </span>
-            <span className="inline-flex items-center gap-1 rounded-full px-2.5 py-0.5 text-[11px] font-bold bg-blue-100 text-blue-800 dark:bg-blue-950/60 dark:text-blue-300 border border-blue-200 dark:border-blue-800">
+            <span className="inline-flex items-center gap-1 rounded-full px-2.5 py-0.5 text-[11px] font-bold bg-slate-100 text-slate-800 dark:bg-[#242424] dark:text-[#f5f5f5] border border-slate-200 dark:border-[#2e2e2e]">
               {T.activeBadge}
             </span>
           </div>
@@ -197,7 +197,7 @@ export default function DailyDrillDownDetail({
       {/* Operational Reasoning Banner if present */}
       {systemReason && (
         <div className="flex items-start gap-2.5 rounded-xl border border-line bg-surface-muted p-3.5 text-xs text-content-muted leading-relaxed">
-          <i className="bx bx-info-circle text-blue-600 dark:text-blue-400 text-base shrink-0 mt-0.5" />
+          <i className="bx bx-info-circle text-slate-600 dark:text-[#a3a3a3] text-base shrink-0 mt-0.5" />
           <span>{systemReason}</span>
         </div>
       )}

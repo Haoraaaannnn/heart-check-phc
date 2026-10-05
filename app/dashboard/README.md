@@ -21,11 +21,12 @@ The Admin Dashboard subsystem adheres strictly to the architectural standards de
    - **Role-Guarded Session Validation:** Automatic session check validating active user credentials on layout initialization with an animated verification spinner.
 
 2. **Solid Surfaces for Clinical Ergonomics:**
-   - Backgrounds use a solid neutral foundation (`bg-slate-50 dark:bg-slate-950`).
-   - Cards, tables, and modal dialogs utilize solid surface tokens (`bg-white dark:bg-slate-900`) with crisp solid borders (`border-slate-200 dark:border-slate-800`) and subtle elevation shadows (`shadow-xs` / `shadow-sm`).
-   - Official Philippine Heart Center red/rose accents (`text-rose-600`, `bg-rose-600`, `border-rose-500`) are applied throughout to reflect the hospital brand identity.
+   - Backgrounds use a solid neutral foundation (`bg-slate-50 dark:bg-[#0d0d0d]`).
+   - Cards, tables, and modal dialogs utilize solid surface tokens (`bg-white dark:bg-[#1a1a1a]`) with crisp solid borders (`border-slate-200 dark:border-[#2e2e2e]`) and subtle elevation shadows (`shadow-xs` / `shadow-sm`).
+   - Official Philippine Heart Center red/rose accents (`text-[#a8071a] dark:text-[#f87171]`, `bg-[#a8071a]`, `border-[#a8071a]`) are applied throughout to reflect the hospital brand identity.
+   - Centralized theme tokens (`constants/themeTokens.ts`) provide the single source of truth for neutral gray surfaces and sizes across all modules.
    - Blurry glassmorphism, translucent milky opacity, and glowing gradients are eliminated in favor of clean, solid surfaces suitable for hospital administration.
-   - Explicit dark styling is applied to native `<option>` tags inside form dropdowns to prevent browser unstyled contrast regressions.
+   - Explicit dark styling is applied to native `<option>` tags inside form dropdowns (`themeTokens.surface.selectOption`) to prevent browser unstyled contrast regressions.
 
 3. **Strict Separation of Concerns:**
    - **UI Component Files (`components/`):** Pure rendering and layout assembly. Components never declare hardcoded string copy or ad-hoc style objects.
@@ -56,9 +57,9 @@ The Admin Dashboard subsystem adheres strictly to the architectural standards de
 ## 2. "Where to Edit" Quick Reference Matrix
 
 | Goal / Intended Change | Where to Edit |
-| :--- | :--- |
-| **Change base dashboard background color or shell wrapper** | [DashboardBg.tsx](file:///home/jensen/Github-Repositories/heart-check-phc/components/backgrounds/DashboardBg.tsx) |
-| **Change global semantic surface, muted, line, or shadow tokens** | [globals.css](file:///home/jensen/Github-Repositories/heart-check-phc/app/globals.css) / [themes.js](file:///home/jensen/Github-Repositories/heart-check-phc/constants/themes.js) |
+| **Change centralized theme tokens, neutral dark mode palette (#0d0d0d, #141414, #1a1a1a, #242424, #2e2e2e), or sizing tokens** | [themeTokens.ts](file:///home/jensen/Github-Repositories/Heart_Check_PHC/constants/themeTokens.ts) |
+| **Change base dashboard background color or shell wrapper** | [DashboardBg.tsx](file:///home/jensen/Github-Repositories/Heart_Check_PHC/components/backgrounds/DashboardBg.tsx) |
+| **Change global semantic surface, muted, line, or shadow tokens** | [globals.css](file:///home/jensen/Github-Repositories/Heart_Check_PHC/app/globals.css) / [themes.js](file:///home/jensen/Github-Repositories/Heart_Check_PHC/constants/themes.js) |
 | **Change sidebar layout, colors, active highlights, or border styles** | [dashNavStyles.ts](file:///home/jensen/Github-Repositories/heart-check-phc/app/dashboard/constants/dashNavStyles.ts) / [styles.ts](file:///home/jensen/Github-Repositories/heart-check-phc/app/dashboard/constants/styles.ts) (`DASH.sidebar`) |
 | **Change sidebar navigation links, route groups, icons, or labels** | [navigation.ts](file:///home/jensen/Github-Repositories/heart-check-phc/app/dashboard/constants/navigation.ts) (`DASHBOARD_NAV_GROUPS`) |
 | **Change sidebar navigation text copy, brand titles, or category titles** | [dashNavTexts.ts](file:///home/jensen/Github-Repositories/heart-check-phc/app/dashboard/constants/dashNavTexts.ts) |

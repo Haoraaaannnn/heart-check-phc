@@ -125,18 +125,18 @@ export const CUBICLES_STYLES = {
     viewModeButton:
       'inline-flex items-center gap-1.5 rounded-lg px-3 py-1.5 text-xs font-semibold transition cursor-pointer select-none',
     viewModeButtonActive:
-      'bg-white dark:bg-slate-900 text-rose-600 dark:text-rose-400 shadow-xs font-bold border border-line',
+      'bg-white dark:bg-[#1a1a1a] text-[#a8071a] dark:text-[#f87171] shadow-xs font-bold border border-line',
     viewModeButtonInactive:
       'text-content-muted hover:text-content hover:bg-surface/60 border border-transparent',
     dateSelectorWrap: 'flex items-center gap-2 rounded-xl border border-line bg-surface px-3 py-1.5 shadow-2xs',
     dateLabel: 'text-xs font-bold text-content-muted flex items-center gap-1.5 shrink-0',
     dateSelect:
-      'bg-transparent text-xs font-semibold text-content focus:outline-none cursor-pointer pr-1 dark:bg-slate-900',
+      'bg-transparent text-xs font-semibold text-content focus:outline-hidden cursor-pointer pr-1 dark:bg-[#1a1a1a]',
     liveBadge:
       'inline-flex items-center gap-1.5 rounded-full bg-emerald-50 dark:bg-emerald-950/60 px-2.5 py-0.5 text-[11px] font-bold text-emerald-700 dark:text-emerald-300 border border-emerald-200 dark:border-emerald-800',
     liveDot: 'h-1.5 w-1.5 rounded-full bg-emerald-500 animate-pulse',
     operationalHoursPill:
-      'inline-flex items-center gap-1 rounded-md bg-slate-100 dark:bg-slate-800 px-2 py-0.5 text-[11px] font-medium text-content-muted',
+      'inline-flex items-center gap-1 rounded-md bg-slate-100 dark:bg-[#242424] px-2 py-0.5 text-[11px] font-medium text-content-muted',
 
     // KPI summary row
     kpiGrid: 'grid grid-cols-1 gap-3 sm:grid-cols-2 lg:grid-cols-4',
@@ -177,7 +177,7 @@ export const CUBICLES_STYLES = {
     cellSecondaryValue: 'font-mono text-[10px] font-medium leading-none opacity-85 mt-0.5',
     cellBadge: 'inline-flex items-center px-1.5 py-0.5 rounded-full text-[9px] font-extrabold uppercase mt-1',
     cellUpcoming:
-      'opacity-40 bg-slate-50 dark:bg-slate-900 border-dashed border-line cursor-not-allowed hover:scale-100 hover:shadow-none',
+      'opacity-40 bg-slate-50 dark:bg-[#1a1a1a] border-dashed border-line cursor-not-allowed hover:scale-100 hover:shadow-none',
 
     // Summary row
     tfRow: 'border-t-2 border-line bg-surface-subtle/90 font-bold',
@@ -198,7 +198,7 @@ export const CUBICLES_STYLES = {
 
     // Modal
     modalBackdrop:
-      'fixed inset-0 z-50 flex items-center justify-center bg-slate-950/60 p-4 backdrop-blur-xs transition-opacity',
+      'fixed inset-0 z-50 flex items-center justify-center bg-black/70 p-4 backdrop-blur-xs transition-opacity',
     modalCard: 'w-full max-w-xl rounded-2xl border border-line bg-surface p-6 shadow-2xl transition-all',
     modalHeader: 'flex items-start justify-between border-b border-line pb-4',
     modalTitle: 'text-lg font-bold text-content',
@@ -274,7 +274,7 @@ export const CUBICLES_STYLES = {
     pipelineTrack:
       'relative flex items-center justify-between gap-1 min-w-[1380px] py-4 px-2',
     pipelinePipe:
-      'absolute left-4 right-4 top-1/2 -translate-y-1/2 h-2.5 rounded-full bg-slate-200 dark:bg-slate-800 -z-0',
+      'absolute left-4 right-4 top-1/2 -translate-y-1/2 h-2.5 rounded-full bg-slate-200 dark:bg-[#2e2e2e] -z-0',
     pipelinePipeActive:
       'absolute left-4 right-4 top-1/2 -translate-y-1/2 h-2.5 rounded-full bg-gradient-to-r from-amber-400 via-rose-500 to-emerald-500 opacity-25 -z-0',
 
@@ -310,18 +310,18 @@ export const CUBICLES_STYLES = {
     // Animated connecting route tokens with real-time queue item dots
     routeWrap: 'relative z-0 flex flex-col items-center justify-center px-1 shrink-0 w-[140px]',
     routeTrack: 'w-full h-10 relative flex items-center justify-center',
-    routeHighway: 'w-full h-1.5 rounded-full bg-slate-200 dark:bg-slate-800 relative overflow-hidden',
+    routeHighway: 'w-full h-1.5 rounded-full bg-slate-200 dark:bg-[#2e2e2e] relative overflow-hidden',
     routeDotItemWrap: 'absolute top-1/2 -translate-y-1/2 phc-queue-dot-motion cursor-pointer z-10 group',
     routeItemDot:
       'flex items-center justify-center w-4 h-4 rounded-full border-2 text-[8px] font-mono font-bold shadow-xs transition-transform hover:scale-125 cursor-pointer',
-    routeItemDotNormal: 'bg-rose-500 border-white dark:border-slate-800 text-white',
+    routeItemDotNormal: 'bg-rose-500 border-white dark:border-[#2e2e2e] text-white',
     routeItemDotStalled: 'bg-rose-600 border-rose-300 text-white ring-2 ring-rose-500/40 animate-pulse',
     routeTooltip:
-      'absolute -top-7 left-1/2 -translate-x-1/2 hidden group-hover:flex items-center gap-1 rounded bg-slate-900 text-white dark:bg-white dark:text-slate-900 px-1.5 py-0.5 text-[9px] font-mono whitespace-nowrap shadow-md pointer-events-none z-30',
+      'absolute -top-7 left-1/2 -translate-x-1/2 hidden group-hover:flex items-center gap-1 rounded bg-slate-900 text-white dark:bg-white dark:text-[#0d0d0d] px-1.5 py-0.5 text-[9px] font-mono whitespace-nowrap shadow-md pointer-events-none z-30',
     routeLabelCapsule:
       'flex items-center gap-1.5 text-[9px] font-bold tracking-wider uppercase px-2 py-0.5 rounded-full bg-surface border border-line shadow-2xs whitespace-nowrap mt-1',
     routeDotActive: 'w-1.5 h-1.5 rounded-full bg-emerald-500 animate-pulse',
-    routeDotIdle: 'w-1.5 h-1.5 rounded-full bg-slate-300 dark:bg-slate-600',
+    routeDotIdle: 'w-1.5 h-1.5 rounded-full bg-slate-300 dark:bg-[#404040]',
     routeItemBadge:
       'font-mono text-[8px] font-extrabold px-1.5 py-0.2 rounded-full border bg-surface text-content-muted',
 
@@ -344,7 +344,7 @@ export const CUBICLES_STYLES = {
       'flex flex-col gap-1.5 rounded-lg bg-surface-subtle p-2.5 border border-line text-xs',
     bayTimerRow: 'flex items-center justify-between',
     bayTimerText: 'font-mono font-extrabold text-content',
-    bayProgressWrap: 'w-full bg-slate-200 dark:bg-slate-700 h-1.5 rounded-full overflow-hidden mt-1',
+    bayProgressWrap: 'w-full bg-slate-200 dark:bg-[#2e2e2e] h-1.5 rounded-full overflow-hidden mt-1',
     bayProgressBar: 'h-full rounded-full transition-all duration-300',
 
     // Branch stem connecting Stage 3 to bays
@@ -380,13 +380,13 @@ export const CUBICLES_STYLES = {
       'flex flex-wrap items-center justify-between gap-3 pb-4 border-b border-line mb-3',
     canvasTitleGroup: 'flex items-center gap-3',
     canvasIconWrap:
-      'flex h-9 w-9 items-center justify-center rounded-xl bg-slate-100 dark:bg-slate-800 text-content text-lg border border-line shadow-2xs',
+      'flex h-9 w-9 items-center justify-center rounded-xl bg-slate-100 dark:bg-[#242424] text-content text-lg border border-line shadow-2xs',
     canvasTitle: 'text-sm font-bold text-content',
     canvasSubtitle: 'text-xs text-content-muted mt-0.5',
     canvasControls: 'flex items-center gap-2',
     canvasScroll: 'w-full overflow-x-auto pb-4 pt-2 phc-scroll relative',
     canvasBoard:
-      'relative min-w-[1260px] rounded-xl border border-line/60 bg-slate-50/50 dark:bg-slate-950/60 p-4 select-none',
+      'relative min-w-[1260px] rounded-xl border border-line/60 bg-slate-50/50 dark:bg-[#0d0d0d]/60 p-4 select-none',
     svgOverlay: 'absolute inset-0 w-full h-full pointer-events-none z-0',
 
     // Rectangular Stage Nodes with Thin Borders
@@ -394,7 +394,7 @@ export const CUBICLES_STYLES = {
       'group flex flex-col justify-between rounded-xl border bg-surface p-3 text-xs shadow-2xs transition-all hover:scale-[1.02] hover:shadow-sm cursor-pointer relative z-10 select-none',
     nodeCardProcessing:
       'border-rose-500 ring-2 ring-rose-500/30 dark:ring-rose-500/20 shadow-sm',
-    nodeCardIdle: 'border-line hover:border-slate-400 dark:hover:border-slate-600',
+    nodeCardIdle: 'border-line hover:border-slate-400 dark:hover:border-[#404040]',
     nodeHeader: 'flex items-center justify-between gap-1 mb-1.5',
     nodeTitle: 'text-xs font-bold text-content break-words flex items-center gap-1.5',
     nodeBadge:
@@ -410,7 +410,7 @@ export const CUBICLES_STYLES = {
     speedToggleBtn:
       'inline-flex items-center gap-1 rounded-lg border border-line bg-surface px-2 py-1 text-[11px] font-semibold text-content-muted hover:text-content hover:bg-surface-subtle transition cursor-pointer select-none',
     activeSpeedBtn:
-      'bg-slate-100 dark:bg-slate-800 text-rose-600 dark:text-rose-400 border-rose-300 dark:border-rose-800 font-bold',
+      'bg-slate-100 dark:bg-[#242424] text-[#a8071a] dark:text-[#f87171] border-[#a8071a]/40 dark:border-[#a8071a]/50 font-bold',
     dispatchBtn:
       'inline-flex items-center gap-1 rounded-lg border border-line bg-surface px-2 py-1 text-[11px] font-semibold text-content-muted hover:text-content hover:bg-surface-subtle transition cursor-pointer shadow-2xs',
     groupFilterTabs:
@@ -426,7 +426,7 @@ export const CUBICLES_STYLES = {
     groupBadgeOpd:
       'bg-rose-50 dark:bg-rose-950/40 text-rose-700 dark:text-rose-300 border-rose-200 dark:border-rose-900',
     groupBadgeWarfarin:
-      'bg-blue-50 dark:bg-blue-950/40 text-blue-700 dark:text-blue-300 border-blue-200 dark:border-blue-900',
+      'bg-slate-100 dark:bg-[#242424] text-slate-700 dark:text-[#f5f5f5] border-slate-200 dark:border-[#2e2e2e]',
     groupBadgeSpecialized:
       'bg-purple-50 dark:bg-purple-950/40 text-purple-700 dark:text-purple-300 border-purple-200 dark:border-purple-900',
     groupBadgeEcg:
@@ -434,13 +434,13 @@ export const CUBICLES_STYLES = {
     groupBadgeRefill:
       'bg-teal-50 dark:bg-teal-950/40 text-teal-700 dark:text-teal-300 border-teal-200 dark:border-teal-900',
     groupBadgeBenzathine:
-      'bg-indigo-50 dark:bg-indigo-950/40 text-indigo-700 dark:text-indigo-300 border-indigo-200 dark:border-indigo-900',
+      'bg-slate-100 dark:bg-[#242424] text-slate-700 dark:text-[#f5f5f5] border-slate-200 dark:border-[#2e2e2e]',
     groupBadgeReschedule:
-      'bg-cyan-50 dark:bg-cyan-950/40 text-cyan-700 dark:text-cyan-300 border-cyan-200 dark:border-cyan-900',
+      'bg-slate-100 dark:bg-[#242424] text-slate-700 dark:text-[#f5f5f5] border-slate-200 dark:border-[#2e2e2e]',
 
     // Unified Stage 3 Container Block
     stage3Container:
-      'flex flex-col rounded-xl border border-line bg-surface/95 dark:bg-slate-900/95 p-3.5 shadow-xs transition-all relative z-10 select-none overflow-hidden',
+      'flex flex-col rounded-xl border border-line bg-surface/95 dark:bg-[#1a1a1a]/95 p-3.5 shadow-xs transition-all relative z-10 select-none overflow-hidden',
     stage3ContainerProcessing:
       'border-rose-500/80 ring-2 ring-rose-500/20 shadow-sm',
     stage3Header:
@@ -462,15 +462,15 @@ export const CUBICLES_STYLES = {
     stage3PodGrid:
       'grid grid-cols-1 sm:grid-cols-2 gap-2',
     cubicleSubCard:
-      'flex flex-col justify-between p-2 rounded-lg border border-line/80 bg-surface text-xs shadow-2xs transition-all hover:scale-[1.01] hover:border-slate-400 dark:hover:border-slate-600 cursor-pointer min-h-[66px]',
+      'flex flex-col justify-between p-2 rounded-lg border border-line/80 bg-surface text-xs shadow-2xs transition-all hover:scale-[1.01] hover:border-slate-400 dark:hover:border-[#404040] cursor-pointer min-h-[66px]',
     cubicleSubCardOccupied:
       'border-rose-400/80 bg-rose-50/20 dark:bg-rose-950/20 ring-1 ring-rose-500/20',
 
     // Dedicated Per-Service Rectangle Block Styles (All 8 Clinical Services)
     serviceBlock:
-      'flex flex-col justify-between rounded-xl border border-line bg-surface/95 dark:bg-slate-900/95 p-3 shadow-2xs transition-all relative z-10 select-none overflow-hidden hover:border-slate-400 dark:hover:border-slate-600',
+      'flex flex-col justify-between rounded-xl border border-line bg-surface/95 dark:bg-[#1a1a1a]/95 p-3 shadow-2xs transition-all relative z-10 select-none overflow-hidden hover:border-slate-400 dark:hover:border-[#404040]',
     serviceBlockCollapsed:
-      'flex flex-col justify-center rounded-xl border border-line bg-surface/95 dark:bg-slate-900/95 px-3 py-2 shadow-2xs transition-all relative z-10 select-none hover:border-slate-400 dark:hover:border-slate-600',
+      'flex flex-col justify-center rounded-xl border border-line bg-surface/95 dark:bg-[#1a1a1a]/95 px-3 py-2 shadow-2xs transition-all relative z-10 select-none hover:border-slate-400 dark:hover:border-[#404040]',
     serviceBlockProcessing:
       'border-rose-500/80 ring-2 ring-rose-500/20 shadow-xs',
     serviceBlockHeader:
@@ -486,11 +486,11 @@ export const CUBICLES_STYLES = {
     serviceRoomFilterPill:
       'px-1.5 py-0.2 text-[9px] font-bold rounded border transition cursor-pointer select-none whitespace-nowrap',
     serviceRoomFilterActive:
-      'bg-slate-800 text-white dark:bg-white dark:text-slate-900 border-transparent',
+      'bg-slate-800 text-white dark:bg-white dark:text-[#0d0d0d] border-transparent',
     serviceRoomFilterInactive:
       'bg-surface-subtle text-content-muted border-line hover:text-content',
     cubicleCompactCard:
-      'flex flex-col justify-between p-1.5 rounded-lg border border-line/80 bg-surface text-xs shadow-2xs transition-all hover:scale-[1.02] hover:border-slate-400 dark:hover:border-slate-600 cursor-pointer min-h-[50px]',
+      'flex flex-col justify-between p-1.5 rounded-lg border border-line/80 bg-surface text-xs shadow-2xs transition-all hover:scale-[1.02] hover:border-slate-400 dark:hover:border-[#404040] cursor-pointer min-h-[50px]',
     cubicleCompactCardOccupied:
       'border-rose-400/80 bg-rose-50/20 dark:bg-rose-950/20 ring-1 ring-rose-500/25',
     serviceBlockToggleBtn:
@@ -506,7 +506,7 @@ export const CUBICLES_STYLES = {
 
     // Stage Detail Inspector Modal
     modalBackdrop:
-      'fixed inset-0 z-50 flex items-center justify-center bg-slate-950/60 p-4 backdrop-blur-xs transition-opacity',
+      'fixed inset-0 z-50 flex items-center justify-center bg-black/70 p-4 backdrop-blur-xs transition-opacity',
     modalCard:
       'w-full max-w-xl rounded-2xl border border-line bg-surface p-6 shadow-2xl transition-all',
     modalHeader: 'flex items-start justify-between border-b border-line pb-4',
@@ -548,9 +548,9 @@ export const PIPELINE_STAGE_STYLES: Record<
     iconText: 'text-amber-700 dark:text-amber-300',
     badgeBg: 'bg-amber-100 dark:bg-amber-900/60 border border-amber-300 dark:border-amber-800',
     badgeText: 'text-amber-800 dark:text-amber-300',
-    metricBg: 'bg-white/90 dark:bg-slate-900/90',
+    metricBg: 'bg-white/90 dark:bg-[#1a1a1a]/90',
     metricBorder: 'border-amber-200/80 dark:border-amber-900/60',
-    pillBg: 'bg-white dark:bg-slate-900 hover:bg-amber-50 dark:hover:bg-amber-950/40',
+    pillBg: 'bg-white dark:bg-[#1a1a1a] hover:bg-amber-50 dark:hover:bg-amber-950/40',
     pillBorder: 'border-amber-200 dark:border-amber-900',
     pillText: 'text-amber-900 dark:text-amber-200',
   },
@@ -562,9 +562,9 @@ export const PIPELINE_STAGE_STYLES: Record<
     iconText: 'text-purple-700 dark:text-purple-300',
     badgeBg: 'bg-purple-100 dark:bg-purple-900/60 border border-purple-300 dark:border-purple-800',
     badgeText: 'text-purple-800 dark:text-purple-300',
-    metricBg: 'bg-white/90 dark:bg-slate-900/90',
+    metricBg: 'bg-white/90 dark:bg-[#1a1a1a]/90',
     metricBorder: 'border-purple-200/80 dark:border-purple-900/60',
-    pillBg: 'bg-white dark:bg-slate-900 hover:bg-purple-50 dark:hover:bg-purple-950/40',
+    pillBg: 'bg-white dark:bg-[#1a1a1a] hover:bg-purple-50 dark:hover:bg-purple-950/40',
     pillBorder: 'border-purple-200 dark:border-purple-900',
     pillText: 'text-purple-900 dark:text-purple-200',
   },
@@ -576,25 +576,25 @@ export const PIPELINE_STAGE_STYLES: Record<
     iconText: 'text-rose-700 dark:text-rose-300',
     badgeBg: 'bg-rose-100 dark:bg-rose-900/60 border border-rose-300 dark:border-rose-800',
     badgeText: 'text-rose-800 dark:text-rose-300',
-    metricBg: 'bg-white/90 dark:bg-slate-900/90',
+    metricBg: 'bg-white/90 dark:bg-[#1a1a1a]/90',
     metricBorder: 'border-rose-200/80 dark:border-rose-900/60',
-    pillBg: 'bg-white dark:bg-slate-900 hover:bg-rose-50 dark:hover:bg-rose-950/40',
+    pillBg: 'bg-white dark:bg-[#1a1a1a] hover:bg-rose-50 dark:hover:bg-rose-950/40',
     pillBorder: 'border-rose-200 dark:border-rose-900',
     pillText: 'text-rose-900 dark:text-rose-200',
   },
   carryout: {
-    border: 'border-sky-200 dark:border-sky-900/80',
-    bg: 'bg-sky-50/40 dark:bg-sky-950/20',
-    headerBorder: 'border-sky-200/80 dark:border-sky-900/60',
-    iconBg: 'bg-sky-100 dark:bg-sky-900/50',
-    iconText: 'text-sky-700 dark:text-sky-300',
-    badgeBg: 'bg-sky-100 dark:bg-sky-900/60 border border-sky-300 dark:border-sky-800',
-    badgeText: 'text-sky-800 dark:text-sky-300',
-    metricBg: 'bg-white/90 dark:bg-slate-900/90',
-    metricBorder: 'border-sky-200/80 dark:border-sky-900/60',
-    pillBg: 'bg-white dark:bg-slate-900 hover:bg-sky-50 dark:hover:bg-sky-950/40',
-    pillBorder: 'border-sky-200 dark:border-sky-900',
-    pillText: 'text-sky-900 dark:text-sky-200',
+    border: 'border-slate-200 dark:border-[#2e2e2e]',
+    bg: 'bg-slate-50/60 dark:bg-[#242424]/40',
+    headerBorder: 'border-slate-200/80 dark:border-[#2e2e2e]',
+    iconBg: 'bg-slate-100 dark:bg-[#242424]',
+    iconText: 'text-slate-700 dark:text-[#f5f5f5]',
+    badgeBg: 'bg-slate-100 dark:bg-[#242424] border border-slate-300 dark:border-[#2e2e2e]',
+    badgeText: 'text-slate-800 dark:text-[#f5f5f5]',
+    metricBg: 'bg-white/90 dark:bg-[#1a1a1a]/90',
+    metricBorder: 'border-slate-200/80 dark:border-[#2e2e2e]',
+    pillBg: 'bg-white dark:bg-[#1a1a1a] hover:bg-slate-50 dark:hover:bg-[#242424]',
+    pillBorder: 'border-slate-200 dark:border-[#2e2e2e]',
+    pillText: 'text-slate-900 dark:text-[#f5f5f5]',
   },
   completed: {
     border: 'border-emerald-200 dark:border-emerald-900/80',
@@ -604,9 +604,9 @@ export const PIPELINE_STAGE_STYLES: Record<
     iconText: 'text-emerald-700 dark:text-emerald-300',
     badgeBg: 'bg-emerald-100 dark:bg-emerald-900/60 border border-emerald-300 dark:border-emerald-800',
     badgeText: 'text-emerald-800 dark:text-emerald-300',
-    metricBg: 'bg-white/90 dark:bg-slate-900/90',
+    metricBg: 'bg-white/90 dark:bg-[#1a1a1a]/90',
     metricBorder: 'border-emerald-200/80 dark:border-emerald-900/60',
-    pillBg: 'bg-white dark:bg-slate-900 hover:bg-emerald-50 dark:hover:bg-emerald-950/40',
+    pillBg: 'bg-white dark:bg-[#1a1a1a] hover:bg-emerald-50 dark:hover:bg-emerald-950/40',
     pillBorder: 'border-emerald-200 dark:border-emerald-900',
     pillText: 'text-emerald-900 dark:text-emerald-200',
   },
@@ -650,11 +650,11 @@ export const CUBICLE_STATUS_STYLES: Record<
     icon: 'bx-wrench',
   },
   cleaning: {
-    border: 'border-blue-200 dark:border-blue-900',
-    bg: 'bg-blue-50 dark:bg-blue-950/40',
-    badgeBg: 'bg-blue-100 border border-blue-300 dark:bg-blue-900/50 dark:border-blue-800',
-    badgeText: 'text-blue-800 dark:text-blue-300',
-    dot: 'bg-blue-500',
+    border: 'border-teal-200 dark:border-teal-900',
+    bg: 'bg-teal-50 dark:bg-teal-950/40',
+    badgeBg: 'bg-teal-100 border border-teal-300 dark:bg-teal-900/50 dark:border-teal-800',
+    badgeText: 'text-teal-800 dark:text-teal-300',
+    dot: 'bg-teal-500',
     icon: 'bx-brush',
   },
 };
@@ -679,12 +679,12 @@ export const HEATMAP_SPEED_STYLES: Record<
     dot: 'bg-emerald-500',
   },
   optimal: {
-    bg: 'bg-sky-50 dark:bg-sky-950/40 hover:bg-sky-100/80 dark:hover:bg-sky-900/50',
-    text: 'text-sky-800 dark:text-sky-200',
-    border: 'border-sky-300 dark:border-sky-800/80',
+    bg: 'bg-teal-50 dark:bg-teal-950/40 hover:bg-teal-100/80 dark:hover:bg-teal-900/50',
+    text: 'text-teal-800 dark:text-teal-200',
+    border: 'border-teal-300 dark:border-teal-800/80',
     badge:
-      'bg-sky-100 text-sky-800 dark:bg-sky-900/60 dark:text-sky-200 border border-sky-300 dark:border-sky-700',
-    dot: 'bg-sky-500',
+      'bg-teal-100 text-teal-800 dark:bg-teal-900/60 dark:text-teal-200 border border-teal-300 dark:border-teal-700',
+    dot: 'bg-teal-500',
   },
   moderate: {
     bg: 'bg-amber-50 dark:bg-amber-950/40 hover:bg-amber-100/80 dark:hover:bg-amber-900/50',
@@ -703,11 +703,11 @@ export const HEATMAP_SPEED_STYLES: Record<
     dot: 'bg-rose-500',
   },
   inactive: {
-    bg: 'bg-slate-50/80 dark:bg-slate-900/40 hover:bg-slate-100 dark:hover:bg-slate-800/50',
-    text: 'text-slate-500 dark:text-slate-400',
-    border: 'border-slate-200 dark:border-slate-800',
+    bg: 'bg-slate-50/80 dark:bg-[#1a1a1a]/40 hover:bg-slate-100 dark:hover:bg-[#242424]/50',
+    text: 'text-slate-500 dark:text-[#a3a3a3]',
+    border: 'border-slate-200 dark:border-[#2e2e2e]',
     badge:
-      'bg-slate-100 text-slate-600 dark:bg-slate-800 dark:text-slate-400 border border-slate-200 dark:border-slate-700',
+      'bg-slate-100 text-slate-600 dark:bg-[#242424] dark:text-[#a3a3a3] border border-slate-200 dark:border-[#2e2e2e]',
     dot: 'bg-slate-400',
   },
 };
@@ -732,20 +732,20 @@ export const HEATMAP_IDLE_STYLES: Record<
     dot: 'bg-emerald-500',
   },
   'low-idle': {
-    bg: 'bg-blue-50 dark:bg-blue-950/40 hover:bg-blue-100/80 dark:hover:bg-blue-900/50',
-    text: 'text-blue-800 dark:text-blue-200',
-    border: 'border-blue-300 dark:border-blue-800/80',
+    bg: 'bg-teal-50 dark:bg-teal-950/40 hover:bg-teal-100/80 dark:hover:bg-teal-900/50',
+    text: 'text-teal-800 dark:text-teal-200',
+    border: 'border-teal-300 dark:border-teal-800/80',
     badge:
-      'bg-blue-100 text-blue-800 dark:bg-blue-900/60 dark:text-blue-200 border border-blue-300 dark:border-blue-700',
-    dot: 'bg-blue-500',
+      'bg-teal-100 text-teal-800 dark:bg-teal-900/60 dark:text-teal-200 border border-teal-300 dark:border-teal-700',
+    dot: 'bg-teal-500',
   },
   'moderate-idle': {
-    bg: 'bg-indigo-50 dark:bg-indigo-950/40 hover:bg-indigo-100/80 dark:hover:bg-indigo-900/50',
-    text: 'text-indigo-800 dark:text-indigo-200',
-    border: 'border-indigo-300 dark:border-indigo-800/80',
+    bg: 'bg-slate-100 dark:bg-[#242424] hover:bg-slate-200/80 dark:hover:bg-[#2e2e2e]',
+    text: 'text-slate-800 dark:text-[#f5f5f5]',
+    border: 'border-slate-300 dark:border-[#2e2e2e]',
     badge:
-      'bg-indigo-100 text-indigo-800 dark:bg-indigo-900/60 dark:text-indigo-200 border border-indigo-300 dark:border-indigo-700',
-    dot: 'bg-indigo-500',
+      'bg-slate-200 text-slate-800 dark:bg-[#2e2e2e] dark:text-[#f5f5f5] border border-slate-300 dark:border-[#2e2e2e]',
+    dot: 'bg-slate-500',
   },
   'high-idle': {
     bg: 'bg-amber-50 dark:bg-amber-950/40 hover:bg-amber-100/80 dark:hover:bg-amber-900/50',
@@ -756,11 +756,11 @@ export const HEATMAP_IDLE_STYLES: Record<
     dot: 'bg-amber-500',
   },
   dormant: {
-    bg: 'bg-slate-50/80 dark:bg-slate-900/40 hover:bg-slate-100 dark:hover:bg-slate-800/50',
-    text: 'text-slate-500 dark:text-slate-400',
-    border: 'border-slate-200 dark:border-slate-800',
+    bg: 'bg-slate-50/80 dark:bg-[#1a1a1a]/40 hover:bg-slate-100 dark:hover:bg-[#242424]/50',
+    text: 'text-slate-500 dark:text-[#a3a3a3]',
+    border: 'border-slate-200 dark:border-[#2e2e2e]',
     badge:
-      'bg-slate-100 text-slate-600 dark:bg-slate-800 dark:text-slate-400 border border-slate-200 dark:border-slate-700',
+      'bg-slate-100 text-slate-600 dark:bg-[#242424] dark:text-[#a3a3a3] border border-slate-200 dark:border-[#2e2e2e]',
     dot: 'bg-slate-400',
   },
 };

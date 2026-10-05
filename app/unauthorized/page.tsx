@@ -21,7 +21,7 @@
  * so the user can sign in with an authorized account.
  *
  * @see middleware.ts
- * @see docs/SECURITY.md
+ * @see docs/specifications/SECURITY.md
  * @module app/unauthorized
  */
 

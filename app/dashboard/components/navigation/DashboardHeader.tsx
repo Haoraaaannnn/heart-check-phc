@@ -14,6 +14,7 @@ import React, { useState, useEffect } from 'react';
 import { useRouter, usePathname, useSearchParams } from 'next/navigation';
 import { useTheme } from 'next-themes';
 import { supabase } from '@/lib/supabase';
+import { handleSignOut } from '@/lib/supabase/signOut';
 import { useBottleneckNotifications } from '@/app/dashboard/hooks/useBottleneckNotifications';
 import NotificationDropdown from '../NotificationDropdown';
 import HeaderSearch from './HeaderSearch';
@@ -90,9 +91,8 @@ export function DashboardHeader({ onOpenMobileDrawer }: DashboardHeaderProps) {
   /**
    * Handles user session termination and route redirection to login.
    */
-  const handleSignOut = async () => {
-    await supabase.auth.signOut();
-    router.push('/login');
+  const onSignOut = async () => {
+    await handleSignOut();
   };
 
   const isDark = mounted && resolvedTheme === 'dark';
@@ -179,7 +179,7 @@ export function DashboardHeader({ onOpenMobileDrawer }: DashboardHeaderProps) {
         )}
 
         <nav aria-label="Breadcrumbs" className={S.breadcrumbs}>
-          <span className="font-semibold text-slate-400 dark:text-slate-500">
+          <span className="font-semibold text-slate-400 dark:text-[#737373]">
             {T.breadcrumbs.root}
           </span>
           <span className={S.breadcrumbSeparator}>/</span>
@@ -210,7 +210,7 @@ export function DashboardHeader({ onOpenMobileDrawer }: DashboardHeaderProps) {
               className={`bx ${
                 isDark
                   ? 'bx-sun text-amber-400'
-                  : 'bx-moon text-slate-600 dark:text-slate-300'
+                  : 'bx-moon text-slate-600 dark:text-[#a3a3a3]'
               }`}
               aria-hidden="true"
             />
@@ -245,7 +245,7 @@ export function DashboardHeader({ onOpenMobileDrawer }: DashboardHeaderProps) {
         {/* Direct Session Sign-Out Button */}
         <button
           type="button"
-          onClick={handleSignOut}
+          onClick={onSignOut}
           className={S.signOutButton}
           title={T.actions.signOut}
           aria-label={T.actions.signOut}

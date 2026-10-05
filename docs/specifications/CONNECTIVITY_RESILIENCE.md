@@ -28,6 +28,8 @@ The system's real-time layer relies on Supabase Realtime, which maintains persis
 3. **Event Burst Collisions:** Reconnecting channels frequently delivered multiple backlog Postgres changes in rapid succession. In un-debounced hooks (such as Transfer), each event triggered an independent network query, overwhelming the weak uplink.
 4. **Concurrent Poll and Realtime Collisions:** Fallback timers and WebSocket events could fire simultaneously, initiating parallel overlapping database queries that competed for limited bandwidth.
 5. **Premature Socket Teardowns:** Default Supabase heartbeat timeouts (40s) were shorter than typical round-trip delays on congested mobile hotspots, triggering premature disconnections and aggressive reconnect loops.
+6. **Premature State Rollback from Asynchronous Writes:** When clinical or transfer staff move a patient across columns, the local UI updates optimistically. Over high-latency WiFi (1000ms+ round trip), an interim background poll or WebSocket re-fetch returns the pre-mutation database row before the write commits. Without mutation pinning, the lagging read overwrites the optimistic state, teleporting the patient card back to the original column until the write eventually completes.
+7. **Realtime Write-Back Echo Loops:** Hooks that derive timestamps or counter associations on read and immediately write them back to Supabase trigger new `postgres_changes` events. Over high latency, this creates an infinite self-triggering cycle of WebSocket notifications and network queries.
 
 ---
 
@@ -91,13 +93,13 @@ channel.subscribe((status) => {
 });
 ```
 
-#### A4. Concurrency & Overlap Throttle (500ms Lock)
+#### A4. Concurrency & Trailing-Edge Throttle (500ms Lock)
 
-To prevent simultaneous requests from fallback timers and WebSocket events colliding on weak connections, `guardedFetch()` enforces a 500ms throttle lock (`isFetchingRef` and `lastFetchTimeRef`). If a trigger occurs within 500ms of an active or recent query, the duplicate invocation is dropped.
+To prevent simultaneous requests from fallback timers and WebSocket events colliding on weak connections while guaranteeing zero event loss, `guardedFetch()` enforces a 500ms throttle lock with an automatic trailing-edge timer (`trailingTimerRef`). If a trigger occurs within 500ms of an active or recent query, it is not dropped; instead, a trailing timer executes the fetch immediately upon window expiration, ensuring that incoming Realtime updates are never delayed until the next polling tick.
 
-#### A5. Inbound Event Debouncing (300ms Window)
+#### A5. Inbound Event Debouncing (50ms – 100ms Window)
 
-In high-throughput hooks (`app/transfer/hooks/useRealtimeSubscription.ts` and `app/monitor/hooks/useRealtimeSubscription.ts`), database events are debounced with a 300ms timer. A burst of 10 simultaneous patient assignments coalesces into a single database query.
+In high-throughput hooks, database events are debounced with a micro-window (50ms for Nurse and Transfer, 100ms for Monitor). Rapid burst events coalesce into a single fetch without introducing noticeable human lag.
 
 #### A6. Immediate Resubscription Reconciliation
 
@@ -105,13 +107,42 @@ When a degraded channel recovers to `SUBSCRIBED`, hooks immediately fire a recon
 
 #### A7. Production Polling Cadence by Subsystem
 
-| Workstation / Hook | Fallback Poll Cadence | Debounce Window | Overlap Throttle | Monotonic Guard | Rationale |
+| Workstation / Hook | Fallback Poll Cadence | Debounce Window | Overlap & Trailing Throttle | Monotonic Guard & Pinning | Rationale |
 | :--- | :--- | :--- | :--- | :--- | :--- |
-| Nurse Station (`app/nurse/hooks/useRealtimeSubscription.ts`) | 5 seconds | Direct (UI debounce) | 500ms | In-flight flag + disposed check | Rapid response for consultation room intake |
-| Transfer Dashboard (`app/transfer/hooks/useRealtimeSubscription.ts`) | 5 seconds | 300ms | 500ms | In-flight flag + timestamp lock | Critical live state for drag-and-drop counter flow |
-| Public Monitor (`app/monitor/hooks/useRealtimeSubscription.ts`) | 8 seconds | 300ms | 500ms | In-flight flag + category filter | Public waiting display; audio chime trigger |
-| Service Queue Panel (`app/dashboard/patients/hooks/useServiceQueue.ts`) | 10 seconds | Direct | 500ms | `fetchSequenceRef` | Active service department queue auditing |
+| Nurse Station (`app/nurse/hooks/useRealtimeSubscription.ts`) | 5 seconds | Direct 0ms payload dispatch + 50ms fallback | 500ms trailing lock | Monotonic sequence guard + 5s in-flight mutation pinning + metadata memoization | Instantaneous response for consultation room intake without UI bounce |
+| Transfer Dashboard (`app/transfer/hooks/useRealtimeSubscription.ts`) | 5 seconds | 150ms debounce + 0ms direct payload patch | 500ms trailing lock | Monotonic sequence guard + 8s confirmed pin (2.5s post-match grace) + getConfirmedPin guard + 4s write throttle | Critical live state for drag-and-drop counter flow |
+| Public Monitor (`app/monitor/hooks/useRealtimeSubscription.ts`) | 8 seconds | 100ms | 500ms trailing lock | In-flight flag + category filter | Public waiting display; audio chime trigger |
+| Service Queue Panel (`app/dashboard/pages/patients/hooks/useServiceQueue.ts`) | 10 seconds | Direct | 500ms | `fetchSequenceRef` | Active service department queue auditing |
 | Admin Overview (`app/dashboard/hooks/useOverviewData.ts`) | 30 seconds | 300ms reconciliation | 500ms | `todayFetchIdRef` | Executive KPI cards and daily flow aggregates |
+
+#### A8. In-Flight Mutation Pinning & Confirmed Pin Guard (Anti-Teleportation State Lock)
+
+To eliminate patient card teleportation when background polling or WebSocket events return lagging pre-mutation rows over weak connections:
+- In Nurse Station (`useNurseData.ts`), `pinInFlightMutation(patientId, stage, 5000)` records an optimistic destination stage with a 5-second Time-To-Live (TTL). When `fetchData()` returns server data, it checks `inFlightMutationsRef`. If a patient has an active pin, the server stage is overridden with the pinned stage until the database transaction is guaranteed to have committed.
+- In Transfer Dashboard (`usePatientData.ts`), `pinConfirmedPatient(patientId, cubicleNum, 'Assigned')` pins confirmed room assignments with an 8-second TTL and a 2.5-second post-match grace window. When `fetchData()` matches the server row, the pin is retained for at least 2.5 seconds to absorb out-of-order WebSocket echo packets. If server rows temporarily omit the patient, the pin retains the patient in the cubicle rather than dropping them.
+- In Transfer Dashboard (`app/transfer/page.tsx`), `handleRealtimePayload` checks `getConfirmedPin(patient.id)`. Any incoming Realtime payload that arrives with an older or conflicting status (such as `status: 'On Progress'` or `cubicleNum: null`) while a pin is active is discarded immediately, preventing patient cards from jumping back to the queue.
+- Drag and drop (`useDragAndDrop.ts`) and tap-to-select (`useTransferSelection.ts`) update `pendingUpdatesRef.current` synchronously at the exact millisecond of the user interaction, closing the race-condition gap before React render effects execute.
+
+#### A9. Direct 0ms Realtime In-Memory Payload Patching
+
+Rather than waiting for a full HTTP round-trip (`fetchData()`) when a Postgres change event arrives:
+- `useRealtimeSubscription` hooks accept an `onPayload` callback that fires immediately upon receiving a `postgres_changes` event (`INSERT`, `UPDATE`, `DELETE`).
+- `applyRealtimeUpdate` in Nurse Station and `handleRealtimePayload` in Transfer Dashboard patch patient records in component memory within 0ms, moving cards to their new columns instantly without waiting for network query resolution.
+- Incoming payloads are strictly guarded by `pendingUpdatesRef` and active confirmed pins (`getConfirmedPin`) so stale packets cannot undo in-flight user decisions.
+
+#### A10. Echo-Loop Write Throttling
+
+To prevent derived database updates from triggering self-inflicted WebSocket storms:
+- `persistDerivedFields()` in Transfer Dashboard is gated by a 4-second timestamp throttle (`lastDerivedWriteAt`). Read operations that calculate progress timestamps or counter associations do not re-commit to the database if a write occurred within the past 4 seconds.
+- `fetchRegistrationPatients()` similarly enforces a 4-second throttle (`lastRegWriteAtRef`) and monotonic sequence guarding (`regFetchSeqRef`).
+
+#### A11. Nurse Workstation Query Memoization
+
+To prevent authorization and room metadata lookups from starving bandwidth on every 5-second poll tick, `useNurseData.ts` caches cubicle numbers and doctor mappings in `cachedCubicleNumsRef` and `cachedCubiclesRef`. Repetitive queries (`getSession`, `users`, `cubicles`, `doctors`) are eliminated during background polling.
+
+#### A12. Non-Blocking Asynchronous Side-Effects (SMS & Queue Renumbering)
+
+In `app/transfer/page.tsx`, manual assignment confirmation (`handleConfirm`) commits changes to Supabase and immediately dismisses the modal and clears pending updates. Heavy secondary operations—such as sending SMS notifications to patient phones and recalculating queue indices for non-assigned patients—are decoupled into asynchronous background promises (`void (async () => { ... })()`). This prevents third-party SMS API round-trips from blocking staff interaction or delaying UI state transitions.
 
 ---
 
@@ -265,18 +296,24 @@ The weak-signal resilience enhancements have been implemented across all real-ti
    - `timeout: 60_000` heartbeat acknowledgment window preventing premature disconnects on congested uplinks.
    - `reconnectAfterMs`: Exponential backoff (`2s` floor, `10s` cap) suppressing reconnect storms.
 
-2. **`app/nurse/hooks/useRealtimeSubscription.ts`:**
-   - 5-second polling fallback activated upon channel degradation.
-   - 2-second hysteresis grace period preventing poll oscillation on transient packet drops.
+2. **`app/nurse/` Station Resilience (`useNurseData.ts`, `useNurseActions.ts`, `useRealtimeSubscription.ts`):**
+   - 0ms direct in-memory payload dispatch (`applyRealtimeUpdate`) moving cards across stages instantly on WebSocket event.
+   - 5-second in-flight mutation pinning (`inFlightMutationsRef`) preventing background polling from rolling back optimistic column transitions during weak signal.
+   - Monotonic sequence guard (`fetchSeqRef`) discarding delayed out-of-order network responses.
+   - Authorization and cubicle metadata query memoization (`cachedCubicleNumsRef`, `cachedCubiclesRef`) eliminating 4 redundant SQL queries on every 5-second poll tick.
+   - 5-second polling fallback activated upon channel degradation with 2-second hysteresis grace period.
    - 500ms overlap throttle eliminating concurrent poll and realtime executions.
    - Immediate reconciliation fetch upon reconnecting to `SUBSCRIBED`.
    - `disposed` cleanup guard preventing state updates on unmounted workstations.
 
-3. **`app/transfer/hooks/useRealtimeSubscription.ts`:**
-   - 300ms event debounce coalescing burst Postgres changes into a single database query.
+3. **`app/transfer/` Dashboard Resilience (`usePatientData.ts`, `page.tsx`, `useRealtimeSubscription.ts`):**
+   - Direct 0ms in-memory payload dispatch (`handleRealtimePayload`) patching assigned, on-progress, and registration queues without waiting for network re-fetch.
+   - 150ms event debounce coalescing burst Postgres changes into a single database query.
+   - 5-second confirmed assignment pinning (`inFlightConfirmedRef`) preventing background queries from reverting assigned patients to unassigned during server upsert.
+   - Write-throttle guards (4 seconds) on `persistDerivedFields` and `fetchRegistrationPatients` suppressing self-triggering Realtime echo loops.
+   - Passing `pendingUpdatesRef` into `usePatientData` ensuring local pending moves overlay fresh fetches before render.
    - 5-second polling fallback with 2-second channel hysteresis.
-   - 500ms overlap throttle lock.
-   - Immediate reconciliation on recovery.
+   - 500ms overlap throttle lock and immediate reconciliation on recovery.
 
 4. **`app/monitor/hooks/useRealtimeSubscription.ts`:**
    - 300ms event debounce for waiting room displays.
@@ -290,11 +327,17 @@ The weak-signal resilience enhancements have been implemented across all real-ti
    - 2-second hysteresis before activating the 30-second polling fallback.
    - Hook dependency stabilization breaking channel teardown loops caused by callback identity changes.
 
-6. **`app/dashboard/patients/hooks/useServiceQueue.ts`:**
-   - 10-second polling fallback for active department queue auditing.
-   - Monotonic `fetchSequenceRef` sequence guard preventing queue teleportation.
-   - 500ms overlap throttle and 2-second channel hysteresis.
+7. **`components/reusables/ConnectionStatusBanner.tsx` (Connection Status Banner Recovery Rule):**
+   - **Silent Initial Boot:** `isInitialConnectionEstablished` ensures that normal application boot and channel handshake never flash a recovery banner.
+   - **Confirmed Outage Requirement:** Recovery banners (`Live - Real-time updates restored`) appear strictly after a confirmed sustained network outage (`!isOnline` or channel `TIMED_OUT` / `CHANNEL_ERROR` lasting > 1.5 seconds).
+   - **Stable Operation Invisibility:** During stable connections, component unmount/remount (`CLOSED`), normal channel establishment (`CONNECTING`), and offline outbox synchronization (`pendingCount > 0`), the recovery banner remains completely hidden.
+   - **2.5-Second Auto-Dismiss:** Upon verified reconnection after an outage, the green banner displays for 2.5 seconds and automatically dismisses.
+
+8. **Workstation Interaction Standard (Tap-to-Act Quick Dropdowns):**
+   - **No Lingering UI on Tap:** Replaced persistent bottom floating banners (`SelectionBanner`, `NurseSelectionBanner`) with self-contained, contextual popovers (`QuickAssignDropdown.tsx` in Transfer and `NurseQuickActionDropdown.tsx` in Nurse).
+   - **Immediate Contextual Action:** Tapping a patient immediately presents a focused menu of available clinical transitions (Doctor Consultation, Carryout, Complete/Done, Audio Announcement, or station reassignment) with live capacity and physician designations.
+   - **Resilient Auto-Dismiss:** The dropdown automatically dismisses upon action execution, outside click (`pointerdown` outside panel), backdrop tap, or `Escape` key press, ensuring zero lingering or stuck UI elements.
 
 ---
 
-_Last updated: reflects the implemented Layer A weak-signal stabilization and documented Layer B LAN-first handoff plan for PHC on-premises deployment._
+_Last updated: reflects the implemented Layer A weak-signal stabilization, ConnectionStatusBanner recovery rules, Tap-to-Act interaction standard, and documented Layer B LAN-first handoff plan for PHC on-premises deployment._

@@ -61,7 +61,7 @@ export default function LiveQueueTable({ patients, currentTime, isMounted }: Liv
     >
       <option
         value="all"
-        className="bg-white dark:bg-slate-900 text-slate-900 dark:text-slate-100"
+        className={DASH.card.selectOption}
       >
         {C.allServicesLabel}
       </option>
@@ -69,7 +69,7 @@ export default function LiveQueueTable({ patients, currentTime, isMounted }: Liv
         <option
           key={service}
           value={service}
-          className="bg-white dark:bg-slate-900 text-slate-900 dark:text-slate-100"
+          className={DASH.card.selectOption}
         >
           {service}
         </option>

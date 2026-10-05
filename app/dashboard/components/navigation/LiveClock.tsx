@@ -24,9 +24,12 @@ export function LiveClock() {
   const [now, setNow] = useState<Date | null>(null);
 
   useEffect(() => {
-    setNow(new Date());
+    const initialTimer = setTimeout(() => setNow(new Date()), 0);
     const timer = setInterval(() => setNow(new Date()), 1000);
-    return () => clearInterval(timer);
+    return () => {
+      clearTimeout(initialTimer);
+      clearInterval(timer);
+    };
   }, []);
 
   return (

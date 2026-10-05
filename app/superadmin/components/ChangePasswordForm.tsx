@@ -63,12 +63,12 @@ export function ChangePasswordForm() {
   };
 
   return (
-    <div className="bg-white dark:bg-slate-900 border border-slate-200 dark:border-slate-800 rounded-xl shadow-xs p-6 max-w-md">
-      <h2 className="text-lg font-bold text-slate-900 dark:text-white mb-1 flex items-center gap-2">
-        <i className="bx bx-lock-alt text-rose-600 dark:text-rose-400" aria-hidden="true" />
+    <div className="bg-white dark:bg-[#1a1a1a] border border-slate-200 dark:border-[#2e2e2e] rounded-xl shadow-xs p-6 max-w-md">
+      <h2 className="text-lg font-bold text-slate-900 dark:text-[#f5f5f5] mb-1 flex items-center gap-2">
+        <i className="bx bx-lock-alt text-[#a8071a] dark:text-[#f87171]" aria-hidden="true" />
         <span>Change Password</span>
       </h2>
-      <p className="text-slate-500 dark:text-slate-400 text-xs mb-4">
+      <p className="text-slate-500 dark:text-[#a3a3a3] text-xs mb-4">
         You will need your current password. Other devices will be signed out.
       </p>
 
@@ -92,7 +92,7 @@ export function ChangePasswordForm() {
           placeholder="Current password"
           value={currentPassword}
           onChange={(e) => setCurrentPassword(e.target.value)}
-          className="w-full px-3.5 py-2 text-sm bg-slate-50 dark:bg-slate-800 border border-slate-300 dark:border-slate-700 rounded-lg text-slate-900 dark:text-white placeholder-slate-400 focus:outline-none focus:ring-2 focus:ring-rose-500"
+          className="w-full px-3.5 py-2 text-sm bg-slate-50 dark:bg-[#1f1f1f] border border-slate-200 dark:border-[#2e2e2e] rounded-lg text-slate-900 dark:text-[#f5f5f5] placeholder:text-slate-400 dark:placeholder:text-[#737373] focus:outline-hidden focus:ring-2 focus:ring-[#a8071a]/20"
           required
         />
         <input
@@ -100,7 +100,7 @@ export function ChangePasswordForm() {
           placeholder="New password"
           value={newPassword}
           onChange={(e) => setNewPassword(e.target.value)}
-          className="w-full px-3.5 py-2 text-sm bg-slate-50 dark:bg-slate-800 border border-slate-300 dark:border-slate-700 rounded-lg text-slate-900 dark:text-white placeholder-slate-400 focus:outline-none focus:ring-2 focus:ring-rose-500"
+          className="w-full px-3.5 py-2 text-sm bg-slate-50 dark:bg-[#1f1f1f] border border-slate-200 dark:border-[#2e2e2e] rounded-lg text-slate-900 dark:text-[#f5f5f5] placeholder:text-slate-400 dark:placeholder:text-[#737373] focus:outline-hidden focus:ring-2 focus:ring-[#a8071a]/20"
           required
         />
         <input
@@ -108,13 +108,13 @@ export function ChangePasswordForm() {
           placeholder="Confirm new password"
           value={confirmPassword}
           onChange={(e) => setConfirmPassword(e.target.value)}
-          className="w-full px-3.5 py-2 text-sm bg-slate-50 dark:bg-slate-800 border border-slate-300 dark:border-slate-700 rounded-lg text-slate-900 dark:text-white placeholder-slate-400 focus:outline-none focus:ring-2 focus:ring-rose-500"
+          className="w-full px-3.5 py-2 text-sm bg-slate-50 dark:bg-[#1f1f1f] border border-slate-200 dark:border-[#2e2e2e] rounded-lg text-slate-900 dark:text-[#f5f5f5] placeholder:text-slate-400 dark:placeholder:text-[#737373] focus:outline-hidden focus:ring-2 focus:ring-[#a8071a]/20"
           required
         />
         <button
           type="submit"
           disabled={saving}
-          className="px-4 py-2 bg-rose-600 hover:bg-rose-700 text-white rounded-lg font-medium text-xs transition cursor-pointer disabled:opacity-50 shadow-xs flex items-center justify-center gap-2"
+          className="px-4 py-2.5 bg-[#a8071a] hover:bg-[#8e0616] text-white rounded-lg font-medium text-xs transition cursor-pointer disabled:opacity-50 shadow-xs flex items-center justify-center gap-2"
         >
           {saving ? (
             <>

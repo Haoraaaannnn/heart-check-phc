@@ -23,13 +23,17 @@ export interface DropFeedback {
  * @param setOnProgressPatients - State setter for active queue patients.
  * @param setAssignedPatients - State setter for cubicle-assigned patients.
  * @param fetchData - Callback to re-synchronize data with the backend.
+ * @param pendingUpdatesRef - Synchronous ref storing active unconfirmed pending updates.
+ * @param unpinConfirmedPatient - Callback to clear any confirmed mutation pin if reassigning a patient.
  * @returns State and event handlers for drag ghost, drop target highlight, and assignment actions.
  */
 export function useDragAndDrop(
   assignedPatients: Record<string, Patient[]>,
   setOnProgressPatients: React.Dispatch<React.SetStateAction<Patient[]>>,
   setAssignedPatients: React.Dispatch<React.SetStateAction<Record<string, Patient[]>>>,
-  fetchData: () => Promise<void>
+  fetchData: () => Promise<void>,
+  pendingUpdatesRef?: React.MutableRefObject<Patient[]>,
+  unpinConfirmedPatient?: (patientId: number) => void
 ) {
   const [draggedPatient, setDraggedPatient] = useState<Patient | null>(null);
   const [dragSourceCubicle, setDragSourceCubicle] = useState<string | null>(null);
@@ -119,6 +123,7 @@ export function useDragAndDrop(
     try {
       const isManual = !!patient.service && MANUAL_SERVICES.includes(patient.service);
 
+      unpinConfirmedPatient?.(patient.id);
       if (isManual) {
         const cooldownUntil = new Date(Date.now() + 60 * 1000).toISOString();
 
@@ -132,10 +137,14 @@ export function useDragAndDrop(
           { ...patient, cubicleNum: null, status: 'On Progress', progress_started_at: null, cooldown_until: cooldownUntil },
         ]);
 
-        setPendingUpdates(prev => [
-          ...prev.filter(p => p.id !== patient.id),
+        const nextPending = [
+          ...(pendingUpdatesRef?.current || []).filter(p => p.id !== patient.id),
           { ...patient, cubicleNum: null, status: 'On Progress', progress_started_at: null, cooldown_until: cooldownUntil },
-        ]);
+        ];
+        if (pendingUpdatesRef) {
+          pendingUpdatesRef.current = nextPending;
+        }
+        setPendingUpdates(nextPending);
         return;
       }
 
@@ -223,6 +232,7 @@ export function useDragAndDrop(
 
         if (dragSourceCubicle) {
           // Reassign between cubicles
+          unpinConfirmedPatient?.(draggedPatient.id);
           setAssignedPatients(prev => ({
             ...prev,
             [dragSourceCubicle]: (prev[dragSourceCubicle] || []).filter(
@@ -238,16 +248,21 @@ export function useDragAndDrop(
             ],
           }));
 
-          setPendingUpdates(prev => [
-            ...prev.filter(p => p.id !== draggedPatient.id),
+          const nextPending = [
+            ...(pendingUpdatesRef?.current || []).filter(p => p.id !== draggedPatient.id),
             {
               ...draggedPatient,
               cubicleNum: targetCubicle,
               status: 'Assigned',
             },
-          ]);
+          ];
+          if (pendingUpdatesRef) {
+            pendingUpdatesRef.current = nextPending;
+          }
+          setPendingUpdates(nextPending);
         } else {
           // Assign from Queue to Cubicle
+          unpinConfirmedPatient?.(draggedPatient.id);
           setOnProgressPatients(prev => prev.filter(p => p.id !== draggedPatient.id));
           setAssignedPatients(prev => ({
             ...prev,
@@ -262,15 +277,19 @@ export function useDragAndDrop(
             ],
           }));
 
-          setPendingUpdates(prev => [
-            ...prev.filter(p => p.id !== draggedPatient.id),
+          const nextPending = [
+            ...(pendingUpdatesRef?.current || []).filter(p => p.id !== draggedPatient.id),
             {
               ...draggedPatient,
               cubicleNum: targetCubicle,
               status: 'Assigned',
               reg_end: now,
             },
-          ]);
+          ];
+          if (pendingUpdatesRef) {
+            pendingUpdatesRef.current = nextPending;
+          }
+          setPendingUpdates(nextPending);
         }
       }
 

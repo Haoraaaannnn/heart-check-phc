@@ -59,7 +59,10 @@ export function useOfflineQueue(onSynced?: () => void | Promise<void>): UseOffli
 
   const isMountedRef = useRef<boolean>(true);
   const onSyncedRef = useRef(onSynced);
-  onSyncedRef.current = onSynced;
+
+  useEffect(() => {
+    onSyncedRef.current = onSynced;
+  }, [onSynced]);
 
   /**
    * Executes a flush pass with loading state management.

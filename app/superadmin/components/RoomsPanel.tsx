@@ -203,7 +203,7 @@ export function RoomsPanel() {
     return (
       <div className="py-16 text-center space-y-3">
         <div className="w-8 h-8 border-2 border-rose-600 border-t-transparent rounded-full animate-spin mx-auto" />
-        <p className="text-xs text-slate-500 dark:text-slate-400">{T.loadingText}</p>
+        <p className="text-xs text-slate-500 dark:text-[#a3a3a3]">{T.loadingText}</p>
       </div>
     );
   }
@@ -217,7 +217,7 @@ export function RoomsPanel() {
             <i className="bx bx-door-open text-rose-600 dark:text-rose-400" aria-hidden="true" />
             <span>Consultation Rooms & Cubicles</span>
           </h2>
-          <p className="text-xs text-slate-500 dark:text-slate-400 mt-0.5">
+          <p className="text-xs text-slate-500 dark:text-[#a3a3a3] mt-0.5">
             Organized by clinical specialty and physical outpatient examination rooms.
           </p>
         </div>
@@ -238,8 +238,8 @@ export function RoomsPanel() {
       )}
 
       {sections.length === 0 ? (
-        <div className="p-12 text-center bg-white dark:bg-slate-900 border border-slate-200 dark:border-slate-800 rounded-xl">
-          <p className="text-sm font-semibold text-slate-600 dark:text-slate-400">
+        <div className={S.emptyCard}>
+          <p className="text-sm font-semibold text-slate-600 dark:text-[#a3a3a3]">
             {T.emptyState}
           </p>
         </div>
@@ -247,10 +247,10 @@ export function RoomsPanel() {
         sections.map(([label, groups]) => (
           <div key={label} className="space-y-4">
             <div className="flex items-center gap-2">
-              <span className="text-xs font-bold uppercase tracking-wider text-rose-700 dark:text-rose-400 px-3 py-1 rounded-lg bg-rose-50 dark:bg-rose-950/60 border border-rose-200 dark:border-rose-900">
+              <span className="text-xs font-bold uppercase tracking-wider text-[#a8071a] dark:text-[#f87171] px-3 py-1 rounded-lg bg-[#a8071a]/10 dark:bg-[#a8071a]/20 border border-[#a8071a]/25">
                 {label}
               </span>
-              <div className="flex-1 h-px bg-slate-200 dark:bg-slate-800" />
+              <div className={S.sectionDivider} />
             </div>
 
             <div className="grid grid-cols-1 lg:grid-cols-2 gap-4">
@@ -263,7 +263,7 @@ export function RoomsPanel() {
                         R{g.room}
                       </span>
                       <span>Room {g.room}</span>
-                      <span className="text-xs font-normal text-slate-500 dark:text-slate-400">
+                      <span className="text-xs font-normal text-slate-500 dark:text-[#a3a3a3]">
                         ({g.cubicles.length} cubicles)
                       </span>
                     </div>
@@ -272,14 +272,14 @@ export function RoomsPanel() {
                       <button
                         type="button"
                         onClick={() => openModal({ type: 'renameRoom', group: g })}
-                        className="px-2 py-1 rounded text-xs font-medium text-slate-600 dark:text-slate-300 hover:bg-slate-200 dark:hover:bg-slate-700 transition"
+                        className="px-2 py-1 rounded text-xs font-medium text-slate-600 dark:text-[#a3a3a3] hover:bg-slate-200 dark:hover:bg-[#242424] transition"
                       >
                         {T.renameRoomButton}
                       </button>
                       <button
                         type="button"
                         onClick={() => confirmDeleteRoom(g)}
-                        className="px-2 py-1 rounded text-xs font-medium text-red-600 dark:text-red-400 hover:bg-red-50 dark:hover:bg-red-950 transition"
+                        className="px-2 py-1 rounded text-xs font-medium text-red-600 dark:text-red-400 hover:bg-red-50 dark:hover:bg-red-950/40 transition"
                       >
                         {T.deleteRoomButton}
                       </button>
@@ -290,12 +290,12 @@ export function RoomsPanel() {
                   <div className={S.cubicleGrid}>
                     {g.cubicles.map((c) => (
                       <div key={c.id} className={S.cubicleChip}>
-                        <span className="truncate">{c.cubicleNum}</span>
+                        <span className="whitespace-normal break-words font-medium">{c.cubicleNum}</span>
                         <div className="flex items-center gap-1 shrink-0 ml-1">
                           <button
                             type="button"
                             onClick={() => openModal({ type: 'editCubicle', cubicle: c })}
-                            className="p-1 hover:text-rose-600 transition"
+                            className="p-1 hover:text-[#a8071a] dark:hover:text-[#f87171] transition"
                             title="Edit cubicle"
                           >
                             <i className="bx bx-edit text-sm" aria-hidden="true" />
@@ -315,7 +315,7 @@ export function RoomsPanel() {
                     <button
                       type="button"
                       onClick={() => openModal({ type: 'addCubicle', group: g })}
-                      className="p-2.5 rounded-lg border border-dashed border-slate-300 dark:border-slate-700 hover:border-rose-400 hover:bg-rose-50/50 dark:hover:bg-rose-950/20 text-xs font-semibold text-rose-600 dark:text-rose-400 flex items-center justify-center gap-1 transition cursor-pointer"
+                      className="p-2.5 rounded-lg border border-dashed border-slate-300 dark:border-[#2e2e2e] hover:border-[#a8071a] hover:bg-rose-50/50 dark:hover:bg-[#a8071a]/10 text-xs font-semibold text-[#a8071a] dark:text-[#f87171] flex items-center justify-center gap-1 transition cursor-pointer"
                     >
                       <i className="bx bx-plus" aria-hidden="true" />
                       <span>{T.addCubicleButton}</span>
@@ -339,12 +339,12 @@ export function RoomsPanel() {
                     <i className="bx bx-error" aria-hidden="true" />
                   </div>
                   <div>
-                    <h3 className="text-base font-bold text-slate-900 dark:text-white">
+                    <h3 className="text-base font-bold text-slate-900 dark:text-[#f5f5f5]">
                       {modal.title}
                     </h3>
                   </div>
                 </div>
-                <p className="text-xs text-slate-600 dark:text-slate-300">
+                <p className="text-xs text-slate-600 dark:text-[#a3a3a3]">
                   {modal.message}
                 </p>
                 {modalError && (
@@ -373,8 +373,8 @@ export function RoomsPanel() {
               </div>
             ) : (
               <form onSubmit={submit} className="space-y-4">
-                <h3 className="text-base font-bold text-slate-900 dark:text-white flex items-center gap-2">
-                  <i className="bx bx-edit text-rose-600" aria-hidden="true" />
+                <h3 className="text-base font-bold text-slate-900 dark:text-[#f5f5f5] flex items-center gap-2">
+                  <i className="bx bx-edit text-[#a8071a] dark:text-[#f87171]" aria-hidden="true" />
                   <span>
                     {modal.type === 'addRoom' && T.modalAddTitle}
                     {modal.type === 'renameRoom' && T.modalRenameTitle}
@@ -392,7 +392,7 @@ export function RoomsPanel() {
                 {modal.type === 'addRoom' && (
                   <>
                     <div className="space-y-1">
-                      <label className="block text-xs font-semibold text-slate-700 dark:text-slate-300">
+                      <label className="block text-xs font-semibold text-slate-700 dark:text-[#a3a3a3]">
                         {T.categoryLabel}
                       </label>
                       <select
@@ -401,7 +401,7 @@ export function RoomsPanel() {
                         className={S.select}
                       >
                         {SERVICES.map((s) => (
-                          <option key={s} value={s} className="bg-white dark:bg-slate-900 text-slate-900 dark:text-white">
+                          <option key={s} value={s} className={S.selectOption}>
                             {s}
                           </option>
                         ))}
@@ -410,7 +410,7 @@ export function RoomsPanel() {
 
                     {needsSub && (
                       <div className="space-y-1">
-                        <label className="block text-xs font-semibold text-slate-700 dark:text-slate-300">
+                        <label className="block text-xs font-semibold text-slate-700 dark:text-[#a3a3a3]">
                           {T.subcategoryLabel}
                         </label>
                         <select
@@ -419,7 +419,7 @@ export function RoomsPanel() {
                           className={S.select}
                         >
                           {SUBCATEGORIES.map((s) => (
-                            <option key={s} value={s} className="bg-white dark:bg-slate-900 text-slate-900 dark:text-white">
+                            <option key={s} value={s} className={S.selectOption}>
                               {s}
                             </option>
                           ))}
@@ -428,7 +428,7 @@ export function RoomsPanel() {
                     )}
 
                     <div className="space-y-1">
-                      <label className="block text-xs font-semibold text-slate-700 dark:text-slate-300">
+                      <label className="block text-xs font-semibold text-slate-700 dark:text-[#a3a3a3]">
                         {T.roomNumberLabel}
                       </label>
                       <input
@@ -443,7 +443,7 @@ export function RoomsPanel() {
                     </div>
 
                     <div className="space-y-1">
-                      <label className="block text-xs font-semibold text-slate-700 dark:text-slate-300">
+                      <label className="block text-xs font-semibold text-slate-700 dark:text-[#a3a3a3]">
                         {T.cubicleCountLabel}
                       </label>
                       <input
@@ -461,7 +461,7 @@ export function RoomsPanel() {
 
                 {modal.type === 'renameRoom' && (
                   <div className="space-y-1">
-                    <label className="block text-xs font-semibold text-slate-700 dark:text-slate-300">
+                    <label className="block text-xs font-semibold text-slate-700 dark:text-[#a3a3a3]">
                       New Room Number
                     </label>
                     <input
@@ -477,7 +477,7 @@ export function RoomsPanel() {
 
                 {(modal.type === 'addCubicle' || modal.type === 'editCubicle') && (
                   <div className="space-y-1">
-                    <label className="block text-xs font-semibold text-slate-700 dark:text-slate-300">
+                    <label className="block text-xs font-semibold text-slate-700 dark:text-[#a3a3a3]">
                       {T.cubicleNameLabel}
                     </label>
                     <input

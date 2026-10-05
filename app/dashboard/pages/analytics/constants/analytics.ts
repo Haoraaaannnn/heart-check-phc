@@ -10,6 +10,7 @@
  */
 
 import { cardSurface } from '@/constants/themes';
+import { themeTokens } from '@/constants/themeTokens';
 import { COMMON_ICONS } from '@/constants/icons';
 
 /** Icon tokens for Analytics page controls and indicators. */
@@ -170,6 +171,7 @@ export const ANALYTICS_STYLES = {
       'bg-surface-muted border-line text-content hover:bg-surface-muted hover:border-emerald-500/50',
     serviceSelect:
       'w-full rounded-xl border border-line bg-surface px-3.5 py-2 text-sm font-semibold text-content outline-none transition focus:border-emerald-500 focus:ring-2 focus:ring-emerald-500/20',
+    selectOption: themeTokens.surface.selectOption,
     infoCard:
       'rounded-xl border border-emerald-200 bg-emerald-50 dark:border-emerald-900 dark:bg-emerald-950/40 p-3.5 text-xs text-content-muted flex flex-col gap-1.5',
     infoRow: 'flex items-center justify-between text-xs',
@@ -211,7 +213,7 @@ export const ANALYTICS_STYLES = {
     header: 'flex flex-col gap-3 md:flex-row md:items-center md:justify-between border-b border-line pb-4',
     titleBlock: 'flex flex-col gap-1',
     title: 'text-lg md:text-xl font-extrabold text-content flex items-center gap-2.5',
-    dateBadge: 'inline-flex items-center gap-1.5 rounded-lg bg-blue-50 text-blue-700 dark:bg-blue-950/60 dark:text-blue-300 px-3 py-1 text-xs font-bold border border-blue-200 dark:border-blue-800',
+    dateBadge: 'inline-flex items-center gap-1.5 rounded-lg bg-slate-100 text-slate-800 dark:bg-[#242424] dark:text-[#f5f5f5] px-3 py-1 text-xs font-bold border border-slate-200 dark:border-[#2e2e2e]',
     subtitle: 'text-xs text-content-muted leading-relaxed',
     headerActions: 'flex items-center gap-2 flex-wrap',
     resetBtn: 'inline-flex items-center gap-1.5 rounded-xl border border-line bg-surface px-3.5 py-2 text-xs font-semibold text-content hover:bg-surface-muted active:scale-95 transition cursor-pointer shadow-xs',
@@ -221,9 +223,9 @@ export const ANALYTICS_STYLES = {
     kpiValue: 'mt-1 text-2xl font-extrabold text-content',
     kpiSub: 'mt-0.5 text-xs text-content-subtle',
     systemStatusBadge: 'mt-2 inline-flex items-center rounded-full px-2.5 py-0.5 text-xs font-bold w-fit',
-    hintBanner: 'flex items-center justify-between gap-3 rounded-xl border border-blue-200/70 bg-blue-50/50 dark:border-blue-900/40 dark:bg-blue-950/20 px-4 py-3 text-xs text-blue-800 dark:text-blue-200',
+    hintBanner: 'flex items-center justify-between gap-3 rounded-xl border border-slate-200 bg-slate-50 dark:border-[#2e2e2e] dark:bg-[#242424]/40 px-4 py-3 text-xs text-slate-800 dark:text-[#f5f5f5]',
     hintContent: 'flex items-center gap-2.5',
-    hintIcon: 'text-lg text-blue-600 dark:text-blue-400 shrink-0',
+    hintIcon: 'text-lg text-slate-600 dark:text-[#a3a3a3] shrink-0',
     emptyNotice: 'flex flex-col items-center justify-center p-8 text-center text-xs text-content-muted rounded-xl border border-line bg-surface-muted gap-2',
     loadingNotice: 'flex items-center justify-center gap-2.5 p-8 text-center text-xs text-content-muted rounded-xl border border-line bg-surface-muted font-medium',
     spinner: 'h-4 w-4 animate-spin text-brand-accent',

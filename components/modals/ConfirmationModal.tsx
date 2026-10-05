@@ -1,8 +1,9 @@
 "use client";
 
-import { useEffect, useState } from "react";
+import { useEffect } from "react";
 import { createPortal } from "react-dom";
 import { themeColors } from "@/constants/colors";
+import { useIsMounted } from "@/hooks/useIsMounted";
 
 /** Props for {@link ConfirmationModal}. */
 interface ConfirmationModalProps {
@@ -49,11 +50,7 @@ export default function ConfirmationModal({
     onCancel,
     isDangerous: _isDangerous = false,
 }: ConfirmationModalProps) {
-    const [mounted, setMounted] = useState(false);
-
-    useEffect(() => {
-        setMounted(true);
-    }, []);
+    const mounted = useIsMounted();
 
     // Lock body scroll when open
     useEffect(() => {

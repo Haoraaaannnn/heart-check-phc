@@ -47,7 +47,7 @@ export default function FlowchartIdleTelemetry({
         </div>
 
         <div className="flex items-center gap-2">
-          <span className="inline-flex items-center gap-1 rounded-md bg-blue-50 dark:bg-blue-950/40 px-2.5 py-1 text-xs font-semibold text-blue-700 dark:text-blue-300 border border-blue-200 dark:border-blue-900">
+          <span className="inline-flex items-center gap-1 rounded-md bg-slate-100 dark:bg-[#242424] px-2.5 py-1 text-xs font-semibold text-slate-700 dark:text-[#f5f5f5] border border-slate-200 dark:border-[#2e2e2e]">
             <i className="bx bx-check-shield" />
             <span>{T.benchmark}</span>
           </span>
@@ -108,8 +108,8 @@ export default function FlowchartIdleTelemetry({
             idle > HEATMAP_IDLE_THRESHOLDS.continuousMax
           ) {
             toneClass =
-              'border-blue-200 dark:border-blue-900 bg-blue-50/50 dark:bg-blue-950/20 text-blue-800 dark:text-blue-300';
-            dotClass = 'bg-blue-500';
+              'border-teal-200 dark:border-teal-900 bg-teal-50/50 dark:bg-teal-950/20 text-teal-800 dark:text-teal-300';
+            dotClass = 'bg-teal-500';
             label = T.lowIdle;
           }
 

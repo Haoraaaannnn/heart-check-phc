@@ -13,7 +13,7 @@
 
 'use client';
 
-import React from 'react';
+import React, { useState } from 'react';
 import { Patient, Cubicle } from '@/types/Types';
 import { MAX_PATIENTS_PER_CUBICLE } from '../lib/constants';
 import { ElapsedTimer } from './ElapsedTimer';
@@ -84,6 +84,8 @@ export function CubicleCard({
   warnAfterSeconds,
   doctorName,
 }: CubicleCardProps) {
+  const [isAssignPending, setIsAssignPending] = useState(false);
+  const [isBackPending, setIsBackPending] = useState(false);
   const safeAssigned = Array.isArray(assigned) ? assigned : [];
   const uniqueAssigned = Array.from(new Map(safeAssigned.map(p => [p.id, p])).values());
   const visibleAssigned = uniqueAssigned.slice(0, MAX_PATIENTS_PER_CUBICLE);
@@ -136,15 +138,34 @@ export function CubicleCard({
         {isTargetEligible ? (
           <button
             type="button"
-            onClick={e => {
+            disabled={isAssignPending}
+            onClick={async e => {
               e.stopPropagation();
-              handleCardTargetClick();
+              if (isAssignPending) return;
+              setIsAssignPending(true);
+              try {
+                await handleCardTargetClick();
+              } finally {
+                setIsAssignPending(false);
+              }
             }}
-            className="px-1.5 py-0.5 text-[10px] font-bold bg-emerald-600 hover:bg-emerald-700 active:bg-emerald-800 text-white rounded transition-colors shadow-2xs shrink-0 cursor-pointer"
+            className={`px-1.5 py-0.5 text-[10px] font-bold bg-emerald-600 hover:bg-emerald-700 active:bg-emerald-800 text-white rounded transition-colors shadow-2xs shrink-0 cursor-pointer select-none ${
+              isAssignPending ? 'cursor-wait opacity-80' : ''
+            }`}
           >
-            {selectedPatient?.sourceType === 'queue'
-              ? transferTexts.assignHereBtn
-              : transferTexts.reassignHereBtn}
+            {isAssignPending ? (
+              <span className="flex items-center gap-1">
+                <svg className="w-2.5 h-2.5 animate-spin" fill="none" viewBox="0 0 24 24">
+                  <circle className="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" strokeWidth="4" />
+                  <path className="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4zm2 5.291A7.962 7.962 0 014 12H0c0 3.042 1.135 5.824 3 7.938l3-2.647z" />
+                </svg>
+                <span>{transferTexts.savingAssignment}</span>
+              </span>
+            ) : (
+              selectedPatient?.sourceType === 'queue'
+                ? transferTexts.assignHereBtn
+                : transferTexts.reassignHereBtn
+            )}
           </button>
         ) : (
           <span
@@ -237,16 +258,32 @@ export function CubicleCard({
                 {/* Return to queue button */}
                 <button
                   type="button"
+                  disabled={isBackPending}
                   onPointerDown={e => e.stopPropagation()}
                   onMouseDown={e => e.stopPropagation()}
-                  onClick={e => {
+                  onClick={async e => {
                     e.stopPropagation();
-                    onMoveBack(topPatient, cubicle.cubicleNum);
+                    if (isBackPending) return;
+                    setIsBackPending(true);
+                    try {
+                      await onMoveBack(topPatient, cubicle.cubicleNum);
+                    } finally {
+                      setIsBackPending(false);
+                    }
                   }}
                   title={transferTexts.moveToQueueTooltip}
-                  className="px-1.5 py-0.5 rounded text-[10px] font-semibold bg-amber-50 hover:bg-amber-100 text-amber-700 transition-colors cursor-pointer"
+                  className={`px-1.5 py-0.5 rounded text-[10px] font-semibold bg-amber-50 hover:bg-amber-100 text-amber-700 transition-colors cursor-pointer select-none ${
+                    isBackPending ? 'cursor-wait opacity-80' : ''
+                  }`}
                 >
-                  {transferTexts.backBtn}
+                  {isBackPending ? (
+                    <svg className="w-3 h-3 animate-spin inline-block text-amber-700" fill="none" viewBox="0 0 24 24">
+                      <circle className="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" strokeWidth="4" />
+                      <path className="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4zm2 5.291A7.962 7.962 0 014 12H0c0 3.042 1.135 5.824 3 7.938l3-2.647z" />
+                    </svg>
+                  ) : (
+                    <span>{transferTexts.backBtn}</span>
+                  )}
                 </button>
               </div>
             </div>

@@ -16,7 +16,7 @@ import { Cubicle, Patient } from '@/types/Types';
 import { QueuePanel } from './QueuePanel';
 import { RegistrationCounterSection } from './RegistrationCounterSection';
 import { CubicleCard } from './CubicleCard';
-import { SelectionBanner } from './SelectionBanner';
+import { QuickAssignDropdown } from './QuickAssignDropdown';
 import { transferTexts } from '../constants/transferTexts';
 import { SelectedTransferPatient } from '../types/transfer';
 
@@ -253,11 +253,34 @@ export function ServiceBoard({
         </div>
       </div>
 
-      {/* Floating Selection Banner for Click-to-Select Tablet Guidance */}
-      <SelectionBanner
-        selectedPatient={selectedPatient ?? null}
-        onCancel={onCancelSelection || (() => {})}
-      />
+      {/* Quick-Assign Destination Popover for One-Tap Station Allocation */}
+      {selectedPatient && (
+        <QuickAssignDropdown
+          patient={selectedPatient.patient}
+          sourceType={selectedPatient.sourceType === 'counter' ? 'queue' : selectedPatient.sourceType}
+          currentCubicleNum={
+            selectedPatient.sourceType === 'cubicle'
+              ? String(selectedPatient.sourceId)
+              : undefined
+          }
+          cubicles={cubicles}
+          cubicleDoctorMap={cubicleDoctorMap}
+          assignedPatients={assignedPatients}
+          onAssignToCubicle={(p, cubicleNum) => {
+            if (onTargetCubicleClick) {
+              onTargetCubicleClick(cubicleNum);
+            }
+          }}
+          onMoveBackToQueue={(p, cubicleNum) => {
+            if (onMoveBackToProgress) {
+              onMoveBackToProgress(p, cubicleNum);
+            }
+          }}
+          onSpeak={onSpeak}
+          categoryName={category}
+          onClose={onCancelSelection || (() => {})}
+        />
+      )}
     </>
   );
 }

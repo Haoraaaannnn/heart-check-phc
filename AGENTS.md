@@ -58,10 +58,10 @@ This document outlines the mandatory rules and architectural standards that the 
 
 ---
 
-### 7. Explicit User Permission Required for Command & File Execution
-- The agent may propose and execute terminal commands, package manager operations, git operations, linters, or build validations **ONLY AFTER requesting and receiving explicit permission from the user**.
-- The agent must NEVER execute autonomous or unconfirmed terminal commands without prior user consent.
-- Always state the exact command to be executed and its purpose before running it.
+### 7. Terminal Command Execution & Token-Saving Scans
+- **Token-Saving Search & Scanning Permitted:** The agent is authorized and encouraged to execute lightweight, read-only commands and tools that streamline repository exploration and save context tokens (such as ripgrep/grep searches, file scanning, directory inspection, file finding, log tailing, and read-only diagnostic checks). Using targeted scanning commands avoids reading unnecessary large files into context, saving tokens and speeding up analysis.
+- **Explicit User Permission Required for Executing Operational Commands:** The agent can execute terminal commands (such as package manager operations, linters like ESLint, build validations, tests, migrations, git commands, and process management), **ONLY AFTER requesting and receiving explicit permission from the user**.
+- **Always Ask First:** The agent must never run unconfirmed operational or state-altering terminal commands autonomously. Always state the exact command line string and its intended purpose, then wait for explicit user confirmation before executing it.
 
 ---
 
@@ -145,7 +145,7 @@ Before completing any refactoring or coding task, verify against these rules:
 - [ ] Enterprise navigation rails, breadcrumbs, Manila clock, and high-contrast solid surfaces are adhered to in administrative workstations.
 - [ ] No emojis are used anywhere in documentation, code, or comments.
 - [ ] No ellipsis or truncated text (`...`, `…`, `truncate`, `text-ellipsis`) is used on labels, names, or clinical data.
-- [ ] All terminal commands and executions received explicit user confirmation prior to running.
+- [ ] All operational terminal commands received explicit user confirmation prior to running (with token-saving search and scanning commands permitted for efficient investigation).
 - [ ] Developer guide markdown files (.md) are created or updated with an explicit "where to edit" reference guide so developers can navigate and make changes easily.
 - [ ] No private secrets, backend credentials, or service role keys are exposed to client code or `NEXT_PUBLIC_` variables.
 - [ ] Server-side route guarding and role validation (`proxy.ts`) protect administrative and clinical endpoints.

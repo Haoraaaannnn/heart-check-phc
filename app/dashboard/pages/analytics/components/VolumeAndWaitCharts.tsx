@@ -286,7 +286,7 @@ export default function VolumeAndWaitCharts({
         >
           {selectedDate && (
             <div className="mb-2 flex items-center justify-between text-xs">
-              <span className="inline-flex items-center gap-1.5 rounded-lg bg-blue-50 text-blue-700 dark:bg-blue-950/60 dark:text-blue-300 px-2.5 py-1 font-bold border border-blue-200 dark:border-blue-800">
+              <span className="inline-flex items-center gap-1.5 rounded-lg bg-slate-100 text-slate-800 dark:bg-[#242424] dark:text-[#f5f5f5] px-2.5 py-1 font-bold border border-slate-200 dark:border-[#2e2e2e]">
                 <i className="bx bx-calendar text-xs" />
                 <span>Drill-Down: {selectedDate}</span>
               </span>

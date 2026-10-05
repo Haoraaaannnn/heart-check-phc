@@ -35,7 +35,7 @@ Use this table to quickly identify the exact file to modify for any given requir
 | Selection button standard tokens & dimensions | `app/transfer/constants/transfer.ts` | `selectionCardTokens`, `transferLayoutTokens` |
 | Transfer UI thresholds & categories | `app/transfer/lib/constants.ts` | Queue capacities, service names, cooldowns |
 | Connection banner messages | `constants/connectionTexts.ts` | Centralized network and offline sync copy |
-| Main transfer orchestrator | `app/transfer/page.tsx` | Flow routing, confirm persistence, sync |
+| Main transfer orchestrator | `app/transfer/page.tsx` | Flow routing, confirm persistence, 0ms direct realtime payload patching, and monotonic sequence guarding |
 | Confirm assignment modal | `app/transfer/components/ConfirmAssignmentModal.tsx` | Dialog for reviewing pending patient assignments and SMS alerts |
 | Navigation sidebar | `app/transfer/components/Sidebar.tsx` | Service category navigation and centralized icons |
 | Drag-and-drop grip handle | `app/transfer/components/DragHandle.tsx` | Pure CSS indicator lines with touch drag gating |
@@ -44,20 +44,22 @@ Use this table to quickly identify the exact file to modify for any given requir
 | Other services flow layout | `app/transfer/components/OtherServicesFlow.tsx` | Non-cubicle service queues |
 | Two-column board container | `app/transfer/components/ServiceBoard.tsx` | Assembles queue list and cubicle/station list |
 | Active queue patient list | `app/transfer/components/OnProgressSection.tsx` | Queue patient cards with call/assign actions |
-| Station / cubicle card | `app/transfer/components/CubicleCard.tsx` | Station status, call button, and back button |
+| Station / cubicle card | `app/transfer/components/CubicleCard.tsx` | Station status, call button, and back button with in-button loading states |
 | Registration counters section | `app/transfer/components/RegistrationCounterSection.tsx` | Counter cards and patient release flow |
 | Idle / holding numbers section | `app/transfer/components/IdleNumbersSection.tsx` | Accordion container for idle patients |
 | Idle patient card panel | `app/transfer/components/IdleNumbersPanel.tsx` | Activate and remove patient actions |
 | Subcategory & room pickers | `app/transfer/components/StepPickers.tsx` | Typography cards for selecting subcategory/room |
-| Selection banner (tablet tap mode) | `app/transfer/components/SelectionBanner.tsx` | Floating active selection bar with cancel |
+| Quick-assign dropdown (tap-to-transfer) | `app/transfer/components/QuickAssignDropdown.tsx` | Contextual popover for direct one-tap cubicle allocation with in-button loading spinners and auto-dismiss |
+| Selection banner (legacy tablet mode) | `app/transfer/components/SelectionBanner.tsx` | Floating active selection bar with cancel |
 | Doctor management modal & panel | `app/transfer/components/DoctorsModal.tsx`, `DoctorsPanel.tsx` | Doctor assignment modal and drawer |
+| Patient state, assignment pinning & polling | `app/transfer/hooks/usePatientData.ts` | Centralized patient data fetching, 8s confirmed assignment pinning with 2.5s post-match grace window, getConfirmedPin payload guarding, pending update overlay, and 4s derived write throttling |
 | Offline queue outbox engine | `lib/offlineQueue.ts` | IndexedDB persistent outbox queue and flush worker |
 | Offline synchronization React hook | `hooks/useOfflineQueue.ts` | Background synchronization engine |
-| Drag-and-drop operations | `app/transfer/hooks/useDragAndDrop.ts` | Pointer event drag-and-drop mechanics |
+| Drag-and-drop operations | `app/transfer/hooks/useDragAndDrop.ts` | Pointer event drag-and-drop mechanics with synchronous pending update ref synchronization |
 | Registration window drag & drop | `app/transfer/hooks/useRegistrationDragAndDrop.ts` | Counter allocation interactions |
 | Auto-assignment algorithm | `app/transfer/hooks/useAutoAssign.ts` | Least-occupied cubicle distribution |
 | Queue rotation timers | `app/transfer/hooks/useAutoRotate.ts` | Idle rotation and timeout management |
-| Realtime subscription | `app/transfer/hooks/useRealtimeSubscription.ts` | Supabase Realtime channel handler with 300ms event debounce, 5s polling fallback, 2s hysteresis, and 500ms overlap throttle |
+| Realtime subscription | `app/transfer/hooks/useRealtimeSubscription.ts` | Supabase Realtime channel handler with 150ms event debounce, direct 0ms onPayload dispatch, 5s polling fallback, 2s hysteresis, and 500ms trailing-edge throttle |
 | Patient types and contracts | `types/Types.ts` | Global patient record interface |
 
 ---

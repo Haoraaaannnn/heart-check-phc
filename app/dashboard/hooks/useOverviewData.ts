@@ -676,11 +676,14 @@ export function useOverviewData(): UseOverviewDataResult {
   // when these functions change identity — that was causing channel teardown
   // loops on weak signal.
   const fetchTodayStatsRef = useRef(fetchTodayStats);
-  fetchTodayStatsRef.current = fetchTodayStats;
   const fetchYesterdayRef = useRef(fetchYesterday);
-  fetchYesterdayRef.current = fetchYesterday;
   const handleRealtimePayloadRef = useRef(handleRealtimePayload);
-  handleRealtimePayloadRef.current = handleRealtimePayload;
+
+  useEffect(() => {
+    fetchTodayStatsRef.current = fetchTodayStats;
+    fetchYesterdayRef.current = fetchYesterday;
+    handleRealtimePayloadRef.current = handleRealtimePayload;
+  }, [fetchTodayStats, fetchYesterday, handleRealtimePayload]);
 
   // Primary Realtime subscription lifecycle with fallback polling and hysteresis
   useEffect(() => {

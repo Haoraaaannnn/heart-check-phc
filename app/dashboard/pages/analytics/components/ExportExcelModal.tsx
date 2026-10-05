@@ -461,7 +461,7 @@ export default function ExportExcelModal({
                       <option
                         value=""
                         disabled
-                        className="bg-white dark:bg-slate-900 text-slate-900 dark:text-slate-100"
+                        className={S.selectOption}
                       >
                         {T.selectRecordedDatePlaceholder}
                       </option>
@@ -469,7 +469,7 @@ export default function ExportExcelModal({
                         <option
                           key={d}
                           value={d}
-                          className="bg-white dark:bg-slate-900 text-slate-900 dark:text-slate-100"
+                          className={S.selectOption}
                         >
                           {formatDisplayDate(d)} ({d})
                         </option>
@@ -537,7 +537,7 @@ export default function ExportExcelModal({
                       <option
                         key={year}
                         value={year}
-                        className="bg-white dark:bg-slate-900 text-slate-900 dark:text-slate-100"
+                        className={S.selectOption}
                       >
                         {year}
                       </option>
@@ -610,7 +610,7 @@ export default function ExportExcelModal({
                 <option
                   key={svc.value}
                   value={svc.value}
-                  className="bg-white dark:bg-slate-900 text-slate-900 dark:text-slate-100"
+                  className={S.selectOption}
                 >
                   {svc.label}
                 </option>

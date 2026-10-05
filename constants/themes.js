@@ -12,11 +12,11 @@
 // ---------------------------------------------------------------------------
 // LEGACY - bg / text themes applicable to all especially on dashboard
 // ---------------------------------------------------------------------------
-export const darkTheme = "dark:bg-gray-900 dark:border-gray-800 dark:shadow-sm";
+export const darkTheme = "dark:bg-[#1a1a1a] dark:border-[#2e2e2e] dark:shadow-sm";
 export const lightTheme = "rounded-2xl shadow-sm border border-gray-200 bg-white";
 
 export const textLight = "text-gray-800";
-export const textDark = "dark:text-gray-200";
+export const textDark = "dark:text-[#f5f5f5]";
 
 // ---------------------------------------------------------------------------
 // SEMANTIC - theme-aware via CSS variables (see app/globals.css)
