@@ -32,15 +32,6 @@ export function useCurrentStaff() {
     };
     window.addEventListener('pageshow', handlePageShow);
 
-    // Push an initial history entry to absorb back-button navigation away from select-screen
-    window.history.pushState(null, '', window.location.href);
-
-    const handlePopState = () => {
-      // Re-push history entry to retain user on select-screen while authenticated
-      window.history.pushState(null, '', window.location.href);
-    };
-    window.addEventListener('popstate', handlePopState);
-
     async function loadStaffProfile() {
       try {
         const {
@@ -89,7 +80,6 @@ export function useCurrentStaff() {
     return () => {
       isMounted = false;
       window.removeEventListener('pageshow', handlePageShow);
-      window.removeEventListener('popstate', handlePopState);
     };
   }, []);
 

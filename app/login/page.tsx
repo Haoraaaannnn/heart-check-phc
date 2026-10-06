@@ -65,25 +65,53 @@ function LoginPageInner() {
   const T = LOGIN_TEXTS;
 
   /**
-   * Automatically redirects to select-screen if user is already authenticated,
-   * preventing unnecessary re-login or back-navigation loops into login form.
+   * Cleanses residual session state and cookies upon arriving at the login screen.
+   *
+   * Ensures that navigating back to login from clinical workstations terminates the
+   * session immediately so credentials do not persist on shared physical hardware.
    */
   useEffect(() => {
     let active = true;
-    const checkActiveSession = async () => {
-      const {
-        data: { session },
-      } = await supabase.auth.getSession();
+
+    const purgeActiveSession = async () => {
+      try {
+        await fetch('/api/auth/logout', {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json' },
+        });
+      } catch (err) {
+        console.error('[AUTH] Failed to purge server cookies on login mount:', err);
+      }
+
+      try {
+        await supabase.auth.signOut();
+      } catch (err) {
+        console.error('[AUTH] Failed to sign out client supabase on login mount:', err);
+      }
+
       if (!active) return;
-      if (session) {
-        window.location.replace('/select-screen');
+
+      setEmail('');
+      setPassword('');
+      if (emailInputRef.current) {
+        emailInputRef.current.value = '';
+      }
+      if (passwordInputRef.current) {
+        passwordInputRef.current.value = '';
+      }
+
+      try {
+        sessionStorage.clear();
+      } catch {
+        // Ignore sandboxed storage clearance failures
       }
     };
-    void checkActiveSession();
+
+    void purgeActiveSession();
 
     const handlePageShow = (event: PageTransitionEvent) => {
       if (event.persisted) {
-        void checkActiveSession();
+        void purgeActiveSession();
       }
     };
 
@@ -201,7 +229,8 @@ function LoginPageInner() {
       }
 
       setEmail('');
-      window.location.replace('/select-screen');
+      setPassword('');
+      router.push('/select-screen');
     } catch (err) {
       setPassword('');
       if (passwordInputRef.current) {

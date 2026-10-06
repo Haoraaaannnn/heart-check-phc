@@ -37,16 +37,16 @@ The table below provides direct file paths for modifying any part of the phone n
 
 | Action / Responsibility | File Path |
 | :--- | :--- |
-| **Core encryption / decryption logic & AES-256-GCM cipher** | [lib/crypto/phoneEncryption.ts](file:///c:/Users/ficti/Desktop/main/lib/crypto/phoneEncryption.ts) |
-| **Next.js Server Actions for client-safe encryption & decryption** | [app/actions/phoneSecurity.ts](file:///c:/Users/ficti/Desktop/main/app/actions/phoneSecurity.ts) |
-| **Kiosk phone number entry & ticket registration** | [KioskPhoneEntry.tsx](file:///c:/Users/ficti/Desktop/main/app/kiosk/pages/sms-input/components/KioskPhoneEntry.tsx) |
-| **Automated SMS dispatch & gateway normalization** | [app/actions/sendSMS.ts](file:///c:/Users/ficti/Desktop/main/app/actions/sendSMS.ts) |
-| **Dashboard patient table & protected phone rendering** | [RecentPatientTable.tsx](file:///c:/Users/ficti/Desktop/main/app/dashboard/pages/patients/components/RecentPatientTable.tsx) |
-| **Dashboard patient query hook & record mapping** | [usePatientsData.ts](file:///c:/Users/ficti/Desktop/main/app/dashboard/pages/patients/hooks/usePatientsData.ts) |
-| **Dashboard patient text tokens & copy** | [patientsTexts.ts](file:///c:/Users/ficti/Desktop/main/app/dashboard/pages/patients/constants/patientsTexts.ts) |
-| **Dashboard patient style definitions & badge tokens** | [patients.ts](file:///c:/Users/ficti/Desktop/main/app/dashboard/pages/patients/constants/patients.ts) |
-| **Shared patient TypeScript definitions** | [types/Types.ts](file:///c:/Users/ficti/Desktop/main/types/Types.ts) |
-| **Supabase database migration script** | [docs/migrations/encrypt_phone_number.sql](file:///c:/Users/ficti/Desktop/main/docs/migrations/encrypt_phone_number.sql) |
+| **Core encryption / decryption logic & AES-256-GCM cipher** | [lib/crypto/phoneEncryption.ts](file:///home/jensen/Github-Repositories/heart-check-phc/lib/crypto/phoneEncryption.ts) |
+| **Next.js Server Actions for client-safe encryption & decryption** | [app/actions/phoneSecurity.ts](file:///home/jensen/Github-Repositories/heart-check-phc/app/actions/phoneSecurity.ts) |
+| **Kiosk phone number entry & ticket registration** | [KioskPhoneEntry.tsx](file:///home/jensen/Github-Repositories/heart-check-phc/app/kiosk/pages/sms-input/components/KioskPhoneEntry.tsx) |
+| **Automated SMS dispatch & gateway normalization** | [app/actions/sendSMS.ts](file:///home/jensen/Github-Repositories/heart-check-phc/app/actions/sendSMS.ts) |
+| **Dashboard patient table & protected phone rendering** | [RecentPatientTable.tsx](file:///home/jensen/Github-Repositories/heart-check-phc/app/dashboard/pages/patients/components/RecentPatientTable.tsx) |
+| **Dashboard patient query hook & record mapping** | [usePatientsData.ts](file:///home/jensen/Github-Repositories/heart-check-phc/app/dashboard/pages/patients/hooks/usePatientsData.ts) |
+| **Dashboard patient text tokens & copy** | [patientsTexts.ts](file:///home/jensen/Github-Repositories/heart-check-phc/app/dashboard/pages/patients/constants/patientsTexts.ts) |
+| **Dashboard patient style definitions & badge tokens** | [patients.ts](file:///home/jensen/Github-Repositories/heart-check-phc/app/dashboard/pages/patients/constants/patients.ts) |
+| **Shared patient TypeScript definitions** | [types/Types.ts](file:///home/jensen/Github-Repositories/heart-check-phc/types/Types.ts) |
+| **Supabase database migration script** | [docs/migrations/encrypt_phone_number.sql](file:///home/jensen/Github-Repositories/heart-check-phc/docs/migrations/encrypt_phone_number.sql) |
 
 ---
 

@@ -152,13 +152,37 @@ export async function proxy(request: NextRequest) {
     const path = request.nextUrl.pathname;
 
     /**
-     * If an already authenticated user accesses the public landing page, login page,
+     * If navigating to the login page (including via browser Back navigation),
+     * expire and clear all active Supabase session cookies so credentials
+     * never persist on shared workstations. Visiting /login must never redirect
+     * back to /select-screen.
+     */
+    if (path === '/login') {
+        const allCookies = request.cookies.getAll();
+        allCookies.forEach((cookie) => {
+            if (cookie.name.startsWith('sb-')) {
+                response.cookies.set(cookie.name, '', {
+                    path: '/',
+                    maxAge: 0,
+                    expires: new Date(0),
+                    sameSite: 'lax',
+                    secure: process.env.NODE_ENV === 'production',
+                });
+            }
+        });
+        response.headers.set('Cache-Control', 'no-store, no-cache, must-revalidate, proxy-revalidate');
+        response.headers.set('Pragma', 'no-cache');
+        response.headers.set('Expires', '0');
+        return response;
+    }
+
+    /**
+     * If an already authenticated user accesses the public landing page
      * or password reset request, redirect them to the screen selector.
      * Authenticated users must not navigate back into unauthenticated public screens.
      */
     const isPublicAuthOrLandingPath =
         path === '/' ||
-        path === '/login' ||
         path === '/forgot-password' ||
         path.startsWith('/landing');
 

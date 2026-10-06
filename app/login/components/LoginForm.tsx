@@ -84,7 +84,7 @@ export function LoginForm({
       )}
 
       {/* Login Form */}
-      <form onSubmit={onSubmit} noValidate>
+      <form onSubmit={onSubmit} noValidate autoComplete="off">
         {/* Email Address Input */}
         <div className={S.form.group}>
           <div className={S.form.labelRow}>
@@ -100,7 +100,7 @@ export function LoginForm({
               value={email}
               onChange={(e) => setEmail(e.target.value)}
               required
-              autoComplete="username"
+              autoComplete="off"
               placeholder={T.form.emailPlaceholder}
               disabled={loading || isLockedOut}
               className={S.form.input}
@@ -126,7 +126,7 @@ export function LoginForm({
               value={password}
               onChange={(e) => setPassword(e.target.value)}
               required
-              autoComplete="current-password"
+              autoComplete="off"
               placeholder={T.form.passwordPlaceholder}
               disabled={loading || isLockedOut}
               className={S.form.inputPassword}

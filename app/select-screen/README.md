@@ -16,7 +16,7 @@ The Screen Display Selector serves as the central routing junction for physical 
    - Operational workstations are strictly gated by the staff member's database role (`users.role`).
    - Only workstations authorized for the logged-in user's role are rendered.
    - Route-level security is enforced on the server edge via `proxy.ts` with `Cache-Control: no-store` to prevent bfcache retention.
-   - **Browser History & Navigation Isolation:** To prevent authenticated staff from backing out into unauthenticated screens (the public landing page `/` and `/login`), `proxy.ts` automatically intercepts requests to `/`, `/login`, and `/forgot-password` from authenticated users and redirects them to `/select-screen`. On the client side, `app/select-screen/hooks/useCurrentStaff.ts` binds `window.history.pushState` and `popstate` listeners to trap the browser Back button on the screen selector, while `app/page.tsx` and `app/login/page.tsx` verify active sessions on mount and on bfcache `pageshow` events to forward any lingering attempts immediately to `/select-screen`. Launching workstations from `ScreenOptionCard.tsx` uses `router.push()`, allowing staff in operational workstations to safely press browser Back to return to `/select-screen`.
+    - **Browser History & Session Teardown on Back Navigation:** Launching workstations from `ScreenOptionCard.tsx` uses `router.push()`, allowing staff to safely use browser Back to return from active workstations to `/select-screen`. When staff navigate further Back to `/login`, `proxy.ts` automatically strips session cookies, and `app/login/page.tsx` proactively terminates client and server session state, ensuring credentials never persist when navigating away from workstations.
 
 ---
 
@@ -25,7 +25,7 @@ The Screen Display Selector serves as the central routing junction for physical 
 The Screen Display Selector conforms to the enterprise solid surfaces standard defined in `AGENTS.md`:
 - High-contrast solid surfaces with neutral grayish dark mode (`bg-slate-50 dark:bg-[#0d0d0d]`, `bg-white dark:bg-[#1a1a1a]`)
 - Crisp 1-pixel borders (`border-slate-200 dark:border-[#2e2e2e]`)
-- Centralized theme surfaces and size tokens defined once in [`constants/themeTokens.ts`](file:///home/jensen/Github-Repositories/Heart_Check_PHC/constants/themeTokens.ts) and imported directly
+- Centralized theme surfaces and size tokens defined once in [`constants/themeTokens.ts`](file:///home/jensen/Github-Repositories/heart-check-phc/constants/themeTokens.ts) and imported directly
 - Flawless dual-theme support (`light` and `dark` modes via `next-themes`)
 - Enterprise sticky top header with Manila-time clock (`formatManilaDate`, `formatManilaTime`), theme toggle, staff identity chip, and quick sign out
 - Zero bluish slate tones, zero blurry glassmorphism, zero emojis, and zero truncated text labels
@@ -36,16 +36,16 @@ The Screen Display Selector conforms to the enterprise solid surfaces standard d
 
 | Goal / Intended Change | Target File | Description |
 | :--- | :--- | :--- |
-| **Change centralized surface themes, dark mode colors, or sizing scales** | [`constants/themeTokens.ts`](file:///home/jensen/Github-Repositories/Heart_Check_PHC/constants/themeTokens.ts) | Modify universal `themeTokens` or `sizeTokens` |
-| **Change page titles, card descriptions, or button labels** | [`app/select-screen/constants/selectScreenTexts.ts`](file:///home/jensen/Github-Repositories/Heart_Check_PHC/app/select-screen/constants/selectScreenTexts.ts) | Modify text dictionaries and user-facing copy strings |
-| **Change visual styles, card padding, colors, or dark mode classes** | [`app/select-screen/constants/selectScreen.ts`](file:///home/jensen/Github-Repositories/Heart_Check_PHC/app/select-screen/constants/selectScreen.ts) | Modify `SELECT_SCREEN_STYLES` tokens |
-| **Add a new screen option or change destination routes** | [`app/select-screen/constants/selectScreen.ts`](file:///home/jensen/Github-Repositories/Heart_Check_PHC/app/select-screen/constants/selectScreen.ts) | Add to or update `SCREEN_OPTIONS` catalog |
-| **Change role authorization lists for workstations or displays** | [`app/select-screen/constants/selectScreen.ts`](file:///home/jensen/Github-Repositories/Heart_Check_PHC/app/select-screen/constants/selectScreen.ts) and [`proxy.ts`](file:///home/jensen/Github-Repositories/Heart_Check_PHC/proxy.ts) | Modify `ALL_STAFF_ROLES`, `CLINICAL_ROLES`, or edge proxy route guard |
-| **Change session resolution, user lookup, or sign-out logic** | [`app/select-screen/hooks/useCurrentStaff.ts`](file:///home/jensen/Github-Repositories/Heart_Check_PHC/app/select-screen/hooks/useCurrentStaff.ts) and [`lib/supabase/signOut.ts`](file:///home/jensen/Github-Repositories/Heart_Check_PHC/lib/supabase/signOut.ts) | Update authentication data hook and sign-out orchestrator |
-| **Modify card presentation, security warnings, or navigation triggers** | [`app/select-screen/components/ScreenOptionCard.tsx`](file:///home/jensen/Github-Repositories/Heart_Check_PHC/app/select-screen/components/ScreenOptionCard.tsx) | Card component markup and session clearance logic |
-| **Modify top navbar, staff identity chip, or hero header** | [`app/select-screen/components/SelectScreenHeader.tsx`](file:///home/jensen/Github-Repositories/Heart_Check_PHC/app/select-screen/components/SelectScreenHeader.tsx) | Top navigation bar layout, Manila clock, and theme toggle |
-| **Change TypeScript interfaces and models** | [`app/select-screen/types/selectScreen.ts`](file:///home/jensen/Github-Repositories/Heart_Check_PHC/app/select-screen/types/selectScreen.ts) | TypeScript type definitions for screen options and user profiles |
-| **Change server-side edge proxy access control** | [`proxy.ts`](file:///home/jensen/Github-Repositories/Heart_Check_PHC/proxy.ts) | Edge middleware role validation map and cache controls |
+| **Change centralized surface themes, dark mode colors, or sizing scales** | [`constants/themeTokens.ts`](file:///home/jensen/Github-Repositories/heart-check-phc/constants/themeTokens.ts) | Modify universal `themeTokens` or `sizeTokens` |
+| **Change page titles, card descriptions, or button labels** | [`app/select-screen/constants/selectScreenTexts.ts`](file:///home/jensen/Github-Repositories/heart-check-phc/app/select-screen/constants/selectScreenTexts.ts) | Modify text dictionaries and user-facing copy strings |
+| **Change visual styles, card padding, colors, or dark mode classes** | [`app/select-screen/constants/selectScreen.ts`](file:///home/jensen/Github-Repositories/heart-check-phc/app/select-screen/constants/selectScreen.ts) | Modify `SELECT_SCREEN_STYLES` tokens |
+| **Add a new screen option or change destination routes** | [`app/select-screen/constants/selectScreen.ts`](file:///home/jensen/Github-Repositories/heart-check-phc/app/select-screen/constants/selectScreen.ts) | Add to or update `SCREEN_OPTIONS` catalog |
+| **Change role authorization lists for workstations or displays** | [`app/select-screen/constants/selectScreen.ts`](file:///home/jensen/Github-Repositories/heart-check-phc/app/select-screen/constants/selectScreen.ts) and [`proxy.ts`](file:///home/jensen/Github-Repositories/heart-check-phc/proxy.ts) | Modify `ALL_STAFF_ROLES`, `CLINICAL_ROLES`, or edge proxy route guard |
+| **Change session resolution, user lookup, or sign-out logic** | [`app/select-screen/hooks/useCurrentStaff.ts`](file:///home/jensen/Github-Repositories/heart-check-phc/app/select-screen/hooks/useCurrentStaff.ts) and [`lib/supabase/signOut.ts`](file:///home/jensen/Github-Repositories/heart-check-phc/lib/supabase/signOut.ts) | Update authentication data hook and sign-out orchestrator |
+| **Modify card presentation, security warnings, or navigation triggers** | [`app/select-screen/components/ScreenOptionCard.tsx`](file:///home/jensen/Github-Repositories/heart-check-phc/app/select-screen/components/ScreenOptionCard.tsx) | Card component markup and session clearance logic |
+| **Modify top navbar, staff identity chip, or hero header** | [`app/select-screen/components/SelectScreenHeader.tsx`](file:///home/jensen/Github-Repositories/heart-check-phc/app/select-screen/components/SelectScreenHeader.tsx) | Top navigation bar layout, Manila clock, and theme toggle |
+| **Change TypeScript interfaces and models** | [`app/select-screen/types/selectScreen.ts`](file:///home/jensen/Github-Repositories/heart-check-phc/app/select-screen/types/selectScreen.ts) | TypeScript type definitions for screen options and user profiles |
+| **Change server-side edge proxy access control** | [`proxy.ts`](file:///home/jensen/Github-Repositories/heart-check-phc/proxy.ts) | Edge middleware role validation map and cache controls |
 
 ---
 
