@@ -34,6 +34,8 @@ export interface RecentPatient {
   waitTime?: number | string;
   /** Contact phone number of patient if captured at intake. */
   phoneNum?: string | null;
+  /** Encrypted token or raw database representation for secure authorized lookup. */
+  rawPhone?: string | number | null;
 }
 
 /**
@@ -78,7 +80,7 @@ export type Patient = {
   service?: string;
   created_at?: string;
   updated_at?: string;
-  phoneNum?: number;
+  phoneNum?: number | string | null;
   reg_start?: string;
   reg_end?: string;
   consult_start?: string;

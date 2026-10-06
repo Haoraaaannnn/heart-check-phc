@@ -25,6 +25,7 @@ import {
     validatePhMobileNumber,
 } from "@/app/kiosk/pages/sms-input/utils/phoneValidation";
 import { SMSValidationTexts } from "@/app/kiosk/pages/sms-input/constants/smsValidationTexts";
+import { encryptPatientPhoneAction } from "@/app/actions/phoneSecurity";
 
 /** Props for {@link KioskPhoneEntry}. */
 interface KioskPhoneEntryProps {
@@ -202,15 +203,36 @@ export default function KioskPhoneEntry({
             groupBySubcategory,
         });
 
+        const encryptedPhone = phoneToSave
+            ? await encryptPatientPhoneAction(phoneToSave)
+            : null;
+
         const t0 = performance.now();
-        const { data, error } = await supabase.rpc("create_patient", {
+        let { data, error } = await supabase.rpc("create_patient", {
             p_service: service.label_en,
             p_subcategory: subcategory ?? null,
             p_preferred_cubicles: preferredList,
             p_prefix: prefix,
             p_group_by_subcategory: groupBySubcategory,
-            p_phone: phoneToSave,
+            p_phone: encryptedPhone,
         });
+
+        // Graceful fallback if database column or RPC is still defined as bigint
+        if (error && (error.code === "22P02" || error.message?.includes("bigint"))) {
+            console.warn(
+                `${getTimestamp()} [PHONE SECURITY] Database p_phone parameter expects bigint. Fallback to standard digits. Run docs/migrations/encrypt_phone_number.sql in Supabase to enable encrypted phone storage.`
+            );
+            const fallbackRes = await supabase.rpc("create_patient", {
+                p_service: service.label_en,
+                p_subcategory: subcategory ?? null,
+                p_preferred_cubicles: preferredList,
+                p_prefix: prefix,
+                p_group_by_subcategory: groupBySubcategory,
+                p_phone: phoneToSave,
+            });
+            data = fallbackRes.data;
+            error = fallbackRes.error;
+        }
         const elapsed = Math.round(performance.now() - t0);
 
         if (error) {

@@ -52,6 +52,9 @@ function formatPhoneNumber(rawPhone: unknown): string | null {
   if (rawPhone === null || rawPhone === undefined || rawPhone === '') return null;
   const str = String(rawPhone).trim();
   if (!str || str === '0') return null;
+  if (str.startsWith('enc:v1:')) {
+    return 'Protected';
+  }
   if (/^\d{10}$/.test(str)) {
     return `0${str}`;
   }
@@ -216,6 +219,7 @@ export function usePatientData(
                 : '--',
               waitTime: waitMin,
               phoneNum: formatPhoneNumber(patient.phoneNum),
+              rawPhone: patient.phoneNum,
             };
           });
 
@@ -259,6 +263,7 @@ export function usePatientData(
               : '--',
             waitTime: calculatedWait,
             phoneNum: formatPhoneNumber(patient.phoneNum),
+            rawPhone: patient.phoneNum,
           };
         });
 
@@ -376,6 +381,7 @@ export function usePatientData(
               : '--',
             waitTime: calculatedWait,
             phoneNum: formatPhoneNumber(patient.phoneNum),
+            rawPhone: patient.phoneNum,
           };
         });
 

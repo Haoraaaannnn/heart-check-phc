@@ -114,7 +114,7 @@ export default function QueuePrintContent({
                     id: patientRecord?.id,
                     created_at: patientRecord?.created_at,
                     patientNum: patientRecord?.patientNum,
-                    phoneNum: patientRecord?.phoneNum,
+                    hasPhone: Boolean(patientRecord?.phoneNum),
                     service: patientRecord?.service,
                     cubicle: dbCubicle,
                 });
