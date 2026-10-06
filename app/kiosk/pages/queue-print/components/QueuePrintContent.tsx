@@ -1,10 +1,11 @@
 "use client";
 
 import { useRouter } from "next/navigation";
-import { useEffect, useRef } from "react";
+import { useEffect, useRef, useState } from "react";
 import { Service } from "@/types/Services";
 import { getTimestamp } from "@/lib/logger";
 import { supabase } from "@/lib/supabase";
+import { formatManilaNumericDate, formatManilaTime } from "@/utils/formatDateTime";
 import {
     QUEUE_PRINT_REDIRECT_DELAY_MS,
     QueuePrintTicketStyle,
@@ -25,8 +26,9 @@ interface QueuePrintContentProps {
  * Display card presenting the generated queue number and triggering physical ticket printing.
  *
  * @remarks
- * Sends a print request to `/api/print-ticket` via an asynchronous POST request,
- * fetches patient log confirmation from Supabase, and automatically redirects
+ * Displays the refined physical ticket preview (queue number, service, Manila Standard Time,
+ * destination cubicle, and bilingual patient reminder without institutional header),
+ * sends an ESC/POS print dispatch request to `/api/print-ticket`, and automatically redirects
  * back to the kiosk welcome screen after a 5-second countdown.
  *
  * @param props - Component props.
@@ -42,15 +44,39 @@ export default function QueuePrintContent({
     // Guard against React StrictMode initiating double print API requests
     const hasFired = useRef(false);
 
+    // Formatted Manila Standard Time (PHT) state for hydration-safe rendering
+    const [manilaDate, setManilaDate] = useState<string>("");
+    const [manilaTime, setManilaTime] = useState<string>("");
+    const [activeCubicle, setActiveCubicle] = useState<string>(cubicleNum);
+
+    useEffect(() => {
+        if (cubicleNum && cubicleNum !== "---" && cubicleNum.toLowerCase() !== "waiting area") {
+            setActiveCubicle(cubicleNum);
+        }
+    }, [cubicleNum]);
+
+    const serviceName = service?.label_en || QueuePrintTicketTexts.defaultService;
+    const rawCubicle =
+        !activeCubicle || activeCubicle === "---" || activeCubicle.toLowerCase() === "waiting area"
+            ? QueuePrintTicketTexts.defaultLocation
+            : activeCubicle;
+    const displayCubicle =
+        rawCubicle === QueuePrintTicketTexts.defaultLocation
+            ? rawCubicle
+            : rawCubicle.replace(/^cubicle\s*/i, "");
+
+    useEffect(() => {
+        const now = new Date();
+        setManilaDate(formatManilaNumericDate(now));
+        setManilaTime(`${formatManilaTime(now, true)} ${QueuePrintTicketTexts.manilaTzSuffix}`);
+    }, []);
+
     useEffect(() => {
         if (hasFired.current) return;
         hasFired.current = true;
 
-        const serviceName = service?.label_en || "Service";
-        const location = cubicleNum || "Waiting Area";
-
         /**
-         * Queries the newly created patient record for diagnostic logging.
+         * Queries the newly created patient record for diagnostic logging and cubicle fallback.
          */
         const fetchAndLogPatientRecord = async () => {
             try {
@@ -63,7 +89,7 @@ export default function QueuePrintContent({
 
                 const { data: patientRecord, error } = await supabase
                     .from("patients")
-                    .select()
+                    .select("id, created_at, patientNum, phoneNum, service, cubicleNum, preferredCubicleNums")
                     .eq("patientNum", patientNum)
                     .gte("created_at", startOfDay)
                     .order("created_at", { ascending: false })
@@ -72,12 +98,25 @@ export default function QueuePrintContent({
 
                 if (error) throw error;
 
+                const dbCubicle =
+                    patientRecord?.cubicleNum ||
+                    (Array.isArray(patientRecord?.preferredCubicleNums) && patientRecord.preferredCubicleNums[0]) ||
+                    null;
+
+                if (
+                    dbCubicle &&
+                    (!activeCubicle || activeCubicle === "---" || activeCubicle.toLowerCase() === "waiting area")
+                ) {
+                    setActiveCubicle(dbCubicle);
+                }
+
                 console.log(`${getTimestamp()} [QUEUE PRINT PAGE] Loaded:`, {
                     id: patientRecord?.id,
                     created_at: patientRecord?.created_at,
                     patientNum: patientRecord?.patientNum,
                     hasPhone: Boolean(patientRecord?.phoneNum),
                     service: patientRecord?.service,
+                    cubicle: dbCubicle,
                 });
             } catch (err) {
                 const errorMessage = err instanceof Error ? err.message : String(err);
@@ -89,7 +128,7 @@ export default function QueuePrintContent({
 
         fetchAndLogPatientRecord();
         console.log(
-            `${getTimestamp()} [PRINT JOB INITIATED] Preparing to send ticket to printer - Queue: ${patientNum}, Service: ${serviceName}, Cubicle: ${location}`
+            `${getTimestamp()} [PRINT JOB INITIATED] Preparing to send ticket to printer - Queue: ${patientNum}, Service: ${serviceName}, Cubicle: ${displayCubicle}`
         );
 
         /**
@@ -106,7 +145,7 @@ export default function QueuePrintContent({
                     body: JSON.stringify({
                         queueNumber: patientNum,
                         serviceName: serviceName,
-                        cubicle: location,
+                        cubicle: displayCubicle,
                     }),
                 });
 
@@ -133,7 +172,7 @@ export default function QueuePrintContent({
         };
 
         printTicket();
-    }, [patientNum, service?.label_en, service?.label_fil, cubicleNum]);
+    }, [patientNum, serviceName, displayCubicle]);
 
     // Automatic navigation timer redirecting back to kiosk entrance
     useEffect(() => {
@@ -149,7 +188,7 @@ export default function QueuePrintContent({
 
     return (
         <div style={QueuePrintTicketStyle.ticketContainer}>
-            {/* Service Information */}
+            {/* Service Information - Large & Clean Typography (No Pillbox) */}
             <div style={QueuePrintTicketStyle.serviceHeader}>
                 {service?.label_fil && (
                     <span style={QueuePrintTicketStyle.serviceTitle}>
@@ -157,24 +196,48 @@ export default function QueuePrintContent({
                     </span>
                 )}
 
-                <span style={QueuePrintTicketStyle.badge}>
-                    {service?.label_en || "Consultation"}
+                <span style={QueuePrintTicketStyle.serviceSubtitle}>
+                    {serviceName}
                 </span>
             </div>
 
             {/* Separator Divider */}
             <div style={QueuePrintTicketStyle.divider} />
 
-            {/* Queue Number Callout */}
+            {/* Hero Queue Number Callout - Maximum Visibility for Seniors */}
             <div style={QueuePrintTicketStyle.queueWrapper}>
                 <span style={QueuePrintTicketStyle.queueLabel}>
                     {QueuePrintTicketTexts.queueLabel}
                 </span>
-
+                <span style={QueuePrintTicketStyle.queueLabelFil}>
+                    {QueuePrintTicketTexts.queueLabelFil}
+                </span>
                 <span style={QueuePrintTicketStyle.queueNumber}>
                     {patientNum}
                 </span>
             </div>
+
+            {/* Separator Divider */}
+            <div style={QueuePrintTicketStyle.divider} />
+
+            {/* Ticket Metadata - Clean Text without Pillbox */}
+            <div style={QueuePrintTicketStyle.metaContainer}>
+                <div style={QueuePrintTicketStyle.cubicleRow}>
+                    <span style={QueuePrintTicketStyle.cubicleLabel}>
+                        {QueuePrintTicketTexts.cubiclePrefix}
+                    </span>
+                    <span style={QueuePrintTicketStyle.cubicleValue}>
+                        {displayCubicle}
+                    </span>
+                </div>
+
+                <div style={QueuePrintTicketStyle.metaRow}>
+                    <span>{manilaDate || "--/--/----"}</span>
+                    <span style={QueuePrintTicketStyle.metaDot}>•</span>
+                    <span>{manilaTime || "--:--:-- --"}</span>
+                </div>
+            </div>
         </div>
     );
+
 }

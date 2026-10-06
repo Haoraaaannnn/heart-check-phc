@@ -73,7 +73,7 @@ export async function POST(request: Request) {
     // Defensive Verification (SEC-029): Verify ticket exists in active patients table
     const { data: patientRecord, error: dbError } = await supabase
       .from('patients')
-      .select('id, created_at, patientNum, phoneNum, service')
+      .select('id, created_at, patientNum, phoneNum, service, cubicleNum, preferredCubicleNums')
       .eq('patientNum', queueNumber)
       .eq('is_historical', false)
       .maybeSingle();
@@ -104,8 +104,36 @@ export async function POST(request: Request) {
       service: patientRecord.service,
     });
 
-    const date = new Date().toLocaleDateString();
-    const time = new Date().toLocaleTimeString();
+    const now = new Date();
+    const dateStr = new Intl.DateTimeFormat('en-PH', {
+      timeZone: 'Asia/Manila',
+      year: 'numeric',
+      month: '2-digit',
+      day: '2-digit',
+    }).format(now);
+
+    const timeStr = new Intl.DateTimeFormat('en-PH', {
+      timeZone: 'Asia/Manila',
+      hour: '2-digit',
+      minute: '2-digit',
+      second: '2-digit',
+      hour12: true,
+    }).format(now);
+
+    const displayService = serviceName || patientRecord.service || 'General Service';
+    const fallbackDbCubicle =
+      patientRecord.cubicleNum ||
+      (Array.isArray(patientRecord.preferredCubicleNums) && patientRecord.preferredCubicleNums[0]) ||
+      'Waiting Area';
+
+    const targetCubicle =
+      !cubicle || cubicle === '---' || cubicle.toLowerCase() === 'waiting area'
+        ? fallbackDbCubicle
+        : cubicle;
+    const displayCubicle =
+      targetCubicle === 'Waiting Area'
+        ? targetCubicle
+        : targetCubicle.replace(/^cubicle\s*/i, '');
 
     // Standard ESC/POS Control Sequences
     const ESC = '\x1b';
@@ -119,20 +147,21 @@ export async function POST(request: Request) {
     const NORMAL_FONT = GS + '!\x00';
     const CUT = GS + 'V\x00';
 
-    // Construct the ticket layout
+    // Construct the ticket layout (institutional header removed per user requirement)
     const ticketData =
       RESET +
       CENTER +
       BOLD_ON +
-      'HEART CHECK PHC' +
+      'QUEUE TICKET' +
       BOLD_OFF +
       '\n' +
-      '--------------------------------\n' +
+      '================================\n' +
       LEFT +
-      `Date: ${date}\n` +
-      `Time: ${time}\n` +
-      `Service: ${serviceName || patientRecord.service || 'General'}\n` +
-      `Location: ${cubicle || 'Waiting Area'}\n\n` +
+      `Date: ${dateStr}\n` +
+      `Time: ${timeStr} (PHT)\n` +
+      `Service: ${displayService}\n` +
+      `Cubicle: ${displayCubicle}\n` +
+      '--------------------------------\n' +
       CENTER +
       LARGE_FONT +
       BOLD_ON +
@@ -140,8 +169,13 @@ export async function POST(request: Request) {
       BOLD_OFF +
       NORMAL_FONT +
       '\n' +
-      '\nPlease wait for your number.\n' +
       '--------------------------------\n' +
+      'Mangyaring maghintay na tawagin\n' +
+      'ang inyong numero sa\n' +
+      'Rehistrasyon.\n\n' +
+      'Please wait for your number\n' +
+      'to be called at Registration.\n' +
+      '================================\n' +
       '\n\n\n\n\n' +
       CUT;
 

@@ -63,6 +63,12 @@ export default function CubicleCard({
         if (subcategory) params.set("subcategory", subcategory);
         params.set("preferredCubicleNums", cubicleNums.join(","));
 
+        // Forward patient-selected cubicle identifier for ticket print display
+        const selectedCubicle = cubicle.cubicle_name || cubicleNums[0];
+        if (selectedCubicle) {
+            params.set("cubicleNum", selectedCubicle);
+        }
+
         navigate(`/kiosk/pages/sms-input?${params.toString()}`);
     };
 

@@ -8,9 +8,10 @@ import { kioskTypography } from "@/constants/kiosk";
 
 /** Typography tokens for print header, referencing centralized root typography scale. */
 export const PrintHeaderTypography = {
-    titleSize: kioskTypography.pageTitle,
-    subtitleSize: kioskTypography.pageSubtitle,
+    titleSize: "clamp(32px, 3.8vw, 44px)",
+    subtitleSize: "clamp(18px, 2vw, 24px)",
 } as const;
+
 
 /** Inline styles for `PrintHeader`. */
 export const PrintHeaderStyle = {
@@ -23,8 +24,8 @@ export const PrintHeaderStyle = {
         flexShrink: 0,
         paddingLeft: 16,
         paddingRight: 16,
-        paddingTop: "clamp(12px, 2vh, 16px)",
-        paddingBottom: "clamp(12px, 2vh, 16px)",
+        paddingTop: "clamp(8px, 1.2vh, 14px)",
+        paddingBottom: "clamp(4px, 0.8vh, 8px)",
         textAlign: "center",
     },
     title: {
@@ -37,8 +38,10 @@ export const PrintHeaderStyle = {
     subtitle: {
         marginTop: 4,
         fontSize: PrintHeaderTypography.subtitleSize,
-        color: "#374151",
-        fontWeight: 700,
+        color: "#4B5563",
+        fontWeight: 600,
+        lineHeight: 1.25,
         margin: 0,
     },
 } satisfies Record<string, CSSProperties>;
+

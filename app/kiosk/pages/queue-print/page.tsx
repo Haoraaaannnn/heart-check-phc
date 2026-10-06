@@ -41,11 +41,47 @@ export default async function QueuePrintPage({ searchParams }: QueuePrintPagePro
         notFound();
     }
 
+    let finalCubicleNum = cubicleNum;
+
+    // Defensive resolution: If cubicleNum was omitted from the URL query params,
+    // query the newly created patient record to retrieve assigned or preferred cubicle
+    if (
+        (!finalCubicleNum || finalCubicleNum === "---" || finalCubicleNum.toLowerCase() === "waiting area") &&
+        patientNum &&
+        patientNum !== "---"
+    ) {
+        const now = new Date();
+        const startOfDay = new Date(
+            now.getFullYear(),
+            now.getMonth(),
+            now.getDate()
+        ).toISOString();
+
+        const { data: patientRecord } = await supabase
+            .from("patients")
+            .select("cubicleNum, preferredCubicleNums")
+            .eq("patientNum", patientNum)
+            .gte("created_at", startOfDay)
+            .order("created_at", { ascending: false })
+            .limit(1)
+            .maybeSingle();
+
+        if (patientRecord?.cubicleNum) {
+            finalCubicleNum = patientRecord.cubicleNum;
+        } else if (
+            Array.isArray(patientRecord?.preferredCubicleNums) &&
+            patientRecord.preferredCubicleNums.length > 0 &&
+            patientRecord.preferredCubicleNums[0]
+        ) {
+            finalCubicleNum = patientRecord.preferredCubicleNums[0];
+        }
+    }
+
     return (
         <QueuePrintContent
             service={service}
             patientNum={patientNum}
-            cubicleNum={cubicleNum}
+            cubicleNum={finalCubicleNum}
         />
     );
 }

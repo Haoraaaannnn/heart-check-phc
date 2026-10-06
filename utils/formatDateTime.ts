@@ -33,6 +33,21 @@ export function formatManilaTime(date: Date, withSeconds = false): string {
 }
 
 /**
+ * Formats a date as a numeric date string in Manila time, e.g. "10/05/2026".
+ *
+ * @param date - Any Date instance (UTC instant); rendered in Asia/Manila.
+ * @returns Numeric date string in MM/DD/YYYY format.
+ */
+export function formatManilaNumericDate(date: Date): string {
+  return new Intl.DateTimeFormat(LOCALE, {
+    timeZone: TIMEZONE,
+    year: 'numeric',
+    month: '2-digit',
+    day: '2-digit',
+  }).format(date);
+}
+
+/**
  * Returns the hour of day (0-23) in Manila time. Used for the greeting so it
  * follows PHC's clock, not the viewer's browser timezone.
  *
