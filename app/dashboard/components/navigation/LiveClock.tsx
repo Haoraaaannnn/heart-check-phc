@@ -9,35 +9,4 @@
 
 'use client';
 
-import React, { useEffect, useState } from 'react';
-import { DASH } from '@/app/dashboard/constants/styles';
-import { formatManilaDate, formatManilaTime } from '@/utils/formatDateTime';
-
-const S = DASH.header;
-
-/**
- * Live ticking Manila clock display for the top navigation header.
- *
- * @returns JSX element.
- */
-export function LiveClock() {
-  const [now, setNow] = useState<Date | null>(null);
-
-  useEffect(() => {
-    const initialTimer = setTimeout(() => setNow(new Date()), 0);
-    const timer = setInterval(() => setNow(new Date()), 1000);
-    return () => {
-      clearTimeout(initialTimer);
-      clearInterval(timer);
-    };
-  }, []);
-
-  return (
-    <div className={S.clockContainer || S.clock}>
-      <p className={S.clockDate}>{now ? formatManilaDate(now) : '--'}</p>
-      <p className={S.clockTime}>{now ? formatManilaTime(now, true) : '--:--:--'}</p>
-    </div>
-  );
-}
-
-export default LiveClock;
+export { LiveClock, default } from '@/components/reusables/LiveClock';

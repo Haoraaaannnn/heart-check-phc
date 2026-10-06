@@ -13,8 +13,8 @@ export const DASHBOARD_NAV_TEXTS = {
   /** Brand identity tokens rendered in the sidebar header */
   brand: {
     badge: 'PHC',
-    title: 'PHC ADMIN',
-    subtitle: 'Queue Management System',
+    title: 'Philippine Heart Center',
+    subtitle: 'Admin Console',
     hospitalName: 'Philippine Heart Center',
   },
 

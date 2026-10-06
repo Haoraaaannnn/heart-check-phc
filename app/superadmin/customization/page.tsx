@@ -163,22 +163,21 @@ export default function AdminServicePage() {
   }
 
   return (
-    <div className={L.container}>
-      <div className={L.mainWrapper}>
-        {/* Header */}
-        <div className={L.headerRow}>
-          <div className={L.titleSection}>
-            <h1 className={L.heading}>{T.header.pageTitle}</h1>
-            <p className={L.subheading}>{T.header.pageDescription}</p>
-          </div>
-
-          {!isEditing && (
-            <button type="button" onClick={startCreate} className={B.primary}>
-              <i className="bx bx-plus text-base" aria-hidden="true" />
-              <span>{T.header.addServiceButton}</span>
-            </button>
-          )}
+    <div className={SUPERADMIN_STYLES.layout.page}>
+      {/* Header Banner Card */}
+      <div className={SUPERADMIN_STYLES.banner.root}>
+        <div className={SUPERADMIN_STYLES.banner.titleSection}>
+          <h1 className={SUPERADMIN_STYLES.banner.heading}>{T.header.pageTitle}</h1>
+          <p className={SUPERADMIN_STYLES.banner.subheading}>{T.header.pageDescription}</p>
         </div>
+
+        {!isEditing && (
+          <button type="button" onClick={startCreate} className={B.primary}>
+            <i className="bx bx-plus text-base" aria-hidden="true" />
+            <span>{T.header.addServiceButton}</span>
+          </button>
+        )}
+      </div>
 
         {error && (
           <div className="p-3.5 rounded-xl bg-red-50 dark:bg-red-950/60 border border-red-200 dark:border-red-900 text-red-700 dark:text-red-300 text-xs flex items-center gap-2">
@@ -453,6 +452,5 @@ export default function AdminServicePage() {
           )}
         </div>
       </div>
-    </div>
   );
 }

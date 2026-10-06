@@ -14,6 +14,10 @@
 import { themeTokens, sizeTokens } from '@/constants/themeTokens';
 
 export const SUPERADMIN_NAV_STYLES = {
+  layout: {
+    stage: 'flex-1 flex flex-col min-w-0 min-h-screen',
+    main: 'flex-1 overflow-y-auto p-4 md:p-6 phc-scroll',
+  },
   sidebar: {
     root: `hidden lg:flex flex-col w-64 shrink-0 ${themeTokens.surface.sidebar} min-h-screen sticky top-0 h-screen select-none`,
     brandHeader: `p-5 border-b ${themeTokens.border.default} flex items-center gap-3`,
@@ -41,12 +45,12 @@ export const SUPERADMIN_NAV_STYLES = {
   },
   header: {
     root: `${themeTokens.surface.header} flex items-center justify-between px-4 sm:px-6 lg:px-8`,
-    leftGroup: 'flex items-center gap-3',
-    hamburgerButton: `lg:hidden p-2 ${sizeTokens.radius.sm} ${themeTokens.text.secondary} hover:bg-slate-100 dark:hover:bg-[#242424] transition`,
+    leftGroup: 'flex items-center gap-3 min-w-0',
+    hamburgerButton: `lg:hidden p-2 ${sizeTokens.radius.sm} ${themeTokens.text.secondary} hover:bg-slate-100 dark:hover:bg-[#242424] transition cursor-pointer`,
     breadcrumbs: `flex items-center gap-2 text-xs font-medium ${themeTokens.text.secondary} hidden sm:flex whitespace-nowrap`,
     breadcrumbActive: `${themeTokens.text.primary} font-semibold whitespace-nowrap`,
-    breadcrumbSeparator: `${themeTokens.text.muted}`,
-    rightGroup: 'flex items-center gap-3',
+    breadcrumbSeparator: `${themeTokens.text.muted} shrink-0`,
+    rightGroup: 'flex items-center gap-2.5 sm:gap-3 shrink-0',
     clockContainer: `hidden md:flex flex-col items-end pr-3 border-r ${themeTokens.border.default}`,
     clockDate: `${sizeTokens.typography.micro} ${themeTokens.text.muted}`,
     clockTime: `text-xs font-mono font-bold ${themeTokens.text.primary}`,
