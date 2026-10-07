@@ -25,6 +25,7 @@ import { UserTable } from './components/UserTable';
 import { UserModal } from './components/UserModal';
 import { DeleteUserModal } from './components/DeleteUserModal';
 import { SettingsPanel } from './components/SettingsPanel';
+import { SuperAdminPageSkeleton } from './components/SuperAdminPageSkeleton';
 import { SUPERADMIN_TEXTS } from './constants/superadminTexts';
 import { SUPERADMIN_STYLES } from './constants/superadminStyles';
 
@@ -103,11 +104,7 @@ export default function SuperAdminPage() {
   const T = SUPERADMIN_TEXTS;
 
   if (checking) {
-    return (
-      <div className="flex min-h-[60vh] items-center justify-center font-sans">
-        <div className="w-10 h-10 border-3 border-rose-200 border-t-rose-600 rounded-full animate-spin" />
-      </div>
-    );
+    return <SuperAdminPageSkeleton activeTab={activeTab} />;
   }
 
   return (
@@ -171,7 +168,7 @@ export default function SuperAdminPage() {
       {activeTab === 'users' && (
         <div className="space-y-6">
           {/* KPI Stats Grid */}
-          <UserStatsCards stats={stats} />
+          <UserStatsCards stats={stats} loading={usersLoading} />
 
           {/* Users Data Table */}
           <UserTable

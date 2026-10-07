@@ -22,6 +22,7 @@ import {
   type OverviewDateRange,
 } from '@/app/dashboard/constants/content';
 import { DASH, TONES } from '@/app/dashboard/constants/styles';
+import { DashboardMetricsSkeleton } from './skeletons/DashboardMetricsSkeleton';
 
 const S = DASH.metric;
 
@@ -49,6 +50,8 @@ export interface DashboardMetricsProps {
   range?: OverviewDateRange;
   /** Flag indicating whether component has completed client hydration */
   isMounted: boolean;
+  /** Flag indicating whether data query is actively loading */
+  isLoading?: boolean;
 }
 
 /**
@@ -66,7 +69,7 @@ interface Trend {
  *
  * @param current - Current period count.
  * @param previous - Previous period baseline count, or null.
- * @returns Trend object, or null if baseline is invalid or zero.
+ * @returns Trend trend object, or null if baseline is invalid or zero.
  */
 function getTrend(current: number, previous: number | null): Trend | null {
   if (previous === null || previous <= 0) return null;
@@ -88,7 +91,11 @@ export default function DashboardMetrics({
   comparisonLabel,
   range = 'today',
   isMounted,
+  isLoading = false,
 }: DashboardMetricsProps) {
+  if (isLoading) {
+    return <DashboardMetricsSkeleton />;
+  }
   const rangeConfig = METRIC_RANGE_CONFIG[range] ?? METRIC_RANGE_CONFIG.today;
   const baseline = comparisonCount !== undefined ? comparisonCount : (yesterdayCount ?? null);
   const trendText = comparisonLabel ?? rangeConfig.trendLabel ?? TREND_LABEL;

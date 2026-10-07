@@ -20,10 +20,13 @@ import {
   SUPERADMIN_TONES,
   SuperadminToneKey,
 } from '../constants/superadminStyles';
+import { UserStatsCardsSkeleton } from './UserStatsCardsSkeleton';
 
 interface UserStatsCardsProps {
   /** Aggregated user counts. */
   stats: UserStats;
+  /** Flag indicating whether user stats are actively loading. */
+  loading?: boolean;
 }
 
 interface UserStatCardItem {
@@ -38,10 +41,16 @@ interface UserStatCardItem {
 /**
  * Renders executive KPI cards for user management overview.
  *
- * @param props - Component properties containing user stats.
+ * @param props - Component properties containing user stats and optional loading flag.
  * @returns JSX element containing the 4-card metric grid.
  */
-export const UserStatsCards: React.FC<UserStatsCardsProps> = ({ stats }) => {
+export const UserStatsCards: React.FC<UserStatsCardsProps> = ({
+  stats,
+  loading = false,
+}) => {
+  if (loading) {
+    return <UserStatsCardsSkeleton />;
+  }
   const S = SUPERADMIN_STYLES.metricCard;
   const T = SUPERADMIN_TEXTS.stats;
 

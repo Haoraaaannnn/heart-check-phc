@@ -11,6 +11,7 @@ import React, { useState } from 'react';
 import { SuperadminUser } from '../types/superadmin';
 import { SUPERADMIN_TEXTS } from '../constants/superadminTexts';
 import { SUPERADMIN_STYLES } from '../constants/superadminStyles';
+import { UserTableSkeleton } from './UserTableSkeleton';
 
 interface UserTableProps {
   /** Array of paginated users to render. */
@@ -181,12 +182,7 @@ export const UserTable: React.FC<UserTableProps> = ({
 
       {/* Table Data */}
       {loading ? (
-        <div className="py-16 text-center space-y-3">
-          <div className="inline-block animate-spin rounded-full h-8 w-8 border-2 border-[#a8071a] border-t-transparent" />
-          <p className="text-xs text-slate-500 dark:text-[#a3a3a3] font-medium">
-            {T.loadingUsers}
-          </p>
-        </div>
+        <UserTableSkeleton includeToolbar={false} />
       ) : users.length === 0 ? (
         <div className="py-16 text-center space-y-2">
           <div className="w-12 h-12 rounded-full bg-slate-100 dark:bg-[#242424] text-slate-400 mx-auto flex items-center justify-center text-2xl">

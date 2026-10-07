@@ -8,9 +8,13 @@ import { STATUS_STYLES } from '@/constants/queueStatus';
 const S = DASH.breakdown;
 const C = SECTIONS.ticketStatus;
 
+import { TicketBreakdownSkeleton } from './skeletons/TicketBreakdownSkeleton';
+
 interface TicketStatusBreakdownProps {
   stats: DashboardStats;
   isMounted: boolean;
+  /** Flag indicating whether ticket breakdown query is actively loading */
+  isLoading?: boolean;
 }
 
 /**
@@ -20,7 +24,14 @@ interface TicketStatusBreakdownProps {
  * colors come from STATUS_STYLES so a status is always the same color
  * everywhere on the dashboard.
  */
-export default function TicketStatusBreakdown({ stats, isMounted }: TicketStatusBreakdownProps) {
+export default function TicketStatusBreakdown({
+  stats,
+  isMounted,
+  isLoading = false,
+}: TicketStatusBreakdownProps) {
+  if (isLoading) {
+    return <TicketBreakdownSkeleton />;
+  }
   const servedPercent =
     isMounted && stats.todayCount > 0 ? Math.round((stats.served / stats.todayCount) * 100) : 0;
 

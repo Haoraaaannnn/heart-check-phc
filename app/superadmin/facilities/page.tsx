@@ -19,6 +19,7 @@ import { RoomsPanel } from '../components/RoomsPanel';
 import { CountersPanel } from '../components/CountersPanel';
 import { useIdleTimeout } from '../hooks/useIdleTimeout';
 import { useRequireAuth } from '../hooks/useRequireAuth';
+import { SuperAdminPageSkeleton } from '../components/SuperAdminPageSkeleton';
 import { FACILITIES_TEXTS } from './constants/facilitiesTexts';
 import { SUPERADMIN_STYLES } from '../constants/superadminStyles';
 
@@ -52,11 +53,7 @@ function FacilitiesContent() {
   const T = FACILITIES_TEXTS.header;
 
   if (checking) {
-    return (
-      <div className="flex min-h-[60vh] items-center justify-center font-sans">
-        <div className="w-10 h-10 border-3 border-rose-200 border-t-rose-600 rounded-full animate-spin" />
-      </div>
-    );
+    return <SuperAdminPageSkeleton />;
   }
 
   return (
@@ -110,13 +107,7 @@ function FacilitiesContent() {
  */
 export default function FacilitiesPage() {
   return (
-    <Suspense
-      fallback={
-        <div className="flex min-h-[60vh] items-center justify-center font-sans">
-          <div className="w-10 h-10 border-3 border-rose-200 border-t-rose-600 rounded-full animate-spin" />
-        </div>
-      }
-    >
+    <Suspense fallback={<SuperAdminPageSkeleton />}>
       <FacilitiesContent />
     </Suspense>
   );

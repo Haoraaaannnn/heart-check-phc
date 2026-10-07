@@ -62,6 +62,12 @@ The SuperAdmin subsystem adheres strictly to the architectural standards defined
 | **Change change-password security form logic or validation** | [ChangePasswordCard.tsx](file:///home/jensen/Github-Repositories/heart-check-phc/app/superadmin/components/ChangePasswordCard.tsx) |
 | **Change rooms and cubicles management panels** | [RoomsPanel.tsx](file:///home/jensen/Github-Repositories/heart-check-phc/app/superadmin/components/RoomsPanel.tsx) |
 | **Change physical registration counters management panel** | [CountersPanel.tsx](file:///home/jensen/Github-Repositories/heart-check-phc/app/superadmin/components/CountersPanel.tsx) |
+| **Change superadmin skeleton loading styles or animations** | [superadminSkeletonStyles.ts](file:///home/jensen/Github-Repositories/heart-check-phc/app/superadmin/constants/superadminSkeletonStyles.ts) (`SUPERADMIN_SKELETON_STYLES`) |
+| **Change superadmin skeleton accessibility labels or screen reader text** | [superadminSkeletonTexts.ts](file:///home/jensen/Github-Repositories/heart-check-phc/app/superadmin/constants/superadminSkeletonTexts.ts) (`SUPERADMIN_SKELETON_TEXTS`) |
+| **Change full-page superadmin skeleton layout or assembly** | [SuperAdminPageSkeleton.tsx](file:///home/jensen/Github-Repositories/heart-check-phc/app/superadmin/components/SuperAdminPageSkeleton.tsx) |
+| **Change user table skeleton rows and toolbar placeholders** | [UserTableSkeleton.tsx](file:///home/jensen/Github-Repositories/heart-check-phc/app/superadmin/components/UserTableSkeleton.tsx) |
+| **Change user metric cards skeleton indicators** | [UserStatsCardsSkeleton.tsx](file:///home/jensen/Github-Repositories/heart-check-phc/app/superadmin/components/UserStatsCardsSkeleton.tsx) |
+| **Change route-level loading suspense fallback for superadmin** | [loading.tsx](file:///home/jensen/Github-Repositories/heart-check-phc/app/superadmin/loading.tsx) |
 | **Change TypeScript contracts for user accounts, cubicles, or assignments** | [superadmin.ts](file:///home/jensen/Github-Repositories/heart-check-phc/app/superadmin/types/superadmin.ts) |
 
 ---
@@ -72,6 +78,7 @@ The SuperAdmin subsystem adheres strictly to the architectural standards defined
 app/superadmin/
 ├── README.md                              # This developer guide
 ├── layout.tsx                             # Enterprise shell wrapping SuperAdminSidebar & SuperAdminHeader
+├── loading.tsx                            # Route-level loading boundary rendering SuperAdminPageSkeleton
 ├── page.tsx                               # Orchestrator: User Accounts & System Settings tabs
 ├── components/                            # Modular presentation components
 │   ├── navigation/                        # Enterprise navigation subsystem
@@ -87,14 +94,19 @@ app/superadmin/
 │   ├── SettingsPanel.tsx                  # Queue timeout and security parameters panel
 │   ├── SettingsPannel.tsx                 # Backward-compatibility proxy for SettingsPanel
 │   ├── SuperAdminNav.tsx                  # Legacy navigation proxy (kept for compatibility)
+│   ├── SuperAdminPageSkeleton.tsx         # Full page superadmin skeleton orchestrator
 │   ├── UserModal.tsx                      # Add/Edit staff account modal dialog
 │   ├── UserStatsCards.tsx                 # 4-card executive KPI summary
-│   └── UserTable.tsx                      # Searchable, filterable staff accounts table
+│   ├── UserStatsCardsSkeleton.tsx         # 4-card executive KPI summary skeleton
+│   ├── UserTable.tsx                      # Searchable, filterable staff accounts table
+│   └── UserTableSkeleton.tsx              # Searchable table and pagination skeleton
 ├── constants/                             # Scoped dictionaries
 │   ├── settingsStyles.ts                  # Settings panel class tokens
 │   ├── settingsTexts.ts                   # Settings copy and validation messages
 │   ├── superadminNav.ts                   # Enterprise navigation route hierarchy & groups
 │   ├── superadminNavStyles.ts             # Sidebar, drawer, and header style tokens
+│   ├── superadminSkeletonStyles.ts        # Solid surface tokens for skeleton loaders
+│   ├── superadminSkeletonTexts.ts         # ARIA labels and accessibility copy for skeletons
 │   ├── superadminStyles.ts                # Main layout, table, and modal class tokens
 │   └── superadminTexts.ts                 # Main UI text copy and table labels
 ├── customization/                         # Outpatient kiosk services management

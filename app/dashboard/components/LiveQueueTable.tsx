@@ -16,6 +16,7 @@ import StatusBadge from '@/app/dashboard/components/StatusBadge';
 import { EMPTY_CELL, LIVE_QUEUE_COLUMNS, SECTIONS } from '@/app/dashboard/constants/content';
 import { DASH } from '@/app/dashboard/constants/styles';
 import { getPatientWaitTime } from '@/utils/waitTime';
+import { LiveQueueTableSkeleton } from './skeletons/LiveQueueTableSkeleton';
 
 const S = DASH.table;
 const C = SECTIONS.liveQueue;
@@ -30,6 +31,8 @@ export interface LiveQueueTableProps {
   currentTime: Date;
   /** Flag indicating whether component has completed client hydration */
   isMounted: boolean;
+  /** Flag indicating whether queue data is actively loading */
+  isLoading?: boolean;
 }
 
 /**
@@ -40,7 +43,15 @@ export interface LiveQueueTableProps {
  * @param props - Component properties.
  * @returns JSX element.
  */
-export default function LiveQueueTable({ patients, currentTime, isMounted }: LiveQueueTableProps) {
+export default function LiveQueueTable({
+  patients,
+  currentTime,
+  isMounted,
+  isLoading = false,
+}: LiveQueueTableProps) {
+  if (isLoading) {
+    return <LiveQueueTableSkeleton />;
+  }
   const [serviceFilter, setServiceFilter] = useState<string>('all');
 
   const services = useMemo(
