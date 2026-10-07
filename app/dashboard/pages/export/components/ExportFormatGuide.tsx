@@ -29,7 +29,7 @@ export default function ExportFormatGuide(): React.ReactElement {
   return (
     <div className={S.card}>
       <h2 className={S.title}>
-        <i className="bx bx-info-circle text-[#a8071a] dark:text-rose-400 text-lg" aria-hidden="true" />
+        <i className="bx bx-info-circle text-[#a8071a] dark:text-[#f87171] text-lg" aria-hidden="true" />
         <span>{T.title}</span>
       </h2>
       <p className={S.subtitle}>{T.subtitle}</p>

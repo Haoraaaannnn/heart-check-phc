@@ -109,7 +109,7 @@ export default function FilePreviewModal({
 
             <div className={S.kpiCard}>
               <div className={S.kpiLabel}>{T.summaryCards.dateRange}</div>
-              <div className="text-xs font-semibold text-slate-800 dark:text-slate-200 mt-1">
+              <div className="text-xs font-semibold text-slate-800 dark:text-[#f5f5f5] mt-1">
                 {dateRangeStr}
               </div>
             </div>
@@ -120,7 +120,7 @@ export default function FilePreviewModal({
             <div className={S.tableTitle}>{T.previewTableTitle}</div>
             <div className={S.tableWrapper}>
               <table className="w-full text-left text-xs">
-                <thead className="sticky top-0 border-b border-slate-200 bg-slate-50 font-semibold text-slate-700 dark:border-slate-800 dark:bg-slate-900/80 dark:text-slate-300">
+                <thead className="sticky top-0 border-b border-slate-200 bg-slate-50 font-semibold text-slate-700 dark:border-[#2e2e2e] dark:bg-[#242424] dark:text-[#f5f5f5]">
                   <tr>
                     <th className="px-3 py-2">{T.tableColumns.patientNum}</th>
                     <th className="px-3 py-2">{T.tableColumns.service}</th>
@@ -132,28 +132,28 @@ export default function FilePreviewModal({
                     <th className="px-3 py-2">{T.tableColumns.status}</th>
                   </tr>
                 </thead>
-                <tbody className="divide-y divide-slate-100 bg-white dark:divide-slate-800 dark:bg-[#1a1a1a]">
+                <tbody className="divide-y divide-slate-100 bg-white dark:divide-[#2e2e2e] dark:bg-[#1a1a1a]">
                   {p.preview_rows.map((row, idx) => (
-                    <tr key={idx} className="hover:bg-slate-50/60 dark:hover:bg-slate-800/40">
-                      <td className="px-3 py-2 font-mono font-bold text-slate-900 dark:text-white">
+                    <tr key={idx} className="hover:bg-slate-50/60 dark:hover:bg-[#242424]/60">
+                      <td className="px-3 py-2 font-mono font-bold text-slate-900 dark:text-[#f5f5f5]">
                         {row.patientNum || '—'}
                       </td>
-                      <td className="px-3 py-2 text-slate-700 dark:text-slate-300">
+                      <td className="px-3 py-2 text-slate-700 dark:text-[#a3a3a3]">
                         {row.service || '—'}
                       </td>
-                      <td className="px-3 py-2 text-slate-600 dark:text-slate-400 font-mono text-[11px]">
+                      <td className="px-3 py-2 text-slate-600 dark:text-[#a3a3a3] font-mono text-[11px]">
                         {row.reg_start ? String(row.reg_start).slice(0, 19).replace('T', ' ') : '—'}
                       </td>
-                      <td className="px-3 py-2 text-slate-600 dark:text-slate-400 font-mono text-[11px]">
+                      <td className="px-3 py-2 text-slate-600 dark:text-[#a3a3a3] font-mono text-[11px]">
                         {row.reg_end ? String(row.reg_end).slice(0, 19).replace('T', ' ') : '—'}
                       </td>
-                      <td className="px-3 py-2 text-slate-600 dark:text-slate-400 font-mono text-[11px]">
+                      <td className="px-3 py-2 text-slate-600 dark:text-[#a3a3a3] font-mono text-[11px]">
                         {row.consult_start ? String(row.consult_start).slice(0, 19).replace('T', ' ') : '—'}
                       </td>
-                      <td className="px-3 py-2 text-slate-600 dark:text-slate-400 font-mono text-[11px]">
+                      <td className="px-3 py-2 text-slate-600 dark:text-[#a3a3a3] font-mono text-[11px]">
                         {row.consult_end ? String(row.consult_end).slice(0, 19).replace('T', ' ') : '—'}
                       </td>
-                      <td className="px-3 py-2 text-slate-600 dark:text-slate-400 font-mono text-[11px]">
+                      <td className="px-3 py-2 text-slate-600 dark:text-[#a3a3a3] font-mono text-[11px]">
                         {row.carryout_end ? String(row.carryout_end).slice(0, 19).replace('T', ' ') : '—'}
                       </td>
                       <td className="px-3 py-2">

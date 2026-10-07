@@ -86,10 +86,8 @@ export const themeTokens = {
       'bg-gradient-to-br from-[#76000d] to-[#a8071a] text-white shadow-xs tracking-wide shrink-0',
     buttonPrimary:
       'bg-[#a8071a] hover:bg-[#8e0616] active:bg-[#76000d] text-white font-bold shadow-xs hover:shadow-sm active:scale-[0.98] transition-all duration-150 cursor-pointer disabled:opacity-60 disabled:cursor-not-allowed',
-    pill: 'bg-[#a8071a]/10 dark:bg-[#a8071a]/20 border border-[#a8071a]/25 text-[#a8071a] dark:text-[#f87171] font-semibold',
     iconWrap:
       'bg-[#a8071a]/10 dark:bg-[#a8071a]/20 border border-[#a8071a]/25 text-[#a8071a] dark:text-[#f87171] shrink-0',
-    pulseDot: 'bg-[#a8071a] animate-pulse',
     spinner:
       'animate-spin rounded-full border-4 border-slate-200 dark:border-[#2e2e2e] border-t-[#a8071a]',
     alertError:

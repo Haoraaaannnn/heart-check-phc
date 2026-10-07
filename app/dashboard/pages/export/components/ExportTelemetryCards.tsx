@@ -74,7 +74,7 @@ export default function ExportTelemetryCards({
             <i className="bx bx-time text-lg" aria-hidden="true" />
           </div>
         </div>
-        <div className="text-sm font-bold text-slate-900 dark:text-white mt-1 break-words">
+        <div className="text-sm font-bold text-slate-900 dark:text-[#f5f5f5] mt-1 break-words">
           {isLoading ? '...' : dateSpanText}
         </div>
         <div className={S.help}>{T.dateSpanHelp}</div>
@@ -88,7 +88,7 @@ export default function ExportTelemetryCards({
             <i className="bx bx-history text-lg" aria-hidden="true" />
           </div>
         </div>
-        <div className="text-lg font-bold text-slate-900 dark:text-white mt-1">
+        <div className="text-lg font-bold text-slate-900 dark:text-[#f5f5f5] mt-1">
           {isLoading ? '...' : yearsText}
         </div>
         <div className={S.help}>{T.calendarYearsHelp}</div>
@@ -102,7 +102,7 @@ export default function ExportTelemetryCards({
             <i className="bx bx-shield-quarter text-lg text-emerald-600 dark:text-emerald-400" aria-hidden="true" />
           </div>
         </div>
-        <div className="text-xs font-bold text-slate-900 dark:text-white mt-1 leading-snug">
+        <div className="text-xs font-bold text-slate-900 dark:text-[#f5f5f5] mt-1 leading-snug">
           {T.protocolValue}
         </div>
         <div className={S.help}>{T.protocolHelp}</div>

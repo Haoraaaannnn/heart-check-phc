@@ -111,10 +111,6 @@ export default function SelectScreenHeader({ staff, onSignOut }: SelectScreenHea
       {/* Hero / Page Scope Description */}
       <div className={H.wrapper}>
         <div className={H.titlesWrap}>
-          <div className={H.tagPill}>
-            <span className={H.pulseDot} />
-            <span>{T.tagPill}</span>
-          </div>
           <h1 className={H.title}>{T.pageTitle}</h1>
           <p className={H.subtitle}>{T.pageSubtitle}</p>
         </div>

@@ -39,7 +39,7 @@ export default function ImportFormatGuide(): React.ReactElement {
           </div>
           <p className={S.formatDesc}>{T.phcDesc}</p>
           <div className={S.columnsTag}>
-            <span className="font-bold text-slate-900 dark:text-white">Columns: </span>
+            <span className="font-bold text-slate-900 dark:text-[#f5f5f5]">Columns: </span>
             <span>{T.phcColumns}</span>
           </div>
         </div>
@@ -52,7 +52,7 @@ export default function ImportFormatGuide(): React.ReactElement {
           </div>
           <p className={S.formatDesc}>{T.csvDesc}</p>
           <div className={S.columnsTag}>
-            <span className="font-bold text-slate-900 dark:text-white">Columns: </span>
+            <span className="font-bold text-slate-900 dark:text-[#f5f5f5]">Columns: </span>
             <span>{T.csvColumns}</span>
           </div>
         </div>

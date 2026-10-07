@@ -131,7 +131,7 @@ export default function ExportDateBrowser({
       {(options.mode === 'specific' || options.mode === 'month') && (
         <div className="mb-4">
           <div className="flex items-center gap-2 mb-2">
-            <span className="text-xs font-bold text-slate-700 dark:text-slate-300">
+            <span className="text-xs font-bold text-slate-700 dark:text-[#f5f5f5]">
               {T.yearLabel}
             </span>
             <div className={S.yearSelectorRow}>
@@ -156,16 +156,16 @@ export default function ExportDateBrowser({
       {/* Mode 1: Specific Single Day */}
       {options.mode === 'specific' && (
         <div>
-          <p className="text-xs text-slate-600 dark:text-slate-400 mb-3">
+          <p className="text-xs text-slate-600 dark:text-[#a3a3a3] mb-3">
             {T.selectDateHint}
           </p>
 
           {isLoading ? (
-            <div className="p-8 text-center text-xs font-semibold text-slate-500">
+            <div className="p-8 text-center text-xs font-semibold text-slate-500 dark:text-[#737373]">
               Loading available recorded dates...
             </div>
           ) : filteredDays.length === 0 ? (
-            <div className="p-8 text-center text-xs font-semibold text-slate-500 dark:text-slate-400 rounded-lg border border-dashed border-slate-200 dark:border-slate-800">
+            <div className="p-8 text-center text-xs font-semibold text-slate-500 dark:text-[#737373] rounded-lg border border-dashed border-slate-200 dark:border-[#2e2e2e]">
               {T.noDatesFound}
             </div>
           ) : (
@@ -183,19 +183,19 @@ export default function ExportDateBrowser({
                     tabIndex={0}
                   >
                     <div className="flex items-center justify-between text-[11px] mb-0.5">
-                      <span className="font-bold uppercase tracking-wider text-slate-500 dark:text-slate-400">
+                      <span className="font-bold uppercase tracking-wider text-slate-500 dark:text-[#737373]">
                         {dayOfWeek}
                       </span>
                       {isActive && (
-                        <span className="text-[10px] uppercase font-bold text-[#a8071a] dark:text-rose-300">
+                        <span className="text-[10px] uppercase font-bold text-[#a8071a] dark:text-[#f87171]">
                           {T.activeDayBadge}
                         </span>
                       )}
                     </div>
-                    <div className="text-xs font-bold text-slate-900 dark:text-white">
+                    <div className="text-xs font-bold text-slate-900 dark:text-[#f5f5f5]">
                       {formatted}
                     </div>
-                    <div className="font-mono text-[10px] text-slate-500 dark:text-slate-400 mt-0.5">
+                    <div className="font-mono text-[10px] text-slate-500 dark:text-[#737373] mt-0.5">
                       {d}
                     </div>
                   </div>
@@ -209,7 +209,7 @@ export default function ExportDateBrowser({
       {/* Mode 2: Calendar Month */}
       {options.mode === 'month' && (
         <div>
-          <p className="text-xs text-slate-600 dark:text-slate-400 mb-3">
+          <p className="text-xs text-slate-600 dark:text-[#a3a3a3] mb-3">
             {T.selectMonthHint}
           </p>
 
@@ -244,7 +244,7 @@ export default function ExportDateBrowser({
       {/* Mode 3: Rolling Range & All Dates */}
       {options.mode === 'range' && (
         <div>
-          <p className="text-xs text-slate-600 dark:text-slate-400 mb-3">
+          <p className="text-xs text-slate-600 dark:text-[#a3a3a3] mb-3">
             {T.selectRangeHint}
           </p>
 
@@ -261,14 +261,14 @@ export default function ExportDateBrowser({
                   tabIndex={0}
                 >
                   <div className="flex items-center justify-between mb-1">
-                    <span className="text-sm font-bold text-slate-900 dark:text-white">
+                    <span className="text-sm font-bold text-slate-900 dark:text-[#f5f5f5]">
                       {r.label}
                     </span>
                     {isActive && (
-                      <i className="bx bx-check-circle text-base text-[#a8071a] dark:text-rose-400" />
+                      <i className="bx bx-check-circle text-base text-[#a8071a] dark:text-[#f87171]" />
                     )}
                   </div>
-                  <p className="text-xs text-slate-500 dark:text-slate-400 leading-normal">
+                  <p className="text-xs text-slate-500 dark:text-[#737373] leading-normal">
                     {r.description}
                   </p>
                 </div>

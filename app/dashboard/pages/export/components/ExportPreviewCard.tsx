@@ -100,7 +100,7 @@ export default function ExportPreviewCard({
         {/* Output Filename */}
         <div className={S.specBox}>
           <span className={S.specLabel}>{T.outputFilenameLabel}</span>
-          <div className="font-mono text-xs font-bold text-[#a8071a] dark:text-rose-400 break-words">
+          <div className="font-mono text-xs font-bold text-[#a8071a] dark:text-[#f87171] break-words">
             {predictedFilename}
           </div>
           <span className={S.specHelp}>Serialized format</span>
@@ -109,7 +109,7 @@ export default function ExportPreviewCard({
         {/* Layout Structure */}
         <div className={S.specBox}>
           <span className={S.specLabel}>{T.sheetStructureLabel}</span>
-          <div className="text-xs font-bold text-slate-800 dark:text-slate-200">
+          <div className="text-xs font-bold text-slate-800 dark:text-[#f5f5f5]">
             {options.format === 'csv' ? 'Tabular CSV' : 'PHC Multi-Sheet'}
           </div>
           <span className={S.specHelp}>{layoutDescription}</span>
@@ -165,7 +165,7 @@ export default function ExportPreviewCard({
 
       {/* Generation and Download Action Row */}
       <div className={S.actionRow}>
-        <div className="text-xs text-slate-500 dark:text-slate-400">
+        <div className="text-xs text-slate-500 dark:text-[#737373]">
           Ready to export patient records matching the selected parameters.
         </div>
 

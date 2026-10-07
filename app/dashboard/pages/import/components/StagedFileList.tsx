@@ -78,7 +78,7 @@ export default function StagedFileList({
           </div>
         </div>
         <div className={S.emptyBox}>
-          <i className="bx bx-file-blank text-3xl mb-2 text-slate-300 dark:text-slate-600 block" />
+          <i className="bx bx-file-blank text-3xl mb-2 text-slate-300 dark:text-[#737373] block" />
           <p>{T.emptyNotice}</p>
         </div>
       </div>
@@ -177,14 +177,14 @@ export default function StagedFileList({
 
                   {/* File Size */}
                   <td className={S.td}>
-                    <span className="text-slate-600 dark:text-slate-400 font-mono">
+                    <span className="text-slate-600 dark:text-[#a3a3a3] font-mono">
                       {formatFileSize(file.size)}
                     </span>
                   </td>
 
                   {/* Format Pill */}
                   <td className={S.td}>
-                    <span className={`${S.typePill} bg-slate-100 text-slate-700 dark:bg-slate-800 dark:text-slate-300`}>
+                    <span className={`${S.typePill} bg-slate-100 text-slate-700 dark:bg-[#242424] dark:text-[#a3a3a3] border border-slate-200/80 dark:border-[#2e2e2e]`}>
                       {file.extension.toUpperCase()}
                     </span>
                   </td>

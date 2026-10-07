@@ -69,7 +69,7 @@ export default function ExportHistoryList({
           </div>
         </div>
         <div className={S.emptyBox}>
-          <i className="bx bx-download text-3xl mb-2 text-slate-300 dark:text-slate-600 block" />
+          <i className="bx bx-download text-3xl mb-2 text-slate-300 dark:text-[#737373] block" />
           <p>{T.emptyNotice}</p>
         </div>
       </div>
@@ -125,12 +125,12 @@ export default function ExportHistoryList({
                       <i
                         className={`bx ${item.format === 'xlsx' ? 'bxs-file-export text-emerald-600' : 'bx-table text-blue-600'} text-base`}
                       />
-                      <span className="font-semibold text-slate-900 dark:text-white font-mono">
+                      <span className="font-semibold text-slate-900 dark:text-[#f5f5f5] font-mono">
                         {item.filename}
                       </span>
                     </div>
                     {item.fileSizeBytes && (
-                      <span className="text-[10px] text-slate-400 block mt-0.5 ml-6">
+                      <span className="text-[10px] text-slate-400 dark:text-[#737373] block mt-0.5 ml-6">
                         {formatSize(item.fileSizeBytes)}
                       </span>
                     )}
@@ -138,7 +138,7 @@ export default function ExportHistoryList({
                   <td className={S.td}>{item.periodLabel}</td>
                   <td className={S.td}>{item.serviceLabel}</td>
                   <td className={S.td}>
-                    <span className="rounded px-2 py-0.5 font-mono text-[10px] font-bold uppercase bg-slate-100 dark:bg-slate-800 text-slate-700 dark:text-slate-300">
+                    <span className="rounded px-2 py-0.5 font-mono text-[10px] font-bold uppercase bg-slate-100 dark:bg-[#242424] text-slate-700 dark:text-[#f5f5f5]">
                       {item.format}
                     </span>
                   </td>

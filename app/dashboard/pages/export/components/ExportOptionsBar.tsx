@@ -113,7 +113,7 @@ export default function ExportOptionsBar({
               <option
                 key={svc.value}
                 value={svc.value}
-                className="bg-white dark:bg-[#1a1a1a] text-slate-900 dark:text-slate-100"
+                className="bg-white dark:bg-[#1a1a1a] text-slate-900 dark:text-[#f5f5f5]"
               >
                 {svc.label}
               </option>

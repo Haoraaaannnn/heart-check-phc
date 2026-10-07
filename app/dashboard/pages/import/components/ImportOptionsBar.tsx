@@ -80,7 +80,7 @@ export default function ImportOptionsBar({
             className={S.select}
           >
             {IMPORT_SERVICE_OPTIONS.map((svc) => (
-              <option key={svc} value={svc} className="bg-white dark:bg-[#1a1a1a] text-slate-900 dark:text-slate-100">
+              <option key={svc} value={svc} className="bg-white dark:bg-[#1a1a1a] text-slate-900 dark:text-[#f5f5f5]">
                 {svc}
               </option>
             ))}
@@ -100,7 +100,7 @@ export default function ImportOptionsBar({
             className={S.select}
           >
             {BATCH_SIZE_OPTIONS.map((size) => (
-              <option key={size} value={size} className="bg-white dark:bg-[#1a1a1a] text-slate-900 dark:text-slate-100">
+              <option key={size} value={size} className="bg-white dark:bg-[#1a1a1a] text-slate-900 dark:text-[#f5f5f5]">
                 {size} records / batch
               </option>
             ))}
