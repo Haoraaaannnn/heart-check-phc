@@ -8,7 +8,6 @@
 import Image from "next/image";
 import { useEffect, useState } from "react";
 import { useRouter } from "next/navigation";
-import KioskHeader from "@/app/kiosk/pages/kiosk-services/components/KioskHeader";
 import {
   IDLE_SLIDESHOW_IMAGES,
   IdleRedirectClasses,
@@ -19,13 +18,15 @@ import {
   KIOSK_ROUTES,
   KIOSK_TIMING,
 } from "@/app/kiosk/constants/kioskNavigation";
+import KioskTapPrompt from "@/app/kiosk/slideshow/components/KioskTapPrompt";
 
 /**
- * Full-screen idle screen that cycles through the kiosk's existing images.
+ * Full-screen idle screen that cycles through the kiosk's existing images across the entire screen.
  *
  * @remarks
  * Activating the screen returns the kiosk to the patient-type selection
- * route. Image order and timing are controlled by kiosk constants.
+ * route. Image order and timing are controlled by kiosk constants. The
+ * slideshow spans the entire display viewport and features an elevated "Tap to Start" prompt.
  *
  * @returns The full-screen, accessible idle slideshow.
  */
@@ -64,9 +65,8 @@ export default function KioskIdleSlideshowPage() {
           />
         ))}
       </button>
-      <div style={IdleRedirectStyle.footerOverlay}>
-        <KioskHeader />
-      </div>
+
+      <KioskTapPrompt />
     </>
   );
 }

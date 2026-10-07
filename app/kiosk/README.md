@@ -37,7 +37,7 @@ Use this lookup table to immediately find the file you need:
 
 | Goal / Intended Change | Where to Edit |
 | :--- | :--- |
-| **Change global typography scales or kiosk font sizes** | [constants/kiosk.ts](file:///home/jensen/Github-Repositories/heart-check-phc/constants/kiosk.ts) (`kioskTypography` / `fontSizeKiosk`). All kiosk screen styles alias these root tokens. |
+| **Change global typography scales or kiosk font sizes** | [constants/kiosk.ts](file:///home/jensen/Github-Repositories/heart-check-phc/constants/kiosk.ts) (`kioskTypography` / `fontSizeKiosk`) and [KIOSK_TYPOGRAPHY_GUIDE.md](file:///home/jensen/Github-Repositories/heart-check-phc/app/kiosk/KIOSK_TYPOGRAPHY_GUIDE.md). All kiosk screen styles alias these root tokens. |
 | **Change text copy, titles, or button labels** | Look for the matching `constants/<component>Texts.ts` in that route. |
 | **Change colors, dimensions, or card padding** | Look for the matching `constants/<component>.ts` in that route. |
 | **Change icons or resolve service/category Boxicons** | [constants/icons.ts](file:///home/jensen/Github-Repositories/heart-check-phc/constants/icons.ts) (central icon map and resolvers) or local `<component>.ts` (page-specific icon tokens). |
@@ -251,15 +251,17 @@ Final completion screen presenting the physical queue ticket preview, triggering
 
 ### Screen 8: Idle Slideshow (`app/kiosk/slideshow/`)
 
-Full-screen promotional and institutional slideshow that displays automatically after 3 minutes of inactivity on patient-flow screens. Automatically cycles through images with smooth cross-fade transitions, and returns patients immediately to the entrance route upon screen activation.
+Full-screen promotional and institutional slideshow that displays automatically after 3 minutes of inactivity on patient-flow screens. Automatically cycles through images with smooth cross-fade transitions across the entire screen, and returns patients immediately to the entrance route upon screen activation.
 
 - **Route:** `/kiosk/slideshow`
 - **Page File:** [page.tsx](file:///home/jensen/Github-Repositories/heart-check-phc/app/kiosk/slideshow/page.tsx)
+- **Subcomponents:**
+  - [KioskTapPrompt.tsx](file:///home/jensen/Github-Repositories/heart-check-phc/app/kiosk/slideshow/components/KioskTapPrompt.tsx): Floating "Tap to Start" tactile callout badge guiding patients to begin interaction.
 - **Idle Timeout Watcher:** [IdleRedirectWrapper.tsx](file:///home/jensen/Github-Repositories/heart-check-phc/app/kiosk/components/IdleRedirectWrapper.tsx) (monitors pointer, touch, and keyboard activity across `/kiosk/pages/*` and redirects to `/kiosk/slideshow` on 3-minute timeout).
 - **Where to Edit Texts:**
-  - [idleRedirectTexts.ts](file:///home/jensen/Github-Repositories/heart-check-phc/app/kiosk/constants/idleRedirectTexts.ts): Screen-reader and accessibility activation copy (`IdleRedirectTexts`).
+  - [idleRedirectTexts.ts](file:///home/jensen/Github-Repositories/heart-check-phc/app/kiosk/constants/idleRedirectTexts.ts): Screen-reader and visible "Tap to Start" callout copy (`IdleRedirectTexts`).
 - **Where to Edit Styles, Intervals, & Images:**
-  - [idleRedirect.ts](file:///home/jensen/Github-Repositories/heart-check-phc/app/kiosk/constants/idleRedirect.ts): Full-screen touch control styles, institutional header footer overlay, opacity classes, and image asset paths (`IdleRedirectStyle`, `IdleRedirectClasses`, `IDLE_SLIDESHOW_IMAGES`).
+  - [idleRedirect.ts](file:///home/jensen/Github-Repositories/heart-check-phc/app/kiosk/constants/idleRedirect.ts): Full-screen touch control styles, "Tap to Start" badge styles, opacity classes, and image asset paths (`IdleRedirectStyle`, `IdleRedirectClasses`, `IDLE_SLIDESHOW_IMAGES`).
   - [kioskNavigation.ts](file:///home/jensen/Github-Repositories/heart-check-phc/app/kiosk/constants/kioskNavigation.ts): Inactivity redirect threshold (`IDLE_REDIRECT_MS = 180000`, 3 minutes) and slide rotation speed (`SLIDESHOW_INTERVAL_MS = 6000`, 6 seconds) (`KIOSK_TIMING`).
 
 ---
