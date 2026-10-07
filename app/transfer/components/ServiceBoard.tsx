@@ -189,16 +189,16 @@ export function ServiceBoard({
           {/* Consultation & Screening Cubicles - Horizontal row same as counters */}
           <div className="bg-white border border-slate-200 rounded-2xl shadow-xs p-2.5 sm:p-3 select-none shrink-0 overflow-hidden">
             <div className="flex items-center justify-between gap-2 mb-2 pb-1.5 border-b border-slate-100">
-              <div className="flex items-center gap-2">
-                <span className="w-2 h-2 rounded-full bg-slate-700 inline-block" />
-                <h2 className="text-slate-700 font-bold text-xs tracking-wider uppercase">
+              <div className="flex items-center gap-2 min-w-0">
+                <span className="w-2 h-2 rounded-full bg-slate-700 inline-block shrink-0" />
+                <h2 className="text-slate-700 font-bold text-xs tracking-wider uppercase truncate">
                   {transferTexts.cubiclesHeading}
                 </h2>
-                <span className="text-[10px] font-bold px-1.5 py-0.2 rounded-full bg-slate-100 text-slate-700">
+                <span className="text-[10px] font-bold px-1.5 py-0.2 rounded-full bg-slate-100 text-slate-700 shrink-0">
                   {cubicles.length}
                 </span>
               </div>
-              <span className="text-[10px] text-slate-400 font-medium">
+              <span className="text-[10px] text-slate-400 font-medium shrink-0 truncate max-w-[120px] sm:max-w-none">
                 {category}
               </span>
             </div>
@@ -218,7 +218,7 @@ export function ServiceBoard({
               }
 
               return (
-                <div className="grid grid-cols-2 sm:grid-cols-3 lg:grid-cols-5 gap-2">
+                <div className="grid grid-cols-2 sm:grid-cols-3 xl:grid-cols-4 2xl:grid-cols-5 gap-2">
                   {safeCubicles.map(cubicle => {
                     const assigned = safeAssignedPatients[cubicle.cubicleNum] || [];
                     const isOver = dragOverCubicle === cubicle.cubicleNum;

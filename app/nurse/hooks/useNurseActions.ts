@@ -135,7 +135,7 @@ export function useNurseActions(
       const now = new Date().toISOString();
 
       // Pin mutation locally so background polling never rolls back this patient
-      pinInFlightMutation?.(patient.id, 'With Doctor');
+      pinInFlightMutation?.(patient.id, 'with_doctor');
 
       // Optimistic state update
       setAssignedPatients((prev) => prev.filter((item) => item.id !== patient.id));
@@ -167,7 +167,7 @@ export function useNurseActions(
    */
   const handleMoveBackFromDoctor = useCallback(
     async (patient: Patient): Promise<boolean> => {
-      pinInFlightMutation?.(patient.id, 'Assigned');
+      pinInFlightMutation?.(patient.id, 'assigned');
 
       // Optimistic state update
       setWithDoctorPatients((prev) => prev.filter((item) => item.id !== patient.id));
@@ -201,7 +201,7 @@ export function useNurseActions(
     async (patient: Patient): Promise<boolean> => {
       const now = new Date().toISOString();
 
-      pinInFlightMutation?.(patient.id, 'Carryout');
+      pinInFlightMutation?.(patient.id, 'carryout');
 
       // Optimistic state update
       setWithDoctorPatients((prev) => prev.filter((item) => item.id !== patient.id));
@@ -241,7 +241,7 @@ export function useNurseActions(
    */
   const handleMoveBackFromCarryout = useCallback(
     async (patient: Patient): Promise<boolean> => {
-      pinInFlightMutation?.(patient.id, 'With Doctor');
+      pinInFlightMutation?.(patient.id, 'with_doctor');
 
       // Optimistic state update
       setCarryoutPatients((prev) => prev.filter((item) => item.id !== patient.id));
@@ -283,7 +283,7 @@ export function useNurseActions(
     async (patient: Patient): Promise<boolean> => {
       const now = new Date().toISOString();
 
-      pinInFlightMutation?.(patient.id, 'Done');
+      pinInFlightMutation?.(patient.id, 'done');
 
       // Optimistic state update
       setCarryoutPatients((prev) => prev.filter((item) => item.id !== patient.id));

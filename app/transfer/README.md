@@ -22,6 +22,15 @@ The module incorporates offline-resilient Write-Ahead Logging (WAL) via an Index
   - Expansive containers: `max-w-4xl` (patient group) and `max-w-5xl` (rooms) with `gap-6`.
   - Clean typography-first anatomy: title heading + queue count badge on top row, patient breakdown details below.
 
+### Anti-Overlap Responsive Layout Standards
+To prevent text collisions across desktop, laptop, and tablet viewports:
+- **Responsive Station & Counter Grids:** Station cubicles and registration counters use `grid grid-cols-2 sm:grid-cols-3 xl:grid-cols-4 2xl:grid-cols-5 gap-2` rather than static 5-column grids, guaranteeing at least 170px width per tile on 1280px–1440px laptop displays.
+- **Flex Boundaries:** All flex row parents containing text and action buttons enforce `min-w-0 flex-1 overflow-hidden` on the text column to prevent label expansion from colliding with buttons.
+- **Station Popover Avatar Sizing:** In `QuickAssignDropdown.tsx`, station avatars use `formatCubicleBadge` to extract compact station identifiers (`C1`, `C2`, etc.) and enforce `overflow-hidden select-none`, preventing long database identifier strings (`Consultation R5 C1`) from overflowing fixed 36px avatars onto neighboring text labels.
+- **Timer and Badge Isolation:** `ElapsedTimer` instances and count badges are wrapped in `shrink-0 flex items-center` containers to protect their width from adjacent text expansion.
+- **Button Wrap Protection:** All action triggers (`Call`, `Back`, `Queue ->`, `Activate`, `Remove`, `+ Assign`) enforce `whitespace-nowrap shrink-0`.
+- **Informational Text Wrapping (AGENTS.md Rule 11):** Critical clinical descriptions wrap naturally (`break-words whitespace-normal`) without truncation or ellipsis. Non-critical hints and parentheticals are hidden gracefully on narrower viewports with `hidden sm:inline`.
+
 ---
 
 ## Where to Edit

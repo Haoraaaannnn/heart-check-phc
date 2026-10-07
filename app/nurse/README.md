@@ -22,6 +22,13 @@ The module implements optimistic state transitions backed by an offline-resilien
 - **Real-Time Notification Badges:** Displays full `NotificationBadge` counters in expanded view and compact pulse dots in icon-only rail view.
 - **Header Station Selector:** `NurseHeader.tsx` provides a compact station/category dropdown selector for quick one-click cubicle switching.
 
+### Anti-Overlap Responsive Layout Standards
+To prevent text collisions across desktop, laptop, and tablet viewports:
+- **Header Element Constraints:** In `NurseHeader.tsx`, the left title container enforces `flex-1 min-w-0 overflow-hidden`, station dropdown is bounded (`max-w-[160px] lg:max-w-[200px]`), and attending physician indicators use `hidden xl:flex` with truncation so right-side ledger and live status controls never collide.
+- **Stage Column Headers:** `StageColumn.tsx` header enforces `flex items-center justify-between gap-2 min-w-0` and `flex-1 overflow-hidden` on the stage title, ensuring the "+ Move Here" button is never crowded out.
+- **Patient Card Boundaries:** `NursePatientCard.tsx` enforces `break-words whitespace-normal leading-snug` on service and subcategory labels (per AGENTS.md Rule 11), wraps `ElapsedTimer` with `shrink-0`, and locks action buttons (`Call`, `With Doctor`, `Back`, `Carryout`, `Done`) with `whitespace-nowrap shrink-0`.
+- **Selection Banners:** `NurseSelectionBanner.tsx` constrains origin labels (`max-w-[130px] truncate`), sets instructions to `min-w-0 flex-1`, and guards the cancel button with `whitespace-nowrap shrink-0`.
+
 ---
 
 ## Where to Edit

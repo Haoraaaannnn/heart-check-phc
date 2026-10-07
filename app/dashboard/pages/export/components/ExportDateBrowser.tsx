@@ -218,7 +218,7 @@ export default function ExportDateBrowser({
               const hasData = monthsForYear.includes(m.value);
               const isActive = hasData && options.selectedMonth === m.value;
 
-              let cardStyle = S.monthCard.disabled;
+              let cardStyle: string = S.monthCard.disabled;
               if (isActive) cardStyle = S.monthCard.active;
               else if (hasData) cardStyle = S.monthCard.available;
 

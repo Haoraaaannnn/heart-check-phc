@@ -74,8 +74,8 @@ export function StageColumn({
       }`}
     >
       {/* Column Header */}
-      <div style={NurseStyle.stageColumnHeader}>
-        <div className="flex items-center gap-2 min-w-0">
+      <div style={NurseStyle.stageColumnHeader} className="flex items-center justify-between gap-2 min-w-0">
+        <div className="flex items-center gap-2 min-w-0 flex-1 overflow-hidden">
           <h2 className="text-sm font-bold text-slate-800 tracking-tight truncate">
             {title}
           </h2>
@@ -91,7 +91,7 @@ export function StageColumn({
           <button
             type="button"
             onClick={onMoveHere}
-            className="inline-flex items-center px-2.5 py-1 rounded-lg text-xs font-bold bg-emerald-600 hover:bg-emerald-700 active:bg-emerald-800 text-white shadow-xs transition-colors cursor-pointer animate-pulse"
+            className="inline-flex items-center px-2 py-0.5 rounded-lg text-xs font-bold bg-emerald-600 hover:bg-emerald-700 active:bg-emerald-800 text-white shadow-xs transition-colors cursor-pointer animate-pulse shrink-0 whitespace-nowrap ml-1.5"
           >
             <span>{nurseTexts.btnMoveHere}</span>
           </button>

@@ -1,8 +1,20 @@
 'use client';
-import { useSearchParams, useRouter } from 'next/navigation';
-import { useState } from 'react';
 
-export default function ConfirmRecoveryPage() {
+/**
+ * @fileoverview Password recovery confirmation token verification page.
+ *
+ * Consumes recovery tokens from URL query parameters and verifies them against the auth API.
+ *
+ * @module app/reset-password/confirm/page
+ */
+
+import { Suspense, useState } from 'react';
+import { useSearchParams, useRouter } from 'next/navigation';
+
+/**
+ * Inner component verifying password recovery parameters.
+ */
+function ConfirmRecoveryContent() {
   const params = useSearchParams();
   const router = useRouter();
   const [error, setError] = useState('');
@@ -36,11 +48,27 @@ export default function ConfirmRecoveryPage() {
         <h1 className="text-xl font-bold text-gray-800 mb-2">Confirm password reset</h1>
         <p className="text-sm text-gray-500 mb-6">Click below to continue resetting your password.</p>
         {error && <p className="text-sm text-red-600 mb-3">{error}</p>}
-        <button onClick={handleConfirm} disabled={loading}
-          className="px-6 py-3 rounded-2xl bg-[#cc3535] text-white font-semibold disabled:opacity-60">
-          {loading ? 'Confirming…' : 'Confirm'}
+        <button
+          onClick={handleConfirm}
+          disabled={loading}
+          className="px-6 py-3 rounded-2xl bg-[#cc3535] text-white font-semibold disabled:opacity-60 cursor-pointer"
+        >
+          {loading ? 'Confirming' : 'Confirm'}
         </button>
       </div>
     </div>
+  );
+}
+
+/**
+ * Root password recovery confirmation page wrapped in Suspense.
+ *
+ * @returns JSX element.
+ */
+export default function ConfirmRecoveryPage() {
+  return (
+    <Suspense fallback={null}>
+      <ConfirmRecoveryContent />
+    </Suspense>
   );
 }

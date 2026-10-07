@@ -147,9 +147,9 @@ export const sendToPrinter = async (
   let lastError: string | null = null;
 
   for (const path of candidatePaths) {
-    if (existsSync(path)) {
+    if (existsSync(/*turbopackIgnore: true*/ path)) {
       try {
-        await fs.writeFile(path, buffer);
+        await fs.writeFile(/*turbopackIgnore: true*/ path, buffer);
         console.log(
           `${getTimestamp()} [PRINT SUCCESS] Direct device print completed:`,
           {

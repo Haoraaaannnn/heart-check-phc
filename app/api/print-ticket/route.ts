@@ -188,9 +188,9 @@ export async function POST(request: Request) {
     let lastError = '';
 
     for (const path of printerPaths) {
-      if (existsSync(path)) {
+      if (existsSync(/*turbopackIgnore: true*/ path)) {
         try {
-          await fs.writeFile(path, buffer);
+          await fs.writeFile(/*turbopackIgnore: true*/ path, buffer);
           console.log(
             `${getTimestamp()} [PRINT SUCCESS] Ticket printed to device - Queue: ${queueNumber}, Service: ${serviceName}, Device: ${path}, Size: ${buffer.length} bytes`
           );

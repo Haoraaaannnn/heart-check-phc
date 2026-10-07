@@ -79,16 +79,16 @@ export function OnProgressSection({
     <div className="h-full flex flex-col min-h-0 overflow-hidden select-none">
       {/* Header */}
       <div className="flex items-center justify-between gap-2 mb-2 pb-1.5 border-b border-slate-100 shrink-0">
-        <div className="flex items-center gap-2">
-          <span className="w-2.5 h-2.5 rounded-full bg-emerald-500 animate-pulse inline-block" />
-          <h2 className="text-slate-700 font-bold text-xs tracking-wider uppercase">
+        <div className="flex items-center gap-2 min-w-0 flex-1">
+          <span className="w-2.5 h-2.5 rounded-full bg-emerald-500 animate-pulse inline-block shrink-0" />
+          <h2 className="text-slate-700 font-bold text-xs tracking-wider uppercase truncate">
             {transferTexts.onProgressHeading}
           </h2>
-          <span className="text-[11px] font-bold px-1.5 py-0.5 rounded-full bg-emerald-100 text-emerald-800">
+          <span className="text-[11px] font-bold px-1.5 py-0.5 rounded-full bg-emerald-100 text-emerald-800 shrink-0">
             {safePatients.length}
           </span>
         </div>
-        <span className="text-[11px] text-slate-400 font-medium">
+        <span className="text-[11px] text-slate-400 font-medium shrink-0 hidden sm:inline">
           {isDraggable
             ? transferTexts.dragToCubiclesHint
             : transferTexts.autoAssigningHint}
@@ -147,7 +147,7 @@ export function OnProgressSection({
                 }`}
               >
                 {/* Left Patient Details */}
-                <div className="flex items-center gap-2 min-w-0">
+                <div className="flex items-center gap-2 min-w-0 flex-1 overflow-hidden">
                   {/* Grip, Status Label, or Selection Indicator */}
                   {isDraggable && (
                     isTop ? (
@@ -161,7 +161,7 @@ export function OnProgressSection({
                     ) : (
                       <span
                         title={transferTexts.lockedInStack}
-                        className="inline-flex items-center justify-center px-1 py-0.5 rounded text-[10px] font-bold text-slate-400 bg-slate-100"
+                        className="inline-flex items-center justify-center px-1 py-0.5 rounded text-[10px] font-bold text-slate-400 bg-slate-100 shrink-0"
                       >
                         WAIT
                       </span>
@@ -182,37 +182,41 @@ export function OnProgressSection({
                   </span>
 
                   {/* Service info & Position */}
-                  <div className="min-w-0 flex flex-col">
-                    <div className="flex items-center gap-1">
+                  <div className="min-w-0 flex-1 flex flex-col justify-center">
+                    <div className="flex items-center gap-1 min-w-0">
                       <span className="text-slate-800 text-xs font-semibold truncate">
                         {p.service}
                         {p.subcategory && ` · ${p.subcategory}`}
                       </span>
-                      <span className="text-[10px] text-slate-400 font-medium">
+                      <span className="text-[10px] text-slate-400 font-medium shrink-0">
                         {transferTexts.queuePositionPrefix}
                         {index + 1}
                       </span>
                     </div>
 
-                    {isSelected ? (
-                      <span className="text-[10px] text-[#cc3535] font-bold tracking-tight">
-                        {transferTexts.selectedBadge} · {transferTexts.selectedQueuePatientHint}
-                      </span>
-                    ) : isTop ? (
-                      <span className="text-[10px] text-emerald-600 font-bold tracking-tight">
-                        {transferTexts.servingNext}
-                      </span>
-                    ) : (
-                      <span className="text-[10px] text-slate-400">
-                        {transferTexts.lockedInStack}
-                      </span>
-                    )}
+                    <div className="min-w-0">
+                      {isSelected ? (
+                        <span className="text-[10px] text-[#cc3535] font-bold tracking-tight truncate block">
+                          {transferTexts.selectedBadge} · {transferTexts.selectedQueuePatientHint}
+                        </span>
+                      ) : isTop ? (
+                        <span className="text-[10px] text-emerald-600 font-bold tracking-tight truncate block">
+                          {transferTexts.servingNext}
+                        </span>
+                      ) : (
+                        <span className="text-[10px] text-slate-400 truncate block">
+                          {transferTexts.lockedInStack}
+                        </span>
+                      )}
+                    </div>
                   </div>
 
-                  <ElapsedTimer
-                    startedAt={p.progress_started_at}
-                    warnAfterSeconds={warnAfterSeconds}
-                  />
+                  <div className="shrink-0 flex items-center">
+                    <ElapsedTimer
+                      startedAt={p.progress_started_at}
+                      warnAfterSeconds={warnAfterSeconds}
+                    />
+                  </div>
                 </div>
 
                 {/* Right Action Buttons */}
@@ -236,7 +240,7 @@ export function OnProgressSection({
                     }}
                     disabled={speakingId === p.id}
                     title={transferTexts.callPatientTooltip}
-                    className={`px-2 py-0.5 rounded-md text-xs font-semibold transition-colors cursor-pointer ${
+                    className={`px-2 py-0.5 rounded-md text-xs font-semibold transition-colors cursor-pointer whitespace-nowrap ${
                       speakingId === p.id
                         ? 'bg-blue-100 text-blue-300 cursor-not-allowed'
                         : 'bg-blue-50 hover:bg-blue-100 text-blue-600'
@@ -256,7 +260,7 @@ export function OnProgressSection({
                         onAssignNow(p);
                       }}
                       title={transferTexts.assignNowTooltip}
-                      className="px-2 py-0.5 rounded-md text-xs font-semibold bg-emerald-50 hover:bg-emerald-100 text-emerald-700 transition-colors cursor-pointer"
+                      className="px-2 py-0.5 rounded-md text-xs font-semibold bg-emerald-50 hover:bg-emerald-100 text-emerald-700 transition-colors cursor-pointer whitespace-nowrap"
                     >
                       {transferTexts.assignBtn}
                     </button>

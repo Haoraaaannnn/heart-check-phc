@@ -94,6 +94,10 @@ export const themeTokens = {
       'border-[#a8071a]/25 dark:border-[#a8071a]/30 bg-[#a8071a]/10 dark:bg-[#a8071a]/20 text-[#a8071a] dark:text-[#f87171]',
     alertLockout:
       'border-amber-200 dark:border-amber-800/80 bg-amber-50 dark:bg-amber-950/40 text-amber-800 dark:text-amber-300',
+    pill:
+      'bg-[#a8071a]/10 dark:bg-[#a8071a]/20 border border-[#a8071a]/25 text-[#a8071a] dark:text-[#f87171] font-semibold',
+    pulseDot:
+      'bg-[#a8071a] animate-pulse',
   },
 } as const;
 

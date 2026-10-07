@@ -1,5 +1,6 @@
 "use client";
 
+import { Suspense } from "react";
 import { useSearchParams } from "next/navigation";
 import { useKioskNavigate } from "@/app/kiosk/hooks/useKioskNavigate";
 import { CategoryHeaderTexts } from "@/app/kiosk/pages/category-selection/constants/categoryHeaderTexts";
@@ -17,24 +18,9 @@ import {
 } from "@/app/kiosk/pages/category-selection/constants/categoryLayout";
 
 /**
- * Unified kiosk step where the patient selects their age category
- * (Adult or Pedia) for **any** service that requires it.
- *
- * @remarks
- * The page reads the following URL search parameters:
- * - `serviceId`    – the service record PK, forwarded downstream.
- * - `type`         – patient type (`"new"` / `"old"`), forwarded downstream.
- * - `serviceLabel` – the English service label (e.g. `"Consultation"`,
- *                     `"OPD Screening"`). Determines the *next* route:
- *   - **Consultation** → `/kiosk/pages/kiosk-cubicle-selection`
- *   - **OPD Screening** → `/kiosk/pages/sms-input`
- *
- * By keeping both flows in one page we eliminate the duplicated
- * `consultation-category` and `opd-screening-category` routes.
- *
- * @returns The age category selection screen.
+ * Inner component reading search parameters.
  */
-export default function CategorySelectionPage() {
+function CategorySelectionContent() {
     const navigate = useKioskNavigate();
     const searchParams = useSearchParams();
 
@@ -179,3 +165,18 @@ export default function CategorySelectionPage() {
         </div>
     );
 }
+
+/**
+ * Unified kiosk step where the patient selects their age category (Adult or Pedia).
+ * Wrapped in Suspense boundary to support Next.js static prerendering with useSearchParams.
+ *
+ * @returns The age category selection screen.
+ */
+export default function CategorySelectionPage() {
+    return (
+        <Suspense fallback={null}>
+            <CategorySelectionContent />
+        </Suspense>
+    );
+}
+

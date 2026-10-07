@@ -104,7 +104,7 @@ export function NurseHeader({
   return (
     <header style={NurseStyle.headerBar}>
       {/* Left: Sidebar Toggle, Station Title & Active Filters / Desktop Dropdown */}
-      <div className="flex items-center gap-2 sm:gap-3 min-w-0">
+      <div className="flex items-center gap-2 sm:gap-3 min-w-0 flex-1 overflow-hidden">
         {/* Sidebar Hide/Open Toggle Button */}
         {onToggleSidebar && (
           <button
@@ -122,14 +122,14 @@ export function NurseHeader({
         )}
 
         <div className="flex items-center gap-2 shrink-0">
-          <span className="text-slate-600 text-sm font-semibold tracking-tight">
+          <span className="text-slate-600 text-sm font-semibold tracking-tight hidden md:inline truncate max-w-[170px] xl:max-w-none">
             {nurseTexts.patientManagement}
           </span>
         </div>
 
         {/* Desktop Station / Cubicle Selector Dropdown */}
         {showCubicleDropdown && onSelectCategory && onSelectCubicle && assignedCubicles.length > 0 && (
-          <div className="flex items-center gap-1.5 bg-slate-100/90 hover:bg-slate-200/80 border border-slate-200 rounded-xl px-2.5 py-1 transition-colors shrink-0">
+          <div className="flex items-center gap-1.5 bg-slate-100/90 hover:bg-slate-200/80 border border-slate-200 rounded-xl px-2.5 py-1 transition-colors min-w-0 shrink">
             <span className="text-[11px] font-bold text-slate-500 uppercase tracking-wider shrink-0">
               {nurseTexts.cubicleSelectLabel}
             </span>
@@ -152,7 +152,7 @@ export function NurseHeader({
                 }
               }}
               aria-label={nurseTexts.selectCubicleDropdown}
-              className="bg-transparent text-xs font-bold text-slate-800 outline-none cursor-pointer py-0.5 pr-1 max-w-[220px] truncate"
+              className="bg-transparent text-xs font-bold text-slate-800 outline-none cursor-pointer py-0.5 pr-1 max-w-[160px] lg:max-w-[200px] truncate"
             >
               <option value="ALL">{nurseTexts.allMyCubicles}</option>
               {Object.entries(services).map(([service, cubicles]) => (
@@ -174,11 +174,11 @@ export function NurseHeader({
 
         {/* Active Filter Badge (visible when filtered and dropdown is hidden) */}
         {!showCubicleDropdown && (selectedCategory || selectedCubicleNum) && (
-          <div className="flex items-center gap-1.5 px-2.5 py-1 rounded-full bg-slate-100 border border-slate-200 text-xs text-slate-600">
-            <span className="font-medium text-slate-400">
+          <div className="flex items-center gap-1.5 px-2.5 py-1 rounded-full bg-slate-100 border border-slate-200 text-xs text-slate-600 min-w-0 shrink">
+            <span className="font-medium text-slate-400 shrink-0">
               {nurseTexts.filteredByPrefix}
             </span>
-            <span className="font-bold text-slate-800">
+            <span className="font-bold text-slate-800 truncate max-w-[120px]">
               {selectedCubicleNum
                 ? `${nurseTexts.cubiclePrefix} ${selectedCubicleNum}`
                 : selectedCategory}
@@ -186,7 +186,7 @@ export function NurseHeader({
             <button
               type="button"
               onClick={onClearFilter}
-              className="ml-1 text-slate-400 hover:text-[#cc3535] cursor-pointer font-semibold underline text-[11px]"
+              className="ml-1 text-slate-400 hover:text-[#cc3535] cursor-pointer font-semibold underline text-[11px] shrink-0"
               title={nurseTexts.clearFilter}
               aria-label={nurseTexts.clearFilter}
             >
@@ -197,15 +197,15 @@ export function NurseHeader({
 
         {/* Attending Physician Indicator */}
         {selectedCubicleNum && (
-          <div className="hidden lg:flex items-center gap-1.5 px-2.5 py-1 rounded-lg bg-purple-50 text-purple-700 text-xs border border-purple-100">
-            <span className="font-medium text-purple-600">{nurseTexts.doctorOnDuty}</span>
-            <span className="font-bold">{doctorName || nurseTexts.noDoctorAssigned}</span>
+          <div className="hidden xl:flex items-center gap-1.5 px-2.5 py-1 rounded-lg bg-purple-50 text-purple-700 text-xs border border-purple-100 min-w-0 shrink max-w-[220px]">
+            <span className="font-medium text-purple-600 shrink-0">{nurseTexts.doctorOnDuty}</span>
+            <span className="font-bold truncate">{doctorName || nurseTexts.noDoctorAssigned}</span>
           </div>
         )}
       </div>
 
       {/* Right: Sync Status, Finished Ledger Button & Notifications */}
-      <div className="flex items-center gap-3 shrink-0">
+      <div className="flex items-center gap-2 sm:gap-3 shrink-0 ml-2">
         {/* Sync Indicator */}
         {isSyncing ? (
           <div className="flex items-center gap-2 px-3 py-1.5 bg-blue-50 border border-blue-200 rounded-lg">

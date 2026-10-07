@@ -123,7 +123,7 @@ export function CubicleCard({
     >
       {/* Cubicle Tile Header: Cubicle Num + Doctor + Assign / Capacity */}
       <div className="flex items-center justify-between gap-1 mb-1">
-        <div className="min-w-0">
+        <div className="min-w-0 flex-1">
           <span className="text-[11px] font-bold text-slate-800 truncate block leading-none">
             {cubicle.cubicleNum}
           </span>
@@ -149,7 +149,7 @@ export function CubicleCard({
                 setIsAssignPending(false);
               }
             }}
-            className={`px-1.5 py-0.5 text-[10px] font-bold bg-emerald-600 hover:bg-emerald-700 active:bg-emerald-800 text-white rounded transition-colors shadow-2xs shrink-0 cursor-pointer select-none ${
+            className={`px-1.5 py-0.5 text-[10px] font-bold bg-emerald-600 hover:bg-emerald-700 active:bg-emerald-800 text-white rounded transition-colors shadow-2xs shrink-0 cursor-pointer select-none whitespace-nowrap ${
               isAssignPending ? 'cursor-wait opacity-80' : ''
             }`}
           >
@@ -206,7 +206,7 @@ export function CubicleCard({
                   : 'border-slate-200 hover:border-slate-300'
               }`}
             >
-              <div className="flex items-center gap-1 min-w-0">
+              <div className="flex items-center gap-1 min-w-0 flex-1 overflow-hidden">
                 {isDraggable && (
                   isTopSelected ? (
                     <span className="px-1 py-0.5 rounded bg-[#cc3535] text-white text-[9px] font-bold shrink-0">
@@ -219,13 +219,12 @@ export function CubicleCard({
                 <span className="font-black text-xs text-[#cc3535] shrink-0">
                   {topPatient.patientNum}
                 </span>
-                <span className="text-[10px] text-slate-500 truncate hidden xl:inline">
-                  {topPatient.subcategory || topPatient.service}
+                <span className="shrink-0 flex items-center">
+                  <ElapsedTimer
+                    startedAt={topPatient.cubicle_top_started_at}
+                    warnAfterSeconds={warnAfterSeconds}
+                  />
                 </span>
-                <ElapsedTimer
-                  startedAt={topPatient.cubicle_top_started_at}
-                  warnAfterSeconds={warnAfterSeconds}
-                />
               </div>
 
               <div className="flex items-center gap-1 shrink-0">
@@ -246,7 +245,7 @@ export function CubicleCard({
                   }}
                   disabled={speakingId === topPatient.id}
                   title={transferTexts.callPatientTooltip}
-                  className={`px-1.5 py-0.5 rounded text-[10px] font-semibold transition-colors cursor-pointer ${
+                  className={`px-1.5 py-0.5 rounded text-[10px] font-semibold transition-colors cursor-pointer whitespace-nowrap shrink-0 ${
                     speakingId === topPatient.id
                       ? 'bg-blue-100 text-blue-300 cursor-not-allowed'
                       : 'bg-blue-50 hover:bg-blue-100 text-blue-600'
@@ -272,7 +271,7 @@ export function CubicleCard({
                     }
                   }}
                   title={transferTexts.moveToQueueTooltip}
-                  className={`px-1.5 py-0.5 rounded text-[10px] font-semibold bg-amber-50 hover:bg-amber-100 text-amber-700 transition-colors cursor-pointer select-none ${
+                  className={`px-1.5 py-0.5 rounded text-[10px] font-semibold bg-amber-50 hover:bg-amber-100 text-amber-700 transition-colors cursor-pointer select-none whitespace-nowrap shrink-0 ${
                     isBackPending ? 'cursor-wait opacity-80' : ''
                   }`}
                 >

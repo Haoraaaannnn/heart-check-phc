@@ -1195,13 +1195,13 @@ export default function TransferPage() {
             </span>
           </div>
 
-          <div className="flex items-center gap-2 sm:gap-2.5">
+          <div className="flex items-center gap-2 sm:gap-2.5 shrink-0">
             {/* Needs Attention / Unassigned Dropdown */}
             <div className="relative">
               <button
                 type="button"
                 onClick={() => setShowUnassignedMenu(v => !v)}
-                className={`flex items-center gap-1.5 px-3 py-1.5 rounded-xl border text-xs font-bold transition-all cursor-pointer ${
+                className={`flex items-center gap-1.5 px-3 py-1.5 rounded-xl border text-xs font-bold transition-all cursor-pointer whitespace-nowrap shrink-0 ${
                   totalUnassigned > 0
                     ? 'bg-red-50 border-red-200 text-[#cc3535] hover:bg-red-100'
                     : 'bg-slate-50 border-slate-200 text-slate-400'
@@ -1253,7 +1253,7 @@ export default function TransferPage() {
 
             {/* Syncing Indicator */}
             {isSyncing && !isConfirming && (
-              <div className="flex items-center gap-2 px-3 py-1 bg-blue-50 text-blue-700 border border-blue-200 rounded-xl text-xs font-semibold">
+              <div className="flex items-center gap-2 px-3 py-1 bg-blue-50 text-blue-700 border border-blue-200 rounded-xl text-xs font-semibold whitespace-nowrap shrink-0">
                 <div className="w-2.5 h-2.5 border-2 border-blue-600 border-t-transparent rounded-full animate-spin" />
                 <span>Syncing...</span>
               </div>
@@ -1263,7 +1263,7 @@ export default function TransferPage() {
             <button
               type="button"
               onClick={() => setShowDoctorsModal(true)}
-              className="px-3 py-1.5 bg-slate-100 hover:bg-slate-200 active:bg-slate-300 rounded-xl text-xs font-bold transition-colors text-slate-700 cursor-pointer shadow-2xs"
+              className="px-3 py-1.5 bg-slate-100 hover:bg-slate-200 active:bg-slate-300 rounded-xl text-xs font-bold transition-colors text-slate-700 cursor-pointer shadow-2xs whitespace-nowrap shrink-0"
               title="Manage Doctors"
             >
               {transferTexts.doctorsBtn}

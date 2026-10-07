@@ -44,16 +44,16 @@ export function IdleNumbersPanel({
     <div className="h-full flex flex-col min-h-0 overflow-hidden select-none">
       {/* Header */}
       <div className="flex items-center justify-between gap-2 mb-2 pb-1.5 border-b border-slate-100 shrink-0">
-        <div className="flex items-center gap-2">
-          <span className="w-2.5 h-2.5 rounded-full bg-slate-400 inline-block" />
-          <h2 className="text-slate-700 font-bold text-xs tracking-wider uppercase">
+        <div className="flex items-center gap-2 min-w-0 flex-1">
+          <span className="w-2.5 h-2.5 rounded-full bg-slate-400 inline-block shrink-0" />
+          <h2 className="text-slate-700 font-bold text-xs tracking-wider uppercase truncate">
             {transferTexts.idleNumbersHeading}
           </h2>
-          <span className="text-[11px] font-bold px-1.5 py-0.5 rounded-full bg-slate-100 text-slate-600">
+          <span className="text-[11px] font-bold px-1.5 py-0.5 rounded-full bg-slate-100 text-slate-600 shrink-0">
             {safePatients.length}
           </span>
         </div>
-        <span className="text-[11px] text-slate-400 font-normal">
+        <span className="text-[11px] text-slate-400 font-normal shrink-0 hidden sm:inline">
           {transferTexts.idleSubtitle}
         </span>
       </div>
@@ -68,13 +68,13 @@ export function IdleNumbersPanel({
           {safePatients.map(p => (
             <div
               key={p.id}
-              className="flex items-center justify-between border border-slate-100 rounded-xl px-2.5 py-1.5 bg-slate-50/70 hover:bg-slate-100/80 transition-colors"
+              className="flex items-center justify-between border border-slate-100 rounded-xl px-2.5 py-1.5 bg-slate-50/70 hover:bg-slate-100/80 transition-colors gap-2"
             >
-              <div className="flex items-center gap-2 min-w-0">
-                <span className="text-slate-800 font-black text-xs">
+              <div className="flex items-center gap-2 min-w-0 flex-1 overflow-hidden">
+                <span className="text-slate-800 font-black text-xs shrink-0">
                   {p.patientNum}
                 </span>
-                <span className="text-slate-500 text-xs truncate">
+                <span className="text-slate-500 text-xs truncate min-w-0 flex-1">
                   {p.service}
                   {p.subcategory && ` · ${p.subcategory}`}
                 </span>
@@ -84,12 +84,12 @@ export function IdleNumbersPanel({
                 </span>
               </div>
 
-              <div className="flex items-center gap-1.5 shrink-0 ml-2">
+              <div className="flex items-center gap-1.5 shrink-0 ml-1">
                 <button
                   type="button"
                   onClick={() => onActivate(p)}
                   title={transferTexts.activateIdleTooltip}
-                  className="px-2 py-0.5 text-[11px] font-bold rounded-md text-emerald-700 bg-emerald-50 hover:bg-emerald-100 transition-colors cursor-pointer"
+                  className="px-2 py-0.5 text-[11px] font-bold rounded-md text-emerald-700 bg-emerald-50 hover:bg-emerald-100 transition-colors cursor-pointer whitespace-nowrap shrink-0"
                 >
                   {transferTexts.activateBtn}
                 </button>
@@ -97,7 +97,7 @@ export function IdleNumbersPanel({
                   type="button"
                   onClick={() => onRemove(p)}
                   title={transferTexts.removeIdleTooltip}
-                  className="px-2 py-0.5 text-[11px] font-bold rounded-md text-rose-600 bg-rose-50 hover:bg-rose-100 transition-colors cursor-pointer"
+                  className="px-2 py-0.5 text-[11px] font-bold rounded-md text-rose-600 bg-rose-50 hover:bg-rose-100 transition-colors cursor-pointer whitespace-nowrap shrink-0"
                 >
                   {transferTexts.removeBtn}
                 </button>

@@ -13,7 +13,7 @@
 
 'use client';
 
-import React, { useState, useEffect } from 'react';
+import React, { useState, useEffect, Suspense } from 'react';
 import { useSearchParams, useRouter } from 'next/navigation';
 import { useRequireAuth } from './hooks/useRequireAuth';
 import { useIdleTimeout } from './hooks/useIdleTimeout';
@@ -30,11 +30,9 @@ import { SUPERADMIN_TEXTS } from './constants/superadminTexts';
 import { SUPERADMIN_STYLES } from './constants/superadminStyles';
 
 /**
- * SuperAdmin dashboard orchestrator component.
- *
- * @returns JSX element containing the active view (Users or Settings).
+ * SuperAdmin inner content component reading URL search parameters.
  */
-export default function SuperAdminPage() {
+function SuperAdminContent() {
   const checking = useRequireAuth();
   useIdleTimeout();
 
@@ -208,5 +206,18 @@ export default function SuperAdminPage() {
         <SettingsPanel focusSecurity={urlTab === 'security'} />
       )}
     </div>
+  );
+}
+
+/**
+ * SuperAdmin dashboard orchestrator component wrapped in Suspense.
+ *
+ * @returns JSX element containing the active view (Users or Settings).
+ */
+export default function SuperAdminPage() {
+  return (
+    <Suspense fallback={<SuperAdminPageSkeleton />}>
+      <SuperAdminContent />
+    </Suspense>
   );
 }
