@@ -152,6 +152,16 @@ export function DashboardHeader({ onOpenMobileDrawer }: DashboardHeaderProps) {
       };
     }
 
+    if (
+      pathname.startsWith('/dashboard/pages/export') ||
+      pathname.startsWith('/dashboard/export')
+    ) {
+      return {
+        section: T.breadcrumbs.sections.operations,
+        page: T.breadcrumbs.pages.export,
+      };
+    }
+
     if (pathname.startsWith('/dashboard/servicesPHC/')) {
       const rawService = pathname.replace('/dashboard/servicesPHC/', '');
       const formatted = rawService

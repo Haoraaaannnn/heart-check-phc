@@ -83,6 +83,14 @@ export function DashSideNavigation({
       );
     }
 
+    // Export route matching
+    if (item.matchPrefix === '/dashboard/pages/export') {
+      return (
+        pathname.startsWith('/dashboard/pages/export') ||
+        pathname.startsWith('/dashboard/export')
+      );
+    }
+
     // Patients and clinical services matching
     if (
       pathname.startsWith('/dashboard/pages/patients') ||

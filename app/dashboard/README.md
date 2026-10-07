@@ -100,6 +100,9 @@ The Admin Dashboard subsystem adheres strictly to the architectural standards de
 | **Change import page drag-and-drop dropzone, staged files, preview modal, or formats** | [import/README.md](file:///home/jensen/Github-Repositories/Heart_Check_PHC/app/dashboard/pages/import/README.md) / [useFileImport.ts](file:///home/jensen/Github-Repositories/Heart_Check_PHC/app/dashboard/pages/import/hooks/useFileImport.ts) |
 | **Change import text copy, format guidelines, and error messages** | [importTexts.ts](file:///home/jensen/Github-Repositories/Heart_Check_PHC/app/dashboard/pages/import/constants/importTexts.ts) |
 | **Change import styles, solid surfaces, and dropzone hover active state** | [importStyles.ts](file:///home/jensen/Github-Repositories/Heart_Check_PHC/app/dashboard/pages/import/constants/importStyles.ts) |
+| **Change export page date browser, mode selection, specification preview, or download history** | [export/README.md](file:///home/jensen/Github-Repositories/Heart_Check_PHC/app/dashboard/pages/export/README.md) / [useFileExport.ts](file:///home/jensen/Github-Repositories/Heart_Check_PHC/app/dashboard/pages/export/hooks/useFileExport.ts) |
+| **Change export text copy, column descriptions, and compliance formula labels** | [exportTexts.ts](file:///home/jensen/Github-Repositories/Heart_Check_PHC/app/dashboard/pages/export/constants/exportTexts.ts) |
+| **Change export styles, solid surfaces, date chips, and specification cards** | [exportStyles.ts](file:///home/jensen/Github-Repositories/Heart_Check_PHC/app/dashboard/pages/export/constants/exportStyles.ts) |
 
 ---
 

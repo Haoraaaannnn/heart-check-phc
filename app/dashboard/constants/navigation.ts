@@ -20,6 +20,8 @@ export const DASHBOARD_ROUTES = {
   PATIENTS: '/dashboard/pages/patients',
   /** Direct drag-and-drop file ingestion interface. */
   IMPORT: '/dashboard/pages/import',
+  /** Official PHC Time and Motion workbook and CSV export interface. */
+  EXPORT: '/dashboard/pages/export',
   /** Advanced bottleneck analysis and algorithmic forecasting. */
   ANALYTICS: '/dashboard/pages/analytics',
 } as const;
@@ -107,6 +109,13 @@ export const DASHBOARD_NAV_GROUPS: readonly DashboardNavGroup[] = [
         icon: 'bx-cloud-upload',
         href: DASHBOARD_ROUTES.IMPORT,
         matchPrefix: '/dashboard/pages/import',
+      },
+      {
+        key: 'export',
+        label: DASHBOARD_NAV_TEXTS.links.export,
+        icon: 'bx-download',
+        href: DASHBOARD_ROUTES.EXPORT,
+        matchPrefix: '/dashboard/pages/export',
       },
     ],
   },

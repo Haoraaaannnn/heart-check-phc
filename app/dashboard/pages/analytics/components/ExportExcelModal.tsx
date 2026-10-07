@@ -13,6 +13,7 @@
 
 import { useEffect, useState, useCallback, useMemo } from 'react';
 import { createPortal } from 'react-dom';
+import Link from 'next/link';
 import {
   ANALYTICS_STYLES,
   ANALYTICS_ICONS,
@@ -653,6 +654,14 @@ export default function ExportExcelModal({
 
         {/* Modal Footer Actions */}
         <div className={S.footer}>
+          <Link
+            href="/dashboard/pages/export"
+            onClick={onClose}
+            className="mr-auto inline-flex items-center gap-1.5 text-xs font-semibold text-[#a8071a] hover:underline dark:text-rose-400"
+          >
+            <i className="bx bx-window-open text-sm" aria-hidden="true" />
+            <span>Open Dedicated Export Page</span>
+          </Link>
           <button
             type="button"
             onClick={onClose}

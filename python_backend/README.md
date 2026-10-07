@@ -48,7 +48,7 @@ python_backend/
 | Sheet date reconciliation | [importer.py](file:///home/jensen/Github-Repositories/Heart_Check_PHC/python_backend/importer.py), [import_phc_data.py](file:///home/jensen/Github-Repositories/Heart_Check_PHC/python_backend/import_phc_data.py) | Intelligent cross-referencing (`resolve_phc_sheet_date`) reconciling raw Excel cell dates with sheet tab names (`M-D`) and workbook filenames to override stale copied templates (e.g. 2023 dates in 2024 workbooks) and string typos (e.g. `1010/2024`). |
 | Time-series models & backtesting | [forecasting.py](file:///home/jensen/Github-Repositories/Heart_Check_PHC/python_backend/analytics/forecasting.py) | Model implementations for SMA, WMA, EMA, Linear Regression, and ARIMA(1,1,1) with walk-forward validation. |
 | Staffing recommendation rules | [staffing.py](file:///home/jensen/Github-Repositories/Heart_Check_PHC/python_backend/analytics/staffing.py) | Required cubicle calculation and target utilization caps. |
-| FastAPI routes & query parameters | [main.py](file:///home/jensen/Github-Repositories/Heart_Check_PHC/python_backend/main.py) | API endpoints `/api/dashboard-data`, `/api/export-phc-excel`, `/api/import-file`, and Supabase data queries. |
+| FastAPI routes & query parameters | [main.py](file:///home/jensen/Github-Repositories/Heart_Check_PHC/python_backend/main.py) | API endpoints `/api/dashboard-data`, `/api/export-excel` (supports date, month, range, service, format), `/api/available-export-dates`, `/api/import-file`, and Supabase queries. |
 
 ---
 

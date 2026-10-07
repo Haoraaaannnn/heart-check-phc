@@ -8,6 +8,7 @@ import os
 import time
 import traceback
 from datetime import date, datetime, timedelta
+from io import BytesIO
 import pandas as pd
 import httpx
 from dotenv import load_dotenv
@@ -614,6 +615,7 @@ def export_excel(
     month: str | None = None,
     date_param: str | None = Query(None, alias="date"),
     service: str | None = None,
+    format: str | None = Query("xlsx", regex="^(xlsx|csv)$"),
 ):
     """
     Raw patient rows in PHC's own Time and Motion Analysis format —
@@ -623,6 +625,7 @@ def export_excel(
     1. date="YYYY-MM-DD" (e.g. "2025-11-04") to export a single specific day.
     2. month="YYYY-MM" (e.g. "2025-11") to export all days in that specific month.
     3. range="90d" | "180d" | "365d" | "all" for rolling range or all-dates exports.
+    4. format="xlsx" | "csv" for workbook or tabular comma-separated values.
     """
     target_year: int | None = None
     target_month: int | None = None
@@ -713,6 +716,27 @@ def export_excel(
             raise HTTPException(status_code=404, detail=f"No patient records found for {month_label}.")
         raise HTTPException(status_code=404, detail="No patient records found for this range.")
 
+    if specific_date:
+        base_name = f"phc_time_motion_export_{specific_date.isoformat()}"
+    elif target_year and target_month:
+        base_name = f"phc_time_motion_export_{target_year}_{target_month:02d}"
+    elif range == "all":
+        base_name = "phc_time_motion_export_all_dates"
+    else:
+        base_name = f"phc_time_motion_export_{range or 'custom'}"
+
+    if format == "csv":
+        csv_buffer = BytesIO()
+        export_df = df.drop(columns=["_manila_date"], errors="ignore")
+        csv_buffer.write(export_df.to_csv(index=False).encode("utf-8"))
+        csv_buffer.seek(0)
+        csv_filename = f"{base_name}.csv"
+        return StreamingResponse(
+            csv_buffer,
+            media_type="text/csv",
+            headers={"Content-Disposition": f'attachment; filename="{csv_filename}"'},
+        )
+
     clinic_label = service if (service and service.strip().lower() not in ("all", "")) else "OPD"
     try:
         buffer = build_phc_workbook(df, clinic_label=clinic_label)
@@ -725,19 +749,11 @@ def export_excel(
         print("=" * 60)
         raise HTTPException(status_code=500, detail="Failed to build the export.")
 
-    if specific_date:
-        filename = f"phc_time_motion_export_{specific_date.isoformat()}.xlsx"
-    elif target_year and target_month:
-        filename = f"phc_time_motion_export_{target_year}_{target_month:02d}.xlsx"
-    elif range == "all":
-        filename = "phc_time_motion_export_all_dates.xlsx"
-    else:
-        filename = f"phc_time_motion_export_{range or 'custom'}.xlsx"
-
+    xlsx_filename = f"{base_name}.xlsx"
     return StreamingResponse(
         buffer,
         media_type="application/vnd.openxmlformats-officedocument.spreadsheetml.sheet",
-        headers={"Content-Disposition": f'attachment; filename="{filename}"'},
+        headers={"Content-Disposition": f'attachment; filename="{xlsx_filename}"'},
     )
 
 
