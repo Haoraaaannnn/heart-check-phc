@@ -59,6 +59,8 @@ export const PATIENTS_STYLES = {
     subtitle: 'text-sm text-content-muted',
     errorBadge:
       'inline-flex items-center gap-2 rounded-xl bg-red-50 px-4 py-2 text-sm font-semibold text-red-700 dark:bg-red-950/40 dark:text-red-300 border border-red-200 dark:border-red-900',
+    importButton:
+      'inline-flex items-center gap-2 rounded-xl bg-[#a8071a] px-4 py-2.5 text-xs font-semibold text-white shadow-xs transition-colors hover:bg-[#8e0616] focus:outline-none focus:ring-2 focus:ring-[#a8071a]/50',
   },
 
   /** Service filter pill bar. */
@@ -113,6 +115,8 @@ export const PATIENTS_STYLES = {
       'inline-flex items-center rounded-md bg-surface-muted px-2 py-0.5 font-mono text-xs font-semibold text-content-muted border border-line whitespace-nowrap',
     ticketBadge:
       'inline-block rounded-lg bg-red-50 border border-red-200 px-3 py-1 font-mono text-sm font-extrabold text-red-700 dark:bg-red-950/40 dark:border-red-900 dark:text-red-300 whitespace-nowrap',
+    statusBadge:
+      'inline-flex items-center gap-1.5 rounded-full px-3 py-1 text-xs font-bold whitespace-nowrap',
     phoneText: 'font-mono text-xs font-medium text-content whitespace-nowrap',
     phoneProtectedBadge:
       'inline-flex items-center gap-1 rounded-md bg-emerald-50 border border-emerald-200 px-2 py-0.5 font-mono text-xs font-semibold text-emerald-700 dark:bg-emerald-950/40 dark:border-emerald-800 dark:text-emerald-300 transition hover:bg-emerald-100 dark:hover:bg-emerald-900/50 cursor-pointer whitespace-nowrap',

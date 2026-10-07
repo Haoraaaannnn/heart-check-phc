@@ -289,6 +289,7 @@ export function useTransferSelection({
     selectPatient,
     clearSelection,
     assignSelectedToCubicle,
+    assignPatientToCubicle,
     moveSelectedToCounter,
   };
 }

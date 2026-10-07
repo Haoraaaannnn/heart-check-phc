@@ -73,16 +73,16 @@ export function RegistrationCounterSection({
     <div className="bg-white border border-slate-200 rounded-2xl shadow-xs p-2.5 sm:p-3 select-none shrink-0 overflow-hidden">
       {/* Section Header */}
       <div className="flex items-center justify-between gap-2 mb-2 pb-1.5 border-b border-slate-100">
-        <div className="flex items-center gap-2">
-          <span className="w-2 h-2 rounded-full bg-blue-500 animate-pulse inline-block" />
-          <h2 className="text-slate-700 font-bold text-xs tracking-wider uppercase">
+        <div className="flex items-center gap-2 min-w-0">
+          <span className="w-2 h-2 rounded-full bg-blue-500 animate-pulse inline-block shrink-0" />
+          <h2 className="text-slate-700 font-bold text-xs tracking-wider uppercase truncate">
             {transferTexts.registrationHeading}
           </h2>
-          <span className="text-[10px] font-bold px-1.5 py-0.2 rounded-full bg-blue-100 text-blue-700">
+          <span className="text-[10px] font-bold px-1.5 py-0.2 rounded-full bg-blue-100 text-blue-700 shrink-0">
             {safePatients.length}
           </span>
         </div>
-        <span className="text-[10px] text-slate-400 font-medium">
+        <span className="text-[10px] text-slate-400 font-medium shrink-0 hidden sm:inline">
           {transferTexts.dragCounterHint}
         </span>
       </div>
@@ -93,7 +93,7 @@ export function RegistrationCounterSection({
           {transferTexts.noCountersAssigned}
         </p>
       ) : (
-        <div className="grid grid-cols-2 sm:grid-cols-3 lg:grid-cols-5 gap-2">
+        <div className="grid grid-cols-2 sm:grid-cols-3 xl:grid-cols-4 2xl:grid-cols-5 gap-2">
           {counters.map(counterNum => {
             const counterPatients = safePatients
               .filter(p => p.counter === counterNum)
@@ -134,13 +134,13 @@ export function RegistrationCounterSection({
                 }`}
               >
                 {/* Counter Tile Header */}
-                <div className="flex items-center justify-between gap-1 mb-1">
-                  <span className="text-[11px] font-bold text-slate-700 truncate">
+                <div className="flex items-center justify-between gap-1 mb-1 min-w-0">
+                  <span className="text-[11px] font-bold text-slate-700 truncate min-w-0 flex-1">
                     {transferTexts.counterPrefix} {counterNum}
                   </span>
 
                   {isTargetEligible ? (
-                    <span className="text-[10px] font-bold text-blue-600 bg-blue-100 px-1.5 py-0.5 rounded shrink-0">
+                    <span className="text-[10px] font-bold text-blue-600 bg-blue-100 px-1.5 py-0.5 rounded shrink-0 whitespace-nowrap">
                       {transferTexts.moveToCounterBtn}
                     </span>
                   ) : (
@@ -176,7 +176,7 @@ export function RegistrationCounterSection({
                             : 'border-slate-200 hover:border-slate-300'
                         }`}
                       >
-                        <div className="flex items-center gap-1 min-w-0">
+                        <div className="flex items-center gap-1 min-w-0 flex-1 overflow-hidden">
                           {isTopSelected ? (
                             <span className="px-1 py-0.5 rounded bg-[#cc3535] text-white text-[9px] font-bold shrink-0">
                               SEL
@@ -187,7 +187,9 @@ export function RegistrationCounterSection({
                           <span className="font-black text-xs text-[#cc3535] shrink-0">
                             {topPatient.patientNum}
                           </span>
-                          <ElapsedTimer startedAt={topPatient.counter_top_started_at ?? undefined} />
+                          <span className="shrink-0 flex items-center">
+                            <ElapsedTimer startedAt={topPatient.counter_top_started_at ?? undefined} />
+                          </span>
                         </div>
 
                         <button
@@ -199,7 +201,7 @@ export function RegistrationCounterSection({
                             onRelease(topPatient);
                           }}
                           title="Send patient to queue"
-                          className="px-1.5 py-0.5 text-[10px] font-bold uppercase tracking-wider bg-blue-600 hover:bg-blue-700 active:bg-blue-800 text-white rounded transition-colors shadow-2xs shrink-0 cursor-pointer"
+                          className="px-1.5 py-0.5 text-[10px] font-bold uppercase tracking-wider bg-blue-600 hover:bg-blue-700 active:bg-blue-800 text-white rounded transition-colors shadow-2xs shrink-0 cursor-pointer whitespace-nowrap"
                         >
                           Queue →
                         </button>

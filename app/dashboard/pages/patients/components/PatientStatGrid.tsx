@@ -84,7 +84,7 @@ export default function PatientStatGrid({ stats }: PatientStatGridProps) {
   return (
     <div className={PATIENTS_STYLES.metricsGrid}>
       {items.map((item) => {
-        const toneStyle = TONES[item.tone];
+        const toneStyle = TONES[item.tone] ?? TONES.blue;
 
         return (
           <div key={item.key} className={`${S.tile} ${toneStyle.tile}`}>

@@ -10,12 +10,12 @@ import type { ToneKey } from '@/app/dashboard/constants/styles';
 /** Static identity shown in the header (replace with session data later). */
 export const DASHBOARD_USER = { name: 'Admin User', role: 'Administrator' } as const;
 
-/** Header search box. `enabled: false` renders it disabled until it is wired to data. */
+/** Header search box configuration and copy. */
 export const HEADER_SEARCH = {
   placeholder: 'Search patient, ticket number, or service...',
   disabledPlaceholder: 'Search (coming soon)',
   shortcut: 'Ctrl + K',
-  enabled: false,
+  enabled: true,
 } as const;
 
 /** Welcome banner copy. Greeting is chosen by Manila hour (see WelcomeBanner). */
@@ -297,6 +297,8 @@ export interface QuickLinkConfig {
 export const QUICK_LINKS: readonly QuickLinkConfig[] = [
   { label: 'Reports & Analytics', href: '/dashboard/pages/analytics', icon: 'bxs-report', tone: 'blue' },
   { label: 'Patient Records', href: '/dashboard/pages/patients', icon: 'bx-male-female', tone: 'rose' },
+  { label: 'Import Patient Data', href: '/dashboard/pages/import', icon: 'bx-cloud-upload', tone: 'emerald' },
+  { label: 'Export Queue Data', href: '/dashboard/pages/export', icon: 'bx-download', tone: 'blue' },
   { label: 'Consultation', href: '/dashboard/servicesPHC/consultation', icon: 'bx-chat', tone: 'green' },
   { label: 'OPD Screening', href: '/dashboard/servicesPHC/opdScreening', icon: 'bx-search-alt-2', tone: 'purple' },
 ];

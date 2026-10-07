@@ -55,6 +55,39 @@ export interface QuickAssignDropdownProps {
 }
 
 /**
+ * Extracts a compact station badge identifier (e.g., "C1", "C2") from full cubicle strings
+ * like "Consultation R5 C1" or "Cubicle 1" to fit cleanly inside compact tile badges.
+ *
+ * @param cubicleNum - Raw cubicle identifier string from the database.
+ * @returns Concise badge label that fits cleanly inside fixed-dimension avatars.
+ */
+export function formatCubicleBadge(cubicleNum: string): string {
+  if (!cubicleNum) return '';
+  const trimmed = cubicleNum.trim();
+  const cMatch = trimmed.match(/C(\d+)$/i);
+  if (cMatch) {
+    return `C${cMatch[1]}`;
+  }
+  const cubicleWordMatch = trimmed.match(/cubicle\s*(\d+)/i);
+  if (cubicleWordMatch) {
+    return `C${cubicleWordMatch[1]}`;
+  }
+  const rMatch = trimmed.match(/R(\d+)$/i);
+  if (rMatch) {
+    return `R${rMatch[1]}`;
+  }
+  if (trimmed.length <= 4) {
+    return trimmed;
+  }
+  const words = trimmed.split(/\s+/);
+  if (words.length > 1) {
+    const lastWord = words[words.length - 1];
+    if (lastWord.length <= 3) return lastWord;
+  }
+  return trimmed.slice(0, 3).toUpperCase();
+}
+
+/**
  * Self-contained popover dialog for direct one-tap patient cubicle allocation.
  *
  * @param props - Patient details, station lists, and assignment handlers.
@@ -220,7 +253,7 @@ export function QuickAssignDropdown({
                       : 'border-amber-200 bg-amber-50/60 hover:bg-amber-100/70 text-amber-950 cursor-pointer active:scale-[0.99] group'
                   }`}
                 >
-                  <div className="flex items-center gap-3 min-w-0">
+                  <div className="flex items-center gap-3 min-w-0 flex-1 overflow-hidden">
                     <div className="w-9 h-9 rounded-xl bg-amber-600 text-white flex items-center justify-center font-bold text-sm shrink-0 shadow-2xs">
                       {pendingTarget === 'queue' ? (
                         <svg className="w-5 h-5 animate-spin" fill="none" viewBox="0 0 24 24">
@@ -268,7 +301,7 @@ export function QuickAssignDropdown({
                       : 'border-blue-200 bg-blue-50/60 hover:bg-blue-100/70 text-blue-950 cursor-pointer active:scale-[0.99] group'
                   }`}
                 >
-                  <div className="flex items-center gap-3 min-w-0">
+                  <div className="flex items-center gap-3 min-w-0 flex-1 overflow-hidden">
                     <div className="w-9 h-9 rounded-xl bg-blue-600 text-white flex items-center justify-center font-bold text-sm shrink-0 shadow-2xs">
                       {pendingTarget === 'call' ? (
                         <svg className="w-5 h-5 animate-spin" fill="none" viewBox="0 0 24 24">
@@ -337,15 +370,16 @@ export function QuickAssignDropdown({
                       : 'border-slate-200/90 bg-white hover:border-emerald-500 hover:bg-emerald-50/40 hover:shadow-xs active:scale-[0.99] cursor-pointer group'
                   }`}
                 >
-                  <div className="flex items-center gap-3 min-w-0">
+                  <div className="flex items-center gap-3 min-w-0 flex-1 overflow-hidden">
                     <span
-                      className={`w-9 h-9 rounded-xl flex items-center justify-center font-black text-xs shrink-0 shadow-2xs ${
+                      className={`w-9 h-9 rounded-xl flex items-center justify-center font-black text-xs shrink-0 shadow-2xs overflow-hidden select-none ${
                         isFull
                           ? 'bg-slate-200 text-slate-500'
                           : isAssigningThis
                           ? 'bg-emerald-600 text-white'
                           : 'bg-emerald-100 text-emerald-800 border border-emerald-300 group-hover:scale-105 transition-transform'
                       }`}
+                      title={cubicle.cubicleNum}
                     >
                       {isAssigningThis ? (
                         <svg className="w-5 h-5 animate-spin" fill="none" viewBox="0 0 24 24">
@@ -353,13 +387,15 @@ export function QuickAssignDropdown({
                           <path className="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4zm2 5.291A7.962 7.962 0 014 12H0c0 3.042 1.135 5.824 3 7.938l3-2.647z" />
                         </svg>
                       ) : (
-                        cubicle.cubicleNum
+                        formatCubicleBadge(cubicle.cubicleNum)
                       )}
                     </span>
 
-                    <div className="min-w-0">
+                    <div className="min-w-0 flex-1">
                       <p className="text-xs font-bold text-slate-900 truncate group-hover:text-emerald-950 transition-colors">
-                        {cubicle.room ? `${transferTexts.roomPrefix} ${cubicle.room} · ` : ''}
+                        {cubicle.room && !cubicle.cubicleNum.toLowerCase().startsWith('room')
+                          ? `${transferTexts.roomPrefix} ${cubicle.room} · `
+                          : ''}
                         {cubicle.cubicleNum}
                       </p>
                       <p className="text-[11px] text-slate-500 truncate mt-0.5">

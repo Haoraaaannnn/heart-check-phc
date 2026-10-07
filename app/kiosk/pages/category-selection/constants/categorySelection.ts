@@ -29,10 +29,10 @@ export const categorySelectionSpacing = {
     containerPaddingBottomPortrait: 140,
     contentGap: categoryLayoutSpacing.contentGap,
     cardsGap: categoryCardsSpacing.cardsGap,
-    cardPadding: categoryCardsSpacing.cardPadding,
-    iconPadding: categoryCardsSpacing.iconPadding,
+    cardPadding: categoryCardsSpacing.paddingX,
+    iconPadding: categoryCardsSpacing.paddingY,
     iconSize: categoryCardsSpacing.iconSize,
-    ctaMarginTop: categoryCardsSpacing.ctaMarginTop,
+    ctaMarginTop: "0px",
 } as const;
 
 /**
@@ -62,7 +62,7 @@ export const categorySelectionFontWeight = {
 export const categorySelectionTheme = {
     adultColor: categoryCardsTheme.adultColor,
     pediaColor: categoryCardsTheme.pediaColor,
-    iconFill: categoryCardsTheme.iconFill,
+    iconFill: categoryCardsTheme.adultColor,
     titleColor: categoryCardsTheme.titleColor,
     subtitleColor: "#4B5563",
     cardSubtitleColor: categoryCardsTheme.cardSubtitleColor,
@@ -88,8 +88,8 @@ export const CategorySelectionStyle = {
     pediaIconTile: CategoryCardsStyle.pediaIconTile,
     cardTitle: CategoryCardsStyle.cardTitle,
     cardSubtitle: CategoryCardsStyle.cardSubtitle,
-    ctaAdult: CategoryCardsStyle.ctaAdult,
-    ctaPedia: CategoryCardsStyle.ctaPedia,
+    ctaAdult: CategoryCardsStyle.cardBadgeAdult,
+    ctaPedia: CategoryCardsStyle.cardBadgePedia,
 } satisfies Record<string, CSSProperties>;
 
 /**

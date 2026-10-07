@@ -38,6 +38,7 @@ import QuickLinks from '@/app/dashboard/components/QuickLinks';
 import LiveQueueTable from '@/app/dashboard/components/LiveQueueTable';
 import HourlyArrivalsChart from '@/app/dashboard/components/HourlyArrivalChart';
 import RecentActivity from '@/app/dashboard/components/RecentActivity';
+import DashboardOverviewSkeleton from '@/app/dashboard/components/DashboardOverviewSkeleton';
 import { DASH } from '@/app/dashboard/constants/styles';
 
 /**
@@ -63,6 +64,7 @@ export default function DashboardPage() {
     range,
     setRange,
     isRangeLoading,
+    isLoading,
     isOnline,
     channelStatus,
     isFullyConnected,
@@ -78,9 +80,14 @@ export default function DashboardPage() {
     checkSession();
   }, [router]);
 
+  // Initial load skeletal fallback
+  if (isLoading || !isMounted) {
+    return <DashboardOverviewSkeleton />;
+  }
+
   const avgWaitTime =
-    isMounted && currentTime ? calcAvgWaitTime(patientsList, currentTime) : '--';
-  const isTodayIdle = isMounted && stats.todayCount === 0 && range === 'today';
+    currentTime ? calcAvgWaitTime(patientsList, currentTime) : '--';
+  const isTodayIdle = stats.todayCount === 0 && range === 'today';
   const shouldRenderHistorical = isTodayIdle || isHistoricalExpanded;
 
   return (
@@ -109,6 +116,7 @@ export default function DashboardPage() {
         comparisonLabel={comparisonLabel}
         range={range}
         isMounted={isMounted}
+        isLoading={isRangeLoading}
       />
 
       {/* Historical Performance Breakdown & Archive Intelligence */}
@@ -127,8 +135,16 @@ export default function DashboardPage() {
         {/* Main column */}
         <div className={DASH.layout.column}>
           <div className={DASH.layout.twoUp}>
-            <ServiceQueueOverview deptStats={deptStats} isMounted={isMounted} />
-            <TicketStatusBreakdown stats={stats} isMounted={isMounted} />
+            <ServiceQueueOverview
+              deptStats={deptStats}
+              isMounted={isMounted}
+              isLoading={isRangeLoading}
+            />
+            <TicketStatusBreakdown
+              stats={stats}
+              isMounted={isMounted}
+              isLoading={isRangeLoading}
+            />
           </div>
           <QuickLinks />
         </div>

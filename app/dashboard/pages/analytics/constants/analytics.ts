@@ -63,6 +63,8 @@ export const ANALYTICS_STYLES = {
     actions: 'flex items-center gap-3 flex-wrap',
     refreshPill: 'flex items-center gap-1.5 text-xs text-content-muted',
     refreshDot: 'h-2 w-2 rounded-full bg-brand-accent animate-pulse',
+    importButton:
+      'inline-flex items-center gap-2 rounded-xl bg-[#a8071a] px-3.5 py-2 text-xs font-semibold text-white shadow-xs transition-colors hover:bg-[#8e0616] focus:outline-none focus:ring-2 focus:ring-[#a8071a]/50',
   },
 
   /** Metric card grid (4 columns). */
@@ -198,6 +200,7 @@ export const ANALYTICS_STYLES = {
     pillIdle:
       'bg-surface border-line text-content-muted hover:bg-surface-muted hover:text-content',
     spinner: 'h-3 w-3 animate-spin',
+    divider: 'hidden sm:inline-block h-4 w-[1px] bg-line mx-1',
   },
 
   /** Chart card layout. */

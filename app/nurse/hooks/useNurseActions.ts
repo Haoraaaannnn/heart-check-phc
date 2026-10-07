@@ -11,7 +11,7 @@ import { useState, useCallback } from 'react';
 import { supabase } from '@/lib/supabase';
 import { enqueueMutation, removeMutation } from '@/lib/offlineQueue';
 import { Patient } from '@/types/Types';
-import { ClinicalStage } from '../types/nurse';
+import { ClinicalStage, dbStatusToStage } from '../types/nurse';
 import { nurseTexts } from '../constants/nurseTexts';
 
 /**
@@ -135,14 +135,17 @@ export function useNurseActions(
       const now = new Date().toISOString();
 
       // Pin mutation locally so background polling never rolls back this patient
-      pinInFlightMutation?.(patient.id, 'With Doctor');
+      pinInFlightMutation?.(patient.id, 'with_doctor');
 
       // Optimistic state update
       setAssignedPatients((prev) => prev.filter((item) => item.id !== patient.id));
-      setWithDoctorPatients((prev) => [
-        ...prev,
-        { ...patient, status: 'With Doctor', consult_start: now },
-      ]);
+      setWithDoctorPatients((prev) => {
+        const filtered = prev.filter((item) => item.id !== patient.id);
+        return [
+          ...filtered,
+          { ...patient, status: 'With Doctor', consult_start: now },
+        ];
+      });
 
       const success = await persistPatientUpdate(patient.id, {
         status: 'With Doctor',
@@ -153,7 +156,10 @@ export function useNurseActions(
       if (!success) {
         unpinMutation?.(patient.id);
         setWithDoctorPatients((prev) => prev.filter((item) => item.id !== patient.id));
-        setAssignedPatients((prev) => [...prev, patient]);
+        setAssignedPatients((prev) => {
+          const filtered = prev.filter((item) => item.id !== patient.id);
+          return [...filtered, patient];
+        });
         return false;
       }
 
@@ -167,14 +173,17 @@ export function useNurseActions(
    */
   const handleMoveBackFromDoctor = useCallback(
     async (patient: Patient): Promise<boolean> => {
-      pinInFlightMutation?.(patient.id, 'Assigned');
+      pinInFlightMutation?.(patient.id, 'assigned');
 
       // Optimistic state update
       setWithDoctorPatients((prev) => prev.filter((item) => item.id !== patient.id));
-      setAssignedPatients((prev) => [
-        ...prev,
-        { ...patient, status: 'Assigned', consult_start: undefined },
-      ]);
+      setAssignedPatients((prev) => {
+        const filtered = prev.filter((item) => item.id !== patient.id);
+        return [
+          ...filtered,
+          { ...patient, status: 'Assigned', consult_start: undefined },
+        ];
+      });
 
       const success = await persistPatientUpdate(patient.id, {
         status: 'Assigned',
@@ -185,7 +194,10 @@ export function useNurseActions(
       if (!success) {
         unpinMutation?.(patient.id);
         setAssignedPatients((prev) => prev.filter((item) => item.id !== patient.id));
-        setWithDoctorPatients((prev) => [...prev, patient]);
+        setWithDoctorPatients((prev) => {
+          const filtered = prev.filter((item) => item.id !== patient.id);
+          return [...filtered, patient];
+        });
         return false;
       }
 
@@ -201,20 +213,23 @@ export function useNurseActions(
     async (patient: Patient): Promise<boolean> => {
       const now = new Date().toISOString();
 
-      pinInFlightMutation?.(patient.id, 'Carryout');
+      pinInFlightMutation?.(patient.id, 'carryout');
 
       // Optimistic state update
       setWithDoctorPatients((prev) => prev.filter((item) => item.id !== patient.id));
-      setCarryoutPatients((prev) => [
-        ...prev,
-        {
-          ...patient,
-          status: 'Carryout',
-          consult_end: now,
-          carryout_start: now,
-          carryout_end: undefined,
-        },
-      ]);
+      setCarryoutPatients((prev) => {
+        const filtered = prev.filter((item) => item.id !== patient.id);
+        return [
+          ...filtered,
+          {
+            ...patient,
+            status: 'Carryout',
+            consult_end: now,
+            carryout_start: now,
+            carryout_end: undefined,
+          },
+        ];
+      });
 
       const success = await persistPatientUpdate(patient.id, {
         status: 'Carryout',
@@ -227,7 +242,10 @@ export function useNurseActions(
       if (!success) {
         unpinMutation?.(patient.id);
         setCarryoutPatients((prev) => prev.filter((item) => item.id !== patient.id));
-        setWithDoctorPatients((prev) => [...prev, patient]);
+        setWithDoctorPatients((prev) => {
+          const filtered = prev.filter((item) => item.id !== patient.id);
+          return [...filtered, patient];
+        });
         return false;
       }
 
@@ -241,20 +259,23 @@ export function useNurseActions(
    */
   const handleMoveBackFromCarryout = useCallback(
     async (patient: Patient): Promise<boolean> => {
-      pinInFlightMutation?.(patient.id, 'With Doctor');
+      pinInFlightMutation?.(patient.id, 'with_doctor');
 
       // Optimistic state update
       setCarryoutPatients((prev) => prev.filter((item) => item.id !== patient.id));
-      setWithDoctorPatients((prev) => [
-        ...prev,
-        {
-          ...patient,
-          status: 'With Doctor',
-          consult_end: undefined,
-          carryout_start: undefined,
-          carryout_end: undefined,
-        },
-      ]);
+      setWithDoctorPatients((prev) => {
+        const filtered = prev.filter((item) => item.id !== patient.id);
+        return [
+          ...filtered,
+          {
+            ...patient,
+            status: 'With Doctor',
+            consult_end: undefined,
+            carryout_start: undefined,
+            carryout_end: undefined,
+          },
+        ];
+      });
 
       const success = await persistPatientUpdate(patient.id, {
         status: 'With Doctor',
@@ -267,7 +288,10 @@ export function useNurseActions(
       if (!success) {
         unpinMutation?.(patient.id);
         setWithDoctorPatients((prev) => prev.filter((item) => item.id !== patient.id));
-        setCarryoutPatients((prev) => [...prev, patient]);
+        setCarryoutPatients((prev) => {
+          const filtered = prev.filter((item) => item.id !== patient.id);
+          return [...filtered, patient];
+        });
         return false;
       }
 
@@ -283,7 +307,7 @@ export function useNurseActions(
     async (patient: Patient): Promise<boolean> => {
       const now = new Date().toISOString();
 
-      pinInFlightMutation?.(patient.id, 'Done');
+      pinInFlightMutation?.(patient.id, 'done');
 
       // Optimistic state update
       setCarryoutPatients((prev) => prev.filter((item) => item.id !== patient.id));
@@ -296,7 +320,10 @@ export function useNurseActions(
       // Rollback on failure
       if (!success) {
         unpinMutation?.(patient.id);
-        setCarryoutPatients((prev) => [...prev, patient]);
+        setCarryoutPatients((prev) => {
+          const filtered = prev.filter((item) => item.id !== patient.id);
+          return [...filtered, patient];
+        });
         return false;
       }
 
@@ -311,31 +338,31 @@ export function useNurseActions(
    */
   const handleTransitionStage = useCallback(
     async (patient: Patient, targetStage: ClinicalStage): Promise<boolean> => {
-      const statusLower = (patient.status || '').toLowerCase().trim();
+      const currentStage = dbStatusToStage(patient.status);
 
       if (targetStage === 'with_doctor') {
-        if (statusLower === 'assigned' || patient.status === 'Assigned') {
+        if (currentStage === 'assigned') {
           return handleMoveToWithDoctor(patient);
         }
-        if (statusLower === 'carryout' || patient.status === 'Carryout') {
+        if (currentStage === 'carryout') {
           return handleMoveBackFromCarryout(patient);
         }
       }
 
       if (targetStage === 'carryout') {
-        if (statusLower === 'with doctor' || patient.status === 'With Doctor') {
+        if (currentStage === 'with_doctor') {
           return handleMoveToCarryout(patient);
         }
       }
 
       if (targetStage === 'done') {
-        if (statusLower === 'carryout' || patient.status === 'Carryout') {
+        if (currentStage === 'carryout') {
           return handleFinish(patient);
         }
       }
 
       if (targetStage === 'assigned') {
-        if (statusLower === 'with doctor' || patient.status === 'With Doctor') {
+        if (currentStage === 'with_doctor') {
           return handleMoveBackFromDoctor(patient);
         }
       }

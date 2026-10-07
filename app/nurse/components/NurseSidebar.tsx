@@ -270,7 +270,7 @@ export function NurseSidebar({
                             {nurseTexts.cubiclePrefix} {cubicle.cubicleNum}
                           </p>
                           <p
-                            className={`text-[10px] leading-tight ${
+                            className={`text-[10px] leading-tight truncate ${
                               active ? 'text-white/80' : 'text-slate-400'
                             }`}
                           >

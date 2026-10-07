@@ -22,6 +22,13 @@ The module implements optimistic state transitions backed by an offline-resilien
 - **Real-Time Notification Badges:** Displays full `NotificationBadge` counters in expanded view and compact pulse dots in icon-only rail view.
 - **Header Station Selector:** `NurseHeader.tsx` provides a compact station/category dropdown selector for quick one-click cubicle switching.
 
+### Anti-Overlap Responsive Layout Standards
+To prevent text collisions across desktop, laptop, and tablet viewports:
+- **Header Element Constraints:** In `NurseHeader.tsx`, the left title container enforces `flex-1 min-w-0 overflow-hidden`, station dropdown is bounded (`max-w-[160px] lg:max-w-[200px]`), and attending physician indicators use `hidden xl:flex` with truncation so right-side ledger and live status controls never collide.
+- **Stage Column Headers:** `StageColumn.tsx` header enforces `flex items-center justify-between gap-2 min-w-0` and `flex-1 overflow-hidden` on the stage title, ensuring the "+ Move Here" button is never crowded out.
+- **Patient Card Boundaries:** `NursePatientCard.tsx` enforces `break-words whitespace-normal leading-snug` on service and subcategory labels (per AGENTS.md Rule 11), wraps `ElapsedTimer` with `shrink-0`, and locks action buttons (`Call`, `With Doctor`, `Back`, `Carryout`, `Done`) with `whitespace-nowrap shrink-0`.
+- **Selection Banners:** `NurseSelectionBanner.tsx` constrains origin labels (`max-w-[130px] truncate`), sets instructions to `min-w-0 flex-1`, and guards the cancel button with `whitespace-nowrap shrink-0`.
+
 ---
 
 ## Where to Edit
@@ -50,6 +57,25 @@ Use this table to quickly identify the exact file to modify for any given requir
 | Finished patient archive drawer | `app/nurse/components/FinishedDrawer.tsx` | Slide-over drawer for completed patients |
 | Audio announcements (TTS) | `app/nurse/page.tsx` | Deepgram Text-to-Speech integration |
 | Patient types and schemas | `types/Types.ts` | Core domain model for patient records |
+| Clinical stages and DB status mapping | `app/nurse/types/nurse.ts` | `ClinicalStage` definitions and `stageToDbStatus` / `dbStatusToStage` bidirectional normalization |
+
+---
+
+## Stage Normalization and In-Flight Mutation Pinning
+
+To prevent patient cards from disappearing or jumping between columns during background fetches or Realtime events:
+
+1. **Bidirectional Stage Normalization (`app/nurse/types/nurse.ts`):**
+   - The UI Kanban board uses internal identifier keys (`'assigned' | 'with_doctor' | 'carryout' | 'done'`).
+   - The Supabase database stores Title Case status strings (`'Assigned' | 'With Doctor' | 'Carryout' | 'Done'`).
+   - `stageToDbStatus` converts local stage identifiers to database status strings for mutations and local overrides.
+   - `dbStatusToStage` converts database status values back to `ClinicalStage` identifiers, returning `null` for non-workstation statuses (such as `'Waiting'` or `'Pending'`).
+
+2. **In-Flight Mutation Pinning Lifecycle (`useNurseData.ts` & `useNurseActions.ts`):**
+   - When a nurse triggers an action (e.g. "With Doctor"), `pinInFlightMutation(patient.id, 'with_doctor')` locks the stage locally with a 5-second safety TTL.
+   - Optimistic state transitions move the card immediately to the destination column.
+   - When background polls (`fetchData`) or WebSocket payloads (`applyRealtimeUpdate`) arrive before the server write commits, the active pin prevents the lagging server response from reverting the card or dropping it from view.
+   - Once the server acknowledges the target status (`dbStatusToStage(patient.status) === pin.stage`), the pin is automatically released.
 
 ---
 

@@ -31,6 +31,7 @@ function PatientsContent() {
   const pathname = usePathname();
   const searchParams = useSearchParams();
   const service = searchParams.get('service'); // null = All Services
+  const urlSearch = searchParams.get('search') || searchParams.get('q') || '';
 
   const { stats, setStats, hourlyData, fetchAnalyticsData } = usePatientsAnalyticsData();
   const {
@@ -41,7 +42,7 @@ function PatientsContent() {
     searchQuery,
     setSearchQuery,
     isSearching,
-  } = usePatientData(setStats, service);
+  } = usePatientData(setStats, service, urlSearch);
   const { historicalData } = useHistoricalSummary();
 
   // Hourly pattern comes from the FastAPI report and isn't per-service, so load it once

@@ -13,8 +13,8 @@ export const DASHBOARD_NAV_TEXTS = {
   /** Brand identity tokens rendered in the sidebar header */
   brand: {
     badge: 'PHC',
-    title: 'PHC ADMIN',
-    subtitle: 'Queue Management System',
+    title: 'Philippine Heart Center',
+    subtitle: 'Admin Console',
     hospitalName: 'Philippine Heart Center',
   },
 
@@ -31,6 +31,8 @@ export const DASHBOARD_NAV_TEXTS = {
     dashboard: 'Dashboard Overview',
     cubicles: 'Live Cubicles',
     patients: 'Patient Flow & Records',
+    import: 'Import Data',
+    export: 'Export Data',
     analytics: 'Reports & Analytics',
     consultation: 'Consultation',
     opdScreening: 'OPD Screening',
@@ -55,6 +57,8 @@ export const DASHBOARD_NAV_TEXTS = {
       dashboard: 'Dashboard',
       cubicles: 'Live Cubicles',
       patients: 'Patient Records',
+      import: 'Import Data',
+      export: 'Export Data',
       analytics: 'Reports & Analytics',
     },
   },

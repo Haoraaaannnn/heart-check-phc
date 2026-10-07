@@ -15,6 +15,7 @@ import { supabase } from '@/lib/supabase';
 import { ChangePasswordCard } from './ChangePasswordCard';
 import { SETTINGS_TEXTS } from '../constants/settingsTexts';
 import { SETTINGS_STYLES } from '../constants/settingsStyles';
+import { SUPERADMIN_SKELETON_STYLES } from '../constants/superadminSkeletonStyles';
 
 interface SettingsPanelProps {
   /** When true, automatically scrolls to the administrator security credentials card. */
@@ -274,7 +275,11 @@ export function SettingsPanel({ focusSecurity = false }: SettingsPanelProps = {}
             {timeoutMessage && <div className={`${S.alertSuccess} mb-3`}>{timeoutMessage}</div>}
 
             {timeoutLoading ? (
-              <p className={S.loadingText}>{T.feedback.loading}</p>
+              <div className={SUPERADMIN_SKELETON_STYLES.settings.inputRow}>
+                <div className={SUPERADMIN_SKELETON_STYLES.settings.inputBox} />
+                <div className={SUPERADMIN_SKELETON_STYLES.settings.unitLabel} />
+                <div className={SUPERADMIN_SKELETON_STYLES.settings.saveButton} />
+              </div>
             ) : (
               <div className={S.inputRow}>
                 <input
@@ -314,7 +319,11 @@ export function SettingsPanel({ focusSecurity = false }: SettingsPanelProps = {}
             {rotationsMessage && <div className={`${S.alertSuccess} mb-3`}>{rotationsMessage}</div>}
 
             {rotationsLoading ? (
-              <p className={S.loadingText}>{T.feedback.loading}</p>
+              <div className={SUPERADMIN_SKELETON_STYLES.settings.inputRow}>
+                <div className={SUPERADMIN_SKELETON_STYLES.settings.inputBox} />
+                <div className={SUPERADMIN_SKELETON_STYLES.settings.unitLabel} />
+                <div className={SUPERADMIN_SKELETON_STYLES.settings.saveButton} />
+              </div>
             ) : (
               <div className={S.inputRow}>
                 <input
@@ -354,7 +363,11 @@ export function SettingsPanel({ focusSecurity = false }: SettingsPanelProps = {}
             {loginAttemptsMessage && <div className={`${S.alertSuccess} mb-3`}>{loginAttemptsMessage}</div>}
 
             {loginAttemptsLoading ? (
-              <p className={S.loadingText}>{T.feedback.loading}</p>
+              <div className={SUPERADMIN_SKELETON_STYLES.settings.inputRow}>
+                <div className={SUPERADMIN_SKELETON_STYLES.settings.inputBox} />
+                <div className={SUPERADMIN_SKELETON_STYLES.settings.unitLabel} />
+                <div className={SUPERADMIN_SKELETON_STYLES.settings.saveButton} />
+              </div>
             ) : (
               <div className={S.inputRow}>
                 <input
@@ -394,7 +407,11 @@ export function SettingsPanel({ focusSecurity = false }: SettingsPanelProps = {}
             {lockoutMessage && <div className={`${S.alertSuccess} mb-3`}>{lockoutMessage}</div>}
 
             {lockoutLoading ? (
-              <p className={S.loadingText}>{T.feedback.loading}</p>
+              <div className={SUPERADMIN_SKELETON_STYLES.settings.inputRow}>
+                <div className={SUPERADMIN_SKELETON_STYLES.settings.inputBox} />
+                <div className={SUPERADMIN_SKELETON_STYLES.settings.unitLabel} />
+                <div className={SUPERADMIN_SKELETON_STYLES.settings.saveButton} />
+              </div>
             ) : (
               <div className={S.inputRow}>
                 <input

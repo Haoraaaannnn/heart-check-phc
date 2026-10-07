@@ -31,6 +31,15 @@ EXAMINE_TREAT_TARGET_MINUTES  = 105                  # 1 hr 45 min — "Examine 
 CARRYOUT_TARGET_MINUTES       = 15                   # 15 min — "Carry out Dr's Orders"
 WAITING_TIME_TARGET_MINUTES   = OPD_TARGET_MINUTES   # 150 min (2.5 hrs) — "Waiting Time"
 
+# In the official PHC Excel workbook template, the formula for Waiting Time evaluates
+# <= 03:00:00 (180 minutes / 3.0 hours) despite the label reading "Waiting Time <= 2.5 hrs. =".
+# Defined here to match the authentic spreadsheet template calculations.
+PHC_EXCEL_WAITING_TIME_TARGET_MINUTES = 180  # 3 hrs (180 min) — formula criterion in PHC template
+
+# Standard daily consultation shift duration used in PHC formula (= Patients Seen / Doctors on Duty / 7)
+PHC_CONSULTATION_SHIFT_HOURS = 7
+
+
 # Forecasting defaults
 EMA_ALPHA    = 0.3
 WINDOW_SIZE  = 2  # Minimum 2 days for moving averages

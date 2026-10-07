@@ -2,7 +2,7 @@
 "use client";
 
 import { usePathname, useSearchParams } from "next/navigation";
-import { useEffect, useRef } from "react";
+import { Suspense, useEffect, useRef } from "react";
 import KioskHeader from "@/app/kiosk/pages/kiosk-services/components/KioskHeader";
 import KioskBackButton from "@/components/reusables/KioskBackButton";
 import { useIsMounted } from "@/hooks/useIsMounted";
@@ -22,6 +22,90 @@ import { KIOSK_ROUTES } from "@/app/kiosk/constants/kioskNavigation";
 interface MainKioskLayoutProps {
   /** The current kiosk page (or nested kiosk layout). */
   children: React.ReactNode;
+}
+
+/**
+ * Isolated back navigation component consuming search parameters inside Suspense.
+ *
+ * @param props - Component props containing current pathname.
+ * @returns Header element with back button or null.
+ */
+function KioskBackNavigation({ pathname }: { pathname: string }) {
+  const searchParams = useSearchParams();
+
+  // Selected patient type ("new" | "old") from the URL, if present.
+  const patientType = searchParams.get("type");
+
+  const shouldShowBackButton =
+    pathname === "/kiosk/pages/kiosk-services" ||
+    pathname === "/kiosk/pages/kiosk-cubicle-selection" ||
+    pathname === "/kiosk/pages/category-selection" ||
+    pathname === "/kiosk/pages/sms-input";
+
+  // Where the back button goes; undefined means no back target on this page.
+  let backHref: string | undefined = undefined;
+
+  if (pathname === "/kiosk/pages/kiosk-services") {
+    backHref = "/kiosk/pages/kiosk-new-old-selection";
+  }
+
+  if (pathname === "/kiosk/pages/kiosk-cubicle-selection") {
+    const serviceId = searchParams.get("serviceId");
+    if (serviceId) {
+      const params = new URLSearchParams();
+      if (patientType) params.set("type", patientType);
+      params.set("serviceId", serviceId);
+      params.set("serviceLabel", "Consultation");
+      backHref = `/kiosk/pages/category-selection?${params.toString()}`;
+    } else {
+      backHref = patientType
+        ? `/kiosk/pages/kiosk-services?type=${encodeURIComponent(patientType)}`
+        : "/kiosk/pages/kiosk-services";
+    }
+  }
+
+  if (pathname === "/kiosk/pages/category-selection") {
+    const serviceId = searchParams.get("serviceId");
+    const params = new URLSearchParams();
+    if (patientType) params.set("type", patientType);
+    if (serviceId) params.set("serviceId", serviceId);
+    const query = params.toString();
+    backHref = `/kiosk/pages/kiosk-services${query ? `?${query}` : ""}`;
+  }
+
+  if (pathname === "/kiosk/pages/sms-input") {
+    const serviceId = searchParams.get("serviceId");
+    const subcategory = searchParams.get("subcategory");
+    const preferredCubicleNums = searchParams.get("preferredCubicleNums");
+    const serviceLabel = searchParams.get("serviceLabel");
+
+    const params = new URLSearchParams();
+    if (serviceId) params.set("serviceId", serviceId);
+    if (patientType) params.set("type", patientType);
+
+    if (preferredCubicleNums) {
+      if (subcategory) params.set("subcategory", subcategory);
+      backHref = `/kiosk/pages/kiosk-cubicle-selection?${params.toString()}`;
+    } else if (subcategory) {
+      if (serviceLabel) params.set("serviceLabel", serviceLabel);
+      backHref = `/kiosk/pages/category-selection?${params.toString()}`;
+    } else {
+      backHref = `/kiosk/pages/kiosk-services?${params.toString()}`;
+    }
+  }
+
+  if (!shouldShowBackButton || !backHref) {
+    return null;
+  }
+
+  return (
+    <header
+      className={KioskLayoutClasses.topNavWrapper}
+      style={KioskLayoutStyle.topNavWrapper}
+    >
+      <KioskBackButton href={backHref} />
+    </header>
+  );
 }
 
 /**
@@ -122,69 +206,7 @@ export default function MainKioskLayout({ children }: MainKioskLayoutProps) {
   const mounted = useIsMounted();
 
   const pathname = usePathname();
-  const searchParams = useSearchParams();
   const isSlideshow = pathname === KIOSK_ROUTES.SLIDESHOW;
-
-  // Selected patient type ("new" | "old") from the URL, if present.
-  const patientType = searchParams.get("type");
-
-  const shouldShowBackButton =
-    pathname === "/kiosk/pages/kiosk-services" ||
-    pathname === "/kiosk/pages/kiosk-cubicle-selection" ||
-    pathname === "/kiosk/pages/category-selection" ||
-    pathname === "/kiosk/pages/sms-input";
-
-  // Where the back button goes; undefined means no back target on this page.
-  let backHref: string | undefined = undefined;
-
-  if (pathname === "/kiosk/pages/kiosk-services") {
-    backHref = "/kiosk/pages/kiosk-new-old-selection";
-  }
-
-  if (pathname === "/kiosk/pages/kiosk-cubicle-selection") {
-    const serviceId = searchParams.get("serviceId");
-    if (serviceId) {
-      const params = new URLSearchParams();
-      if (patientType) params.set("type", patientType);
-      params.set("serviceId", serviceId);
-      params.set("serviceLabel", "Consultation");
-      backHref = `/kiosk/pages/category-selection?${params.toString()}`;
-    } else {
-      backHref = patientType
-        ? `/kiosk/pages/kiosk-services?type=${encodeURIComponent(patientType)}`
-        : "/kiosk/pages/kiosk-services";
-    }
-  }
-
-  if (pathname === "/kiosk/pages/category-selection") {
-    const serviceId = searchParams.get("serviceId");
-    const params = new URLSearchParams();
-    if (patientType) params.set("type", patientType);
-    if (serviceId) params.set("serviceId", serviceId);
-    const query = params.toString();
-    backHref = `/kiosk/pages/kiosk-services${query ? `?${query}` : ""}`;
-  }
-
-  if (pathname === "/kiosk/pages/sms-input") {
-    const serviceId = searchParams.get("serviceId");
-    const subcategory = searchParams.get("subcategory");
-    const preferredCubicleNums = searchParams.get("preferredCubicleNums");
-    const serviceLabel = searchParams.get("serviceLabel");
-
-    const params = new URLSearchParams();
-    if (serviceId) params.set("serviceId", serviceId);
-    if (patientType) params.set("type", patientType);
-
-    if (preferredCubicleNums) {
-      if (subcategory) params.set("subcategory", subcategory);
-      backHref = `/kiosk/pages/kiosk-cubicle-selection?${params.toString()}`;
-    } else if (subcategory) {
-      if (serviceLabel) params.set("serviceLabel", serviceLabel);
-      backHref = `/kiosk/pages/category-selection?${params.toString()}`;
-    } else {
-      backHref = `/kiosk/pages/kiosk-services?${params.toString()}`;
-    }
-  }
 
   return (
     <KioskLoadingProvider>
@@ -198,14 +220,9 @@ export default function MainKioskLayout({ children }: MainKioskLayoutProps) {
           className={KioskLayoutClasses.container(mounted)}
           style={KioskLayoutStyle.container}
         >
-          {shouldShowBackButton && backHref ? (
-            <header
-              className={KioskLayoutClasses.topNavWrapper}
-              style={KioskLayoutStyle.topNavWrapper}
-            >
-              <KioskBackButton href={backHref} />
-            </header>
-          ) : null}
+          <Suspense fallback={null}>
+            <KioskBackNavigation pathname={pathname} />
+          </Suspense>
 
           {/* Main content: fills all remaining space, no fixed dimensions. */}
           <main

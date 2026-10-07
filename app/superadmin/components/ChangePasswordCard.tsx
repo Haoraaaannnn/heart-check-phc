@@ -100,8 +100,8 @@ export const ChangePasswordCard: React.FC = () => {
       )}
 
       <form onSubmit={handleSubmit} className={S.passwordForm}>
-        <div className="space-y-1">
-          <label className="block text-xs font-semibold text-slate-700 dark:text-[#a3a3a3] uppercase tracking-wider">
+        <div className={S.fieldGroup}>
+          <label className={S.inputLabel}>
             {T.currentPasswordLabel}
           </label>
           <input
@@ -114,9 +114,9 @@ export const ChangePasswordCard: React.FC = () => {
           />
         </div>
 
-        <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
-          <div className="space-y-1">
-            <label className="block text-xs font-semibold text-slate-700 dark:text-[#a3a3a3] uppercase tracking-wider">
+        <div className={S.fieldGrid}>
+          <div className={S.fieldGroup}>
+            <label className={S.inputLabel}>
               {T.newPasswordLabel}
             </label>
             <input
@@ -129,8 +129,8 @@ export const ChangePasswordCard: React.FC = () => {
             />
           </div>
 
-          <div className="space-y-1">
-            <label className="block text-xs font-semibold text-slate-700 dark:text-[#a3a3a3] uppercase tracking-wider">
+          <div className={S.fieldGroup}>
+            <label className={S.inputLabel}>
               {T.confirmPasswordLabel}
             </label>
             <input
@@ -147,11 +147,11 @@ export const ChangePasswordCard: React.FC = () => {
         <button
           type="submit"
           disabled={saving}
-          className="px-4 py-2.5 rounded-lg bg-rose-600 hover:bg-rose-700 text-white font-medium text-xs transition cursor-pointer disabled:opacity-50 disabled:cursor-not-allowed shadow-xs flex items-center gap-2"
+          className={S.submitButton}
         >
           {saving ? (
             <>
-              <div className="w-3.5 h-3.5 border-2 border-white border-t-transparent rounded-full animate-spin" />
+              <div className={S.buttonSpinner} />
               <span>{T.savingButton}</span>
             </>
           ) : (

@@ -73,7 +73,7 @@ export function BreadcrumbNav({
         />
       )}
 
-      <div className="flex items-center gap-2 overflow-x-auto whitespace-nowrap phc-scroll py-1 text-sm font-medium">
+      <div className="flex items-center gap-2 overflow-x-auto whitespace-nowrap phc-scroll py-1 text-sm font-medium flex-1 min-w-0">
         {/* Services Root */}
         <button
           type="button"

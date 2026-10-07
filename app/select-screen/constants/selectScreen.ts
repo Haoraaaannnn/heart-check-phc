@@ -164,12 +164,10 @@ export const SELECT_SCREEN_STYLES = {
   },
 
   hero: {
-    wrapper: `mt-6 mb-10 text-center sm:text-left sm:flex sm:items-center sm:justify-between border-b ${themeTokens.border.default} pb-8`,
-    titlesWrap: 'max-w-3xl',
-    tagPill: `inline-flex items-center gap-1.5 px-3 py-1 ${sizeTokens.radius.full} ${themeTokens.brand.pill} ${sizeTokens.typography.micro} mb-3`,
-    pulseDot: `w-2 h-2 ${sizeTokens.radius.full} ${themeTokens.brand.pulseDot}`,
-    title: `${sizeTokens.typography.pageTitle} ${themeTokens.text.primary}`,
-    subtitle: `mt-2 ${sizeTokens.typography.bodySmall} ${themeTokens.text.secondary} font-normal`,
+    wrapper: `mx-auto max-w-7xl px-4 sm:px-6 lg:px-8 mt-6 mb-10 text-center flex flex-col items-center justify-center border-b ${themeTokens.border.default} pb-8`,
+    titlesWrap: 'max-w-3xl flex flex-col items-center justify-center text-center mx-auto',
+    title: `${sizeTokens.typography.pageTitle} ${themeTokens.text.primary} text-center`,
+    subtitle: `mt-2 ${sizeTokens.typography.bodySmall} ${themeTokens.text.secondary} font-normal text-center max-w-2xl mx-auto`,
   },
 
   section: {

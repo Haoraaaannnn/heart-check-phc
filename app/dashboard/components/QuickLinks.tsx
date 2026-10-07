@@ -17,7 +17,7 @@ export default function QuickLinks() {
     <DashboardCard title={C.title} subtitle={C.subtitle} icon={C.icon}>
       <div className={S.grid}>
         {QUICK_LINKS.map((link) => {
-          const tone = TONES[link.tone];
+          const tone = TONES[link.tone] ?? TONES.blue;
           return (
             <Link key={link.href} href={link.href} className={`${S.tile} ${tone.tile}`}>
               <span className={`${S.icon} ${tone.icon}`}>

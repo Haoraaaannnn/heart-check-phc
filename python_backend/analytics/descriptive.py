@@ -342,9 +342,17 @@ def phc_compliance_summary(df: pd.DataFrame, opd_hours: float = 8.0) -> dict:
         gt = int((vals > threshold).sum())
         return le, gt
 
+    # In official PHC Excel template, "Examine & treat Pts." evaluates Column AA:
+    # Initial Assessment to Doctor Seen (wait_consultation).
+    if 'wait_consultation' in completed.columns:
+        exam_col = 'wait_consultation'
+    else:
+        exam_col = 'service_consultation'
+
+
     waiting_le, waiting_gt = _bucket('total_time',           WAITING_TIME_TARGET_MINUTES)
     eval_le,    eval_gt    = _bucket('service_registration', EVALUATE_TARGET_MINUTES)
-    exam_le,    exam_gt    = _bucket('service_consultation', EXAMINE_TREAT_TARGET_MINUTES)
+    exam_le,    exam_gt    = _bucket(exam_col,               EXAMINE_TREAT_TARGET_MINUTES)
     carry_le,   carry_gt   = _bucket('service_carryout',     CARRYOUT_TARGET_MINUTES)
 
     avg_total_waiting = (

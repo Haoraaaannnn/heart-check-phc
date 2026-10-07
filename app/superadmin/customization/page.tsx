@@ -18,6 +18,7 @@ import {
 } from '@/constants/icons';
 import { useRequireAuth } from '../hooks/useRequireAuth';
 import { useIdleTimeout } from '../hooks/useIdleTimeout';
+import { SuperAdminPageSkeleton } from '../components/SuperAdminPageSkeleton';
 import { CUSTOMIZATION_TEXTS } from './constants/customizationTexts';
 import { CUSTOMIZATION_STYLES } from './constants/customizationStyles';
 import { SUPERADMIN_STYLES } from '../constants/superadminStyles';
@@ -155,30 +156,25 @@ export default function AdminServicePage() {
   const isEditing = editingId !== null;
 
   if (checking) {
-    return (
-      <div className="flex min-h-[60vh] items-center justify-center font-sans">
-        <div className="w-10 h-10 border-3 border-rose-200 border-t-rose-600 rounded-full animate-spin" />
-      </div>
-    );
+    return <SuperAdminPageSkeleton />;
   }
 
   return (
-    <div className={L.container}>
-      <div className={L.mainWrapper}>
-        {/* Header */}
-        <div className={L.headerRow}>
-          <div className={L.titleSection}>
-            <h1 className={L.heading}>{T.header.pageTitle}</h1>
-            <p className={L.subheading}>{T.header.pageDescription}</p>
-          </div>
-
-          {!isEditing && (
-            <button type="button" onClick={startCreate} className={B.primary}>
-              <i className="bx bx-plus text-base" aria-hidden="true" />
-              <span>{T.header.addServiceButton}</span>
-            </button>
-          )}
+    <div className={SUPERADMIN_STYLES.layout.page}>
+      {/* Header Banner Card */}
+      <div className={SUPERADMIN_STYLES.banner.root}>
+        <div className={SUPERADMIN_STYLES.banner.titleSection}>
+          <h1 className={SUPERADMIN_STYLES.banner.heading}>{T.header.pageTitle}</h1>
+          <p className={SUPERADMIN_STYLES.banner.subheading}>{T.header.pageDescription}</p>
         </div>
+
+        {!isEditing && (
+          <button type="button" onClick={startCreate} className={B.primary}>
+            <i className="bx bx-plus text-base" aria-hidden="true" />
+            <span>{T.header.addServiceButton}</span>
+          </button>
+        )}
+      </div>
 
         {error && (
           <div className="p-3.5 rounded-xl bg-red-50 dark:bg-red-950/60 border border-red-200 dark:border-red-900 text-red-700 dark:text-red-300 text-xs flex items-center gap-2">
@@ -365,11 +361,39 @@ export default function AdminServicePage() {
         {/* Services Table */}
         <div className={S.tableContainer}>
           {loading ? (
-            <div className="py-16 text-center space-y-3">
-              <div className="w-8 h-8 border-2 border-rose-600 border-t-transparent rounded-full animate-spin mx-auto" />
-              <p className="text-xs text-slate-500 dark:text-[#a3a3a3]">
-                Loading services...
-              </p>
+            <div className="animate-pulse">
+              <table className={S.table}>
+                <thead className={S.thead}>
+                  <tr>
+                    <th className={S.th}><div className="h-3 w-10 bg-slate-200 dark:bg-[#2e2e2e] rounded-md" /></th>
+                    <th className={S.th}><div className="h-3 w-28 bg-slate-200 dark:bg-[#2e2e2e] rounded-md" /></th>
+                    <th className={S.th}><div className="h-3 w-20 bg-slate-200 dark:bg-[#2e2e2e] rounded-md" /></th>
+                    <th className={S.th}><div className="h-3 w-12 bg-slate-200 dark:bg-[#2e2e2e] rounded-md" /></th>
+                    <th className={`${S.th} text-right`}><div className="h-3 w-14 bg-slate-200 dark:bg-[#2e2e2e] rounded-md ml-auto" /></th>
+                  </tr>
+                </thead>
+                <tbody className={S.tbody}>
+                  {['s-1', 's-2', 's-3', 's-4', 's-5'].map((key) => (
+                    <tr key={key} className={S.tr}>
+                      <td className={S.td}><div className="w-8 h-8 rounded-lg bg-slate-100 dark:bg-[#242424]" /></td>
+                      <td className={S.td}>
+                        <div className="space-y-1.5">
+                          <div className="h-3.5 w-36 bg-slate-100 dark:bg-[#242424] rounded-md" />
+                          <div className="h-2.5 w-24 bg-slate-100 dark:bg-[#242424] rounded-md" />
+                        </div>
+                      </td>
+                      <td className={S.td}><div className="h-5 w-16 bg-slate-100 dark:bg-[#242424] rounded-full" /></td>
+                      <td className={S.td}><div className="h-3.5 w-8 bg-slate-100 dark:bg-[#242424] rounded-md" /></td>
+                      <td className={`${S.td} text-right`}>
+                        <div className="flex items-center justify-end gap-2">
+                          <div className="h-6 w-14 bg-slate-100 dark:bg-[#242424] rounded-lg" />
+                          <div className="h-6 w-14 bg-slate-100 dark:bg-[#242424] rounded-lg" />
+                        </div>
+                      </td>
+                    </tr>
+                  ))}
+                </tbody>
+              </table>
             </div>
           ) : (
             <table className={S.table}>
@@ -453,6 +477,5 @@ export default function AdminServicePage() {
           )}
         </div>
       </div>
-    </div>
   );
 }

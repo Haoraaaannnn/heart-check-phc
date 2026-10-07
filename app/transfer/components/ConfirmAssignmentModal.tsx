@@ -95,19 +95,19 @@ export function ConfirmAssignmentModal({
               key={patient.id}
               className="p-3.5 rounded-xl border border-slate-200 bg-slate-50/70 flex items-center justify-between gap-3 shadow-2xs"
             >
-              <div className="flex items-center gap-3 min-w-0">
+              <div className="flex items-center gap-3 min-w-0 flex-1">
                 <span className="w-10 h-10 rounded-xl bg-red-50 border border-red-200 text-[#cc3535] font-black text-sm flex items-center justify-center shrink-0">
                   {patient.patientNum}
                 </span>
 
-                <div className="min-w-0">
+                <div className="min-w-0 flex-1">
                   <div className="flex items-center gap-2">
                     <span className="text-xs font-bold text-slate-800 truncate">
-                      {patient.patientNum}
+                      {patient.service}
                     </span>
-                    {(patient.subcategory || patient.service) && (
+                    {patient.subcategory && (
                       <span className="text-[10px] font-medium px-1.5 py-0.5 rounded bg-slate-200/80 text-slate-600 truncate">
-                        {patient.subcategory || patient.service}
+                        {patient.subcategory}
                       </span>
                     )}
                   </div>
@@ -120,14 +120,14 @@ export function ConfirmAssignmentModal({
                   </p>
 
                   {Boolean(patient.phoneNum) && (
-                    <p className="text-[10px] text-blue-600 font-medium mt-0.5">
+                    <p className="text-[10px] text-blue-600 font-medium mt-0.5 break-words leading-tight">
                       {transferTexts.smsNotificationNotice}
                     </p>
                   )}
                 </div>
               </div>
 
-              <span className="text-xs font-bold text-emerald-700 bg-emerald-50 border border-emerald-200 px-2 py-1 rounded-lg shrink-0">
+              <span className="text-xs font-bold text-emerald-700 bg-emerald-50 border border-emerald-200 px-2 py-1 rounded-lg shrink-0 whitespace-nowrap">
                 {patient.cubicleNum || 'Queue'}
               </span>
             </div>

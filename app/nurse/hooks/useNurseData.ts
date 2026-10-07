@@ -22,7 +22,12 @@
 import { useState, useCallback, useRef, useEffect } from 'react';
 import { supabase } from '@/lib/supabase';
 import { Patient } from '@/types/Types';
-import { AssignedNurseCubicle, ClinicalStage } from '../types/nurse';
+import {
+  AssignedNurseCubicle,
+  ClinicalStage,
+  stageToDbStatus,
+  dbStatusToStage,
+} from '../types/nurse';
 
 /**
  * Cubicle assignment status descriptor.
@@ -315,23 +320,25 @@ export function useNurseData(): UseNurseDataReturn {
       const processedData = (data as Patient[]).map((patient) => {
         const pin = inFlightMutationsRef.current.get(patient.id);
         if (pin) {
-          if (patient.status === pin.stage) {
+          if (dbStatusToStage(patient.status) === pin.stage) {
             inFlightMutationsRef.current.delete(patient.id);
           } else {
-            return { ...patient, status: pin.stage };
+            return { ...patient, status: stageToDbStatus(pin.stage) };
           }
         }
         return patient;
       });
 
       setAssignedPatients(
-        processedData.filter((p) => p.status === 'Assigned' && p.cubicleNum)
+        processedData.filter(
+          (p) => dbStatusToStage(p.status) === 'assigned' && p.cubicleNum
+        )
       );
       setWithDoctorPatients(
-        processedData.filter((p) => p.status === 'With Doctor')
+        processedData.filter((p) => dbStatusToStage(p.status) === 'with_doctor')
       );
       setCarryoutPatients(
-        processedData.filter((p) => p.status === 'Carryout')
+        processedData.filter((p) => dbStatusToStage(p.status) === 'carryout')
       );
     } else if (error) {
       console.warn('Nurse background fetch dropped:', error.message);
@@ -405,12 +412,17 @@ export function useNurseData(): UseNurseDataReturn {
 
     // If active pin exists and server status caught up, unpin
     const pin = inFlightMutationsRef.current.get(patient.id);
-    if (pin && patient.status === pin.stage) {
+    if (pin && dbStatusToStage(patient.status) === pin.stage) {
       inFlightMutationsRef.current.delete(patient.id);
     }
-    const effectiveStatus = pin ? pin.stage : patient.status;
+    const effectiveStage: ClinicalStage | null = pin
+      ? pin.stage
+      : dbStatusToStage(patient.status);
+    const effectiveStatus = effectiveStage
+      ? stageToDbStatus(effectiveStage)
+      : patient.status;
 
-    if (!belongsToMe || effectiveStatus === 'Done') {
+    if (!belongsToMe || effectiveStage === 'done' || !effectiveStage) {
       setAssignedPatients((prev) => prev.filter((p) => p.id !== patient.id));
       setWithDoctorPatients((prev) => prev.filter((p) => p.id !== patient.id));
       setCarryoutPatients((prev) => prev.filter((p) => p.id !== patient.id));
@@ -419,21 +431,21 @@ export function useNurseData(): UseNurseDataReturn {
 
     const updatedPatient: Patient = { ...patient, status: effectiveStatus };
 
-    if (effectiveStatus === 'Assigned') {
+    if (effectiveStage === 'assigned') {
       setAssignedPatients((prev) => {
         const idx = prev.findIndex((p) => p.id === updatedPatient.id);
         return idx >= 0 ? prev.map((p, i) => (i === idx ? updatedPatient : p)) : [...prev, updatedPatient];
       });
       setWithDoctorPatients((prev) => prev.filter((p) => p.id !== updatedPatient.id));
       setCarryoutPatients((prev) => prev.filter((p) => p.id !== updatedPatient.id));
-    } else if (effectiveStatus === 'With Doctor') {
+    } else if (effectiveStage === 'with_doctor') {
       setWithDoctorPatients((prev) => {
         const idx = prev.findIndex((p) => p.id === updatedPatient.id);
         return idx >= 0 ? prev.map((p, i) => (i === idx ? updatedPatient : p)) : [...prev, updatedPatient];
       });
       setAssignedPatients((prev) => prev.filter((p) => p.id !== updatedPatient.id));
       setCarryoutPatients((prev) => prev.filter((p) => p.id !== updatedPatient.id));
-    } else if (effectiveStatus === 'Carryout') {
+    } else if (effectiveStage === 'carryout') {
       setCarryoutPatients((prev) => {
         const idx = prev.findIndex((p) => p.id === updatedPatient.id);
         return idx >= 0 ? prev.map((p, i) => (i === idx ? updatedPatient : p)) : [...prev, updatedPatient];

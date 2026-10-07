@@ -37,32 +37,20 @@ Use this lookup table to immediately find the file you need:
 
 | Goal / Intended Change | Where to Edit |
 | :--- | :--- |
-| **Change global typography scales or kiosk font sizes** | [constants/kiosk.ts](file:///home/jensen/Github-Repositories/heart-check-phc/constants/kiosk.ts) (`kioskTypography` / `fontSizeKiosk`). All kiosk screen styles alias these root tokens. |
+| **Change global typography scales or kiosk font sizes** | [constants/kiosk.ts](file:///home/jensen/Github-Repositories/heart-check-phc/constants/kiosk.ts) (`kioskTypography` / `fontSizeKiosk`) and [KIOSK_TYPOGRAPHY_GUIDE.md](file:///home/jensen/Github-Repositories/heart-check-phc/app/kiosk/KIOSK_TYPOGRAPHY_GUIDE.md). All kiosk screen styles alias these root tokens. |
 | **Change text copy, titles, or button labels** | Look for the matching `constants/<component>Texts.ts` in that route. |
 | **Change colors, dimensions, or card padding** | Look for the matching `constants/<component>.ts` in that route. |
 | **Change icons or resolve service/category Boxicons** | [constants/icons.ts](file:///home/jensen/Github-Repositories/heart-check-phc/constants/icons.ts) (central icon map and resolvers) or local `<component>.ts` (page-specific icon tokens). |
 | **Change layout dimensions, padding, or orientation behavior** | Look for `constants/<feature>Layout.ts` or the route's `layout.tsx`. |
-| **Change navigation flow or routing destinations** | Check the page component (`page.tsx`) or `app/kiosk/hooks/useKioskNavigate.ts`. |
+| **Change navigation flow or routing destinations** | Check the page component (`page.tsx`) or [useKioskNavigate.ts](file:///home/jensen/Github-Repositories/heart-check-phc/app/kiosk/hooks/useKioskNavigate.ts). |
+| **Change kiosk idle timeout, slideshow images, or slide interval** | [kioskNavigation.ts](file:///home/jensen/Github-Repositories/heart-check-phc/app/kiosk/constants/kioskNavigation.ts) and [idleRedirect.ts](file:///home/jensen/Github-Repositories/heart-check-phc/app/kiosk/constants/idleRedirect.ts). |
+| **Change idle-screen accessibility text or activation behavior** | [idleRedirectTexts.ts](file:///home/jensen/Github-Repositories/heart-check-phc/app/kiosk/constants/idleRedirectTexts.ts) and [page.tsx](file:///home/jensen/Github-Repositories/heart-check-phc/app/kiosk/slideshow/page.tsx). |
 | **Change loading overlay message or animation** | [kioskLoadingOverlayTexts.ts](file:///home/jensen/Github-Repositories/heart-check-phc/app/kiosk/constants/kioskLoadingOverlayTexts.ts) / [kioskLoadingOverlay.ts](file:///home/jensen/Github-Repositories/heart-check-phc/app/kiosk/constants/kioskLoadingOverlay.ts). |
 | **Change the universal back button appearance or label** | [kioskBackButtonTexts.ts](file:///home/jensen/Github-Repositories/heart-check-phc/app/kiosk/constants/kioskBackButtonTexts.ts) / [kioskBackButton.ts](file:///home/jensen/Github-Repositories/heart-check-phc/app/kiosk/constants/kioskBackButton.ts). |
 | **Change the hardware ticket print API payload or format** | [QueuePrintContent.tsx](file:///home/jensen/Github-Repositories/heart-check-phc/app/kiosk/pages/queue-print/components/QueuePrintContent.tsx), [route.ts](file:///home/jensen/Github-Repositories/heart-check-phc/app/api/print-ticket/route.ts), and [printer.ts](file:///home/jensen/Github-Repositories/heart-check-phc/lib/printer.ts). |
 | **Change mobile phone number validation rules** | [phoneValidation.ts](file:///home/jensen/Github-Repositories/heart-check-phc/app/kiosk/pages/sms-input/utils/phoneValidation.ts) (NTC prefixes, sequential runs, repetition limits) and [KioskPhoneEntry.tsx](file:///home/jensen/Github-Repositories/heart-check-phc/app/kiosk/pages/sms-input/components/KioskPhoneEntry.tsx). |
+| **Change phone encryption, reveal actions, or security** | [phoneSecurity.ts](file:///home/jensen/Github-Repositories/heart-check-phc/app/actions/phoneSecurity.ts), [phoneEncryption.ts](file:///home/jensen/Github-Repositories/heart-check-phc/lib/crypto/phoneEncryption.ts), and [DATA_ENCRYPTION_GUIDE.md](file:///home/jensen/Github-Repositories/heart-check-phc/docs/specifications/DATA_ENCRYPTION_GUIDE.md). |
 | **Change queue ticket prefixes and numeric rules** | [smsPrefixRules.ts](file:///home/jensen/Github-Repositories/heart-check-phc/app/kiosk/pages/sms-input/constants/smsPrefixRules.ts). |
-| Goal / Intended Change                                             | Where to Edit                                                                                                                                                                                                                                                                                                                    |
-| :----------------------------------------------------------------- | :------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
-| **Change global typography scales or kiosk font sizes**            | [constants/kiosk.ts](file:///home/jensen/Github-Repositories/heart-check-phc/constants/kiosk.ts) (`kioskTypography` / `fontSizeKiosk`). All kiosk screen styles alias these root tokens.                                                                                                                                         |
-| **Change text copy, titles, or button labels**                     | Look for the matching `constants/<component>Texts.ts` in that route.                                                                                                                                                                                                                                                             |
-| **Change colors, dimensions, or card padding**                     | Look for the matching `constants/<component>.ts` in that route.                                                                                                                                                                                                                                                                  |
-| **Change icons or resolve service/category Boxicons**              | [constants/icons.ts](file:///home/jensen/Github-Repositories/heart-check-phc/constants/icons.ts) (central icon map and resolvers) or local `<component>.ts` (page-specific icon tokens).                                                                                                                                         |
-| **Change layout dimensions, padding, or orientation behavior**     | Look for `constants/<feature>Layout.ts` or the route's `layout.tsx`.                                                                                                                                                                                                                                                             |
-| **Change navigation flow or routing destinations**                 | Check the page component (`page.tsx`) or `app/kiosk/hooks/useKioskNavigate.ts`.                                                                                                                                                                                                                                                  |
-| **Change kiosk idle timeout, slideshow images, or slide interval** | [kioskNavigation.ts](app/kiosk/constants/kioskNavigation.ts) and [idleRedirect.ts](app/kiosk/constants/idleRedirect.ts).                                                                                                                                                                                                         |
-| **Change idle-screen accessibility text or activation behavior**   | [idleRedirectTexts.ts](app/kiosk/constants/idleRedirectTexts.ts) and [slideshow/page.tsx](app/kiosk/slideshow/page.tsx).                                                                                                                                                                                                         |
-| **Change loading overlay message or animation**                    | [kioskLoadingOverlayTexts.ts](file:///home/jensen/Github-Repositories/heart-check-phc/app/kiosk/constants/kioskLoadingOverlayTexts.ts) / [kioskLoadingOverlay.ts](file:///home/jensen/Github-Repositories/heart-check-phc/app/kiosk/constants/kioskLoadingOverlay.ts).                                                           |
-| **Change the universal back button appearance or label**           | [kioskBackButtonTexts.ts](file:///home/jensen/Github-Repositories/heart-check-phc/app/kiosk/constants/kioskBackButtonTexts.ts) / [kioskBackButton.ts](file:///home/jensen/Github-Repositories/heart-check-phc/app/kiosk/constants/kioskBackButton.ts).                                                                           |
-| **Change the hardware ticket print API payload**                   | [QueuePrintContent.tsx](file:///home/jensen/Github-Repositories/heart-check-phc/app/kiosk/pages/queue-print/components/QueuePrintContent.tsx) and `/api/print-ticket/route.ts`.                                                                                                                                                  |
-| **Change mobile phone number validation rules**                    | [phoneValidation.ts](file:///home/jensen/Github-Repositories/heart-check-phc/app/kiosk/pages/sms-input/utils/phoneValidation.ts) (NTC prefixes, sequential runs, repetition limits) and [KioskPhoneEntry.tsx](file:///home/jensen/Github-Repositories/heart-check-phc/app/kiosk/pages/sms-input/components/KioskPhoneEntry.tsx). |
-| **Change queue ticket prefixes and numeric rules**                 | [smsPrefixRules.ts](file:///home/jensen/Github-Repositories/heart-check-phc/app/kiosk/pages/sms-input/constants/smsPrefixRules.ts).                                                                                                                                                                                              |
 
 ---
 
@@ -77,16 +65,18 @@ The root layout wraps all kiosk subroutes with client-side hydration awareness, 
 - **Universal Back Button:** [KioskBackButton.tsx](file:///home/jensen/Github-Repositories/heart-check-phc/components/reusables/KioskBackButton.tsx)
 - **Loading State Context:** [KioskLoadingContext.tsx](file:///home/jensen/Github-Repositories/heart-check-phc/app/kiosk/context/KioskLoadingContext.tsx)
 - **Unified Navigation Hook:** [useKioskNavigate.ts](file:///home/jensen/Github-Repositories/heart-check-phc/app/kiosk/hooks/useKioskNavigate.ts)
-- **Idle Activity Timer:** [IdleRedirectWrapper.tsx](app/kiosk/components/IdleRedirectWrapper.tsx) (3-minute inactivity redirect on patient-flow routes).
-- **Idle Slideshow:** [page.tsx](app/kiosk/slideshow/page.tsx) (cycles the existing `/images/1.jpg`, `/images/2.jpg`, and `/images/3.jpg` assets and returns to patient selection on activation).
+- **Idle Activity Timer:** [IdleRedirectWrapper.tsx](file:///home/jensen/Github-Repositories/heart-check-phc/app/kiosk/components/IdleRedirectWrapper.tsx) (3-minute inactivity redirect on patient-flow routes).
+- **Idle Slideshow:** [page.tsx](file:///home/jensen/Github-Repositories/heart-check-phc/app/kiosk/slideshow/page.tsx) (cycles the existing `/images/1.jpg`, `/images/2.jpg`, and `/images/3.jpg` assets and returns to patient selection on activation).
 - **Constants:**
   - [kioskBackButtonTexts.ts](file:///home/jensen/Github-Repositories/heart-check-phc/app/kiosk/constants/kioskBackButtonTexts.ts): Back button text and ARIA labels (`KioskBackButtonTexts`).
   - [kioskBackButton.ts](file:///home/jensen/Github-Repositories/heart-check-phc/app/kiosk/constants/kioskBackButton.ts): Back button styles with tactile white background, brand red typography and enlarged icon (`clamp(24px, 2.4vmin, 32px)`), generous vertical padding (`clamp(12px, 1.4vh, 18px)`), and touch active border feedback (`KioskBackButtonStyles`, `KioskBackButtonClasses`).
   - [kioskLoadingOverlayTexts.ts](file:///home/jensen/Github-Repositories/heart-check-phc/app/kiosk/constants/kioskLoadingOverlayTexts.ts): Default loading spinner status strings (`KioskLoadingOverlayTexts`).
   - [kioskLoadingOverlay.ts](file:///home/jensen/Github-Repositories/heart-check-phc/app/kiosk/constants/kioskLoadingOverlay.ts): Loading overlay styling and elevated z-index (200) backdrop filters (`KioskLoadingOverlayStyles`, `KioskLoadingOverlayClasses`).
+  - [idleRedirectTexts.ts](file:///home/jensen/Github-Repositories/heart-check-phc/app/kiosk/constants/idleRedirectTexts.ts): Accessibility and screen-reader copy for idle slideshow activation (`IdleRedirectTexts`).
+  - [idleRedirect.ts](file:///home/jensen/Github-Repositories/heart-check-phc/app/kiosk/constants/idleRedirect.ts): Full-screen idle slideshow layout, styles, transitions, and image assets (`IdleRedirectStyle`, `IdleRedirectClasses`, `IDLE_SLIDESHOW_IMAGES`).
   - [kioskLayoutTexts.ts](file:///home/jensen/Github-Repositories/heart-check-phc/app/kiosk/constants/kioskLayoutTexts.ts): Composite barrel re-export for layout text strings.
   - [kioskLayout.ts](file:///home/jensen/Github-Repositories/heart-check-phc/app/kiosk/constants/kioskLayout.ts): Shell layout styles (`KioskLayoutStyle`) and responsive utility classes (`KioskLayoutClasses`).
-  - [kioskNavigation.ts](file:///home/jensen/Github-Repositories/heart-check-phc/app/kiosk/constants/kioskNavigation.ts): Kiosk route path constants.
+  - [kioskNavigation.ts](file:///home/jensen/Github-Repositories/heart-check-phc/app/kiosk/constants/kioskNavigation.ts): Kiosk route path and timing constants (`KIOSK_ROUTES`, `KIOSK_TIMING`).
 
 ---
 
@@ -202,9 +192,9 @@ Keypad screen for entering the patient's Philippine mobile number (`09XX XXX XXX
 - **Where to Edit Phone Validation & Anti-Troll Rules:**
   - [phoneValidation.ts](file:///home/jensen/Github-Repositories/heart-check-phc/app/kiosk/pages/sms-input/utils/phoneValidation.ts): Strict Philippine mobile number rules, 09 keypad constraint, NTC telco prefix verification, sequential run detection (`123456...`), and repetitive number limits (`09111111111`).
 - **Where to Edit Phone Encryption & Security:**
-  - [phoneSecurity.ts](file:///c:/Users/ficti/Desktop/main/app/actions/phoneSecurity.ts): Server actions isolating phone encryption and masking logic.
-  - [phoneEncryption.ts](file:///c:/Users/ficti/Desktop/main/lib/crypto/phoneEncryption.ts): Core AES-256-GCM cipher and key management.
-  - [DATA_ENCRYPTION_GUIDE.md](file:///c:/Users/ficti/Desktop/main/docs/specifications/DATA_ENCRYPTION_GUIDE.md): Architecture specifications and database migration guide.
+  - [phoneSecurity.ts](file:///home/jensen/Github-Repositories/heart-check-phc/app/actions/phoneSecurity.ts): Server actions isolating phone encryption and masking logic.
+  - [phoneEncryption.ts](file:///home/jensen/Github-Repositories/heart-check-phc/lib/crypto/phoneEncryption.ts): Core AES-256-GCM cipher and key management.
+  - [DATA_ENCRYPTION_GUIDE.md](file:///home/jensen/Github-Repositories/heart-check-phc/docs/specifications/DATA_ENCRYPTION_GUIDE.md): Architecture specifications and database migration guide.
 - **Where to Edit Queue Ticket Prefixes & Rules:**
   - [smsPrefixRules.ts](file:///home/jensen/Github-Repositories/heart-check-phc/app/kiosk/pages/sms-input/constants/smsPrefixRules.ts): Service ticket prefix mappings (`SMS_SERVICE_PREFIXES`) and numeric subcategory routing rules (`NUMERIC_PREFIX_RULES`).
 
@@ -256,6 +246,23 @@ Final completion screen presenting the physical queue ticket preview, triggering
   - [printFooter.ts](file:///home/jensen/Github-Repositories/heart-check-phc/app/kiosk/pages/queue-print/constants/printFooter.ts): Footer notice typography (`PrintFooterStyle`).
   - [queuePrintTicket.ts](file:///home/jensen/Github-Repositories/heart-check-phc/app/kiosk/pages/queue-print/constants/queuePrintTicket.ts): Ticket card dimensions, senior-friendly typography scales without pillboxes, queue callout, dividers, Manila timestamp, cubicle row (`QueuePrintTicketStyle`), and redirect delay (`QUEUE_PRINT_REDIRECT_DELAY_MS`).
   - [queuePrintLayout.ts](file:///home/jensen/Github-Repositories/heart-check-phc/app/kiosk/pages/queue-print/constants/queuePrintLayout.ts): Print screen layout classes (`QueuePrintLayoutClasses`).
+
+---
+
+### Screen 8: Idle Slideshow (`app/kiosk/slideshow/`)
+
+Full-screen promotional and institutional slideshow that displays automatically after 3 minutes of inactivity on patient-flow screens. Automatically cycles through images with smooth cross-fade transitions across the entire screen, and returns patients immediately to the entrance route upon screen activation.
+
+- **Route:** `/kiosk/slideshow`
+- **Page File:** [page.tsx](file:///home/jensen/Github-Repositories/heart-check-phc/app/kiosk/slideshow/page.tsx)
+- **Subcomponents:**
+  - [KioskTapPrompt.tsx](file:///home/jensen/Github-Repositories/heart-check-phc/app/kiosk/slideshow/components/KioskTapPrompt.tsx): Floating "Tap to Start" tactile callout badge guiding patients to begin interaction.
+- **Idle Timeout Watcher:** [IdleRedirectWrapper.tsx](file:///home/jensen/Github-Repositories/heart-check-phc/app/kiosk/components/IdleRedirectWrapper.tsx) (monitors pointer, touch, and keyboard activity across `/kiosk/pages/*` and redirects to `/kiosk/slideshow` on 3-minute timeout).
+- **Where to Edit Texts:**
+  - [idleRedirectTexts.ts](file:///home/jensen/Github-Repositories/heart-check-phc/app/kiosk/constants/idleRedirectTexts.ts): Screen-reader and visible "Tap to Start" callout copy (`IdleRedirectTexts`).
+- **Where to Edit Styles, Intervals, & Images:**
+  - [idleRedirect.ts](file:///home/jensen/Github-Repositories/heart-check-phc/app/kiosk/constants/idleRedirect.ts): Full-screen touch control styles, "Tap to Start" badge styles, opacity classes, and image asset paths (`IdleRedirectStyle`, `IdleRedirectClasses`, `IDLE_SLIDESHOW_IMAGES`).
+  - [kioskNavigation.ts](file:///home/jensen/Github-Repositories/heart-check-phc/app/kiosk/constants/kioskNavigation.ts): Inactivity redirect threshold (`IDLE_REDIRECT_MS = 180000`, 3 minutes) and slide rotation speed (`SLIDESHOW_INTERVAL_MS = 6000`, 6 seconds) (`KIOSK_TIMING`).
 
 ---
 

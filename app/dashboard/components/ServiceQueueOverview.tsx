@@ -7,10 +7,14 @@ import { getServiceColor } from '@/constants/palette';
 const S = DASH.breakdown;
 const C = SECTIONS.serviceQueue;
 
+import { ServiceQueueSkeleton } from './skeletons/ServiceQueueSkeleton';
+
 interface ServiceQueueOverviewProps {
   /** Service name -> patients currently waiting or being served. */
   deptStats: Record<string, number>;
   isMounted: boolean;
+  /** Flag indicating whether department query is actively loading */
+  isLoading?: boolean;
 }
 
 /**
@@ -18,7 +22,14 @@ interface ServiceQueueOverviewProps {
  * Colors per service come from constants/palette.ts, shared with any other
  * chart that needs the same service -> color mapping.
  */
-export default function ServiceQueueOverview({ deptStats, isMounted }: ServiceQueueOverviewProps) {
+export default function ServiceQueueOverview({
+  deptStats,
+  isMounted,
+  isLoading = false,
+}: ServiceQueueOverviewProps) {
+  if (isLoading) {
+    return <ServiceQueueSkeleton />;
+  }
   const entries = isMounted ? Object.entries(deptStats) : [];
   const total = entries.reduce((sum, [, count]) => sum + count, 0);
   const maxCount = Math.max(...entries.map(([, count]) => count), 1);

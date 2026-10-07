@@ -9,6 +9,7 @@
 
 'use client';
 
+import Link from 'next/link';
 import { ANALYTICS_STYLES } from '@/app/dashboard/pages/analytics/constants/analytics';
 import { ANALYTICS_TEXTS } from '@/app/dashboard/pages/analytics/constants/analyticsTexts';
 import type { AnalyticsRange } from '@/app/dashboard/pages/analytics/hooks/useAnalyticsData';
@@ -59,6 +60,11 @@ export default function AnalyticsHeader({
         )}
 
         <ExportExcelButton range={range} />
+
+        <Link href="/dashboard/pages/import" className={S.importButton}>
+          <i className="bx bx-cloud-upload text-base" />
+          <span>{T.importButton}</span>
+        </Link>
       </div>
     </div>
   );

@@ -1,0 +1,132 @@
+/**
+ * @fileoverview Centralized UI text strings and user-facing copy for the Admin Dashboard
+ * Export Data module.
+ *
+ * All labels, headers, instructions, button text, badges, formula summaries, format guidelines,
+ * and error strings are decoupled here to ensure complete separation of concerns.
+ *
+ * @remarks
+ * Strictly follows AGENTS.md rules: zero emojis in UI copy, professional healthcare terminology,
+ * full symbol documentation, and no truncated indicator text.
+ *
+ * @module app/dashboard/pages/export/constants/exportTexts
+ */
+
+export const EXPORT_TEXTS = {
+  header: {
+    title: 'Export Patient Queue Data',
+    subtitle: 'Generate and download official PHC Time and Motion Analysis workbooks (.xlsx) and patient queue datasets (.csv) for reporting, compliance audits, and analytics.',
+    breadcrumb: 'Operations / Export Data',
+    backToDashboard: 'Back to Overview',
+    importDataLink: 'Import Patient Data',
+    analyticsLink: 'View Analytics',
+    refreshDatesButton: 'Refresh Available Dates',
+  },
+  telemetry: {
+    availableDaysLabel: 'Available Clinic Days',
+    availableDaysHelp: 'Distinct recorded days with milestone data',
+    dateSpanLabel: 'Recorded Archive Span',
+    dateSpanHelp: 'Earliest to latest recorded date',
+    calendarYearsLabel: 'Active Calendar Years',
+    calendarYearsHelp: 'Years containing patient data',
+    protocolLabel: 'Audit Protocol Standard',
+    protocolValue: 'PHC OPD Time & Motion Protocol (UTC+8)',
+    protocolHelp: 'Asia/Manila normalized timestamps',
+  },
+  options: {
+    title: 'Export Configuration & Parameters',
+    subtitle: 'Configure the date scope, target clinical service, and output file serialization.',
+    modeLabel: 'Date Selection Mode',
+    serviceLabel: 'Clinical Department / Service',
+    servicePlaceholder: 'Select clinical service',
+    formatLabel: 'File Output Format',
+    formatOptions: {
+      xlsxTitle: 'PHC Time and Motion Workbook (.xlsx)',
+      xlsxDesc: 'Official multi-sheet Excel workbook with daily sheets, 10 milestone columns, and 4-row compliance summary.',
+      csvTitle: 'Patient Queue Dataset (.csv)',
+      csvDesc: 'Flat tabular comma-separated values containing raw patient queue timestamps and cubicle records.',
+    },
+    summaryToggleLabel: 'Include Bottom 4-Row Compliance Summary Block',
+    summaryToggleDesc: 'Calculates COUNTIF thresholds for waiting time (<= 2.5h), initial evaluation (<= 30m), doctor treatment (<= 1.45h), and carry out (<= 15m).',
+  },
+  dateBrowser: {
+    title: 'Target Date & Timeframe Selection',
+    subtitle: 'Select from dates containing verified patient records in the database.',
+    yearLabel: 'Calendar Year:',
+    monthLabel: 'Calendar Month:',
+    selectDateHint: 'Choose a specific date from the available clinic days recorded below:',
+    selectMonthHint: 'Choose a calendar month to export all recorded days in that month:',
+    selectRangeHint: 'Choose a rolling timeframe or export the complete recorded archive:',
+    filterInputPlaceholder: 'Search available dates (e.g. 2024-01-15)...',
+    noDatesFound: 'No recorded dates match your search filter.',
+    noDataForYear: 'No recorded clinic dates found for this calendar year.',
+    monthsWithDataTag: 'Recorded clinic months',
+    availableDatesCount: 'available dates',
+    activeDayBadge: 'Selected Day',
+    hasDataBadge: 'Recorded Data',
+    noDataBadge: 'No Records',
+  },
+  preview: {
+    title: 'Export Specification & Sheet Layout Preview',
+    subtitle: 'Review target file attributes, sheet structure, and column definitions before generating.',
+    targetPeriodLabel: 'Target Period / Scope',
+    serviceFilterLabel: 'Service Filter',
+    outputFilenameLabel: 'Generated File Name',
+    sheetStructureLabel: 'Workbook Layout',
+    totalDatesEstimateLabel: 'Selected Scope Days',
+    estimatedRecordsLabel: 'Status / Readiness',
+    downloadButtonIdle: 'Generate & Download File',
+    downloadButtonLoading: 'Building Export Workbook...',
+    downloadButtonSuccess: 'File Downloaded Successfully',
+    allServicesTag: 'All Services (Master OPD)',
+    singleSheetStructure: 'Single worksheet with 10 milestone columns and bottom compliance summary',
+    multiSheetStructure: 'Multi-worksheet workbook (one worksheet per recorded clinic day)',
+    flatCsvStructure: 'Single flat CSV file with raw column headers and timestamp fields',
+    milestonesTitle: 'Milestone Columns Included (Columns A to J):',
+    complianceSummaryTitle: 'Official PHC 4-Row Compliance Summary Formulas:',
+  },
+  history: {
+    title: 'Session Export History',
+    subtitle: 'Review and re-download workbooks generated during this browser session.',
+    emptyNotice: 'No files exported in this session yet. Configure your parameters above to download a dataset.',
+    clearHistoryButton: 'Clear History',
+    tableHeaders: {
+      filename: 'File Name',
+      period: 'Timeframe',
+      service: 'Service Filter',
+      format: 'Format',
+      timestamp: 'Exported At',
+      status: 'Status',
+      actions: 'Action',
+    },
+    redownloadButton: 'Download Again',
+  },
+  formatGuide: {
+    title: 'Hospital Export Structure & Compliance Guide',
+    subtitle: 'Authoritative specification of the Philippine Heart Center Out-Patient Division time and motion report.',
+    workbookTitle: 'PHC Time and Motion Analysis Workbook (.xlsx)',
+    workbookDesc: 'Every generated Excel file strictly reproduces the hospital standard layout. For monthly and rolling exports, each recorded calendar day is assigned its own dedicated worksheet named with the clinic date and department (for example, "Jan 02 2024 OPD").',
+    columnsTitle: 'Authoritative 10-Column Data Architecture',
+    columnsDesc: 'Columns A through E capture raw patient operational milestones: Queuing Time (reg_start), Initial Assessment (reg_end), Doctor Seen (consult_start), Doctor Completed (consult_end), and Carry Out Completed (carryout_end). Columns F through J calculate elapsed waiting and treatment durations, culminating in Column J Total Waiting Time.',
+    summaryTitle: 'Bottom 4-Row Compliance Summary Calculations',
+    summaryDesc: 'Beneath the data rows, each worksheet generates four compliance summary rows reproducing hospital audit formulas: Waiting Time <= 2.5 hrs, Evaluate patients <= 30 mins, Examine and treat patients <= 1.45 hrs, and Carry out doctor orders <= 15 mins, along with patient-to-doctor ratios.',
+    timezoneTitle: 'Asia/Manila (UTC+8) Timezone Normalization',
+    timezoneDesc: 'All patient queue timestamps are converted from stored UTC values to Asia/Manila standard time before serialization, ensuring that shift boundaries and timestamps match hospital clocks.',
+  },
+  resultsBanner: {
+    successTitle: 'File Export Completed',
+    successSubtitle: 'The workbook has been built and downloaded to your computer.',
+    errorTitle: 'Export Generation Failed',
+    viewPatients: 'View Patient Flow',
+    viewAnalytics: 'Open Analytics & Reports',
+    exportAnother: 'Export Another Date',
+  },
+  errors: {
+    noDateSelected: 'Please select a valid date before exporting.',
+    noMonthSelected: 'Please select a calendar month containing recorded patient data.',
+    failedToFetchDates: 'Failed to retrieve available export dates from the server.',
+    failedToGenerateExport: 'Failed to build the export workbook. Please check server logs and try again.',
+    networkTimeout: 'The export request timed out. Large multi-month datasets may require additional processing time.',
+    emptyDataset: 'No patient records were found for the selected timeframe and service filter.',
+  },
+} as const;

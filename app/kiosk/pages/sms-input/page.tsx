@@ -1,3 +1,4 @@
+import { Suspense } from "react";
 import { createClient } from "@/lib/supabase/server";
 import KioskPhoneEntry from "@/app/kiosk/pages/sms-input/components/KioskPhoneEntry";
 import { notFound } from "next/navigation";
@@ -41,12 +42,14 @@ export default async function SMSPage({ searchParams }: SMSPageProps) {
     }
 
     return (
-        <KioskPhoneEntry
-            service={service}
-            patientNum={patientNum}
-            preferredCubicleNums={preferredCubicleNums}
-            subcategory={subcategory}
-            cubicleNum={cubicleNum}
-        />
+        <Suspense fallback={null}>
+            <KioskPhoneEntry
+                service={service}
+                patientNum={patientNum}
+                preferredCubicleNums={preferredCubicleNums}
+                subcategory={subcategory}
+                cubicleNum={cubicleNum}
+            />
+        </Suspense>
     );
 }

@@ -4,76 +4,110 @@
  * Renders 4 high-level KPI tiles displaying counts of total registered users,
  * clinical medical staff, triage registration officers, and privileged administrators.
  *
+ * @remarks
+ * Adheres strictly to AGENTS.md enterprise design standards: matching horizontal layout,
+ * standardized metric tones (rose, emerald, slate, purple), round icon badges,
+ * and high-contrast solid surfaces identical to the Admin Dashboard metrics.
+ *
  * @module app/superadmin/components/UserStatsCards
  */
 
 import React from 'react';
 import { UserStats } from '../types/superadmin';
 import { SUPERADMIN_TEXTS } from '../constants/superadminTexts';
-import { SUPERADMIN_STYLES } from '../constants/superadminStyles';
+import {
+  SUPERADMIN_STYLES,
+  SUPERADMIN_TONES,
+  SuperadminToneKey,
+} from '../constants/superadminStyles';
+import { UserStatsCardsSkeleton } from './UserStatsCardsSkeleton';
 
 interface UserStatsCardsProps {
   /** Aggregated user counts. */
   stats: UserStats;
+  /** Flag indicating whether user stats are actively loading. */
+  loading?: boolean;
+}
+
+interface UserStatCardItem {
+  key: string;
+  title: string;
+  value: number;
+  desc: string;
+  icon: string;
+  tone: SuperadminToneKey;
 }
 
 /**
- * Renders KPI cards for user management overview.
+ * Renders executive KPI cards for user management overview.
  *
- * @param props - Component properties containing user stats.
+ * @param props - Component properties containing user stats and optional loading flag.
  * @returns JSX element containing the 4-card metric grid.
  */
-export const UserStatsCards: React.FC<UserStatsCardsProps> = ({ stats }) => {
-  const S = SUPERADMIN_STYLES.statsCard;
+export const UserStatsCards: React.FC<UserStatsCardsProps> = ({
+  stats,
+  loading = false,
+}) => {
+  if (loading) {
+    return <UserStatsCardsSkeleton />;
+  }
+  const S = SUPERADMIN_STYLES.metricCard;
   const T = SUPERADMIN_TEXTS.stats;
 
-  const cardItems = [
+  const cardItems: UserStatCardItem[] = [
     {
+      key: 'totalUsers',
       title: T.totalUsersTitle,
       value: stats.totalUsers,
       desc: T.totalUsersDesc,
       icon: 'bx-group',
-      iconBg: 'bg-rose-100 text-rose-700 dark:bg-rose-950 dark:text-rose-400',
+      tone: 'rose',
     },
     {
+      key: 'clinicalStaff',
       title: T.clinicalTitle,
       value: stats.clinicalStaff,
       desc: T.clinicalDesc,
       icon: 'bx-plus-medical',
-      iconBg: 'bg-emerald-100 text-emerald-700 dark:bg-emerald-950 dark:text-emerald-400',
+      tone: 'emerald',
     },
     {
+      key: 'registrationStaff',
       title: T.registrationTitle,
       value: stats.registrationStaff,
       desc: T.registrationDesc,
       icon: 'bx-id-card',
-      iconBg: 'bg-slate-100 text-slate-700 dark:bg-[#242424] dark:text-[#f5f5f5]',
+      tone: 'slate',
     },
     {
+      key: 'adminUsers',
       title: T.adminsTitle,
       value: stats.adminUsers,
       desc: T.adminsDesc,
       icon: 'bx-shield-quarter',
-      iconBg: 'bg-purple-100 text-purple-700 dark:bg-purple-950 dark:text-purple-400',
+      tone: 'purple',
     },
   ];
 
   return (
-    <div className={S.grid}>
-      {cardItems.map((item) => (
-        <div key={item.title} className={S.card}>
-          <div className={S.header}>
-            <span className={S.title}>{item.title}</span>
-            <div className={`${S.iconWrapper} ${item.iconBg}`}>
+    <div className={SUPERADMIN_STYLES.metricGrid}>
+      {cardItems.map((item) => {
+        const toneStyle = SUPERADMIN_TONES[item.tone];
+        return (
+          <div key={item.key} className={`${S.tile} ${toneStyle.tile}`}>
+            <span className={`${S.iconWrap} ${toneStyle.icon}`}>
               <i className={`bx ${item.icon}`} aria-hidden="true" />
+            </span>
+            <div className={S.content}>
+              <p className={S.label}>{item.title}</p>
+              <p className={S.value}>{item.value}</p>
+              <p className={S.subtitle}>{item.desc}</p>
             </div>
           </div>
-          <div>
-            <div className={S.value}>{item.value}</div>
-            <div className={S.description}>{item.desc}</div>
-          </div>
-        </div>
-      ))}
+        );
+      })}
     </div>
   );
 };
+
+export default UserStatsCards;

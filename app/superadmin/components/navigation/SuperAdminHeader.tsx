@@ -1,8 +1,12 @@
 /**
  * @fileoverview Top header bar component for the enterprise SuperAdmin portal.
  *
- * Renders breadcrumb navigation, live Manila-time clock, light/dark theme toggle,
+ * Renders dynamic breadcrumb navigation, live Manila-time clock, light/dark theme toggle,
  * user identity pill, mobile drawer trigger, and sign-out controls.
+ *
+ * @remarks
+ * Strictly conforms to AGENTS.md: pure assembly and rendering, zero emojis,
+ * consumes centralized themeTokens, and reuses the modular LiveClock component.
  *
  * @module app/superadmin/components/navigation/SuperAdminHeader
  */
@@ -14,7 +18,7 @@ import { useRouter, usePathname, useSearchParams } from 'next/navigation';
 import { useTheme } from 'next-themes';
 import { supabase } from '@/lib/supabase';
 import { handleSignOut as executeSignOut } from '@/lib/supabase/signOut';
-import { formatManilaDate, formatManilaTime } from '@/utils/formatDateTime';
+import { LiveClock } from '@/components/reusables/LiveClock';
 import { SUPERADMIN_TEXTS } from '../../constants/superadminTexts';
 import { SUPERADMIN_NAV_STYLES } from '../../constants/superadminNavStyles';
 
@@ -35,7 +39,6 @@ export function SuperAdminHeader({ onOpenMobileDrawer }: SuperAdminHeaderProps) 
   const searchParams = useSearchParams();
 
   const [userEmail, setUserEmail] = useState('');
-  const [now, setNow] = useState<Date | null>(null);
   const [mounted, setMounted] = useState(false);
 
   const { resolvedTheme, setTheme } = useTheme();
@@ -45,9 +48,6 @@ export function SuperAdminHeader({ onOpenMobileDrawer }: SuperAdminHeaderProps) 
 
   useEffect(() => {
     setMounted(true);
-    setNow(new Date());
-    const timer = setInterval(() => setNow(new Date()), 1000);
-    return () => clearInterval(timer);
   }, []);
 
   useEffect(() => {
@@ -113,7 +113,7 @@ export function SuperAdminHeader({ onOpenMobileDrawer }: SuperAdminHeaderProps) 
 
   return (
     <header className={S.root}>
-      {/* Left: Hamburger & Breadcrumbs */}
+      {/* Left: Hamburger & Dynamic Breadcrumbs */}
       <div className={S.leftGroup}>
         <button
           type="button"
@@ -124,7 +124,7 @@ export function SuperAdminHeader({ onOpenMobileDrawer }: SuperAdminHeaderProps) 
           <i className="bx bx-menu text-2xl" aria-hidden="true" />
         </button>
 
-        <div className={S.breadcrumbs}>
+        <nav aria-label="Breadcrumbs" className={S.breadcrumbs}>
           <span className="font-semibold text-slate-400 dark:text-[#737373]">
             SuperAdmin
           </span>
@@ -132,20 +132,13 @@ export function SuperAdminHeader({ onOpenMobileDrawer }: SuperAdminHeaderProps) 
           <span>{breadcrumb.section}</span>
           <span className={S.breadcrumbSeparator}>/</span>
           <span className={S.breadcrumbActive}>{breadcrumb.page}</span>
-        </div>
+        </nav>
       </div>
 
       {/* Right: Clock, Theme, User Chip & Sign Out */}
       <div className={S.rightGroup}>
         {/* Live Manila Clock */}
-        <div className={S.clockContainer}>
-          <span className={S.clockDate}>
-            {now ? formatManilaDate(now) : '--'}
-          </span>
-          <span className={S.clockTime}>
-            {now ? formatManilaTime(now, true) : '--:--:--'}
-          </span>
-        </div>
+        <LiveClock />
 
         {/* Theme Toggle Button */}
         <button
@@ -192,3 +185,5 @@ export function SuperAdminHeader({ onOpenMobileDrawer }: SuperAdminHeaderProps) 
     </header>
   );
 }
+
+export default SuperAdminHeader;

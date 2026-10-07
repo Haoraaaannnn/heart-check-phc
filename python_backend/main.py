@@ -8,10 +8,12 @@ import os
 import time
 import traceback
 from datetime import date, datetime, timedelta
+from io import BytesIO
 import pandas as pd
 import httpx
 from dotenv import load_dotenv
-from fastapi import FastAPI, HTTPException, Query
+from fastapi import FastAPI, HTTPException, Query, Request
+from importer import parse_and_process_file, insert_records_batch
 from fastapi.middleware.cors import CORSMiddleware
 from analytics.report import generate_report, convert_to_native
 from analytics.preprocessing import preprocess_queue_data
@@ -46,7 +48,7 @@ app.add_middleware(
 )
 
 SUPABASE_URL = os.environ.get("NEXT_PUBLIC_SUPABASE_URL")
-SUPABASE_KEY = os.environ.get("NEXT_PUBLIC_SUPABASE_ANON_KEY")
+SUPABASE_KEY = os.environ.get("SUPABASE_SERVICE_ROLE_KEY") or os.environ.get("NEXT_PUBLIC_SUPABASE_ANON_KEY")
 
 # Maps the frontend's range selector to a day count.
 # "all" is handled separately below (skips filtering entirely).
@@ -191,9 +193,16 @@ def resolve_date_range(range_param: str) -> tuple[str | None, str | None]:
     Converts the frontend's `range` selector into concrete start/end
     ISO date strings used to filter the Supabase query.
     "all" returns (None, None), which skips filtering entirely.
+    A 4-digit year string (e.g. "2024") filters that entire calendar year.
     """
     if range_param == "all":
         return None, None
+
+    if range_param.isdigit() and len(range_param) == 4:
+        y = int(range_param)
+        start = f"{y}-01-01"
+        end = f"{y + 1}-01-01"
+        return start, end
 
     days = RANGE_DAYS.get(range_param, RANGE_DAYS[DEFAULT_RANGE])
     end_exclusive = date.today() + timedelta(days=1)  # include all of today
@@ -606,6 +615,7 @@ def export_excel(
     month: str | None = None,
     date_param: str | None = Query(None, alias="date"),
     service: str | None = None,
+    format: str | None = Query("xlsx", regex="^(xlsx|csv)$"),
 ):
     """
     Raw patient rows in PHC's own Time and Motion Analysis format —
@@ -615,6 +625,7 @@ def export_excel(
     1. date="YYYY-MM-DD" (e.g. "2025-11-04") to export a single specific day.
     2. month="YYYY-MM" (e.g. "2025-11") to export all days in that specific month.
     3. range="90d" | "180d" | "365d" | "all" for rolling range or all-dates exports.
+    4. format="xlsx" | "csv" for workbook or tabular comma-separated values.
     """
     target_year: int | None = None
     target_month: int | None = None
@@ -705,6 +716,27 @@ def export_excel(
             raise HTTPException(status_code=404, detail=f"No patient records found for {month_label}.")
         raise HTTPException(status_code=404, detail="No patient records found for this range.")
 
+    if specific_date:
+        base_name = f"phc_time_motion_export_{specific_date.isoformat()}"
+    elif target_year and target_month:
+        base_name = f"phc_time_motion_export_{target_year}_{target_month:02d}"
+    elif range == "all":
+        base_name = "phc_time_motion_export_all_dates"
+    else:
+        base_name = f"phc_time_motion_export_{range or 'custom'}"
+
+    if format == "csv":
+        csv_buffer = BytesIO()
+        export_df = df.drop(columns=["_manila_date"], errors="ignore")
+        csv_buffer.write(export_df.to_csv(index=False).encode("utf-8"))
+        csv_buffer.seek(0)
+        csv_filename = f"{base_name}.csv"
+        return StreamingResponse(
+            csv_buffer,
+            media_type="text/csv",
+            headers={"Content-Disposition": f'attachment; filename="{csv_filename}"'},
+        )
+
     clinic_label = service if (service and service.strip().lower() not in ("all", "")) else "OPD"
     try:
         buffer = build_phc_workbook(df, clinic_label=clinic_label)
@@ -717,17 +749,102 @@ def export_excel(
         print("=" * 60)
         raise HTTPException(status_code=500, detail="Failed to build the export.")
 
-    if specific_date:
-        filename = f"phc_time_motion_export_{specific_date.isoformat()}.xlsx"
-    elif target_year and target_month:
-        filename = f"phc_time_motion_export_{target_year}_{target_month:02d}.xlsx"
-    elif range == "all":
-        filename = "phc_time_motion_export_all_dates.xlsx"
-    else:
-        filename = f"phc_time_motion_export_{range or 'custom'}.xlsx"
-
+    xlsx_filename = f"{base_name}.xlsx"
     return StreamingResponse(
         buffer,
         media_type="application/vnd.openxmlformats-officedocument.spreadsheetml.sheet",
-        headers={"Content-Disposition": f'attachment; filename="{filename}"'},
+        headers={"Content-Disposition": f'attachment; filename="{xlsx_filename}"'},
     )
+
+
+@app.post("/api/import-file")
+async def import_file(
+    request: Request,
+    filename: str = Query(..., description="Uploaded file name"),
+    mode: str = Query("commit", description="Execution mode: 'inspect' or 'commit'"),
+    service: str = Query("Consultation", description="Target clinic service"),
+    is_historical: bool = Query(True, description="Flag indicating if rows are historical data"),
+    batch_size: int = Query(500, description="Chunk size for batch inserts"),
+):
+    """
+    Accepts raw binary content of an uploaded .xls, .xlsx, or .csv file.
+    When mode='inspect', parses the file and returns summary metrics and preview rows without inserting.
+    When mode='commit', writes valid records to Supabase patients table in batches.
+    """
+    global _monthly_cache, _years_cache, _export_dates_cache, _daily_drilldown_cache
+
+    try:
+        file_bytes = await request.body()
+    except Exception as e:
+        raise HTTPException(status_code=400, detail=f"Failed to read file payload: {e}")
+
+    if not file_bytes:
+        raise HTTPException(status_code=400, detail="Uploaded file payload is empty.")
+
+    try:
+        records, meta = parse_and_process_file(
+            file_bytes=file_bytes,
+            filename=filename,
+            service=service,
+            is_historical=is_historical,
+        )
+    except ValueError as ve:
+        raise HTTPException(status_code=422, detail=str(ve))
+    except Exception as e:
+        print("=" * 60)
+        print(f"IMPORT PARSING ERROR ({filename}) - FULL TRACEBACK:")
+        traceback.print_exc()
+        print("=" * 60)
+        raise HTTPException(status_code=500, detail=f"Failed to parse file: {e}")
+
+    # Prepare preview rows (first 10 records)
+    preview_rows = records[:10]
+
+    if mode == "inspect":
+        payload = {
+            "success": True,
+            "mode": "inspect",
+            "filename": filename,
+            "format": meta["format"],
+            "sheets_processed": meta["sheets_processed"],
+            "total_extracted": meta["total_extracted"],
+            "valid_records": meta["valid_records"],
+            "dropped_records": meta["dropped_records"],
+            "date_range": meta["date_range"],
+            "preview_rows": preview_rows,
+            "inserted_records": 0,
+            "errors": [],
+        }
+        return convert_to_native(payload)
+
+    # Mode is commit: write records to Supabase
+    try:
+        inserted_count, errors = insert_records_batch(records, batch_size=batch_size)
+    except Exception as e:
+        print("=" * 60)
+        print(f"IMPORT INSERT ERROR ({filename}) - FULL TRACEBACK:")
+        traceback.print_exc()
+        print("=" * 60)
+        raise HTTPException(status_code=500, detail=f"Failed to write records to database: {e}")
+
+    # Invalidate backend caches so new data is immediately reflected in analytics
+    _monthly_cache.clear()
+    _years_cache = None
+    _export_dates_cache = None
+    _daily_drilldown_cache.clear()
+
+    payload = {
+        "success": len(errors) == 0,
+        "mode": "commit",
+        "filename": filename,
+        "format": meta["format"],
+        "sheets_processed": meta["sheets_processed"],
+        "total_extracted": meta["total_extracted"],
+        "valid_records": meta["valid_records"],
+        "dropped_records": meta["dropped_records"],
+        "date_range": meta["date_range"],
+        "preview_rows": preview_rows,
+        "inserted_records": inserted_count,
+        "errors": errors,
+    }
+    return convert_to_native(payload)

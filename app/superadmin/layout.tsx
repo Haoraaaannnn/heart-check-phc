@@ -3,7 +3,11 @@
  *
  * Implements an industry-standard layout featuring a fixed desktop sidebar rail,
  * responsive slide-over mobile drawer, top header bar with live Manila clock,
- * breadcrumbs, theme toggle, and role-guarded session validation.
+ * breadcrumbs, theme toggle, solid background surface, and role-guarded session validation.
+ *
+ * @remarks
+ * Strictly conforms to AGENTS.md: consumes centralized themeTokens, sizeTokens,
+ * and DashboardBG wrapper, aligning visual presentation with the Admin Dashboard workspace.
  *
  * @module app/superadmin/layout
  */
@@ -13,6 +17,7 @@
 import React, { useEffect, useState, Suspense } from 'react';
 import { useRouter } from 'next/navigation';
 import { supabase } from '@/lib/supabase';
+import DashboardBG from '@/components/backgrounds/DashboardBg';
 import { SuperAdminSidebar } from './components/navigation/SuperAdminSidebar';
 import { SuperAdminHeader } from './components/navigation/SuperAdminHeader';
 import { SUPERADMIN_NAV_STYLES } from './constants/superadminNavStyles';
@@ -35,6 +40,7 @@ export default function SuperAdminLayout({ children }: SuperAdminLayoutProps) {
   const [mobileDrawerOpen, setMobileDrawerOpen] = useState(false);
 
   const D = SUPERADMIN_NAV_STYLES.drawer;
+  const L = SUPERADMIN_NAV_STYLES.layout;
 
   useEffect(() => {
     let active = true;
@@ -115,74 +121,76 @@ export default function SuperAdminLayout({ children }: SuperAdminLayoutProps) {
   }
 
   return (
-    <div className="min-h-screen bg-slate-50 dark:bg-[#0d0d0d] text-slate-900 dark:text-[#f5f5f5] font-sans flex transition-colors duration-200">
-      {/* 1. Desktop Fixed Sidebar */}
-      <Suspense
-        fallback={
-          <div className="hidden lg:block w-64 bg-white dark:bg-[#141414] border-r border-slate-200 dark:border-[#2e2e2e] h-screen" />
-        }
-      >
-        <SuperAdminSidebar />
-      </Suspense>
-
-      {/* 2. Responsive Mobile Drawer */}
-      {mobileDrawerOpen && (
-        <div className={D.backdrop} onClick={() => setMobileDrawerOpen(false)}>
-          <div
-            className={D.panel}
-            onClick={(e) => e.stopPropagation()}
-            role="dialog"
-            aria-modal="true"
-          >
-            <div className="p-4 border-b border-slate-200 dark:border-[#2e2e2e] flex items-center justify-between">
-              <span className="text-xs font-bold text-slate-500 uppercase tracking-wider">
-                Navigation Menu
-              </span>
-              <button
-                type="button"
-                onClick={() => setMobileDrawerOpen(false)}
-                className={D.closeButton}
-                aria-label="Close navigation drawer"
-              >
-                <i className="bx bx-x text-2xl" aria-hidden="true" />
-              </button>
-            </div>
-            <div className="flex-1 overflow-y-auto">
-              <Suspense fallback={null}>
-                <SuperAdminSidebar
-                  isMobileDrawer
-                  onNavigate={() => setMobileDrawerOpen(false)}
-                />
-              </Suspense>
-            </div>
-          </div>
-        </div>
-      )}
-
-      {/* 3. Main Stage Area */}
-      <div className="flex-1 flex flex-col min-w-0">
+    <DashboardBG>
+      <div className="w-full flex min-h-screen">
+        {/* 1. Desktop Fixed Sidebar */}
         <Suspense
           fallback={
-            <div className="h-16 bg-white dark:bg-[#141414] border-b border-slate-200 dark:border-[#2e2e2e]" />
+            <div className="hidden lg:block w-64 bg-white dark:bg-[#141414] border-r border-slate-200 dark:border-[#2e2e2e] h-screen" />
           }
         >
-          <SuperAdminHeader
-            onOpenMobileDrawer={() => setMobileDrawerOpen(true)}
-          />
+          <SuperAdminSidebar />
         </Suspense>
 
-        <main className="flex-1 overflow-y-auto">
+        {/* 2. Responsive Mobile Drawer */}
+        {mobileDrawerOpen && (
+          <div className={D.backdrop} onClick={() => setMobileDrawerOpen(false)}>
+            <div
+              className={D.panel}
+              onClick={(e) => e.stopPropagation()}
+              role="dialog"
+              aria-modal="true"
+            >
+              <div className="p-4 border-b border-slate-200 dark:border-[#2e2e2e] flex items-center justify-between">
+                <span className="text-xs font-bold text-slate-500 uppercase tracking-wider">
+                  Navigation Menu
+                </span>
+                <button
+                  type="button"
+                  onClick={() => setMobileDrawerOpen(false)}
+                  className={D.closeButton}
+                  aria-label="Close navigation drawer"
+                >
+                  <i className="bx bx-x text-2xl" aria-hidden="true" />
+                </button>
+              </div>
+              <div className="flex-1 overflow-y-auto">
+                <Suspense fallback={null}>
+                  <SuperAdminSidebar
+                    isMobileDrawer
+                    onNavigate={() => setMobileDrawerOpen(false)}
+                  />
+                </Suspense>
+              </div>
+            </div>
+          </div>
+        )}
+
+        {/* 3. Main Stage Area */}
+        <div className={L.stage}>
           <Suspense
             fallback={
-              <div className="p-8 text-center text-xs text-slate-400 dark:text-[#737373]">
-                Loading workspace
-              </div>
+              <div className="h-16 bg-white dark:bg-[#141414] border-b border-slate-200 dark:border-[#2e2e2e]" />
             }
           >
-            {children}
+            <SuperAdminHeader
+              onOpenMobileDrawer={() => setMobileDrawerOpen(true)}
+            />
           </Suspense>
-        </main>
+
+          <main className={L.main}>
+            <Suspense
+              fallback={
+                <div className="p-8 text-center text-xs text-slate-400 dark:text-[#737373]">
+                  Loading workspace
+                </div>
+              }
+            >
+              {children}
+            </Suspense>
+          </main>
+        </div>
       </div>
-    </div>
+    </DashboardBG>
   );
 }

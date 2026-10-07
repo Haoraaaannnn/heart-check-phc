@@ -9,6 +9,7 @@
 
 'use client';
 
+import Link from 'next/link';
 import { PATIENTS_STYLES } from '@/app/dashboard/pages/patients/constants/patients';
 import { PATIENTS_TEXTS } from '@/app/dashboard/pages/patients/constants/patientsTexts';
 
@@ -43,6 +44,12 @@ export default function PatientsHeader({ service, error }: PatientsHeaderProps) 
         <div className={S.titleBlock}>
           <h1 className={S.title}>{title}</h1>
           <p className={S.subtitle}>{subtitle}</p>
+        </div>
+        <div>
+          <Link href="/dashboard/pages/import" className={S.importButton}>
+            <i className="bx bx-cloud-upload text-base" />
+            <span>{T.importButton}</span>
+          </Link>
         </div>
       </div>
 

@@ -139,7 +139,7 @@ export function NurseQuickActionDropdown({
   };
 
   // Determine stage pill text and color
-  let currentStageBadge = nurseTexts.badgeQueue;
+  let currentStageBadge: string = nurseTexts.badgeQueue;
   let currentStageColor = 'bg-blue-100 text-blue-700 border-blue-200';
   if (currentStage === 'with_doctor') {
     currentStageBadge = nurseTexts.badgeDoctor;
