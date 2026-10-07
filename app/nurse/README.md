@@ -57,6 +57,25 @@ Use this table to quickly identify the exact file to modify for any given requir
 | Finished patient archive drawer | `app/nurse/components/FinishedDrawer.tsx` | Slide-over drawer for completed patients |
 | Audio announcements (TTS) | `app/nurse/page.tsx` | Deepgram Text-to-Speech integration |
 | Patient types and schemas | `types/Types.ts` | Core domain model for patient records |
+| Clinical stages and DB status mapping | `app/nurse/types/nurse.ts` | `ClinicalStage` definitions and `stageToDbStatus` / `dbStatusToStage` bidirectional normalization |
+
+---
+
+## Stage Normalization and In-Flight Mutation Pinning
+
+To prevent patient cards from disappearing or jumping between columns during background fetches or Realtime events:
+
+1. **Bidirectional Stage Normalization (`app/nurse/types/nurse.ts`):**
+   - The UI Kanban board uses internal identifier keys (`'assigned' | 'with_doctor' | 'carryout' | 'done'`).
+   - The Supabase database stores Title Case status strings (`'Assigned' | 'With Doctor' | 'Carryout' | 'Done'`).
+   - `stageToDbStatus` converts local stage identifiers to database status strings for mutations and local overrides.
+   - `dbStatusToStage` converts database status values back to `ClinicalStage` identifiers, returning `null` for non-workstation statuses (such as `'Waiting'` or `'Pending'`).
+
+2. **In-Flight Mutation Pinning Lifecycle (`useNurseData.ts` & `useNurseActions.ts`):**
+   - When a nurse triggers an action (e.g. "With Doctor"), `pinInFlightMutation(patient.id, 'with_doctor')` locks the stage locally with a 5-second safety TTL.
+   - Optimistic state transitions move the card immediately to the destination column.
+   - When background polls (`fetchData`) or WebSocket payloads (`applyRealtimeUpdate`) arrive before the server write commits, the active pin prevents the lagging server response from reverting the card or dropping it from view.
+   - Once the server acknowledges the target status (`dbStatusToStage(patient.status) === pin.stage`), the pin is automatically released.
 
 ---
 
