@@ -97,14 +97,23 @@ def mmc_benchmark(lam: float, mu: float, c: int) -> dict:
     }
 
 
-def lam_mu_metrics(subset: pd.DataFrame) -> dict:
+def lam_mu_metrics(subset: pd.DataFrame, service_col: str = 'service_consultation') -> dict:
     """
-    Compute λ, μ, and M/M/1 metrics from a patient subset.
+    Compute lambda, mu, and M/M/1 metrics from a patient subset.
     Single reusable block called by registration, cubicle,
     and specialized service computations.
+
+    Args:
+        subset: Patient records for this queue segment.
+        service_col: Column name holding the service duration (minutes)
+                     to use for mu computation. Defaults to 'service_consultation'.
+
+    Returns:
+        Dictionary containing patients_served, arrival_rate_lambda,
+        service_rate_mu, and M/M/1 metrics dictionary.
     """
     lam = arrival_rate(subset['kiosk_time'])
-    mu  = service_rate(subset['service_consultation'])
+    mu  = service_rate(subset[service_col]) if service_col in subset.columns else 0.0
     return {
         "patients_served"     : len(subset),
         "arrival_rate_lambda" : lam,

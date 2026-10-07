@@ -9,6 +9,7 @@
 
 'use client';
 
+import { Suspense } from 'react';
 import { useAnalyticsData } from '@/app/dashboard/pages/analytics/hooks/useAnalyticsData';
 import {
   getLRRaw,
@@ -29,11 +30,9 @@ import LRForecast from '@/app/dashboard/pages/analytics/components/LRForecast';
 import ArimaForecast from '@/app/dashboard/pages/analytics/components/ArimaForecast';
 
 /**
- * Root analytical dashboard page.
- *
- * @returns JSX element.
+ * Inner analytical dashboard content component consuming URL search parameters.
  */
-export default function AnalyticsPage() {
+function AnalyticsContent() {
   const { data, loading, isRefreshing, error, range, setRange } = useAnalyticsData();
   const T = ANALYTICS_TEXTS.header;
 
@@ -113,3 +112,25 @@ export default function AnalyticsPage() {
     </div>
   );
 }
+
+/**
+ * Main queue analytics dashboard page with Suspense boundary for search parameters.
+ *
+ * @returns JSX Element.
+ */
+export default function AnalyticsPage() {
+  return (
+    <Suspense
+      fallback={
+        <div className={ANALYTICS_STYLES.page}>
+          <div className="flex h-64 items-center justify-center rounded-2xl border border-line bg-surface p-12 text-center text-sm font-semibold text-content-muted shadow-card">
+            <span className="h-6 w-6 animate-spin rounded-full border-2 border-brand-accent border-t-transparent" />
+          </div>
+        </div>
+      }
+    >
+      <AnalyticsContent />
+    </Suspense>
+  );
+}
+

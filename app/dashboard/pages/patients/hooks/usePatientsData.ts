@@ -126,8 +126,8 @@ export function usePatientData(
       let allQuery = supabase
         .from('patients')
         .select(PATIENT_COLUMNS)
-        .gte('created_at', thirtyDaysAgo)
-        .order('created_at', { ascending: false });
+        .order('created_at', { ascending: false })
+        .limit(300);
 
       if (service) {
         todayQuery = todayQuery.ilike('service', service);

@@ -37,6 +37,7 @@ The Admin Dashboard subsystem adheres strictly to the architectural standards de
    - `app/dashboard/page.tsx`: Overview page displaying metrics, queue breakdown, arrival charts, and activity feeds.
    - `app/dashboard/pages/cubicles/`: Real-time cubicle monitoring and consultation tracking.
    - `app/dashboard/pages/patients/`: Patient flow inspection, department distributions, and queue auditing.
+   - `app/dashboard/pages/import/`: Graphical drag-and-drop file ingestion interface for PHC workbooks (.xls, .xlsx) and CSV datasets.
    - `app/dashboard/pages/analytics/`: Computational bottleneck forecasting, ARIMA modeling, and Excel export.
 
 5. **Zero-Latency Realtime Streaming & Degraded Polling Fallback:**
@@ -96,6 +97,9 @@ The Admin Dashboard subsystem adheres strictly to the architectural standards de
 | **Change analytics page styles, forecast pills, and modal styling** | [analytics.ts](file:///home/jensen/Github-Repositories/heart-check-phc/app/dashboard/pages/analytics/constants/analytics.ts) |
 | **Change analytics text copy, algorithm labels, and export modal copy** | [analyticsTexts.ts](file:///home/jensen/Github-Repositories/heart-check-phc/app/dashboard/pages/analytics/constants/analyticsTexts.ts) |
 | **Change excel export modal specification, dropdowns, and date filters** | [ExportExcelModal.tsx](file:///home/jensen/Github-Repositories/heart-check-phc/app/dashboard/pages/analytics/components/ExportExcelModal.tsx) |
+| **Change import page drag-and-drop dropzone, staged files, preview modal, or formats** | [import/README.md](file:///home/jensen/Github-Repositories/Heart_Check_PHC/app/dashboard/pages/import/README.md) / [useFileImport.ts](file:///home/jensen/Github-Repositories/Heart_Check_PHC/app/dashboard/pages/import/hooks/useFileImport.ts) |
+| **Change import text copy, format guidelines, and error messages** | [importTexts.ts](file:///home/jensen/Github-Repositories/Heart_Check_PHC/app/dashboard/pages/import/constants/importTexts.ts) |
+| **Change import styles, solid surfaces, and dropzone hover active state** | [importStyles.ts](file:///home/jensen/Github-Repositories/Heart_Check_PHC/app/dashboard/pages/import/constants/importStyles.ts) |
 
 ---
 

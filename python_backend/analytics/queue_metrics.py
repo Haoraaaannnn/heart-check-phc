@@ -36,7 +36,7 @@ def registration_metrics(df: pd.DataFrame) -> dict:
                 "avg_time_system_W_min": 0.0,
             },
         }
-    return lam_mu_metrics(df)
+    return lam_mu_metrics(df, service_col='service_registration')
 
 
 def per_cubicle_metrics(df: pd.DataFrame, clinic: str = 'adult') -> dict:
@@ -150,9 +150,12 @@ def system_time_report(df: pd.DataFrame) -> dict:
             "within_target": True,
             "excess_min": 0.0,
             "littles_law_check": {
+                "lambda_per_min": 0.0,
+                "W_min": 0.0,
                 "L_observed": 0.0,
-                "L_theoretical": 0.0,
-                "match_ratio": 0.0,
+                "L_littles_law": 0.0,
+                "total_patients": 0,
+                "note": "L = lambda * W represents the average number of patients in the system at any instant.",
                 "status": "No data",
             },
         }
@@ -169,15 +172,19 @@ def system_time_report(df: pd.DataFrame) -> dict:
             "within_target": True,
             "excess_min": 0.0,
             "littles_law_check": {
+                "lambda_per_min": 0.0,
+                "W_min": 0.0,
                 "L_observed": 0.0,
-                "L_theoretical": 0.0,
-                "match_ratio": 0.0,
+                "L_littles_law": 0.0,
+                "total_patients": 0,
+                "note": "L = lambda * W represents the average number of patients in the system at any instant.",
                 "status": "No completed visits",
             },
         }
 
     W   = round(float(completed.mean()), 2)
     lam = arrival_rate(df['kiosk_time'])
+    L_observed = lam * W
 
     return {
         "avg_wait_registration": round(float(df['wait_registration'].mean()) if not df['wait_registration'].empty else 0.0, 2),
@@ -189,9 +196,12 @@ def system_time_report(df: pd.DataFrame) -> dict:
         "within_target": W <= OPD_TARGET_MINUTES,
         "excess_min": round(max(0.0, W - OPD_TARGET_MINUTES), 2),
         "littles_law_check": {
-            "L_observed": round(lam * W, 4),
-            "L_theoretical": round(float(len(df)), 4),
-            "match_ratio": round((lam * W) / len(df) if len(df) > 0 else 0.0, 4),
-            "status": "Validated" if abs((lam * W) - len(df)) < 5 else "Mismatch",
+            "lambda_per_min": round(lam, 4),
+            "W_min": W,
+            "L_observed": round(L_observed, 4),
+            "L_littles_law": round(L_observed, 4),
+            "total_patients": int(len(df)),
+            "note": "L = lambda * W represents the average number of patients in the system at any instant.",
+            "status": "Computed",
         },
     }

@@ -6,17 +6,27 @@ from openpyxl import Workbook
 from openpyxl.styles import Font, Alignment, PatternFill, Border, Side
 from openpyxl.utils import get_column_letter
 
+from .constants import (
+    CARRYOUT_TARGET_MINUTES,
+    EVALUATE_TARGET_MINUTES,
+    EXAMINE_TREAT_TARGET_MINUTES,
+    PHC_CONSULTATION_SHIFT_HOURS,
+    PHC_EXCEL_WAITING_TIME_TARGET_MINUTES,
+    WAITING_TIME_TARGET_MINUTES,
+)
+
 MANILA_TZ = pytz.timezone("Asia/Manila")
 
 # --- Threshold constants used in the bottom summary block ---
-# Inferred from the values in the source sheet, not from its formulas.
-# Confirm against the actual .xls formula bar (Q36/Q38/Q40/U36 etc.)
-# before relying on these for Chapter 4.
-TOTAL_WAIT_THRESHOLD = timedelta(hours=2.5)      # "Waiting Time ≤/> 2.5 hrs"
-EVALUATE_THRESHOLD = timedelta(minutes=30)       # "Evaluate patients ≤/>30 min"
-EXAMINE_TREAT_THRESHOLD = timedelta(hours=1)     # "Examine & treat Pts. ≤/>1hr"
-CARRYOUT_THRESHOLD = timedelta(minutes=15)       # "Carry out Dr's Orders ≤/>15 min"
-DEFAULT_SHIFT_HOURS = 8                          # fallback if a day's span can't be derived
+# In the official PHC Time and Motion Analysis Excel template, the formula for Total Waiting Time evaluates
+# against <= 03:00:00 (180 min) despite the label reading "Waiting Time <= 2.5 hrs. =".
+# We use PHC_EXCEL_WAITING_TIME_TARGET_MINUTES (180 min) to match the official spreadsheet's COUNTIF formulas.
+TOTAL_WAIT_THRESHOLD = timedelta(minutes=PHC_EXCEL_WAITING_TIME_TARGET_MINUTES) # "Waiting Time <= 2.5 hrs. ="
+EVALUATE_THRESHOLD = timedelta(minutes=EVALUATE_TARGET_MINUTES)                 # "Evaluate patients <= 30 mins. ="
+EXAMINE_TREAT_THRESHOLD = timedelta(minutes=EXAMINE_TREAT_TARGET_MINUTES)       # "Examine & treat Pts. <= 1.45hrs. ="
+CARRYOUT_THRESHOLD = timedelta(minutes=CARRYOUT_TARGET_MINUTES)                 # "Carry out Dr's Orders <= 15 mins. ="
+DEFAULT_SHIFT_HOURS = 7                                                         # Standard PHC OPD shift hours
+
 
 THIN = Side(style="thin", color="B7B7B7")
 BORDER = Border(left=THIN, right=THIN, top=THIN, bottom=THIN)
@@ -134,8 +144,10 @@ def _write_day_sheet(wb, day_df, date_val, clinic_label):
         g = _safe_delta(reg_end, reg_start)          # Queuing -> Initial Assessment
         h = _safe_delta(consult_start, reg_end)       # Initial Assessment -> Doctor Seen
         i = _safe_delta(consult_end, consult_start)   # Doctor Seen -> Completed
-        j = _safe_delta(carryout_end, consult_end)    # Doctor Completed -> Carry Out
-        total = _safe_delta(carryout_end, reg_start)  # Total waiting time (telescopes g+h+i+j)
+        carryout_start = r.get("carryout_start")
+        j = _safe_delta(carryout_end, carryout_start if pd.notna(carryout_start) else consult_end)    # Doctor Completed -> Carry Out
+        effective_end = carryout_end if pd.notna(carryout_end) else consult_end
+        total = _safe_delta(effective_end, reg_start)  # Total waiting time (telescopes g+h+i+j or g+h+i)
 
         # 10 values for 10 headers (A-J) — hospitalNum intentionally omitted
         values = [
@@ -153,7 +165,8 @@ def _write_day_sheet(wb, day_df, date_val, clinic_label):
 
         if total is not None: wait_times.append(total)
         if g is not None: evaluate_times.append(g)
-        if h is not None and i is not None: examine_times.append(h + i)
+        # In official PHC Excel template, "Examine & treat Pts." evaluates Column AA (Initial Assessment to Doctor Seen)
+        if h is not None: examine_times.append(h)
         if j is not None: carryout_times.append(j)
 
         row_idx += 1
@@ -183,30 +196,26 @@ def _write_day_sheet(wb, day_df, date_val, clinic_label):
     # re: "Doctors on Duty" historical recording (Reign to confirm).
     doctors_on_duty = 1
 
-    # FIXED: walrus-on-Series is invalid (ValueError: truth value of a Series
-    # is ambiguous). Use .empty checks on the dropna'd Series instead.
-    reg_start_notna = day_df["reg_start"].dropna()
-    carryout_notna = day_df["carryout_end"].dropna()
-    if not reg_start_notna.empty and not carryout_notna.empty:
-        span_hours = max(
-            (_to_manila(carryout_notna.max()) - _to_manila(reg_start_notna.min())).total_seconds() / 3600,
-            1,
-        )
-    else:
-        span_hours = DEFAULT_SHIFT_HOURS
-
-    patient_doctor_ratio = round(n_seen / span_hours) if span_hours else 0
+    # In official PHC template, Patient to Doctor Ratio formula is:
+    # = Number of Patients Seen / Number of Doctors on Duty / 7
+    # where 7 is the standard daily clinic consultation shift hours.
+    patient_doctor_ratio = (
+        round(n_seen / (doctors_on_duty * PHC_CONSULTATION_SHIFT_HOURS))
+        if doctors_on_duty and PHC_CONSULTATION_SHIFT_HOURS
+        else 0
+    )
 
     rows = [
-        ("Waiting Time \u2264 2.5 hrs. =", wait_le, "Waiting Time > 2.5 hrs.=", wait_gt,
+        ("Waiting Time \u2264 2.5 hrs. =", wait_le, "Waiting Time > 2.5 hrs. =", wait_gt,
          "Average Patient's Total Waiting Time =", _fmt_hms(avg_wait)),
-        ("Evaluate patients \u226430 min", eval_le, "Evaluate patients >30min", eval_gt,
+        ("Evaluate patients \u226430 mins. =", eval_le, "Evaluate patients >30 mins. =", eval_gt,
          "Number of Patient's Seen =", n_seen),
-        ("Examine & treat Pts. \u22641hr", exam_le, "Examine & treat Pts. >1hr", exam_gt,
+        ("Examine & treat Pts. \u22641.45hrs. =", exam_le, "Examine & treat Pts.>1.45hrs. =", exam_gt,
          "Number of Doctors on Duty =", doctors_on_duty),
-        ("Carry out Dr's Orders \u226415 min", carry_le, "Carry out Dr's Orders >15 min", carry_gt,
+        ("Carry out Dr's Orders \u226415 mins. =", carry_le, "Carry out Dr's Orders >15 mins. =", carry_gt,
          "Patient to Doctor Ratio Per Hour =", patient_doctor_ratio),
     ]
+
     for offset, (label1, val1, label2, val2, label3, val3) in enumerate(rows):
         r = summary_row + offset * 2
         _write_merged(ws, f"A{r}:B{r}", label1, BOLD, Alignment(horizontal="left"))

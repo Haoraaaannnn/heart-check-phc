@@ -297,6 +297,7 @@ export interface QuickLinkConfig {
 export const QUICK_LINKS: readonly QuickLinkConfig[] = [
   { label: 'Reports & Analytics', href: '/dashboard/pages/analytics', icon: 'bxs-report', tone: 'blue' },
   { label: 'Patient Records', href: '/dashboard/pages/patients', icon: 'bx-male-female', tone: 'rose' },
+  { label: 'Import Patient Data', href: '/dashboard/pages/import', icon: 'bx-cloud-upload', tone: 'emerald' },
   { label: 'Consultation', href: '/dashboard/servicesPHC/consultation', icon: 'bx-chat', tone: 'green' },
   { label: 'OPD Screening', href: '/dashboard/servicesPHC/opdScreening', icon: 'bx-search-alt-2', tone: 'purple' },
 ];

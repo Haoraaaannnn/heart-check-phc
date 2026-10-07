@@ -151,19 +151,17 @@ def preprocess_queue_data(df: pd.DataFrame) -> pd.DataFrame:
         ).dt.total_seconds() / 60
 
     # ── Total time (moved below carryout) ──────────────────────────────
-    # PHC's own manual tracking sheet's "Average Patient's Total Waiting
-    # Time" includes all four stages, ending with "Carry out Dr's Orders"
-    # — not just kiosk_time → consult_end. Computing total_time without
-    # carryout was the exact source of a ~7 minute gap between our
-    # computed average and PHC's recorded average (confirmed by matching
-    # the gap almost to the second against PHC's own recorded carryout
-    # average for 2024-03-21). fillna(0) treats "no carryout for this
-    # patient" as zero added time rather than dropping the row's
-    # otherwise-valid total_time to NaN.
-    df['total_time'] = (df['consult_end'] - df['kiosk_time']).dt.total_seconds() / 60
+    # PHC's paper form defines "Total Waiting Time" as reg_start -> carryout_end.
+    # For patients without carryout, fall back to reg_start -> consult_end.
+    # Starting from reg_start preserves wait_registration as an independent
+    # metric (kiosk_time -> reg_start) and unifies the analytics pipeline with
+    # the authoritative PHC Excel export definition.
+    if 'carryout_end' in df.columns:
+        end_ts = df['carryout_end'].fillna(df['consult_end'])
+    else:
+        end_ts = df['consult_end']
 
-    if 'service_carryout' in df.columns:
-        df['total_time'] = df['total_time'] + df['service_carryout'].fillna(0)
+    df['total_time'] = (end_ts - df['reg_start']).dt.total_seconds() / 60
 
     # Time grouping — computed in Asia/Manila local time, not UTC.
     manila_time        = df['kiosk_time'].dt.tz_convert('Asia/Manila')

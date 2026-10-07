@@ -11,12 +11,13 @@
 'use client';
 
 import { useEffect, useState, useCallback, useRef } from 'react';
+import { useSearchParams } from 'next/navigation';
 import {
   POLL_INTERVAL_MS,
   CACHE_STALE_MS,
 } from '@/app/dashboard/pages/analytics/constants/analytics';
 
-export type AnalyticsRange = '90d' | '180d' | '365d' | 'all';
+export type AnalyticsRange = '90d' | '180d' | '365d' | 'all' | string;
 
 interface CacheEntry {
   data: any;
@@ -29,11 +30,14 @@ interface CacheEntry {
  * @returns State properties: current data, loading/refreshing flags, error, range, and range setter.
  */
 export function useAnalyticsData() {
+  const searchParams = useSearchParams();
+  const urlRange = searchParams ? (searchParams.get('range') || searchParams.get('year')) : null;
+
   const [data, setData] = useState<any>(null);
   const [loading, setLoading] = useState(true);
   const [isRefreshing, setIsRefreshing] = useState(false);
   const [error, setError] = useState<string | null>(null);
-  const [range, setRange] = useState<AnalyticsRange>('90d');
+  const [range, setRange] = useState<AnalyticsRange>((urlRange as AnalyticsRange) || 'all');
 
   const cacheRef = useRef<Partial<Record<AnalyticsRange, CacheEntry>>>({});
   const missedWhileHidden = useRef(false);

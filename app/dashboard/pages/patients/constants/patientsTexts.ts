@@ -14,6 +14,7 @@ export const PATIENTS_TEXTS = {
     defaultSubtitle: 'Patient statistics and queue management overview',
     serviceSubtitlePrefix: 'Live queue and statistics for',
     errorPrefix: 'Error:',
+    importButton: 'Import Files',
   },
   filterBar: {
     ariaLabel: 'Filter by service',

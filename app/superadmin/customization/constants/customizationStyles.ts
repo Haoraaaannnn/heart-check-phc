@@ -28,6 +28,7 @@ export const CUSTOMIZATION_STYLES = {
   table: 'w-full text-left border-collapse text-sm',
   thead: `bg-slate-50 dark:bg-[#242424]/60 border-b ${themeTokens.border.default} text-xs font-semibold ${themeTokens.text.muted} uppercase tracking-wider`,
   th: 'px-5 py-3.5',
+  tbody: 'divide-y divide-slate-100 dark:divide-[#2e2e2e]',
   td: `px-5 py-4 ${themeTokens.text.secondary}`,
   tr: `${themeTokens.surface.tableRowHover} border-b ${themeTokens.border.default} last:border-0`,
   selectOption: themeTokens.surface.selectOption,

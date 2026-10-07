@@ -2,6 +2,7 @@ import pandas as pd
 import os
 from dotenv import load_dotenv
 from supabase import create_client
+from importer import resolve_phc_sheet_date
 
 BASE_DIR = os.path.dirname(os.path.abspath(__file__))
 env_path = os.path.join(BASE_DIR, "..", ".env.local")
@@ -79,8 +80,10 @@ def extract_sheet_data(path, sheet_name):
         print(f"WARNING: no patient rows found in sheet '{sheet_name}'")
         return None
 
+    resolved_date = resolve_phc_sheet_date(date_val, sheet_name, os.path.basename(path))
+
     df = pd.DataFrame(rows)
-    df["sheet_date"] = date_val
+    df["sheet_date"] = resolved_date
     df["sheet_name"] = sheet_name
     return df
 
@@ -119,9 +122,11 @@ def combine_date_and_time(df):
         hour = t.hour
 
         # HEURISTIC FIX:
-        # If Excel gave us a time between 1:00 AM and 7:00 AM,
-        # it almost certainly meant 1:00 PM - 7:00 PM.
-        if 1 <= hour <= 7:
+        # If Excel gave us a time between 1:00 AM and 6:59 AM,
+        # it almost certainly meant 1:00 PM - 6:59 PM.
+        # Hour 7 (7:00 AM - 7:59 AM) is preserved as morning arrival
+        # because PHC OPD patients queue as early as 7:00 AM.
+        if 1 <= hour <= 6:
             hour += 12
 
         # Reconstruct the time string with the corrected 24-hour integer

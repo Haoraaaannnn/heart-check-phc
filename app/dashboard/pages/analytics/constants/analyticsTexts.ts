@@ -12,20 +12,22 @@ export const ANALYTICS_TEXTS = {
   header: {
     title: 'OPD Queue Analytics Dashboard',
     subtitle: 'Advanced forecasting and bottleneck analysis',
-    refreshing: 'Refreshing…',
-    loading: 'Loading Heart Check Analytics Engine...',
+    refreshing: 'Refreshing',
+    loading: 'Loading Heart Check Analytics Engine',
     errorPrefix: 'Error:',
     empty: 'No data received.',
+    importButton: 'Import Files',
   },
   presets: {
     '90d': 'Last 90 Days',
     '180d': 'Last 6 Months',
     '365d': 'Last Year',
     all: 'All Time',
+    yearFilterTitle: (year: number) => `Filter analytics for calendar year ${year}`,
   },
   export: {
     buttonIdle: 'Export to Excel',
-    buttonLoading: 'Exporting...',
+    buttonLoading: 'Exporting',
     defaultError: 'Export failed — try a different date range.',
   },
   exportModal: {

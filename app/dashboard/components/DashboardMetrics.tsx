@@ -110,7 +110,7 @@ export default function DashboardMetrics({
   return (
     <div className={DASH.layout.metricGrid}>
       {METRIC_CARDS.map((metric) => {
-        const tone = TONES[metric.tone];
+        const tone = TONES[metric.tone] ?? TONES.blue;
         const value = isMounted ? String(values[metric.key]) : PLACEHOLDER;
         const showUnit = Boolean(metric.unit) && value !== PLACEHOLDER;
         const trend =

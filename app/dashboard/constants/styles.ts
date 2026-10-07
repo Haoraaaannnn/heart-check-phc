@@ -14,7 +14,7 @@ import { themeTokens, sizeTokens } from '@/constants/themeTokens';
  */
 
 /** Accent tones shared by metric cards and quick links. */
-export type ToneKey = 'rose' | 'blue' | 'green' | 'purple' | 'amber';
+export type ToneKey = 'rose' | 'blue' | 'green' | 'purple' | 'amber' | 'emerald';
 
 export interface ToneStyle {
   /** Tinted tile background + border. */
@@ -33,6 +33,10 @@ export const TONES: Record<ToneKey, ToneStyle> = {
     icon: 'bg-slate-100 text-slate-700 dark:bg-[#242424] dark:text-[#f5f5f5]',
   },
   green: {
+    tile: 'border-emerald-200 bg-emerald-50 dark:border-[#2e2e2e] dark:bg-[#1a1a1a]',
+    icon: 'bg-emerald-100 text-emerald-700 dark:bg-emerald-950/60 dark:text-emerald-400',
+  },
+  emerald: {
     tile: 'border-emerald-200 bg-emerald-50 dark:border-[#2e2e2e] dark:bg-[#1a1a1a]',
     icon: 'bg-emerald-100 text-emerald-700 dark:bg-emerald-950/60 dark:text-emerald-400',
   },
