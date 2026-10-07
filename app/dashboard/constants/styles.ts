@@ -100,7 +100,7 @@ export const DASH = {
     breadcrumbActive: `${themeTokens.text.primary} font-semibold whitespace-nowrap`,
     breadcrumbSeparator: `${themeTokens.text.muted} shrink-0`,
     rightGroup: 'flex items-center gap-2.5 sm:gap-3 shrink-0',
-    searchWrap: 'hidden xl:flex items-center mx-4 max-w-xs w-full',
+    searchWrap: 'flex items-center mx-2 sm:mx-3 max-w-xs md:max-w-sm lg:max-w-md w-full relative',
     searchInner: 'relative w-full',
     searchIcon: 'absolute left-3 top-1/2 -translate-y-1/2 text-sm text-slate-400',
     searchInput:

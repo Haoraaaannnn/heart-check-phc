@@ -77,7 +77,8 @@ function formatPhoneNumber(rawPhone: unknown): string | null {
  */
 export function usePatientData(
   setStats: React.Dispatch<React.SetStateAction<PatientStats>>,
-  service: string | null = null
+  service: string | null = null,
+  initialSearchQuery: string = ''
 ): UsePatientDataReturn {
   const [recentPatients, setRecentPatients] = useState<RecentPatient[]>([]);
   const [baselinePatients, setBaselinePatients] = useState<AllRecentPatient[]>([]);
@@ -86,9 +87,17 @@ export function usePatientData(
   const [error, setError] = useState<string | null>(null);
 
   // Search input state and debounce controls
-  const [searchQuery, setSearchQuery] = useState<string>('');
-  const [debouncedQuery, setDebouncedQuery] = useState<string>('');
+  const [searchQuery, setSearchQuery] = useState<string>(initialSearchQuery);
+  const [debouncedQuery, setDebouncedQuery] = useState<string>(initialSearchQuery);
   const [isSearching, setIsSearching] = useState<boolean>(false);
+
+  // Synchronize when external search query (e.g. from URL deep-link) changes
+  useEffect(() => {
+    if (initialSearchQuery !== undefined && initialSearchQuery !== searchQuery) {
+      setSearchQuery(initialSearchQuery);
+      setDebouncedQuery(initialSearchQuery);
+    }
+  }, [initialSearchQuery]);
 
   // Guards against race conditions from asynchronous responses
   const fetchRequestIdRef = useRef(0);

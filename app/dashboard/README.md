@@ -65,9 +65,10 @@ The Admin Dashboard subsystem adheres strictly to the architectural standards de
 | **Change sidebar navigation links, route groups, icons, or labels** | [navigation.ts](file:///home/jensen/Github-Repositories/heart-check-phc/app/dashboard/constants/navigation.ts) (`DASHBOARD_NAV_GROUPS`) |
 | **Change sidebar navigation text copy, brand titles, or category titles** | [dashNavTexts.ts](file:///home/jensen/Github-Repositories/heart-check-phc/app/dashboard/constants/dashNavTexts.ts) |
 | **Change left sidebar rail component or mobile drawer behavior** | [DashSideNavigation.tsx](file:///home/jensen/Github-Repositories/heart-check-phc/app/dashboard/components/navigation/DashSideNavigation.tsx) |
-| **Change top header bar, dynamic breadcrumbs, user chip, or sign-out** | [DashboardHeader.tsx](file:///home/jensen/Github-Repositories/heart-check-phc/app/dashboard/components/navigation/DashboardHeader.tsx) |
-| **Change header search box placeholder, shortcut, or input behavior** | [HeaderSearch.tsx](file:///home/jensen/Github-Repositories/heart-check-phc/app/dashboard/components/navigation/HeaderSearch.tsx) / [content.ts](file:///home/jensen/Github-Repositories/heart-check-phc/app/dashboard/constants/content.ts) |
-| **Change live Manila clock format or second tick interval** | [LiveClock.tsx](file:///home/jensen/Github-Repositories/heart-check-phc/components/reusables/LiveClock.tsx) / [formatDateTime.ts](file:///home/jensen/Github-Repositories/heart-check-phc/utils/formatDateTime.ts) |
+| **Change header search box component, dropdown presentation, or palette** | [HeaderSearch.tsx](file:///home/jensen/Github-Repositories/Heart_Check_PHC/app/dashboard/components/navigation/HeaderSearch.tsx) |
+| **Change header search text copy, placeholders, aria labels, or category headers** | [headerSearchTexts.ts](file:///home/jensen/Github-Repositories/Heart_Check_PHC/app/dashboard/constants/headerSearchTexts.ts) / [content.ts](file:///home/jensen/Github-Repositories/Heart_Check_PHC/app/dashboard/constants/content.ts) |
+| **Change header search styles, status badges, dropdown dimensions, or keycaps** | [headerSearchStyles.ts](file:///home/jensen/Github-Repositories/Heart_Check_PHC/app/dashboard/constants/headerSearchStyles.ts) / [styles.ts](file:///home/jensen/Github-Repositories/Heart_Check_PHC/app/dashboard/constants/styles.ts) |
+| **Change header search query debouncing, Supabase lookup, or keyboard shortcuts** | [useHeaderSearch.ts](file:///home/jensen/Github-Repositories/Heart_Check_PHC/app/dashboard/hooks/useHeaderSearch.ts) |
 | **Change bottleneck notification dropdown styling, colors, or action handlers** | [NotificationDropdown.tsx](file:///home/jensen/Github-Repositories/heart-check-phc/app/dashboard/components/NotificationDropdown.tsx) |
 | **Change overview metric cards, tones, and status colors** | [styles.ts](file:///home/jensen/Github-Repositories/heart-check-phc/app/dashboard/constants/styles.ts) (`TONES`, `DASH.metric`) |
 | **Change overview card labels, welcome greetings, or activity text** | [content.ts](file:///home/jensen/Github-Repositories/heart-check-phc/app/dashboard/constants/content.ts) |
@@ -153,6 +154,8 @@ app/dashboard/
 │   ├── dashNav.ts                         # Navigation contracts
 │   ├── dashNavStyles.ts                   # Sidebar, drawer, and header style tokens
 │   ├── dashNavTexts.ts                    # Navigation copy, brand labels, and breadcrumbs
+│   ├── headerSearchStyles.ts              # Solid surface tokens, badges, and dropdown styles
+│   ├── headerSearchTexts.ts               # User copy, labels, placeholders, and accessibility
 │   ├── historicalStyles.ts                # Solid surface tokens for historical breakdown
 │   ├── historicalTexts.ts                 # User copy and labels for historical breakdown
 │   ├── navigation.ts                      # Route hierarchies & categorized groups
@@ -160,7 +163,13 @@ app/dashboard/
 │   ├── skeletonTexts.ts                   # ARIA labels and accessibility copy for skeletons
 │   └── styles.ts                          # Solid surface class maps (DASH, TONES)
 ├── context/                               # Context providers (HistoricalSummaryContext)
-├── hooks/                                 # Custom hooks (data, theme, idle timeout)
+├── hooks/                                 # Custom hooks (data, theme, idle timeout, header search)
+│   ├── useBottleneckNotifications.ts      # Realtime queue bottleneck alerts
+│   ├── useDashboardTheme.ts               # Light/dark mode synchronizer
+│   ├── useHeaderSearch.ts                 # Real-time search state, debouncing, and shortcuts
+│   ├── useIdleTimeout.ts                  # Session security idle countdown
+│   ├── useMountedClock.ts                 # Manila time clock ticker
+│   └── useOverviewData.ts                 # Live Supabase metrics and queue aggregation
 ├── pages/                                 # Canonical sub-route implementations
 │   ├── analytics/                         # Analytics and forecasting module
 │   ├── cubicles/                          # Cubicle monitoring module
