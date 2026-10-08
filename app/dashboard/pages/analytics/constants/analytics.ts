@@ -235,6 +235,17 @@ export const ANALYTICS_STYLES = {
     errorBanner: 'flex items-center justify-between gap-3 rounded-xl border border-rose-200 bg-rose-50 dark:border-rose-900/50 dark:bg-rose-950/30 p-4 text-xs font-medium text-rose-700 dark:text-rose-300',
     retryBtn: 'rounded-lg border border-rose-300 bg-surface px-2.5 py-1 text-xs font-semibold text-rose-700 hover:bg-rose-100 transition cursor-pointer dark:border-rose-800 dark:bg-rose-900 dark:text-rose-200',
   },
+
+  /** Hourly stage mode switcher and badge tokens. */
+  hourlyToggle: {
+    container: 'flex items-center gap-1 rounded-xl bg-slate-100 p-1 dark:bg-[#242424] border border-slate-200 dark:border-[#2e2e2e]',
+    btnBase: 'flex items-center gap-1.5 rounded-lg px-2.5 py-1 text-xs font-semibold transition cursor-pointer',
+    btnActive: 'bg-white text-slate-900 shadow-xs dark:bg-[#1f1f1f] dark:text-[#f5f5f5]',
+    btnIdle: 'text-content-muted hover:text-content',
+    noticePill: 'inline-flex items-center gap-1 rounded-md px-2 py-0.5 text-[10px] font-semibold border',
+    historicalPill: 'bg-amber-50 text-amber-700 border-amber-200 dark:bg-amber-950/40 dark:text-amber-300 dark:border-amber-800/60',
+    livePill: 'bg-cyan-50 text-cyan-700 border-cyan-200 dark:bg-cyan-950/40 dark:text-cyan-300 dark:border-cyan-800/60',
+  },
 } as const;
 
 /** Chart color tokens for interactive drill-downs. */
@@ -250,12 +261,21 @@ export const DRILLDOWN_CHART_COLORS = {
 
 /** Queue stage line colors for wait-time trend charts. */
 export const STAGE_LINES = [
-  { dataKey: 'consultation', name: 'Consultation', color: '#cc3535' },
-  { dataKey: 'ecg', name: 'ECG', color: '#3b82f6' },
-  { dataKey: 'warfarin', name: 'Warfarin', color: '#10b981' },
-  { dataKey: 'opdCard', name: 'OPD Card', color: '#f59e0b' },
-  { dataKey: 'opdReschedule', name: 'OPD Reschedule', color: '#8b5cf6' },
-  { dataKey: 'refillPrescription', name: 'Refill', color: '#ec4899' },
-  { dataKey: 'opdScreening', name: 'Screening', color: '#06b6d4' },
-  { dataKey: 'benzathine', name: 'Benzathine', color: '#84cc16' },
+  { dataKey: 'avg_wait_registration', name: 'Kiosk Wait', color: '#06b6d4' },
+  { dataKey: 'avg_service_registration', name: 'Registration Duration', color: '#f59e0b' },
+  { dataKey: 'avg_wait_consultation', name: 'Wait for Doctor', color: '#8b5cf6' },
+  { dataKey: 'avg_service_consultation', name: 'With Doctor (Consultation)', color: '#10b981' },
+  { dataKey: 'avg_service_carryout', name: 'Carryout Duration', color: '#ec4899' },
+  { dataKey: 'avg_total_time', name: 'Total Journey', color: '#3b82f6' },
 ] as const;
+
+/** Palette tokens for per-stage hourly distribution curves. */
+export const HOURLY_STAGE_COLORS = {
+  kiosk: '#06b6d4',          // Cyan - Kiosk Check-in / Ticket issuance
+  registration: '#f59e0b',   // Amber - Registration Counter
+  waitDoctor: '#8b5cf6',     // Purple - Wait for Doctor / Triage
+  withDoctor: '#10b981',     // Emerald - With Doctor Consultation
+  carryout: '#ec4899',       // Pink - Carryout Process
+  intake: '#2563eb',         // Primary Blue - Selected Day Intake
+  benchmark: '#cc3535',      // Crimson - Overall Range Average Benchmark
+} as const;

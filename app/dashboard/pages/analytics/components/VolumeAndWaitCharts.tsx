@@ -11,7 +11,7 @@
 
 'use client';
 
-import { useMemo } from 'react';
+import { useState, useMemo } from 'react';
 import {
   ComposedChart,
   Bar,
@@ -31,6 +31,7 @@ import {
   ANALYTICS_STYLES,
   STAGE_LINES,
   DRILLDOWN_CHART_COLORS,
+  HOURLY_STAGE_COLORS,
 } from '@/app/dashboard/pages/analytics/constants/analytics';
 import { ANALYTICS_TEXTS } from '@/app/dashboard/pages/analytics/constants/analyticsTexts';
 import { useDailyDrilldown } from '@/app/dashboard/pages/analytics/hooks/useDailyDrilldown';
@@ -113,6 +114,24 @@ export default function VolumeAndWaitCharts({
     };
   }, [selectedDate, enrichedDaily]);
 
+  type HourlyViewMode = 'volume' | 'waittime' | 'intake';
+  const [hourlyMode, setHourlyMode] = useState<HourlyViewMode>('volume');
+
+  const isHistorical = Boolean(
+    drilldownData?.is_historical ?? drilldownData?.summary?.is_historical
+  );
+
+  const hasKioskData = useMemo(() => {
+    if (selectedDate && drilldownData?.hourly_pattern?.length) {
+      return drilldownData.hourly_pattern.some(
+        (pt) => pt.kiosk_patients !== null && pt.kiosk_patients !== undefined
+      );
+    }
+    return (hourlyPattern || []).some(
+      (pt) => pt.kiosk_patients !== null && pt.kiosk_patients !== undefined
+    );
+  }, [selectedDate, drilldownData, hourlyPattern]);
+
   // Merge hourly distribution data when a date is selected for comparison
   const activeHourlyData = useMemo(() => {
     const baseHourly = hourlyPattern || [];
@@ -121,19 +140,41 @@ export default function VolumeAndWaitCharts({
         ...hp,
         avg_patients: hp.avg_patients ?? 0,
         selected_day_patients: undefined,
+        kiosk_patients: hp.kiosk_patients ?? undefined,
+        reg_patients: hp.reg_patients ?? 0,
+        consult_patients: hp.consult_patients ?? 0,
+        carryout_patients: hp.carryout_patients ?? 0,
+        avg_wait_registration: hp.avg_wait_registration ?? undefined,
+        avg_service_registration: hp.avg_service_registration ?? undefined,
+        avg_wait_consultation: hp.avg_wait_consultation ?? undefined,
+        avg_service_consultation: hp.avg_service_consultation ?? undefined,
+        avg_service_carryout: hp.avg_service_carryout ?? undefined,
       }));
     }
 
-    const drilldownMap = new Map<number, number>();
+    const drilldownMap = new Map<number, any>();
     for (const point of drilldownData.hourly_pattern) {
-      drilldownMap.set(point.hour, point.avg_patients);
+      drilldownMap.set(point.hour, point);
     }
 
     return baseHourly.map((hp) => {
-      const dayIntake = drilldownMap.get(hp.hour) ?? 0;
+      const dd = drilldownMap.get(hp.hour);
+      const dayIntake = dd?.avg_patients ?? 0;
       return {
         ...hp,
         selected_day_patients: dayIntake,
+        kiosk_patients:
+          dd?.kiosk_patients !== null && dd?.kiosk_patients !== undefined
+            ? dd.kiosk_patients
+            : undefined,
+        reg_patients: dd?.reg_patients ?? 0,
+        consult_patients: dd?.consult_patients ?? 0,
+        carryout_patients: dd?.carryout_patients ?? 0,
+        avg_wait_registration: dd?.avg_wait_registration ?? undefined,
+        avg_service_registration: dd?.avg_service_registration ?? undefined,
+        avg_wait_consultation: dd?.avg_wait_consultation ?? undefined,
+        avg_service_consultation: dd?.avg_service_consultation ?? undefined,
+        avg_service_carryout: dd?.avg_service_carryout ?? undefined,
       };
     });
   }, [selectedDate, drilldownData, hourlyPattern]);
@@ -284,20 +325,72 @@ export default function VolumeAndWaitCharts({
           }
           icon="bx-time-five"
         >
-          {selectedDate && (
-            <div className="mb-2 flex items-center justify-between text-xs">
-              <span className="inline-flex items-center gap-1.5 rounded-lg bg-slate-100 text-slate-800 dark:bg-[#242424] dark:text-[#f5f5f5] px-2.5 py-1 font-bold border border-slate-200 dark:border-[#2e2e2e]">
-                <i className="bx bx-calendar text-xs" />
-                <span>Drill-Down: {selectedDate}</span>
-              </span>
+          {/* Top Controls: Mode Switcher & Drill-down Active Badge */}
+          <div className="mb-3 flex flex-col gap-2.5 sm:flex-row sm:items-center sm:justify-between text-xs">
+            {/* View Mode Toggle */}
+            <div className={ANALYTICS_STYLES.hourlyToggle.container}>
               <button
                 type="button"
-                onClick={clearSelectedDate}
-                className="inline-flex items-center gap-1 text-[11px] font-semibold text-content-muted hover:text-content transition cursor-pointer underline"
+                onClick={() => setHourlyMode('volume')}
+                className={`${ANALYTICS_STYLES.hourlyToggle.btnBase} ${
+                  hourlyMode === 'volume'
+                    ? ANALYTICS_STYLES.hourlyToggle.btnActive
+                    : ANALYTICS_STYLES.hourlyToggle.btnIdle
+                }`}
               >
-                <i className="bx bx-reset text-xs" />
-                <span>{T.resetButton}</span>
+                <i className="bx bx-group text-xs" />
+                <span>{T.modes.volume}</span>
               </button>
+              <button
+                type="button"
+                onClick={() => setHourlyMode('waittime')}
+                className={`${ANALYTICS_STYLES.hourlyToggle.btnBase} ${
+                  hourlyMode === 'waittime'
+                    ? ANALYTICS_STYLES.hourlyToggle.btnActive
+                    : ANALYTICS_STYLES.hourlyToggle.btnIdle
+                }`}
+              >
+                <i className="bx bx-timer text-xs" />
+                <span>{T.modes.waittime}</span>
+              </button>
+              <button
+                type="button"
+                onClick={() => setHourlyMode('intake')}
+                className={`${ANALYTICS_STYLES.hourlyToggle.btnBase} ${
+                  hourlyMode === 'intake'
+                    ? ANALYTICS_STYLES.hourlyToggle.btnActive
+                    : ANALYTICS_STYLES.hourlyToggle.btnIdle
+                }`}
+              >
+                <i className="bx bx-line-chart text-xs" />
+                <span>{T.modes.intake}</span>
+              </button>
+            </div>
+
+            {/* Drilldown status & reset button if date active */}
+            {selectedDate && (
+              <div className="flex items-center gap-2">
+                <span className="inline-flex items-center gap-1.5 rounded-lg bg-slate-100 text-slate-800 dark:bg-[#242424] dark:text-[#f5f5f5] px-2.5 py-1 font-bold border border-slate-200 dark:border-[#2e2e2e]">
+                  <i className="bx bx-calendar text-xs" />
+                  <span>Drill-Down: {selectedDate}</span>
+                </span>
+                <button
+                  type="button"
+                  onClick={clearSelectedDate}
+                  className="inline-flex items-center gap-1 text-[11px] font-semibold text-content-muted hover:text-content transition cursor-pointer underline"
+                >
+                  <i className="bx bx-reset text-xs" />
+                  <span>{T.resetButton}</span>
+                </button>
+              </div>
+            )}
+          </div>
+
+          {/* Historical notice when kiosk ticketing data is unavailable */}
+          {selectedDate && (isHistorical || !hasKioskData) && (
+            <div className="mb-2.5 flex items-center gap-2 rounded-lg bg-amber-50/80 px-3 py-1.5 text-[11px] font-medium text-amber-800 border border-amber-200/80 dark:bg-amber-950/30 dark:text-amber-300 dark:border-amber-800/40">
+              <i className="bx bx-info-circle text-sm shrink-0" />
+              <span>{T.historicalNotice}</span>
             </div>
           )}
 
@@ -315,41 +408,163 @@ export default function VolumeAndWaitCharts({
                   tickLine={false}
                 />
                 <YAxis
-                  allowDecimals={false}
+                  allowDecimals={hourlyMode === 'waittime'}
                   tick={{ fontSize: 10, fill: axisColor }}
+                  tickFormatter={
+                    hourlyMode === 'waittime'
+                      ? (mins: number) => `${Math.round(mins)}m`
+                      : (pts: number) => `${pts}`
+                  }
                   axisLine={{ stroke: gridColor }}
                   tickLine={false}
                 />
-                <Tooltip contentStyle={tooltipStyle} />
+                <Tooltip
+                  contentStyle={tooltipStyle}
+                  formatter={(val: any, name: any) => {
+                    if (val === undefined || val === null) {
+                      return ['N/A', name];
+                    }
+                    if (hourlyMode === 'waittime') {
+                      return [typeof val === 'number' ? formatMinutesToHMS(val) : `${val}m`, name];
+                    }
+                    return [`${val} patients`, name];
+                  }}
+                />
                 <Legend wrapperStyle={{ fontSize: '11px', paddingTop: '10px' }} />
 
-                {/* When drilldown is active, show the selected day's actual intake */}
-                {selectedDate && (
-                  <Line
-                    type="monotone"
-                    dataKey="selected_day_patients"
-                    name={`${T.series.selectedDayPatients} (${selectedDate})`}
-                    stroke={DRILLDOWN_CHART_COLORS.hourlyDayIntake}
-                    strokeWidth={2.5}
-                    dot={{ r: 3.5, fill: DRILLDOWN_CHART_COLORS.hourlyDayIntake }}
-                  />
+                {/* 1. Patients by Stage Mode */}
+                {hourlyMode === 'volume' && (
+                  <>
+                    {hasKioskData && (
+                      <Line
+                        type="monotone"
+                        dataKey="kiosk_patients"
+                        name={T.series.kioskPatients}
+                        stroke={HOURLY_STAGE_COLORS.kiosk}
+                        strokeWidth={2}
+                        dot={{ r: 3, fill: HOURLY_STAGE_COLORS.kiosk }}
+                        connectNulls={false}
+                      />
+                    )}
+                    <Line
+                      type="monotone"
+                      dataKey="reg_patients"
+                      name={T.series.regPatients}
+                      stroke={HOURLY_STAGE_COLORS.registration}
+                      strokeWidth={2}
+                      dot={{ r: 3, fill: HOURLY_STAGE_COLORS.registration }}
+                    />
+                    <Line
+                      type="monotone"
+                      dataKey="consult_patients"
+                      name={T.series.withDoctorPatients}
+                      stroke={HOURLY_STAGE_COLORS.withDoctor}
+                      strokeWidth={2}
+                      dot={{ r: 3, fill: HOURLY_STAGE_COLORS.withDoctor }}
+                    />
+                    <Line
+                      type="monotone"
+                      dataKey="carryout_patients"
+                      name={T.series.carryoutPatients}
+                      stroke={HOURLY_STAGE_COLORS.carryout}
+                      strokeWidth={2}
+                      dot={{ r: 3, fill: HOURLY_STAGE_COLORS.carryout }}
+                    />
+                    <Line
+                      type="monotone"
+                      dataKey="avg_patients"
+                      name={T.series.rangeAverage}
+                      stroke={HOURLY_STAGE_COLORS.benchmark}
+                      strokeWidth={1.5}
+                      strokeDasharray="3 3"
+                      dot={false}
+                      strokeOpacity={0.65}
+                    />
+                  </>
                 )}
 
-                {/* Base range average benchmark curve */}
-                <Line
-                  type="monotone"
-                  dataKey="avg_patients"
-                  name={selectedDate ? T.series.rangeAverage : T.series.avgPatients}
-                  stroke={DRILLDOWN_CHART_COLORS.hourlyRangeAvg}
-                  strokeWidth={selectedDate ? 1.5 : 2.5}
-                  strokeDasharray={selectedDate ? '3 3' : undefined}
-                  dot={
-                    selectedDate
-                      ? false
-                      : { r: 3, fill: DRILLDOWN_CHART_COLORS.hourlyRangeAvg }
-                  }
-                  strokeOpacity={selectedDate ? 0.65 : 1}
-                />
+                {/* 2. Wait Times by Stage Mode */}
+                {hourlyMode === 'waittime' && (
+                  <>
+                    {hasKioskData && (
+                      <Line
+                        type="monotone"
+                        dataKey="avg_wait_registration"
+                        name={T.series.waitReg}
+                        stroke={HOURLY_STAGE_COLORS.kiosk}
+                        strokeWidth={2}
+                        dot={{ r: 3, fill: HOURLY_STAGE_COLORS.kiosk }}
+                        connectNulls={false}
+                      />
+                    )}
+                    <Line
+                      type="monotone"
+                      dataKey="avg_service_registration"
+                      name={T.series.servReg}
+                      stroke={HOURLY_STAGE_COLORS.registration}
+                      strokeWidth={2}
+                      dot={{ r: 3, fill: HOURLY_STAGE_COLORS.registration }}
+                      connectNulls={false}
+                    />
+                    <Line
+                      type="monotone"
+                      dataKey="avg_wait_consultation"
+                      name={T.series.waitConsult}
+                      stroke={HOURLY_STAGE_COLORS.waitDoctor}
+                      strokeWidth={2}
+                      dot={{ r: 3, fill: HOURLY_STAGE_COLORS.waitDoctor }}
+                      connectNulls={false}
+                    />
+                    <Line
+                      type="monotone"
+                      dataKey="avg_service_consultation"
+                      name={T.series.servConsult}
+                      stroke={HOURLY_STAGE_COLORS.withDoctor}
+                      strokeWidth={2}
+                      dot={{ r: 3, fill: HOURLY_STAGE_COLORS.withDoctor }}
+                      connectNulls={false}
+                    />
+                    <Line
+                      type="monotone"
+                      dataKey="avg_service_carryout"
+                      name={T.series.servCarry}
+                      stroke={HOURLY_STAGE_COLORS.carryout}
+                      strokeWidth={2}
+                      dot={{ r: 3, fill: HOURLY_STAGE_COLORS.carryout }}
+                      connectNulls={false}
+                    />
+                  </>
+                )}
+
+                {/* 3. Overall Intake Mode */}
+                {hourlyMode === 'intake' && (
+                  <>
+                    {selectedDate && (
+                      <Line
+                        type="monotone"
+                        dataKey="selected_day_patients"
+                        name={`${T.series.selectedDayPatients} (${selectedDate})`}
+                        stroke={HOURLY_STAGE_COLORS.intake}
+                        strokeWidth={2.5}
+                        dot={{ r: 3.5, fill: HOURLY_STAGE_COLORS.intake }}
+                      />
+                    )}
+                    <Line
+                      type="monotone"
+                      dataKey="avg_patients"
+                      name={selectedDate ? T.series.rangeAverage : T.series.avgPatients}
+                      stroke={HOURLY_STAGE_COLORS.benchmark}
+                      strokeWidth={selectedDate ? 1.5 : 2.5}
+                      strokeDasharray={selectedDate ? '3 3' : undefined}
+                      dot={
+                        selectedDate
+                          ? false
+                          : { r: 3, fill: HOURLY_STAGE_COLORS.benchmark }
+                      }
+                      strokeOpacity={selectedDate ? 0.65 : 1}
+                    />
+                  </>
+                )}
               </ComposedChart>
             </ResponsiveContainer>
           </div>
@@ -432,6 +647,7 @@ export default function VolumeAndWaitCharts({
                   stroke={line.color}
                   strokeWidth={2}
                   dot={false}
+                  connectNulls={false}
                 />
               ))}
               {selectedDate && (

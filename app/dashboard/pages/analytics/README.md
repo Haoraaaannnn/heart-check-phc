@@ -53,16 +53,18 @@ The Analytics module adheres strictly to the repository separation-of-concerns r
 | **Change date range preset durations, polling intervals, or cache timeouts** | [analytics.ts](file:///home/jensen/Github-Repositories/heart-check-phc/app/dashboard/pages/analytics/constants/analytics.ts) |
 | **Change date range filter pills, dynamic historical years rendering, or year fetch** | [DateRangeSelector.tsx](file:///home/jensen/Github-Repositories/heart-check-phc/app/dashboard/pages/analytics/components/DateRangeSelector.tsx) |
 | **Change Excel export modal logic, date mode selection, availability filtering, or download trigger** | [ExportExcelModal.tsx](file:///home/jensen/Github-Repositories/heart-check-phc/app/dashboard/pages/analytics/components/ExportExcelModal.tsx) |
-| **Change Excel export trigger button appearance or modal invocation** | [ExportExcelButton.tsx](file:///home/jensen/Github-Repositories/heart-check-phc/app/dashboard/pages/analytics/components/ExportExcelButton.tsx) |
-| **Change header banner layout, title presentation, import button, or action alignment** | [AnalyticsHeader.tsx](file:///home/jensen/Github-Repositories/heart-check-phc/app/dashboard/pages/analytics/components/AnalyticsHeader.tsx) |
+| **Change header banner layout, title presentation, or action alignment** | [AnalyticsHeader.tsx](file:///home/jensen/Github-Repositories/heart-check-phc/app/dashboard/pages/analytics/components/AnalyticsHeader.tsx) |
 | **Change analytics data fetching, polling, or range state management** | [useAnalyticsData.ts](file:///home/jensen/Github-Repositories/heart-check-phc/app/dashboard/pages/analytics/hooks/useAnalyticsData.ts) |
 | **Change daily drill-down state, caching, timeout, or single-day fetch logic** | [useDailyDrilldown.ts](file:///home/jensen/Github-Repositories/heart-check-phc/app/dashboard/pages/analytics/hooks/useDailyDrilldown.ts) |
 | **Change bottleneck stage analysis table presentation or severity mapping** | [BottleneckStageTable.tsx](file:///home/jensen/Github-Repositories/heart-check-phc/app/dashboard/pages/analytics/components/BottleneckStageTable.tsx) |
-| **Change daily volume, hourly pattern, stage wait charts, or drill-down click triggers** | [VolumeAndWaitCharts.tsx](file:///home/jensen/Github-Repositories/heart-check-phc/app/dashboard/pages/analytics/components/VolumeAndWaitCharts.tsx) |
+| **Change daily volume, hourly stage breakdown, stage wait charts, or drill-down triggers** | [VolumeAndWaitCharts.tsx](file:///home/jensen/Github-Repositories/heart-check-phc/app/dashboard/pages/analytics/components/VolumeAndWaitCharts.tsx) |
+| **Change hourly stage view mode labels (volume, wait times, intake) or stage names** | [analyticsTexts.ts](file:///home/jensen/Github-Repositories/heart-check-phc/app/dashboard/pages/analytics/constants/analyticsTexts.ts) |
+| **Change hourly stage line colors (`HOURLY_STAGE_COLORS`) or timeline lines (`STAGE_LINES`)** | [analytics.ts](file:///home/jensen/Github-Repositories/heart-check-phc/app/dashboard/pages/analytics/constants/analytics.ts) |
 | **Change daily drill-down detail panel layout, KPI cards, or single-day stage table** | [DailyDrillDownDetail.tsx](file:///home/jensen/Github-Repositories/heart-check-phc/app/dashboard/pages/analytics/components/DailyDrillDownDetail.tsx) |
 | **Change PHC compliance summary cards or threshold breakdown** | [PHCComplianceSummary.tsx](file:///home/jensen/Github-Repositories/heart-check-phc/app/dashboard/pages/analytics/components/PHCComplianceSummary.tsx) |
 | **Change linear regression (LR) or ARIMA forecast presentations** | [LRForecast.tsx](file:///home/jensen/Github-Repositories/heart-check-phc/app/dashboard/pages/analytics/components/LRForecast.tsx) / [ArimaForecast.tsx](file:///home/jensen/Github-Repositories/heart-check-phc/app/dashboard/pages/analytics/components/ArimaForecast.tsx) |
 | **Change Python backend single-day drill-down calculation or caching** | `python_backend/main.py` (`/api/daily-drilldown`) |
+| **Change Python backend hourly pattern stage aggregation or kiosk isolation** | `python_backend/analytics/descriptive.py` / `python_backend/analytics/preprocessing.py` |
 | **Change Python backend export filtering, date bounds, or sheets structure** | `python_backend/main.py` / `python_backend/analytics/export.py` |
 | **Change available export dates caching or discovery query** | `python_backend/main.py` (`/api/available-export-dates`) |
 
@@ -72,12 +74,7 @@ The Analytics module adheres strictly to the repository separation-of-concerns r
 
 ### Header Banner
 - **Component:** [AnalyticsHeader.tsx](file:///home/jensen/Github-Repositories/heart-check-phc/app/dashboard/pages/analytics/components/AnalyticsHeader.tsx)
-- **Role:** Displays page title, subtitle, date range pills, live refreshing indicator, and the Export to Excel trigger button.
-
-### Export to Excel Modal & Trigger
-- **Trigger Component:** [ExportExcelButton.tsx](file:///home/jensen/Github-Repositories/heart-check-phc/app/dashboard/pages/analytics/components/ExportExcelButton.tsx)
-- **Modal Component:** [ExportExcelModal.tsx](file:///home/jensen/Github-Repositories/heart-check-phc/app/dashboard/pages/analytics/components/ExportExcelModal.tsx)
-- **Role:** Allows administrative users to pick a specific single date, all recorded dates, or a calendar month/year and clinical department to generate and download a compliant PHC Time and Motion Analysis multi-sheet workbook (.xlsx). Dynamically limits selectable years, months, and dates strictly to recorded patient data.
+- **Role:** Displays page title, subtitle, date range pills, and live refreshing indicator. (Export and Import operations are isolated in their dedicated workstation routes `/dashboard/pages/export` and `/dashboard/pages/import`).
 
 ### Metric Cards Grid
 - **Component:** [AnalyticsMetricCards.tsx](file:///home/jensen/Github-Repositories/heart-check-phc/app/dashboard/pages/analytics/components/AnalyticsMetricCards.tsx)
@@ -92,9 +89,13 @@ The Analytics module adheres strictly to the repository separation-of-concerns r
 - **Drill-Down Component:** [DailyDrillDownDetail.tsx](file:///home/jensen/Github-Repositories/heart-check-phc/app/dashboard/pages/analytics/components/DailyDrillDownDetail.tsx)
 - **Hook:** [useDailyDrilldown.ts](file:///home/jensen/Github-Repositories/heart-check-phc/app/dashboard/pages/analytics/hooks/useDailyDrilldown.ts)
 - **Role:**
-  - Renders daily volume bars with 7-day trailing moving average, hourly arrival curves, and stage-by-stage wait time trends.
+  - Renders daily volume bars with 7-day trailing moving average, hourly process progression curves, and stage-by-stage wait time trends.
   - Clicking on any date or bar in the Daily Volume Chart, or clicking any date on the Stage Wait Time Trends timeline, triggers interactive drill-down.
-  - Automatically loads that day's granular hourly distribution curve into the adjacent chart alongside the range average benchmark.
+  - The Hourly Process & Arrival Distribution chart supports three complementary view modes:
+    1. **Patients by Stage (Volume):** Displays patient throughput across operating hours for Kiosk Check-in (cyan, when available), Registration (amber), With Doctor / Consultation (emerald), and Carryout (pink), overlaid with the range average intake benchmark.
+    2. **Wait Times by Stage:** Displays average elapsed dwell times in minutes per hour for Kiosk Wait, Registration Service, Wait for Doctor, With Doctor Consultation, and Carryout.
+    3. **Overall Intake:** Displays single-day intake against the overall benchmark curve.
+  - Gracefully accommodates historical datasets where physical kiosks were not deployed, displaying available Registration to With Doctor stages and rendering an informative historical notice pill.
   - Renders the Daily Drill-Down Detail panel with total patients, average total journey time, peak arrival hour, primary bottleneck step, and the full 5-stage bottleneck severity table for that specific date.
   - Provides a single-click "Reset to Overall Range" action to clear the drill-down and restore standard range analysis.
 

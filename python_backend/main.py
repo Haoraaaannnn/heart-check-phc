@@ -362,12 +362,16 @@ def get_daily_drilldown(date_param: str = Query(..., alias="date")):
         if sorted_hours and sorted_hours[0].get("avg_patients", 0) > 0:
             peak_hour = sorted_hours[0].get("time_label")
 
+    is_hist = bool(df_clean["is_historical"].iloc[0]) if "is_historical" in df_clean.columns and not df_clean.empty else False
+
     payload = {
         "date": cleaned_date,
+        "is_historical": is_hist,
         "total_patients": len(df_clean),
         "hourly_pattern": hourly,
         "bottleneck_analysis": bottlenecks,
         "summary": {
+            "is_historical": is_hist,
             "total_patients": len(df_clean),
             "avg_total_time": avg_tot,
             "avg_wait_registration": avg_reg,
