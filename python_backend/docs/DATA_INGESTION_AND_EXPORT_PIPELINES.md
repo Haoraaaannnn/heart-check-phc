@@ -8,6 +8,8 @@ This document provides a complete technical analysis of the data ingestion engin
 
 Hospital data originates from Philippine Heart Center (PHC) Time and Motion Analysis workbooks recorded in legacy Excel formats (`.xls`, `.xlsx`). Each workbook corresponds to a monthly record containing multiple sheets, where each sheet corresponds to an individual clinic operating day.
 
+- **Parsing Engines:** Modern `.xlsx` files are parsed with `openpyxl` (`openpyxl>=3.1.2`), while legacy `.xls` binary workbooks require `xlrd` (`xlrd>=2.0.1`). Both dependencies are declared in `requirements.txt`.
+
 ### 1.1 Sheet Scanning and Layout Detection
 In [importer.py:L148-L220](file:///home/jensen/Github-Repositories/Heart_Check_PHC/python_backend/importer.py#L148-L220) and [import_phc_data.py:L37-L89](file:///home/jensen/Github-Repositories/Heart_Check_PHC/python_backend/import_phc_data.py#L37-L89):
 
@@ -134,11 +136,11 @@ Every imported record written to Supabase `patients` table includes:
 - `is_historical`: Boolean flag (`True` for imported files).
 
 ### 5.3 Batch Insert Operation
-Implemented in `insert_records_batch(records, batch_size=500)` in [importer.py:L485-L506](file:///home/jensen/Github-Repositories/Heart_Check_PHC/python_backend/importer.py#L485-L506) and [import_phc_data.py:L211-L217](file:///home/jensen/Github-Repositories/Heart_Check_PHC/python_backend/import_phc_data.py#L211-L217):
-- Uses singleton Supabase client configured with `SUPABASE_SERVICE_ROLE_KEY`.
-- Chunks records into slices of `batch_size` (default 500).
-- Executes `client.table("patients").insert(batch).execute()`.
-- Halts on error and reports exact batch index and database error message.
+Implemented in `insert_records_batch(records, batch_size=500)` in [importer.py](file:///home/jensen/Github-Repositories/heart-check-phc/python_backend/importer.py) and `insert_in_batches` in [import_phc_data.py](file:///home/jensen/Github-Repositories/heart-check-phc/python_backend/import_phc_data.py):
+- Dispatches batch insertions directly to the Supabase PostgREST endpoint (`/rest/v1/patients`) using `httpx`.
+- Chunks records into slices of `batch_size` (default 500) with `Prefer: return=minimal`.
+- Supports both legacy 3-part JWT keys and modern secret keys (`sb_secret_*`) without failing client-side regex validations.
+- Halts on error and reports exact batch index and HTTP/database error message.
 
 ---
 

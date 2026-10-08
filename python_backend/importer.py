@@ -17,6 +17,7 @@ import re
 from datetime import date, datetime, timedelta
 import pandas as pd
 from dotenv import load_dotenv
+import httpx
 from supabase import create_client, Client
 
 BASE_DIR = os.path.dirname(os.path.abspath(__file__))
@@ -29,13 +30,25 @@ SUPABASE_SERVICE_KEY = os.environ.get("SUPABASE_SERVICE_ROLE_KEY") or os.environ
 _supabase_client: Client | None = None
 
 
-def get_supabase_client() -> Client:
-    """Returns singleton Supabase client configured with service role key."""
+def get_supabase_client() -> Client | None:
+    """
+    Returns singleton Supabase client configured with service role key if supported.
+
+    Legacy versions of supabase-py enforce strict 3-part JWT regex validation and reject
+    modern secret keys (sb_secret_*). If initialization fails, this returns None to allow
+    graceful fallback to direct PostgREST HTTP operations.
+
+    Returns:
+        Client | None: Active Supabase SDK client instance, or None if client library initialization failed.
+    """
     global _supabase_client
     if _supabase_client is None:
         if not SUPABASE_URL or not SUPABASE_SERVICE_KEY:
             raise RuntimeError("Supabase URL or service key is not configured in .env.local")
-        _supabase_client = create_client(SUPABASE_URL, SUPABASE_SERVICE_KEY)
+        try:
+            _supabase_client = create_client(SUPABASE_URL, SUPABASE_SERVICE_KEY)
+        except Exception:
+            _supabase_client = None
     return _supabase_client
 
 
@@ -484,23 +497,52 @@ def parse_and_process_file(
 
 def insert_records_batch(records: list[dict], batch_size: int = 500) -> tuple[int, list[str]]:
     """
-    Batch inserts records into Supabase 'patients' table.
-    Returns (inserted_count, list_of_error_messages).
+    Batch inserts records into Supabase 'patients' table via PostgREST REST API.
+
+    Directly interacts with the PostgREST endpoint using httpx, bypassing client-side JWT
+    regex format checks in older versions of supabase-py. This ensures flawless compatibility
+    with both legacy JWT service role keys and modern secret keys (prefixed with sb_secret_*).
+
+    Args:
+        records: List of patient record dictionaries prepared for the patients table.
+        batch_size: Number of records per HTTP request chunk (defaults to 500).
+
+    Returns:
+        tuple[int, list[str]]: Count of successfully inserted records and any error messages encountered.
+
+    Raises:
+        RuntimeError: If SUPABASE_URL or SUPABASE_SERVICE_KEY is missing from environment.
     """
-    client = get_supabase_client()
+    if not SUPABASE_URL or not SUPABASE_SERVICE_KEY:
+        raise RuntimeError("Supabase URL or service key is not configured in .env.local")
+
     total = len(records)
     inserted = 0
     errors = []
 
-    for i in range(0, total, batch_size):
-        batch = records[i:i + batch_size]
-        try:
-            client.table("patients").insert(batch).execute()
-            inserted += len(batch)
-        except Exception as e:
-            err_msg = str(e)
-            print(f"Error inserting batch {i}..{i + len(batch)}: {err_msg}")
-            errors.append(err_msg)
-            break
+    headers = {
+        "apikey": SUPABASE_SERVICE_KEY,
+        "Authorization": f"Bearer {SUPABASE_SERVICE_KEY}",
+        "Content-Type": "application/json",
+        "Prefer": "return=minimal",
+    }
+    url = f"{SUPABASE_URL.rstrip('/')}/rest/v1/patients"
+
+    with httpx.Client(timeout=60.0) as client:
+        for i in range(0, total, batch_size):
+            batch = records[i:i + batch_size]
+            try:
+                resp = client.post(url, headers=headers, json=batch)
+                if resp.status_code not in (200, 201):
+                    err_msg = f"HTTP {resp.status_code}: {resp.text}"
+                    print(f"Error inserting batch {i}..{i + len(batch)}: {err_msg}")
+                    errors.append(err_msg)
+                    break
+                inserted += len(batch)
+            except Exception as e:
+                err_msg = str(e)
+                print(f"Error inserting batch {i}..{i + len(batch)}: {err_msg}")
+                errors.append(err_msg)
+                break
 
     return inserted, errors
