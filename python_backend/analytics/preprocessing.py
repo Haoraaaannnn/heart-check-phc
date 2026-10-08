@@ -104,10 +104,15 @@ def preprocess_queue_data(df: pd.DataFrame) -> pd.DataFrame:
     # wait_registration is kept as-is even for ongoing patients: kiosk_time
     # is always real, and reg_start-filled-to-now (for today's live rows
     # only, per fill_as_live above) correctly represents "how long they've
-    # been waiting so far" — a genuinely meaningful live signal. Stale or
-    # historical rows kept reg_start as NaT, so this comes out NaN for
-    # them automatically — no separate gating needed.
+    # been waiting so far" — a genuinely meaningful live signal.
+    # Historical data did not deploy physical kiosk ticketing (kiosk_time was
+    # assigned from reg_start on import). Gating wait_registration ensures
+    # historical rows report genuine NA instead of false 0.0-minute waits.
     df['wait_registration']    = (df['reg_start']      - df['kiosk_time']).dt.total_seconds() / 60
+    df.loc[is_historical, 'wait_registration'] = pd.NA
+
+    # Genuine kiosk arrival timestamp (NaT for historical rows)
+    df['kiosk_arrival_time']   = df['kiosk_time'].where(~is_historical, pd.NaT)
 
     # These three are only meaningful once their END boundary actually
     # happened — otherwise they're measuring the gap between two
@@ -164,10 +169,34 @@ def preprocess_queue_data(df: pd.DataFrame) -> pd.DataFrame:
     df['total_time'] = (end_ts - df['reg_start']).dt.total_seconds() / 60
 
     # Time grouping — computed in Asia/Manila local time, not UTC.
-    manila_time        = df['kiosk_time'].dt.tz_convert('Asia/Manila')
+    # For historical rows without kiosk ticketing, patient intake occurs at the registration desk (reg_start).
+    # For live rows, patient intake begins when the queue ticket is generated at the kiosk (kiosk_time).
+    intake_time        = df['kiosk_time'].where(~is_historical, df['reg_start']).fillna(df['kiosk_time'])
+    manila_time        = intake_time.dt.tz_convert('Asia/Manila')
     df['visit_date']   = manila_time.dt.date
     df['hour']         = manila_time.dt.hour
     df['day_of_week']  = manila_time.dt.day_name()
+
+    # Per-stage arrival and execution hours in Asia/Manila local time
+    if 'reg_start' in df.columns:
+        df['reg_hour'] = df['reg_start'].dt.tz_convert('Asia/Manila').dt.hour
+    else:
+        df['reg_hour'] = pd.Series(pd.NA, index=df.index)
+
+    if 'consult_start' in df.columns:
+        df['consult_hour'] = df['consult_start'].dt.tz_convert('Asia/Manila').dt.hour
+    else:
+        df['consult_hour'] = pd.Series(pd.NA, index=df.index)
+
+    if 'carryout_start' in df.columns and 'carryout_end' in df.columns:
+        c_ts = df['carryout_start'].fillna(df['carryout_end'])
+        df['carryout_hour'] = c_ts.dt.tz_convert('Asia/Manila').dt.hour
+    elif 'carryout_end' in df.columns:
+        df['carryout_hour'] = df['carryout_end'].dt.tz_convert('Asia/Manila').dt.hour
+    else:
+        df['carryout_hour'] = pd.Series(pd.NA, index=df.index)
+
+    df['kiosk_hour']   = df['kiosk_arrival_time'].dt.tz_convert('Asia/Manila').dt.hour
 
     # Normalize purpose to lowercase
     if 'purpose' in df.columns:

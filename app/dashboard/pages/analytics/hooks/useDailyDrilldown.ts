@@ -33,16 +33,24 @@ export interface DrilldownHourlyPoint {
   avg_patients: number;
   /** Formatted time interval label (e.g. 08:00–09:00). */
   time_label: string;
+  /** Number of patients who checked in at kiosk this hour (null if historical/not deployed). */
+  kiosk_patients?: number | null;
+  /** Number of patients who started registration this hour. */
+  reg_patients?: number;
+  /** Number of patients who were with doctor (consultation started) this hour. */
+  consult_patients?: number;
+  /** Number of patients who were in carryout this hour. */
+  carryout_patients?: number;
   /** Average registration wait for patients arriving this hour. */
-  avg_wait_registration?: number;
+  avg_wait_registration?: number | null;
   /** Average registration duration for patients arriving this hour. */
-  avg_service_registration?: number;
+  avg_service_registration?: number | null;
   /** Average consultation wait for patients arriving this hour. */
-  avg_wait_consultation?: number;
+  avg_wait_consultation?: number | null;
   /** Average consultation duration for patients arriving this hour. */
-  avg_service_consultation?: number;
+  avg_service_consultation?: number | null;
   /** Average carryout duration for patients arriving this hour. */
-  avg_service_carryout?: number;
+  avg_service_carryout?: number | null;
 }
 
 export interface DrilldownSummary {
@@ -62,6 +70,8 @@ export interface DrilldownSummary {
   system_reason?: string;
   /** Time interval with peak arrivals (e.g. 08:00–09:00). */
   peak_hour?: string | null;
+  /** Flag indicating if records on this date are historical (no physical kiosk). */
+  is_historical?: boolean;
 }
 
 export interface DailyDrilldownData {
@@ -69,6 +79,8 @@ export interface DailyDrilldownData {
   date: string;
   /** Total patients recorded on this date. */
   total_patients: number;
+  /** Flag indicating if records on this date are historical. */
+  is_historical?: boolean;
   /** Hourly arrival distribution points for this date. */
   hourly_pattern: DrilldownHourlyPoint[];
   /** Queue bottleneck stage breakdown for this date. */

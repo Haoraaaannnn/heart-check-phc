@@ -105,6 +105,7 @@ python_backend/
 | Time-series models & backtesting | [forecasting.py](file:///home/jensen/Github-Repositories/Heart_Check_PHC/python_backend/analytics/forecasting.py) | Model implementations for SMA, WMA, EMA, Linear Regression, and ARIMA(1, 1, 1) with optimized refit intervals (`ARIMA_REFIT_INTERVAL = 7`). |
 | Staffing recommendation rules | [staffing.py](file:///home/jensen/Github-Repositories/Heart_Check_PHC/python_backend/analytics/staffing.py) | Required cubicle calculation and target utilization caps (`target_utilization = 0.80`). |
 | FastAPI routes & query parameters | [main.py](file:///home/jensen/Github-Repositories/Heart_Check_PHC/python_backend/main.py) | API endpoints `/health`, `/api/dashboard-data`, `/api/daily-drilldown`, `/api/available-years`, `/api/available-export-dates`, `/api/monthly-breakdown/{year}`, `/api/export-excel`, `/api/import-file`, and Supabase queries. |
+| Python dependencies & Excel parsers | [requirements.txt](file:///home/jensen/Github-Repositories/Heart_Check_PHC/python_backend/requirements.txt) | Python dependency manifests, including `openpyxl` (XLSX) and `xlrd` (legacy XLS) Excel parsing engines. |
 
 ---
 

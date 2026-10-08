@@ -22,62 +22,118 @@ from .constants import (
 
 # Calculate daily summaries such as patient counts and average wait times per day
 def daily_summary(df: pd.DataFrame) -> pd.DataFrame:
-    """Daily aggregation — last 5 days shown on dashboard."""
+    """Daily aggregation — includes volumes, stage durations, and total times."""
     clean = df.copy()
     if 'total_time' in clean.columns:
         clean.loc[clean['total_time'] < 0, 'total_time'] = pd.NA
 
-    return (
-        clean.groupby('visit_date').agg(
-            total_patients        = ('patient_id',        'count'),
-            avg_wait_registration = ('wait_registration', 'mean'),
-            avg_wait_consultation = ('wait_consultation', 'mean'),
-            avg_total_time        = ('total_time',        'mean'),
-        )
-        .reset_index()
-        .round(2)
-    )
-
-# Shows which are the busiest hours of the day, and how wait times vary by hour,
-# broken down per queue stage (kiosk→registration, registration duration,
-# registration→consultation wait, consultation duration, carryout duration).
-# This lets the dashboard show WHICH stage is slow at WHICH hour, rather than
-# one blended number that hides which part of the flow backs up when.
-def hourly_pattern(df: pd.DataFrame) -> pd.DataFrame:
-    """Average patient count and per-stage average duration/wait, per hour of day."""
-
-    # Same 5 stages used in bottleneck_report — kept in sync so the hourly
-    # chart and the Queue Stage Breakdown table always describe the same
-    # pipeline.
-    stage_cols = {
-        "avg_wait_registration"    : "wait_registration",
-        "avg_service_registration" : "service_registration",
-        "avg_wait_consultation"    : "wait_consultation",
-        "avg_service_consultation" : "service_consultation",
-        "avg_service_carryout"     : "service_carryout",
+    agg_map = {
+        'total_patients'           : ('patient_id',           'count'),
+        'avg_wait_registration'    : ('wait_registration',    'mean'),
+        'avg_service_registration' : ('service_registration', 'mean'),
+        'avg_wait_consultation'    : ('wait_consultation',    'mean'),
+        'avg_service_consultation' : ('service_consultation', 'mean'),
+        'avg_service_carryout'     : ('service_carryout',     'mean'),
+        'avg_total_time'           : ('total_time',           'mean'),
     }
 
-    agg_kwargs = {"avg_patients": ("patient_id", "count")}
-    for out_col, src_col in stage_cols.items():
-        if src_col in df.columns:
-            agg_kwargs[out_col] = (src_col, "mean")
+    active_agg = {k: v for k, v in agg_map.items() if v[0] in clean.columns}
+    res = clean.groupby('visit_date').agg(**active_agg).reset_index().round(2)
 
-    result = (
-        df.groupby("hour").agg(**agg_kwargs)
-        .reset_index()
-        .assign(time_label=lambda d: d["hour"].astype(int).apply(
-            lambda h: f"{h:02d}:00–{h+1:02d}:00"
-        ))
-    )
+    for k in agg_map:
+        if k not in res.columns:
+            res[k] = None
 
-    # Guarantee every stage column exists even if its source column wasn't
-    # in df (e.g. carryout not selected upstream) — keeps the frontend's
-    # line list stable instead of a line silently disappearing.
-    for out_col in stage_cols:
-        if out_col not in result.columns:
-            result[out_col] = 0.0
+    return res
 
-    return result.round(2)
+
+# Shows which are the busiest hours of the day, and how wait times vary by hour,
+# broken down per queue stage (kiosk check-in, registration duration,
+# registration to consultation wait, with doctor consultation duration, carryout duration).
+# This lets the dashboard show which stage is active and which stage is slow at which hour.
+def hourly_pattern(df: pd.DataFrame) -> pd.DataFrame:
+    """
+    Computes hourly patient counts (intake volume and per-stage throughput)
+    as well as per-stage average duration and wait times per hour of the day.
+    Gracefully handles historical records where kiosk ticketing was not deployed.
+    """
+    if df.empty:
+        return pd.DataFrame(columns=[
+            'hour', 'time_label', 'avg_patients',
+            'kiosk_patients', 'reg_patients', 'consult_patients', 'carryout_patients',
+            'avg_wait_registration', 'avg_service_registration',
+            'avg_wait_consultation', 'avg_service_consultation', 'avg_service_carryout'
+        ])
+
+    # Distinct calendar days to compute true daily averages for overall range benchmarks
+    n_days = max(1, int(df['visit_date'].dropna().nunique())) if 'visit_date' in df.columns else 1
+
+    # Check if real kiosk timestamps exist in this dataset
+    has_kiosk_data = bool('kiosk_arrival_time' in df.columns and df['kiosk_arrival_time'].notna().any())
+
+    # Standard clinic operating hours: 07:00 to 16:00, plus any extra hours in the data
+    data_hours = set(df['hour'].dropna().astype(int).unique()) if 'hour' in df.columns else set()
+    all_hours = sorted(set(range(7, 17)).union(data_hours))
+
+    rows = []
+    for h in all_hours:
+        time_label = f"{h:02d}:00–{h+1:02d}:00"
+
+        # Overall patient intake in this hour
+        hour_intake_mask = df['hour'] == h if 'hour' in df.columns else pd.Series(False, index=df.index)
+        intake_count = int(hour_intake_mask.sum())
+        avg_patients = round(intake_count / n_days, 2) if n_days > 1 else intake_count
+
+        # 1. Kiosk stage (Check-in volume and wait to registration)
+        if has_kiosk_data:
+            kiosk_mask = df['kiosk_hour'] == h if 'kiosk_hour' in df.columns else pd.Series(False, index=df.index)
+            k_count = int(kiosk_mask.sum())
+            kiosk_pts = round(k_count / n_days, 2) if n_days > 1 else k_count
+            sub_kiosk_wait = df.loc[kiosk_mask, 'wait_registration'].dropna() if 'wait_registration' in df.columns else pd.Series()
+            avg_wait_reg = round(float(sub_kiosk_wait.mean()), 2) if not sub_kiosk_wait.empty else None
+        else:
+            kiosk_pts = None
+            avg_wait_reg = None
+
+        # 2. Registration stage (intake at registration counter and service duration)
+        reg_mask = df['reg_hour'] == h if 'reg_hour' in df.columns else pd.Series(False, index=df.index)
+        r_count = int(reg_mask.sum())
+        reg_pts = round(r_count / n_days, 2) if n_days > 1 else r_count
+        sub_reg_serv = df.loc[reg_mask, 'service_registration'].dropna() if 'service_registration' in df.columns else pd.Series()
+        avg_serv_reg = round(float(sub_reg_serv.mean()), 2) if not sub_reg_serv.empty else None
+
+        # 3. With Doctor stage (patients entering consultation and consultation duration)
+        consult_mask = df['consult_hour'] == h if 'consult_hour' in df.columns else pd.Series(False, index=df.index)
+        c_count = int(consult_mask.sum())
+        consult_pts = round(c_count / n_days, 2) if n_days > 1 else c_count
+        sub_wait_con = df.loc[consult_mask, 'wait_consultation'].dropna() if 'wait_consultation' in df.columns else pd.Series()
+        avg_wait_con = round(float(sub_wait_con.mean()), 2) if not sub_wait_con.empty else None
+        sub_serv_con = df.loc[consult_mask, 'service_consultation'].dropna() if 'service_consultation' in df.columns else pd.Series()
+        avg_serv_con = round(float(sub_serv_con.mean()), 2) if not sub_serv_con.empty else None
+
+        # 4. Carryout stage (patients in carryout and service duration)
+        carryout_mask = df['carryout_hour'] == h if 'carryout_hour' in df.columns else pd.Series(False, index=df.index)
+        co_count = int(carryout_mask.sum())
+        carryout_pts = round(co_count / n_days, 2) if n_days > 1 else co_count
+        sub_serv_carry = df.loc[carryout_mask, 'service_carryout'].dropna() if 'service_carryout' in df.columns else pd.Series()
+        avg_serv_carry = round(float(sub_serv_carry.mean()), 2) if not sub_serv_carry.empty else None
+
+        rows.append({
+            'hour'                     : h,
+            'time_label'               : time_label,
+            'avg_patients'             : avg_patients,
+            'kiosk_patients'           : kiosk_pts,
+            'reg_patients'             : reg_pts,
+            'consult_patients'         : consult_pts,
+            'carryout_patients'        : carryout_pts,
+            'avg_wait_registration'    : avg_wait_reg,
+            'avg_service_registration' : avg_serv_reg,
+            'avg_wait_consultation'    : avg_wait_con,
+            'avg_service_consultation' : avg_serv_con,
+            'avg_service_carryout'     : avg_serv_carry,
+        })
+
+    return pd.DataFrame(rows)
 
 
 def _classify_level(avg_minutes: float) -> str:
@@ -92,6 +148,8 @@ def _classify_level(avg_minutes: float) -> str:
 def _stage_reason(stage_label: str, avg_minutes: float, level: str, patient_count: int) -> str:
     """Plain-language explanation of why a stage was classified at this level."""
     if level == "No Data":
+        if "kiosk" in stage_label.lower():
+            return "No kiosk ticketing records available (kiosk was not deployed for this dataset)."
         return f"No patients have reached {stage_label} yet in this range."
 
     if level == "Normal":

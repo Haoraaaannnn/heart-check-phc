@@ -1,20 +1,18 @@
 /**
  * @fileoverview Header banner component for the Analytics dashboard page.
  *
- * Integrates the page title, subtitle, date range selector, live refreshing indicator,
- * and Excel export trigger within the dashboard visual design system.
+ * Integrates the page title, subtitle, date range selector, and live refreshing indicator
+ * within the dashboard visual design system.
  *
  * @module app/dashboard/pages/analytics/components/AnalyticsHeader
  */
 
 'use client';
 
-import Link from 'next/link';
 import { ANALYTICS_STYLES } from '@/app/dashboard/pages/analytics/constants/analytics';
 import { ANALYTICS_TEXTS } from '@/app/dashboard/pages/analytics/constants/analyticsTexts';
 import type { AnalyticsRange } from '@/app/dashboard/pages/analytics/hooks/useAnalyticsData';
 import DateRangeSelector from '@/app/dashboard/pages/analytics/components/DateRangeSelector';
-import ExportExcelButton from '@/app/dashboard/pages/analytics/components/ExportExcelButton';
 
 interface AnalyticsHeaderProps {
   /** The selected analytics date range. */
@@ -58,13 +56,6 @@ export default function AnalyticsHeader({
             {T.refreshing}
           </span>
         )}
-
-        <ExportExcelButton range={range} />
-
-        <Link href="/dashboard/pages/import" className={S.importButton}>
-          <i className="bx bx-cloud-upload text-base" />
-          <span>{T.importButton}</span>
-        </Link>
       </div>
     </div>
   );

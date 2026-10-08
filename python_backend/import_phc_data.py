@@ -1,7 +1,7 @@
-import pandas as pd
 import os
 from dotenv import load_dotenv
-from supabase import create_client
+import httpx
+import pandas as pd
 from importer import resolve_phc_sheet_date
 
 BASE_DIR = os.path.dirname(os.path.abspath(__file__))
@@ -28,10 +28,8 @@ EXCEL_PATHS = [
 ]
 
 SUPABASE_URL = os.environ.get("NEXT_PUBLIC_SUPABASE_URL")
-SUPABASE_KEY = os.environ.get("SUPABASE_SERVICE_ROLE_KEY")
+SUPABASE_KEY = os.environ.get("SUPABASE_SERVICE_ROLE_KEY") or os.environ.get("NEXT_PUBLIC_SUPABASE_ANON_KEY")
 BATCH_SIZE   = 500
-
-supabase = create_client(SUPABASE_URL, SUPABASE_KEY)
 
 
 def extract_sheet_data(path, sheet_name):
@@ -209,11 +207,25 @@ def to_supabase_records(df):
 
 
 def insert_in_batches(records, batch_size=BATCH_SIZE):
+    if not SUPABASE_URL or not SUPABASE_KEY:
+        raise RuntimeError("Supabase URL or service key is not configured in .env.local")
+
     total = len(records)
-    for i in range(0, total, batch_size):
-        batch = records[i:i + batch_size]
-        supabase.table("patients").insert(batch).execute()
-        print(f"Inserted rows {i} to {i + len(batch)} of {total}")
+    headers = {
+        "apikey": SUPABASE_KEY,
+        "Authorization": f"Bearer {SUPABASE_KEY}",
+        "Content-Type": "application/json",
+        "Prefer": "return=minimal",
+    }
+    url = f"{SUPABASE_URL.rstrip('/')}/rest/v1/patients"
+
+    with httpx.Client(timeout=60.0) as client:
+        for i in range(0, total, batch_size):
+            batch = records[i:i + batch_size]
+            resp = client.post(url, headers=headers, json=batch)
+            if resp.status_code not in (200, 201):
+                raise RuntimeError(f"HTTP {resp.status_code}: {resp.text}")
+            print(f"Inserted rows {i} to {i + len(batch)} of {total}")
 
 
 def process_file(path):

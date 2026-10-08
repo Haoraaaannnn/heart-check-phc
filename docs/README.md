@@ -32,6 +32,7 @@ docs/
     ├── SCHEMA_REFERENCE.md                # PostgreSQL schema DDL & live RLS policies
     ├── SECURITY.md                        # Access control & zero-trust security model
     ├── SETUP_AND_SEEDING.md               # Development setup & simulated queue traffic
+    ├── LOCAL_NETWORK_SETUP.md             # Local network sharing & multi-device deployment
     ├── PRD.md                             # Product Requirements Document & capstone scope
     ├── NURSE_DASHBOARD_SYSTEM_DESIGN.md   # Nurse station Kanban architecture
     ├── TRANSFER_DASHBOARD.md              # Patient transfer station architecture
@@ -69,8 +70,9 @@ These documents provide deep architectural specifications, data models, communic
 | [`docs/specifications/DATABASE_SCHEMA.md`](file:///home/jensen/Github-Repositories/Heart_Check_PHC/docs/specifications/DATABASE_SCHEMA.md) | Database Models | Table structures, column definitions, primary keys, relationships, and legacy data migration pipelines. |
 | [`docs/specifications/SCHEMA_REFERENCE.md`](file:///home/jensen/Github-Repositories/Heart_Check_PHC/docs/specifications/SCHEMA_REFERENCE.md) | Schema & RLS Reference | PostgreSQL DDL definitions, data types, and live Row-Level Security (RLS) policies. |
 | [`docs/specifications/SECURITY.md`](file:///home/jensen/Github-Repositories/Heart_Check_PHC/docs/specifications/SECURITY.md) | Security Architecture | Two-layer access control: Supabase Row-Level Security (RLS) policies and Next.js middleware route guarding. |
-| [`docs/specifications/SETUP_AND_SEEDING.md`](file:///home/jensen/Github-Repositories/Heart_Check_PHC/docs/specifications/SETUP_AND_SEEDING.md) | Environment Setup | Local development setup, database migrations, Python virtual environment, and simulated queue traffic generation. |
-| [`docs/specifications/PRD.md`](file:///home/jensen/Github-Repositories/Heart_Check_PHC/docs/specifications/PRD.md) | Product Scope | Product Requirements Document: problem statement, thesis objectives, user roles, and core operational needs. |
+| [`docs/specifications/SETUP_AND_SEEDING.md`](file:///home/jensen/Github-Repositories/heart-check-phc/docs/specifications/SETUP_AND_SEEDING.md) | Environment Setup | Local development setup, database migrations, Python virtual environment, and simulated queue traffic generation. |
+| [`docs/specifications/LOCAL_NETWORK_SETUP.md`](file:///home/jensen/Github-Repositories/heart-check-phc/docs/specifications/LOCAL_NETWORK_SETUP.md) | Multi-Device Deployment | Local network sharing, IP binding with `npm start`, and station setup for kiosks, monitors, and tablets. |
+| [`docs/specifications/PRD.md`](file:///home/jensen/Github-Repositories/heart-check-phc/docs/specifications/PRD.md) | Product Scope | Product Requirements Document: problem statement, thesis objectives, user roles, and core operational needs. |
 | [`docs/specifications/NURSE_DASHBOARD_SYSTEM_DESIGN.md`](file:///home/jensen/Github-Repositories/Heart_Check_PHC/docs/specifications/NURSE_DASHBOARD_SYSTEM_DESIGN.md) | Clinical Workstations | Consultation cubicle intake, 3-column Kanban board, optimistic state updates, and IndexedDB outbox queue. |
 | [`docs/specifications/TRANSFER_DASHBOARD.md`](file:///home/jensen/Github-Repositories/Heart_Check_PHC/docs/specifications/TRANSFER_DASHBOARD.md) | Clinical Workstations | Patient Transfer station architecture, FIFO queue lock, pointer event drag-and-drop, and counter release flow. |
 | [`docs/specifications/TRANSFER_MANUAL_TWEAKING_GUIDE.md`](file:///home/jensen/Github-Repositories/Heart_Check_PHC/docs/specifications/TRANSFER_MANUAL_TWEAKING_GUIDE.md) | Operations Handbook | Operator handbook for tuning queue capacities, cooldown timers, rotation rules, and doctor assignments. |
