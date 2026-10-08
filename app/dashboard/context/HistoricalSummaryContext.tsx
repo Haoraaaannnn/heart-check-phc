@@ -22,8 +22,8 @@ export function HistoricalSummaryProvider({ children }: { children: ReactNode })
   useEffect(() => {
     // Fetched once at the dashboard layout level and shared via context —
     // avoids every page (Overview, Patients, Consultation, etc.) making
-    // its own duplicate call to the same historical dataset.
-    fetch('http://localhost:8000/api/dashboard-data?range=all')
+    const apiBase = process.env.NEXT_PUBLIC_API_URL || 'http://localhost:8000';
+    fetch(`${apiBase}/api/dashboard-data?range=all`)
       .then((res) => {
         if (!res.ok) throw new Error(`Server error: ${res.status}`);
         return res.json();
