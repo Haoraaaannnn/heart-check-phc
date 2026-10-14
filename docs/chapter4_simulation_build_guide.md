@@ -1,352 +1,487 @@
-# Chapter 4 Simulation — Build Guide
+# Chapter 4 Simulation — Build Guide (Consultation-Only, Real PHC Data)
 
-**File this guide creates:** `python_backend/chapter4_simulation.py`
+**Script to create:** `python_backend/chapter4_simulation.py`
 
-> **Context:** The document `docs/chapter4_simulation_comparison.md` is a written analytical report
-> with manually derived numbers. This guide explains how to build the **actual executable simulation**
-> that generates those numbers programmatically, so the results are reproducible and verifiable.
+> **Scope correction from earlier draft:**
+> The simulation is scoped **exclusively to the Consultation service** — the only service for which
+> PHC has real historical timestamp data in Supabase (imported from the consultation room Excel
+> sheets, March 2024 to December 2025). The `db_seeder.py` is disregarded entirely.
+> Other services (Warfarin, Benzathine, ECG, etc.) have no timestamped records and cannot
+> be included in a data-grounded comparison.
 
 ---
 
 ## Table of Contents
 
-1. [What "Buildable" Means Here](#1-what-buildable-means-here)
-2. [What Already Exists (Do Not Rewrite)](#2-what-already-exists-do-not-rewrite)
-3. [What Needs to Be Written](#3-what-needs-to-be-written)
-4. [Architecture of the Simulation Script](#4-architecture-of-the-simulation-script)
-5. [Step-by-Step Implementation Plan](#5-step-by-step-implementation-plan)
-   - [Step 1 — Imports and Configuration](#step-1--imports-and-configuration)
-   - [Step 2 — Simulate the Manual Process](#step-2--simulate-the-manual-process)
-   - [Step 3 — Simulate the Digital Process](#step-3--simulate-the-digital-process)
-   - [Step 4 — Compute M/M/1 Metrics for Both Scenarios](#step-4--compute-mm1-metrics-for-both-scenarios)
-   - [Step 5 — Compute Stage-by-Stage Comparison Table](#step-5--compute-stage-by-stage-comparison-table)
-   - [Step 6 — Compute PHC Compliance Rates](#step-6--compute-phc-compliance-rates)
-   - [Step 7 — Print the Report](#step-7--print-the-report)
-6. [Full Script Skeleton](#6-full-script-skeleton)
-7. [How to Run](#7-how-to-run)
-8. [Expected Output](#8-expected-output)
-9. [How to Use the Output in Chapter 4](#9-how-to-use-the-output-in-chapter-4)
-10. [Common Errors and Fixes](#10-common-errors-and-fixes)
+1. [Why Consultation-Only is the Right Choice](#1-why-consultation-only-is-the-right-choice)
+2. [What Real Data You Have](#2-what-real-data-you-have)
+3. [What the Simulation Computes](#3-what-the-simulation-computes)
+4. [What Existing Modules to Reuse](#4-what-existing-modules-to-reuse)
+5. [How Scenario A (Manual) is Reconstructed](#5-how-scenario-a-manual-is-reconstructed)
+6. [How Scenario B (Digital) is Derived](#6-how-scenario-b-digital-is-derived)
+7. [Step-by-Step Implementation Plan](#7-step-by-step-implementation-plan)
+   - [Step 1 — Fetch Real Data from Supabase](#step-1--fetch-real-data-from-supabase)
+   - [Step 2 — Preprocess with Existing Pipeline](#step-2--preprocess-with-existing-pipeline)
+   - [Step 3 — Extract Consultation Baseline Metrics](#step-3--extract-consultation-baseline-metrics)
+   - [Step 4 — Model the Manual Scenario Overhead](#step-4--model-the-manual-scenario-overhead)
+   - [Step 5 — Model the Digital Scenario Overhead](#step-5--model-the-digital-scenario-overhead)
+   - [Step 6 — Run M/M/1 for Both Scenarios](#step-6--run-mm1-for-both-scenarios)
+   - [Step 7 — Compute Compliance Rates](#step-7--compute-compliance-rates)
+   - [Step 8 — Print and Export the Report](#step-8--print-and-export-the-report)
+8. [Full Script Skeleton](#8-full-script-skeleton)
+9. [How to Run](#9-how-to-run)
+10. [Expected Output Structure](#10-expected-output-structure)
+11. [How to Use in Chapter 4](#11-how-to-use-in-chapter-4)
+12. [Common Errors and Fixes](#12-common-errors-and-fixes)
 
 ---
 
-## 1. What "Buildable" Means Here
+## 1. Why Consultation-Only is the Right Choice
 
-The comparison document lists numbers such as:
-
-- "Registration queue wait reduced from 18.2 min to 2.67 min"
-- "Server utilization (rho) drops from 0.785 to 0.471"
-- "Total OPD stay reduced by 35%"
-
-These numbers were computed by hand from the system's source parameters. A **buildable simulation** means:
-
-1. A single Python script (`chapter4_simulation.py`) runs both scenarios end-to-end.
-2. The script uses the **same stochastic engine** already in `db_seeder.py` and the **same M/M/1 math** already in `analytics/helpers.py`.
-3. The script outputs a comparison table to the terminal (and optionally to a CSV file) that matches or verifies the numbers in the report.
-4. Any thesis reviewer can run `python chapter4_simulation.py` and reproduce the results.
+| Reason | Explanation |
+|---|---|
+| **Only real data available** | The PHC historical Excel files cover the consultation room only: Queuing Time (reg_start), Initial Assessment (reg_end), Doctor Seen (consult_start), Doctor Completed (consult_end), Carry Out Completed (carryout_end). No timestamps exist for Warfarin, Benzathine, ECG, etc. |
+| **More defensible academically** | A simulation grounded in ~21 months of real PHC data (Mar 2024 – Dec 2025) is far stronger evidence than a synthetic simulation using invented service durations. |
+| **Consultation is the primary service** | ~45% of daily OPD patients go through consultation, making it the dominant flow and the most meaningful bottleneck to analyze. |
+| **The registration bottleneck lives here** | The registration counter is only used by Consultation (and OPD Screening). The time savings this system delivers are most concentrated at this exact stage. |
 
 ---
 
-## 2. What Already Exists (Do Not Rewrite)
+## 2. What Real Data You Have
 
-The following modules in the project already contain the logic you need. Import them; do not duplicate them.
+The Supabase `patients` table (where `is_historical = true`) contains records imported from PHC's
+Excel sheets covering the consultation room. The following columns are populated for historical rows:
 
-| Existing File | What It Provides | How the Simulation Uses It |
+| Supabase Column | PHC Excel Source | What It Represents |
 |---|---|---|
-| `db_seeder.py` — `generate_fake_patients()` | Stochastic patient arrival and service timestamps for the **digital scenario** (kiosk-based, with registration stage modeled as 3 min avg) | Call directly to generate Scenario B data |
-| `analytics/helpers.py` — `mm1()` | Closed-form M/M/1 metrics: rho, Lq, Wq, W | Apply to both scenarios with different mu values |
-| `analytics/helpers.py` — `mmc_benchmark()` | Erlang C / M/M/c theoretical lower bound | Use as the pooled-cubicle benchmark |
-| `analytics/helpers.py` — `arrival_rate()` | Computes lambda from a series of arrival timestamps | Feed it kiosk_time column from generated data |
-| `analytics/helpers.py` — `service_rate()` | Computes mu from a series of service durations | Feed it reg/consult duration columns |
-| `analytics/constants.py` | `OPD_TARGET_MINUTES`, `OVERWHELMED_MINUTES`, `CRITICAL_MINUTES`, `PHC_EXCEL_WAITING_TIME_TARGET_MINUTES` | Use as compliance thresholds |
+| `created_at` (→ `kiosk_time` / `reg_start` after import) | "Queuing Time" | Patient arrived and joined the queue at the registration desk |
+| `reg_start` | "Queuing Time" (same as created_at) | Start of registration wait |
+| `reg_end` | "Initial Assessment" | Completed registration / initial assessment |
+| `consult_start` | "Doctor Seen" | Doctor began seeing the patient |
+| `consult_end` | "Doctor Completed" | Doctor finished with the patient |
+| `carryout_end` | "Carry Out Completed" | Patient completed any carry-out orders |
+| `is_historical` | — | `true` for all imported rows |
+| `service` | — | `'consultation'` or `'Consultation'` |
+
+> **Key note on `kiosk_time` for historical rows:** Because PHC did not deploy kiosk ticketing
+> historically, `kiosk_time` (`created_at`) was mapped directly from the Queuing Time column
+> (same value as `reg_start`). This means `wait_registration` (kiosk_time → reg_start) is
+> always 0 for historical rows — which is correct. Historical patients had no kiosk step;
+> they queued at the registration desk directly. This difference is exactly what the simulation
+> compares against.
+
+**What this means for the simulation:**
+- The historical data gives you **real service durations** (`service_registration`, `service_consultation`, `service_carryout`) and **real inter-arrival times**.
+- The simulation **adds manual overhead on top** of those real durations for Scenario A, and **adds kiosk overhead on top** for Scenario B.
+- The comparison shows how the administrative scaffolding around the same clinical visit differs.
 
 ---
 
-## 3. What Needs to Be Written
+## 3. What the Simulation Computes
 
-The new script `python_backend/chapter4_simulation.py` must add the following logic that does not currently exist anywhere:
+For each patient record in the historical consultation data, the simulation reconstructs two scenarios:
 
-1. **Manual scenario parameters** — The existing `db_seeder.py` only models the digital process (avg_reg_time = 3 min, no announcement delay, no stub issuance overhead). You need to define manual-process overrides.
-2. **Scenario runner** — A function that generates a dataset for each scenario and attaches the relevant overhead times.
-3. **Per-stage time accumulator** — Computes average wait at each stage (check-in, registration queue, registration service, walk, consultation) for both scenarios.
-4. **Comparison table printer** — Formats and prints the side-by-side table.
-5. **Compliance calculator** — Counts what fraction of patients finish within 150 min and 180 min.
-
----
-
-## 4. Architecture of the Simulation Script
-
+**Scenario A — Manual (what PHC had before / the baseline captured in the data):**
 ```
-chapter4_simulation.py
-        |
-        |--- [1] Define scenario configs (manual vs digital)
-        |
-        |--- [2] run_scenario(config)
-        |           |
-        |           |-- Call generate_fake_patients() with scenario params
-        |           |-- Attach per-patient overhead times (check-in, announcement)
-        |           |-- Compute per-patient total OPD stay
-        |           |-- Return DataFrame with all stage times
-        |
-        |--- [3] compute_mm1_metrics(scenario_df, scenario_config)
-        |           |
-        |           |-- Call arrival_rate() from helpers.py
-        |           |-- Call service_rate() from helpers.py
-        |           |-- Call mm1() from helpers.py
-        |           |-- Return dict of rho, Lq, Wq, W for registration stage
-        |
-        |--- [4] build_comparison_table(scenario_a_df, scenario_b_df)
-        |           |
-        |           |-- Stage-by-stage averages for each scenario
-        |           |-- Compute time saved and % reduction per stage
-        |           |-- Return pandas DataFrame (the comparison table)
-        |
-        |--- [5] compute_compliance(scenario_df, targets)
-        |           |
-        |           |-- Count patients within 150 min, 180 min
-        |           |-- Return compliance rates
-        |
-        |--- [6] print_report(comparison_table, mm1_a, mm1_b, compliance_a, compliance_b)
-                    |
-                    |-- Print all tables to stdout
-                    |-- Optionally export to CSV
+reg_start
+    + manual_stub_issuance_time (new overhead, added)
+    + registration_queue_wait   (derived from M/M/1 Wq using real lambda/mu)
+    + service_registration      (real: reg_end - reg_start)
+    + wait_consultation         (real: consult_start - reg_end)
+    + service_consultation      (real: consult_end - consult_start)
+    + service_carryout          (real: carryout_end - consult_end, where available)
+= total_opd_time_manual
 ```
 
+**Scenario B — Digital (what Heart Check PHC adds):**
+```
+kiosk_checkin_time              (new overhead, added — replaces stub issuance)
+    + digital_registration_wait (derived from M/M/1 Wq with reduced mu)
+    + service_registration      (real: same clinical work, same duration)
+    + wait_consultation         (real: unchanged — clinical flow, not admin)
+    + service_consultation      (real: unchanged)
+    + service_carryout          (real: unchanged)
+= total_opd_time_digital
+```
+
+The **time saved per patient = total_opd_time_manual - total_opd_time_digital**, driven entirely
+by the difference in stub issuance time and registration queue wait (the two stages the system
+directly replaces).
+
 ---
 
-## 5. Step-by-Step Implementation Plan
+## 4. What Existing Modules to Reuse
 
-### Step 1 — Imports and Configuration
+Do not rewrite any of these. Import and call them directly.
 
-At the top of `chapter4_simulation.py`, import existing modules and define both scenario configurations as plain dictionaries.
+| File | Import | Purpose in Simulation |
+|---|---|---|
+| `main.py` | `fetch_supabase_table()`, `normalize_dataframe()` | Fetch and normalize the real historical data from Supabase |
+| `analytics/preprocessing.py` | `preprocess_queue_data()` | Compute all derived duration columns (`service_registration`, `service_consultation`, `wait_registration`, etc.) |
+| `analytics/helpers.py` | `mm1()`, `arrival_rate()`, `service_rate()` | Compute M/M/1 metrics for both scenarios |
+| `analytics/constants.py` | `OPD_TARGET_MINUTES`, `PHC_EXCEL_WAITING_TIME_TARGET_MINUTES`, `OVERWHELMED_MINUTES` | PHC compliance thresholds |
+
+---
+
+## 5. How Scenario A (Manual) is Reconstructed
+
+The historical data already captures the real clinical durations (registration service, consultation, carryout). What it does **not** capture is the administrative overhead that the staff performed before the patient got to the counter — because in the manual process, those steps were invisible to the tracking sheet (the sheet only starts from Queuing Time, which is when the patient reached the desk).
+
+For Scenario A, add the following overhead **per patient** on top of the real data:
+
+| Overhead Component | Value | Basis |
+|---|---|---|
+| Manual stub issuance time | Normal(mean=3.5 min, sd=0.8) | MISD staff interview / observation |
+| Queue announcement delay | 1.5 min (fixed + small jitter) | Observation: PA call lag before patient responds |
+| **Total pre-desk overhead added** | **~5.0 min per patient (avg)** | |
+
+These values are additive on top of the real timestamps. The real timestamps (reg_start onward) stay unchanged.
+
+---
+
+## 6. How Scenario B (Digital) is Derived
+
+For Scenario B, replace the manual stub issuance with kiosk check-in time and eliminate the announcement overhead:
+
+| Component | Value | Basis |
+|---|---|---|
+| Kiosk check-in time | Normal(mean=0.67 min, sd=0.15) | System walkthrough (~40 sec) |
+| Announcement overhead | 0 min (eliminated) | Monitor display replaces verbal calls |
+| Registration service time | **Reduced** — draw from Normal(mean=3.0 min, sd=0.7) | Kiosk pre-fills the record; staff only verifies appointment. The real `service_registration` mean from historical data is your Scenario A baseline; Scenario B reduces it by the data-entry portion |
+| All subsequent stages | Unchanged from real data | Clinical time is identical in both scenarios |
+
+> **How to derive the Scenario B registration reduction:**
+> Compute `service_registration.mean()` from the real data. That is your Scenario A registration
+> service duration. For Scenario B, subtract the time that kiosk pre-population saves (data entry
+> + ledger lookup, estimated at ~2.0 min based on observation). The result is your Scenario B
+> registration service mean. If the real mean is, for example, 6.2 min, Scenario B becomes ~4.2 min.
+> Use the **real data mean as the anchor**, not a hardcoded value.
+
+---
+
+## 7. Step-by-Step Implementation Plan
+
+### Step 1 — Fetch Real Data from Supabase
 
 ```python
 """
 chapter4_simulation.py
 
-Executable comparative simulation for Chapter 4 (Results and Discussion).
-Runs the manual paper-based OPD process (Scenario A) and the Heart Check PHC
-kiosk-based digital process (Scenario B) side by side, computing M/M/1 queue
-metrics and stage-by-stage wait time comparisons.
+Executable Chapter 4 comparative simulation for Heart Check PHC.
+Scoped to the Consultation service only — the sole service with real PHC
+historical timestamp data in Supabase (imported from PHC Excel sheets,
+March 2024 to December 2025).
+
+Reuses existing analytics modules. Does not use db_seeder.py.
 
 Run from python_backend/:
     python chapter4_simulation.py
 
-Dependencies (all already in requirements.txt):
-    pandas, numpy
-Internal imports:
-    analytics.helpers  (mm1, mmc_benchmark, arrival_rate, service_rate)
-    analytics.constants (OPD_TARGET_MINUTES, PHC_EXCEL_WAITING_TIME_TARGET_MINUTES)
-    db_seeder          (generate_fake_patients)
+Requirements:
+    - .env.local must be present at the repo root with NEXT_PUBLIC_SUPABASE_URL
+      and SUPABASE_SERVICE_ROLE_KEY (or NEXT_PUBLIC_SUPABASE_ANON_KEY).
+    - pip packages: pandas, numpy, httpx, python-dotenv (all in requirements.txt)
 """
 
+import os
+import sys
 import numpy as np
 import pandas as pd
-from datetime import datetime, timedelta
-import random
+from datetime import datetime
+from dotenv import load_dotenv
 
-# --- Import existing project modules ---
-# Run this script from inside python_backend/
-from analytics.helpers import mm1, mmc_benchmark, arrival_rate, service_rate
+# Load environment variables from repo root
+BASE_DIR = os.path.dirname(os.path.abspath(__file__))
+load_dotenv(os.path.join(BASE_DIR, "..", ".env.local"))
+
+# Import existing project modules
+from analytics.helpers import mm1, arrival_rate, service_rate
+from analytics.preprocessing import preprocess_queue_data
 from analytics.constants import (
     OPD_TARGET_MINUTES,
     PHC_EXCEL_WAITING_TIME_TARGET_MINUTES,
     OVERWHELMED_MINUTES,
 )
-from db_seeder import generate_fake_patients, SERVICES, SERVICE_WEIGHTS, REQUIRES_REGISTRATION
-```
 
-Then define the scenario parameter blocks:
+# Reuse main.py's fetch logic by importing its helper directly
+# (main.py is in the same directory; this avoids re-implementing pagination)
+from main import fetch_supabase_table, normalize_dataframe
 
-```python
-# ── Scenario A: Manual Paper-Based OPD Process ────────────────────────────────
-# These overrides represent the manual process overhead. The stochastic patient
-# arrival model is identical to Scenario B — only the administrative stage
-# durations differ.
-SCENARIO_A = {
-    "name": "Scenario A — Manual Paper-Based",
-    # Check-in: staff writes stub, logs in ledger, hands stub to patient
-    "checkin_mean_min": 3.5,       # mean minutes per patient for stub issuance
-    "checkin_std_min": 0.8,        # standard deviation
-    # Announcement overhead: delay between queue call and patient response
-    "announcement_overhead_min": 1.5,
-    # Registration service time: includes appointment book lookup + data entry
-    "reg_service_mean_min": 5.0,
-    "reg_service_std_min": 1.2,
-}
 
-# ── Scenario B: Heart Check PHC Kiosk-Based System ───────────────────────────
-SCENARIO_B = {
-    "name": "Scenario B — Heart Check PHC (Digital)",
-    # Check-in: kiosk touchscreen selection + thermal ticket print
-    "checkin_mean_min": 0.67,      # ~40 seconds mean
-    "checkin_std_min": 0.15,
-    # No announcement overhead — monitor display is always visible
-    "announcement_overhead_min": 0.0,
-    # Registration service time: kiosk pre-fills record, staff only verifies
-    # This matches db_seeder.py avg_reg_time = 3 minutes
-    "reg_service_mean_min": 3.0,
-    "reg_service_std_min": 0.7,
-}
-
-# ── Shared simulation parameters ──────────────────────────────────────────────
-SIM_DAYS = 25
-PATIENTS_PER_DAY = 120
-START_DATE = "2026-05-01"
-WALK_TIME_MIN = 2.0          # Walk from reception to service area (same for both)
-POST_CONSULT_MIN = 15.0      # Doctor orders / discharge (same for both)
-RANDOM_SEED = 42
-```
-
----
-
-### Step 2 — Simulate the Manual Process
-
-Because `generate_fake_patients()` already models the digital scenario (avg_reg_time = 3 min), you call it as-is for Scenario B. For Scenario A, call the same function but then **replace** the registration stage durations with the manual overrides.
-
-```python
-def run_scenario(scenario_config: dict, random_seed: int = 42) -> pd.DataFrame:
+def fetch_consultation_data() -> pd.DataFrame:
     """
-    Generates a patient flow DataFrame for the given scenario.
+    Fetches all historical consultation patient records from Supabase.
 
-    Calls generate_fake_patients() to produce arrival timestamps and
-    consultation stage times, then attaches check-in overhead and
-    announcement delay according to the scenario configuration.
-
-    Returns a DataFrame with columns:
-        kiosk_time, checkin_min, announcement_min, reg_wait_min,
-        reg_service_min, walk_min, consult_service_min,
-        post_consult_min, total_opd_min, needs_registration
-    """
-    np.random.seed(random_seed)
-    random.seed(random_seed)
-
-    # Generate base stochastic data using the existing seeder
-    # suppress_print=True if you add that parameter to db_seeder,
-    # otherwise redirect stdout or just let it print
-    df_raw = generate_fake_patients(
-        num_days=SIM_DAYS,
-        patients_per_day=PATIENTS_PER_DAY,
-        start_date=START_DATE,
-        output_filename=None,   # do not write to CSV
-    )
-
-    n = len(df_raw)
-    cfg = scenario_config
-
-    # ── Per-patient check-in time (stochastic, truncated at 0) ────────────────
-    checkin = np.random.normal(cfg["checkin_mean_min"], cfg["checkin_std_min"], n)
-    checkin = np.clip(checkin, 0.1, None)
-
-    # ── Announcement overhead (fixed per scenario, add small jitter) ──────────
-    announcement = np.full(n, cfg["announcement_overhead_min"])
-    if cfg["announcement_overhead_min"] > 0:
-        announcement += np.random.normal(0, 0.3, n)
-        announcement = np.clip(announcement, 0, None)
-
-    # ── Registration service time (only for registration-requiring services) ──
-    needs_reg = df_raw["service"].isin(REQUIRES_REGISTRATION)
-    reg_service = np.where(
-        needs_reg,
-        np.clip(
-            np.random.normal(cfg["reg_service_mean_min"], cfg["reg_service_std_min"], n),
-            0.5, None
-        ),
-        0.0,
-    )
-
-    # ── Registration queue wait: derived from M/M/1 Wq ────────────────────────
-    # Compute lambda from actual arrival timestamps
-    df_raw["kiosk_time"] = pd.to_datetime(df_raw["created_at"])
-    reg_subset = df_raw[needs_reg]
-    if len(reg_subset) > 1:
-        lam = arrival_rate(reg_subset["kiosk_time"])
-        mu  = 1.0 / cfg["reg_service_mean_min"] if cfg["reg_service_mean_min"] > 0 else 0
-        metrics = mm1(lam, mu)
-        wq_mean = metrics.get("avg_wait_queue_Wq_min", 0.0)
-        if isinstance(wq_mean, (int, float)) and wq_mean > 0:
-            reg_wait = np.where(
-                needs_reg,
-                np.clip(np.random.exponential(wq_mean, n), 0, None),
-                0.0,
-            )
-        else:
-            reg_wait = np.zeros(n)
-    else:
-        reg_wait = np.zeros(n)
-
-    # ── Consultation service time: use simulated values from db_seeder ─────────
-    consult_service = np.zeros(n)
-    for i, row in df_raw.iterrows():
-        avg = SERVICES.get(row["service"], {}).get("avg_time", 10)
-        consult_service[df_raw.index.get_loc(i)] = np.random.exponential(avg)
-
-    # ── Assemble per-patient total OPD stay ────────────────────────────────────
-    total_opd = (
-        checkin +
-        announcement +
-        reg_wait +
-        reg_service +
-        WALK_TIME_MIN +
-        consult_service +
-        POST_CONSULT_MIN
-    )
-
-    result = df_raw[["service", "kiosk_time"]].copy()
-    result["needs_registration"] = needs_reg.values
-    result["checkin_min"]        = checkin
-    result["announcement_min"]   = announcement
-    result["reg_wait_min"]       = reg_wait
-    result["reg_service_min"]    = reg_service
-    result["walk_min"]           = WALK_TIME_MIN
-    result["consult_service_min"]= consult_service
-    result["post_consult_min"]   = POST_CONSULT_MIN
-    result["total_opd_min"]      = total_opd
-
-    return result
-```
-
-> **Note on `generate_fake_patients(output_filename=None)`:** The existing `db_seeder.py` always
-> writes to a file. You will need to add `if output_filename is not None: df.to_csv(...)` to the
-> seeder before the return statement. This is a minor, one-line change. The function already returns
-> the DataFrame — just make the CSV write conditional.
-
----
-
-### Step 3 — Simulate the Digital Process
-
-The digital process uses the same `run_scenario()` function with `SCENARIO_B` as the config. No additional logic is needed because the check-in and registration overrides already distinguish the two scenarios.
-
-```python
-# In main():
-df_a = run_scenario(SCENARIO_A, random_seed=RANDOM_SEED)
-df_b = run_scenario(SCENARIO_B, random_seed=RANDOM_SEED)
-```
-
-Using the same `random_seed` ensures the same patient arrival stream for both scenarios, making the comparison an apples-to-apples test of the process difference only.
-
----
-
-### Step 4 — Compute M/M/1 Metrics for Both Scenarios
-
-```python
-def compute_mm1_for_registration(df: pd.DataFrame, reg_service_mean_min: float) -> dict:
-    """
-    Computes M/M/1 metrics for the registration counter using the actual
-    arrival timestamps in the DataFrame and the scenario's service time.
-
-    Args:
-        df: Patient DataFrame produced by run_scenario().
-        reg_service_mean_min: Mean registration service duration in minutes.
+    Filters to is_historical=true to get only PHC-imported records with
+    real timestamps. Filters service to 'consultation' (case-insensitive).
 
     Returns:
-        Dictionary containing lambda, mu, and the mm1() output dict.
+        Preprocessed DataFrame ready for analytics, or empty DataFrame if
+        no records are found.
     """
-    reg_df = df[df["needs_registration"]]
-    if len(reg_df) < 2:
-        return {"error": "Insufficient registration data"}
+    print("Fetching historical consultation records from Supabase...")
 
-    lam = arrival_rate(reg_df["kiosk_time"])
+    raw = fetch_supabase_table(
+        "patients",
+        select=(
+            "id,created_at,patientNum,service,status,"
+            "reg_start,reg_end,consult_start,consult_end,"
+            "carryout_start,carryout_end,cubicleNum,is_historical"
+        ),
+    )
+
+    if not raw:
+        print("ERROR: No data returned from Supabase. Check credentials and network.")
+        sys.exit(1)
+
+    df = pd.DataFrame(raw)
+    df = normalize_dataframe(df)
+
+    # Filter to historical consultation records only
+    df = df[df.get("is_historical", pd.Series(False, index=df.index)).fillna(False).astype(bool)]
+
+    if "purpose" not in df.columns and "service" in df.columns:
+        df["purpose"] = df["service"]
+    if "purpose" in df.columns:
+        df["purpose"] = df["purpose"].str.lower().str.strip()
+        df = df[df["purpose"] == "consultation"]
+
+    if df.empty:
+        print("ERROR: No historical consultation records found after filtering.")
+        sys.exit(1)
+
+    print(f"  Loaded {len(df)} historical consultation records.")
+
+    # Run through the full preprocessing pipeline to get all derived columns
+    df = preprocess_queue_data(df)
+
+    # Drop rows with no usable service_registration or service_consultation data
+    df = df[df["service_consultation"].notna() & (df["service_consultation"] > 0)]
+    print(f"  {len(df)} records with complete consultation data after cleaning.")
+
+    return df
+```
+
+---
+
+### Step 2 — Preprocess with Existing Pipeline
+
+`preprocess_queue_data()` (called above in Step 1) already computes:
+
+| Column | What It Contains |
+|---|---|
+| `wait_registration` | kiosk_time → reg_start (always 0 for historical rows — no kiosk existed) |
+| `service_registration` | reg_start → reg_end (actual time at the registration desk) |
+| `wait_consultation` | reg_end → consult_start (waiting to be seen by the doctor) |
+| `service_consultation` | consult_start → consult_end (time with the doctor) |
+| `service_carryout` | carryout_start → carryout_end (carry-out stage, where available) |
+| `total_time` | reg_start → carryout_end (or consult_end if no carryout) |
+
+No additional preprocessing is needed. These are the ground-truth durations for the clinical stages.
+
+---
+
+### Step 3 — Extract Consultation Baseline Metrics
+
+```python
+def extract_baseline_metrics(df: pd.DataFrame) -> dict:
+    """
+    Computes descriptive statistics from the real historical data.
+    These are the anchor values used to calibrate both scenarios.
+
+    Args:
+        df: Preprocessed consultation DataFrame from preprocess_queue_data().
+
+    Returns:
+        Dictionary of mean, std, and count for each measured stage.
+    """
+    def safe_stats(series: pd.Series) -> dict:
+        clean = series.dropna()
+        clean = clean[clean > 0]
+        return {
+            "mean": round(float(clean.mean()), 2) if not clean.empty else 0.0,
+            "std":  round(float(clean.std()),  2) if len(clean) > 1 else 0.0,
+            "n":    len(clean),
+        }
+
+    metrics = {
+        "service_registration": safe_stats(df["service_registration"]),
+        "wait_consultation":    safe_stats(df["wait_consultation"]),
+        "service_consultation": safe_stats(df["service_consultation"]),
+        "total_time":           safe_stats(df["total_time"]),
+    }
+
+    if "service_carryout" in df.columns:
+        metrics["service_carryout"] = safe_stats(df["service_carryout"])
+
+    # Real arrival rate from kiosk_time timestamps
+    lam = arrival_rate(df["kiosk_time"])
+    metrics["arrival_rate_lambda"] = round(lam, 4)
+
+    print("\n--- REAL PHC DATA BASELINE (Consultation) ---")
+    for k, v in metrics.items():
+        if isinstance(v, dict):
+            print(f"  {k}: mean={v['mean']} min, std={v['std']} min, n={v['n']}")
+        else:
+            print(f"  {k}: {v}")
+
+    return metrics
+```
+
+---
+
+### Step 4 — Model the Manual Scenario Overhead
+
+```python
+# ── Manual scenario overhead constants ────────────────────────────────────────
+# These represent the pre-desk administrative overhead in the manual process:
+# the time before a patient's Queuing Time (reg_start) was recorded.
+# Historical data does NOT capture this — it starts at reg_start.
+# These are added to reconstruct the full manual experience.
+
+MANUAL_STUB_MEAN_MIN  = 3.5   # Mean stub issuance time (min) — MISD interview / observation
+MANUAL_STUB_STD_MIN   = 0.8   # Standard deviation
+MANUAL_ANNOUNCE_MIN   = 1.5   # Announcement overhead per patient (fixed + jitter)
+MANUAL_ANNOUNCE_STD   = 0.3   # Jitter on announcement
+
+# Registration service time reduction due to kiosk pre-fill (Scenario B only)
+# The kiosk eliminates the data-entry and appointment-lookup portion of registration.
+# Estimated at ~2.0 min based on MISD interview. Applied as a reduction from the
+# real service_registration mean observed in the data.
+DIGITAL_REG_REDUCTION_MIN = 2.0
+
+# Kiosk check-in constants (Scenario B)
+KIOSK_CHECKIN_MEAN_MIN = 0.67   # ~40 seconds mean
+KIOSK_CHECKIN_STD_MIN  = 0.15
+
+
+def add_manual_overhead(df: pd.DataFrame, seed: int = 42) -> pd.DataFrame:
+    """
+    Adds manual process overhead columns to each patient row for Scenario A.
+
+    Adds stub_issuance_min and announcement_min as stochastic per-patient values.
+    The real historical columns (service_registration, service_consultation, etc.)
+    are kept unchanged — the overhead is additive.
+
+    Args:
+        df: Preprocessed consultation DataFrame.
+        seed: Random seed for reproducibility.
+
+    Returns:
+        DataFrame with additional overhead columns for Scenario A.
+    """
+    rng = np.random.default_rng(seed)
+    n = len(df)
+
+    df = df.copy()
+    df["stub_issuance_min"] = np.clip(
+        rng.normal(MANUAL_STUB_MEAN_MIN, MANUAL_STUB_STD_MIN, n),
+        0.5, None
+    )
+    df["announcement_min"] = np.clip(
+        rng.normal(MANUAL_ANNOUNCE_MIN, MANUAL_ANNOUNCE_STD, n),
+        0.0, None
+    )
+    return df
+
+
+def add_digital_overhead(df: pd.DataFrame, baseline: dict, seed: int = 42) -> pd.DataFrame:
+    """
+    Adds digital process overhead columns to each patient row for Scenario B.
+
+    Adds kiosk_checkin_min. Sets announcement_min to 0.
+    Reduces service_registration by DIGITAL_REG_REDUCTION_MIN (kiosk pre-fill benefit).
+
+    Args:
+        df: Preprocessed consultation DataFrame (same as Scenario A base).
+        baseline: Baseline metrics dict from extract_baseline_metrics().
+        seed: Random seed for reproducibility.
+
+    Returns:
+        DataFrame with digital overhead columns for Scenario B.
+    """
+    rng = np.random.default_rng(seed)
+    n = len(df)
+
+    df = df.copy()
+    df["stub_issuance_min"] = np.clip(
+        rng.normal(KIOSK_CHECKIN_MEAN_MIN, KIOSK_CHECKIN_STD_MIN, n),
+        0.1, None
+    )
+    df["announcement_min"] = 0.0
+
+    # Reduce registration service time by the kiosk pre-fill benefit,
+    # but floor at 1.0 min (some minimum clinical interaction always remains)
+    df["service_registration_digital"] = np.clip(
+        df["service_registration"].fillna(0) - DIGITAL_REG_REDUCTION_MIN,
+        1.0, None
+    )
+    return df
+```
+
+---
+
+### Step 5 — Compute Per-Patient Total OPD Time for Both Scenarios
+
+```python
+def compute_scenario_totals(df_a: pd.DataFrame, df_b: pd.DataFrame) -> tuple:
+    """
+    Computes total OPD stay per patient for both scenarios.
+
+    Scenario A total = stub_issuance + announcement + service_registration
+                       + wait_consultation + service_consultation
+                       + service_carryout (if available)
+
+    Scenario B total = kiosk_checkin + service_registration_digital
+                       + wait_consultation + service_consultation
+                       + service_carryout (if available)
+
+    Note: wait_consultation and service_consultation are REAL data —
+          identical for both scenarios (clinical time is unchanged).
+    """
+    carryout_col = "service_carryout" if "service_carryout" in df_a.columns else None
+
+    def total(df, reg_col):
+        base = (
+            df["stub_issuance_min"].fillna(0) +
+            df["announcement_min"].fillna(0) +
+            df[reg_col].fillna(0) +
+            df["wait_consultation"].fillna(0) +
+            df["service_consultation"].fillna(0)
+        )
+        if carryout_col:
+            base += df[carryout_col].fillna(0)
+        return base
+
+    df_a = df_a.copy()
+    df_a["total_opd_sim"] = total(df_a, "service_registration")
+
+    df_b = df_b.copy()
+    df_b["total_opd_sim"] = total(df_b, "service_registration_digital")
+
+    return df_a, df_b
+```
+
+---
+
+### Step 6 — Run M/M/1 for Both Scenarios
+
+```python
+def compute_mm1_registration(df: pd.DataFrame, reg_service_mean_min: float) -> dict:
+    """
+    Computes M/M/1 metrics for the registration counter.
+
+    Uses the real arrival rate derived from historical kiosk_time timestamps
+    and the scenario-specific mean registration service time.
+
+    Args:
+        df: Historical consultation DataFrame.
+        reg_service_mean_min: Mean registration service duration for this scenario.
+
+    Returns:
+        Dictionary with lambda, mu, and mm1() output.
+    """
+    lam = arrival_rate(df["kiosk_time"])
     mu  = 1.0 / reg_service_mean_min if reg_service_mean_min > 0 else 0.0
     return {
         "lambda_per_min": round(lam, 4),
@@ -355,124 +490,148 @@ def compute_mm1_for_registration(df: pd.DataFrame, reg_service_mean_min: float) 
     }
 ```
 
----
-
-### Step 5 — Compute Stage-by-Stage Comparison Table
-
-```python
-def build_comparison_table(df_a: pd.DataFrame, df_b: pd.DataFrame) -> pd.DataFrame:
-    """
-    Computes average time per stage for both scenarios and returns a
-    comparison DataFrame showing time saved and percentage reduction.
-    """
-    stages = [
-        ("Ticket / check-in",          "checkin_min"),
-        ("Queue announcement overhead", "announcement_min"),
-        ("Registration queue wait",     "reg_wait_min"),
-        ("Registration service",        "reg_service_min"),
-        ("Walk to service area",        "walk_min"),
-        ("Service / consultation",      "consult_service_min"),
-        ("Post-consultation",           "post_consult_min"),
-        ("Total OPD stay",             "total_opd_min"),
-    ]
-
-    rows = []
-    for label, col in stages:
-        val_a = round(df_a[col].mean(), 2)
-        val_b = round(df_b[col].mean(), 2)
-        saved = round(val_a - val_b, 2)
-        pct   = round((saved / val_a) * 100, 1) if val_a > 0 else 0.0
-        rows.append({
-            "Stage":           label,
-            "Manual (min)":    val_a,
-            "Digital (min)":   val_b,
-            "Saved (min)":     saved,
-            "Reduction (%)":   pct,
-        })
-
-    return pd.DataFrame(rows)
-```
+The M/M/1 registration wait (Wq) is the **analytically derived** queue wait. For the per-patient
+simulation, you can sample Wq-based waiting times from an exponential distribution (mean = Wq)
+or simply report the theoretical Wq as the average — either is valid for a thesis.
 
 ---
 
-### Step 6 — Compute PHC Compliance Rates
+### Step 7 — Compute Compliance Rates
 
 ```python
-def compute_compliance(df: pd.DataFrame) -> dict:
+def compute_compliance(df: pd.DataFrame, total_col: str = "total_opd_sim") -> dict:
     """
-    Computes the percentage of patients whose total OPD stay falls within
-    PHC's defined time targets.
+    Computes PHC compliance rates against the 150-min and 180-min targets.
+
+    Args:
+        df: Scenario DataFrame with a total_opd_sim column.
+        total_col: Column name for the per-patient total OPD time.
 
     Returns:
-        Dictionary with compliance rates for 150-min and 180-min thresholds.
+        Compliance statistics dictionary.
     """
     total = len(df)
     if total == 0:
-        return {}
+        return {"error": "No data"}
 
-    within_150 = (df["total_opd_min"] <= OPD_TARGET_MINUTES).sum()
-    within_180 = (df["total_opd_min"] <= PHC_EXCEL_WAITING_TIME_TARGET_MINUTES).sum()
+    within_150 = (df[total_col] <= OPD_TARGET_MINUTES).sum()
+    within_180 = (df[total_col] <= PHC_EXCEL_WAITING_TIME_TARGET_MINUTES).sum()
 
-    # Peak hour: patients who arrived between 8:00 and 9:00 AM
-    df["hour"] = df["kiosk_time"].dt.hour
-    peak = df[df["hour"] == 8]
-    peak_total = len(peak)
-    peak_within_150 = (peak["total_opd_min"] <= OPD_TARGET_MINUTES).sum() if peak_total > 0 else 0
+    # Peak arrival hour: 8:00 AM (hour == 8 in Manila time)
+    peak = df[df["hour"] == 8] if "hour" in df.columns else pd.DataFrame()
+    peak_n = len(peak)
+    peak_within_150 = (peak[total_col] <= OPD_TARGET_MINUTES).sum() if peak_n > 0 else 0
 
     return {
-        "total_patients":        total,
-        "within_150_min":        within_150,
-        "within_150_pct":        round(within_150 / total * 100, 1),
-        "within_180_min":        within_180,
-        "within_180_pct":        round(within_180 / total * 100, 1),
-        "peak_total":            peak_total,
-        "peak_within_150_pct":   round(peak_within_150 / peak_total * 100, 1) if peak_total > 0 else 0.0,
+        "total_patients":      total,
+        "within_150_pct":      round(within_150 / total * 100, 1),
+        "within_180_pct":      round(within_180 / total * 100, 1),
+        "peak_n":              peak_n,
+        "peak_within_150_pct": round(peak_within_150 / peak_n * 100, 1) if peak_n > 0 else 0.0,
     }
 ```
 
 ---
 
-### Step 7 — Print the Report
+### Step 8 — Print and Export the Report
 
 ```python
-def print_report(
-    comparison: pd.DataFrame,
-    mm1_a: dict,
-    mm1_b: dict,
-    compliance_a: dict,
-    compliance_b: dict,
-) -> None:
-    """Prints the full simulation comparison report to stdout."""
+def build_stage_comparison(df_a: pd.DataFrame, df_b: pd.DataFrame, baseline: dict) -> pd.DataFrame:
+    """
+    Builds the stage-by-stage comparison table.
+    Real historical values are used for clinical stages (unchanged between scenarios).
+    Only the administrative/overhead stages differ.
+    """
+    def mean(df, col, fallback=None):
+        if col in df.columns:
+            s = df[col].dropna()
+            s = s[s > 0] if col not in ("announcement_min",) else s
+            return round(float(s.mean()), 2) if not s.empty else 0.0
+        return fallback or 0.0
 
-    sep = "=" * 70
+    reg_mean_real = baseline["service_registration"]["mean"]
+    reg_b_mean    = max(1.0, reg_mean_real - DIGITAL_REG_REDUCTION_MIN)
 
+    rows = [
+        {
+            "Stage":                  "Ticket / check-in",
+            "Manual (min)":           mean(df_a, "stub_issuance_min"),
+            "Digital (min)":          mean(df_b, "stub_issuance_min"),
+        },
+        {
+            "Stage":                  "Queue announcement overhead",
+            "Manual (min)":           mean(df_a, "announcement_min"),
+            "Digital (min)":          0.00,
+        },
+        {
+            "Stage":                  "Registration service (real data anchor)",
+            "Manual (min)":           reg_mean_real,
+            "Digital (min)":          reg_b_mean,
+        },
+        {
+            "Stage":                  "Wait for consultation (real)",
+            "Manual (min)":           baseline["wait_consultation"]["mean"],
+            "Digital (min)":          baseline["wait_consultation"]["mean"],
+        },
+        {
+            "Stage":                  "Consultation service (real)",
+            "Manual (min)":           baseline["service_consultation"]["mean"],
+            "Digital (min)":          baseline["service_consultation"]["mean"],
+        },
+        {
+            "Stage":                  "Carryout (real, where recorded)",
+            "Manual (min)":           baseline.get("service_carryout", {}).get("mean", 0.0),
+            "Digital (min)":          baseline.get("service_carryout", {}).get("mean", 0.0),
+        },
+        {
+            "Stage":                  "TOTAL OPD STAY (simulated)",
+            "Manual (min)":           round(float(df_a["total_opd_sim"].mean()), 2),
+            "Digital (min)":          round(float(df_b["total_opd_sim"].mean()), 2),
+        },
+    ]
+
+    result = pd.DataFrame(rows)
+    result["Saved (min)"] = (result["Manual (min)"] - result["Digital (min)"]).round(2)
+    result["Reduction (%)"] = result.apply(
+        lambda r: round(r["Saved (min)"] / r["Manual (min)"] * 100, 1) if r["Manual (min)"] > 0 else 0.0,
+        axis=1,
+    )
+    return result
+
+
+def print_report(comparison, mm1_a, mm1_b, compliance_a, compliance_b, baseline):
+    sep = "=" * 72
     print(f"\n{sep}")
     print("  HEART CHECK PHC — CHAPTER 4 SIMULATION REPORT")
+    print("  Scope: Consultation Service | Source: Real PHC Historical Data")
     print(f"  Generated: {datetime.now().strftime('%Y-%m-%d %H:%M:%S')}")
     print(sep)
 
-    print("\n--- STAGE-BY-STAGE WAIT TIME COMPARISON ---\n")
+    print(f"\n  Real data anchor: {baseline['service_consultation']['n']} consultation")
+    print(f"  records from PHC historical import (Mar 2024 – Dec 2025).\n")
+
+    print("--- STAGE-BY-STAGE COMPARISON ---\n")
     print(comparison.to_string(index=False))
 
-    print("\n--- M/M/1 REGISTRATION COUNTER METRICS ---\n")
-    for label, data in [("Manual (Scenario A)", mm1_a), ("Digital (Scenario B)", mm1_b)]:
-        print(f"  {label}")
-        print(f"    lambda (arrival rate)  : {data.get('lambda_per_min', 'N/A')} patients/min")
-        print(f"    mu (service rate)      : {data.get('mu_per_min', 'N/A')} patients/min")
+    print("\n--- M/M/1 REGISTRATION COUNTER ---\n")
+    for label, data in [("Scenario A — Manual", mm1_a), ("Scenario B — Digital", mm1_b)]:
         m = data.get("metrics", {})
-        print(f"    rho (utilization)      : {m.get('utilization_rho', 'N/A')}")
-        print(f"    Lq (avg queue length)  : {m.get('avg_in_queue_Lq', 'N/A')}")
-        print(f"    Wq (avg queue wait)    : {m.get('avg_wait_queue_Wq_min', 'N/A')} min")
-        print(f"    W  (avg system time)   : {m.get('avg_time_system_W_min', 'N/A')} min")
+        print(f"  {label}")
+        print(f"    lambda  : {data.get('lambda_per_min')} patients/min (from real arrival data)")
+        print(f"    mu      : {data.get('mu_per_min')} patients/min")
+        print(f"    rho     : {m.get('utilization_rho', 'N/A')}")
+        print(f"    Lq      : {m.get('avg_in_queue_Lq', 'N/A')} patients")
+        print(f"    Wq      : {m.get('avg_wait_queue_Wq_min', 'N/A')} min")
+        print(f"    W       : {m.get('avg_time_system_W_min', 'N/A')} min")
         print()
 
     print("--- PHC COMPLIANCE RATES ---\n")
-    for label, c in [("Manual (Scenario A)", compliance_a), ("Digital (Scenario B)", compliance_b)]:
+    for label, c in [("Scenario A — Manual", compliance_a), ("Scenario B — Digital", compliance_b)]:
         print(f"  {label}")
-        print(f"    Patients simulated     : {c.get('total_patients')}")
-        print(f"    Within 150 min         : {c.get('within_150_pct')}%")
-        print(f"    Within 180 min         : {c.get('within_180_pct')}%")
-        print(f"    Peak hour (8-9 AM)     : {c.get('peak_within_150_pct')}% within 150 min")
+        print(f"    Patients            : {c['total_patients']}")
+        print(f"    Within 150 min      : {c['within_150_pct']}%")
+        print(f"    Within 180 min      : {c['within_180_pct']}%")
+        print(f"    Peak hour (8-9 AM)  : {c['peak_within_150_pct']}% within 150 min  (n={c['peak_n']})")
         print()
 
     print(sep)
@@ -482,34 +641,48 @@ def print_report(
 
 ---
 
-## 6. Full Script Skeleton
+## 8. Full Script Skeleton
 
-Combine all functions above into `python_backend/chapter4_simulation.py` with the following `main()` entrypoint:
+Wire all functions into a `main()` entrypoint:
 
 ```python
 def main():
-    print("Running Scenario A (Manual Process)...")
-    df_a = run_scenario(SCENARIO_A, random_seed=RANDOM_SEED)
+    # 1. Fetch real historical consultation data
+    df = fetch_consultation_data()
 
-    print("Running Scenario B (Digital Kiosk System)...")
-    df_b = run_scenario(SCENARIO_B, random_seed=RANDOM_SEED)
+    # 2. Extract baseline metrics from the real data
+    baseline = extract_baseline_metrics(df)
 
-    print("Computing M/M/1 metrics...")
-    mm1_a = compute_mm1_for_registration(df_a, SCENARIO_A["reg_service_mean_min"])
-    mm1_b = compute_mm1_for_registration(df_b, SCENARIO_B["reg_service_mean_min"])
+    # 3. Build Scenario A: real data + manual overhead
+    df_a = add_manual_overhead(df, seed=42)
 
-    print("Building comparison table...")
-    comparison = build_comparison_table(df_a, df_b)
+    # 4. Build Scenario B: real data + digital overhead
+    df_b = add_digital_overhead(df, baseline, seed=42)
 
-    print("Computing compliance rates...")
+    # 5. Compute per-patient total OPD times for both scenarios
+    df_a, df_b = compute_scenario_totals(df_a, df_b)
+
+    # 6. M/M/1 metrics — lambda from real data, mu from scenario config
+    reg_service_mean_a = baseline["service_registration"]["mean"]
+    reg_service_mean_b = max(1.0, reg_service_mean_a - DIGITAL_REG_REDUCTION_MIN)
+    mm1_a = compute_mm1_registration(df, reg_service_mean_a)
+    mm1_b = compute_mm1_registration(df, reg_service_mean_b)
+
+    # 7. Compliance rates
     compliance_a = compute_compliance(df_a)
     compliance_b = compute_compliance(df_b)
 
-    print_report(comparison, mm1_a, mm1_b, compliance_a, compliance_b)
+    # 8. Build comparison table and print report
+    comparison = build_stage_comparison(df_a, df_b, baseline)
+    print_report(comparison, mm1_a, mm1_b, compliance_a, compliance_b, baseline)
 
-    # Optional: export comparison table to CSV for inclusion in the thesis
+    # 9. Export to CSV
     comparison.to_csv("chapter4_comparison_output.csv", index=False)
-    print("\nComparison table exported to: chapter4_comparison_output.csv")
+    df_a[["total_opd_sim"]].describe().round(2).to_csv("chapter4_scenario_a_stats.csv")
+    df_b[["total_opd_sim"]].describe().round(2).to_csv("chapter4_scenario_b_stats.csv")
+    print("\nExported: chapter4_comparison_output.csv")
+    print("Exported: chapter4_scenario_a_stats.csv")
+    print("Exported: chapter4_scenario_b_stats.csv")
 
 
 if __name__ == "__main__":
@@ -518,127 +691,103 @@ if __name__ == "__main__":
 
 ---
 
-## 7. How to Run
+## 9. How to Run
 
-### Prerequisites
-
-The existing `python_backend/venv` already has all required packages (`pandas`, `numpy`). No new packages are needed.
-
-### One-time change to `db_seeder.py`
-
-Locate line 178 in `db_seeder.py`:
-
-```python
-# Current (always writes to CSV)
-df.to_csv(output_filename, index=False)
-```
-
-Change it to:
-
-```python
-# After change (only writes if a filename is given)
-if output_filename is not None:
-    df.to_csv(output_filename, index=False)
-```
-
-This makes `generate_fake_patients(output_filename=None)` return the DataFrame without writing to disk.
-
-### Run the simulation
+No new packages are needed. Everything is already in `requirements.txt`.
 
 ```bash
 cd python_backend
-source venv/bin/activate          # On Windows: venv\Scripts\activate
+source venv/bin/activate        # Windows: venv\Scripts\activate
 python chapter4_simulation.py
 ```
 
+The script reads from your live Supabase instance using the credentials in `.env.local`.
+
 ---
 
-## 8. Expected Output
+## 10. Expected Output Structure
 
-The script should print a report resembling the following (exact values will vary slightly due to stochastic sampling, but should be close to these figures):
+Exact numbers depend on your real historical data. The structure will be:
 
 ```
-======================================================================
+========================================================================
   HEART CHECK PHC — CHAPTER 4 SIMULATION REPORT
-  Generated: 2026-10-14 22:30:00
-======================================================================
+  Scope: Consultation Service | Source: Real PHC Historical Data
+  Generated: 2026-10-15 ...
+========================================================================
 
---- STAGE-BY-STAGE WAIT TIME COMPARISON ---
+  Real data anchor: XXXX consultation
+  records from PHC historical import (Mar 2024 – Dec 2025).
 
-                        Stage  Manual (min)  Digital (min)  Saved (min)  Reduction (%)
-            Ticket / check-in          3.50           0.67         2.83           81.0
-  Queue announcement overhead          1.50           0.00         1.50          100.0
-      Registration queue wait         18.2x           2.6x        ~15.5           ~85
-          Registration service          5.00           3.00         2.00           40.0
-       Walk to service area            2.00           2.00         0.00            0.0
-       Service / consultation         15.0x          15.0x         0.00            0.0
-            Post-consultation         15.00          15.00         0.00            0.0
-                Total OPD stay         58.xx          38.xx        ~20.x          ~35.0
+--- STAGE-BY-STAGE COMPARISON ---
 
---- M/M/1 REGISTRATION COUNTER METRICS ---
+                            Stage  Manual (min)  Digital (min)  Saved (min)  Reduction (%)
+                Ticket / check-in          3.5x          0.6x         2.8x          ~81.0
+  Queue announcement overhead             1.5x          0.00         1.5x         100.0
+  Registration service (real data)        X.XX          X.XX         X.XX           X.X
+  Wait for consultation (real)            X.XX          X.XX         0.00           0.0
+  Consultation service (real)             X.XX          X.XX         0.00           0.0
+  Carryout (real, where recorded)         X.XX          X.XX         0.00           0.0
+  TOTAL OPD STAY (simulated)             XX.XX         XX.XX         X.XX           X.X
 
-  Manual (Scenario A)
-    lambda (arrival rate)  : 0.157x patients/min
-    mu (service rate)      : 0.2000 patients/min
-    rho (utilization)      : 0.78xx
-    Lq (avg queue length)  : 2.8x
-    Wq (avg queue wait)    : 18.xx min
-    W  (avg system time)   : 23.xx min
+--- M/M/1 REGISTRATION COUNTER ---
 
-  Digital (Scenario B)
-    lambda (arrival rate)  : 0.157x patients/min
-    mu (service rate)      : 0.3333 patients/min
-    rho (utilization)      : 0.47xx
-    Lq (avg queue length)  : 0.4x
-    Wq (avg queue wait)    : 2.6x min
-    W  (avg system time)   : 5.6x min
+  Scenario A — Manual
+    lambda  : X.XXXX patients/min (from real arrival data)
+    mu      : X.XXXX patients/min
+    rho     : X.XXXX
+    Lq      : X.XXXX patients
+    Wq      : XX.XX min
+    W       : XX.XX min
+
+  Scenario B — Digital
+    lambda  : X.XXXX patients/min (from real arrival data)
+    mu      : X.XXXX patients/min
+    rho     : X.XXXX
+    Lq      : X.XXXX patients
+    Wq      : X.XX min
+    W       : X.XX min
 
 --- PHC COMPLIANCE RATES ---
 
-  Manual (Scenario A)
-    Patients simulated     : ~2996
-    Within 150 min         : ~94.x%
-    Within 180 min         : ~98.x%
-    Peak hour (8-9 AM)     : ~82.x% within 150 min
+  Scenario A — Manual
+    Patients            : XXXX
+    Within 150 min      : XX.X%
+    Within 180 min      : XX.X%
+    Peak hour (8-9 AM)  : XX.X% within 150 min  (n=XXX)
 
-  Digital (Scenario B)
-    Patients simulated     : ~2996
-    Within 150 min         : ~99.x%
-    Within 180 min         : ~100.0%
-    Peak hour (8-9 AM)     : ~97.x% within 150 min
-
-======================================================================
-  END OF REPORT
-======================================================================
+  Scenario B — Digital
+    Patients            : XXXX
+    Within 150 min      : XX.X%
+    Within 180 min      : XX.X%
+    Peak hour (8-9 AM)  : XX.X% within 150 min  (n=XXX)
 ```
 
-> Values marked with `x` will vary slightly across runs with different random seeds. The M/M/1 closed-form metrics (rho, Wq, W) are deterministic given the same scenario config and will always be stable.
+---
+
+## 11. How to Use in Chapter 4
+
+1. **Run the script.** Capture terminal output.
+2. **Replace the manually derived tables** in `docs/chapter4_simulation_comparison.md` (Sections 6, 7, 10) with the script's actual output. These numbers are now fully reproducible.
+3. **Cite the data source** in the thesis body as:
+   > "Stage durations for the consultation service are derived from XXX patient records imported from PHC's physical consultation room Excel tracking sheets (March 2024 to December 2025). Administrative overhead values for the manual scenario were obtained from structured observation and MISD staff interviews. The simulation was executed via `python_backend/chapter4_simulation.py`, applying M/M/1 closed-form formulas from `analytics/helpers.py` to the real historical arrival stream."
+4. **For the manual scenario overhead**, cite the MISD interview and observation as the data source. The clinical stages are real data — only the pre-desk overhead is estimated.
+5. **Export the CSVs** (`chapter4_comparison_output.csv`, `chapter4_scenario_a_stats.csv`, `chapter4_scenario_b_stats.csv`) and include them as appendices.
 
 ---
 
-## 9. How to Use the Output in Chapter 4
-
-1. **Run the script** and capture the terminal output.
-2. **Paste the stage-by-stage table** into `docs/chapter4_simulation_comparison.md` (Section 6) as verbatim simulation output, replacing or validating the manually derived figures.
-3. **Paste the M/M/1 metrics** into Section 7 as the computed values.
-4. **Paste the compliance rates** into Section 10.
-5. **Cite the script** in the thesis body:
-   > "Results were generated by executing `python_backend/chapter4_simulation.py`, which applies M/M/1 closed-form formulas from `analytics/helpers.py` to stochastic patient flow data generated by `db_seeder.py` over a simulated 25-day operating period."
-
-This gives your Chapter 4 a fully reproducible, auditable simulation result rather than manually computed estimates.
-
----
-
-## 10. Common Errors and Fixes
+## 12. Common Errors and Fixes
 
 | Error | Cause | Fix |
 |---|---|---|
-| `ModuleNotFoundError: No module named 'analytics'` | Script not run from inside `python_backend/` | Run `python chapter4_simulation.py` from the `python_backend/` directory, not the repo root |
-| `TypeError: generate_fake_patients() got unexpected keyword argument 'output_filename=None'` | `db_seeder.py` tries to pass `None` to `df.to_csv()` | Apply the one-line guard: `if output_filename is not None: df.to_csv(output_filename, index=False)` |
-| `M/M/1 status: Unstable` for Scenario A | The manually defined `reg_service_mean_min = 5.0` produces mu = 0.200, which is close to lambda on high-volume days | This is expected and intentional — it demonstrates the bottleneck. The instability warning validates the claim that the manual system operates near capacity |
-| `KeyError: 'kiosk_time'` | `db_seeder.py` uses column name `created_at`, not `kiosk_time` | Add `df_raw["kiosk_time"] = pd.to_datetime(df_raw["created_at"])` immediately after calling `generate_fake_patients()` |
-| Compliance rates show 100% for both scenarios | `POST_CONSULT_MIN` or `WALK_TIME_MIN` set too low, making all totals small | Keep `POST_CONSULT_MIN = 15.0` and `WALK_TIME_MIN = 2.0` as defined in Step 1 |
+| `RuntimeError: Supabase URL/key are not configured` | `.env.local` not found or missing keys | Confirm `.env.local` is at the repo root and has `NEXT_PUBLIC_SUPABASE_URL` and `SUPABASE_SERVICE_ROLE_KEY` |
+| `ModuleNotFoundError: No module named 'main'` | Script not run from inside `python_backend/` | `cd python_backend` first, then run |
+| `ModuleNotFoundError: No module named 'analytics'` | Same cause | Run from `python_backend/` |
+| `df is empty after filtering` | `is_historical` column not present or all rows are `false` | Confirm historical import was run. Check Supabase directly: `SELECT COUNT(*) FROM patients WHERE is_historical = true` |
+| `service_registration all NaN` | Historical rows where `reg_start = reg_end = created_at` (import mapped Queuing Time to both) | Use `service_consultation` as the primary clinical metric; acknowledge this in the report |
+| `mm1() returns {"status": "Unstable"}` | Real lambda exceeds mu for Scenario A | This is a valid and reportable finding — it means the manual process was operating at or above capacity. Report it as evidence of the bottleneck |
 
 ---
 
-_This guide is scoped to thesis Chapter 4 reproduction. The simulation script is a standalone file; it does not affect the live Next.js application, the FastAPI analytics server, or any Supabase data._
+_This guide replaces the earlier draft that used `db_seeder.py` and synthetic service weights.
+The simulation is now grounded entirely in real PHC historical data for the consultation service._
