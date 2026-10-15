@@ -2,179 +2,265 @@
 
 ## Overview
 
-Database: Supabase (PostgreSQL) for development, with an intended handoff to PHC's own on-premises PostgreSQL server for production. This document covers the primary tables, key gotchas, and the reasoning behind schema decisions that deviate from a "textbook" normalized design.
-
-> **Note on currency:** the columns below reflect the schema as previously documented, with additions layered in from a more recent live schema pull. Several new columns and entire new tables (staff-assignment tables, rate-limiting tables) are flagged below as "not yet documented" — their semantics haven't been confirmed yet, only their existence.
+Database: Supabase (PostgreSQL 15) for development, with an intended handoff to PHC's own on-premises PostgreSQL server for production. This document covers the primary tables, access policies, key gotchas, and the reasoning behind schema decisions that deviate from a textbook normalized design.
 
 ## Table: `patients`
 
-**This is the single unified table** for both the live kiosk-generated queue and PHC's historical Excel-imported records — there is no separate historical table. This was a deliberate decision to avoid duplicating analytics logic across two schemas, at the cost of needing careful row-scoping to keep live operational writes from ever touching historical data. See `SECURITY.md` for how RLS enforces this separation (currently under review — the live policy set has diverged from the originally documented `is_historical`-only model).
+**This is the single unified table** for both the live kiosk-generated queue and PHC's historical Excel-imported records — there is no separate historical table. This was a deliberate decision to avoid duplicating analytics logic across two schemas, at the cost of needing careful row-scoping to keep live operational writes from ever touching historical data.
+
+PostgreSQL Row-Level Security (RLS) strictly enforces this separation using RESTRICTIVE policies (`patients_no_historical_insert`, `patients_no_historical_update`, `patients_no_historical_delete`) requiring `is_historical = false`. These RESTRICTIVE policies act as mandatory filters that combine with PERMISSIVE role policies via boolean AND, guaranteeing that no normal authenticated or anonymous operation can ever mutate or delete historical research records.
 
 ### Columns (verified against live schema)
 
-| Column                    | Type          | Constraints               | Notes                                                                                                                                                                                                                                                                                                                                                                              |
-| ------------------------- | ------------- | -------------------------- | ------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------ |
-| `id`                      | `int8`        | Primary Identity           | **The reliable patient identifier for analytics.** Always present for both live and historical rows.                                                                                                                                                                                                                                                                               |
-| `created_at`              | `timestamptz` |                             | For imported rows, mapped from the Excel "Queuing Time" column during import.                                                                                                                                                                                                                                                                                                      |
-| `phoneNum`                | `int8`        | Nullable                   |                                                                                                                                                                                                                                                                                                                                                                                     |
-| `service`                 | `varchar`     | Nullable                   | Links to `services` table                                                                                                                                                                                                                                                                                                                                                           |
-| `patientNum`              | `text`        | Nullable                   | **Kiosk queue code (e.g. `C001`) — NOT a hospital record ID.** Only populated for live kiosk-created rows; historical imported rows leave this NULL. Do not use this as a patient identifier in analytics — see Key Gotcha below.                                                                                                                                                  |
-| `cubicleNum`              | `text`        | Nullable                   |                                                                                                                                                                                                                                                                                                                                                                                     |
-| `status`                  | `text`        | Nullable                   | e.g. waiting, in-progress, Done                                                                                                                                                                                                                                                                                                                                                    |
-| `updated_at`              | `timestamptz` | Nullable                   |                                                                                                                                                                                                                                                                                                                                                                                     |
-| `reg_start`               | `timestamptz` | Nullable                   | NULL for services that don't use a registration stage (only Consultation and OPD Screening use this)                                                                                                                                                                                                                                                                                |
-| `reg_end`                 | `timestamptz` | Nullable                   | Same NULL condition as `reg_start`                                                                                                                                                                                                                                                                                                                                                  |
-| `consult_start`           | `timestamptz` | Nullable                   | Mapped from Excel "Doctor Seen" column during import                                                                                                                                                                                                                                                                                                                                |
-| `consult_end`             | `timestamptz` | Nullable                   | Mapped from Excel "Doctor Completed" column during import                                                                                                                                                                                                                                                                                                                           |
-| `counter`                 | `int4`        | Nullable                   |                                                                                                                                                                                                                                                                                                                                                                                     |
-| `called_at`               | `timestamptz` | Nullable                   |                                                                                                                                                                                                                                                                                                                                                                                     |
-| `timeout_seconds`         | `int4`        | Nullable                   |                                                                                                                                                                                                                                                                                                                                                                                     |
-| `queue_position`          | `int4`        | Nullable                   |                                                                                                                                                                                                                                                                                                                                                                                     |
-| `progress_started_at`     | `timestamptz` | Nullable                   |                                                                                                                                                                                                                                                                                                                                                                                     |
-| `cubicle_top_started_at`  | `timestamptz` | Nullable                   |                                                                                                                                                                                                                                                                                                                                                                                     |
-| `is_historical`           | `boolean`     | NOT NULL, default `false`  | **Added during the security pass.** `true` = historical/imported row, `false` = live kiosk-created row. Backfilled using `patientNum IS NULL` as the original signal, since the import script never wrote that column. This is the field that separates "safe to edit/delete via app" from "protected, historical, analytics-critical." See `CHANGES_NEEDED.md` for the migration. |
-| `preferredCubicleNums`    | `_text`       | Nullable                   | Array of cubicle numbers, patient's ranked preference — semantics not yet documented.                                                                                                                                                                                                                                                                                              |
-| `subcategory`              | `text`        | Nullable                   | Not yet documented against `cubicle.subcategory` — confirm relationship.                                                                                                                                                                                                                                                                                                            |
-| `carryout_start`           | `timestamptz` | Nullable                   | Start of the "Carry Out" stage — see Known Discrepancy note below; this stage exists in the schema but has historically been excluded from the computed `avg_total_time` pipeline.                                                                                                                                                                                                |
-| `carryout_end`             | `timestamptz` | Nullable                   | End of the "Carry Out" stage.                                                                                                                                                                                                                                                                                                                                                       |
-| `cooldown_until`           | `timestamptz` | Nullable                   | Not yet documented — likely part of a rotation/re-queue throttling mechanism alongside `rotation_count`.                                                                                                                                                                                                                                                                            |
-| `rotation_count`           | `int4`        | NOT NULL                   | Not yet documented — likely tracks how many times a patient has been rotated through a cubicle queue.                                                                                                                                                                                                                                                                               |
-| `counter_rejoin_at`        | `timestamptz` | Nullable                   | Not yet documented.                                                                                                                                                                                                                                                                                                                                                                 |
-| `counter_top_started_at`   | `timestamptz` | Nullable                   | Not yet documented.                                                                                                                                                                                                                                                                                                                                                                 |
-| `idle_at`                  | `timestamptz` | Nullable                   | Not yet documented — likely marks when a patient entered an idle/unassigned state (see `IdleNumbersSection.tsx`, `useIdlePatients.ts` in `/transfer`).                                                                                                                                                                                                                             |
-| `removed_at`               | `timestamptz` | Nullable                   | Not yet documented.                                                                                                                                                                                                                                                                                                                                                                 |
+| Column | Type | Constraints | Notes |
+| :--- | :--- | :--- | :--- |
+| `id` | `int8` | Primary Identity | **The reliable patient identifier for analytics.** Always present for both live and historical rows. Auto-incrementing int8. |
+| `created_at` | `timestamptz` | NOT NULL | For imported rows, mapped from the Excel "Queuing Time" column during import. |
+| `phoneNum` | `int8` | Nullable | Patient contact phone number. Stored as integer or encrypted ciphertext (`enc:v1:...`). |
+| `service` | `varchar` | Nullable | Links to `services.label_en` (e.g. `Consultation`, `OPD Screening`, `ECG`). |
+| `patientNum` | `text` | Nullable | **Kiosk queue code (e.g. `C001`) — NOT a hospital record ID.** Only populated for live kiosk-created rows; historical imported rows leave this NULL. Do not use this as a patient identifier in analytics. |
+| `cubicleNum` | `text` | Nullable | Current assigned station or cubicle identifier (e.g. `1`, `Cubicle 2`). |
+| `status` | `text` | Nullable | Current operational queue state (`waiting`, `in-progress`, `Done`, `cancelled`). |
+| `updated_at` | `timestamptz` | Nullable | Last modification timestamp. |
+| `reg_start` | `timestamptz` | Nullable | Registration desk intake start time. NULL for services bypassing registration. |
+| `reg_end` | `timestamptz` | Nullable | Registration desk completion time. |
+| `consult_start` | `timestamptz` | Nullable | Mapped from Excel "Doctor Seen" column during import; set when nurse calls patient. |
+| `consult_end` | `timestamptz` | Nullable | Mapped from Excel "Doctor Completed" column during import; set when consultation finishes. |
+| `counter` | `int4` | Nullable | Assigned physical registration counter number (links to `counters.counter_number`). |
+| `called_at` | `timestamptz` | Nullable | Timestamp when patient was called over audio callout system. |
+| `timeout_seconds` | `int4` | Nullable | Cooldown or intake timeout setting in seconds. |
+| `queue_position` | `int4` | Nullable | Numeric index indicating current waiting sequence position. |
+| `progress_started_at` | `timestamptz` | Nullable | Timestamp marking transition into active service. |
+| `cubicle_top_started_at` | `timestamptz` | Nullable | Timestamp when patient reached the top of a cubicle queue. |
+| `preferredCubicleNums` | `_text` | Nullable | Array of cubicle strings indicating patient preference or routing options. |
+| `subcategory` | `text` | Nullable | Subcategory classification for specific clinical queues (e.g., ECG, Pedia, Adult). |
+| `carryout_start` | `timestamptz` | Nullable | Start timestamp for carryout / prescription release stage. |
+| `carryout_end` | `timestamptz` | Nullable | Completion timestamp for carryout stage. Integrated in analytics pipeline. |
+| `is_historical` | `bool` | NOT NULL, default `false` | Distinguishes imported historical research records (`true`) from active queue rows (`false`). |
+| `cooldown_until` | `timestamptz` | Nullable | Throttling timestamp preventing immediate re-calling of skipped/rotated patients. |
+| `rotation_count` | `int4` | NOT NULL, default `0` | Tracks number of times a patient has been skipped or rotated across queues. |
+| `counter_rejoin_at` | `timestamptz` | Nullable | Timestamp when an idle or transferred patient rejoined the counter queue. |
+| `counter_top_started_at` | `timestamptz` | Nullable | Timestamp when patient arrived at the head of the counter queue. |
+| `idle_at` | `timestamptz` | Nullable | Timestamp when patient was moved to idle status (no-show / unassigned pool). |
+| `removed_at` | `timestamptz` | Nullable | Timestamp marking removal from active queue flow. |
 
-> Several of the columns above are undocumented — flagged rather than guessed at. Give actual semantics when available and these notes will get tightened.
+### Key Gotcha: `patientNum` vs `id`
 
-### Key Gotcha — `patientNum` vs `id`
+`patientNum` stores kiosk-generated queue display codes (`C001`, `C002`, ...), **not** a reliable unique patient identifier. The import script that loads historical Excel data never populates `patientNum` at all — so any analytics logic that checks `patientNum` before `id` will silently treat every historical row as having no patient, causing aggregations to return zero counts on historical data.
 
-`patientNum` stores kiosk-generated queue display codes (`C001`, `C002`, ...), **not** a reliable unique patient identifier. The import script that loads historical Excel data never populates `patientNum` at all — so any analytics logic that checks `patientNum` before `id` will silently treat every historical row as having no patient, and pandas' `.count()` skips those NULLs entirely.
+**Rule: always use `id` (int8, auto-increment) as the reliable unique patient identifier in all analytics, forecasting, and joins — never `patientNum`.**
 
-This caused a real bug: `normalize_dataframe()` in `main.py` checked `patientNum` before `id`, causing all `groupby` aggregations in `daily_summary()`, `hourly_pattern()`, and the forecasting modules to return zero counts on real data. **Fix:** check `id` first, fall back to `patientNum` only if needed. This is safe for both imported historical rows and live kiosk patients.
+### Kiosk Intake Architecture: `create_patient` Stored Procedure
 
-**Rule going forward: always use `id` (int8, auto-increment) as the reliable patient identifier in any new analytics code — never `patientNum`.**
+Public kiosk terminals running on unauthenticated hardware do not execute direct table `INSERT` queries on `patients`. Instead, the kiosk invokes the `create_patient` PostgreSQL stored procedure via Supabase RPC (`SECURITY DEFINER`). This stored procedure:
+1. Validates input parameters (`p_service`, `p_subcategory`, `p_preferred_cubicles`, `p_phone`).
+2. Calculates the next sequential queue code with the appropriate service prefix.
+3. Inserts the new record with `is_historical = false`.
+4. Returns the assigned queue code and initial queue position to the kiosk client.
+
+Direct `INSERT` statements on `patients` are restricted by RLS to authenticated `is_admin_or_superadmin()` and `is_registration_staff()`.
+
+---
 
 ## Table: `services`
 
-| Column            | Type   | Constraints | Notes                                                                                                                                                                                          |
-| ----------------- | ------ | ----------- | ---------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
-| `id`              | `int4` | Primary     |                                                                                                                                                                                                |
-| `label_en`        | `text` |             |                                                                                                                                                                                                |
-| `label_fil`       | `text` |             |                                                                                                                                                                                                |
-| `icon_src`        | `text` |             | Stores a Boxicons class name (e.g. `bx-heart`, `bx-chat`), resolved dynamically at render time via `resolveServiceIcon(service)` from `constants/icons.ts`, with fallback to `bx-folder` or service category icon. Supports legacy Tabler icon names via backward compatibility map. |
-| `display_order`   | `int4` | Nullable    |                                                                                                                                                                                                |
-| `description_en`  | `text` | Nullable    |                                                                                                                                                                                                |
-| `description_fil` | `text` | Nullable    |                                                                                                                                                                                                |
-| `patient_type`    | `text` | Nullable    | Values: `'new'`, `'old'`, `'both'` (default `'both'`). OPD Screening = `'new'` only. Consultation = `'old'` only. Determines whether a patient goes through the registration stage.            |
+| Column | Type | Constraints | Notes |
+| :--- | :--- | :--- | :--- |
+| `id` | `int4` | Primary | Service identifier. |
+| `label_en` | `text` | NOT NULL | English display label (e.g. `Consultation`, `OPD Screening`, `Warfarin`). |
+| `label_fil` | `text` | NOT NULL | Filipino display label (e.g. `Pagsusuri ng Doktor`, `Pagsala sa OPD`). |
+| `icon_src` | `text` | NOT NULL | Boxicons icon identifier resolved dynamically via `resolveServiceIcon()`. |
+| `display_order` | `int4` | Nullable | Sorting index for kiosk touchscreens. |
+| `description_en` | `text` | Nullable | English description displayed on kiosk guidance screens. |
+| `description_fil` | `text` | Nullable | Filipino description displayed on kiosk guidance screens. |
+| `patient_type` | `text` | Nullable | Routing flag: `'new'`, `'old'`, or `'both'`. Governs triage registration routing. |
 
-This is the kiosk's entire service menu — public write access here was the highest-severity RLS issue found in the audit (see `SECURITY.md`; not yet confirmed fixed in the latest live pull).
+**RLS Enforcement:**
+- Public read access for anonymous and authenticated users (`Enable read access for all users`).
+- All mutation operations (`INSERT`, `UPDATE`, `DELETE`) are strictly restricted to superadmins via `is_superadmin()`. Unauthenticated modifications are completely blocked.
+
+---
 
 ## Table: `users`
 
-Named `users`, not `profiles` — this table stores nurse/staff/admin/superadmin accounts (not patients).
+Stores nurse, staff, administrator, and superadmin accounts.
 
-| Column         | Type          | Constraints      | Notes                                                                                                                                            |
-| -------------- | ------------- | ----------------- | ------------------------------------------------------------------------------------------------------------------------------------------------- |
-| `id`           | `int8`        | Primary Identity  | Internal PK, not used for auth joins                                                                                                              |
-| `created_at`   | `timestamptz` |                   |                                                                                                                                                   |
-| `username`     | `text`        | Unique            |                                                                                                                                                   |
-| `email`        | `text`        | Unique            |                                                                                                                                                   |
-| `role`         | `text`        |                   | Values: `superadmin`, `admin`, `nurse`, `staff` — confirm exact casing/spelling against actual DB before relying on it in policy/middleware code |
-| `auth_id`      | `uuid`        | Unique            | **The join column for RLS/auth checks — matches `auth.uid()`, not `id`.** Every policy and middleware role check must use `auth_id`, not `id`.   |
-| `assigned_room`| `int4`        | Nullable          | Not yet documented — likely scopes a nurse/staff account to a physical room, distinct from the cubicle/service/counter assignment tables below.   |
+| Column | Type | Constraints | Notes |
+| :--- | :--- | :--- | :--- |
+| `id` | `int8` | Primary Identity | Internal sequence PK. |
+| `created_at` | `timestamptz` | NOT NULL | Account creation timestamp. |
+| `username` | `text` | Unique, NOT NULL | Account username. |
+| `email` | `text` | Unique, NOT NULL | Staff email address. |
+| `role` | `text` | NOT NULL | Role tier: `superadmin`, `admin`, `nurse`, `staff`. |
+| `auth_id` | `uuid` | Unique, NOT NULL | **Foreign key linking to `auth.users.id`.** Used for all RLS joins via `auth.uid()`. |
+| `assigned_room` | `int4` | Nullable | Primary physical triage or consultation room assignment. |
 
-## Staff Assignment Tables (new)
+**RLS Enforcement:**
+- `users_select_self`: Authenticated users can view only their own record (`auth_id = auth.uid() OR lower(email) = lower(auth.jwt() ->> 'email')`).
+- `users_select_superadmin`: Superadmins can view all user records (`is_superadmin()`).
+- Public / anonymous read access is completely denied, eliminating previous credential leakage risks.
 
-A set of join tables now scope staff accounts to specific cubicles, services, rooms, and counters — not yet reflected anywhere else in this doc set. These appear to back the new `is_clinical_staff()` / `is_registration_staff()` / `my_cubicle_nums()` RLS helper functions referenced in the `patients` policies (see `SECURITY.md` — flagged there as needing a fresh audit).
-
-- **`user_cubicles`** (`user_id`, `cubicle_id`, composite PK) — which cubicles a user is assigned to.
-- **`user_services`** (`id`, `user_id`, `service`) — which services a user is assigned to.
-- **`user_rooms`** (`id`, `user_id`, `service`, `subcategory` nullable, `room`) — which room(s) a user is assigned to, per service/subcategory.
-- **`user_counters`** (`id`, `user_id`, `counter`) — which counter(s) a user is assigned to.
-- **`cubicle_selector`** (`id`, `cubicle_name`, `cubicle_order` nullable) and **`cubicle_selector_cubicle`** (`id`, `cubicle_selector_id`, `cubicle_id`) — a grouping/ordering layer over `cubicle`, purpose not yet documented.
-
-None of these are covered in `SECURITY.md` or `CHANGES_NEEDED.md` in narrative form yet. The `patients` RLS policies on `SELECT`/`UPDATE` now branch into `patients_select_nurse_scoped` (cubicle-scoped, via `my_cubicle_nums()`) vs. `patients_select_registration_full` (unscoped for registration staff) — this is a materially different access model than the `is_historical`-only split originally documented, and needs its own audit pass rather than a patch.
-
-## Table: `login_attempts` / `password_reset_attempts` (new)
-
-Both are keyed on `email` (text, primary) and track rate-limiting state:
-
-- **`login_attempts`**: `attempt_count` (int4), `locked_until` (timestamptz, nullable), `updated_at` (timestamptz, nullable) — backs login lockout after repeated failures.
-- **`password_reset_attempts`**: `request_count` (int4), `window_start` (timestamptz), `updated_at` (timestamptz) — backs the password-reset flow (`app/api/auth/forgot-password`, `reset-password`, `verify-recovery`), rate-limiting reset requests per email/window.
+---
 
 ## Table: `cubicle`
 
-| Column        | Type          | Constraints      | Notes                 |
-| ------------- | ------------- | ----------------- | --------------------- |
-| `id`          | `int8`        | Primary Identity  |                       |
-| `created_at`  | `timestamptz` |                   |                       |
-| `cubicleNum`  | `text`        | Nullable          |                       |
-| `category`    | `text`        | Nullable          |                       |
-| `room`        | `int4`        | Nullable          |                       |
-| `subcategory` | `text`        | Nullable          |                       |
-| `doctorId`    | `uuid`        | Nullable          | Links to `doctors.id` |
+Stores clinical stations and cubicle rooms within the OPD clinic.
 
-Per the latest live schema pull, has no INSERT/DELETE policy — under RLS, that means both are fully blocked by default unless done via service role key. Confirm this is intentional. Also has 3 overlapping SELECT policies currently — cleanup candidate.
+| Column | Type | Constraints | Notes |
+| :--- | :--- | :--- | :--- |
+| `id` | `int8` | Primary Identity | Cubicle identifier. |
+| `created_at` | `timestamptz` | NOT NULL | Creation timestamp. |
+| `cubicleNum` | `text` | Nullable | Station designation (e.g. `1`, `Cubicle 2`). |
+| `category` | `text` | Nullable | Clinical category (e.g. `Adult`, `Pediatric`). |
+| `room` | `int4` | Nullable | Physical room number. |
+| `subcategory` | `text` | Nullable | Departmental sub-queue classification. |
+| `doctorId` | `uuid` | Nullable | Foreign key linking to `doctors.id`. |
+
+**RLS Enforcement:**
+- `Allow public read access`: Readable by anon and authenticated users for queue displays and station status.
+- `cubicle_update_doctor_assignment`: Doctor assignment updates restricted to registration staff (`is_registration_staff()`) or administrative managers (`is_admin_or_superadmin()`).
+- `INSERT` and `DELETE` have no public or staff policies, meaning they are blocked by default under RLS and reserved for service-role administrative operations.
+
+---
 
 ## Table: `doctors`
 
-| Column       | Type          | Constraints      | Notes |
-| ------------ | ------------- | ----------------- | ----- |
-| `id`         | `uuid`        | Primary           |       |
-| `full_name`  | `text`        |                   |       |
-| `specialty`  | `text`        | Nullable          |       |
-| `email`      | `text`        | Nullable, Unique  |       |
-| `auth_id`    | `uuid`        | Nullable          |       |
-| `active`     | `bool`        |                   |       |
-| `created_at` | `timestamptz` | Nullable          |       |
+Physician directory for consultation cubicle assignments.
+
+| Column | Type | Constraints | Notes |
+| :--- | :--- | :--- | :--- |
+| `id` | `uuid` | Primary | Unique doctor identifier. |
+| `full_name` | `text` | NOT NULL | Doctor full name and medical credentials. |
+| `specialty` | `text` | Nullable | Medical specialization (e.g. `Cardiology`, `Pediatric Cardiology`). |
+| `email` | `text` | Nullable, Unique | Contact email address. |
+| `auth_id` | `uuid` | Nullable | Optional link to Supabase Auth if doctor has direct login. |
+| `active` | `bool` | NOT NULL, default `true` | Active duty indicator. |
+| `created_at` | `timestamptz` | Nullable | Record creation timestamp. |
+
+**RLS Enforcement:**
+- `Authenticated users can read doctors`: All authenticated staff can view active doctor profiles.
+- `doctors_insert_managers`, `doctors_update_managers`, `doctors_delete_managers`: Mutations restricted to registration managers (`is_registration_staff()`) and administrators (`is_admin_or_superadmin()`).
+
+---
+
+## Table: `counters`
+
+Physical registration counters at the OPD reception and triage area.
+
+| Column | Type | Constraints | Notes |
+| :--- | :--- | :--- | :--- |
+| `counter_number` | `int4` | Primary | Physical counter number (e.g. `1`, `2`, `3`). |
+| `label` | `text` | Nullable | Optional descriptive title (e.g. `Triage Desk 1`). |
+| `active` | `bool` | NOT NULL, default `true` | Operating status flag. |
+| `created_at` | `timestamptz` | NOT NULL | Creation timestamp. |
+
+**RLS Enforcement:**
+- `counters readable`: Permissive public read for anon and authenticated users (`SELECT true`).
+
+---
 
 ## Table: `patient_category`
 
-| Column      | Type   | Constraints      | Notes |
-| ----------- | ------ | ----------------- | ----- |
-| `id`        | `int8` | Primary Identity  |       |
-| `label_en`  | `text` | Nullable          |       |
-| `label_fil` | `text` | Nullable          |       |
-| `icon_src`  | `text` | Nullable          |       |
-| `order`     | `int8` | Nullable          |       |
-| `type`      | `text` | Nullable          |       |
+Kiosk intake categories (e.g., Senior Citizen, PWD, Pregnant, Regular).
 
-Not yet discussed in depth — RLS policies here should get the same review `services` and `patients` received.
+| Column | Type | Constraints | Notes |
+| :--- | :--- | :--- | :--- |
+| `id` | `int8` | Primary Identity | Category identifier. |
+| `label_en` | `text` | Nullable | English description. |
+| `label_fil` | `text` | Nullable | Filipino description. |
+| `icon_src` | `text` | Nullable | Boxicons icon class. |
+| `order` | `int8` | Nullable | Display sequence index. |
+| `type` | `text` | Nullable | Category type mapping. |
+
+**RLS Enforcement:**
+- `Allow public read`: Public read access for kiosk touchscreen interfaces (`SELECT true`).
+
+---
 
 ## Table: `app_settings`
 
-| Column       | Type          | Constraints | Notes |
-| ------------ | ------------- | ----------- | ----- |
-| `key`        | `text`        | Primary     |       |
-| `value`      | `text`        |             |       |
-| `updated_at` | `timestamptz` | Nullable    |       |
+System-wide key-value configuration table (e.g. operating hours, timeout limits).
 
-RLS on this table already follows the correct pattern (read open to authenticated, all writes gated to superadmin) — used as the reference pattern for fixing the other tables.
+| Column | Type | Constraints | Notes |
+| :--- | :--- | :--- | :--- |
+| `key` | `text` | Primary | Setting key name. |
+| `value` | `text` | NOT NULL | Configuration value string or serialized JSON. |
+| `updated_at` | `timestamptz` | Nullable | Timestamp of last modification. |
+
+**RLS Enforcement:**
+- Read open to all authenticated users.
+- `INSERT` and `UPDATE` strictly restricted to `superadmin` role via `users` check.
+
+---
+
+## Staff Station Assignment Tables
+
+A set of join tables scoping staff accounts to physical rooms, counters, cubicles, and services:
+
+1. **`user_cubicles`** (`user_id` int8, `cubicle_id` int8, composite PK):
+   - Maps staff accounts to specific consultation cubicles.
+   - Read: `user_cubicles_select_self_or_superadmin` (self or superadmin).
+   - Write: `user_cubicles_write_superadmin` (superadmin only).
+2. **`user_services`** (`id` int8 PK, `user_id` int8, `service` text):
+   - Maps staff accounts to clinical service departments.
+   - Read: Authenticated self-read via `auth.uid()`.
+3. **`user_rooms`** (`id` int8 PK, `user_id` int8, `service` text, `subcategory` text nullable, `room` int4):
+   - Maps staff accounts to physical room numbers by service.
+   - Read: Authenticated self-read via `auth.uid()`.
+4. **`user_counters`** (`id` int8 PK, `user_id` int8, `counter` int4):
+   - Maps staff accounts to registration counter numbers.
+   - Read: Authenticated self-read via `auth.uid()`.
+5. **`cubicle_selector`** (`id` int8 PK, `cubicle_name` text, `cubicle_order` int8 nullable):
+   - Grouping and display layer for kiosk cubicle selection.
+   - Read: Public read (`anon, authenticated`).
+6. **`cubicle_selector_cubicle`** (`id` int8 PK, `cubicle_selector_id` int8, `cubicle_id` int8):
+   - Many-to-many link between selector groups and cubicles.
+   - Read: Public read (`public`).
+
+---
+
+## Rate-Limiting & Audit Tables
+
+Keyed on `email` to protect authentication endpoints from brute-force and replay attacks:
+
+1. **`login_attempts`**:
+   - `email` (`text` Primary), `attempt_count` (`int4`), `locked_until` (`timestamptz` Nullable), `updated_at` (`timestamptz` Nullable).
+   - Backs `/api/auth/login` brute-force lockout. Managed via service-role backend routes.
+2. **`password_reset_attempts`**:
+   - `email` (`text` Primary), `request_count` (`int4`), `window_start` (`timestamptz`), `updated_at` (`timestamptz`).
+   - Backs password recovery rate limiting with 15-minute expiration windows.
+
+---
 
 ## Diagnostic Signal Worth Knowing
 
 `get_empty_data()`'s output is distinguishable from a real `generate_report()` response by the presence of a top-level `queue_theory` key — **real output does not contain this key.** If the dashboard shows all zeros, checking for `queue_theory` in the JSON response immediately tells you whether `generate_report()` ran at all, without needing to dig through the pipeline step by step.
 
+---
+
 ## Import Pipeline Notes (Historical Data)
 
-- **Source:** `NOV.ROOM6-2025.xls` — legacy `.xls` format, requires the `xlrd` engine (not the default `openpyxl`, which only handles `.xlsx`)
-- **Structure:** ~74 daily sheets spanning March 2024–December 2025, dual-table layout per sheet
-- **Table identification:** the correct table on each sheet is found by searching for the word "Hospital" only in columns with index ≥ 15
+- **Source:** `NOV.ROOM6-2025.xls` — legacy `.xls` format, requires the `xlrd` engine (not the default `openpyxl`, which only handles `.xlsx`).
+- **Structure:** ~74 daily sheets spanning March 2024–December 2025, dual-table layout per sheet.
+- **Table identification:** The correct table on each sheet is found by searching for the word "Hospital" only in columns with index >= 15.
 - **Column mapping:**
-  - Queuing Time → `reg_start` AND `created_at`
-  - Initial Assessment → `reg_end`
-  - Doctor Seen → `consult_start`
-  - Doctor Completed → `consult_end`
-- **Timezone:** timestamps localized to `Asia/Manila`, then converted to UTC before insertion
-- **Gotcha:** `xlrd` returns time cells as Python `datetime.time` objects, not strings — use `.strftime()`, not `pd.to_datetime()`, or the conversion breaks silently
-- **Gotcha:** template/blank rows in the source Excel had `Hospital Number = 0` and all timestamps at `12:00 AM` — these were being imported as real data until a stop condition (`hosp_str == "0"`) was added to `extract_sheet_data()`
-- **Gotcha:** a LibreOffice-resaved copy of the source file caused every sheet to import as empty — always use the original downloaded `.xls` file, never a resaved copy
-- **Script location:** `import_phc_data.py` in `python_backend/`
-
-## Known Discrepancy: Computed vs. PHC-Recorded Averages
-
-The system's computed `avg_total_time` has historically run roughly 4 minutes lower than PHC's own recorded average, attributed to exclusion of the "Carry Out" stage from the computed pipeline. `patients` now has `carryout_start`/`carryout_end` columns — confirm whether the computed pipeline has been updated to include this stage, which would change or close this discrepancy. If it's still excluded, this remains a defensible, documentable point rather than a bug, and should be stated explicitly in Chapter 4 so it doesn't read as an unexplained discrepancy.
+  - Queuing Time -> `reg_start` AND `created_at`
+  - Initial Assessment -> `reg_end`
+  - Doctor Seen -> `consult_start`
+  - Doctor Completed -> `consult_end`
+- **Timezone:** Timestamps localized to `Asia/Manila`, then converted to UTC before insertion.
+- **Gotcha:** `xlrd` returns time cells as Python `datetime.time` objects, not strings — use `.strftime()`, not `pd.to_datetime()`, or the conversion breaks silently.
+- **Gotcha:** Template/blank rows in the source Excel had `Hospital Number = 0` and all timestamps at `12:00 AM` — these were being imported as real data until a stop condition (`hosp_str == "0"`) was added to `extract_sheet_data()`.
+- **Gotcha:** A LibreOffice-resaved copy of the source file caused every sheet to import as empty — always use the original downloaded `.xls` file, never a resaved copy.
+- **Script location:** `import_phc_data.py` in `python_backend/`.
+- **Historical Flag:** The import script uses the Supabase service role key and explicitly tags all ingested rows with `is_historical = true`.
 
 ---
 
-_Last updated: reflects schema state after the `patient_id` priority-fallback fix, with additions layered in from a more recent live schema pull (new `patients` columns, staff-assignment tables, `login_attempts`/`password_reset_attempts`). The `is_historical`-based RLS redesign described here has diverged from the live policy set — see `SECURITY.md`. Update this doc if any column is added, renamed, or repurposed._
+## Carry Out Stage Calculation
+
+The system calculates `service_carryout` using `carryout_start` and `carryout_end` in `python_backend/analytics/preprocessing.py`, integrating it into `total_time` to match Philippine Heart Center outpatient benchmarks.
+
+---
+
+_Last updated: 2026-10-16 — Database schema and RLS policies verified against live Supabase PostgreSQL instance. All legacy permissive policies dropped, staff-assignment scoping active, and RESTRICTIVE immutability policies enforced on historical records._

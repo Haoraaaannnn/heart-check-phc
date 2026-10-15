@@ -2,7 +2,7 @@
 
 import React from 'react';
 import { NotificationBadge } from '@/components/reusables/NotificationBadge';
-import { transferTexts } from '../constants/transferTexts';
+import { transferTexts } from '@/app/transfer/constants/transferTexts';
 import { Cubicle, Patient } from '@/types/Types';
 
 /**

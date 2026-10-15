@@ -90,4 +90,4 @@ Two defensible positions, both used together:
 
 ---
 
-_Last updated: reflects current project scope ahead of Chapter 4 (Results and Discussion). Revisit scope boundaries if future-work items get pulled forward._
+_Last updated: 2026-10-15 — Reflects current project scope ahead of Chapter 4 (Results and Discussion). Revisit scope boundaries if future-work items get pulled forward._

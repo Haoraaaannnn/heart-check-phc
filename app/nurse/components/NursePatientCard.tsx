@@ -14,9 +14,9 @@
 
 import React, { useState } from 'react';
 import { Patient } from '@/types/Types';
-import { ClinicalStage } from '../types/nurse';
-import { nurseTexts } from '../constants/nurseTexts';
-import { NurseStyle, STAGE_CONFIGS } from '../constants/nurse';
+import { ClinicalStage } from '@/app/nurse/types/nurse';
+import { nurseTexts } from '@/app/nurse/constants/nurseTexts';
+import { NurseStyle, STAGE_CONFIGS } from '@/app/nurse/constants/nurse';
 import { ElapsedTimer } from './ElapsedTimer';
 import { NurseDragHandle } from './NurseDragHandle';
 

@@ -11,9 +11,9 @@
 
 import React from 'react';
 import NotificationDropdown from '@/app/dashboard/components/NotificationDropdown';
-import { AssignedNurseCubicle } from '../types/nurse';
-import { nurseTexts } from '../constants/nurseTexts';
-import { NurseStyle } from '../constants/nurse';
+import { AssignedNurseCubicle } from '@/app/nurse/types/nurse';
+import { nurseTexts } from '@/app/nurse/constants/nurseTexts';
+import { NurseStyle } from '@/app/nurse/constants/nurse';
 
 /**
  * Props for the NurseHeader component.

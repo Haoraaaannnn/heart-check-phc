@@ -3,7 +3,7 @@
 import React, { useEffect, useState } from 'react';
 import { createPortal } from 'react-dom';
 import { Patient } from '@/types/Types';
-import { DragPoint } from '../hooks/dragUtils';
+import { DragPoint } from '@/app/transfer/hooks/dragUtils';
 
 /**
  * Props for `DragGhost`.

@@ -2,7 +2,7 @@
 import { useEffect } from 'react';
 import { Patient } from '@/types/Types';
 import { supabase } from '@/lib/supabase';
-import { callRotateApi } from '../lib/rotateApi';
+import { callRotateApi } from '@/app/transfer/lib/rotateApi';
 
 export function useRegistrationRotate(
   registrationPatients: Patient[],

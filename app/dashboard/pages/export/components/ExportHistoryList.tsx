@@ -13,9 +13,9 @@
 'use client';
 
 import React from 'react';
-import { EXPORT_STYLES } from '../constants/exportStyles';
-import { EXPORT_TEXTS } from '../constants/exportTexts';
-import { ExportHistoryItem } from '../types/exportTypes';
+import { EXPORT_STYLES } from '@/app/dashboard/pages/export/constants/exportStyles';
+import { EXPORT_TEXTS } from '@/app/dashboard/pages/export/constants/exportTexts';
+import { ExportHistoryItem } from '@/app/dashboard/pages/export/types/exportTypes';
 
 /**
  * Properties for the {@link ExportHistoryList} component.

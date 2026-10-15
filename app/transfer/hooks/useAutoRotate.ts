@@ -2,7 +2,7 @@
 import { useEffect, useRef } from 'react';
 import { Patient } from '@/types/Types';
 import { supabase } from '@/lib/supabase';
-import { callRotateApi } from '../lib/rotateApi';
+import { callRotateApi } from '@/app/transfer/lib/rotateApi';
 
 const MANUAL_SERVICES: string[] = [];
 

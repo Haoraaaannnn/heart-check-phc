@@ -2,7 +2,7 @@
 import { useState, useEffect, useMemo } from 'react';
 import { supabase } from '@/lib/supabase';
 import { Doctor, Cubicle } from '@/types/Types';
-import { transferTexts } from '../constants/transferTexts';
+import { transferTexts } from '@/app/transfer/constants/transferTexts';
 
 export function DoctorsPanel() {
   const [doctors, setDoctors] = useState<Doctor[]>([]);

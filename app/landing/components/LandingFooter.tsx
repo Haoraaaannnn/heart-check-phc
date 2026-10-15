@@ -11,8 +11,8 @@
 
 import React from 'react';
 import Link from 'next/link';
-import { LANDING_TEXTS } from '../constants/landingTexts';
-import { LANDING_STYLES } from '../constants/landingStyles';
+import { LANDING_TEXTS } from '@/app/landing/constants/landingTexts';
+import { LANDING_STYLES } from '@/app/landing/constants/landingStyles';
 
 /**
  * Enterprise footer component for the landing page.

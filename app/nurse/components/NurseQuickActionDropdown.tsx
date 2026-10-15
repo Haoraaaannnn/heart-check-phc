@@ -26,8 +26,8 @@
 
 import React, { useEffect, useRef, useState } from 'react';
 import { Patient } from '@/types/Types';
-import { ClinicalStage, SelectedNursePatient } from '../types/nurse';
-import { nurseTexts } from '../constants/nurseTexts';
+import { ClinicalStage, SelectedNursePatient } from '@/app/nurse/types/nurse';
+import { nurseTexts } from '@/app/nurse/constants/nurseTexts';
 
 /**
  * Props for the NurseQuickActionDropdown component.

@@ -4,27 +4,26 @@ Running list of known follow-ups that aren't urgent enough to block progress, bu
 
 ## Security
 
-- [x] `proxy.ts` (formerly `middleware.ts`) — built. Server-side route guard using `@supabase/ssr` cookie-based session validation with role-based access control. Protects `/superadmin`, `/dashboard`, `/nurse`, `/transfer`. Redirects unauthenticated users to `/login` and unauthorized users to `/unauthorized`. Renamed from `middleware.ts` to `proxy.ts` per Next.js 16 deprecation.
 - [ ] `useRoleGuard` hook — confirm it queries `users`/`auth_id`, not the earlier assumed `profiles`/`id`; clarify overlap with `lib/supabase/authGuard.ts`
-- [ ] `cubicle` table — no INSERT/DELETE policy exists; confirm this is intentional (service-role-only) rather than an oversight. Also has 3 overlapping SELECT policies in the latest live pull — cleanup candidate.
-- [ ] `patient_category` table — RLS policies not yet reviewed
-- [ ] Rate limiting (`slowapi`) not yet applied to analytics endpoints — note: `login_attempts`/`password_reset_attempts` tables now exist, suggesting auth-endpoint rate limiting has been added separately; document once confirmed
+- [ ] Rate limiting (`slowapi`) not yet applied to analytics endpoints — note: `login_attempts`/`password_reset_attempts` tables now exist, protecting auth endpoints; analytics heavy computation endpoints remain to be throttled
+- [x] `proxy.ts` (formerly `middleware.ts`) — built. Server-side route guard using `@supabase/ssr` cookie-based session validation with role-based access control. Protects `/superadmin`, `/dashboard`, `/nurse`, `/transfer`. Redirects unauthenticated users to `/login` and unauthorized users to `/unauthorized`.
 - [x] `/unauthorized` page — built. Displays a branded access-denied screen for authenticated users whose role does not satisfy the middleware route requirements.
-- [ ] Kiosk insert still uses anon key directly to Supabase; longer-term move to a FastAPI endpoint + service role key is still the better design
-- [ ] `services` RLS fix — latest live pull still shows the old wide-open `anon` INSERT/DELETE policies present; the planned fix in `CHANGES_NEEDED.md` step 3 does not appear applied
-- [ ] `users` RLS fix — latest live pull still shows the public-read policy present; the planned fix in `CHANGES_NEEDED.md` step 4 does not appear applied
-- [ ] `patients` RLS — the planned `is_historical`-scoped fix (`CHANGES_NEEDED.md` step 5) does not match the live pull at all; live policies show a newer, undocumented `is_clinical_staff()`/`is_registration_staff()`/`my_cubicle_nums()` model layered on top of the still-present old wide-open policies, and there is no DELETE policy. Needs a full re-audit and fresh design doc, not a re-apply of the old SQL.
-- [ ] `doctors` write policies — live pull shows unguarded `true`/`authenticated`-only checks instead of superadmin-gated checks; confirm intentional vs. regression
-- [ ] New staff-assignment tables (`user_cubicles`, `user_services`, `user_rooms`, `user_counters`, `cubicle_selector`, `cubicle_selector_cubicle`) and their helper functions are undocumented — needed before the `patients` RLS rewrite above can be written up properly
+- [x] Kiosk ticket generation path — secured. Public kiosk terminals invoke the `create_patient` stored procedure via Supabase RPC (`SECURITY DEFINER`), enforcing parameter validation and `is_historical = false` server-side without requiring raw table INSERT permissions.
+- [x] `services` RLS — resolved. Anonymous insert and delete policies dropped; writes restricted strictly to `is_superadmin()`, read open to public.
+- [x] `users` RLS — resolved. Public account directory leak eliminated; authenticated self-read (`users_select_self`) and superadmin-all (`users_select_superadmin`) active.
+- [x] `patients` RLS — resolved. All legacy wide-open policies dropped. Active policies enforce nurse cubicle isolation (`my_cubicle_nums()`), registration staff permissions (`is_registration_staff()`), Manila-day live scoping for TV monitors (`patients_select_public_live`), and strict PostgreSQL RESTRICTIVE policies (`patients_no_historical_*`) preventing modification or deletion of historical research rows.
+- [x] `doctors` write policies — resolved. Mutations (`INSERT`, `UPDATE`, `DELETE`) restricted to registration staff and administrators (`is_registration_staff() OR is_admin_or_superadmin()`).
+- [x] `cubicle` table policies — resolved. Overlapping SELECT policies consolidated into a single public read policy; doctor assignment updates restricted to registration staff and administrators.
+- [x] Staff-assignment join tables (`user_cubicles`, `user_services`, `user_rooms`, `user_counters`, `cubicle_selector`, `cubicle_selector_cubicle`) — documented and verified with active role-based access policies.
 
 ## Data / Schema
 
-- [ ] Confirm exact `users.role` string values in production data (case-sensitive) — mismatches silently break policies and middleware
-- [ ] Run `is_historical` migration + backfill on `patients` (see `CHANGES_NEEDED.md` step 1) — not yet applied as of this doc's writing
-- [ ] `distribution_tests.py` — statistical validation of Poisson/exponential assumptions, pending real PHC data to run meaningfully
-- [ ] New `patients` columns not yet documented in narrative form: `preferredCubicleNums`, `subcategory`, `cooldown_until`, `rotation_count`, `counter_rejoin_at`, `counter_top_started_at`, `idle_at`, `removed_at` — need actual semantics, currently only flagged as "not yet documented" in `DATABASE_SCHEMA.md`
+- [x] Run `is_historical` migration + backfill on `patients` — applied and active. Verified in live schema with RESTRICTIVE RLS policies.
+- [x] New `patients` columns documented in narrative form: `preferredCubicleNums`, `subcategory`, `cooldown_until`, `rotation_count`, `counter_rejoin_at`, `counter_top_started_at`, `idle_at`, `removed_at` — documented with exact operational semantics in `docs/specifications/DATABASE_SCHEMA.md`.
 - [x] `carryout_start`/`carryout_end` schema columns — confirmed: `python_backend/analytics/preprocessing.py` computes `service_carryout` and includes it in `total_time` (lines 153-167), closing the ~7-minute tracking discrepancy against PHC's manual analysis sheet.
-- [ ] `users.assigned_room` — new column, purpose not yet documented against the `user_rooms` join table
+- [x] `users.assigned_room` — documented as primary physical triage or consultation room assignment.
+- [ ] Confirm exact `users.role` string values in production data (case-sensitive) — mismatches silently break policies and middleware
+- [ ] `distribution_tests.py` — statistical validation of Poisson/exponential assumptions, pending real PHC data to run meaningfully
 
 ## Analytics / ML (Planned, Post-Current-Priorities)
 
@@ -38,6 +37,7 @@ Running list of known follow-ups that aren't urgent enough to block progress, bu
 - [x] `PRD.md` scope/objectives updated with password-reset auth flow, superadmin cubicle management, modular dashboard presentation, and Excel export (`export.py`, `ExportExcelButton.tsx`)
 - [x] `python_backend/analytics/export.py` documented in `ARCHITECTURE.md` and `PRD.md`
 - [x] Title standardization across all documents: Updated to `Heart Check PHC: A Kiosk-Based Queue Management and Analytics System` (removing obsolete IoT terminology)
+- [x] Reconcile raw schema and RLS policies across `SCHEMA_REFERENCE.md`, `DATABASE_SCHEMA.md`, and `SECURITY.md` against live Supabase database instance.
 
 ## Deployment (Production Handoff, Not Urgent Yet)
 
@@ -47,10 +47,13 @@ Running list of known follow-ups that aren't urgent enough to block progress, bu
 
 ---
 
-_Add new items as they surface. Move resolved items to a "Resolved" section below with the date, rather than deleting them — useful for Chapter 4 documentation of the security work done._
-
 ## Resolved
 
+- [x] **2026-10-16:** Reconciled live Supabase schema and RLS policies across all specifications (`SCHEMA_REFERENCE.md`, `DATABASE_SCHEMA.md`, `SECURITY.md`, `SECURITY_CHECKLIST.md`, and `brain/architecture/database-and-rls.md`).
+- [x] **2026-10-16:** Verified `patients` RLS lockdown: eliminated unconditioned legacy policies, verified nurse station cubicle isolation via `my_cubicle_nums()`, verified Manila-day live scoping for TV monitors, and confirmed PostgreSQL RESTRICTIVE policies enforcing historical data immutability.
+- [x] **2026-10-16:** Verified `services` RLS lockdown: eliminated anonymous write/delete access; enforced `is_superadmin()` gate for catalog changes.
+- [x] **2026-10-16:** Verified `users` RLS lockdown: eliminated public directory read leak; enforced self-read and superadmin directory access.
+- [x] **2026-10-16:** Verified `doctors` and `cubicle` RLS: restricted doctor station assignments and physician directory changes to registration staff and hospital administrators.
 - [x] Import script used anon key and never marked rows historical — fixed: uses service role key and sets `is_historical = true`
 - [x] CORS on FastAPI backend — configured via `CORSMiddleware` in `python_backend/main.py` allowing frontend origins (localhost/127.0.0.1:3000/3001)
 - [x] Architecture & PRD documentation — synchronized with latest codebase refactorings and title standardization
@@ -62,8 +65,6 @@ _Add new items as they surface. Move resolved items to a "Resolved" section belo
 - [x] Comprehensive UAT use case verification checklist created in `docs/UAT_USE_CASE_CHECKLIST.md`.
 - [x] Real-time queue synchronization stabilization under weak signal — implemented across all hooks (`app/nurse/`, `app/transfer/`, `app/monitor/`, `app/dashboard/hooks/useOverviewData.ts`, `app/dashboard/pages/patients/hooks/useServiceQueue.ts`) and client socket tuning (`lib/supabase.ts`): monotonic fetch sequence guards, 300ms event debouncing, 2s channel hysteresis, 500ms overlap throttling, and subsystem-tailored polling fallbacks.
 
-## Still Open (Security High Priority)
+---
 
-- [ ] `patients` RLS wide open (all policies `true`) — a fix was designed (`is_historical`-scoped policies) but does not appear applied; live schema also shows a separate, newer, undocumented scoped-access model layered on top — needs full re-audit
-- [ ] `services` table — anon could INSERT/DELETE the kiosk service menu — fix designed (superadmin-only writes) but does not appear applied per latest live pull
-- [ ] `users` table — public (no-login) read access to accounts — fix designed (self-read + superadmin-all) but does not appear applied per latest live pull
+_Last updated: 2026-10-16 — Open issues tracker updated with verified RLS resolutions._

@@ -19,8 +19,8 @@ import { useTheme } from 'next-themes';
 import { supabase } from '@/lib/supabase';
 import { handleSignOut as executeSignOut } from '@/lib/supabase/signOut';
 import { LiveClock } from '@/components/reusables/LiveClock';
-import { SUPERADMIN_TEXTS } from '../../constants/superadminTexts';
-import { SUPERADMIN_NAV_STYLES } from '../../constants/superadminNavStyles';
+import { SUPERADMIN_TEXTS } from '@/app/superadmin/constants/superadminTexts';
+import { SUPERADMIN_NAV_STYLES } from '@/app/superadmin/constants/superadminNavStyles';
 
 interface SuperAdminHeaderProps {
   /** Handler to open the mobile drawer. */

@@ -10,7 +10,7 @@
 import { useState, useEffect, useCallback } from 'react';
 import { supabase } from '@/lib/supabase';
 import { handleSignOut } from '@/lib/supabase/signOut';
-import { CurrentStaffProfile } from '../types/selectScreen';
+import { CurrentStaffProfile } from '@/app/select-screen/types/selectScreen';
 
 /**
  * Resolves current staff auth session and users table profile.

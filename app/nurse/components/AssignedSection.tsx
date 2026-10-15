@@ -11,8 +11,8 @@
 
 import React from 'react';
 import { Patient } from '@/types/Types';
-import { ClinicalStage } from '../types/nurse';
-import { nurseTexts } from '../constants/nurseTexts';
+import { ClinicalStage } from '@/app/nurse/types/nurse';
+import { nurseTexts } from '@/app/nurse/constants/nurseTexts';
 import { StageColumn } from './StageColumn';
 import { NursePatientCard } from './NursePatientCard';
 

@@ -19,14 +19,14 @@ import {
   DEFAULT_EXPORT_OPTIONS,
   EXPORT_FETCH_TIMEOUT_MS,
   MONTHS_CONFIG,
-} from '../constants/export';
-import { EXPORT_TEXTS } from '../constants/exportTexts';
+} from '@/app/dashboard/pages/export/constants/export';
+import { EXPORT_TEXTS } from '@/app/dashboard/pages/export/constants/exportTexts';
 import {
   AvailableExportDatesResponse,
   ExportHistoryItem,
   ExportOptions,
   ExportTelemetrySummary,
-} from '../types/exportTypes';
+} from '@/app/dashboard/pages/export/types/exportTypes';
 
 /**
  * Return signature of the {@link useFileExport} hook.

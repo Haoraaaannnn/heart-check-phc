@@ -14,8 +14,8 @@ import { Patient } from '@/types/Types';
 import { OnProgressSection } from './OnProgressSection';
 import { IdleNumbersPanel } from './IdleNumbersPanel';
 import { NotificationBadge } from '@/components/reusables/NotificationBadge';
-import { transferTexts } from '../constants/transferTexts';
-import { SelectedTransferPatient } from '../types/transfer';
+import { transferTexts } from '@/app/transfer/constants/transferTexts';
+import { SelectedTransferPatient } from '@/app/transfer/types/transfer';
 
 /**
  * Props for {@link QueuePanel}.

@@ -15,7 +15,7 @@ import {
   CubicleOption,
   AccessOptions,
   AssignedRoom,
-} from '../types/superadmin';
+} from '@/app/superadmin/types/superadmin';
 
 export const CLINICAL_ROLES: string[] = ['nurse', 'staff', 'doctor'];
 export const REGISTRATION_ROLES: string[] = ['registration'];

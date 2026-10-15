@@ -9,8 +9,8 @@
 
 import React, { useState } from 'react';
 import { supabase } from '@/lib/supabase';
-import { SETTINGS_TEXTS } from '../constants/settingsTexts';
-import { SETTINGS_STYLES } from '../constants/settingsStyles';
+import { SETTINGS_TEXTS } from '@/app/superadmin/constants/settingsTexts';
+import { SETTINGS_STYLES } from '@/app/superadmin/constants/settingsStyles';
 
 /**
  * Superadmin password modification card.

@@ -11,8 +11,8 @@
 
 import React from 'react';
 import { Patient } from '@/types/Types';
-import { ClinicalStage, SelectedNursePatient } from '../types/nurse';
-import { NurseStyle } from '../constants/nurse';
+import { ClinicalStage, SelectedNursePatient } from '@/app/nurse/types/nurse';
+import { NurseStyle } from '@/app/nurse/constants/nurse';
 import { AssignedSection } from './AssignedSection';
 import { WithDoctorSection } from './WithDoctorSection';
 import { CarryoutSection } from './CarryoutSection';

@@ -13,8 +13,8 @@ import React, { useState, useEffect } from 'react';
 import { useRouter } from 'next/navigation';
 import { useTheme } from 'next-themes';
 import { formatManilaDate, formatManilaTime } from '@/utils/formatDateTime';
-import { LANDING_TEXTS } from '../constants/landingTexts';
-import { LANDING_STYLES } from '../constants/landingStyles';
+import { LANDING_TEXTS } from '@/app/landing/constants/landingTexts';
+import { LANDING_STYLES } from '@/app/landing/constants/landingStyles';
 
 /**
  * Top enterprise navigation header for the landing page.

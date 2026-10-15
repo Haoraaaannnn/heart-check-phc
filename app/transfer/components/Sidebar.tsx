@@ -18,8 +18,8 @@ import React from 'react';
 import { useRouter } from 'next/navigation';
 import { supabase } from '@/lib/supabase';
 import { handleSignOut } from '@/lib/supabase/signOut';
-import { CATEGORIES } from '../lib/constants';
-import { transferTexts } from '../constants/transferTexts';
+import { CATEGORIES } from '@/app/transfer/lib/constants';
+import { transferTexts } from '@/app/transfer/constants/transferTexts';
 import { NotificationBadge } from '@/components/reusables/NotificationBadge';
 import { SIDEBAR_ICONS, resolveServiceIcon } from '@/constants/icons';
 

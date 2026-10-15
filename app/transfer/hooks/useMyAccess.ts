@@ -3,7 +3,7 @@
 import { fetchActiveCounters } from '@/lib/counters';
 import { useState, useCallback } from 'react';
 import { supabase } from '@/lib/supabase';
-import { CATEGORIES } from '../lib/constants';
+import { CATEGORIES } from '@/app/transfer/lib/constants';
 
 export interface RoomAccess {
   service: string;

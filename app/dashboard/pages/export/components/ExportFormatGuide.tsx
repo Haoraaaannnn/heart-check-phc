@@ -14,8 +14,8 @@
 'use client';
 
 import React from 'react';
-import { EXPORT_STYLES } from '../constants/exportStyles';
-import { EXPORT_TEXTS } from '../constants/exportTexts';
+import { EXPORT_STYLES } from '@/app/dashboard/pages/export/constants/exportStyles';
+import { EXPORT_TEXTS } from '@/app/dashboard/pages/export/constants/exportTexts';
 
 /**
  * Hospital export format guideline card component.

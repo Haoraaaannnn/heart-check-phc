@@ -12,7 +12,7 @@
  * @module app/dashboard/pages/export/constants/export
  */
 
-import { ExportDateMode, ExportFileFormat, ExportOptions } from '../types/exportTypes';
+import { ExportDateMode, ExportFileFormat, ExportOptions } from '@/app/dashboard/pages/export/types/exportTypes';
 
 /** API base route for backend analytics requests. */
 export const API_BASE_URL = process.env.NEXT_PUBLIC_API_URL || 'http://localhost:8000';

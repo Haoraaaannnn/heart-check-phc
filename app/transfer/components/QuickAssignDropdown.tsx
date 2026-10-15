@@ -23,8 +23,8 @@
 
 import React, { useEffect, useRef, useState } from 'react';
 import { Cubicle, Patient } from '@/types/Types';
-import { MAX_PATIENTS_PER_CUBICLE } from '../lib/constants';
-import { transferTexts } from '../constants/transferTexts';
+import { MAX_PATIENTS_PER_CUBICLE } from '@/app/transfer/lib/constants';
+import { transferTexts } from '@/app/transfer/constants/transferTexts';
 
 /**
  * Props for {@link QuickAssignDropdown}.

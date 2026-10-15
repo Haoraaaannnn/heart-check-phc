@@ -2,7 +2,7 @@
 
 import React from 'react';
 import { BackButton } from '@/components/reusables/BackButton';
-import { transferTexts } from '../constants/transferTexts';
+import { transferTexts } from '@/app/transfer/constants/transferTexts';
 
 /**
  * Props for the `BreadcrumbNav` component.

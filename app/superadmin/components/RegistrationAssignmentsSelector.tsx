@@ -8,10 +8,10 @@
  */
 
 import React from 'react';
-import { AccessOptions, AssignedRoom } from '../types/superadmin';
-import { roomKey } from '../hooks/useUserModalState';
-import { SUPERADMIN_TEXTS } from '../constants/superadminTexts';
-import { SUPERADMIN_STYLES } from '../constants/superadminStyles';
+import { AccessOptions, AssignedRoom } from '@/app/superadmin/types/superadmin';
+import { roomKey } from '@/app/superadmin/hooks/useUserModalState';
+import { SUPERADMIN_TEXTS } from '@/app/superadmin/constants/superadminTexts';
+import { SUPERADMIN_STYLES } from '@/app/superadmin/constants/superadminStyles';
 
 interface RegistrationAssignmentsSelectorProps {
   /** Access options payload from the server. */

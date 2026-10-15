@@ -1,7 +1,7 @@
 'use client';
 import { useState } from 'react';
 import { Patient } from '@/types/Types';
-import { transferTexts } from '../constants/transferTexts';
+import { transferTexts } from '@/app/transfer/constants/transferTexts';
 
 type IdleNumbersSectionProps = {
   patients: Patient[];

@@ -5,7 +5,7 @@
  * Centralizes patient-facing validation error messages in accordance with AGENTS.md rules.
  */
 
-import { PhoneValidationErrorReason } from "../utils/phoneValidation";
+import { PhoneValidationErrorReason } from "@/app/kiosk/pages/sms-input/utils/phoneValidation";
 
 /**
  * Text messages for phone number validation feedback and keypad warnings.

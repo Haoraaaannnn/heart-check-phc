@@ -8,8 +8,8 @@
  */
 
 import React from 'react';
-import { SUPERADMIN_SKELETON_STYLES } from '../constants/superadminSkeletonStyles';
-import { SUPERADMIN_SKELETON_TEXTS } from '../constants/superadminSkeletonTexts';
+import { SUPERADMIN_SKELETON_STYLES } from '@/app/superadmin/constants/superadminSkeletonStyles';
+import { SUPERADMIN_SKELETON_TEXTS } from '@/app/superadmin/constants/superadminSkeletonTexts';
 
 const ROW_KEYS = ['row-1', 'row-2', 'row-3', 'row-4', 'row-5', 'row-6'] as const;
 const FILTER_KEYS = ['filter-1', 'filter-2', 'filter-3', 'filter-4', 'filter-5', 'filter-6'] as const;

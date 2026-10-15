@@ -10,10 +10,10 @@
 'use client';
 
 import React, { useCallback, useEffect, useState } from 'react';
-import { adminApi } from '../lib/adminApi';
-import { FACILITIES_TEXTS } from '../facilities/constants/facilitiesTexts';
-import { FACILITIES_STYLES } from '../facilities/constants/facilitiesStyles';
-import { SUPERADMIN_STYLES } from '../constants/superadminStyles';
+import { adminApi } from '@/app/superadmin/lib/adminApi';
+import { FACILITIES_TEXTS } from '@/app/superadmin/facilities/constants/facilitiesTexts';
+import { FACILITIES_STYLES } from '@/app/superadmin/facilities/constants/facilitiesStyles';
+import { SUPERADMIN_STYLES } from '@/app/superadmin/constants/superadminStyles';
 
 interface Counter {
   counter_number: number;

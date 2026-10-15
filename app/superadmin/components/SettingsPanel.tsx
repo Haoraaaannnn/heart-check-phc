@@ -13,9 +13,9 @@
 import React, { useState, useEffect, useCallback } from 'react';
 import { supabase } from '@/lib/supabase';
 import { ChangePasswordCard } from './ChangePasswordCard';
-import { SETTINGS_TEXTS } from '../constants/settingsTexts';
-import { SETTINGS_STYLES } from '../constants/settingsStyles';
-import { SUPERADMIN_SKELETON_STYLES } from '../constants/superadminSkeletonStyles';
+import { SETTINGS_TEXTS } from '@/app/superadmin/constants/settingsTexts';
+import { SETTINGS_STYLES } from '@/app/superadmin/constants/settingsStyles';
+import { SUPERADMIN_SKELETON_STYLES } from '@/app/superadmin/constants/superadminSkeletonStyles';
 
 interface SettingsPanelProps {
   /** When true, automatically scrolls to the administrator security credentials card. */

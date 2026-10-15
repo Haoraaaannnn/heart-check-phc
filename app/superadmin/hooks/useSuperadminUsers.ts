@@ -9,7 +9,7 @@
 
 import { useState, useEffect, useCallback, useMemo } from 'react';
 import { supabase } from '@/lib/supabase';
-import { SuperadminUser, UserStats } from '../types/superadmin';
+import { SuperadminUser, UserStats } from '@/app/superadmin/types/superadmin';
 
 export interface UseSuperadminUsersReturn {
   /** Array of users currently displayed. */

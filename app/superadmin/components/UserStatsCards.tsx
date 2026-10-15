@@ -13,13 +13,13 @@
  */
 
 import React from 'react';
-import { UserStats } from '../types/superadmin';
-import { SUPERADMIN_TEXTS } from '../constants/superadminTexts';
+import { UserStats } from '@/app/superadmin/types/superadmin';
+import { SUPERADMIN_TEXTS } from '@/app/superadmin/constants/superadminTexts';
 import {
   SUPERADMIN_STYLES,
   SUPERADMIN_TONES,
   SuperadminToneKey,
-} from '../constants/superadminStyles';
+} from '@/app/superadmin/constants/superadminStyles';
 import { UserStatsCardsSkeleton } from './UserStatsCardsSkeleton';
 
 interface UserStatsCardsProps {

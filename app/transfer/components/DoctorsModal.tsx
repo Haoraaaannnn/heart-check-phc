@@ -1,6 +1,6 @@
 'use client';
 import { DoctorsPanel } from './DoctorsPanel';
-import { transferTexts } from '../constants/transferTexts';
+import { transferTexts } from '@/app/transfer/constants/transferTexts';
 
 type DoctorsModalProps = {
   onClose: () => void;

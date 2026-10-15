@@ -13,7 +13,7 @@ import React from 'react';
 import { Cubicle, Patient } from '@/types/Types';
 import { SubcategoryPicker, RoomPicker } from './StepPickers';
 import { ServiceBoard } from './ServiceBoard';
-import { SelectedTransferPatient } from '../types/transfer';
+import { SelectedTransferPatient } from '@/app/transfer/types/transfer';
 
 /**
  * Props for {@link OPScreeningFlow}.

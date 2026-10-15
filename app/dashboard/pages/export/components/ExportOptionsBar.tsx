@@ -16,10 +16,10 @@ import React from 'react';
 import {
   EXPORT_DATE_MODES,
   EXPORT_SERVICE_OPTIONS,
-} from '../constants/export';
-import { EXPORT_STYLES } from '../constants/exportStyles';
-import { EXPORT_TEXTS } from '../constants/exportTexts';
-import { ExportDateMode, ExportFileFormat, ExportOptions } from '../types/exportTypes';
+} from '@/app/dashboard/pages/export/constants/export';
+import { EXPORT_STYLES } from '@/app/dashboard/pages/export/constants/exportStyles';
+import { EXPORT_TEXTS } from '@/app/dashboard/pages/export/constants/exportTexts';
+import { ExportDateMode, ExportFileFormat, ExportOptions } from '@/app/dashboard/pages/export/types/exportTypes';
 
 /**
  * Properties for the {@link ExportOptionsBar} component.

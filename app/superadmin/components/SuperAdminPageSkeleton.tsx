@@ -15,8 +15,8 @@
  */
 
 import React from 'react';
-import { SUPERADMIN_SKELETON_STYLES } from '../constants/superadminSkeletonStyles';
-import { SUPERADMIN_SKELETON_TEXTS } from '../constants/superadminSkeletonTexts';
+import { SUPERADMIN_SKELETON_STYLES } from '@/app/superadmin/constants/superadminSkeletonStyles';
+import { SUPERADMIN_SKELETON_TEXTS } from '@/app/superadmin/constants/superadminSkeletonTexts';
 import { UserStatsCardsSkeleton } from './UserStatsCardsSkeleton';
 import { UserTableSkeleton } from './UserTableSkeleton';
 

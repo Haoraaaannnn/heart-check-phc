@@ -15,13 +15,13 @@
 
 import React, { useState, useEffect, Suspense } from 'react';
 import { useSearchParams, useRouter } from 'next/navigation';
-import { RoomsPanel } from '../components/RoomsPanel';
-import { CountersPanel } from '../components/CountersPanel';
-import { useIdleTimeout } from '../hooks/useIdleTimeout';
-import { useRequireAuth } from '../hooks/useRequireAuth';
-import { SuperAdminPageSkeleton } from '../components/SuperAdminPageSkeleton';
+import { RoomsPanel } from '@/app/superadmin/components/RoomsPanel';
+import { CountersPanel } from '@/app/superadmin/components/CountersPanel';
+import { useIdleTimeout } from '@/app/superadmin/hooks/useIdleTimeout';
+import { useRequireAuth } from '@/app/superadmin/hooks/useRequireAuth';
+import { SuperAdminPageSkeleton } from '@/app/superadmin/components/SuperAdminPageSkeleton';
 import { FACILITIES_TEXTS } from './constants/facilitiesTexts';
-import { SUPERADMIN_STYLES } from '../constants/superadminStyles';
+import { SUPERADMIN_STYLES } from '@/app/superadmin/constants/superadminStyles';
 
 /**
  * Inner facilities content component synchronized with URL search parameters.

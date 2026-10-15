@@ -1,12 +1,14 @@
 # Heart Check PHC: A Kiosk-Based Queue Management and Analytics System — Raw Schema Reference
 
-**This is a literal dump, not a narrative explanation.** For context, reasoning, and gotchas, see `DATABASE_SCHEMA.md`. This doc exists so there's always an exact, copy-pasteable source of truth to diff against — regenerate and replace this file wholesale whenever the schema changes, rather than hand-editing it.
+This is a literal reference dump of the verified database schema and active Row-Level Security (RLS) policies. For architectural context, rationale, and key gotchas, see [DATABASE_SCHEMA.md](file:///home/jensen/Github-Repositories/Heart_Check_PHC/docs/specifications/DATABASE_SCHEMA.md) and [SECURITY.md](file:///home/jensen/Github-Repositories/Heart_Check_PHC/docs/specifications/SECURITY.md).
 
-**Last captured:** latest schema pull, reflecting the cubicle/service/room/counter staff-assignment model and the nurse/registration RLS scoping. Supersedes the earlier `is_historical`-only access model described in `SECURITY.md`/`CHANGES_NEEDED.md` — those docs have not yet been reconciled against this dump.
+**Schema Status:** Fully reconciled and active against live PostgreSQL Supabase database instance (Last updated: 2026-10-16).
 
 ---
 
 ## Table `services`
+
+### Columns
 
 | Name | Type | Constraints |
 |------|------|-------------|
@@ -21,6 +23,8 @@
 
 ## Table `users`
 
+### Columns
+
 | Name | Type | Constraints |
 |------|------|-------------|
 | `id` | `int8` | Primary Identity |
@@ -33,6 +37,8 @@
 
 ## Table `patients`
 
+### Columns
+
 | Name | Type | Constraints |
 |------|------|-------------|
 | `id` | `int8` | Primary Identity |
@@ -43,10 +49,10 @@
 | `cubicleNum` | `text` | Nullable |
 | `status` | `text` | Nullable |
 | `updated_at` | `timestamptz` | Nullable |
-| `reg_start` | `timestamptz` | Nullable |
 | `reg_end` | `timestamptz` | Nullable |
 | `consult_start` | `timestamptz` | Nullable |
 | `consult_end` | `timestamptz` | Nullable |
+| `reg_start` | `timestamptz` | Nullable |
 | `counter` | `int4` | Nullable |
 | `called_at` | `timestamptz` | Nullable |
 | `timeout_seconds` | `int4` | Nullable |
@@ -67,6 +73,8 @@
 
 ## Table `cubicle`
 
+### Columns
+
 | Name | Type | Constraints |
 |------|------|-------------|
 | `id` | `int8` | Primary Identity |
@@ -79,6 +87,8 @@
 
 ## Table `patient_category`
 
+### Columns
+
 | Name | Type | Constraints |
 |------|------|-------------|
 | `id` | `int8` | Primary Identity |
@@ -90,6 +100,8 @@
 
 ## Table `app_settings`
 
+### Columns
+
 | Name | Type | Constraints |
 |------|------|-------------|
 | `key` | `text` | Primary |
@@ -97,6 +109,8 @@
 | `updated_at` | `timestamptz` | Nullable |
 
 ## Table `doctors`
+
+### Columns
 
 | Name | Type | Constraints |
 |------|------|-------------|
@@ -110,6 +124,8 @@
 
 ## Table `login_attempts`
 
+### Columns
+
 | Name | Type | Constraints |
 |------|------|-------------|
 | `email` | `text` | Primary |
@@ -117,16 +133,9 @@
 | `locked_until` | `timestamptz` | Nullable |
 | `updated_at` | `timestamptz` | Nullable |
 
-## Table `password_reset_attempts`
-
-| Name | Type | Constraints |
-|------|------|-------------|
-| `email` | `text` | Primary |
-| `request_count` | `int4` |  |
-| `window_start` | `timestamptz` |  |
-| `updated_at` | `timestamptz` |  |
-
 ## Table `cubicle_selector`
+
+### Columns
 
 | Name | Type | Constraints |
 |------|------|-------------|
@@ -136,6 +145,8 @@
 
 ## Table `cubicle_selector_cubicle`
 
+### Columns
+
 | Name | Type | Constraints |
 |------|------|-------------|
 | `id` | `int8` | Primary Identity |
@@ -144,12 +155,16 @@
 
 ## Table `user_cubicles`
 
+### Columns
+
 | Name | Type | Constraints |
 |------|------|-------------|
 | `user_id` | `int8` | Primary |
 | `cubicle_id` | `int8` | Primary |
 
 ## Table `user_services`
+
+### Columns
 
 | Name | Type | Constraints |
 |------|------|-------------|
@@ -158,6 +173,8 @@
 | `service` | `text` |  |
 
 ## Table `user_rooms`
+
+### Columns
 
 | Name | Type | Constraints |
 |------|------|-------------|
@@ -169,26 +186,66 @@
 
 ## Table `user_counters`
 
+### Columns
+
 | Name | Type | Constraints |
 |------|------|-------------|
 | `id` | `int8` | Primary |
 | `user_id` | `int8` |  |
 | `counter` | `int4` |  |
 
+## Table `password_reset_attempts`
+
+### Columns
+
+| Name | Type | Constraints |
+|------|------|-------------|
+| `email` | `text` | Primary |
+| `request_count` | `int4` |  |
+| `window_start` | `timestamptz` |  |
+| `updated_at` | `timestamptz` |  |
+
+## Table `counters`
+
+### Columns
+
+| Name | Type | Constraints |
+|------|------|-------------|
+| `counter_number` | `int4` | Primary |
+| `label` | `text` | Nullable |
+| `active` | `bool` |  |
+| `created_at` | `timestamptz` |  |
+
 ---
 
 ## RLS Policies
+
+### `user_services`
+
+| Policy | Command | Roles | Action | USING | WITH CHECK |
+|--------|---------|-------|--------|-------|------------|
+| `Users can read their own service assignments` | SELECT | authenticated | PERMISSIVE | `(user_id = ( SELECT users.id FROM users WHERE (users.auth_id = auth.uid())))` | — |
+
+### `user_rooms`
+
+| Policy | Command | Roles | Action | USING | WITH CHECK |
+|--------|---------|-------|--------|-------|------------|
+| `Users can read their own room assignments` | SELECT | authenticated | PERMISSIVE | `(user_id = ( SELECT users.id FROM users WHERE (users.auth_id = auth.uid())))` | — |
+
+### `user_counters`
+
+| Policy | Command | Roles | Action | USING | WITH CHECK |
+|--------|---------|-------|--------|-------|------------|
+| `Users can read their own counter assignments` | SELECT | authenticated | PERMISSIVE | `(user_id = ( SELECT users.id FROM users WHERE (users.auth_id = auth.uid())))` | — |
 
 ### `services`
 
 | Policy | Command | Roles | Action | USING | WITH CHECK |
 |--------|---------|-------|--------|-------|------------|
 | `Enable read access for all users` | SELECT | public | PERMISSIVE | `true` | — |
-| `Allow anon deletion on services` | DELETE | anon | PERMISSIVE | `true` | — |
-| `Allow anon insert on services` | INSERT | anon | PERMISSIVE | — | `true` |
-| `Allow public read on services` | SELECT | anon | PERMISSIVE | `true` | — |
-
-_WARNING: Still unconditioned/public-writable as of this pull — the fix in `CHANGES_NEEDED.md` step 3 does not appear applied here._
+| `services_insert_superadmin` | INSERT | authenticated | PERMISSIVE | — | `( SELECT is_superadmin() AS is_superadmin)` |
+| `services_update_superadmin` | UPDATE | authenticated | PERMISSIVE | `( SELECT is_superadmin() AS is_superadmin)` | `( SELECT is_superadmin() AS is_superadmin)` |
+| `services_delete_superadmin` | DELETE | authenticated | PERMISSIVE | `( SELECT is_superadmin() AS is_superadmin)` | — |
 
 ### `patient_category`
 
@@ -209,22 +266,9 @@ _WARNING: Still unconditioned/public-writable as of this pull — the fix in `CH
 | Policy | Command | Roles | Action | USING | WITH CHECK |
 |--------|---------|-------|--------|-------|------------|
 | `Authenticated users can read doctors` | SELECT | authenticated | PERMISSIVE | `true` | — |
-| `Authenticated users can delete doctors` | DELETE | authenticated | PERMISSIVE | `true` | — |
-| `Authenticated users can insert doctors` | INSERT | authenticated | PERMISSIVE | — | `true` |
-| `Authenticated users can update doctors` | UPDATE | authenticated | PERMISSIVE | `true` | `true` |
-
-_WARNING: Previously documented as superadmin-gated (`EXISTS ... role = 'superadmin'`); this pull shows plain `true`/`authenticated`-only checks — any authenticated user can now write. Flagging for confirmation._
-
-### `cubicle`
-
-| Policy | Command | Roles | Action | USING | WITH CHECK |
-|--------|---------|-------|--------|-------|------------|
-| `Authenticated users can read cubicle` | SELECT | authenticated | PERMISSIVE | `true` | — |
-| `Allow public read access` | SELECT | anon, authenticated | PERMISSIVE | `true` | — |
-| `Authenticated users can update cubicle` | UPDATE | authenticated | PERMISSIVE | `true` | `true` |
-| `Allow authenticated read` | SELECT | authenticated | PERMISSIVE | `true` | — |
-
-_Still no INSERT/DELETE policy — both fully blocked under RLS by default. Also has 3 overlapping SELECT policies (duplicate cleanup candidate, same pattern as the old `patients` issue)._
+| `doctors_delete_managers` | DELETE | authenticated | PERMISSIVE | `(( SELECT is_registration_staff() AS is_registration_staff) OR ( SELECT is_admin_or_superadmin() AS is_admin_or_superadmin))` | — |
+| `doctors_update_managers` | UPDATE | authenticated | PERMISSIVE | `(( SELECT is_registration_staff() AS is_registration_staff) OR ( SELECT is_admin_or_superadmin() AS is_admin_or_superadmin))` | `(( SELECT is_registration_staff() AS is_registration_staff) OR ( SELECT is_admin_or_superadmin() AS is_admin_or_superadmin))` |
+| `doctors_insert_managers` | INSERT | authenticated | PERMISSIVE | — | `(( SELECT is_registration_staff() AS is_registration_staff) OR ( SELECT is_admin_or_superadmin() AS is_admin_or_superadmin))` |
 
 ### `cubicle_selector`
 
@@ -245,51 +289,42 @@ _Still no INSERT/DELETE policy — both fully blocked under RLS by default. Also
 | `user_cubicles_select_self_or_superadmin` | SELECT | authenticated | PERMISSIVE | `((user_id = ( SELECT users.id FROM users WHERE (users.auth_id = auth.uid()))) OR is_superadmin())` | — |
 | `user_cubicles_write_superadmin` | ALL | authenticated | PERMISSIVE | `is_superadmin()` | `is_superadmin()` |
 
-_Correctly designed — self-read-or-superadmin pattern, superadmin-only writes._
-
-### `users`
+### `cubicle`
 
 | Policy | Command | Roles | Action | USING | WITH CHECK |
 |--------|---------|-------|--------|-------|------------|
-| `Enable read access for all users` | SELECT | public | PERMISSIVE | `true` | — |
-
-_WARNING: Public account-data leak still present — the `CHANGES_NEEDED.md` step 4 fix does not appear applied here._
+| `Allow public read access` | SELECT | anon, authenticated | PERMISSIVE | `true` | — |
+| `cubicle_update_doctor_assignment` | UPDATE | authenticated | PERMISSIVE | `(( SELECT is_registration_staff() AS is_registration_staff) OR ( SELECT is_admin_or_superadmin() AS is_admin_or_superadmin))` | `(( SELECT is_registration_staff() AS is_registration_staff) OR ( SELECT is_admin_or_superadmin() AS is_admin_or_superadmin))` |
 
 ### `patients`
 
 | Policy | Command | Roles | Action | USING | WITH CHECK |
 |--------|---------|-------|--------|-------|------------|
-| `Allow insert for all` | INSERT | public | PERMISSIVE | — | `true` |
-| `Allow public insert` | INSERT | anon | PERMISSIVE | — | `true` |
-| `Allow public insert on patients` | INSERT | anon | PERMISSIVE | — | `true` |
-| `Allow public read` | SELECT | anon | PERMISSIVE | `true` | — |
-| `Allow public read on patients` | SELECT | anon | PERMISSIVE | `true` | — |
 | `patients_select_nurse_scoped` | SELECT | authenticated | PERMISSIVE | `(is_clinical_staff() AND ("cubicleNum" = ANY (my_cubicle_nums())))` | — |
 | `patients_update_nurse_scoped` | UPDATE | authenticated | PERMISSIVE | `(is_clinical_staff() AND ("cubicleNum" = ANY (my_cubicle_nums())))` | `(is_clinical_staff() AND ("cubicleNum" = ANY (my_cubicle_nums())))` |
 | `patients_select_registration_full` | SELECT | authenticated | PERMISSIVE | `is_registration_staff()` | — |
 | `patients_update_registration_full` | UPDATE | authenticated | PERMISSIVE | `is_registration_staff()` | `is_registration_staff()` |
+| `patients_select_public_live` | SELECT | anon | PERMISSIVE | `((is_historical = false) AND (created_at >= (date_trunc('day'::text, (now() AT TIME ZONE 'Asia/Manila'::text)) AT TIME ZONE 'Asia/Manila'::text)))` | — |
+| `patients_select_admin` | SELECT | authenticated | PERMISSIVE | `( SELECT is_admin_or_superadmin() AS is_admin_or_superadmin)` | — |
+| `patients_update_admin` | UPDATE | authenticated | PERMISSIVE | `( SELECT is_admin_or_superadmin() AS is_admin_or_superadmin)` | `( SELECT is_admin_or_superadmin() AS is_admin_or_superadmin)` |
+| `patients_insert_admin` | INSERT | authenticated | PERMISSIVE | — | `( SELECT is_admin_or_superadmin() AS is_admin_or_superadmin)` |
+| `patients_insert_registration` | INSERT | authenticated | PERMISSIVE | — | `( SELECT is_registration_staff() AS is_registration_staff)` |
+| `patients_no_historical_insert` | INSERT | anon, authenticated | RESTRICTIVE | — | `(is_historical = false)` |
+| `patients_no_historical_update` | UPDATE | anon, authenticated | RESTRICTIVE | `(is_historical = false)` | `(is_historical = false)` |
+| `patients_no_historical_delete` | DELETE | anon, authenticated | RESTRICTIVE | `(is_historical = false)` | — |
 
-_WARNING: Old wide-open `anon`/`public` policies (unconditioned INSERT/SELECT) are still present alongside the new `is_clinical_staff()`/`is_registration_staff()`/`my_cubicle_nums()` scoped policies — the earlier `is_historical`-based fix set (`patients_select_public_live`, `patients_insert_kiosk`, `patients_update_staff_live_only`, `patients_delete_superadmin_live_only`) does not appear in this pull at all, and no DELETE policy exists here. This table's access model has clearly evolved past what `SECURITY.md`/`CHANGES_NEEDED.md` describe — needs a fresh audit, not a patch of the old doc's language. `is_clinical_staff()`, `is_registration_staff()`, and `my_cubicle_nums()` are not yet documented anywhere as helper functions._
-
-### `user_services`
-
-| Policy | Command | Roles | Action | USING | WITH CHECK |
-|--------|---------|-------|--------|-------|------------|
-| `Users can read their own service assignments` | SELECT | public | PERMISSIVE | `(user_id = ( SELECT users.id FROM users WHERE (users.auth_id = auth.uid())))` | — |
-
-### `user_rooms`
-
-| Policy | Command | Roles | Action | USING | WITH CHECK |
-|--------|---------|-------|--------|-------|------------|
-| `Users can read their own room assignments` | SELECT | public | PERMISSIVE | `(user_id = ( SELECT users.id FROM users WHERE (users.auth_id = auth.uid())))` | — |
-
-### `user_counters`
+### `counters`
 
 | Policy | Command | Roles | Action | USING | WITH CHECK |
 |--------|---------|-------|--------|-------|------------|
-| `Users can read their own counter assignments` | SELECT | public | PERMISSIVE | `(user_id = ( SELECT users.id FROM users WHERE (users.auth_id = auth.uid())))` | — |
+| `counters readable` | SELECT | anon, authenticated | PERMISSIVE | `true` | — |
 
-_`user_services`/`user_rooms`/`user_counters` have SELECT-only self-read policies — no INSERT/UPDATE/DELETE policy on any of the three, meaning writes are fully blocked under RLS (service-role-only), same pattern as `cubicle`._
+### `users`
+
+| Policy | Command | Roles | Action | USING | WITH CHECK |
+|--------|---------|-------|--------|-------|------------|
+| `users_select_self` | SELECT | authenticated | PERMISSIVE | `((auth_id = auth.uid()) OR (lower(email) = lower((auth.jwt() ->> 'email'::text))))` | — |
+| `users_select_superadmin` | SELECT | authenticated | PERMISSIVE | `( SELECT is_superadmin() AS is_superadmin)` | — |
 
 ---
 

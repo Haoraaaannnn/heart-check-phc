@@ -11,8 +11,8 @@ import { useState, useCallback } from 'react';
 import { supabase } from '@/lib/supabase';
 import { enqueueMutation, removeMutation } from '@/lib/offlineQueue';
 import { Patient } from '@/types/Types';
-import { ClinicalStage, dbStatusToStage } from '../types/nurse';
-import { nurseTexts } from '../constants/nurseTexts';
+import { ClinicalStage, dbStatusToStage } from '@/app/nurse/types/nurse';
+import { nurseTexts } from '@/app/nurse/constants/nurseTexts';
 
 /**
  * Return model for the useNurseActions hook.

@@ -10,8 +10,8 @@
 'use client';
 
 import React from 'react';
-import { LANDING_TEXTS } from '../constants/landingTexts';
-import { LANDING_STYLES } from '../constants/landingStyles';
+import { LANDING_TEXTS } from '@/app/landing/constants/landingTexts';
+import { LANDING_STYLES } from '@/app/landing/constants/landingStyles';
 
 /**
  * 4-step clinical queue workflow progression component.
