@@ -14,8 +14,8 @@
 import React, { useState, useCallback, useEffect, type Dispatch, type SetStateAction } from 'react';
 import { supabase } from '@/lib/supabase';
 import { Patient } from '@/types/Types';
-import { MAX_PATIENTS_PER_CUBICLE } from '../lib/constants';
-import { SelectedTransferPatient, TransferSourceType } from '../types/transfer';
+import { MAX_PATIENTS_PER_CUBICLE } from '@/app/transfer/lib/constants';
+import { SelectedTransferPatient, TransferSourceType } from '@/app/transfer/types/transfer';
 
 /**
  * Configuration options required by {@link useTransferSelection}.

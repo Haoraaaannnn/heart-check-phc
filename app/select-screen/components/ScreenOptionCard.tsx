@@ -16,9 +16,9 @@
 import React, { useState } from 'react';
 import { useRouter } from 'next/navigation';
 import { handleSignOut } from '@/lib/supabase/signOut';
-import { ScreenOption } from '../types/selectScreen';
-import { SELECT_SCREEN_STYLES } from '../constants/selectScreen';
-import { SELECT_SCREEN_TEXTS } from '../constants/selectScreenTexts';
+import { ScreenOption } from '@/app/select-screen/types/selectScreen';
+import { SELECT_SCREEN_STYLES } from '@/app/select-screen/constants/selectScreen';
+import { SELECT_SCREEN_TEXTS } from '@/app/select-screen/constants/selectScreenTexts';
 
 interface ScreenOptionCardProps {
   /** Screen display configuration details. */

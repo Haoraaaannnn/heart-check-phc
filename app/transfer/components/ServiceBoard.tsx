@@ -17,8 +17,8 @@ import { QueuePanel } from './QueuePanel';
 import { RegistrationCounterSection } from './RegistrationCounterSection';
 import { CubicleCard } from './CubicleCard';
 import { QuickAssignDropdown } from './QuickAssignDropdown';
-import { transferTexts } from '../constants/transferTexts';
-import { SelectedTransferPatient } from '../types/transfer';
+import { transferTexts } from '@/app/transfer/constants/transferTexts';
+import { SelectedTransferPatient } from '@/app/transfer/types/transfer';
 
 /**
  * Props for {@link ServiceBoard}.

@@ -10,7 +10,7 @@
 
 import { useState, useCallback, useEffect } from 'react';
 import { Patient } from '@/types/Types';
-import { ClinicalStage, SelectedNursePatient } from '../types/nurse';
+import { ClinicalStage, SelectedNursePatient } from '@/app/nurse/types/nurse';
 import { isValidStageTransition } from './useNurseDragAndDrop';
 
 /**

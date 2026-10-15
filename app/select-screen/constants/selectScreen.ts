@@ -11,7 +11,7 @@
  * @module app/select-screen/constants/selectScreen
  */
 
-import { ScreenOption } from '../types/selectScreen';
+import { ScreenOption } from '@/app/select-screen/types/selectScreen';
 import { SELECT_SCREEN_TEXTS } from './selectScreenTexts';
 import { themeTokens, sizeTokens } from '@/constants/themeTokens';
 

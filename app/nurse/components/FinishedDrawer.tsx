@@ -11,8 +11,8 @@
 
 import React, { useEffect } from 'react';
 import { Patient } from '@/types/Types';
-import { nurseTexts } from '../constants/nurseTexts';
-import { NurseStyle } from '../constants/nurse';
+import { nurseTexts } from '@/app/nurse/constants/nurseTexts';
+import { NurseStyle } from '@/app/nurse/constants/nurse';
 import { FinishedTable } from './FinishedTable';
 
 /**

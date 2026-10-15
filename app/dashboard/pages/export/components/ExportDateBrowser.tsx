@@ -13,10 +13,10 @@
 'use client';
 
 import React from 'react';
-import { MONTHS_CONFIG, RANGE_OPTIONS } from '../constants/export';
-import { EXPORT_STYLES } from '../constants/exportStyles';
-import { EXPORT_TEXTS } from '../constants/exportTexts';
-import { AvailableExportDatesResponse, ExportOptions } from '../types/exportTypes';
+import { MONTHS_CONFIG, RANGE_OPTIONS } from '@/app/dashboard/pages/export/constants/export';
+import { EXPORT_STYLES } from '@/app/dashboard/pages/export/constants/exportStyles';
+import { EXPORT_TEXTS } from '@/app/dashboard/pages/export/constants/exportTexts';
+import { AvailableExportDatesResponse, ExportOptions } from '@/app/dashboard/pages/export/types/exportTypes';
 
 /**
  * Properties for the {@link ExportDateBrowser} component.

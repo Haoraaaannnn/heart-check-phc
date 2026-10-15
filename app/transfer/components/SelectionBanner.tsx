@@ -11,9 +11,9 @@
 'use client';
 
 import React from 'react';
-import { SelectedTransferPatient } from '../types/transfer';
-import { transferTexts } from '../constants/transferTexts';
-import { TransferStyle } from '../constants/transfer';
+import { SelectedTransferPatient } from '@/app/transfer/types/transfer';
+import { transferTexts } from '@/app/transfer/constants/transferTexts';
+import { TransferStyle } from '@/app/transfer/constants/transfer';
 
 /**
  * Props for {@link SelectionBanner}.

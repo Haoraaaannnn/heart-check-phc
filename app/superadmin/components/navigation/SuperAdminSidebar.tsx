@@ -15,9 +15,9 @@ import { usePathname, useSearchParams } from 'next/navigation';
 import {
   SUPERADMIN_NAV_GROUPS,
   SuperadminNavLink,
-} from '../../constants/superadminNav';
-import { SUPERADMIN_TEXTS } from '../../constants/superadminTexts';
-import { SUPERADMIN_NAV_STYLES } from '../../constants/superadminNavStyles';
+} from '@/app/superadmin/constants/superadminNav';
+import { SUPERADMIN_TEXTS } from '@/app/superadmin/constants/superadminTexts';
+import { SUPERADMIN_NAV_STYLES } from '@/app/superadmin/constants/superadminNavStyles';
 
 interface SuperAdminSidebarProps {
   /** Optional callback when a navigation link is clicked (used to close mobile drawer). */

@@ -16,12 +16,12 @@ import {
   AVAILABLE_SERVICE_BOXICONS,
   resolveServiceIcon,
 } from '@/constants/icons';
-import { useRequireAuth } from '../hooks/useRequireAuth';
-import { useIdleTimeout } from '../hooks/useIdleTimeout';
-import { SuperAdminPageSkeleton } from '../components/SuperAdminPageSkeleton';
+import { useRequireAuth } from '@/app/superadmin/hooks/useRequireAuth';
+import { useIdleTimeout } from '@/app/superadmin/hooks/useIdleTimeout';
+import { SuperAdminPageSkeleton } from '@/app/superadmin/components/SuperAdminPageSkeleton';
 import { CUSTOMIZATION_TEXTS } from './constants/customizationTexts';
 import { CUSTOMIZATION_STYLES } from './constants/customizationStyles';
-import { SUPERADMIN_STYLES } from '../constants/superadminStyles';
+import { SUPERADMIN_STYLES } from '@/app/superadmin/constants/superadminStyles';
 
 type PatientType = 'new' | 'old' | 'both';
 

@@ -11,7 +11,7 @@
 
 import React, { useState, useMemo } from 'react';
 import { Patient } from '@/types/Types';
-import { nurseTexts } from '../constants/nurseTexts';
+import { nurseTexts } from '@/app/nurse/constants/nurseTexts';
 
 /**
  * Props for the FinishedTable component.

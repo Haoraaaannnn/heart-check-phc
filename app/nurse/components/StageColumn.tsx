@@ -11,9 +11,9 @@
 'use client';
 
 import React from 'react';
-import { ClinicalStage } from '../types/nurse';
-import { NurseStyle } from '../constants/nurse';
-import { nurseTexts } from '../constants/nurseTexts';
+import { ClinicalStage } from '@/app/nurse/types/nurse';
+import { NurseStyle } from '@/app/nurse/constants/nurse';
+import { nurseTexts } from '@/app/nurse/constants/nurseTexts';
 
 /**
  * Props for the StageColumn component.

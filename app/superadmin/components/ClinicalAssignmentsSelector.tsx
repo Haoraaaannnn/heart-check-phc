@@ -8,9 +8,9 @@
  */
 
 import React, { useMemo } from 'react';
-import { CubicleOption } from '../types/superadmin';
-import { SUPERADMIN_TEXTS } from '../constants/superadminTexts';
-import { SUPERADMIN_STYLES } from '../constants/superadminStyles';
+import { CubicleOption } from '@/app/superadmin/types/superadmin';
+import { SUPERADMIN_TEXTS } from '@/app/superadmin/constants/superadminTexts';
+import { SUPERADMIN_STYLES } from '@/app/superadmin/constants/superadminStyles';
 
 interface ClinicalAssignmentsSelectorProps {
   /** Full list of cubicles fetched from the hospital database. */

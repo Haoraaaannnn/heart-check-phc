@@ -3,7 +3,7 @@
 import { useState, useRef, useEffect, useCallback } from 'react';
 import { supabase } from '@/lib/supabase';
 import { Patient } from '@/types/Types';
-import { MAX_PATIENTS_PER_CUBICLE } from '../lib/constants';
+import { MAX_PATIENTS_PER_CUBICLE } from '@/app/transfer/lib/constants';
 import { DragPoint, pointOf, findDropTarget, canStartDrag } from './dragUtils';
 
 const MANUAL_SERVICES = ['Consultation', 'OPD Screening'];

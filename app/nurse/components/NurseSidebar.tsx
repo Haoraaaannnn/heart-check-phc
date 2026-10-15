@@ -18,8 +18,8 @@ import React from 'react';
 import { useRouter } from 'next/navigation';
 import { supabase } from '@/lib/supabase';
 import { handleSignOut } from '@/lib/supabase/signOut';
-import { AssignedNurseCubicle } from '../types/nurse';
-import { nurseTexts } from '../constants/nurseTexts';
+import { AssignedNurseCubicle } from '@/app/nurse/types/nurse';
+import { nurseTexts } from '@/app/nurse/constants/nurseTexts';
 import { NotificationBadge } from '@/components/reusables/NotificationBadge';
 import { SIDEBAR_ICONS, resolveServiceIcon } from '@/constants/icons';
 

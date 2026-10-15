@@ -27,7 +27,7 @@ import {
   ClinicalStage,
   stageToDbStatus,
   dbStatusToStage,
-} from '../types/nurse';
+} from '@/app/nurse/types/nurse';
 
 /**
  * Cubicle assignment status descriptor.

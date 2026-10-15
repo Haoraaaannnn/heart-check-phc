@@ -17,10 +17,10 @@ import React from 'react';
 import {
   COMPLIANCE_FORMULAS_INFO,
   EXPORT_COLUMNS_INFO,
-} from '../constants/export';
-import { EXPORT_STYLES } from '../constants/exportStyles';
-import { EXPORT_TEXTS } from '../constants/exportTexts';
-import { ExportOptions } from '../types/exportTypes';
+} from '@/app/dashboard/pages/export/constants/export';
+import { EXPORT_STYLES } from '@/app/dashboard/pages/export/constants/exportStyles';
+import { EXPORT_TEXTS } from '@/app/dashboard/pages/export/constants/exportTexts';
+import { ExportOptions } from '@/app/dashboard/pages/export/types/exportTypes';
 
 /**
  * Properties for the {@link ExportPreviewCard} component.

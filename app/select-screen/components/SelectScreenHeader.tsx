@@ -13,9 +13,9 @@
 import React, { useState, useEffect } from 'react';
 import { useTheme } from 'next-themes';
 import { formatManilaDate, formatManilaTime } from '@/utils/formatDateTime';
-import { CurrentStaffProfile } from '../types/selectScreen';
-import { SELECT_SCREEN_STYLES } from '../constants/selectScreen';
-import { SELECT_SCREEN_TEXTS } from '../constants/selectScreenTexts';
+import { CurrentStaffProfile } from '@/app/select-screen/types/selectScreen';
+import { SELECT_SCREEN_STYLES } from '@/app/select-screen/constants/selectScreen';
+import { SELECT_SCREEN_TEXTS } from '@/app/select-screen/constants/selectScreenTexts';
 
 interface SelectScreenHeaderProps {
   /** Authenticated staff profile information. */

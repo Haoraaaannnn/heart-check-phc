@@ -16,8 +16,8 @@ import { handleSignOut as executeSignOut } from '@/lib/supabase/signOut';
 import { useRouter, usePathname, useSearchParams } from 'next/navigation';
 import Link from 'next/link';
 import { useTheme } from 'next-themes';
-import { SUPERADMIN_TEXTS } from '../constants/superadminTexts';
-import { SUPERADMIN_STYLES } from '../constants/superadminStyles';
+import { SUPERADMIN_TEXTS } from '@/app/superadmin/constants/superadminTexts';
+import { SUPERADMIN_STYLES } from '@/app/superadmin/constants/superadminStyles';
 
 /**
  * Superadmin navigation bar component with integrated light/dark theme toggle.

@@ -13,8 +13,8 @@ import React, { useState, useEffect } from 'react';
 import { useRouter } from 'next/navigation';
 import { useTheme } from 'next-themes';
 import { formatManilaDate, formatManilaTime } from '@/utils/formatDateTime';
-import { LOGIN_TEXTS } from '../constants/loginTexts';
-import { LOGIN_STYLES } from '../constants/loginStyles';
+import { LOGIN_TEXTS } from '@/app/login/constants/loginTexts';
+import { LOGIN_STYLES } from '@/app/login/constants/loginStyles';
 
 /**
  * Top navigation row component for the login view.

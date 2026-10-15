@@ -10,11 +10,11 @@
 'use client';
 
 import React, { useCallback, useEffect, useMemo, useState } from 'react';
-import { adminApi } from '../lib/adminApi';
+import { adminApi } from '@/app/superadmin/lib/adminApi';
 import { SERVICES, SERVICES_WITH_SUBCATEGORIES, SUBCATEGORIES } from '@/lib/facilities';
-import { FACILITIES_TEXTS } from '../facilities/constants/facilitiesTexts';
-import { FACILITIES_STYLES } from '../facilities/constants/facilitiesStyles';
-import { SUPERADMIN_STYLES } from '../constants/superadminStyles';
+import { FACILITIES_TEXTS } from '@/app/superadmin/facilities/constants/facilitiesTexts';
+import { FACILITIES_STYLES } from '@/app/superadmin/facilities/constants/facilitiesStyles';
+import { SUPERADMIN_STYLES } from '@/app/superadmin/constants/superadminStyles';
 
 interface Cubicle {
   id: number;

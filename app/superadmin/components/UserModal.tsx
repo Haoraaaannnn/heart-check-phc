@@ -8,16 +8,16 @@
  */
 
 import React from 'react';
-import { SuperadminRole } from '../types/superadmin';
+import { SuperadminRole } from '@/app/superadmin/types/superadmin';
 import {
   UseUserModalStateReturn,
   CLINICAL_ROLES,
   REGISTRATION_ROLES,
-} from '../hooks/useUserModalState';
+} from '@/app/superadmin/hooks/useUserModalState';
 import { ClinicalAssignmentsSelector } from './ClinicalAssignmentsSelector';
 import { RegistrationAssignmentsSelector } from './RegistrationAssignmentsSelector';
-import { SUPERADMIN_TEXTS } from '../constants/superadminTexts';
-import { SUPERADMIN_STYLES } from '../constants/superadminStyles';
+import { SUPERADMIN_TEXTS } from '@/app/superadmin/constants/superadminTexts';
+import { SUPERADMIN_STYLES } from '@/app/superadmin/constants/superadminStyles';
 
 interface UserModalProps {
   /** Form state and controller methods from useUserModalState hook. */

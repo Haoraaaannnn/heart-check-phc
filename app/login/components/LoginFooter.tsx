@@ -10,8 +10,8 @@
 'use client';
 
 import React from 'react';
-import { LOGIN_TEXTS } from '../constants/loginTexts';
-import { LOGIN_STYLES } from '../constants/loginStyles';
+import { LOGIN_TEXTS } from '@/app/login/constants/loginTexts';
+import { LOGIN_STYLES } from '@/app/login/constants/loginStyles';
 
 /**
  * Staff login regulatory footer component.

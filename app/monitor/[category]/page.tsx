@@ -2,14 +2,14 @@
 import { useState, useEffect } from 'react';
 import { useParams, useRouter } from 'next/navigation';
 import { supabase } from '@/lib/supabase';
-import { Header } from '../components/Header';
-import { Footer } from '../components/Footer';
-import { PairedLayout } from '../components/PairedLayout';
-import { TableLayout } from '../components/TableLayout';
-import { StartScreen } from '../components/StartScreen';
-import { RegistrationLayout } from '../components/RegistrationLayout';
-import { useMonitorData } from '../hooks/useMonitorData';
-import { useRealtimeSubscription } from '../hooks/useRealtimeSubscription';
+import { Header } from '@/app/monitor/components/Header';
+import { Footer } from '@/app/monitor/components/Footer';
+import { PairedLayout } from '@/app/monitor/components/PairedLayout';
+import { TableLayout } from '@/app/monitor/components/TableLayout';
+import { StartScreen } from '@/app/monitor/components/StartScreen';
+import { RegistrationLayout } from '@/app/monitor/components/RegistrationLayout';
+import { useMonitorData } from '@/app/monitor/hooks/useMonitorData';
+import { useRealtimeSubscription } from '@/app/monitor/hooks/useRealtimeSubscription';
 
 
 export default function CategoryMonitorPage() {

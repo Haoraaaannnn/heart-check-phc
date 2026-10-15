@@ -16,7 +16,7 @@ import { useTheme } from 'next-themes';
 import { supabase } from '@/lib/supabase';
 import { handleSignOut } from '@/lib/supabase/signOut';
 import { useBottleneckNotifications } from '@/app/dashboard/hooks/useBottleneckNotifications';
-import NotificationDropdown from '../NotificationDropdown';
+import NotificationDropdown from '@/app/dashboard/components/NotificationDropdown';
 import HeaderSearch from './HeaderSearch';
 import LiveClock from './LiveClock';
 import { DASHBOARD_NAV_TEXTS } from '@/app/dashboard/constants/dashNavTexts';

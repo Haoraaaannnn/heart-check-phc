@@ -8,7 +8,7 @@
  */
 
 import { CSSProperties } from 'react';
-import { StageConfig } from '../types/nurse';
+import { StageConfig } from '@/app/nurse/types/nurse';
 
 // Re-export text copy for unified feature-level access
 export { nurseTexts } from './nurseTexts';

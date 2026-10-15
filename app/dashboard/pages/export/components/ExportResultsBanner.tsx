@@ -14,8 +14,8 @@
 
 import React from 'react';
 import Link from 'next/link';
-import { EXPORT_STYLES } from '../constants/exportStyles';
-import { EXPORT_TEXTS } from '../constants/exportTexts';
+import { EXPORT_STYLES } from '@/app/dashboard/pages/export/constants/exportStyles';
+import { EXPORT_TEXTS } from '@/app/dashboard/pages/export/constants/exportTexts';
 
 /**
  * Properties for the {@link ExportResultsBanner} component.

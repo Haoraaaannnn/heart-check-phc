@@ -12,9 +12,9 @@
 import React, { useEffect, useState } from 'react';
 import { createPortal } from 'react-dom';
 import { Patient } from '@/types/Types';
-import { DragPoint } from '../hooks/dragUtils';
-import { ClinicalStage } from '../types/nurse';
-import { nurseTexts } from '../constants/nurseTexts';
+import { DragPoint } from '@/app/nurse/hooks/dragUtils';
+import { ClinicalStage } from '@/app/nurse/types/nurse';
+import { nurseTexts } from '@/app/nurse/constants/nurseTexts';
 
 /**
  * Props for the NurseDragGhost component.

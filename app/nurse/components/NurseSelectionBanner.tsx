@@ -10,9 +10,9 @@
 'use client';
 
 import React from 'react';
-import { SelectedNursePatient } from '../types/nurse';
-import { nurseTexts } from '../constants/nurseTexts';
-import { NurseStyle } from '../constants/nurse';
+import { SelectedNursePatient } from '@/app/nurse/types/nurse';
+import { nurseTexts } from '@/app/nurse/constants/nurseTexts';
+import { NurseStyle } from '@/app/nurse/constants/nurse';
 
 /**
  * Props for the NurseSelectionBanner component.

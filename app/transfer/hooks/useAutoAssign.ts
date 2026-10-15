@@ -1,7 +1,7 @@
 'use client';
 import { useEffect, useRef } from 'react';
 import { Patient, Cubicle } from '@/types/Types';
-import { AUTO_ASSIGN_SERVICES, MAX_PATIENTS_PER_CUBICLE } from '../lib/constants';
+import { AUTO_ASSIGN_SERVICES, MAX_PATIENTS_PER_CUBICLE } from '@/app/transfer/lib/constants';
 import { supabase } from "@/lib/supabase";
 
   export function useAutoAssign(

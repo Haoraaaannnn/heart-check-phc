@@ -8,9 +8,9 @@
  */
 
 import React from 'react';
-import { SuperadminUser } from '../types/superadmin';
-import { SUPERADMIN_TEXTS } from '../constants/superadminTexts';
-import { SUPERADMIN_STYLES } from '../constants/superadminStyles';
+import { SuperadminUser } from '@/app/superadmin/types/superadmin';
+import { SUPERADMIN_TEXTS } from '@/app/superadmin/constants/superadminTexts';
+import { SUPERADMIN_STYLES } from '@/app/superadmin/constants/superadminStyles';
 
 interface DeleteUserModalProps {
   /** User account slated for deletion, or null if modal is closed. */
