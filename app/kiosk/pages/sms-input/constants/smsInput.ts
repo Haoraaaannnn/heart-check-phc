@@ -3,7 +3,6 @@
  * @description Centralized barrel exporting style objects and class name dictionaries for the SMS input feature.
  */
 
-export * from "./smsBanner";
 export * from "./smsInstruction";
 export * from "./smsPhoneInput";
 export * from "./smsNumPad";

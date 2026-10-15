@@ -292,10 +292,8 @@ Directory structure:
     │   │           │   ├── KioskPhoneEntry.tsx
     │   │           │   ├── NumPad.tsx
     │   │           │   ├── PhoneInput.tsx
-    │   │           │   ├── SMSBanner.tsx
     │   │           │   └── SMSInstruction.tsx
     │   │           └── constants/
-    │   │               ├── smsBanner.ts
     │   │               ├── smsContinueButton.ts
     │   │               ├── smsContinueButtonTexts.ts
     │   │               ├── smsInput.ts
@@ -370,7 +368,6 @@ Directory structure:
     │   │   ├── page.tsx
     │   │   ├── components/
     │   │   │   ├── ChangePasswordCard.tsx
-    │   │   │   ├── ChangePasswordForm.tsx
     │   │   │   ├── ClinicalAssignmentsSelector.tsx
     │   │   │   ├── navigation/
     │   │   │   │   ├── SuperAdminHeader.tsx
@@ -380,8 +377,6 @@ Directory structure:
     │   │   │   ├── RegistrationAssignmentsSelector.tsx
     │   │   │   ├── RoomsPanel.tsx
     │   │   │   ├── SettingsPanel.tsx
-    │   │   │   ├── SettingsPannel.tsx
-    │   │   │   ├── SuperAdminNav.tsx
     │   │   │   ├── UserModal.tsx
     │   │   │   ├── UserStatsCards.tsx
     │   │   │   └── UserTable.tsx
@@ -464,14 +459,7 @@ Directory structure:
     │       ├── BackButton.tsx
     │       ├── KioskBackButton.tsx
     │       ├── NotificationBadge.tsx
-    │       ├── ScrollArea.tsx
-    │       ├── analyticsMetricCards.tsx
-    │       ├── analyticsMetricHeader.tsx
-    │       ├── analyticsMetricPara.tsx
-    │       ├── metricCards.tsx
-    │       ├── patientHeaderCard.tsx
-    │       ├── patientMetricCard.tsx
-    │       └── serviceMetricCard.tsx
+    │       └── ScrollArea.tsx
     ├── constants/
     │   ├── app.ts
     │   ├── colors.ts

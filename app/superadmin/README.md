@@ -85,15 +85,12 @@ app/superadmin/
 │   │   ├── SuperAdminSidebar.tsx          # Collapsible desktop rail and mobile drawer
 │   │   └── SuperAdminHeader.tsx           # Top bar with breadcrumbs, Manila clock, theme toggle
 │   ├── ChangePasswordCard.tsx             # Superadmin password change form card
-│   ├── ChangePasswordForm.tsx             # Standalone form component
 │   ├── ClinicalAssignmentsSelector.tsx    # Cubicle multi-select by clinical category
 │   ├── CountersPanel.tsx                  # Registration counter stations editor
 │   ├── DeleteUserModal.tsx                # Destructive user deletion prompt
 │   ├── RegistrationAssignmentsSelector.tsx # Service, room, and counter scope toggles
 │   ├── RoomsPanel.tsx                     # Consultation rooms and cubicles editor
 │   ├── SettingsPanel.tsx                  # Queue timeout and security parameters panel
-│   ├── SettingsPannel.tsx                 # Backward-compatibility proxy for SettingsPanel
-│   ├── SuperAdminNav.tsx                  # Legacy navigation proxy (kept for compatibility)
 │   ├── SuperAdminPageSkeleton.tsx         # Full page superadmin skeleton orchestrator
 │   ├── UserModal.tsx                      # Add/Edit staff account modal dialog
 │   ├── UserStatsCards.tsx                 # 4-card executive KPI summary
