@@ -340,4 +340,4 @@ The weak-signal resilience enhancements have been implemented across all real-ti
 
 ---
 
-_Last updated: reflects the implemented Layer A weak-signal stabilization, ConnectionStatusBanner recovery rules, Tap-to-Act interaction standard, and documented Layer B LAN-first handoff plan for PHC on-premises deployment._
+_Last updated: 2026-10-15 — Reflects the implemented Layer A weak-signal stabilization, ConnectionStatusBanner recovery rules, Tap-to-Act interaction standard, and documented Layer B LAN-first handoff plan for PHC on-premises deployment._

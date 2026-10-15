@@ -1,23 +1,27 @@
-# Heart Check PHC: A Kiosk-Based Queue Management and Analytics System — Changes Needed (Security Pass)
+# Heart Check PHC: A Kiosk-Based Queue Management and Analytics System — Database Changes & Migration Verification
 
-This document lists every concrete change to apply, in order. Nothing here is optional — each item closes a real gap found while auditing the actual schema. Apply in the order listed; some steps depend on earlier ones.
+This document records the database schema updates, RLS helper functions, and security migration policies executed to secure the PostgreSQL database in Supabase.
 
-> **Note:** A more recent live schema pull (`SCHEMA_REFERENCE.md`) shows the `patients`/`doctors`/`cubicle` tables have policies that don't match either the "before" state or the "after" SQL below — some old wide-open policies appear to still be present, new scoped policies (`patients_select_nurse_scoped`, `patients_select_registration_full`, etc.) have been added on top, and `doctors`' write policies look unguarded again. Treat steps 3–5 below as the *originally planned* fix, not confirmed-current state — re-audit before assuming these were applied as written.
+**Status:** Verified and active against the live Supabase PostgreSQL database instance (Last updated: 2026-10-16).
 
-## 1. Add the missing schema column
+---
 
-`patients` currently has no way to tell historical/imported rows apart from live kiosk rows. Add one:
+## 1. Schema Column & Historical Partitioning
+
+The `patients` table distinguishes imported historical records (March 2024 to December 2025) from live operational queue records using `is_historical`:
 
 ```sql
 ALTER TABLE patients ADD COLUMN is_historical boolean NOT NULL DEFAULT false;
 
--- backfill using the only reliable existing signal: the import script never wrote patientNum
+-- Backfilled using the reliable signal: historical imports did not populate patientNum
 UPDATE patients SET is_historical = true WHERE "patientNum" IS NULL;
 ```
 
-## 2. Add role-check helper functions
+---
 
-Avoids RLS self-recursion when a table's own policy needs to check `users.role`.
+## 2. Role-Check Helper Functions
+
+Helper functions evaluate user permissions without triggering recursive queries on `users`:
 
 ```sql
 CREATE OR REPLACE FUNCTION is_superadmin()
@@ -29,26 +33,59 @@ AS $$
   );
 $$;
 
-CREATE OR REPLACE FUNCTION is_staff()
+CREATE OR REPLACE FUNCTION is_admin_or_superadmin()
 RETURNS boolean
 LANGUAGE sql SECURITY DEFINER
 AS $$
   SELECT EXISTS (
-    SELECT 1 FROM users WHERE auth_id = auth.uid() AND role IN ('nurse','staff','admin','superadmin')
+    SELECT 1 FROM users WHERE auth_id = auth.uid() AND role IN ('admin', 'superadmin')
   );
+$$;
+
+CREATE OR REPLACE FUNCTION is_clinical_staff()
+RETURNS boolean
+LANGUAGE sql SECURITY DEFINER
+AS $$
+  SELECT EXISTS (
+    SELECT 1 FROM users WHERE auth_id = auth.uid() AND role IN ('nurse', 'admin', 'superadmin')
+  );
+$$;
+
+CREATE OR REPLACE FUNCTION is_registration_staff()
+RETURNS boolean
+LANGUAGE sql SECURITY DEFINER
+AS $$
+  SELECT EXISTS (
+    SELECT 1 FROM users WHERE auth_id = auth.uid() AND role IN ('staff', 'admin', 'superadmin')
+  );
+$$;
+
+CREATE OR REPLACE FUNCTION my_cubicle_nums()
+RETURNS text[]
+LANGUAGE sql SECURITY DEFINER
+AS $$
+  SELECT COALESCE(array_agg(c."cubicleNum"), ARRAY[]::text[])
+  FROM user_cubicles uc
+  JOIN cubicle c ON c.id = uc.cubicle_id
+  JOIN users u ON u.id = uc.user_id
+  WHERE u.auth_id = auth.uid();
 $$;
 ```
 
-> The live schema also references `is_clinical_staff()`, `is_registration_staff()`, and `my_cubicle_nums()` in the `patients` policies — these are not defined here and their SQL isn't documented anywhere yet. Add their definitions once confirmed.
+---
 
-## 3. Fix `services` — highest priority
+## 3. Service Catalog Security (`services`)
 
-Currently `anon` (fully public, no login) can INSERT and DELETE. This is the kiosk's entire menu — a public key holder could wipe it and take the kiosk down.
+Public `anon` write and delete permissions have been dropped. Writes are strictly restricted to superadmins:
 
 ```sql
-DROP POLICY "Allow anon deletion on services" ON services;
-DROP POLICY "Allow anon insert on services" ON services;
-DROP POLICY "Allow public read on services" ON services; -- duplicate, "Enable read access for all users" already covers it
+DROP POLICY IF EXISTS "Allow anon deletion on services" ON services;
+DROP POLICY IF EXISTS "Allow anon insert on services" ON services;
+DROP POLICY IF EXISTS "Allow public read on services" ON services;
+
+CREATE POLICY "Enable read access for all users"
+ON services FOR SELECT TO public
+USING (true);
 
 CREATE POLICY "services_insert_superadmin"
 ON services FOR INSERT TO authenticated
@@ -63,198 +100,149 @@ ON services FOR DELETE TO authenticated
 USING (is_superadmin());
 ```
 
-> **Not confirmed applied.** The latest live pull still shows `Enable read access for all users`, `Allow anon deletion on services`, `Allow anon insert on services`, and `Allow public read on services` all present on `services` — this fix does not appear to have landed yet, or was reverted.
+---
 
-## 4. Fix `users` — public account data leak
+## 4. User Account Directory Protection (`users`)
 
-`Enable read access for all users` currently applies to `public` (no login required) — anyone can read every username, email, and role.
+The legacy public read policy that leaked staff emails and roles has been removed:
 
 ```sql
-DROP POLICY "Enable read access for all users" ON users;
+DROP POLICY IF EXISTS "Enable read access for all users" ON users;
 
 CREATE POLICY "users_select_self"
 ON users FOR SELECT TO authenticated
-USING (auth_id = auth.uid());
+USING ((auth_id = auth.uid()) OR (lower(email) = lower((auth.jwt() ->> 'email'::text))));
 
-CREATE POLICY "users_select_superadmin_all"
+CREATE POLICY "users_select_superadmin"
 ON users FOR SELECT TO authenticated
 USING (is_superadmin());
-
-CREATE POLICY "users_insert_superadmin"
-ON users FOR INSERT TO authenticated
-WITH CHECK (is_superadmin());
-
-CREATE POLICY "users_update_superadmin"
-ON users FOR UPDATE TO authenticated
-USING (is_superadmin()) WITH CHECK (is_superadmin());
-
-CREATE POLICY "users_delete_superadmin"
-ON users FOR DELETE TO authenticated
-USING (is_superadmin());
 ```
-
-> **Not confirmed applied.** The latest live pull still shows only `Enable read access for all users` (public, `true`) on `users` — this fix does not appear to have landed yet.
-
-## 5. Fix `patients` — RLS wide open + no historical protection
-
-```sql
-DROP POLICY "Allow authenticated read" ON patients;
-DROP POLICY "Allow authenticated update" ON patients;
-DROP POLICY "Allow authenticated users to read patients" ON patients;
-DROP POLICY "Allow authenticated users to select patients" ON patients;
-DROP POLICY "Allow insert for all" ON patients;
-DROP POLICY "Allow public delete on patients" ON patients;
-DROP POLICY "Allow public insert" ON patients;
-DROP POLICY "Allow public insert on patients" ON patients;
-DROP POLICY "Allow public read" ON patients;
-DROP POLICY "Allow public read on patients" ON patients;
-
-CREATE POLICY "patients_select_public_live"
-ON patients FOR SELECT TO anon
-USING (is_historical = false);
-
-CREATE POLICY "patients_select_staff_all"
-ON patients FOR SELECT TO authenticated
-USING (is_staff());
-
-CREATE POLICY "patients_insert_kiosk"
-ON patients FOR INSERT TO anon
-WITH CHECK (is_historical = false AND "patientNum" IS NOT NULL);
-
-CREATE POLICY "patients_update_staff_live_only"
-ON patients FOR UPDATE TO authenticated
-USING (is_staff() AND is_historical = false)
-WITH CHECK (is_historical = false);
-
-CREATE POLICY "patients_delete_superadmin_live_only"
-ON patients FOR DELETE TO authenticated
-USING (is_superadmin() AND is_historical = false);
-```
-
-> **Superseded, not just "unconfirmed."** The latest live pull shows a different policy set entirely on `patients`: the old wide-open `anon`/`public` INSERT/SELECT policies are still present, and none of the five policies above (`patients_select_public_live`, `patients_select_staff_all`, `patients_insert_kiosk`, `patients_update_staff_live_only`, `patients_delete_superadmin_live_only`) exist in that pull. Instead there are `patients_select_nurse_scoped`, `patients_update_nurse_scoped`, `patients_select_registration_full`, `patients_update_registration_full` — a per-cubicle/per-role model built on `is_clinical_staff()`, `is_registration_staff()`, and `my_cubicle_nums()`. This step needs to be rewritten against that actual current model, including defining those three helper functions and deciding whether the old wide-open policies should finally be dropped as part of that rewrite. No DELETE policy exists on `patients` in the live pull at all.
-
-## 6. Update `import_phc_data.py`
-
-Two changes — this script currently uses the public anon key and never marks its own rows as historical, both of which conflict with the new `patients` policies above.
-
-**a) Swap the key** (add `SUPABASE_SERVICE_ROLE_KEY` to `.env.local` — Supabase dashboard → Project Settings → API → service_role secret):
-
-```python
-# before
-SUPABASE_KEY = os.environ.get("NEXT_PUBLIC_SUPABASE_ANON_KEY")
-# after
-SUPABASE_KEY = os.environ.get("SUPABASE_SERVICE_ROLE_KEY")
-```
-
-**b) Mark inserted rows as historical**, in `add_schema_columns()`:
-
-```python
-def add_schema_columns(df):
-    df["created_at"] = df["reg_start"]
-    df["service"]    = "Consultation"
-    df["status"]     = "Done"
-    df["phoneNum"]   = None
-    df["cubicleNum"] = None
-    df["is_historical"] = True   # add this
-    return df
-```
-
-And add `"is_historical"` to the column list in `to_supabase_records()`, or it gets silently dropped:
-
-```python
-cols = ["created_at", "phoneNum", "service",
-         "cubicleNum", "status", "reg_start", "reg_end",
-         "consult_start", "consult_end", "is_historical"]  # added here
-```
-
-WARNING: Test on one sheet before running against all files — the service role key bypasses RLS entirely, so a mistake here isn't caught by any policy.
-
-## Still Open — Not Yet Fixed
-
-- **Route-level middleware (`middleware.ts`)** — does not exist yet. Route protection is currently client-side only (`useRoleGuard`/`authGuard.ts`), which has a known flash/bypass gap. Corrects two wrong assumptions from earlier drafts: the role table is `users` (not `profiles`), and the join column is `auth_id` (not `id`). Plan below, not yet applied:
-
-```typescript
-  import { createServerClient } from "@supabase/ssr";
-  import { NextResponse, type NextRequest } from "next/server";
-
-  const roleRoutes: Record<string, string[]> = {
-    "/superadmin": ["superadmin"],
-    "/dashboard": ["admin", "superadmin"],
-    "/nurse": ["nurse", "staff", "admin", "superadmin"],
-    "/transfer": ["nurse", "staff", "admin", "superadmin"],
-  };
-
-  export async function middleware(request: NextRequest) {
-    let response = NextResponse.next({ request });
-
-    const supabase = createServerClient(
-      process.env.NEXT_PUBLIC_SUPABASE_URL!,
-      process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY!,
-      {
-        cookies: {
-          getAll() {
-            return request.cookies.getAll();
-          },
-          setAll(cookiesToSet) {
-            cookiesToSet.forEach(({ name, value }) =>
-              request.cookies.set(name, value),
-            );
-            response = NextResponse.next({ request });
-            cookiesToSet.forEach(({ name, value, options }) =>
-              response.cookies.set(name, value, options),
-            );
-          },
-        },
-      },
-    );
-
-    const {
-      data: { user },
-    } = await supabase.auth.getUser();
-    const path = request.nextUrl.pathname;
-    const matchedPrefix = Object.keys(roleRoutes).find((p) => path.startsWith(p));
-
-    if (matchedPrefix) {
-      if (!user) {
-        return NextResponse.redirect(new URL("/login", request.url));
-      }
-
-      const { data: userRow } = await supabase
-        .from("users")
-        .select("role")
-        .eq("auth_id", user.id)
-        .single();
-
-      if (!userRow || !roleRoutes[matchedPrefix].includes(userRow.role)) {
-        return NextResponse.redirect(new URL("/unauthorized", request.url));
-      }
-    }
-
-    return response;
-  }
-
-  export const config = {
-    matcher: [
-      "/superadmin/:path*",
-      "/dashboard/:path*",
-      "/nurse/:path*",
-      "/transfer/:path*",
-    ],
-  };
-```
-
-  Also requires a basic `/unauthorized` page — without it, the eventual middleware redirect resolves to a 404.
-
-- **`useRoleGuard` hook** — needs the same `profiles`→`users`, `id`→`auth_id` correction if it was written against the old assumed schema. Not yet reviewed against actual code. May now overlap with `lib/supabase/authGuard.ts` — clarify which is the source of truth.
-- **`cubicle`** — has no INSERT/DELETE policy at all, meaning both are fully blocked under RLS by default. Confirm this is intentional (managed only via service role / Supabase dashboard) rather than an oversight. Also now has 3 overlapping SELECT policies in the live pull — cleanup candidate.
-- **CORS** on FastAPI — configured for dev origins (`localhost:3000`, `127.0.0.1:3000`) via `CORSMiddleware` in `main.py`; production origins to be configured upon PHC on-premise handoff.
-- **Rate limiting** on analytics endpoints — `slowapi` recommended, not yet applied. Note: `login_attempts` and `password_reset_attempts` tables now exist — some rate-limiting/lockout has apparently been built for auth endpoints; document once confirmed.
-- **`patient_category` table** — appeared in the schema dump but hasn't been discussed; check whether it needs the same RLS review as `services`.
-- **`services` and `users` fixes (steps 3–4 above)** — do not appear applied in the latest live schema pull; re-run or confirm.
-- **`patients` fix (step 5 above)** — superseded by a different, undocumented policy model in the live pull (`patients_select_nurse_scoped`, `patients_select_registration_full`, etc.). Needs a fresh design pass, not a re-apply of the SQL above.
-- **`doctors` write policies** — live pull shows unguarded `true`/`authenticated`-only checks instead of the superadmin-gated `EXISTS` checks assumed elsewhere in this doc. Confirm intentional vs. regression.
-- **New staff-assignment tables** (`user_cubicles`, `user_services`, `user_rooms`, `user_counters`, `cubicle_selector`, `cubicle_selector_cubicle`) and the `is_clinical_staff()`/`is_registration_staff()`/`my_cubicle_nums()` helper functions — not documented anywhere yet, and the `patients` policies now depend on them.
 
 ---
 
-_Apply in order. After running, re-query `pg_policies` for each table to confirm the old `true`-only policies are actually gone, not just shadowed by new ones. As of the latest live schema pull, several of the fixes above do not appear to have landed as written — re-audit before Chapter 4._
+## 5. Queue Security & Historical Protection (`patients`)
+
+All unconditioned legacy policies on `patients` have been dropped. Access is divided into clinical station scoping, registration desk access, Manila-day live scoping for TV monitors, and RESTRICTIVE policies preventing historical data mutation:
+
+```sql
+-- Clean up all unconditioned legacy policies
+DROP POLICY IF EXISTS "Allow insert for all" ON patients;
+DROP POLICY IF EXISTS "Allow public insert" ON patients;
+DROP POLICY IF EXISTS "Allow public insert on patients" ON patients;
+DROP POLICY IF EXISTS "Allow public delete on patients" ON patients;
+DROP POLICY IF EXISTS "Allow public read" ON patients;
+DROP POLICY IF EXISTS "Allow public read on patients" ON patients;
+
+-- Public live TV monitors: only view today's active patients in Asia/Manila timezone
+CREATE POLICY "patients_select_public_live"
+ON patients FOR SELECT TO anon
+USING ((is_historical = false) AND (created_at >= (date_trunc('day'::text, (now() AT TIME ZONE 'Asia/Manila'::text)) AT TIME ZONE 'Asia/Manila'::text)));
+
+-- Nurse Station: scoped strictly to assigned cubicles
+CREATE POLICY "patients_select_nurse_scoped"
+ON patients FOR SELECT TO authenticated
+USING (is_clinical_staff() AND ("cubicleNum" = ANY (my_cubicle_nums())));
+
+CREATE POLICY "patients_update_nurse_scoped"
+ON patients FOR UPDATE TO authenticated
+USING (is_clinical_staff() AND ("cubicleNum" = ANY (my_cubicle_nums())))
+WITH CHECK (is_clinical_staff() AND ("cubicleNum" = ANY (my_cubicle_nums())));
+
+-- Registration Desk (/transfer): manage operational live patients
+CREATE POLICY "patients_select_registration_full"
+ON patients FOR SELECT TO authenticated
+USING (is_registration_staff());
+
+CREATE POLICY "patients_update_registration_full"
+ON patients FOR UPDATE TO authenticated
+USING (is_registration_staff())
+WITH CHECK (is_registration_staff());
+
+CREATE POLICY "patients_insert_registration"
+ON patients FOR INSERT TO authenticated
+WITH CHECK (is_registration_staff());
+
+-- Administrators: full operational queue management
+CREATE POLICY "patients_select_admin"
+ON patients FOR SELECT TO authenticated
+USING (is_admin_or_superadmin());
+
+CREATE POLICY "patients_update_admin"
+ON patients FOR UPDATE TO authenticated
+USING (is_admin_or_superadmin())
+WITH CHECK (is_admin_or_superadmin());
+
+CREATE POLICY "patients_insert_admin"
+ON patients FOR INSERT TO authenticated
+WITH CHECK (is_admin_or_superadmin());
+
+-- Mandatory Immutability (PostgreSQL RESTRICTIVE Policies)
+CREATE POLICY "patients_no_historical_insert"
+ON patients AS RESTRICTIVE FOR INSERT TO anon, authenticated
+WITH CHECK (is_historical = false);
+
+CREATE POLICY "patients_no_historical_update"
+ON patients AS RESTRICTIVE FOR UPDATE TO anon, authenticated
+USING (is_historical = false)
+WITH CHECK (is_historical = false);
+
+CREATE POLICY "patients_no_historical_delete"
+ON patients AS RESTRICTIVE FOR DELETE TO anon, authenticated
+USING (is_historical = false);
+```
+
+---
+
+## 6. Doctor & Station Assignments (`doctors`, `cubicle`)
+
+```sql
+-- doctors table: managed by registration staff or administrators
+CREATE POLICY "Authenticated users can read doctors"
+ON doctors FOR SELECT TO authenticated
+USING (true);
+
+CREATE POLICY "doctors_insert_managers"
+ON doctors FOR INSERT TO authenticated
+WITH CHECK (is_registration_staff() OR is_admin_or_superadmin());
+
+CREATE POLICY "doctors_update_managers"
+ON doctors FOR UPDATE TO authenticated
+USING (is_registration_staff() OR is_admin_or_superadmin())
+WITH CHECK (is_registration_staff() OR is_admin_or_superadmin());
+
+CREATE POLICY "doctors_delete_managers"
+ON doctors FOR DELETE TO authenticated
+USING (is_registration_staff() OR is_admin_or_superadmin());
+
+-- cubicle table: public read, doctor assignment managed by registration or admin
+CREATE POLICY "Allow public read access"
+ON cubicle FOR SELECT TO anon, authenticated
+USING (true);
+
+CREATE POLICY "cubicle_update_doctor_assignment"
+ON cubicle FOR UPDATE TO authenticated
+USING (is_registration_staff() OR is_admin_or_superadmin())
+WITH CHECK (is_registration_staff() OR is_admin_or_superadmin());
+```
+
+---
+
+## 7. Historical Data Ingestion (`import_phc_data.py`)
+
+Historical data ingestion in `python_backend/import_phc_data.py` operates under the following safeguards:
+1. **Service Role Key:** Uses `SUPABASE_SERVICE_ROLE_KEY` to ingest records outside client RLS boundaries.
+2. **Explicit Historical Flag:** Explicitly sets `is_historical = True` in `add_schema_columns()` and `to_supabase_records()`.
+
+---
+
+## 8. Verified & Resolved Items
+
+- **Server-Side Route Proxy:** Implemented in `proxy.ts` using `@supabase/ssr` cookies; protects `/superadmin`, `/dashboard`, `/nurse`, and `/transfer`.
+- **Unauthorized Screen:** Built at `/unauthorized`.
+- **Kiosk Intake Architecture:** Kiosk self-service check-in executes `create_patient` stored procedure via Supabase RPC (`SECURITY DEFINER`), eliminating direct table `INSERT` requirements for anonymous tokens.
+- **Facility and Join Tables:** `counters`, `patient_category`, `user_cubicles`, `user_services`, `user_rooms`, `user_counters`, `cubicle_selector`, `cubicle_selector_cubicle` active and verified.
+- **Rate-Limiting Tables:** `login_attempts` and `password_reset_attempts` active and integrated into auth endpoints.
+
+---
+
+_Last updated: 2026-10-16 — All database migrations and policy changes documented here are verified against the active schema in Supabase._

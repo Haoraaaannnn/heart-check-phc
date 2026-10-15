@@ -60,6 +60,10 @@ For selective context retrieval, domain architecture, and memory workflows, cons
 - **Historical Data Protection:** Operational mutations (`UPDATE`, `DELETE`) on `patients` must strictly exclude historical research data (`AND is_historical = false`).
 - **Resilience & Timeouts:** Enforce an explicit 10-second `AbortController` timeout on all cross-service HTTP calls between Next.js and FastAPI. Sanitize all backend error responses (strip raw tracebacks).
 
+### 13. Explicit Date Stamp Standard for Markdown Documentation
+- Every created or updated Markdown document (`.md`) must include an explicit date stamp in ISO format (`YYYY-MM-DD`, e.g., `_Last updated: 2026-10-16 — ..._` or `**Last Updated:** 2026-10-16`).
+- This standard applies strictly across all documentation files (`docs/`, `brain/`, `README.md`, module guides) to ensure clear temporal tracking across versions.
+
 ---
 
 ## Memory & Context Retrieval Protocol
@@ -88,3 +92,4 @@ For selective context retrieval, domain architecture, and memory workflows, cons
 - [ ] Database queries are parameterized; `is_historical = true` rows are protected.
 - [ ] Cross-service calls between Next.js and FastAPI have 10-second timeouts.
 - [ ] Second brain notes (`brain/CURRENT.md`, `brain/handoffs/`) are updated after significant work.
+- [ ] Updated or created Markdown documentation files include an explicit ISO date stamp (YYYY-MM-DD).
