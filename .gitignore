@@ -46,5 +46,6 @@ python_backend/__pycache__/
 python_backend/data_entries
 *.pyc
 
-# Obsidian
+# Obsidian && 2nd Brain
 .obsidian
+brain/
