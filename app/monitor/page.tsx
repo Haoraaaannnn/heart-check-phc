@@ -63,11 +63,13 @@ export default function MonitorIndexPage() {
   return (
     <div className="min-h-screen bg-gray-50 flex flex-col items-center justify-center gap-8 p-12">
       <button
-        onClick={() => router.push('/')}
-        className="fixed top-8 left-8 flex items-center gap-2 text-gray-500 hover:text-[#cc3535] transition group"
+        onClick={() => router.push('/select-screen')}
+        className="fixed top-8 left-8 flex items-center gap-2 text-gray-500 hover:text-[#cc3535] transition group cursor-pointer"
+        title="Return to Select Screen"
+        aria-label="Return to Select Screen"
       >
         <i className="bx bx-arrow-back text-xl group-hover:-translate-x-1 transition-transform"></i>
-        <span className="text-sm font-medium">Back to Home</span>
+        <span className="text-sm font-medium">Back to Select Screen</span>
       </button>
       <h1 className="text-3xl font-bold text-gray-700">Select Monitor</h1>
       <div className="grid grid-cols-3 gap-4 w-full max-w-2xl">

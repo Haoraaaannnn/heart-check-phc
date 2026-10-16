@@ -10,6 +10,7 @@
 'use client';
 
 import React from 'react';
+import Link from 'next/link';
 import NotificationDropdown from '@/app/dashboard/components/NotificationDropdown';
 import { AssignedNurseCubicle } from '@/app/nurse/types/nurse';
 import { nurseTexts } from '@/app/nurse/constants/nurseTexts';
@@ -120,6 +121,16 @@ export function NurseHeader({
             />
           </button>
         )}
+
+        {/* Return to Select Screen Button */}
+        <Link
+          href="/select-screen"
+          className="p-1.5 sm:p-2 rounded-xl text-slate-500 hover:text-slate-800 hover:bg-slate-100 active:bg-slate-200 transition-colors cursor-pointer shrink-0"
+          title={nurseTexts.selectScreenLabel}
+          aria-label={nurseTexts.selectScreenAria}
+        >
+          <i className="bx bx-grid-alt text-xl block" aria-hidden="true" />
+        </Link>
 
         <div className="flex items-center gap-2 shrink-0">
           <span className="text-slate-600 text-sm font-semibold tracking-tight hidden md:inline truncate max-w-[170px] xl:max-w-none">

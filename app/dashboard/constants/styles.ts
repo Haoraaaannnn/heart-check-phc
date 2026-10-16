@@ -121,6 +121,8 @@ export const DASH = {
     roleTag: 'px-1.5 py-0.5 rounded text-[10px] font-bold uppercase tracking-wider bg-[#a8071a] text-white',
     signOutButton:
       `p-2 ${sizeTokens.radius.md} text-slate-500 hover:text-[#a8071a] hover:bg-[#a8071a]/10 dark:hover:bg-[#a8071a]/20 dark:hover:text-[#f87171] transition cursor-pointer text-lg`,
+    selectScreenButton:
+      `flex items-center gap-1.5 px-2.5 py-1.5 ${sizeTokens.radius.md} text-xs font-semibold text-slate-600 dark:text-[#a3a3a3] hover:text-slate-900 dark:hover:text-[#f5f5f5] hover:bg-slate-100 dark:hover:bg-[#1f1f1f] border ${themeTokens.border.default} transition cursor-pointer shrink-0`,
     // Legacy header keys for backwards compatibility
     brand: 'flex shrink-0 items-center gap-3 md:w-[232px]',
     logo: 'flex h-11 w-11 items-center justify-center rounded-xl bg-brand-gradient text-2xl text-white shadow-md',

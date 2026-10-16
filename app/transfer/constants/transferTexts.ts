@@ -15,6 +15,8 @@ export const transferTexts = {
   openSidebar: "Expand with text",
   servicesCrumb: "Services",
   roomCrumbPrefix: "Room",
+  selectScreenLabel: "Select Screen",
+  selectScreenAria: "Return to Select Screen",
 
   // Queue Panel & On Progress Section
   queueTabTitle: "Active Queue",

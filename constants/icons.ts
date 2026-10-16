@@ -72,6 +72,7 @@ export const SIDEBAR_ICONS = {
   brand: 'bx-heart',
   brandSolid: 'bxs-heart',
   allCubicles: 'bx-grid-alt',
+  selectScreen: 'bx-grid-alt',
   collapse: 'bx-chevron-left',
   expand: 'bx-chevron-right',
   logout: 'bx-log-out',

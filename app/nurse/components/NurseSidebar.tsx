@@ -288,8 +288,26 @@ export function NurseSidebar({
         </div>
       </nav>
 
-      {/* Footer / Logout */}
+      {/* Footer / Workstation Controls */}
       <div className="p-2 border-t border-slate-100 space-y-1 shrink-0">
+        {/* Return to Select Screen */}
+        <button
+          type="button"
+          onClick={() => router.push('/select-screen')}
+          title={nurseTexts.selectScreenLabel}
+          aria-label={nurseTexts.selectScreenAria}
+          className={`w-full flex items-center ${
+            isExpanded ? 'justify-start px-3' : 'justify-center px-0'
+          } py-2 rounded-xl text-slate-500 hover:text-slate-800 hover:bg-slate-100 transition-colors font-medium text-sm cursor-pointer`}
+        >
+          <i className={`bx ${SIDEBAR_ICONS.selectScreen} text-xl shrink-0`} aria-hidden="true" />
+          {isExpanded && (
+            <span className="text-xs font-semibold ml-3 truncate animate-in fade-in duration-200">
+              {nurseTexts.selectScreenLabel}
+            </span>
+          )}
+        </button>
+
         <button
           type="button"
           onClick={handleLogout}

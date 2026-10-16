@@ -1,5 +1,7 @@
 # SuperAdmin Domain Developer Guide: Architecture & Where to Edit
 
+**Last Updated:** 2026-10-16
+
 This document serves as the authoritative developer guide for maintaining, extending, and modifying the SuperAdmin module in `app/superadmin/`.
 
 It details the module architecture, solid background design standard, separation-of-concerns principles, and provides an exhaustive lookup table showing where to make edits for any visual, textual, layout, logic, or navigational changes.

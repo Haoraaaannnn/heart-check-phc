@@ -1,6 +1,7 @@
 'use client';
 
 import React from 'react';
+import Link from 'next/link';
 import { BackButton } from '@/components/reusables/BackButton';
 import { transferTexts } from '@/app/transfer/constants/transferTexts';
 
@@ -65,6 +66,16 @@ export function BreadcrumbNav({
       className="flex items-center gap-3 w-full select-none min-w-0"
       aria-label="Breadcrumb navigation"
     >
+      <Link
+        href="/select-screen"
+        className="inline-flex items-center gap-1.5 min-w-[36px] min-h-[36px] px-2.5 py-1.5 rounded-xl text-xs font-semibold text-slate-600 bg-white hover:bg-slate-50 border border-slate-200 hover:border-slate-300 transition-colors shadow-2xs shrink-0 cursor-pointer"
+        title={transferTexts.selectScreenLabel}
+        aria-label={transferTexts.selectScreenAria}
+      >
+        <i className="bx bx-grid-alt text-sm" aria-hidden="true" />
+        <span className="hidden sm:inline">{transferTexts.selectScreenLabel}</span>
+      </Link>
+
       {canGoBack && (
         <BackButton
           onClick={handleStepBack}
