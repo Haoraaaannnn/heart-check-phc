@@ -1,5 +1,7 @@
 # Staff Login Developer Guide & Where to Edit Map
 
+**Last Updated:** 2026-10-16
+
 This guide documents the architecture, component hierarchy, design tokens, security policies, and editing locations for the Staff Login module (`app/login/page.tsx`).
 
 ---
@@ -48,4 +50,4 @@ Use this lookup table to identify the exact file to modify for any change:
 | **Header navigation, clock display, or theme button** | [`app/login/components/LoginHeader.tsx`](file:///home/jensen/Github-Repositories/heart-check-phc/app/login/components/LoginHeader.tsx) | Header component markup and theme hooks |
 | **Form inputs, password reveal button, or alert banners** | [`app/login/components/LoginForm.tsx`](file:///home/jensen/Github-Repositories/heart-check-phc/app/login/components/LoginForm.tsx) | Form subcomponent markup |
 | **Legal footer or institutional copyright styling** | [`app/login/components/LoginFooter.tsx`](file:///home/jensen/Github-Repositories/heart-check-phc/app/login/components/LoginFooter.tsx) | Footer component markup |
-| **Authentication endpoint, session establishment, or routing** | [`app/login/page.tsx`](file:///home/jensen/Github-Repositories/heart-check-phc/app/login/page.tsx) | Form submission handler, session clearance, and Supabase auth logic |
+| **Authentication endpoint, session establishment, or routing** | [`app/login/page.tsx`](file:///home/jensen/Github-Repositories/heart-check-phc/app/login/page.tsx) | Form submission handler, session clearance, Supabase auth logic, and history replacement via `window.location.replace` |

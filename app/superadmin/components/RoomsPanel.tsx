@@ -4,6 +4,11 @@
  * Allows hospital administrators to configure consultation rooms, add screening
  * and doctor cubicles, rename physical spaces, and manage departmental groupings.
  *
+ * In addition to cubicle management, each room card header displays small pill badges
+ * showing the queue prefix digit(s) mapped to that room via the `queue_prefix_map`
+ * app_setting. The mapping is fetched from /api/superadmin/settings on mount and
+ * rendered using the {@link QueuePrefixRow} type from QueuePrefixPanel.
+ *
  * @module app/superadmin/components/RoomsPanel
  */
 
@@ -15,6 +20,7 @@ import { SERVICES, SERVICES_WITH_SUBCATEGORIES, SUBCATEGORIES } from '@/lib/faci
 import { FACILITIES_TEXTS } from '@/app/superadmin/facilities/constants/facilitiesTexts';
 import { FACILITIES_STYLES } from '@/app/superadmin/facilities/constants/facilitiesStyles';
 import { SUPERADMIN_STYLES } from '@/app/superadmin/constants/superadminStyles';
+import type { QueuePrefixRow } from '@/app/superadmin/components/QueuePrefixPanel';
 
 interface Cubicle {
   id: number;
@@ -65,6 +71,15 @@ export function RoomsPanel() {
   const [fCount, setFCount] = useState('1');
   const [fName, setFName] = useState('');
 
+  /**
+   * Stored rows from the `queue_prefix_map` app_setting.
+   * Each row links a clinical service+subcategory to a prefix digit and room number.
+   * Empty array when the setting has not been persisted yet (defaults are not loaded here
+   * because the panel itself handles its own defaults; RoomsPanel shows badges only for
+   * explicitly configured mappings).
+   */
+  const [prefixRows, setPrefixRows] = useState<QueuePrefixRow[]>([]);
+
   const load = useCallback(async () => {
     try {
       const data = await adminApi('/api/superadmin/cubicles');
@@ -80,6 +95,33 @@ export function RoomsPanel() {
   useEffect(() => {
     load();
   }, [load]);
+
+  /**
+   * Fetches the persisted queue prefix mapping from app_settings and populates
+   * {@link prefixRows} so the room cards can display prefix badges.
+   *
+   * @remarks
+   * Failures are intentionally swallowed; badge display is non-critical and the
+   * panel remains fully functional without this data.
+   */
+  const loadPrefixMap = useCallback(async () => {
+    try {
+      const data = await adminApi('/api/superadmin/settings');
+      const raw: string | undefined = data?.settings?.queue_prefix_map;
+      if (raw) {
+        const parsed: QueuePrefixRow[] = JSON.parse(raw);
+        if (Array.isArray(parsed)) {
+          setPrefixRows(parsed);
+        }
+      }
+    } catch {
+      // Badge display is optional; no error surface needed.
+    }
+  }, []);
+
+  useEffect(() => {
+    loadPrefixMap();
+  }, [loadPrefixMap]);
 
   const sections = useMemo(() => {
     const groups = new Map<string, Group>();
@@ -109,6 +151,24 @@ export function RoomsPanel() {
       });
     return [...bySection.entries()];
   }, [cubicles]);
+
+  /**
+   * Derived lookup map from physical room number to the list of queue prefix rows
+   * configured for that room. Used to render prefix digit badges in room card headers.
+   *
+   * @remarks
+   * A single room may have multiple services mapped to it, so the value is an array.
+   * If `prefixRows` is empty (no persisted mapping yet), the map is also empty and no
+   * badges are rendered.
+   */
+  const roomPrefixMap = useMemo(() => {
+    const map = new Map<number, QueuePrefixRow[]>();
+    for (const row of prefixRows) {
+      const existing = map.get(row.room) ?? [];
+      map.set(row.room, [...existing, row]);
+    }
+    return map;
+  }, [prefixRows]);
 
   const openModal = (m: ModalState) => {
     setModalError('');
@@ -266,6 +326,16 @@ export function RoomsPanel() {
                       <span className="text-xs font-normal text-slate-500 dark:text-[#a3a3a3]">
                         ({g.cubicles.length} cubicles)
                       </span>
+                      {/* Queue prefix digit badges for services mapped to this room */}
+                      {(roomPrefixMap.get(g.room) ?? []).map((pr) => (
+                        <span
+                          key={`${pr.service}-${pr.subcategory ?? ''}`}
+                          title={pr.subcategory ? `${pr.service} (${pr.subcategory})` : pr.service}
+                          className="inline-flex items-center px-1.5 py-0.5 rounded-full text-[10px] font-bold bg-rose-100 dark:bg-rose-950 text-rose-700 dark:text-rose-300 border border-rose-200 dark:border-rose-800 leading-none"
+                        >
+                          #{pr.prefix}
+                        </span>
+                      ))}
                     </div>
 
                     <div className="flex items-center gap-1.5">

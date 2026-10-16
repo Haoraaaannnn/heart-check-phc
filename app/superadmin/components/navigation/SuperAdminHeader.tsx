@@ -14,6 +14,7 @@
 'use client';
 
 import React, { useState, useEffect } from 'react';
+import Link from 'next/link';
 import { useRouter, usePathname, useSearchParams } from 'next/navigation';
 import { useTheme } from 'next-themes';
 import { supabase } from '@/lib/supabase';
@@ -161,6 +162,17 @@ export function SuperAdminHeader({ onOpenMobileDrawer }: SuperAdminHeaderProps) 
             <div className="w-5 h-5" />
           )}
         </button>
+
+        {/* Return to Select Screen Button */}
+        <Link
+          href="/select-screen"
+          className={S.selectScreenButton}
+          title={T.selectScreen}
+          aria-label={T.selectScreenAria}
+        >
+          <i className="bx bx-grid-alt text-base" aria-hidden="true" />
+          <span className="hidden md:inline">{T.selectScreen}</span>
+        </Link>
 
         {/* User Identity Chip */}
         <div className={S.userChip}>

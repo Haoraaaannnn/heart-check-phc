@@ -158,8 +158,18 @@ export function DashSideNavigation({
         ))}
       </div>
 
-      {/* Footer System Status */}
+      {/* Footer System Status & Workstation Link */}
       <div className={S.footer}>
+        <Link
+          href="/select-screen"
+          onClick={onNavigate}
+          className={`${S.navLink} ${S.navLinkIdle} mb-2`}
+          title={T.actions.selectScreen}
+          aria-label={T.actions.selectScreenAria}
+        >
+          <i className={`bx bx-grid-alt ${S.navIcon}`} aria-hidden="true" />
+          <span>{T.actions.selectScreen}</span>
+        </Link>
         <div className={S.statusBadge}>
           <span className={S.statusDot} />
           <span>{T.system.statusOnline}</span>

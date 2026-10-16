@@ -11,6 +11,7 @@
 'use client';
 
 import React, { useState, useEffect } from 'react';
+import Link from 'next/link';
 import { useRouter, usePathname, useSearchParams } from 'next/navigation';
 import { useTheme } from 'next-themes';
 import { supabase } from '@/lib/supabase';
@@ -250,6 +251,17 @@ export function DashboardHeader({ onOpenMobileDrawer }: DashboardHeaderProps) {
             onClearAll={clearAll}
           />
         )}
+
+        {/* Return to Select Screen Button */}
+        <Link
+          href="/select-screen"
+          className={S.selectScreenButton}
+          title={T.actions.selectScreen}
+          aria-label={T.actions.selectScreenAria}
+        >
+          <i className="bx bx-grid-alt text-base" aria-hidden="true" />
+          <span className="hidden md:inline">{T.actions.selectScreen}</span>
+        </Link>
 
         {/* Authenticated User Identity Chip */}
         <div className={S.userChip}>

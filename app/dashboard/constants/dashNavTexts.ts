@@ -79,6 +79,8 @@ export const DASHBOARD_NAV_TEXTS = {
     closeDrawer: 'Close navigation drawer',
     themeLight: 'Switch to light mode',
     themeDark: 'Switch to dark mode',
+    selectScreen: 'Select Screen',
+    selectScreenAria: 'Return to Select Screen',
     signOut: 'Sign out of admin session',
     defaultRole: 'ADMIN',
     defaultUserName: 'Admin User',

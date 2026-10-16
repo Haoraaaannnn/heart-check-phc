@@ -22,6 +22,8 @@ export const SUPERADMIN_TEXTS = {
     settingsTab: 'System Settings',
     facilitiesLink: 'Facilities & Cubicles',
     customizationLink: 'Kiosk Services',
+    selectScreen: 'Select Screen',
+    selectScreenAria: 'Return to Select Screen',
     signOut: 'Sign Out',
     superadminRoleBadge: 'Super Administrator',
     themeToggleLight: 'Switch to light mode',

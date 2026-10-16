@@ -230,7 +230,7 @@ function LoginPageInner() {
 
       setEmail('');
       setPassword('');
-      router.push('/select-screen');
+      window.location.replace('/select-screen');
     } catch (err) {
       setPassword('');
       if (passwordInputRef.current) {

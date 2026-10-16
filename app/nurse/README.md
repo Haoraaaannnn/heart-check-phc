@@ -1,5 +1,7 @@
 # Nurse Station Module Developer Guide
 
+**Last Updated:** 2026-10-16
+
 This document provides architectural standards and an exhaustive developer mapping for the Nurse Station module in the Heart Check PHC application.
 
 ---

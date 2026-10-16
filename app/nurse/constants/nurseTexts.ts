@@ -29,6 +29,8 @@ export const nurseTexts = {
   clearFilter: "Clear filter",
   cubicleSelectLabel: "Station:",
   selectCubicleDropdown: "Select Cubicle",
+  selectScreenLabel: "Select Screen",
+  selectScreenAria: "Return to Select Screen",
 
   // Clinical Stage Headings
   stageAssignedHeading: "In Queue / Assigned",
