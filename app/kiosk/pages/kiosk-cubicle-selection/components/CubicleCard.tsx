@@ -114,23 +114,15 @@ export default function CubicleCard({
                 />
             </div>
 
-            {/* Cubicle Title and Assigned Doctor */}
-            <div style={CubicleCardStyle.titleWrapper}>
+            {/* Labels. min-w-0 lets the text wrap instead of pushing the arrow out. */}
+            <div style={CubicleCardStyle.labelWrapper}>
                 <span style={CubicleCardStyle.title}>
                     {cubicle.cubicle_name}
                 </span>
-                {formattedDoctorName && (
-                    <div style={CubicleCardStyle.doctorWrapper}>
-                        <i
-                            className={`bx ${CubicleCardIcons.doctor}`}
-                            style={CubicleCardStyle.doctorIcon}
-                            aria-hidden="true"
-                        />
-                        <span style={CubicleCardStyle.doctorName}>
-                            {formattedDoctorName}
-                        </span>
-                    </div>
-                )}
+                <div style={CubicleCardStyle.divider} />
+                <span style={CubicleCardStyle.subtitle}>
+                    {formattedDoctorName || CubicleCardTexts.unassignedDoctor}
+                </span>
             </div>
 
             {/* Directional arrow */}

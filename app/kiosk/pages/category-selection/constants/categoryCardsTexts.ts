@@ -17,4 +17,8 @@ export const CategoryCardsTexts = {
     pediaLabelEn: "18 years old and below",
     /** Call to action button text inside each category card. */
     cta: "Piliin",
+    /** Short label displayed on the floating scroll down badge. */
+    scrollDownBadgeShort: "Pindutin para bumaba",
+    /** Accessibility label for scroll down action. */
+    scrollDownAria: "Mag-scroll pababa para sa higit pang kategorya",
 } as const;

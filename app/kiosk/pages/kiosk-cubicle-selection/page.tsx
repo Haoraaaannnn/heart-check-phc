@@ -1,11 +1,10 @@
 import { createClient } from "@/lib/supabase/server";
 import { supabaseAdmin } from "@/lib/supabase/facilityHelpers";
 import { redirect } from "next/navigation";
-import CubicleCard from "@/app/kiosk/pages/kiosk-cubicle-selection/components/CubicleCard";
+import CubicleCardsGrid from "@/app/kiosk/pages/kiosk-cubicle-selection/components/CubicleCardsGrid";
 import CubicleHeader from "@/app/kiosk/pages/kiosk-cubicle-selection/components/CubicleHeader";
 import { CubicleSelectorType } from "@/app/kiosk/pages/kiosk-cubicle-selection/types/CubicleSelectorType";
 import { getTimestamp } from "@/lib/logger";
-import { CubicleCardClasses } from "@/app/kiosk/pages/kiosk-cubicle-selection/constants/cubicleCard";
 import {
     CubicleLayoutStyle,
     CubicleLayoutClasses,
@@ -258,23 +257,13 @@ export default async function KioskCubicleSelectionPage({
                     <CubicleHeader />
                 </header>
 
-                {/* Cubicle cards scroll area */}
-                <div
-                    className={CubicleLayoutClasses.cardsScrollArea}
-                    style={CubicleLayoutStyle.cardsScrollArea}
-                >
-                    <div className={CubicleCardClasses.grid}>
-                        {enrichedCubicles.map((cubicle: CubicleSelectorType) => (
-                            <CubicleCard
-                                key={cubicle.id}
-                                cubicle={cubicle}
-                                serviceId={serviceId}
-                                patientType={type}
-                                subcategory={subcategory}
-                            />
-                        ))}
-                    </div>
-                </div>
+                {/* Scrollable cubicle cards grid with dynamic scroll indicators */}
+                <CubicleCardsGrid
+                    cubicles={enrichedCubicles}
+                    serviceId={serviceId}
+                    patientType={type}
+                    subcategory={subcategory}
+                />
             </div>
         </div>
     );
