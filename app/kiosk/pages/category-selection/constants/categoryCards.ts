@@ -1,11 +1,12 @@
 /**
  * @file categoryCards.ts
- * @description Centralized visual styles and Tailwind utility classes for category selection cards.
+ * @description Centralized visual styles and Tailwind utility classes for category selection cards,
+ * matching the standardized constant card dimensions and responsive grid layout established by `KioskServicesCard`.
  */
 
 import { CSSProperties } from "react";
 import { themeColors } from "@/constants/colors";
-import { kioskTypography, fontSizeBody } from "@/constants/kiosk";
+import { kioskTypography, kioskCardDimensions } from "@/constants/kiosk";
 import { SUBCATEGORY_ICONS, COMMON_ICONS } from "@/constants/icons";
 
 /** Boxicons class tokens for age category selection cards. */
@@ -13,6 +14,7 @@ export const CategoryCardsIcons = {
     adult: SUBCATEGORY_ICONS.Adult,
     pedia: SUBCATEGORY_ICONS.Pedia,
     arrow: COMMON_ICONS.arrowRight,
+    chevronDown: COMMON_ICONS.chevronDown,
 } as const;
 
 /** Theme colors for the Adult and Pedia category buttons. */
@@ -28,23 +30,25 @@ export const categoryCardsTheme = {
 } as const;
 
 /**
- * Spacing tokens for category cards.
+ * Spacing tokens for category cards matching unified kiosk card dimensions.
  */
 export const categoryCardsSpacing = {
-    cardsGap: "clamp(12px, 1.6vmin, 20px)",
-    paddingX: "clamp(16px, 2vmin, 28px)",
-    paddingY: "clamp(12px, 1.5vh, 20px)",
-    cardMinHeight: "clamp(100px, 11vh, 150px)",
-    iconSize: "clamp(48px, 5vmin, 70px)",
-    arrowSize: "clamp(26px, 2.5vmin, 36px)",
+    cardsGap: kioskCardDimensions.cardGap,
+    paddingX: kioskCardDimensions.cardPaddingX,
+    paddingY: kioskCardDimensions.cardPaddingY,
+    cardMinHeight: kioskCardDimensions.cardMinHeight,
+    iconSize: kioskCardDimensions.iconFontSize,
+    arrowSize: kioskCardDimensions.arrowFontSize,
+    gridGap: kioskCardDimensions.gridGap,
+    gridPaddingX: kioskCardDimensions.gridPaddingX,
 } as const;
 
 /**
  * Typography tokens for category cards, referencing centralized root typography scale.
  */
 export const categoryCardsTypography = {
-    cardTitle: kioskTypography.cardCategoryTitle,
-    cardBadge: kioskTypography.badgeMedium,
+    cardTitle: kioskTypography.cardTitle,
+    cardBadge: kioskTypography.badgeLarge,
     cardSubtitle: kioskTypography.cardSubtitle,
     cta: kioskTypography.ctaText,
 } as const;
@@ -65,7 +69,7 @@ export const CategoryCardsStyle = {
         height: "100%",
         minHeight: categoryCardsSpacing.cardMinHeight,
         alignItems: "center",
-        gap: "clamp(14px, 1.8vmin, 20px)",
+        gap: categoryCardsSpacing.cardsGap,
         borderRadius: 16,
         borderWidth: 2,
         borderStyle: "solid",
@@ -85,7 +89,7 @@ export const CategoryCardsStyle = {
         alignItems: "center",
         justifyContent: "center",
         flexShrink: 0,
-        width: "clamp(48px, 5vmin, 70px)",
+        width: kioskCardDimensions.iconWrapperWidth,
     },
     adultIconTile: {
         display: "flex",
@@ -121,7 +125,7 @@ export const CategoryCardsStyle = {
         flex: 1,
         flexDirection: "column",
         minWidth: 0,
-        paddingLeft: "clamp(4px, 0.8vmin, 8px)",
+        paddingLeft: "clamp(6px, 1vmin, 12px)",
         overflowWrap: "anywhere",
         wordBreak: "break-word",
     },
@@ -138,8 +142,8 @@ export const CategoryCardsStyle = {
         width: "100%",
         backgroundColor: "#E5E7EB",
         borderRadius: 4,
-        marginTop: 8,
-        marginBottom: 8,
+        marginTop: 6,
+        marginBottom: 6,
     },
     cardSubtitle: {
         fontSize: categoryCardsTypography.cardSubtitle,
@@ -189,18 +193,19 @@ export const CategoryCardsStyle = {
     cardsGrid: {
         display: "grid",
         width: "100%",
-        gridTemplateColumns: "repeat(auto-fit, minmax(280px, 1fr))",
         gridAutoRows: "1fr",
-        gap: categoryCardsSpacing.cardsGap,
+        gap: categoryCardsSpacing.gridGap,
+        paddingLeft: categoryCardsSpacing.gridPaddingX,
+        paddingRight: categoryCardsSpacing.gridPaddingX,
+        paddingTop: 2,
+        paddingBottom: "clamp(36px, 5vh, 60px)",
         margin: "0 auto",
-        paddingTop: 4,
-        paddingBottom: 0,
     },
 } satisfies Record<string, CSSProperties>;
 
 /** Tailwind CSS class name dictionary for category cards. */
 export const CategoryCardsClasses = {
-    grid: "grid w-full grid-cols-1 sm:grid-cols-2 gap-3 sm:gap-6 px-4 pt-1 sm:pt-2 pb-0 mx-auto auto-rows-fr",
+    grid: "grid w-full grid-cols-1 sm:grid-cols-2 gap-4 sm:gap-6 px-3 sm:px-6 pt-1 pb-10 mx-auto auto-rows-fr",
     adultCard: "group transition-all duration-100 active:scale-[0.98] active:!border-[#ED1C24] active:shadow-sm",
     pediaCard: "group transition-all duration-100 active:scale-[0.98] active:!border-[#ED1C24] active:shadow-sm",
     cardIconWrapper: "shrink-0",
@@ -208,3 +213,4 @@ export const CategoryCardsClasses = {
     cardArrow: "shrink-0 transition-all duration-100 text-[#D7D6D6] group-active:!text-[#ED1C24] group-active:translate-x-1",
     cta: "transition-transform",
 } as const;
+

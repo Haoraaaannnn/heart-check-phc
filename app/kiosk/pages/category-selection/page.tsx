@@ -1,6 +1,6 @@
 "use client";
 
-import { Suspense } from "react";
+import { Suspense, useState, useRef, useCallback, useEffect } from "react";
 import { useSearchParams } from "next/navigation";
 import { useKioskNavigate } from "@/app/kiosk/hooks/useKioskNavigate";
 import { CategoryHeaderTexts } from "@/app/kiosk/pages/category-selection/constants/categoryHeaderTexts";
@@ -18,7 +18,7 @@ import {
 } from "@/app/kiosk/pages/category-selection/constants/categoryLayout";
 
 /**
- * Inner component reading search parameters.
+ * Inner component reading search parameters and rendering category cards.
  */
 function CategorySelectionContent() {
     const navigate = useKioskNavigate();
@@ -27,6 +27,58 @@ function CategorySelectionContent() {
     const serviceId = searchParams.get("serviceId");
     const patientType = searchParams.get("type");
     const serviceLabel = searchParams.get("serviceLabel")?.trim().toLowerCase();
+
+    // Scroll state tracking
+    const scrollContainerRef = useRef<HTMLDivElement>(null);
+    const [canScrollDown, setCanScrollDown] = useState(false);
+    const [canScrollUp, setCanScrollUp] = useState(false);
+
+    /**
+     * Inspects the scroll container to verify if overflow exists and whether
+     * the patient can scroll downward or upward.
+     */
+    const updateScrollState = useCallback(() => {
+        const el = scrollContainerRef.current;
+        if (!el) return;
+
+        const hasOverflow = el.scrollHeight > el.clientHeight + 8;
+        const isAtBottom = el.scrollTop + el.clientHeight >= el.scrollHeight - 16;
+        const isAtTop = el.scrollTop <= 8;
+
+        setCanScrollDown(hasOverflow && !isAtBottom);
+        setCanScrollUp(hasOverflow && !isAtTop);
+    }, []);
+
+    // Monitor resize and content mutations to keep scroll indicators accurate
+    useEffect(() => {
+        updateScrollState();
+
+        const timeout = setTimeout(updateScrollState, 150);
+        const el = scrollContainerRef.current;
+        if (!el) return () => clearTimeout(timeout);
+
+        const observer = new ResizeObserver(() => {
+            updateScrollState();
+        });
+        observer.observe(el);
+
+        return () => {
+            clearTimeout(timeout);
+            observer.disconnect();
+        };
+    }, [updateScrollState]);
+
+    /**
+     * Smoothly scrolls the card container downward by one viewport section.
+     */
+    const handleScrollDown = () => {
+        const el = scrollContainerRef.current;
+        if (!el) return;
+        el.scrollBy({
+            top: Math.max(el.clientHeight * 0.7, 180),
+            behavior: "smooth",
+        });
+    };
 
     /**
      * Builds the downstream URL, carrying over existing params and
@@ -75,91 +127,137 @@ function CategorySelectionContent() {
                     </div>
                 </header>
 
-                {/* Age category cards scroll area */}
+                {/* Relative wrapper holding scrollable cards and floating scroll indicators */}
                 <div
-                    className={CategoryLayoutClasses.cardsScrollArea}
-                    style={CategoryLayoutStyle.cardsScrollArea}
+                    className={CategoryLayoutClasses.scrollWrapper}
+                    style={CategoryLayoutStyle.scrollWrapper}
                 >
+                    {/* Top gradient shadow when scrolled */}
+                    {canScrollUp && (
+                        <div
+                            className={CategoryLayoutClasses.scrollTopShadow}
+                            style={CategoryLayoutStyle.scrollTopShadow}
+                            aria-hidden="true"
+                        />
+                    )}
+
+                    {/* Age category cards scroll area */}
                     <div
-                        style={CategoryCardsStyle.cardsGrid}
-                        className={CategoryCardsClasses.grid}
+                        ref={scrollContainerRef}
+                        onScroll={updateScrollState}
+                        className={CategoryLayoutClasses.cardsScrollArea}
+                        style={CategoryLayoutStyle.cardsScrollArea}
                     >
-                        {/* Adult Button */}
-                        <button
-                            type="button"
-                            onClick={() => chooseCategory("Adult")}
-                            style={CategoryCardsStyle.card}
-                            className={CategoryCardsClasses.adultCard}
+                        <div
+                            style={CategoryCardsStyle.cardsGrid}
+                            className={CategoryCardsClasses.grid}
                         >
-                            {/* Brand-colored icon container */}
-                            <div
-                                style={CategoryCardsStyle.iconWrapper}
-                                className={CategoryCardsClasses.cardIconWrapper}
+                            {/* Adult Button */}
+                            <button
+                                type="button"
+                                onClick={() => chooseCategory("Adult")}
+                                style={CategoryCardsStyle.card}
+                                className={CategoryCardsClasses.adultCard}
                             >
+                                {/* Brand-colored icon container */}
+                                <div
+                                    style={CategoryCardsStyle.iconWrapper}
+                                    className={CategoryCardsClasses.cardIconWrapper}
+                                >
+                                    <i
+                                        className={`bx ${CategoryCardsIcons.adult}`}
+                                        style={CategoryCardsStyle.adultIcon}
+                                        aria-hidden="true"
+                                    />
+                                </div>
+
+                                {/* Category Labels */}
+                                <div style={CategoryCardsStyle.labelsWrapper}>
+                                    <span style={CategoryCardsStyle.cardTitle}>
+                                        {CategoryCardsTexts.adultLabelFil}
+                                    </span>
+                                    <div style={CategoryCardsStyle.divider} />
+                                    <span style={CategoryCardsStyle.cardSubtitle}>
+                                        {CategoryCardsTexts.adultLabelEn}
+                                    </span>
+                                </div>
+
+                                {/* Directional navigation indicator */}
                                 <i
-                                    className={`bx ${CategoryCardsIcons.adult}`}
-                                    style={CategoryCardsStyle.adultIcon}
+                                    className={`bx ${CategoryCardsIcons.arrow} ${CategoryCardsClasses.cardArrow}`}
+                                    style={CategoryCardsStyle.arrowIcon}
                                     aria-hidden="true"
                                 />
-                            </div>
+                            </button>
 
-                            {/* Category Labels */}
-                            <div style={CategoryCardsStyle.labelsWrapper}>
-                                <span style={CategoryCardsStyle.cardTitle}>
-                                    {CategoryCardsTexts.adultLabelFil}
-                                </span>
-                                <div style={CategoryCardsStyle.divider} />
-                                <span style={CategoryCardsStyle.cardSubtitle}>
-                                    {CategoryCardsTexts.adultLabelEn}
-                                </span>
-                            </div>
-
-                            {/* Directional navigation indicator */}
-                            <i
-                                className={`bx ${CategoryCardsIcons.arrow} ${CategoryCardsClasses.cardArrow}`}
-                                style={CategoryCardsStyle.arrowIcon}
-                                aria-hidden="true"
-                            />
-                        </button>
-
-                        {/* Pedia Button */}
-                        <button
-                            type="button"
-                            onClick={() => chooseCategory("Pedia")}
-                            style={CategoryCardsStyle.card}
-                            className={CategoryCardsClasses.pediaCard}
-                        >
-                            {/* Brand-colored icon container */}
-                            <div
-                                style={CategoryCardsStyle.iconWrapper}
-                                className={CategoryCardsClasses.cardIconWrapper}
+                            {/* Pedia Button */}
+                            <button
+                                type="button"
+                                onClick={() => chooseCategory("Pedia")}
+                                style={CategoryCardsStyle.card}
+                                className={CategoryCardsClasses.pediaCard}
                             >
+                                {/* Brand-colored icon container */}
+                                <div
+                                    style={CategoryCardsStyle.iconWrapper}
+                                    className={CategoryCardsClasses.cardIconWrapper}
+                                >
+                                    <i
+                                        className={`bx ${CategoryCardsIcons.pedia}`}
+                                        style={CategoryCardsStyle.pediaIcon}
+                                        aria-hidden="true"
+                                    />
+                                </div>
+
+                                {/* Category Labels */}
+                                <div style={CategoryCardsStyle.labelsWrapper}>
+                                    <span style={CategoryCardsStyle.cardTitle}>
+                                        {CategoryCardsTexts.pediaLabelFil}
+                                    </span>
+                                    <div style={CategoryCardsStyle.divider} />
+                                    <span style={CategoryCardsStyle.cardSubtitle}>
+                                        {CategoryCardsTexts.pediaLabelEn}
+                                    </span>
+                                </div>
+
+                                {/* Directional navigation indicator */}
                                 <i
-                                    className={`bx ${CategoryCardsIcons.pedia}`}
-                                    style={CategoryCardsStyle.pediaIcon}
+                                    className={`bx ${CategoryCardsIcons.arrow} ${CategoryCardsClasses.cardArrow}`}
+                                    style={CategoryCardsStyle.arrowIcon}
                                     aria-hidden="true"
                                 />
-                            </div>
-
-                            {/* Category Labels */}
-                            <div style={CategoryCardsStyle.labelsWrapper}>
-                                <span style={CategoryCardsStyle.cardTitle}>
-                                    {CategoryCardsTexts.pediaLabelFil}
-                                </span>
-                                <div style={CategoryCardsStyle.divider} />
-                                <span style={CategoryCardsStyle.cardSubtitle}>
-                                    {CategoryCardsTexts.pediaLabelEn}
-                                </span>
-                            </div>
-
-                            {/* Directional navigation indicator */}
-                            <i
-                                className={`bx ${CategoryCardsIcons.arrow} ${CategoryCardsClasses.cardArrow}`}
-                                style={CategoryCardsStyle.arrowIcon}
-                                aria-hidden="true"
-                            />
-                        </button>
+                            </button>
+                        </div>
                     </div>
+
+                    {/* Bottom gradient shadow when more content exists below */}
+                    {canScrollDown && (
+                        <div
+                            className={CategoryLayoutClasses.scrollBottomShadow}
+                            style={CategoryLayoutStyle.scrollBottomShadow}
+                            aria-hidden="true"
+                        />
+                    )}
+
+                    {/* Floating scroll indication badge */}
+                    {canScrollDown && (
+                        <button
+                            type="button"
+                            onClick={handleScrollDown}
+                            style={CategoryLayoutStyle.scrollIndicator}
+                            className={CategoryLayoutClasses.scrollIndicator}
+                            aria-label={CategoryCardsTexts.scrollDownAria}
+                        >
+                            <span style={CategoryLayoutStyle.scrollIndicatorText}>
+                                {CategoryCardsTexts.scrollDownBadgeShort}
+                            </span>
+                            <i
+                                className={`bx ${CategoryCardsIcons.chevronDown} ${CategoryLayoutClasses.scrollIndicatorIcon}`}
+                                style={CategoryLayoutStyle.scrollIndicatorIcon}
+                                aria-hidden="true"
+                            />
+                        </button>
+                    )}
                 </div>
             </div>
         </div>

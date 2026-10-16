@@ -1,7 +1,7 @@
 import { CSSProperties } from "react";
 import { themeColors } from "@/constants/colors";
 import { COMMON_ICONS } from "@/constants/icons";
-import { kioskTypography } from "@/constants/kiosk";
+import { kioskTypography, kioskCardDimensions } from "@/constants/kiosk";
 
 /** Boxicons class tokens for services menu elements. */
 export const KioskServicesIcons = {
@@ -12,14 +12,14 @@ export const KioskServicesIcons = {
 
 /** Spacing tokens for the services menu cards and grid, widened for enhanced touch accessibility. */
 export const kioskServicesSpacing = {
-    cardGap: "clamp(14px, 1.8vmin, 22px)",
-    cardPaddingX: "clamp(20px, 2.6vmin, 36px)",
-    cardPaddingY: "clamp(16px, 1.8vh, 24px)",
-    cardMinHeight: "clamp(125px, 13.5vh, 165px)",
+    cardGap: kioskCardDimensions.cardGap,
+    cardPaddingX: kioskCardDimensions.cardPaddingX,
+    cardPaddingY: kioskCardDimensions.cardPaddingY,
+    cardMinHeight: kioskCardDimensions.cardMinHeight,
     iconTileSize: 88,
     iconTilePadding: 16,
-    gridGap: "clamp(16px, 2.2vmin, 28px)",
-    gridPaddingX: "clamp(12px, 1.5vmin, 24px)",
+    gridGap: kioskCardDimensions.gridGap,
+    gridPaddingX: kioskCardDimensions.gridPaddingX,
     gridPaddingY: "clamp(12px, 1.5vh, 20px)",
 } as const;
 
@@ -45,12 +45,12 @@ export const kioskServicesTypography = {
 /** Inline styles for `ServiceCard`. */
 export const KioskServicesCardStyle = {
     icon: {
-        fontSize: "clamp(48px, 5.2vmin, 76px)",
+        fontSize: kioskCardDimensions.iconFontSize,
         color: themeColors.brandRed,
         lineHeight: 1,
     },
     arrowIcon: {
-        fontSize: "clamp(26px, 2.6vmin, 36px)",
+        fontSize: kioskCardDimensions.arrowFontSize,
         color: kioskServicesColors.arrowColor,
         lineHeight: 1,
     },
@@ -81,7 +81,7 @@ export const KioskServicesCardStyle = {
         alignItems: "center",
         justifyContent: "center",
         flexShrink: 0,
-        width: "clamp(52px, 5.2vmin, 76px)",
+        width: kioskCardDimensions.iconWrapperWidth,
     },
     iconTile: {
         display: "flex",

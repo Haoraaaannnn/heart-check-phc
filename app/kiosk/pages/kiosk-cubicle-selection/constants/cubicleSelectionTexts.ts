@@ -4,12 +4,15 @@
  */
 
 import { CubicleHeaderTexts } from "./cubicleHeaderTexts";
+import { CubicleCardTexts } from "./cubicleCardTexts";
 
 export * from "./cubicleHeaderTexts";
+export * from "./cubicleCardTexts";
 
 /**
  * Composite text copy dictionary for cubicle selection.
  */
 export const cubicleSelectionTexts = {
     ...CubicleHeaderTexts,
+    ...CubicleCardTexts,
 } as const;

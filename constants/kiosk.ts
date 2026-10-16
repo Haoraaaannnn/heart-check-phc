@@ -97,3 +97,21 @@ export const kioskTypography = {
  */
 export const fontSizeKiosk = kioskTypography;
 
+/**
+ * Standardized constant card dimensions for all Kiosk screens and components,
+ * matching the canonical expansive sizing of `kiosk-services`.
+ */
+export const kioskCardDimensions = {
+  cardMinHeight: "clamp(125px, 13.5vh, 165px)",
+  cardPaddingX: "clamp(20px, 2.6vmin, 36px)",
+  cardPaddingY: "clamp(16px, 1.8vh, 24px)",
+  cardGap: "clamp(14px, 1.8vmin, 22px)",
+  iconWrapperWidth: "clamp(52px, 5.2vmin, 76px)",
+  iconFontSize: "clamp(48px, 5.2vmin, 76px)",
+  arrowFontSize: "clamp(26px, 2.6vmin, 36px)",
+  gridGap: "clamp(16px, 2.2vmin, 28px)",
+  gridPaddingX: "clamp(12px, 1.5vmin, 24px)",
+  gridAutoRows: "1fr",
+} as const;
+
+

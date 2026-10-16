@@ -8,6 +8,10 @@ export type ActualCubicle = {
     category: string;
     /** Age subcategory assigned to this cubicle ("Adult", "Pedia", or null if unassigned). */
     subcategory: string | null;
+    /** ID of doctor assigned to this cubicle (foreign key to `doctors.id`). */
+    doctorId?: string | null;
+    /** Resolved full name of the doctor assigned to this cubicle. */
+    doctorName?: string | null;
 };
 
 /**
@@ -27,4 +31,6 @@ export type CubicleSelectorType = {
     cubicles?: {
         cubicle: ActualCubicle | null;
     }[];
+    /** Primary or aggregated doctor name for display on the card. */
+    doctorName?: string | null;
 };

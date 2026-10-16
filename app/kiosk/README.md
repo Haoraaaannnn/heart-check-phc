@@ -4,6 +4,8 @@ This document is the definitive guide for developers maintaining, modifying, or 
 
 It explains the system architecture, separation-of-concerns conventions, and provides an exhaustive directory mapping showing exactly which files to edit for any visual, textual, layout, or behavioral changes.
 
+_Last updated: 2026-10-17_
+
 ---
 
 ## 1. Architectural Principles
@@ -89,8 +91,8 @@ The welcome screen where patients indicate whether they are a "New Patient" or "
 - **Layout File:** [layout.tsx](file:///home/jensen/Github-Repositories/heart-check-phc/app/kiosk/pages/kiosk-new-old-selection/layout.tsx)
 - **Components:**
   - [KioskTitle.tsx](file:///home/jensen/Github-Repositories/heart-check-phc/app/kiosk/pages/kiosk-new-old-selection/components/KioskTitle.tsx): Main Filipino/English heading.
-  - [PatientTypeBanner.tsx](file:///home/jensen/Github-Repositories/heart-check-phc/app/kiosk/pages/kiosk-new-old-selection/components/PatientTypeBanner.tsx): Informational instruction callout.
-  - [PatientTypeCards.tsx](file:///home/jensen/Github-Repositories/heart-check-phc/app/kiosk/pages/kiosk-new-old-selection/components/PatientTypeCards.tsx): Tappable New/Old selection cards.
+  - [PatientTypeBanner.tsx](file:///home/jensen/Github-Repositories/heart-check-phc/app/kiosk/pages/kiosk-new-old-selection/components/PatientTypeBanner.tsx): Informational instruction callout situated tightly directly above the selection cards.
+  - [PatientTypeCards.tsx](file:///home/jensen/Github-Repositories/heart-check-phc/app/kiosk/pages/kiosk-new-old-selection/components/PatientTypeCards.tsx): Tappable New/Old selection cards matching canonical `kiosk-services` expansive sizing (`width: "100%"`, `height: "100%"`, `minHeight: "clamp(125px, 13.5vh, 165px)"`, `auto-rows-fr`).
 - **Where to Edit Texts:**
   - [kioskTitleTexts.ts](file:///home/jensen/Github-Repositories/heart-check-phc/app/kiosk/pages/kiosk-new-old-selection/constants/kioskTitleTexts.ts): Heading copy (`KioskTitleTexts`).
   - [patientTypeBannerTexts.ts](file:///home/jensen/Github-Repositories/heart-check-phc/app/kiosk/pages/kiosk-new-old-selection/constants/patientTypeBannerTexts.ts): Banner instructions (`PatientTypeBannerTexts`).
@@ -98,7 +100,8 @@ The welcome screen where patients indicate whether they are a "New Patient" or "
 - **Where to Edit Styles:**
   - [kioskTitle.ts](file:///home/jensen/Github-Repositories/heart-check-phc/app/kiosk/pages/kiosk-new-old-selection/constants/kioskTitle.ts): Title font size (referencing `kioskTypography.heroTitle`) and alignments (`KioskTitleStyle`).
   - [patientTypeBanner.ts](file:///home/jensen/Github-Repositories/heart-check-phc/app/kiosk/pages/kiosk-new-old-selection/constants/patientTypeBanner.ts): Banner container, badge styles, and fluid typography (`clamp(28px, 3.2vmin, 44px)`) (`PatientTypeBannerStyle`).
-  - [kioskNewOldLayout.ts](file:///home/jensen/Github-Repositories/heart-check-phc/app/kiosk/pages/kiosk-new-old-selection/constants/kioskNewOldLayout.ts): Page layout classes (`KioskNewOldLayoutClasses`) providing a strictly non-scrollable container (`cardsArea`) fitted completely within the viewport, as patient types (New vs Old) are fixed and do not increase.
+  - [patientTypeCards.ts](file:///home/jensen/Github-Repositories/heart-check-phc/app/kiosk/pages/kiosk-new-old-selection/constants/patientTypeCards.ts): Standardized card dimensions (`kioskCardDimensions.cardMinHeight`, `cardPaddingX`, `cardPaddingY`, `cardGap`), divider line, and active feedback states (`PatientTypeCardStyle`, `PatientTypeCardsClasses`).
+  - [kioskNewOldLayout.ts](file:///home/jensen/Github-Repositories/heart-check-phc/app/kiosk/pages/kiosk-new-old-selection/constants/kioskNewOldLayout.ts): Page layout classes (`KioskNewOldLayoutClasses`) keeping the banner instructions directly above the cards with zero vertical gap or stretching.
 
 ---
 
@@ -135,11 +138,11 @@ Unified age-bracket selector for services requiring Adult (19+) vs Pedia (18 and
 - **Page File:** [page.tsx](file:///home/jensen/Github-Repositories/heart-check-phc/app/kiosk/pages/category-selection/page.tsx)
 - **Where to Edit Texts:**
   - [categoryHeaderTexts.ts](file:///home/jensen/Github-Repositories/heart-check-phc/app/kiosk/pages/category-selection/constants/categoryHeaderTexts.ts): Header question text (`CategoryHeaderTexts`).
-  - [categoryCardsTexts.ts](file:///home/jensen/Github-Repositories/heart-check-phc/app/kiosk/pages/category-selection/constants/categoryCardsTexts.ts): Adult / Pedia bilingual labels (`CategoryCardsTexts`).
+  - [categoryCardsTexts.ts](file:///home/jensen/Github-Repositories/heart-check-phc/app/kiosk/pages/category-selection/constants/categoryCardsTexts.ts): Adult / Pedia bilingual labels and scroll indicator texts (`CategoryCardsTexts`).
 - **Where to Edit Styles:**
   - [categoryHeader.ts](file:///home/jensen/Github-Repositories/heart-check-phc/app/kiosk/pages/category-selection/constants/categoryHeader.ts): Heading typography referencing `kioskTypography` and margins (`CategoryHeaderStyle`).
-  - [categoryCards.ts](file:///home/jensen/Github-Repositories/heart-check-phc/app/kiosk/pages/category-selection/constants/categoryCards.ts): Brand red icon styling (`adultIcon`, `pediaIcon`), enlarged fluid clamp icon (`clamp(48px, 5vmin, 70px)`) and arrow sizing, responsive min-height (`clamp(100px, 11vh, 150px)`), word wrapping on titles without clipping (`overflowWrap: "anywhere"`), horizontal card button layout (icon on left, Filipino title, gray divider line, English subtitle in middle, directional arrow on right), touch active border/arrow highlight classes, typography referencing `kioskTypography`, card grid layout with dynamic `m-auto` centering and bottom padding, card styles, and animations (`CategoryCardsStyle`, `CategoryCardsClasses`).
-  - [categoryLayout.ts](file:///home/jensen/Github-Repositories/heart-check-phc/app/kiosk/pages/category-selection/constants/categoryLayout.ts): Page container styles and responsive padding (`CategoryLayoutStyle`, `CategoryLayoutClasses`) providing sticky greetings header and scrollable buttons area with `cardsScrollArea`.
+  - [categoryCards.ts](file:///home/jensen/Github-Repositories/heart-check-phc/app/kiosk/pages/category-selection/constants/categoryCards.ts): Standardized card dimensions (`minHeight: clamp(125px, 13.5vh, 165px)`, `paddingX`, `paddingY`, `cardsGap`), 2px divider line, fluid clamp icon (`clamp(48px, 5.2vmin, 76px)`) and arrow sizing (`clamp(26px, 2.6vmin, 36px)`), word wrapping on titles without clipping (`overflowWrap: "anywhere"`), horizontal card button layout (icon on left, Filipino title, gray divider line, English subtitle in middle, directional arrow on right), touch active border/arrow highlight classes, typography referencing `kioskTypography`, and card styles (`CategoryCardsStyle`, `CategoryCardsClasses`).
+  - [categoryLayout.ts](file:///home/jensen/Github-Repositories/heart-check-phc/app/kiosk/pages/category-selection/constants/categoryLayout.ts): Page container styles and scroll wrapper architecture (`CategoryLayoutStyle`, `CategoryLayoutClasses`) providing sticky greetings header, top/bottom gradient shadows, floating scroll indicator badge, and scrollable buttons area with `cardsScrollArea`.
 
 ---
 
@@ -152,14 +155,16 @@ Consultation doctor / room selection step.
 - **Layout File:** [layout.tsx](file:///home/jensen/Github-Repositories/heart-check-phc/app/kiosk/pages/kiosk-cubicle-selection/layout.tsx) (clean pass-through layout)
 - **Components:**
   - [CubicleHeader.tsx](file:///home/jensen/Github-Repositories/heart-check-phc/app/kiosk/pages/kiosk-cubicle-selection/components/CubicleHeader.tsx): Top header prompt.
-  - [CubicleCard.tsx](file:///home/jensen/Github-Repositories/heart-check-phc/app/kiosk/pages/kiosk-cubicle-selection/components/CubicleCard.tsx): Cubicle button that forwards preferred cubicle numbers and `cubicleNum` selection identifier to SMS input.
+  - [CubicleCardsGrid.tsx](file:///home/jensen/Github-Repositories/heart-check-phc/app/kiosk/pages/kiosk-cubicle-selection/components/CubicleCardsGrid.tsx): Scrollable cubicle grid with top/bottom gradient shadows, floating scroll indicator badge, and ResizeObserver tracking.
+  - [CubicleCard.tsx](file:///home/jensen/Github-Repositories/heart-check-phc/app/kiosk/pages/kiosk-cubicle-selection/components/CubicleCard.tsx): Cubicle button displaying cubicle designation, divider line, and assigned active physician (`Dr. <Name>`), forwarding preferred cubicle numbers and `cubicleNum` selection identifier to SMS input.
 - **Where to Edit Texts:**
   - [cubicleHeaderTexts.ts](file:///home/jensen/Github-Repositories/heart-check-phc/app/kiosk/pages/kiosk-cubicle-selection/constants/cubicleHeaderTexts.ts): Header title and subtitle (`CubicleHeaderTexts`).
-  - _Note:_ Cubicle names are fetched from the database (`cubicle_selector_groups`).
+  - [cubicleCardTexts.ts](file:///home/jensen/Github-Repositories/heart-check-phc/app/kiosk/pages/kiosk-cubicle-selection/constants/cubicleCardTexts.ts): Card text tokens including doctor title prefix, fallback copy, and scroll indicator text (`CubicleCardTexts`).
+  - _Note:_ Cubicle names and active doctor assignments are fetched dynamically from the database (`cubicle_selector`, `cubicle`, and `doctors` tables).
 - **Where to Edit Styles:**
   - [cubicleHeader.ts](file:///home/jensen/Github-Repositories/heart-check-phc/app/kiosk/pages/kiosk-cubicle-selection/constants/cubicleHeader.ts): Header styles and typography referencing `kioskTypography` (`CubicleHeaderStyle`).
-  - [cubicleCard.ts](file:///home/jensen/Github-Repositories/heart-check-phc/app/kiosk/pages/kiosk-cubicle-selection/constants/cubicleCard.ts): Card styles with enlarged responsive minHeight (`clamp(100px, 11vh, 130px)`) and fluid padding, multi-line wrapping for long cubicle names without ellipsis truncation (`whiteSpace: "normal"`, `overflowWrap: "break-word"`), brand red icon with enlarged fluid clamp sizing (`clamp(44px, 4.5vmin, 60px)`), typography referencing `kioskTypography`, touch active border/arrow highlight classes, dynamic `m-auto` centering, and generous bottom padding (`CubicleCardStyle`, `CubicleCardClasses`).
-  - [cubicleLayout.ts](file:///home/jensen/Github-Repositories/heart-check-phc/app/kiosk/pages/kiosk-cubicle-selection/constants/cubicleLayout.ts): Layout wrapper styles (`CubicleLayoutStyle`, `CubicleLayoutClasses`) providing centered prompt and cubicle cards container with `justifyContent: "center"` and `maxHeight: "100%"` ensuring vertical and horizontal centering in both portrait and landscape modes.
+  - [cubicleCard.ts](file:///home/jensen/Github-Repositories/heart-check-phc/app/kiosk/pages/kiosk-cubicle-selection/constants/cubicleCard.ts): Standardized card styling matching `kiosk-services` (`minHeight: clamp(125px, 13.5vh, 165px)`, `cardPaddingX`, `cardPaddingY`, `cardGap`), doctor row subtitle, 2px divider line, multi-line wrapping for long cubicle names and physician credentials without ellipsis truncation (`whiteSpace: "normal"`, `overflowWrap: "anywhere"`, `wordBreak: "break-word"`), brand red icon (`clamp(48px, 5.2vmin, 76px)`), directional arrow (`clamp(26px, 2.6vmin, 36px)`), typography referencing `kioskTypography`, and touch active border/arrow highlight classes (`CubicleCardStyle`, `CubicleCardClasses`).
+  - [cubicleLayout.ts](file:///home/jensen/Github-Repositories/heart-check-phc/app/kiosk/pages/kiosk-cubicle-selection/constants/cubicleLayout.ts): Layout wrapper styles and scroll tokens (`CubicleLayoutStyle`, `CubicleLayoutClasses`) providing scrollable wrapper architecture (`scrollWrapper`, `cardsScrollArea`, `scrollTopShadow`, `scrollBottomShadow`, `scrollIndicator`).
 
 ---
 
@@ -288,20 +293,36 @@ Whenever you create or edit code in `app/kiosk/`:
 6. **Comprehensive Documentation:**
    Every new or refactored file must include a top-level JSDoc `@file` comment and symbol-level JSDoc annotations for all components, interfaces, and exported constants.
 
-7. **Scrolling Architecture Policy (Dynamic Lists vs. Fixed Screens):**
-   - **Unified Centered Content Wrapper:** All selection screens ([category-selection](file:///home/jensen/Github-Repositories/heart-check-phc/app/kiosk/pages/category-selection/page.tsx), [kiosk-services](file:///home/jensen/Github-Repositories/heart-check-phc/app/kiosk/pages/kiosk-services/page.tsx), and [kiosk-cubicle-selection](file:///home/jensen/Github-Repositories/heart-check-phc/app/kiosk/pages/kiosk-cubicle-selection/page.tsx)) bundle the greetings banner or prompt directly with the button cards inside `contentWrapper` with zero gaps or spaces between greetings and selection buttons.
-   - **Fixed Screens (Items Do Not Increase):** Screens with fixed options ([kiosk-new-old-selection](file:///home/jensen/Github-Repositories/heart-check-phc/app/kiosk/pages/kiosk-new-old-selection/layout.tsx), [category-selection](file:///home/jensen/Github-Repositories/heart-check-phc/app/kiosk/pages/category-selection/page.tsx), [sms-input](file:///home/jensen/Github-Repositories/heart-check-phc/app/kiosk/pages/sms-input/page.tsx), [queue-print](file:///home/jensen/Github-Repositories/heart-check-phc/app/kiosk/pages/queue-print/page.tsx)) must be strictly non-scrollable (`overflow-hidden`). All elements and cards must fit comfortably within the available viewport on all screen sizes in both portrait and landscape modes.
+7. **Universal Scrollable Architecture Standard:**
+   All selection screens ([kiosk-services](file:///home/jensen/Github-Repositories/heart-check-phc/app/kiosk/pages/kiosk-services/page.tsx), [category-selection](file:///home/jensen/Github-Repositories/heart-check-phc/app/kiosk/pages/category-selection/page.tsx), [kiosk-cubicle-selection](file:///home/jensen/Github-Repositories/heart-check-phc/app/kiosk/pages/kiosk-cubicle-selection/page.tsx), and [kiosk-new-old-selection](file:///home/jensen/Github-Repositories/heart-check-phc/app/kiosk/pages/kiosk-new-old-selection/layout.tsx)) implement the unified scrollable architecture established by `kiosk-services`:
+   - **Sticky Top Greeting/Header:** The prompt sits directly above cards inside `contentWrapper` with zero unnecessary vertical gap.
+   - **Top Gradient Shadow (`scrollTopShadow`):** Rendered dynamically when `canScrollUp` is true, providing smooth visual fading at the top edge.
+   - **Scrollable Cards Area (`cardsScrollArea`):** Overflow vertical scroll container with custom slim scrollbar styles and touch overscroll containment.
+   - **Bottom Gradient Shadow (`scrollBottomShadow`):** Rendered dynamically when `canScrollDown` is true, indicating more options exist below the fold.
+   - **Floating Scroll Indicator Badge (`scrollIndicator`):** Centered floating pill with uppercase badge label and bouncing chevron icon. Tapping triggers smooth programmatic scroll down (`scrollBy({ top: clientHeight * 0.7, behavior: "smooth" })`). Automatically hides when scrolled to bottom.
+   - **Automated Viewport Synchronization:** Combines scroll event listeners, window resize events, and `ResizeObserver` tracking to keep scroll indicators perfectly accurate across viewport size and orientation changes.
 
 8. **Always Center Kiosk UI & Non-Overflow Navigation:**
    Every kiosk screen, whether fixed or scrollable, must ALWAYS center its content both vertically and horizontally in the available viewport.
    - **Non-Overflow Navigation (In-Flow):** The universal back button is rendered in its own dedicated in-flow top navigation row (`topNavWrapper`) in `app/kiosk/layout.tsx`. It is strictly `inline-flex` and never absolute, guaranteeing that no headers, banners, or instruction texts ever share a row or collide with the back button.
    - **Centered Content Area (`<main>`):** All page contents (headers, banners, cards, instructions, numeric keypads) are rendered inside `<main>`, vertically and horizontally centered in the available space between the top navigation bar and the footer wave.
    - **Greetings Directly on Top of Selection Buttons:** On every selection screen, the greetings banner or instruction prompt sits directly on top of the selection cards with zero empty space or gap separating them. No vertical auto-margins (`m-auto`) inside scroll containers may pull or push cards away from the header.
-   - **Unified Content Wrapper Centering:** Across [kiosk-services](file:///home/jensen/Github-Repositories/heart-check-phc/app/kiosk/pages/kiosk-services/page.tsx), [category-selection](file:///home/jensen/Github-Repositories/heart-check-phc/app/kiosk/pages/category-selection/page.tsx), and [kiosk-cubicle-selection](file:///home/jensen/Github-Repositories/heart-check-phc/app/kiosk/pages/kiosk-cubicle-selection/page.tsx), the container and `contentWrapper` use `m-auto flex flex-col items-center justify-center` so that the greetings prompt and cards are centered cleanly on the page as one block directly between the top navigation back button and the footer.
-   - **Fixed Screens Centering:** On fixed screens ([kiosk-new-old-selection](file:///home/jensen/Github-Repositories/heart-check-phc/app/kiosk/pages/kiosk-new-old-selection/layout.tsx), [category-selection](file:///home/jensen/Github-Repositories/heart-check-phc/app/kiosk/pages/category-selection/page.tsx), [sms-input](file:///home/jensen/Github-Repositories/heart-check-phc/app/kiosk/pages/sms-input/page.tsx), [queue-print](file:///home/jensen/Github-Repositories/heart-check-phc/app/kiosk/pages/queue-print/page.tsx)), content is centered vertically and horizontally within the viewport above the kiosk wave footer.
+   - **Unified Content Wrapper Centering:** Across [kiosk-services](file:///home/jensen/Github-Repositories/heart-check-phc/app/kiosk/pages/kiosk-services/page.tsx), [category-selection](file:///home/jensen/Github-Repositories/heart-check-phc/app/kiosk/pages/category-selection/page.tsx), [kiosk-cubicle-selection](file:///home/jensen/Github-Repositories/heart-check-phc/app/kiosk/pages/kiosk-cubicle-selection/page.tsx), and [kiosk-new-old-selection](file:///home/jensen/Github-Repositories/heart-check-phc/app/kiosk/pages/kiosk-new-old-selection/layout.tsx), the container and `contentWrapper` use `m-auto flex flex-col items-center justify-center` so that the greetings prompt and cards are centered cleanly on the page as one block directly between the top navigation back button and the footer.
 
-9. **Constant Card Dimensions Standard:**
-   All interactive cards (services menu cards, cubicle selector cards, patient category cards) must have strictly constant, uniform sizes across all columns and rows:
-   - **Full Grid Fill:** Cards must define `width: "100%"`, `height: "100%"`, and `boxSizing: "border-box"`.
-   - **Equal Row Heights:** Grids must enforce `gridAutoRows: "1fr"` and `auto-rows-fr` so that all rows have identical height regardless of variations in text length.
-   - **Fixed Icon Alignment:** Icon wrappers must define explicit fixed clamp widths (`width: clamp(...)`, `flexShrink: 0`) so that icons, text labels, and navigation arrows align perfectly across all cards.
+9. **Canonical Expansive Card Specification (`kiosk-services` reference):**
+   All interactive cards (service cards, cubicle selector cards, age category cards, patient type cards) must adhere strictly to the canonical expansive dimensions, typography, and structure established by `kiosk-services` and defined by `kioskCardDimensions` in `constants/kiosk.ts`:
+   - **Expansive Fluid Dimensions:** 
+     - Fluid Height: `height: "100%"`, `minHeight: "clamp(125px, 13.5vh, 165px)"`, and `gridAutoRows: "1fr"` (`auto-rows-fr`).
+     - Natural Track Fill: `width: "100%"`, expanding naturally to fill grid columns without artificial `maxWidth` caps or fixed heights.
+     - Grid Containers: Multi-card grids span up to `max-w-[1650px]` in landscape (3 columns) or `max-w-[1150px]` in portrait (2 columns), using `auto-rows-fr` for perfectly balanced row heights.
+     - Spacing & Borders: Horizontal padding `clamp(20px, 2.6vmin, 36px)`, vertical padding `clamp(16px, 1.8vh, 24px)`, card gap `clamp(14px, 1.8vmin, 22px)`, 16px corner radius, 2px solid border (`#D1D5DB`), and solid white background.
+   - **Left Icon Tile:** Fixed width container (`width: "clamp(52px, 5.2vmin, 76px)"`, `flexShrink: 0`) centering a brand red Boxicon (`fontSize: "clamp(48px, 5.2vmin, 76px)"`, `lineHeight: 1`).
+   - **Middle Column Labels:** Fluid label container with `paddingLeft: "clamp(6px, 1vmin, 12px)"`, `flex: 1`, `minWidth: 0`. Comprises:
+     1. Primary Filipino Title: `fontSize: kioskTypography.cardTitle`, `fontWeight: 900`, `lineHeight: 1.2`.
+     2. Horizontal Divider: `height: 2`, `width: "100%"`, `backgroundColor: "#E5E7EB"`, `borderRadius: 4`, `marginTop: 6`, `marginBottom: 6`.
+     3. Secondary Subtitle / Doctor Name: `fontSize: kioskTypography.cardSubtitle`, `fontWeight: 600`, `color: "#4B5563"`, `lineHeight: 1.25`.
+   - **Right Directional Arrow:** Fluid arrow icon (`fontSize: "clamp(26px, 2.6vmin, 36px)"`, `color: "#D7D6D6"`) with smooth transition to brand red (`#ED1C24`) and horizontal translation (`translate-x-1`) on active card press.
+   - **Touch Feedback:** Tactile scale and border active states: `active:scale-[0.98] active:!border-[#ED1C24] active:shadow-sm`.
+   - **Zero Text Ellipsis / Truncation:** Never use `truncate` or `text-ellipsis` on clinical data, services, or doctor names. All text must wrap cleanly using `overflowWrap: "anywhere"`, `wordBreak: "break-word"`, and `whiteSpace: "normal"`.
+
+

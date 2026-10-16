@@ -7,6 +7,7 @@ import {
     CubicleCardClasses,
     CubicleCardIcons,
 } from "@/app/kiosk/pages/kiosk-cubicle-selection/constants/cubicleCard";
+import { CubicleCardTexts } from "@/app/kiosk/pages/kiosk-cubicle-selection/constants/cubicleCardTexts";
 
 /** Props for {@link CubicleCard}. */
 interface CubicleCardProps {
@@ -28,8 +29,11 @@ interface CubicleCardProps {
  * `subcategory`. When tapped, navigates to `/kiosk/pages/sms-input` with the preferred
  * cubicle numbers encoded in `preferredCubicleNums`.
  *
+ * Displays the cubicle designation along with the active physician assigned to that station
+ * (with automatic `Dr.` prefixing and full text-wrapping compliance).
+ *
  * @param props - Component props.
- * @returns An interactive cubicle selection button.
+ * @returns An interactive cubicle selection button with physician designation.
  */
 export default function CubicleCard({
     cubicle,
@@ -39,6 +43,33 @@ export default function CubicleCard({
 }: CubicleCardProps) {
     const navigate = useKioskNavigate();
 
+    // Filter linked cubicles matching category and chosen subcategory
+    const matchingCubicles = (cubicle.cubicles ?? [])
+        .map((link) => link.cubicle)
+        .filter(
+            (actualCubicle) =>
+                actualCubicle &&
+                actualCubicle.category === "Consultation" &&
+                (!subcategory || actualCubicle.subcategory === subcategory)
+        );
+
+    // Extract doctor name from matching cubicles, falling back to top-level selector doctor
+    const matchingDoctorNames = Array.from(
+        new Set(matchingCubicles.map((c) => c?.doctorName).filter(Boolean))
+    ) as string[];
+
+    const rawDoctorName =
+        matchingDoctorNames.length > 0
+            ? matchingDoctorNames.join(", ")
+            : cubicle.doctorName || null;
+
+    // Format doctor name with "Dr." prefix if not already present
+    const formattedDoctorName = rawDoctorName
+        ? /^dr\.?\s+/i.test(rawDoctorName.trim())
+            ? rawDoctorName.trim()
+            : `${CubicleCardTexts.doctorPrefix} ${rawDoctorName.trim()}`
+        : null;
+
     /**
      * Resolves matching cubicle numbers and pushes to the SMS input route.
      */
@@ -46,15 +77,7 @@ export default function CubicleCard({
         const params = new URLSearchParams();
 
         // Extract cubicle numbers matching category and chosen subcategory
-        const cubicleNums = (cubicle.cubicles ?? [])
-            .map((link) => link.cubicle)
-            .filter(
-                (actualCubicle) =>
-                    actualCubicle &&
-                    actualCubicle.category === "Consultation" &&
-                    (!subcategory || actualCubicle.subcategory === subcategory)
-            )
-            .map((actualCubicle) => actualCubicle!.cubicleNum);
+        const cubicleNums = matchingCubicles.map((actualCubicle) => actualCubicle!.cubicleNum);
 
         if (cubicleNums.length === 0) return;
 
@@ -91,10 +114,14 @@ export default function CubicleCard({
                 />
             </div>
 
-            {/* Cubicle Title */}
-            <div style={CubicleCardStyle.titleWrapper}>
+            {/* Labels. min-w-0 lets the text wrap instead of pushing the arrow out. */}
+            <div style={CubicleCardStyle.labelWrapper}>
                 <span style={CubicleCardStyle.title}>
                     {cubicle.cubicle_name}
+                </span>
+                <div style={CubicleCardStyle.divider} />
+                <span style={CubicleCardStyle.subtitle}>
+                    {formattedDoctorName || CubicleCardTexts.unassignedDoctor}
                 </span>
             </div>
 
