@@ -70,6 +70,56 @@ function getPrefixInfo(service: Service, subcategory?: string) {
 }
 
 /**
+ * Resolves the queue ticket prefix asynchronously, prioritizing any custom
+ * `queue_prefix_map` configured in the `app_settings` database table.
+ *
+ * @param service - Active service record.
+ * @param subcategory - Optional patient subcategory (e.g. Adult or Pedia).
+ * @returns Object containing prefix string and subcategory grouping flag.
+ */
+async function resolvePrefixInfo(
+    service: Service,
+    subcategory?: string
+): Promise<{ prefix: string; groupBySubcategory: boolean }> {
+    const fallback = getPrefixInfo(service, subcategory);
+    try {
+        const { data, error } = await supabase
+            .from("app_settings")
+            .select("value")
+            .eq("key", "queue_prefix_map")
+            .maybeSingle();
+
+        if (!error && data?.value) {
+            const list = JSON.parse(data.value);
+            if (Array.isArray(list)) {
+                const nameLower = service.label_en?.trim().toLowerCase();
+                const subLower = subcategory?.trim().toLowerCase();
+
+                const matched = list.find((item: { service?: string; subcategory?: string | null; prefix?: string }) => {
+                    const itemServiceLower = item.service?.trim().toLowerCase();
+                    const itemSubLower = item.subcategory?.trim().toLowerCase() || null;
+                    if (itemServiceLower !== nameLower) return false;
+                    if (subLower) {
+                        return itemSubLower === subLower;
+                    }
+                    return !itemSubLower;
+                });
+
+                if (matched && matched.prefix) {
+                    return {
+                        prefix: String(matched.prefix).trim(),
+                        groupBySubcategory: fallback.groupBySubcategory,
+                    };
+                }
+            }
+        }
+    } catch (err) {
+        console.warn(`${getTimestamp()} [PREFIX RESOLUTION] Falling back to default prefix:`, err);
+    }
+    return fallback;
+}
+
+/**
  * Builds the URL for the SMS page's "Bumalik - Cancel" button.
  *
  * @remarks
@@ -192,7 +242,7 @@ export default function KioskPhoneEntry({
      * Executes the `create_patient` stored procedure in Supabase.
      */
     const createPatient = async (phoneToSave: string | null): Promise<string> => {
-        const { prefix, groupBySubcategory } = getPrefixInfo(service, subcategory);
+        const { prefix, groupBySubcategory } = await resolvePrefixInfo(service, subcategory);
 
         // Diagnostic: log the resolved prefix and exact service label before the RPC call
         // so any future prefix mismatch is immediately visible in the console.
