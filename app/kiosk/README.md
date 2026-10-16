@@ -4,6 +4,8 @@ This document is the definitive guide for developers maintaining, modifying, or 
 
 It explains the system architecture, separation-of-concerns conventions, and provides an exhaustive directory mapping showing exactly which files to edit for any visual, textual, layout, or behavioral changes.
 
+_Last updated: 2026-10-16_
+
 ---
 
 ## 1. Architectural Principles
@@ -152,13 +154,14 @@ Consultation doctor / room selection step.
 - **Layout File:** [layout.tsx](file:///home/jensen/Github-Repositories/heart-check-phc/app/kiosk/pages/kiosk-cubicle-selection/layout.tsx) (clean pass-through layout)
 - **Components:**
   - [CubicleHeader.tsx](file:///home/jensen/Github-Repositories/heart-check-phc/app/kiosk/pages/kiosk-cubicle-selection/components/CubicleHeader.tsx): Top header prompt.
-  - [CubicleCard.tsx](file:///home/jensen/Github-Repositories/heart-check-phc/app/kiosk/pages/kiosk-cubicle-selection/components/CubicleCard.tsx): Cubicle button that forwards preferred cubicle numbers and `cubicleNum` selection identifier to SMS input.
+  - [CubicleCard.tsx](file:///home/jensen/Github-Repositories/heart-check-phc/app/kiosk/pages/kiosk-cubicle-selection/components/CubicleCard.tsx): Cubicle button displaying cubicle designation and assigned active physician (`Dr. <Name>`), forwarding preferred cubicle numbers and `cubicleNum` selection identifier to SMS input.
 - **Where to Edit Texts:**
   - [cubicleHeaderTexts.ts](file:///home/jensen/Github-Repositories/heart-check-phc/app/kiosk/pages/kiosk-cubicle-selection/constants/cubicleHeaderTexts.ts): Header title and subtitle (`CubicleHeaderTexts`).
-  - _Note:_ Cubicle names are fetched from the database (`cubicle_selector_groups`).
+  - [cubicleCardTexts.ts](file:///home/jensen/Github-Repositories/heart-check-phc/app/kiosk/pages/kiosk-cubicle-selection/constants/cubicleCardTexts.ts): Card text tokens including doctor title prefix (`CubicleCardTexts`).
+  - _Note:_ Cubicle names and active doctor assignments are fetched dynamically from the database (`cubicle_selector`, `cubicle`, and `doctors` tables).
 - **Where to Edit Styles:**
   - [cubicleHeader.ts](file:///home/jensen/Github-Repositories/heart-check-phc/app/kiosk/pages/kiosk-cubicle-selection/constants/cubicleHeader.ts): Header styles and typography referencing `kioskTypography` (`CubicleHeaderStyle`).
-  - [cubicleCard.ts](file:///home/jensen/Github-Repositories/heart-check-phc/app/kiosk/pages/kiosk-cubicle-selection/constants/cubicleCard.ts): Card styles with enlarged responsive minHeight (`clamp(100px, 11vh, 130px)`) and fluid padding, multi-line wrapping for long cubicle names without ellipsis truncation (`whiteSpace: "normal"`, `overflowWrap: "break-word"`), brand red icon with enlarged fluid clamp sizing (`clamp(44px, 4.5vmin, 60px)`), typography referencing `kioskTypography`, touch active border/arrow highlight classes, dynamic `m-auto` centering, and generous bottom padding (`CubicleCardStyle`, `CubicleCardClasses`).
+  - [cubicleCard.ts](file:///home/jensen/Github-Repositories/heart-check-phc/app/kiosk/pages/kiosk-cubicle-selection/constants/cubicleCard.ts): Card styles with enlarged responsive minHeight (`clamp(100px, 11vh, 130px)`) and fluid padding, doctor row styling (`doctorWrapper`, `doctorIcon`, `doctorName`), multi-line wrapping for long cubicle names and physician credentials without ellipsis truncation (`whiteSpace: "normal"`, `overflowWrap: "break-word"`), brand red icon with enlarged fluid clamp sizing (`clamp(44px, 4.5vmin, 60px)`), typography referencing `kioskTypography`, touch active border/arrow highlight classes, dynamic `m-auto` centering, and generous bottom padding (`CubicleCardStyle`, `CubicleCardClasses`).
   - [cubicleLayout.ts](file:///home/jensen/Github-Repositories/heart-check-phc/app/kiosk/pages/kiosk-cubicle-selection/constants/cubicleLayout.ts): Layout wrapper styles (`CubicleLayoutStyle`, `CubicleLayoutClasses`) providing centered prompt and cubicle cards container with `justifyContent: "center"` and `maxHeight: "100%"` ensuring vertical and horizontal centering in both portrait and landscape modes.
 
 ---

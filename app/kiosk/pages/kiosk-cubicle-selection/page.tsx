@@ -1,4 +1,5 @@
 import { createClient } from "@/lib/supabase/server";
+import { supabaseAdmin } from "@/lib/supabase/facilityHelpers";
 import { redirect } from "next/navigation";
 import CubicleCard from "@/app/kiosk/pages/kiosk-cubicle-selection/components/CubicleCard";
 import CubicleHeader from "@/app/kiosk/pages/kiosk-cubicle-selection/components/CubicleHeader";
@@ -26,7 +27,7 @@ interface KioskCubicleSelectionPageProps {
  * Kiosk cubicle selection page (`/kiosk/pages/kiosk-cubicle-selection`).
  *
  * Server component that queries `cubicle_selector` records joined with their
- * linked physical cubicles and presents them for patient selection.
+ * linked physical cubicles and assigned active doctors, presenting them for patient selection.
  *
  * @remarks
  * **Access Control Guard:**
@@ -35,13 +36,19 @@ interface KioskCubicleSelectionPageProps {
  * OPD Screening), patients are automatically redirected to the appropriate
  * downstream screen (`sms-input` or `kiosk-services`).
  *
+ * **Doctor Roster Resolution:**
+ * Gathers assigned `doctorId` foreign keys across linked cubicles, queries the
+ * `doctors` directory (with server-side fallback to `supabaseAdmin` if anonymous RLS
+ * policies restrict directory reads on kiosk terminals), and enriches each cubicle
+ * option with physician metadata.
+ *
  * Follows the single-container layout pattern of `category-selection`:
  * - Outer container centers all content vertically and horizontally within `<main>`.
  * - Inner content wrapper bundles the greetings prompt (`CubicleHeader`) directly above
  *   the cubicle cards grid with tight spacing as one cohesive unit.
  *
  * @param props - Page props provided by Next.js.
- * @returns The grid of cubicle selector options.
+ * @returns The grid of cubicle selector options with assigned doctor details.
  */
 export default async function KioskCubicleSelectionPage({
     searchParams,
@@ -86,7 +93,8 @@ export default async function KioskCubicleSelectionPage({
                 cubicle:cubicle!cubicle_selector_cubicle_cubicle_id_fkey(
                     "cubicleNum",
                     category,
-                    subcategory
+                    subcategory,
+                    "doctorId"
                 )
             )
         `)
@@ -95,6 +103,143 @@ export default async function KioskCubicleSelectionPage({
     if (error) {
         console.error(`${getTimestamp()} [CUBICLE SELECTOR ERROR]:`, error);
     }
+
+    // Direct query for consultation cubicles to build fallback name-to-doctor mapping
+    const { data: directCubicles } = await supabase
+        .from("cubicle")
+        .select(`"cubicleNum", category, subcategory, "doctorId"`)
+        .eq("category", "Consultation");
+
+    const cubicleDocIdMap = new Map<string, string>();
+    (directCubicles || []).forEach((c: { cubicleNum: string | null; doctorId: string | null }) => {
+        if (c.cubicleNum && c.doctorId) {
+            const rawKey = c.cubicleNum.trim().toLowerCase();
+            cubicleDocIdMap.set(rawKey, c.doctorId);
+
+            const strippedKey = c.cubicleNum
+                .replace(/^cubicle\s*/i, "")
+                .trim()
+                .toLowerCase();
+            if (strippedKey) {
+                cubicleDocIdMap.set(strippedKey, c.doctorId);
+            }
+        }
+    });
+
+    // Collect all doctor IDs across joined cubicles and direct cubicles
+    const allDoctorIds = new Set<string>();
+    (directCubicles || []).forEach((c: { doctorId: string | null }) => {
+        if (c.doctorId) allDoctorIds.add(c.doctorId);
+    });
+    (cubicles || []).forEach((cs: { cubicles?: { cubicle: { doctorId?: string | null } | null }[] }) => {
+        (cs.cubicles || []).forEach((link) => {
+            if (link.cubicle?.doctorId) {
+                allDoctorIds.add(link.cubicle.doctorId);
+            }
+        });
+    });
+
+    const doctorIdsList = Array.from(allDoctorIds);
+    const doctorNameById = new Map<string, string>();
+
+    if (doctorIdsList.length > 0) {
+        let doctorsData: { id: string; full_name: string }[] | null = null;
+
+        // Attempt read via current session
+        const { data: publicDocs, error: docError } = await supabase
+            .from("doctors")
+            .select("id, full_name")
+            .in("id", doctorIdsList);
+
+        if (!docError && publicDocs && publicDocs.length > 0) {
+            doctorsData = publicDocs;
+        } else {
+            // Fallback to service-role client on server if anonymous RLS restricts public read
+            try {
+                const { data: adminDocs } = await supabaseAdmin
+                    .from("doctors")
+                    .select("id, full_name")
+                    .in("id", doctorIdsList);
+                if (adminDocs) {
+                    doctorsData = adminDocs;
+                }
+            } catch (adminErr) {
+                console.error(
+                    `${getTimestamp()} [CUBICLE DOCTOR FETCH ERROR]:`,
+                    adminErr
+                );
+            }
+        }
+
+        (doctorsData || []).forEach((d) => {
+            if (d.id && d.full_name) {
+                doctorNameById.set(d.id, d.full_name.trim());
+            }
+        });
+    }
+
+    // Enrich each cubicle selector record with resolved doctor names
+    const enrichedCubicles: CubicleSelectorType[] = (cubicles || []).map((cs: any) => {
+        const enrichedLinks = (cs.cubicles || []).map((link: any) => {
+            if (!link.cubicle) return link;
+            const cubicleNumKey = (link.cubicle.cubicleNum || "").trim().toLowerCase();
+            const strippedKey = (link.cubicle.cubicleNum || "")
+                .replace(/^cubicle\s*/i, "")
+                .trim()
+                .toLowerCase();
+
+            const resolvedDoctorId =
+                link.cubicle.doctorId ||
+                cubicleDocIdMap.get(cubicleNumKey) ||
+                cubicleDocIdMap.get(strippedKey) ||
+                null;
+
+            const docName = resolvedDoctorId
+                ? doctorNameById.get(resolvedDoctorId) || null
+                : null;
+
+            return {
+                ...link,
+                cubicle: {
+                    ...link.cubicle,
+                    doctorId: resolvedDoctorId,
+                    doctorName: docName,
+                },
+            };
+        });
+
+        // Resolve card-level doctor name (matching linked cubicles or name matching)
+        const selectorNameKey = (cs.cubicle_name || "").trim().toLowerCase();
+        const strippedSelectorKey = (cs.cubicle_name || "")
+            .replace(/^cubicle\s*/i, "")
+            .trim()
+            .toLowerCase();
+
+        const directDoctorId =
+            cubicleDocIdMap.get(selectorNameKey) ||
+            cubicleDocIdMap.get(strippedSelectorKey);
+
+        const linkDoctorNames = Array.from(
+            new Set(
+                enrichedLinks
+                    .map((l: any) => l.cubicle?.doctorName)
+                    .filter(Boolean)
+            )
+        ) as string[];
+
+        const primaryDoctorName =
+            linkDoctorNames.length > 0
+                ? linkDoctorNames.join(", ")
+                : directDoctorId
+                ? doctorNameById.get(directDoctorId) || null
+                : null;
+
+        return {
+            ...cs,
+            cubicles: enrichedLinks,
+            doctorName: primaryDoctorName,
+        };
+    });
 
     return (
         <div
@@ -119,7 +264,7 @@ export default async function KioskCubicleSelectionPage({
                     style={CubicleLayoutStyle.cardsScrollArea}
                 >
                     <div className={CubicleCardClasses.grid}>
-                        {cubicles?.map((cubicle: CubicleSelectorType) => (
+                        {enrichedCubicles.map((cubicle: CubicleSelectorType) => (
                             <CubicleCard
                                 key={cubicle.id}
                                 cubicle={cubicle}

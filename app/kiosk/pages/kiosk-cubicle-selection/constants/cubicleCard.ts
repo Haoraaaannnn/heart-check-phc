@@ -11,6 +11,7 @@ import { kioskTypography } from "@/constants/kiosk";
 /** Boxicons class tokens for cubicle card elements. */
 export const CubicleCardIcons = {
     cubicle: COMMON_ICONS.cubicle,
+    doctor: "bx-user",
     arrow: COMMON_ICONS.arrowRight,
 } as const;
 
@@ -20,16 +21,20 @@ export const cubicleCardSpacing = {
     cardPaddingX: "clamp(16px, 2.2vmin, 28px)",
     cardPaddingY: "clamp(16px, 1.8vh, 22px)",
     cardMinHeight: "clamp(100px, 11vh, 130px)",
+    doctorGap: "clamp(4px, 0.6vmin, 8px)",
 } as const;
 
 /** Typography tokens for cubicle card, referencing centralized root typography scale. */
 export const cubicleCardTypography = {
     cardTitleSize: kioskTypography.cardCubicleTitle,
+    doctorNameSize: kioskTypography.badgeLarge,
 } as const;
 
 /** Color tokens for cubicle card. */
 export const cubicleCardColors = {
     cardTitleText: "#111827",
+    doctorNameText: "#4B5563",
+    doctorIconColor: themeColors.brandRed,
     cardBg: themeColors.white,
     cardBorder: "#D1D5DB",
     arrowColor: "#D7D6D6",
@@ -92,6 +97,28 @@ export const CubicleCardStyle = {
         fontSize: cubicleCardTypography.cardTitleSize,
         lineHeight: 1.2,
         color: cubicleCardColors.cardTitleText,
+        whiteSpace: "normal",
+        overflowWrap: "break-word",
+        wordBreak: "break-word",
+    },
+    doctorWrapper: {
+        display: "flex",
+        alignItems: "center",
+        gap: cubicleCardSpacing.doctorGap,
+        marginTop: "clamp(4px, 0.6vh, 8px)",
+        minWidth: 0,
+    },
+    doctorIcon: {
+        fontSize: "clamp(16px, 1.8vmin, 22px)",
+        color: cubicleCardColors.doctorIconColor,
+        flexShrink: 0,
+        lineHeight: 1,
+    },
+    doctorName: {
+        fontWeight: 700,
+        fontSize: cubicleCardTypography.doctorNameSize,
+        lineHeight: 1.25,
+        color: cubicleCardColors.doctorNameText,
         whiteSpace: "normal",
         overflowWrap: "break-word",
         wordBreak: "break-word",
