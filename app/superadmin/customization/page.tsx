@@ -33,6 +33,8 @@ const EMPTY_FORM: Omit<Service, 'id'> = {
   description_en: '',
   description_fil: '',
   patient_type: 'both',
+  queue_prefix: '',
+  queue_pad_length: 3,
 };
 
 /**
@@ -95,6 +97,8 @@ export default function AdminServicePage() {
       display_order: services.length
         ? Math.max(...services.map((s) => s.display_order)) + 1
         : 0,
+      queue_prefix: '',
+      queue_pad_length: 3,
     });
     setIconQuery('');
   }
@@ -102,7 +106,11 @@ export default function AdminServicePage() {
   function startEdit(service: Service) {
     setEditingId(service.id);
     const { id: _, ...rest } = service;
-    setForm(rest);
+    setForm({
+      ...rest,
+      queue_prefix: rest.queue_prefix ?? '',
+      queue_pad_length: rest.queue_pad_length ?? 3,
+    });
     setIconQuery(service.icon_src);
   }
 
@@ -123,16 +131,34 @@ export default function AdminServicePage() {
       return;
     }
 
+    const padLength = Number(form.queue_pad_length ?? 3);
+    if (!Number.isInteger(padLength) || padLength < 1 || padLength > 6) {
+      setError(T.validation.padLengthInvalid);
+      return;
+    }
+
+    const cleanPrefix = (form.queue_prefix ?? '').trim().toUpperCase();
+    if (cleanPrefix && !/^[A-Za-z0-9]+$/.test(cleanPrefix)) {
+      setError(T.validation.prefixInvalid);
+      return;
+    }
+
     setSaving(true);
     setError(null);
 
+    const payload = {
+      ...form,
+      queue_prefix: cleanPrefix || null,
+      queue_pad_length: padLength,
+    };
+
     if (editingId === 'new') {
-      const { error: insertErr } = await supabase.from('services').insert([form]);
+      const { error: insertErr } = await supabase.from('services').insert([payload]);
       if (insertErr) setError(insertErr.message);
     } else if (editingId !== null) {
       const { error: updateErr } = await supabase
         .from('services')
-        .update(form)
+        .update(payload)
         .eq('id', editingId);
       if (updateErr) setError(updateErr.message);
     }
@@ -176,306 +202,393 @@ export default function AdminServicePage() {
         )}
       </div>
 
-        {error && (
-          <div className="p-3.5 rounded-xl bg-red-50 dark:bg-red-950/60 border border-red-200 dark:border-red-900 text-red-700 dark:text-red-300 text-xs flex items-center gap-2">
-            <i className="bx bx-error-circle text-lg shrink-0" aria-hidden="true" />
-            <span>{error}</span>
-          </div>
-        )}
+      {error && (
+        <div className="p-3.5 rounded-xl bg-red-50 dark:bg-red-950/60 border border-red-200 dark:border-red-900 text-red-700 dark:text-red-300 text-xs flex items-center gap-2">
+          <i className="bx bx-error-circle text-lg shrink-0" aria-hidden="true" />
+          <span>{error}</span>
+        </div>
+      )}
 
-        {/* Editor Form Card */}
-        {isEditing && (
-          <div className={S.formCard}>
-            <div className={S.formTitle}>
-              <i className="bx bx-edit text-rose-600 dark:text-rose-400 text-xl" aria-hidden="true" />
-              <span>{editingId === 'new' ? T.form.newTitle : T.form.editTitle}</span>
+      {/* Editor Form Card */}
+      {isEditing && (
+        <div className={S.formCard}>
+          <div className={S.formTitle}>
+            <i className="bx bx-edit text-rose-600 dark:text-rose-400 text-xl" aria-hidden="true" />
+            <span>{editingId === 'new' ? T.form.newTitle : T.form.editTitle}</span>
+          </div>
+
+          <div className="space-y-4">
+            {/* Bilingual Labels */}
+            <div className={S.grid2}>
+              <div>
+                <label className={S.label}>{T.form.labelEn}</label>
+                <input
+                  type="text"
+                  value={form.label_en}
+                  onChange={(e) => setForm({ ...form, label_en: e.target.value })}
+                  placeholder={T.form.labelEnPlaceholder}
+                  className={S.input}
+                  required
+                />
+              </div>
+              <div>
+                <label className={S.label}>{T.form.labelFil}</label>
+                <input
+                  type="text"
+                  value={form.label_fil}
+                  onChange={(e) => setForm({ ...form, label_fil: e.target.value })}
+                  placeholder={T.form.labelFilPlaceholder}
+                  className={S.input}
+                  required
+                />
+              </div>
             </div>
 
-            <div className="space-y-4">
-              {/* Bilingual Labels */}
+            {/* Bilingual Descriptions */}
+            <div className={S.grid2}>
+              <div>
+                <label className={S.label}>{T.form.descEn}</label>
+                <textarea
+                  value={form.description_en ?? ''}
+                  onChange={(e) =>
+                    setForm({ ...form, description_en: e.target.value })
+                  }
+                  placeholder={T.form.descEnPlaceholder}
+                  className={S.textarea}
+                  rows={2}
+                />
+              </div>
+              <div>
+                <label className={S.label}>{T.form.descFil}</label>
+                <textarea
+                  value={form.description_fil ?? ''}
+                  onChange={(e) =>
+                    setForm({ ...form, description_fil: e.target.value })
+                  }
+                  placeholder={T.form.descFilPlaceholder}
+                  className={S.textarea}
+                  rows={2}
+                />
+              </div>
+            </div>
+
+            {/* Patient Cohort and Display Order */}
+            <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
+              <div>
+                <label className={S.label}>{T.form.patientType}</label>
+                <select
+                  value={form.patient_type}
+                  onChange={(e) =>
+                    setForm({
+                      ...form,
+                      patient_type: e.target.value as PatientType,
+                    })
+                  }
+                  className={S.select}
+                >
+                  <option value="both" className={S.selectOption}>
+                    {T.form.patientTypeBoth}
+                  </option>
+                  <option value="new" className={S.selectOption}>
+                    {T.form.patientTypeNew}
+                  </option>
+                  <option value="old" className={S.selectOption}>
+                    {T.form.patientTypeOld}
+                  </option>
+                </select>
+              </div>
+              <div>
+                <label className={S.label}>{T.form.displayOrder}</label>
+                <input
+                  type="number"
+                  min="0"
+                  value={form.display_order}
+                  onChange={(e) =>
+                    setForm({
+                      ...form,
+                      display_order: Number(e.target.value),
+                    })
+                  }
+                  className={S.input}
+                />
+              </div>
+            </div>
+
+            {/* Print Queue Number Configuration */}
+            <div className={S.sectionBox}>
+              <div className={S.sectionHeader}>
+                <i className="bx bx-receipt text-base text-rose-600 dark:text-rose-400" aria-hidden="true" />
+                <span>{T.form.queueConfigTitle}</span>
+              </div>
+              <p className={S.sectionSubtitle}>{T.form.queueConfigSubtitle}</p>
+
               <div className={S.grid2}>
                 <div>
-                  <label className={S.label}>{T.form.labelEn}</label>
+                  <label className={S.label}>{T.form.queuePrefixLabel}</label>
                   <input
                     type="text"
-                    value={form.label_en}
-                    onChange={(e) => setForm({ ...form, label_en: e.target.value })}
-                    placeholder={T.form.labelEnPlaceholder}
+                    maxLength={6}
+                    value={form.queue_prefix ?? ''}
+                    onChange={(e) =>
+                      setForm({ ...form, queue_prefix: e.target.value.toUpperCase() })
+                    }
+                    placeholder={T.form.queuePrefixPlaceholder}
                     className={S.input}
-                    required
                   />
+                  <p className={S.helpText}>{T.form.queuePrefixHelp}</p>
                 </div>
                 <div>
-                  <label className={S.label}>{T.form.labelFil}</label>
-                  <input
-                    type="text"
-                    value={form.label_fil}
-                    onChange={(e) => setForm({ ...form, label_fil: e.target.value })}
-                    placeholder={T.form.labelFilPlaceholder}
-                    className={S.input}
-                    required
-                  />
-                </div>
-              </div>
-
-              {/* Bilingual Descriptions */}
-              <div className={S.grid2}>
-                <div>
-                  <label className={S.label}>{T.form.descEn}</label>
-                  <textarea
-                    value={form.description_en ?? ''}
-                    onChange={(e) =>
-                      setForm({ ...form, description_en: e.target.value })
-                    }
-                    placeholder={T.form.descEnPlaceholder}
-                    className={S.textarea}
-                    rows={2}
-                  />
-                </div>
-                <div>
-                  <label className={S.label}>{T.form.descFil}</label>
-                  <textarea
-                    value={form.description_fil ?? ''}
-                    onChange={(e) =>
-                      setForm({ ...form, description_fil: e.target.value })
-                    }
-                    placeholder={T.form.descFilPlaceholder}
-                    className={S.textarea}
-                    rows={2}
-                  />
-                </div>
-              </div>
-
-              {/* Patient Cohort and Display Order */}
-              <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
-                <div>
-                  <label className={S.label}>{T.form.patientType}</label>
-                  <select
-                    value={form.patient_type}
-                    onChange={(e) =>
-                      setForm({
-                        ...form,
-                        patient_type: e.target.value as PatientType,
-                      })
-                    }
-                    className={S.select}
-                  >
-                    <option value="both" className={S.selectOption}>
-                      {T.form.patientTypeBoth}
-                    </option>
-                    <option value="new" className={S.selectOption}>
-                      {T.form.patientTypeNew}
-                    </option>
-                    <option value="old" className={S.selectOption}>
-                      {T.form.patientTypeOld}
-                    </option>
-                  </select>
-                </div>
-                <div>
-                  <label className={S.label}>{T.form.displayOrder}</label>
+                  <label className={S.label}>{T.form.queuePadLengthLabel}</label>
                   <input
                     type="number"
-                    min="0"
-                    value={form.display_order}
+                    min={1}
+                    max={6}
+                    value={form.queue_pad_length ?? 3}
                     onChange={(e) =>
                       setForm({
                         ...form,
-                        display_order: Number(e.target.value),
+                        queue_pad_length: Math.max(1, Math.min(6, Number(e.target.value) || 1)),
                       })
                     }
+                    placeholder={T.form.queuePadLengthPlaceholder}
                     className={S.input}
                   />
+                  <p className={S.helpText}>{T.form.queuePadLengthHelp}</p>
                 </div>
               </div>
 
-              {/* Icon Selector */}
-              <div>
-                <label className={S.label}>{T.form.iconLabel}</label>
-                <div className="flex items-center gap-3">
-                  <input
-                    type="text"
-                    value={iconQuery}
-                    onChange={(e) => {
-                      setIconQuery(e.target.value);
-                      setForm({ ...form, icon_src: e.target.value });
-                    }}
-                    placeholder={T.form.iconPlaceholder}
-                    className={S.input}
-                  />
-                  {form.icon_src && (
-                    <div className={S.iconPreviewBox}>
-                      <i
-                        className={`bx ${resolveServiceIcon(form.icon_src)} text-2xl text-rose-600 dark:text-rose-400`}
-                        aria-hidden="true"
-                      />
-                      <span className="text-xs font-mono text-slate-600 dark:text-[#a3a3a3]">
-                        {form.icon_src}
-                      </span>
-                    </div>
-                  )}
+              {/* Live Ticket Preview */}
+              <div className={S.previewCard}>
+                <div>
+                  <span className="block text-xs font-semibold text-slate-700 dark:text-[#e5e5e5]">
+                    {T.form.previewLabel}
+                  </span>
+                  <span className="text-[11px] text-slate-500 dark:text-[#a3a3a3]">
+                    {T.form.previewExplanation}
+                  </span>
                 </div>
+                <div className="flex items-center gap-2">
+                  <span className={S.ticketBadge}>
+                    {`${(form.queue_prefix || '').trim().toUpperCase() || '?'}${String(1).padStart(form.queue_pad_length ?? 3, '0')}`}
+                  </span>
+                </div>
+              </div>
+            </div>
 
-                {iconQuery && filteredIconNames.length > 0 && (
-                  <div className={S.iconDropdown}>
-                    {filteredIconNames.map((name) => (
-                      <button
-                        key={name}
-                        type="button"
-                        onClick={() => {
-                          setIconQuery(name);
-                          setForm({ ...form, icon_src: name });
-                        }}
-                        className={S.iconDropdownItem}
-                      >
-                        <i className={`bx ${name} text-lg text-rose-600`} aria-hidden="true" />
-                        <span>{name}</span>
-                      </button>
-                    ))}
+            {/* Icon Selector */}
+            <div>
+              <label className={S.label}>{T.form.iconLabel}</label>
+              <div className="flex items-center gap-3">
+                <input
+                  type="text"
+                  value={iconQuery}
+                  onChange={(e) => {
+                    setIconQuery(e.target.value);
+                    setForm({ ...form, icon_src: e.target.value });
+                  }}
+                  placeholder={T.form.iconPlaceholder}
+                  className={S.input}
+                />
+                {form.icon_src && (
+                  <div className={S.iconPreviewBox}>
+                    <i
+                      className={`bx ${resolveServiceIcon(form.icon_src)} text-2xl text-rose-600 dark:text-rose-400`}
+                      aria-hidden="true"
+                    />
+                    <span className="text-xs font-mono text-slate-600 dark:text-[#a3a3a3]">
+                      {form.icon_src}
+                    </span>
                   </div>
                 )}
               </div>
-            </div>
 
-            {/* Form Actions */}
-            <div className="flex items-center justify-end gap-2 pt-4 border-t border-slate-200 dark:border-[#2e2e2e]">
-              <button
-                type="button"
-                onClick={cancelEdit}
-                className={B.secondary}
-                disabled={saving}
-              >
-                {T.form.cancelButton}
-              </button>
-              <button
-                type="button"
-                onClick={handleSave}
-                disabled={saving}
-                className={B.primary}
-              >
-                {saving ? T.form.savingButton : T.form.saveButton}
-              </button>
+              {iconQuery && filteredIconNames.length > 0 && (
+                <div className={S.iconDropdown}>
+                  {filteredIconNames.map((name) => (
+                    <button
+                      key={name}
+                      type="button"
+                      onClick={() => {
+                        setIconQuery(name);
+                        setForm({ ...form, icon_src: name });
+                      }}
+                      className={S.iconDropdownItem}
+                    >
+                      <i className={`bx ${name} text-lg text-rose-600`} aria-hidden="true" />
+                      <span>{name}</span>
+                    </button>
+                  ))}
+                </div>
+              )}
             </div>
           </div>
-        )}
 
-        {/* Services Table */}
-        <div className={S.tableContainer}>
-          {loading ? (
-            <div className="animate-pulse">
-              <table className={S.table}>
-                <thead className={S.thead}>
-                  <tr>
-                    <th className={S.th}><div className="h-3 w-10 bg-slate-200 dark:bg-[#2e2e2e] rounded-md" /></th>
-                    <th className={S.th}><div className="h-3 w-28 bg-slate-200 dark:bg-[#2e2e2e] rounded-md" /></th>
-                    <th className={S.th}><div className="h-3 w-20 bg-slate-200 dark:bg-[#2e2e2e] rounded-md" /></th>
-                    <th className={S.th}><div className="h-3 w-12 bg-slate-200 dark:bg-[#2e2e2e] rounded-md" /></th>
-                    <th className={`${S.th} text-right`}><div className="h-3 w-14 bg-slate-200 dark:bg-[#2e2e2e] rounded-md ml-auto" /></th>
-                  </tr>
-                </thead>
-                <tbody className={S.tbody}>
-                  {['s-1', 's-2', 's-3', 's-4', 's-5'].map((key) => (
-                    <tr key={key} className={S.tr}>
-                      <td className={S.td}><div className="w-8 h-8 rounded-lg bg-slate-100 dark:bg-[#242424]" /></td>
-                      <td className={S.td}>
-                        <div className="space-y-1.5">
-                          <div className="h-3.5 w-36 bg-slate-100 dark:bg-[#242424] rounded-md" />
-                          <div className="h-2.5 w-24 bg-slate-100 dark:bg-[#242424] rounded-md" />
-                        </div>
-                      </td>
-                      <td className={S.td}><div className="h-5 w-16 bg-slate-100 dark:bg-[#242424] rounded-full" /></td>
-                      <td className={S.td}><div className="h-3.5 w-8 bg-slate-100 dark:bg-[#242424] rounded-md" /></td>
-                      <td className={`${S.td} text-right`}>
-                        <div className="flex items-center justify-end gap-2">
-                          <div className="h-6 w-14 bg-slate-100 dark:bg-[#242424] rounded-lg" />
-                          <div className="h-6 w-14 bg-slate-100 dark:bg-[#242424] rounded-lg" />
-                        </div>
-                      </td>
-                    </tr>
-                  ))}
-                </tbody>
-              </table>
-            </div>
-          ) : (
+          {/* Form Actions */}
+          <div className="flex items-center justify-end gap-2 pt-4 border-t border-slate-200 dark:border-[#2e2e2e]">
+            <button
+              type="button"
+              onClick={cancelEdit}
+              className={B.secondary}
+              disabled={saving}
+            >
+              {T.form.cancelButton}
+            </button>
+            <button
+              type="button"
+              onClick={handleSave}
+              disabled={saving}
+              className={B.primary}
+            >
+              {saving ? T.form.savingButton : T.form.saveButton}
+            </button>
+          </div>
+        </div>
+      )}
+
+      {/* Services Table */}
+      <div className={S.tableContainer}>
+        {loading ? (
+          <div className="animate-pulse">
             <table className={S.table}>
               <thead className={S.thead}>
                 <tr>
-                  <th className={S.th}>{T.table.colIcon}</th>
-                  <th className={S.th}>{T.table.colLabels}</th>
-                  <th className={S.th}>{T.table.colPatientType}</th>
-                  <th className={S.th}>{T.table.colOrder}</th>
-                  <th className={`${S.th} text-right`}>{T.table.colActions}</th>
+                  <th className={S.th}><div className="h-3 w-10 bg-slate-200 dark:bg-[#2e2e2e] rounded-md" /></th>
+                  <th className={S.th}><div className="h-3 w-28 bg-slate-200 dark:bg-[#2e2e2e] rounded-md" /></th>
+                  <th className={S.th}><div className="h-3 w-20 bg-slate-200 dark:bg-[#2e2e2e] rounded-md" /></th>
+                  <th className={S.th}><div className="h-3 w-20 bg-slate-200 dark:bg-[#2e2e2e] rounded-md" /></th>
+                  <th className={S.th}><div className="h-3 w-12 bg-slate-200 dark:bg-[#2e2e2e] rounded-md" /></th>
+                  <th className={`${S.th} text-right`}><div className="h-3 w-14 bg-slate-200 dark:bg-[#2e2e2e] rounded-md ml-auto" /></th>
                 </tr>
               </thead>
-              <tbody>
-                {services.map((service) => {
-                  const iconClass = resolveServiceIcon(service);
-                  return (
-                    <tr key={service.id} className={S.tr}>
-                      <td className={S.td}>
-                        <div className="w-10 h-10 rounded-xl bg-slate-100 dark:bg-[#242424] text-[#a8071a] dark:text-[#f87171] flex items-center justify-center text-2xl shadow-2xs">
-                          <i className={`bx ${iconClass}`} aria-hidden="true" />
-                        </div>
-                      </td>
-                      <td className={S.td}>
-                        <div className="font-semibold text-slate-900 dark:text-[#f5f5f5]">
-                          {service.label_en}
-                        </div>
-                        <div className="text-xs text-slate-500 dark:text-[#a3a3a3] italic">
-                          {service.label_fil}
-                        </div>
-                      </td>
-                      <td className={S.td}>
-                        <span
-                          className={`px-2.5 py-0.5 rounded-full text-xs font-semibold capitalize border ${
-                            service.patient_type === 'both'
-                              ? 'bg-purple-50 text-purple-700 border-purple-200 dark:bg-purple-950/60 dark:text-purple-300'
-                              : service.patient_type === 'new'
-                              ? 'bg-emerald-50 text-emerald-700 border-emerald-200 dark:bg-emerald-950/60 dark:text-emerald-300'
-                              : 'bg-slate-100 text-slate-700 border-slate-200 dark:bg-[#242424] dark:text-[#f5f5f5] dark:border-[#2e2e2e]'
-                          }`}
-                        >
-                          {service.patient_type}
-                        </span>
-                      </td>
-                      <td className={S.td}>
-                        <span className="font-mono text-xs font-semibold px-2 py-1 bg-slate-100 dark:bg-[#242424] text-slate-700 dark:text-[#a3a3a3] rounded-md">
-                          #{service.display_order}
-                        </span>
-                      </td>
-                      <td className={`${S.td} text-right`}>
-                        <div className="flex items-center justify-end gap-1.5">
-                          <button
-                            type="button"
-                            onClick={() => startEdit(service)}
-                            className="px-2.5 py-1 rounded-lg text-xs font-semibold text-[#a8071a] dark:text-[#f87171] hover:bg-[#a8071a]/10 dark:hover:bg-[#a8071a]/20 transition cursor-pointer flex items-center gap-1"
-                          >
-                            <i className="bx bx-edit-alt text-sm" aria-hidden="true" />
-                            <span>{T.table.editButton}</span>
-                          </button>
-                          <button
-                            type="button"
-                            onClick={() => handleDelete(service.id)}
-                            className="px-2.5 py-1 rounded-lg text-xs font-semibold text-red-600 dark:text-red-400 hover:bg-red-50 dark:hover:bg-red-950/60 transition cursor-pointer flex items-center gap-1"
-                          >
-                            <i className="bx bx-trash text-sm" aria-hidden="true" />
-                            <span>{T.table.deleteButton}</span>
-                          </button>
-                        </div>
-                      </td>
-                    </tr>
-                  );
-                })}
-                {services.length === 0 && (
-                  <tr>
-                    <td colSpan={5} className="p-12 text-center text-xs text-slate-400">
-                      {T.table.emptyTitle}
+              <tbody className={S.tbody}>
+                {['s-1', 's-2', 's-3', 's-4', 's-5'].map((key) => (
+                  <tr key={key} className={S.tr}>
+                    <td className={S.td}><div className="w-8 h-8 rounded-lg bg-slate-100 dark:bg-[#242424]" /></td>
+                    <td className={S.td}>
+                      <div className="space-y-1.5">
+                        <div className="h-3.5 w-36 bg-slate-100 dark:bg-[#242424] rounded-md" />
+                        <div className="h-2.5 w-24 bg-slate-100 dark:bg-[#242424] rounded-md" />
+                      </div>
+                    </td>
+                    <td className={S.td}><div className="h-5 w-16 bg-slate-100 dark:bg-[#242424] rounded-full" /></td>
+                    <td className={S.td}><div className="h-5 w-20 bg-slate-100 dark:bg-[#242424] rounded-md" /></td>
+                    <td className={S.td}><div className="h-3.5 w-8 bg-slate-100 dark:bg-[#242424] rounded-md" /></td>
+                    <td className={`${S.td} text-right`}>
+                      <div className="flex items-center justify-end gap-2">
+                        <div className="h-6 w-14 bg-slate-100 dark:bg-[#242424] rounded-lg" />
+                        <div className="h-6 w-14 bg-slate-100 dark:bg-[#242424] rounded-lg" />
+                      </div>
                     </td>
                   </tr>
-                )}
+                ))}
               </tbody>
             </table>
-          )}
-        </div>
+          </div>
+        ) : (
+          <table className={S.table}>
+            <thead className={S.thead}>
+              <tr>
+                <th className={S.th}>{T.table.colIcon}</th>
+                <th className={S.th}>{T.table.colLabels}</th>
+                <th className={S.th}>{T.table.colPatientType}</th>
+                <th className={S.th}>{T.table.colQueueTicket}</th>
+                <th className={S.th}>{T.table.colOrder}</th>
+                <th className={`${S.th} text-right`}>{T.table.colActions}</th>
+              </tr>
+            </thead>
+            <tbody>
+              {services.map((service) => {
+                const iconClass = resolveServiceIcon(service);
+                const prefixDisplay = service.queue_prefix?.trim().toUpperCase();
+                const padLen = service.queue_pad_length ?? 3;
+                const sampleNum = prefixDisplay
+                  ? `${prefixDisplay}${String(1).padStart(padLen, '0')}`
+                  : null;
+
+                return (
+                  <tr key={service.id} className={S.tr}>
+                    <td className={S.td}>
+                      <div className="w-10 h-10 rounded-xl bg-slate-100 dark:bg-[#242424] text-[#a8071a] dark:text-[#f87171] flex items-center justify-center text-2xl shadow-2xs">
+                        <i className={`bx ${iconClass}`} aria-hidden="true" />
+                      </div>
+                    </td>
+                    <td className={S.td}>
+                      <div className="font-semibold text-slate-900 dark:text-[#f5f5f5] whitespace-normal break-words">
+                        {service.label_en}
+                      </div>
+                      <div className="text-xs text-slate-500 dark:text-[#a3a3a3] italic whitespace-normal break-words">
+                        {service.label_fil}
+                      </div>
+                    </td>
+                    <td className={S.td}>
+                      <span
+                        className={`px-2.5 py-0.5 rounded-full text-xs font-semibold capitalize border ${
+                          service.patient_type === 'both'
+                            ? 'bg-purple-50 text-purple-700 border-purple-200 dark:bg-purple-950/60 dark:text-purple-300'
+                            : service.patient_type === 'new'
+                            ? 'bg-emerald-50 text-emerald-700 border-emerald-200 dark:bg-emerald-950/60 dark:text-emerald-300'
+                            : 'bg-slate-100 text-slate-700 border-slate-200 dark:bg-[#242424] dark:text-[#f5f5f5] dark:border-[#2e2e2e]'
+                        }`}
+                      >
+                        {service.patient_type}
+                      </span>
+                    </td>
+                    <td className={S.td}>
+                      {sampleNum ? (
+                        <div>
+                          <span className={S.tableTicketBadge}>
+                            <i className="bx bx-receipt text-xs" aria-hidden="true" />
+                            <span>{sampleNum}</span>
+                          </span>
+                          <div className="text-[10px] text-slate-400 dark:text-[#737373] mt-0.5 font-mono">
+                            {prefixDisplay} + {padLen}d
+                          </div>
+                        </div>
+                      ) : (
+                        <span className="text-xs text-slate-400 dark:text-[#737373] italic">
+                          {T.table.noPrefixFallback}
+                        </span>
+                      )}
+                    </td>
+                    <td className={S.td}>
+                      <span className="font-mono text-xs font-semibold px-2 py-1 bg-slate-100 dark:bg-[#242424] text-slate-700 dark:text-[#a3a3a3] rounded-md">
+                        #{service.display_order}
+                      </span>
+                    </td>
+                    <td className={`${S.td} text-right`}>
+                      <div className="flex items-center justify-end gap-1.5">
+                        <button
+                          type="button"
+                          onClick={() => startEdit(service)}
+                          className="px-2.5 py-1 rounded-lg text-xs font-semibold text-[#a8071a] dark:text-[#f87171] hover:bg-[#a8071a]/10 dark:hover:bg-[#a8071a]/20 transition cursor-pointer flex items-center gap-1"
+                        >
+                          <i className="bx bx-edit-alt text-sm" aria-hidden="true" />
+                          <span>{T.table.editButton}</span>
+                        </button>
+                        <button
+                          type="button"
+                          onClick={() => handleDelete(service.id)}
+                          className="px-2.5 py-1 rounded-lg text-xs font-semibold text-red-600 dark:text-red-400 hover:bg-red-50 dark:hover:bg-red-950/60 transition cursor-pointer flex items-center gap-1"
+                        >
+                          <i className="bx bx-trash text-sm" aria-hidden="true" />
+                          <span>{T.table.deleteButton}</span>
+                        </button>
+                      </div>
+                    </td>
+                  </tr>
+                );
+              })}
+              {services.length === 0 && (
+                <tr>
+                  <td colSpan={6} className="p-12 text-center text-xs text-slate-400">
+                    {T.table.emptyTitle}
+                  </td>
+                </tr>
+              )}
+            </tbody>
+          </table>
+        )}
       </div>
+    </div>
   );
 }

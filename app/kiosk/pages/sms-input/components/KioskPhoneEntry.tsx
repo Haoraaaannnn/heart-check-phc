@@ -81,6 +81,14 @@ async function resolvePrefixInfo(
     service: Service,
     subcategory?: string
 ): Promise<{ prefix: string; groupBySubcategory: boolean }> {
+    // 1. If service has an explicit queue_prefix defined in the PostgreSQL services table, prioritize it
+    if (service.queue_prefix && service.queue_prefix.trim().length > 0) {
+        return {
+            prefix: service.queue_prefix.trim().toUpperCase(),
+            groupBySubcategory: false,
+        };
+    }
+
     const fallback = getPrefixInfo(service, subcategory);
     try {
         const { data, error } = await supabase

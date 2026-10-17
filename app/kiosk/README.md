@@ -201,7 +201,10 @@ Keypad screen for entering the patient's Philippine mobile number (`09XX XXX XXX
   - [phoneEncryption.ts](file:///home/jensen/Github-Repositories/heart-check-phc/lib/crypto/phoneEncryption.ts): Core AES-256-GCM cipher and key management.
   - [DATA_ENCRYPTION_GUIDE.md](file:///home/jensen/Github-Repositories/heart-check-phc/docs/specifications/DATA_ENCRYPTION_GUIDE.md): Architecture specifications and database migration guide.
 - **Where to Edit Queue Ticket Prefixes & Rules:**
-  - [smsPrefixRules.ts](file:///home/jensen/Github-Repositories/heart-check-phc/app/kiosk/pages/sms-input/constants/smsPrefixRules.ts): Service ticket prefix mappings (`SMS_SERVICE_PREFIXES`) and numeric subcategory routing rules (`NUMERIC_PREFIX_RULES`).
+  - [smsPrefixRules.ts](file:///home/jensen/Github-Repositories/heart-check-phc/app/kiosk/pages/sms-input/constants/smsPrefixRules.ts): Default service ticket prefix mappings (`SMS_SERVICE_PREFIXES`) and numeric subcategory routing rules (`NUMERIC_PREFIX_RULES`).
+  - [customization/page.tsx](file:///home/jensen/Github-Repositories/heart-check-phc/app/superadmin/customization/page.tsx): SuperAdmin service catalog management allowing custom print queue prefixes (`queue_prefix` — first letter/number on queue number) and digit padding (`queue_pad_length`) persisted directly on the `services` table.
+  - [KioskPhoneEntry.tsx](file:///home/jensen/Github-Repositories/heart-check-phc/app/kiosk/pages/sms-input/components/KioskPhoneEntry.tsx): Dynamic prefix resolution hierarchy prioritizing `services.queue_prefix`, followed by `app_settings.queue_prefix_map`, and finally code defaults.
+
 
 ---
 

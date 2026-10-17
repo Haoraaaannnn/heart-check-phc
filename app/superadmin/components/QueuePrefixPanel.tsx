@@ -214,10 +214,11 @@ export function QueuePrefixPanel() {
     setSuccessMessage('');
 
     const isValid = rows.every((r) => {
-      const p = Number(r.prefix);
+      const p = (r.prefix ?? '').trim();
       const rm = Number(r.room);
       return (
-        Number.isInteger(p) && p >= 1 && p <= 999 &&
+        p.length > 0 &&
+        /^[A-Za-z0-9]+$/.test(p) &&
         Number.isInteger(rm) && rm >= 1 && rm <= 999
       );
     });
@@ -304,19 +305,18 @@ export function QueuePrefixPanel() {
                       {rowLabel(row)}
                     </td>
 
-                    {/* Prefix number input */}
+                    {/* Prefix letter or number input */}
                     <td className="py-2.5 px-3 text-center">
                       <input
-                        type="number"
-                        min={1}
-                        max={999}
-                        step={1}
+                        type="text"
+                        maxLength={6}
                         value={row.prefix}
-                        onChange={(e) => handlePrefixChange(i, e.target.value)}
-                        aria-label={`Prefix number for ${rowLabel(row)}`}
-                        className={`${S.numberInput} w-20 text-center`}
+                        onChange={(e) => handlePrefixChange(i, e.target.value.toUpperCase())}
+                        aria-label={`Prefix for ${rowLabel(row)}`}
+                        className={`${S.numberInput} w-20 text-center uppercase font-mono font-semibold`}
                       />
                     </td>
+
 
                     {/* Room number input */}
                     <td className="py-2.5 pl-3 text-center">

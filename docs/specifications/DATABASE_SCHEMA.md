@@ -74,10 +74,13 @@ Direct `INSERT` statements on `patients` are restricted by RLS to authenticated 
 | `description_en` | `text` | Nullable | English description displayed on kiosk guidance screens. |
 | `description_fil` | `text` | Nullable | Filipino description displayed on kiosk guidance screens. |
 | `patient_type` | `text` | Nullable | Routing flag: `'new'`, `'old'`, or `'both'`. Governs triage registration routing. |
+| `queue_prefix` | `text` | Nullable | Leading character/prefix (letter or number, e.g. `C`, `1`, `S`) for printed queue tickets. Serves as the first number or letter on the queue number. |
+| `queue_pad_length` | `int4` | NOT NULL | Number of padded numeric digits following the prefix (e.g. `3` produces `001` yielding `C001` or `1001`; `4` produces `0001` yielding `C0001`). |
 
 **RLS Enforcement:**
 - Public read access for anonymous and authenticated users (`Enable read access for all users`).
 - All mutation operations (`INSERT`, `UPDATE`, `DELETE`) are strictly restricted to superadmins via `is_superadmin()`. Unauthenticated modifications are completely blocked.
+
 
 ---
 
@@ -263,4 +266,4 @@ The system calculates `service_carryout` using `carryout_start` and `carryout_en
 
 ---
 
-_Last updated: 2026-10-16 — Database schema and RLS policies verified against live Supabase PostgreSQL instance. All legacy permissive policies dropped, staff-assignment scoping active, and RESTRICTIVE immutability policies enforced on historical records._
+_Last updated: 2026-10-17 — Database schema reconciled with live Supabase PostgreSQL instance, including services table queue_prefix and queue_pad_length columns for customizable kiosk print queue ticket formatting. All legacy permissive policies dropped, staff-assignment scoping active, and RESTRICTIVE immutability policies enforced on historical records._

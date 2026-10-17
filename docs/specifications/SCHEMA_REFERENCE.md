@@ -2,7 +2,7 @@
 
 This is a literal reference dump of the verified database schema and active Row-Level Security (RLS) policies. For architectural context, rationale, and key gotchas, see [DATABASE_SCHEMA.md](file:///home/jensen/Github-Repositories/Heart_Check_PHC/docs/specifications/DATABASE_SCHEMA.md) and [SECURITY.md](file:///home/jensen/Github-Repositories/Heart_Check_PHC/docs/specifications/SECURITY.md).
 
-**Schema Status:** Fully reconciled and active against live PostgreSQL Supabase database instance (Last updated: 2026-10-16).
+**Schema Status:** Fully reconciled and active against live PostgreSQL Supabase database instance (Last updated: 2026-10-17).
 
 ---
 
@@ -20,6 +20,9 @@ This is a literal reference dump of the verified database schema and active Row-
 | `description_en` | `text` | Nullable |
 | `description_fil` | `text` | Nullable |
 | `patient_type` | `text` | Nullable |
+| `queue_prefix` | `text` | Nullable |
+| `queue_pad_length` | `int4` |  |
+
 
 ## Table `users`
 
