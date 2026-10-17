@@ -37,7 +37,7 @@ Running list of known follow-ups that aren't urgent enough to block progress, bu
 - [x] `PRD.md` scope/objectives updated with password-reset auth flow, superadmin cubicle management, modular dashboard presentation, and Excel export (`export.py`, `ExportExcelButton.tsx`)
 - [x] `python_backend/analytics/export.py` documented in `ARCHITECTURE.md` and `PRD.md`
 - [x] Title standardization across all documents: Updated to `Heart Check PHC: A Kiosk-Based Queue Management and Analytics System` (removing obsolete IoT terminology)
-- [x] Reconcile raw schema and RLS policies across `SCHEMA_REFERENCE.md`, `DATABASE_SCHEMA.md`, and `SECURITY.md` against live Supabase database instance.
+- [x] Reconcile raw schema and RLS policies across `DATABASE_SCHEMA.md` (Appendix A) and `SECURITY.md` against live Supabase database instance.
 
 ## Deployment (Production Handoff, Not Urgent Yet)
 
@@ -49,7 +49,7 @@ Running list of known follow-ups that aren't urgent enough to block progress, bu
 
 ## Resolved
 
-- [x] **2026-10-16:** Reconciled live Supabase schema and RLS policies across all specifications (`SCHEMA_REFERENCE.md`, `DATABASE_SCHEMA.md`, `SECURITY.md`, `SECURITY_CHECKLIST.md`, and `brain/architecture/database-and-rls.md`).
+- [x] **2026-10-16:** Reconciled live Supabase schema and RLS policies across all specifications (`DATABASE_SCHEMA.md`, `SECURITY.md`, `SECURITY_CHECKLIST.md`, and `brain/architecture/database-and-rls.md`).
 - [x] **2026-10-16:** Verified `patients` RLS lockdown: eliminated unconditioned legacy policies, verified nurse station cubicle isolation via `my_cubicle_nums()`, verified Manila-day live scoping for TV monitors, and confirmed PostgreSQL RESTRICTIVE policies enforcing historical data immutability.
 - [x] **2026-10-16:** Verified `services` RLS lockdown: eliminated anonymous write/delete access; enforced `is_superadmin()` gate for catalog changes.
 - [x] **2026-10-16:** Verified `users` RLS lockdown: eliminated public directory read leak; enforced self-read and superadmin directory access.

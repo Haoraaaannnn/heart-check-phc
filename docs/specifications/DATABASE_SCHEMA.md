@@ -266,4 +266,104 @@ The system calculates `service_carryout` using `carryout_start` and `carryout_en
 
 ---
 
-_Last updated: 2026-10-17 — Database schema reconciled with live Supabase PostgreSQL instance, including services table queue_prefix and queue_pad_length columns for customizable kiosk print queue ticket formatting. All legacy permissive policies dropped, staff-assignment scoping active, and RESTRICTIVE immutability policies enforced on historical records._
+## Appendix A: Raw Table Column Schemas & RLS Policy Reference
+
+This appendix provides a literal reference dump of the verified database schema and active Row-Level Security (RLS) policies reconciled against the live Supabase PostgreSQL database.
+
+### Table Columns
+
+#### `services`
+| Name | Type | Constraints | Notes |
+| :--- | :--- | :--- | :--- |
+| `id` | `int4` | Primary | Service identifier |
+| `label_en` | `text` | NOT NULL | Primary English display name |
+| `label_fil` | `text` | NOT NULL | Filipino translation |
+| `icon_src` | `text` | NOT NULL | Tabler/Boxicon icon identifier |
+| `display_order` | `int4` | Nullable | Ordering index on kiosk |
+| `description_en` | `text` | Nullable | Service instructions |
+| `description_fil` | `text` | Nullable | Filipino instructions |
+| `patient_type` | `text` | Nullable | Target demographic classification |
+| `queue_prefix` | `text` | Nullable | Customizable queue prefix letter or number (e.g. "C", "S", "1") |
+| `queue_pad_length` | `int4` | Default 3 | Ticket digit padding (e.g. 3 for "001", 4 for "0001") |
+
+#### `users`
+| Name | Type | Constraints | Notes |
+| :--- | :--- | :--- | :--- |
+| `id` | `int8` | Primary Identity | Internal sequential ID |
+| `created_at` | `timestamptz` | NOT NULL | Record creation timestamp |
+| `username` | `text` | Unique | Clinical login username |
+| `email` | `text` | Unique | User email address |
+| `role` | `text` | NOT NULL | Role string (`superadmin`, `admin`, `nurse`, `staff`, `doctor`, `registration`) |
+| `auth_id` | `uuid` | Unique | Foreign key linking to `auth.users.id` (`auth.uid()`) |
+| `assigned_room` | `int4` | Nullable | Assigned examination/consultation room number |
+
+#### `cubicle`
+| Name | Type | Constraints | Notes |
+| :--- | :--- | :--- | :--- |
+| `id` | `int8` | Primary Identity | Cubicle ID |
+| `created_at` | `timestamptz` | NOT NULL | Creation timestamp |
+| `cubicleNum` | `text` | Nullable | Station identifier (e.g. "1", "Cubicle 2") |
+| `category` | `text` | Nullable | Service department (e.g. "Consultation") |
+| `room` | `int4` | Nullable | Room number containing this cubicle |
+| `subcategory` | `text` | Nullable | Subcategory specialization ("Adult", "Pediatric") |
+| `doctorId` | `uuid` | Nullable | Foreign key linking to assigned physician in `doctors.id` |
+
+#### `doctors`
+| Name | Type | Constraints | Notes |
+| :--- | :--- | :--- | :--- |
+| `id` | `uuid` | Primary | Physician ID |
+| `full_name` | `text` | NOT NULL | Doctor full name (e.g. "Dr. Juan dela Cruz") |
+| `specialty` | `text` | Nullable | Medical specialty |
+| `email` | `text` | Nullable Unique | Doctor email |
+| `auth_id` | `uuid` | Nullable | Linked auth ID |
+| `active` | `bool` | NOT NULL | Active on-duty status flag |
+| `created_at` | `timestamptz` | Nullable | Creation timestamp |
+
+#### `counters`
+| Name | Type | Constraints | Notes |
+| :--- | :--- | :--- | :--- |
+| `counter_number` | `int4` | Primary | Physical registration window number (1, 2, 3...) |
+| `label` | `text` | Nullable | Display label (e.g. "Priority Counter") |
+| `active` | `bool` | NOT NULL | Online/offline operational toggle |
+| `created_at` | `timestamptz` | NOT NULL | Creation timestamp |
+
+---
+
+### Active Row-Level Security Policies
+
+| Table | Policy Name | Command | Roles | Type | Clause / Check |
+| :--- | :--- | :---: | :--- | :---: | :--- |
+| **`patients`** | `patients_no_historical_insert` | INSERT | anon, authenticated | RESTRICTIVE | `(is_historical = false)` |
+| **`patients`** | `patients_no_historical_update` | UPDATE | anon, authenticated | RESTRICTIVE | `(is_historical = false)` |
+| **`patients`** | `patients_no_historical_delete` | DELETE | anon, authenticated | RESTRICTIVE | `(is_historical = false)` |
+| **`patients`** | `patients_select_nurse_scoped` | SELECT | authenticated | PERMISSIVE | `(is_clinical_staff() AND ("cubicleNum" = ANY (my_cubicle_nums())))` |
+| **`patients`** | `patients_update_nurse_scoped` | UPDATE | authenticated | PERMISSIVE | `(is_clinical_staff() AND ("cubicleNum" = ANY (my_cubicle_nums())))` |
+| **`patients`** | `patients_select_registration_full` | SELECT | authenticated | PERMISSIVE | `is_registration_staff()` |
+| **`patients`** | `patients_update_registration_full` | UPDATE | authenticated | PERMISSIVE | `is_registration_staff()` |
+| **`patients`** | `patients_insert_registration` | INSERT | authenticated | PERMISSIVE | `is_registration_staff()` |
+| **`patients`** | `patients_select_public_live` | SELECT | anon | PERMISSIVE | `((is_historical = false) AND (created_at >= (date_trunc('day', now() AT TIME ZONE 'Asia/Manila'))))` |
+| **`patients`** | `patients_select_admin` | SELECT | authenticated | PERMISSIVE | `is_admin_or_superadmin()` |
+| **`patients`** | `patients_update_admin` | UPDATE | authenticated | PERMISSIVE | `is_admin_or_superadmin()` |
+| **`patients`** | `patients_insert_admin` | INSERT | authenticated | PERMISSIVE | `is_admin_or_superadmin()` |
+| **`services`** | `Enable read access for all users` | SELECT | public | PERMISSIVE | `true` |
+| **`services`** | `services_insert_superadmin` | INSERT | authenticated | PERMISSIVE | `is_superadmin()` |
+| **`services`** | `services_update_superadmin` | UPDATE | authenticated | PERMISSIVE | `is_superadmin()` |
+| **`services`** | `services_delete_superadmin` | DELETE | authenticated | PERMISSIVE | `is_superadmin()` |
+| **`users`** | `users_select_self` | SELECT | authenticated | PERMISSIVE | `((auth_id = auth.uid()) OR (lower(email) = lower(auth.jwt() ->> 'email')))` |
+| **`users`** | `users_select_superadmin` | SELECT | authenticated | PERMISSIVE | `is_superadmin()` |
+| **`cubicle`** | `Allow public read access` | SELECT | anon, authenticated | PERMISSIVE | `true` |
+| **`cubicle`** | `cubicle_update_doctor_assignment` | UPDATE | authenticated | PERMISSIVE | `(is_registration_staff() OR is_admin_or_superadmin())` |
+| **`doctors`** | `Authenticated users can read doctors` | SELECT | authenticated | PERMISSIVE | `true` |
+| **`doctors`** | `doctors_insert_managers` | INSERT | authenticated | PERMISSIVE | `(is_registration_staff() OR is_admin_or_superadmin())` |
+| **`doctors`** | `doctors_update_managers` | UPDATE | authenticated | PERMISSIVE | `(is_registration_staff() OR is_admin_or_superadmin())` |
+| **`doctors`** | `doctors_delete_managers` | DELETE | authenticated | PERMISSIVE | `(is_registration_staff() OR is_admin_or_superadmin())` |
+| **`app_settings`** | `Authenticated users can read app_settings` | SELECT | authenticated | PERMISSIVE | `true` |
+| **`app_settings`** | `Superadmin can insert app_settings` | INSERT | authenticated | PERMISSIVE | `(is_superadmin())` |
+| **`app_settings`** | `Superadmin can update app_settings` | UPDATE | authenticated | PERMISSIVE | `(is_superadmin())` |
+| **`counters`** | `counters readable` | SELECT | anon, authenticated | PERMISSIVE | `true` |
+| **`user_cubicles`** | `user_cubicles_select_self_or_superadmin` | SELECT | authenticated | PERMISSIVE | `((user_id = (SELECT users.id FROM users WHERE users.auth_id = auth.uid())) OR is_superadmin())` |
+| **`user_cubicles`** | `user_cubicles_write_superadmin` | ALL | authenticated | PERMISSIVE | `is_superadmin()` |
+
+---
+
+_Last updated: 2026-10-17 — Master database architecture and schema reference consolidated. Includes full column definitions, customizable queue ticket prefixes/padding, staff-scoping join tables, rate-limiting models, and verified RLS policies._

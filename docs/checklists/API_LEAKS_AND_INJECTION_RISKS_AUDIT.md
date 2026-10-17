@@ -23,6 +23,8 @@ A static code analysis and architectural security review was conducted across th
 | **SEC-AUD-005** | Toll Fraud / Rate Limiting | **MEDIUM** | Unauthenticated, unthrottled SMS dispatch Server Action | [app/actions/sendSMS.ts](file:///home/jensen/Github-Repositories/heart-check-phc/app/actions/sendSMS.ts#L3-L53) | [PTCH] |
 | **SEC-AUD-006** | Hardware Abuse / DoS | **MEDIUM** | Unauthenticated thermal printer trigger and unescaped ESC/POS input | [app/api/print-ticket/route.ts](file:///home/jensen/Github-Repositories/heart-check-phc/app/api/print-ticket/route.ts#L21-L66) | [PTCH] |
 | **SEC-AUD-007** | Historical Immutability | **LOW** | Missing defensive `is_historical = false` filters on operational updates | [app/nurse/hooks/useNurseActions.ts](file:///home/jensen/Github-Repositories/heart-check-phc/app/nurse/hooks/useNurseActions.ts#L97-L100), `app/transfer/hooks/` | [PTCH] |
+| **SEC-AUD-008** | Toll Fraud / Rate Limiting | **MEDIUM** | Unthrottled external Deepgram speech synthesis proxy risking quota exhaustion | [app/api/tts/route.ts](file:///home/jensen/Github-Repositories/heart-check-phc/app/api/tts/route.ts) | [PTCH] |
+| **SEC-AUD-009** | Broken Access Control | **HIGH** | Inadequate authorization guard on system settings route allowing non-superadmin mutation | [app/api/superadmin/settings/route.ts](file:///home/jensen/Github-Repositories/heart-check-phc/app/api/superadmin/settings/route.ts) | [PTCH] |
 
 ---
 
@@ -204,6 +206,24 @@ A static code analysis and architectural security review was conducted across th
 - **Remediation:**
   Append `.eq('is_historical', false)` to every operational `update` and `delete` query targeting the `patients` table.
 
+### SEC-AUD-008: Unthrottled External TTS Proxy & Quota Overrun Risk (MEDIUM)
+
+- **Location:** [app/api/tts/route.ts](file:///home/jensen/Github-Repositories/heart-check-phc/app/api/tts/route.ts)
+- **Vulnerability Type:** CWE-799: Improper Control of Generation of Code or Resource Consumption (Rate Limiting)
+- **Mechanics:**
+  The server proxy route receives queue announcement text from client screens and proxies it directly to Deepgram's Speech API. While input length was capped at 500 characters, the endpoint lacked IP-level rate limiting and server-side response caching. Rapid automated requests could exhaust Deepgram promotional credits or cause service denial for waiting-room audio.
+- **Remediation:**
+  Implemented sliding-window IP rate limiting (max 20 requests per minute per IP returning HTTP 429 with `Retry-After`) and an in-memory LRU audio buffer cache (30-minute TTL, max 100 entries). Repeated announcements return in <1ms directly from server RAM at zero external API cost.
+
+### SEC-AUD-009: Inadequate Authorization on System Settings Route (HIGH)
+
+- **Location:** [app/api/superadmin/settings/route.ts](file:///home/jensen/Github-Repositories/heart-check-phc/app/api/superadmin/settings/route.ts#L92-L96)
+- **Vulnerability Type:** CWE-285: Improper Authorization
+- **Mechanics:**
+  The `PUT` handler for system settings used `requireUser(request)` rather than `requireSuperadmin(request)`. Because the handler executes mutations via `supabaseAdmin` (which holds `SUPABASE_SERVICE_ROLE_KEY` and bypasses RLS), any authenticated user (e.g. nurse, registration staff) could overwrite critical application configuration (such as `queue_prefix_map`, `login_lockout_seconds`, or `rotate_timeout_seconds`).
+- **Remediation:**
+  Upgraded the authentication guard to `requireSuperadmin(request)`, strictly restricting mutations to verified superadmin accounts.
+
 ---
 
 ## 3. Verified System Security Strengths
@@ -225,7 +245,9 @@ The audit confirmed several well-implemented defensive controls across the repos
 | :---: | :--- | :--- | :--- | :--- | :---: |
 | **P0** | Eliminate OS command injection by deleting or rewriting printer helper | [lib/printer.ts](file:///home/jensen/Github-Repositories/heart-check-phc/lib/printer.ts) | 1. Search codebase for `child_process.exec()`.<br>2. Call `sendToPrinter("1001; id", "OPD", "C1")`. | No `child_process.exec` invocations exist; direct `fs.writeFile` writes to `/dev/usb/lp*`; command characters are stripped without shell execution. | [x] Patched |
 | **P0** | Enforce `requireSuperadmin` guard on user sync route | [app/api/superadmin/sync-users/route.ts](file:///home/jensen/Github-Repositories/heart-check-phc/app/api/superadmin/sync-users/route.ts) | Send unauthenticated request: `curl -X POST http://localhost:3000/api/superadmin/sync-users`. | HTTP 401 Unauthorized `{"error":"Not authenticated"}`; unauthenticated sync requests rejected without modifying database. | [x] Patched |
+| **P0** | Enforce `requireSuperadmin` guard on settings update route | [app/api/superadmin/settings/route.ts](file:///home/jensen/Github-Repositories/heart-check-phc/app/api/superadmin/settings/route.ts) | Send authenticated PUT request as nurse or registration staff. | HTTP 403 Forbidden `{"error":"Superadmin access required"}`; settings update blocked. | [x] Patched |
 | **P1** | Move Deepgram TTS calls server-side and remove `NEXT_PUBLIC_` key | [useMonitorData.ts](file:///home/jensen/Github-Repositories/heart-check-phc/app/monitor/hooks/useMonitorData.ts), [RegistrationLayout.tsx](file:///home/jensen/Github-Repositories/heart-check-phc/app/monitor/components/RegistrationLayout.tsx), [transfer/page.tsx](file:///home/jensen/Github-Repositories/heart-check-phc/app/transfer/page.tsx), [nurse/page.tsx](file:///home/jensen/Github-Repositories/heart-check-phc/app/nurse/page.tsx), [app/api/tts/route.ts](file:///home/jensen/Github-Repositories/heart-check-phc/app/api/tts/route.ts) | Trigger queue speech on `/monitor` or `/nurse`; inspect browser DevTools Network tab and check for `NEXT_PUBLIC_DEEPGRAM_KEY` in bundle. | Requests routed through `POST /api/tts` returning `audio/mp3`; Deepgram API key is absent from client bundle assets. | [x] Patched |
+| **P1** | Add IP rate limiting and audio buffer caching to TTS proxy route | [app/api/tts/route.ts](file:///home/jensen/Github-Repositories/heart-check-phc/app/api/tts/route.ts) | Send >20 POST requests in 60s; repeat identical ticket announcement. | HTTP 429 Too Many Requests once rate limit reached; repeated announcements return in <1ms with `X-Cache-Lookup: HIT`. | [x] Patched |
 | **P1** | Apply schema whitelisting and `is_historical = false` check to `/api/rotate` | [app/api/rotate/route.ts](file:///home/jensen/Github-Repositories/heart-check-phc/app/api/rotate/route.ts) | Send authenticated POST with non-whitelisted attribute (e.g. `medical_notes`) or targeting a row where `is_historical = true`. | Non-whitelisted fields stripped; queries condition on `.eq('is_historical', false)`; historical records cannot be updated (`applied: false`). | [x] Patched |
 | **P1** | Add session verification and rate limiting to `sendSMS` action | [app/actions/sendSMS.ts](file:///home/jensen/Github-Repositories/heart-check-phc/app/actions/sendSMS.ts) | 1. Call `sendSMS` without active session.<br>2. Pass invalid phone `12345`.<br>3. Send >20 messages in 60 seconds. | 1. `{ error: 'Unauthorized: Active clinical session required...' }`<br>2. `{ error: 'Invalid Philippine phone number format...' }`<br>3. `{ error: 'SMS dispatch rate limit exceeded...' }` | [x] Patched |
 | **P2** | Require verified `patientRecord` before thermal ticket printing | [app/api/print-ticket/route.ts](file:///home/jensen/Github-Repositories/heart-check-phc/app/api/print-ticket/route.ts) | Send POST to `/api/print-ticket` with fictitious `queueNumber: "99999"`. | HTTP 404 Not Found `{"error":"Queue ticket not found or invalid for printing."}`; zero bytes written to `/dev/usb/lp*`. | [x] Patched |

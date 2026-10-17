@@ -1,5 +1,7 @@
 # Quality Assurance, Security Audits, and Operational Checklists
 
+**Last Updated:** 2026-10-17
+
 This directory contains all actionable checklists, security audit matrices, quality verification protocols, and technical debt tracking documents for the Heart Check PHC platform.
 
 ---

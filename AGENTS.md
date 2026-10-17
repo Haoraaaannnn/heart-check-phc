@@ -2,10 +2,18 @@
 
 Mandatory architectural rules, safety boundaries, and refactoring guidelines for the Heart Check PHC repository.
 
+**Last Updated:** 2026-10-18
+
 For selective context retrieval, domain architecture, and memory workflows, consult the second brain:
 - **Master Index & Navigation:** [brain/INDEX.md](./brain/INDEX.md)
 - **Active State & Branch Context:** [brain/CURRENT.md](./brain/CURRENT.md)
 - **Memory Protocols:** [brain/WORKFLOWS.md](./brain/WORKFLOWS.md)
+
+---
+
+## Security-First Mandate
+
+Security is the primary, non-negotiable priority across all architectural design, code generation, refactoring, and editing activities. Every written or edited line of code must undergo rigorous security verification prior to completion. Developers and agents must proactively evaluate every modification for data privacy compliance (RA 10173), authorization boundaries, input sanitization, rate limiting, and cost overrun prevention before writing or saving code.
 
 ---
 
@@ -53,15 +61,23 @@ For selective context retrieval, domain architecture, and memory workflows, cons
 ### 11. Prohibition of Text Ellipsis & Truncation
 - Never use `truncate`, `text-ellipsis`, or `text-overflow: ellipsis` on medical or operational data (doctor names, ticket codes, room labels, service names). Text must wrap naturally (`break-words`, `whitespace-normal`).
 
-### 12. Secure Coding & System Interconnection
-- **Service-Role Isolation:** The Supabase Service Role Key bypasses RLS and must NEVER be exposed to client bundles or `NEXT_PUBLIC_` variables.
-- **Server-Side Route Guarding:** Enforce role validation on the server (`proxy.ts` and Supabase RLS). Client-side checks are purely cosmetic.
-- **Input Validation:** Validate inputs with Zod (Next.js) and Pydantic (FastAPI). Use parameterized SQL queries only; never concatenate raw query strings.
-- **Historical Data Protection:** Operational mutations (`UPDATE`, `DELETE`) on `patients` must strictly exclude historical research data (`AND is_historical = false`).
-- **Resilience & Timeouts:** Enforce an explicit 10-second `AbortController` timeout on all cross-service HTTP calls between Next.js and FastAPI. Sanitize all backend error responses (strip raw tracebacks).
+### 12. Security-First Architecture & Mandatory Code Security Checks
+Prioritize security above convenience or speed in every code write and edit. The following security checks are strictly enforced:
+- **Continuous Security Review During Writing/Editing:** Every time code is created or modified, verify:
+  1. Does this introduce an unauthenticated or under-authorized entry point?
+  2. Does this expose sensitive patient data or system secrets?
+  3. Can this input trigger SQL injection, command execution, or cross-site scripting?
+  4. Can this endpoint be flooded to cause denial of service or spike external billing?
+- **Service-Role & Secret Isolation:** The Supabase Service Role Key bypasses RLS and must NEVER be exposed to client bundles or `NEXT_PUBLIC_` variables. External provider keys (UniSMS, Deepgram, etc.) must remain server-side in environment variables only.
+- **Server-Side Route Guarding & Defense-in-Depth:** Enforce authentication and role validation strictly on the server (`proxy.ts`, `requireUser`, `requireSuperadmin`, and Supabase RLS). Client-side checks and disabled UI buttons are purely cosmetic and must never be relied upon for security.
+- **SQL & Command Injection Immunity:** Use parameterized SQL queries only (`$1`, `$2`); never concatenate raw strings into SQL statements. When constructing PostgREST search queries, sanitize input strings by stripping special filter syntax characters (`,`, `.`, `:`, `()`). Never use `child_process.exec()` or pass unvalidated input to shell subprocesses.
+- **Rate Limiting, Cost Protection & Caching:** All public-facing endpoints, outbound SMS services (`app/actions/sendSMS.ts`), and external API proxies (such as Text-to-Speech `app/api/tts/route.ts`) must enforce sliding-window IP/session rate limits, duplicate dispatch cooldowns, and in-memory caching to prevent resource exhaustion and billing overruns.
+- **Data Privacy & Encryption (RA 10173 Compliance):** Patient contact numbers must be encrypted using authenticated AES-256-GCM before database insertion. Mask phone numbers on all client screens (`0917 •••• 567`). Patient full names must never be broadcast across public TV monitors or exported in analytical research datasets.
+- **Historical Data Immutability:** Operational mutations (`UPDATE`, `DELETE`) on `patients` must strictly exclude historical research records by conditioning on `is_historical = false` in both client SDK calls and PostgreSQL RESTRICTIVE RLS policies.
+- **Cross-Service Resilience & Error Sanitization:** Enforce an explicit 10-second `AbortController` timeout on all cross-service HTTP calls between Next.js and FastAPI. Sanitize all backend error responses to strip raw tracebacks, internal database errors, and system paths.
 
 ### 13. Explicit Date Stamp Standard for Markdown Documentation
-- Every created or updated Markdown document (`.md`) must include an explicit date stamp in ISO format (`YYYY-MM-DD`, e.g., `_Last updated: 2026-10-16 — ..._` or `**Last Updated:** 2026-10-16`).
+- Every created or updated Markdown document (`.md`) must include an explicit date stamp in ISO format (`YYYY-MM-DD`, e.g., `_Last updated: 2026-10-18 — ..._` or `**Last Updated:** 2026-10-18`).
 - This standard applies strictly across all documentation files (`docs/`, `brain/`, `README.md`, module guides) to ensure clear temporal tracking across versions.
 
 ---
@@ -75,6 +91,14 @@ For selective context retrieval, domain architecture, and memory workflows, cons
 
 ## Pre-Commit / Pre-Completion Checklist
 
+- [ ] Security-first code review completed on all written or edited files before completion.
+- [ ] No private secrets or service role keys are exposed to client code or `NEXT_PUBLIC_`.
+- [ ] Server-side route guarding (`requireSuperadmin`, `requireUser`) and RLS policies protect all endpoints.
+- [ ] SQL injection immunity verified: parameterized queries used, PostgREST filter delimiters sanitized.
+- [ ] Rate limiting, abuse controls, and memory caching implemented on external proxies and outbound services.
+- [ ] Patient PII encrypted with AES-256-GCM and masked on displays; zero patient names on public monitors.
+- [ ] Database queries are parameterized; `is_historical = true` rows are protected across mutations.
+- [ ] Cross-service calls between Next.js and FastAPI have 10-second timeouts; errors are sanitized.
 - [ ] Every changed or created file has full file-level and symbol-level JSDoc comments.
 - [ ] No raw text copy or inline style objects remain hardcoded in UI components.
 - [ ] Text copy is exported from `<feature>Texts.ts`; styles from `<feature>.ts`.
@@ -87,9 +111,5 @@ For selective context retrieval, domain architecture, and memory workflows, cons
 - [ ] No ellipsis or truncated text (`truncate`, `text-ellipsis`) exists on clinical data.
 - [ ] Operational terminal commands received explicit user confirmation prior to execution.
 - [ ] Developer guide markdown files (`README.md`) are updated with "Where to Edit" tables.
-- [ ] No private secrets or service role keys are exposed to client code or `NEXT_PUBLIC_`.
-- [ ] Server-side route guarding and RLS policies protect administrative endpoints.
-- [ ] Database queries are parameterized; `is_historical = true` rows are protected.
-- [ ] Cross-service calls between Next.js and FastAPI have 10-second timeouts.
 - [ ] Second brain notes (`brain/CURRENT.md`, `brain/handoffs/`) are updated after significant work.
 - [ ] Updated or created Markdown documentation files include an explicit ISO date stamp (YYYY-MM-DD).

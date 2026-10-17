@@ -122,6 +122,38 @@ Heart Check PHC implements server-side route guarding in [proxy.ts](file:///home
 
 ---
 
+## Layer 3 — Rate Limiting, Cost Protection & Abuse Controls
+
+To protect external API quotas, prevent financial overages, and mitigate automated denial-of-service / brute-force abuse, rate limiting and resource throttling are enforced across all public and metered endpoints:
+
+1. **Text-to-Speech Synthesis Gateway (`POST /api/tts`):**
+   - **Sliding-Window IP Rate Limiter:** Capped at 20 requests per minute per IP address. Exceeding callers receive HTTP 429 (`Too Many Requests`) with an explicit `Retry-After: 60` response header.
+   - **In-Memory Audio Buffer Cache:** Synthesized speech MP3 buffers are cached in Node.js server RAM for 30 minutes (up to 100 entries). Repeated announcements (e.g. nurse clicking "Call" multiple times, or identical waiting-room ticket callouts) return in under 1ms with header `X-Cache-Lookup: HIT`, completely eliminating repeat Deepgram API calls and credit consumption.
+2. **Patient SMS Dispatch Server Action (`app/actions/sendSMS.ts`):**
+   - **Session Authentication:** Strictly requires verified clinical session (`supabase.auth.getUser()`).
+   - **Phone Number Regex:** Enforces strict Philippine mobile format (`/^\+639\d{9}$/`).
+   - **User Sliding-Window Limit:** Max 20 SMS notifications per staff member per 60 seconds (`RATE_LIMIT_MAX_PER_WINDOW = 20`).
+   - **Duplicate Recipient Cooldown:** Mandatory 10-second delay between dispatches to the identical phone number (`DUPLICATE_COOLDOWN_MS = 10000`).
+3. **Authentication Brute-Force Lockout (`POST /api/auth/login`):**
+   - Persisted in the `login_attempts` table. After 3 consecutive failed authentication attempts, the email account is locked out for 30 seconds (HTTP 429 with `secondsRemaining`).
+4. **Password Reset Flood Protection (`POST /api/auth/forgot-password`):**
+   - Tracked in `password_reset_attempts`. Enforces a strict ceiling of 3 reset emails per hour and a minimum 60-second cooldown between requests.
+5. **Hardware Peripheral Mutex (`POST /api/print-ticket`):**
+   - Employs a single-threaded hardware mutex (`isPrinterBusy`) and queries the database to confirm that the requested ticket exists in active patients (`is_historical = false`) before writing ESC/POS byte streams to `/dev/usb/lp*`.
+
+---
+
+## Layer 4 — SQL Injection Immunity Architecture
+
+The system is architecturally immune to SQL injection across all tiers:
+
+1. **Prepared Statements ($1, $2):** Zero direct SQL connection drivers (`pg`, `mysql2`, `sqlite3`, `cursor.execute`) exist in the codebase. All database interactions in Next.js (`@supabase/supabase-js`, `@supabase/ssr`) and FastAPI (`httpx.Client` to PostgREST) communicate over HTTP JSON REST APIs. PostgREST compiles all operations into PostgreSQL prepared statements with bound parameters (`$1`, `$2`), preventing query evaluation of payload strings.
+2. **Search Syntax Sanitization:** Client search hooks (`useHeaderSearch.ts`, `usePatientsData.ts`) filter out PostgREST structural delimiter characters (`,`, `(`, `)`) using regex before URL parameter encoding.
+3. **Static Stored Procedures:** Database intake via `create_patient` uses compiled static PL/pgSQL `INSERT` statements with strictly typed arguments without dynamic string interpolation (`EXECUTE format(...)`).
+4. **Strict Column Whitelisting:** Operational rotation routes (`app/api/rotate/route.ts`) validate incoming payload keys against a strict `Set` of approved database columns (`ALLOWED_UPDATE_FIELDS`), discarding unapproved properties.
+
+---
+
 ## Data Encryption & Peripheral Safeguards
 
 1. **Patient Phone Number Encryption:**
@@ -146,4 +178,4 @@ Heart Check PHC implements server-side route guarding in [proxy.ts](file:///home
 
 ---
 
-_Last updated: 2026-10-16 — Full RLS policy set verified and active against live Supabase PostgreSQL instance. RESTRICTIVE policies protect historical data; staff station scoping active; public account and service menu leaks fully resolved._
+_Last updated: 2026-10-17 — Reconciled against live system. Documented Layer 3 (Rate Limiting & Cost Protection) and Layer 4 (SQL Injection Immunity). Restrictive policies protect historical research data; settings route guarded by requireSuperadmin._

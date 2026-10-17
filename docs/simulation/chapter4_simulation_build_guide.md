@@ -778,7 +778,7 @@ Exact numbers depend on your real historical data. The structure will be:
 ## 11. How to Use in Chapter 4
 
 1. **Run the script.** Capture terminal output.
-2. **Replace the manually derived tables** in `docs/chapter4_simulation_comparison.md` (Sections 6, 7, 10) with the script's actual output. These numbers are now fully reproducible.
+2. **Replace the manually derived tables** in `docs/simulation/chapter4_simulation_comparison.md` (Sections 6, 7, 10) with the script's actual output. These numbers are now fully reproducible.
 3. **Cite the data source** in the thesis body as:
    > "Stage durations for the consultation service are derived from XXX patient records imported from PHC's physical consultation room Excel tracking sheets (March 2024 to December 2025). Administrative overhead values for the manual scenario were obtained from structured observation and MISD staff interviews. The simulation was executed via `python_backend/chapter4_simulation.py`, applying M/M/1 closed-form formulas from `analytics/helpers.py` to the real historical arrival stream."
 4. **For the manual scenario overhead**, cite the MISD interview and observation as the data source. The clinical stages are real data — only the pre-desk overhead is estimated.

@@ -2,10 +2,10 @@
 ## How to Build a Valid and Reasonable Simulation to Compare Queue Time and Prove the System Works
 
 **Last Updated:** 2026-10-17
-**Cross-references:**
-- `docs/chapter4_simulation_build_guide.md` — Full implementation code and script skeleton
-- `docs/simulation-best-approach-guide.md` — Decision rationale for each methodology choice
-- `docs/simulation-baseline-methodology-note.md` — Grand mean vs. mean of monthly means analysis
+**Cross-references & Consolidated Sections:**
+- `docs/simulation/chapter4_simulation_build_guide.md` — Full implementation code and script skeleton
+- Section 9 — Comprehensive Methodology Decision Rationale (Integrated)
+- Section 10 — Baseline Computation Analysis: Grand Mean vs. Mean of Monthly Means (Integrated)
 
 ---
 
@@ -293,6 +293,38 @@ After running the simulation, your thesis Chapter 4 must be able to state all th
 
 ---
 
-_This is the definitive Chapter 4 simulation methodology guide for the Heart Check PHC thesis.
-All parameter choices, scope decisions, and reporting requirements are documented here with
-explicit academic justification._
+## 9. Comprehensive Methodology Decision Rationale
+
+| Decision | Chosen Approach | Why Other Approaches Were Rejected |
+| :--- | :--- | :--- |
+| **Data Scope** | Consultation Service Only (2024 full year) | Other services (Triage, ECG, Pharmacy) lack timestamp records in the historical logs. Inventing fake timestamps for other services would destroy the credibility of the entire simulation. Scoping strictly to Consultation is defensible because it represents ~45% of total OPD volume. |
+| **Baseline Anchor** | Grand Mean across all 2024 records | Mean of monthly means introduces small-month sample bias. The grand mean is the maximum-likelihood unbiased estimator for M/M/1 service rate (mu). |
+| **Model Selection** | Two-tier: Closed-form M/M/1 for registration counter + Empirical stochastic simulation for whole visit | Pure M/M/1 across the entire multi-stage visit assumes exponential service times everywhere, which clinical stages violate. Pure empirical simulation lacks theoretical rigor. Combining closed-form M/M/1 at the registration bottleneck with stochastic simulation of total stay provides maximum defensibility. |
+| **Arrival Rate Window** | Morning Peak (08:00 to 12:00 Manila time) | Averaging arrival rate over an 8-hour day dilutes lambda and masks the congestion that actually causes hospital waiting lines. Queues form during the morning arrival surge. |
+| **Reproducibility** | Fixed random seed (`seed = 42`) | Academic evaluation requires identical reproducible outputs across multiple execution runs. |
+
+---
+
+## 10. Baseline Computation Analysis: Grand Mean vs. Mean of Monthly Means
+
+A common methodology question during thesis defense is:
+> *"Is it more accurate if I average all the monthly averages of 2024 records, then use that as the baseline for the simulation?"*
+
+### Mathematical Comparison
+
+1. **The Grand Mean (Pooled Average):**
+   $$\mu_{grand} = \frac{1}{N_{total}} \sum_{i=1}^{N_{total}} X_i$$
+   Every patient carries equal weight ($1/N$). Months with 2,500 patients have 5x more weight than months with 500 patients, accurately reflecting real hospital operating conditions.
+
+2. **The Mean of Monthly Means (Unweighted Average):**
+   $$\mu_{unweighted} = \frac{1}{12} \sum_{m=1}^{12} \bar{X}_m$$
+   Every month carries equal weight ($1/12$), regardless of whether 500 or 2,500 patients attended that month.
+
+### Why the Grand Mean is Selected for Heart Check PHC
+- **M/M/1 Theoretical Consistency:** Queueing theory assumes customers arrive from a single aggregate process. The true service rate $\mu$ of the registration clerk is the total patients processed divided by total clerk time. The grand mean matches this definition exactly.
+- **Vulnerability to Small-Sample Outliers:** If December has fewer clinic operating days and only 400 records with an anomalous average of 22 minutes, the unweighted average gives that small month identical weight to March (2,200 records, 14.2 minutes), artificially inflating the baseline.
+- **Recommendation:** Use the grand mean for all baseline inputs. If thesis advisers specifically request monthly analysis, report the monthly means in an appendix table to demonstrate that the grand mean lies within the inter-month confidence interval.
+
+---
+
+_Last updated: 2026-10-17 — Consolidated all simulation guides into this single authoritative methodology reference._

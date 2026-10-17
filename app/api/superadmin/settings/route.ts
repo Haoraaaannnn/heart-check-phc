@@ -9,7 +9,7 @@
  *          anonymous Supabase client (respects RLS; public settings are readable).
  *   PUT  - Upserts a single {key, value} pair using the Supabase service-role
  *          admin client, which bypasses RLS to guarantee writes succeed.
- *          Requires a valid authenticated user session (Bearer token).
+ *          Requires a valid verified superadmin session (Bearer token via requireSuperadmin).
  *
  * @remarks
  * The service-role key (SUPABASE_SERVICE_ROLE_KEY) is consumed exclusively on
@@ -25,7 +25,7 @@
 
 import { NextResponse } from 'next/server';
 import { createClient } from '@supabase/supabase-js';
-import { requireUser } from '@/lib/supabase/authGuard';
+import { requireSuperadmin } from '@/lib/supabase/superadminGuard';
 
 /**
  * Service-role admin client used exclusively for write operations.
@@ -92,7 +92,7 @@ export async function GET(_request: Request): Promise<NextResponse> {
  *          or `{ error: string }` with HTTP 500 on database failure.
  */
 export async function PUT(request: Request): Promise<NextResponse> {
-  const guard = await requireUser(request);
+  const guard = await requireSuperadmin(request);
   if (!guard.authorized) return guard.response;
 
   let body: unknown;

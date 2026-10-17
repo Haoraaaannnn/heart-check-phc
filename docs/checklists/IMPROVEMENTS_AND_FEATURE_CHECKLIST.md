@@ -177,13 +177,13 @@ When contributing new features or addressing items from this checklist, consult 
 | **SuperAdmin Subsystem** | Users, desk access, facilities, kiosks, settings, passwords | [app/superadmin/README.md](file:///home/jensen/Github-Repositories/heart-check-phc/app/superadmin/README.md) |
 | **Analytics Module** | Bottleneck analysis, forecasts, Excel export modal | [app/dashboard/pages/analytics/README.md](file:///home/jensen/Github-Repositories/heart-check-phc/app/dashboard/pages/analytics/README.md) |
 | **Nurse Station** | Patient calling, vitals, station queues | [app/nurse/README.md](file:///home/jensen/Github-Repositories/heart-check-phc/app/nurse/README.md) |
-| **Transfer Dashboard** | Doctor assignment, rotation, idle management | [docs/TRANSFER_MANUAL_TWEAKING_GUIDE.md](file:///home/jensen/Github-Repositories/heart-check-phc/docs/TRANSFER_MANUAL_TWEAKING_GUIDE.md) |
-| **Security & Schema** | Database schema, policies, role management | [docs/DATABASE_SCHEMA.md](file:///home/jensen/Github-Repositories/heart-check-phc/docs/DATABASE_SCHEMA.md), [docs/OPEN_ISSUES.md](file:///home/jensen/Github-Repositories/heart-check-phc/docs/OPEN_ISSUES.md) |
-| **Security Checklist** | Vulnerability matrix, verification steps, patch guide | [docs/SECURITY_CHECKLIST.md](file:///home/jensen/Github-Repositories/heart-check-phc/docs/SECURITY_CHECKLIST.md), [AGENTS.md](file:///home/jensen/Github-Repositories/heart-check-phc/AGENTS.md) |
-| **API & Injection Audit** | Vulnerability mechanics, exploit proofs, technical patches | [docs/API_LEAKS_AND_INJECTION_RISKS_AUDIT.md](file:///home/jensen/Github-Repositories/heart-check-phc/docs/API_LEAKS_AND_INJECTION_RISKS_AUDIT.md) |
-| **UAT Test Cases** | End-to-end verification checklist and remarks | [docs/UAT_USE_CASE_CHECKLIST.md](file:///home/jensen/Github-Repositories/heart-check-phc/docs/UAT_USE_CASE_CHECKLIST.md) |
+| **Transfer Dashboard** | Doctor assignment, rotation, idle management | [docs/specifications/TRANSFER_DASHBOARD.md](file:///home/jensen/Github-Repositories/Heart_Check_PHC/docs/specifications/TRANSFER_DASHBOARD.md#7-developer-customization--where-to-edit-guide) |
+| **Security & Schema** | Database schema, policies, role management | [docs/specifications/DATABASE_SCHEMA.md](file:///home/jensen/Github-Repositories/Heart_Check_PHC/docs/specifications/DATABASE_SCHEMA.md), [docs/checklists/OPEN_ISSUES.md](file:///home/jensen/Github-Repositories/Heart_Check_PHC/docs/checklists/OPEN_ISSUES.md) |
+| **Security Checklist** | Vulnerability matrix, verification steps, patch guide | [docs/checklists/SECURITY_CHECKLIST.md](file:///home/jensen/Github-Repositories/Heart_Check_PHC/docs/checklists/SECURITY_CHECKLIST.md), [AGENTS.md](file:///home/jensen/Github-Repositories/Heart_Check_PHC/AGENTS.md) |
+| **API & Injection Audit** | Vulnerability mechanics, exploit proofs, technical patches | [docs/checklists/API_LEAKS_AND_INJECTION_RISKS_AUDIT.md](file:///home/jensen/Github-Repositories/Heart_Check_PHC/docs/checklists/API_LEAKS_AND_INJECTION_RISKS_AUDIT.md) |
+| **UAT Test Cases** | End-to-end verification checklist and remarks | [docs/checklists/UAT_USE_CASE_CHECKLIST.md](file:///home/jensen/Github-Repositories/Heart_Check_PHC/docs/checklists/UAT_USE_CASE_CHECKLIST.md) |
 
 ---
 
-_Last updated: 2026-10-16 — Database RLS security enforcement and anonymous write restrictions marked complete. This document must be updated whenever items are started or completed._
+_Last updated: 2026-10-18 — Database RLS security enforcement, transfer guide consolidation, and documentation cleanup. This document must be updated whenever items are started or completed._
 
