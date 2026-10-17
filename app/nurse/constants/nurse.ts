@@ -11,7 +11,7 @@ import { CSSProperties } from 'react';
 import { StageConfig } from '@/app/nurse/types/nurse';
 
 // Re-export text copy for unified feature-level access
-export { nurseTexts } from './nurseTexts';
+export { nurseTexts } from '@/app/nurse/constants/nurseTexts';
 
 /** Dimension and layout tokens for nurse dashboard */
 export const nurseLayoutTokens = {

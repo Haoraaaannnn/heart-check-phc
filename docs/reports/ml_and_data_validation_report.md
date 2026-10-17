@@ -582,4 +582,42 @@ The exported data differs from imported/analytics data due to **three independen
 
 ---
 
-*End of validation report.*
+## 10. Actionable Remediation & Verified Implementation Resolutions
+
+All findings (F-01 through F-07 and pipeline bugs) identified in this audit have been resolved, implemented, and verified in the codebase:
+
+### 10.1 F-05: Total Time Computation Mismatch (Resolved)
+- **Problem:** Analytics previously started from `kiosk_time` and added carryout, while Excel export measured from `reg_start` to `carryout_end`.
+- **Resolution:** Aligned both pipelines with the authoritative PHC paper form. In `analytics/preprocessing.py`, `total_time` starts from `reg_start` and telescopes to `carryout_end` (falling back to `consult_end` if carryout was omitted). In `analytics/export.py`, `total` also falls back to `consult_end` if `carryout_end` is null (`effective_end = carryout_end if pd.notna(carryout_end) else consult_end`), guaranteeing identical averages across dashboard and workbook exports.
+
+### 10.2 F-06: Examine & Treat Threshold Mismatch (Resolved)
+- **Problem:** Discrepancy between 105 minutes (analytics) and 60 minutes (export label).
+- **Resolution:** Empirical inspection of genuine PHC historical Excel sheets (`data_entries/2024_MARCH.xls`, row 85) confirmed the official hospital threshold label is `Examine & treat Pts. <= 1.45 hrs. =` (105 minutes). Export summary labels and constants were updated to import `EXAMINE_TREAT_TARGET_MINUTES = 105` from `analytics/constants.py`, and `analytics/descriptive.py` was aligned to bucket wait plus consultation duration (`wait_consultation + service_consultation`) against 105 minutes.
+
+### 10.3 F-03: CSV Import Timezone Assumption (Resolved)
+- **Problem:** `importer.py` previously parsed naive CSV timestamps with `utc=True`, causing Manila-local timestamps to be shifted backward by 8 hours.
+- **Resolution:** Naive timestamps are now localized to `Asia/Manila` before converting to UTC, matching the PHC Excel import pipeline.
+
+### 10.4 F-01: Little's Law Comparison Target (Resolved)
+- **Problem:** Little's Law theoretical occupancy was being compared directly to raw row count `len(df)`.
+- **Resolution:** `littles_law_check` in `analytics/queue_metrics.py` was refactored to compute `L = lambda * W` (patients in system = arrival rate * mean stay duration) reporting `lambda_per_min`, `W_min`, `L_littles_law`, and status `Computed`, eliminating the dimensional mismatch.
+
+### 10.5 F-02 / F-07: AM/PM Heuristic Boundary (Resolved)
+- **Problem:** Historical records recorded as 7:00 AM (early registrations) were being shifted to 19:00 (7:00 PM).
+- **Resolution:** Empirical data scan identified 430 legitimate morning arrivals between 7:00 AM and 7:59 AM. The afternoon heuristic in both `importer.py` and `import_phc_data.py` was narrowed from `1 <= hour <= 7` to `1 <= hour <= 6`, correctly preserving all 7:00-7:59 AM morning arrivals.
+
+### 10.6 F-04: Carryout Duration Column Divergence (Resolved)
+- **Problem:** Analytics computed `carryout_end - carryout_start` while export computed `carryout_end - consult_end`.
+- **Resolution:** Export column `j` in `analytics/export.py` now checks `carryout_start` with fallback to `consult_end` (`_safe_delta(carryout_end, carryout_start if pd.notna(carryout_start) else consult_end)`).
+
+### 10.7 Registration Service Rate (mu) Bug (Resolved)
+- **Problem:** `lam_mu_metrics` in `analytics/helpers.py` hardcoded `service_consultation` for mu even when called for the registration desk.
+- **Resolution:** Added `service_col` parameter with default `'service_consultation'`. `registration_metrics` in `analytics/queue_metrics.py` now passes `service_col='service_registration'`, accurately computing registration service rate.
+
+### 10.8 Dead Code Cleanup (Resolved)
+- **Problem:** Dead ternary condition referencing non-existent `extract_sheet_data`.
+- **Resolution:** Removed the ternary expression in `importer.py` in favor of direct call `extract_phc_sheet_data(raw, sheet)`.
+
+---
+
+_Last updated: 2026-10-17 — Consolidated audit findings and verified remediation plan into a single authoritative report._

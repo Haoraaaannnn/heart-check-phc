@@ -11,7 +11,7 @@
  */
 
 import React from 'react';
-import { DashboardOverviewSkeleton } from './components/DashboardOverviewSkeleton';
+import { DashboardOverviewSkeleton } from '@/app/dashboard/components/DashboardOverviewSkeleton';
 
 /**
  * Route-level loading component for Admin Dashboard.

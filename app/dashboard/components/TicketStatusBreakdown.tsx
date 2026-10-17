@@ -8,7 +8,7 @@ import { STATUS_STYLES } from '@/constants/queueStatus';
 const S = DASH.breakdown;
 const C = SECTIONS.ticketStatus;
 
-import { TicketBreakdownSkeleton } from './skeletons/TicketBreakdownSkeleton';
+import { TicketBreakdownSkeleton } from '@/app/dashboard/components/skeletons/TicketBreakdownSkeleton';
 
 interface TicketStatusBreakdownProps {
   stats: DashboardStats;

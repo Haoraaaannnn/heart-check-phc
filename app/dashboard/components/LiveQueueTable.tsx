@@ -16,7 +16,7 @@ import StatusBadge from '@/app/dashboard/components/StatusBadge';
 import { EMPTY_CELL, LIVE_QUEUE_COLUMNS, SECTIONS } from '@/app/dashboard/constants/content';
 import { DASH } from '@/app/dashboard/constants/styles';
 import { getPatientWaitTime } from '@/utils/waitTime';
-import { LiveQueueTableSkeleton } from './skeletons/LiveQueueTableSkeleton';
+import { LiveQueueTableSkeleton } from '@/app/dashboard/components/skeletons/LiveQueueTableSkeleton';
 
 const S = DASH.table;
 const C = SECTIONS.liveQueue;

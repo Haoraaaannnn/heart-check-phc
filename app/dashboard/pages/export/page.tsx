@@ -26,16 +26,16 @@
 import React, { useEffect } from 'react';
 import { useRouter } from 'next/navigation';
 import { supabase } from '@/lib/supabase';
-import { EXPORT_STYLES } from './constants/exportStyles';
-import { useFileExport } from './hooks/useFileExport';
-import ExportHeader from './components/ExportHeader';
-import ExportTelemetryCards from './components/ExportTelemetryCards';
-import ExportOptionsBar from './components/ExportOptionsBar';
-import ExportDateBrowser from './components/ExportDateBrowser';
-import ExportPreviewCard from './components/ExportPreviewCard';
-import ExportHistoryList from './components/ExportHistoryList';
-import ExportFormatGuide from './components/ExportFormatGuide';
-import ExportResultsBanner from './components/ExportResultsBanner';
+import { EXPORT_STYLES } from '@/app/dashboard/pages/export/constants/exportStyles';
+import { useFileExport } from '@/app/dashboard/pages/export/hooks/useFileExport';
+import ExportHeader from '@/app/dashboard/pages/export/components/ExportHeader';
+import ExportTelemetryCards from '@/app/dashboard/pages/export/components/ExportTelemetryCards';
+import ExportOptionsBar from '@/app/dashboard/pages/export/components/ExportOptionsBar';
+import ExportDateBrowser from '@/app/dashboard/pages/export/components/ExportDateBrowser';
+import ExportPreviewCard from '@/app/dashboard/pages/export/components/ExportPreviewCard';
+import ExportHistoryList from '@/app/dashboard/pages/export/components/ExportHistoryList';
+import ExportFormatGuide from '@/app/dashboard/pages/export/components/ExportFormatGuide';
+import ExportResultsBanner from '@/app/dashboard/pages/export/components/ExportResultsBanner';
 
 /**
  * Root page component for exporting patient queue datasets and workbooks.

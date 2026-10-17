@@ -173,7 +173,43 @@ When a user begins dragging from the touch handle of the top patient card:
 
 ---
 
-## 7. Developer & Customization Reference
+## 7. Developer Customization & Where to Edit Guide
 
-For actionable instructions on editing UI copy, changing card dimensions, adjusting timers, modifying counter numbers, or configuring Click-to-Select tablet modes, refer to the [Manual Tweaking & Customization Guide](file:///home/jensen/Github-Repositories/heart-check-phc/docs/TRANSFER_MANUAL_TWEAKING_GUIDE.md).
+### Common Tweaks Cookbook
+
+#### A. Change UI Text, Wording, or Tooltips
+- **Target File:** [`app/transfer/constants/transferTexts.ts`](file:///home/jensen/Github-Repositories/Heart_Check_PHC/app/transfer/constants/transferTexts.ts)
+- **Guidelines:** All UI copy is strictly isolated into `transferTexts.ts`. Never hardcode user-facing copy inside React component JSX.
+- **Example:** Modify `queueTabTitle`, `servingNext`, `assignHereBtn`, `reassignHereBtn`, or `moveToCounterBtn`.
+
+#### B. Change Colors, Highlight Borders, or Card Styles
+- **Target File:** [`app/transfer/constants/transfer.ts`](file:///home/jensen/Github-Repositories/Heart_Check_PHC/app/transfer/constants/transfer.ts)
+- **Tokens:**
+  - `TransferStyle.activeDropzone`: Highlights hovered cubicles or counters during active drag.
+  - `TransferStyle.selectedPatientRow`: Red border outline on selected patient card in Click-to-Select mode.
+  - `TransferStyle.assignTargetCard`: Emerald border outline on eligible destination cubicles.
+  - `TransferStyle.selectionBanner`: Styling and shadow for floating tablet context action bar.
+
+#### C. Change Maximum Capacity per Cubicle
+- **Target File:** [`app/transfer/lib/constants.ts`](file:///home/jensen/Github-Repositories/Heart_Check_PHC/app/transfer/lib/constants.ts#L27)
+- **Setting:** `MAX_PATIENTS_PER_CUBICLE = 5` (1 actively being served + 4 waiting in cubicle stack). Modify to adjust hospital-wide cubicle intake thresholds.
+
+#### D. Change Timer Warning and Rotation Durations
+- **Target Files:**
+  - [`app/transfer/lib/constants.ts`](file:///home/jensen/Github-Repositories/Heart_Check_PHC/app/transfer/lib/constants.ts#L17-L18): `ROTATE_TIMEOUT_MS = 2 * 60 * 1000` (2-minute window before rotation) and `MAX_ROTATIONS_BEFORE_IDLE = 5`.
+  - [`app/transfer/components/ElapsedTimer.tsx`](file:///home/jensen/Github-Repositories/Heart_Check_PHC/app/transfer/components/ElapsedTimer.tsx#L6): `warnAfterSeconds = 120` (switches timer display text to high-contrast red warning when intake exceeds 2 minutes).
+
+#### E. Change Default Registration Counters
+- **Target Files:**
+  - [`app/transfer/components/RegistrationCounterSection.tsx`](file:///home/jensen/Github-Repositories/Heart_Check_PHC/app/transfer/components/RegistrationCounterSection.tsx#L49)
+  - [`app/transfer/hooks/useMyAccess.ts`](file:///home/jensen/Github-Repositories/Heart_Check_PHC/app/transfer/hooks/useMyAccess.ts#L107)
+- When a clinical staff account does not have restrictive assignments in `user_counters`, the workstation renders 5 active registration windows (`[1, 2, 3, 4, 5]`).
+
+#### F. Text-to-Speech (TTS) Announcement Phrasing
+- **Target File:** [`app/transfer/page.tsx`](file:///home/jensen/Github-Repositories/Heart_Check_PHC/app/transfer/page.tsx#L510-L545)
+- Voice synthesis requests proxy securely through `POST /api/tts` with server-side caching and rate limiting. To customize announcement phrasing (e.g. adding Tagalog or institutional greetings), update the template string dispatched to `speak()`.
+
+---
+
+_Last updated: 2026-10-17 — Consolidated Transfer Dashboard architectural specification and developer customization guide into a single master document._
 

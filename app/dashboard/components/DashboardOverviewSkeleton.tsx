@@ -18,15 +18,15 @@
 import React from 'react';
 import { DASHBOARD_SKELETON_STYLES } from '@/app/dashboard/constants/skeletonStyles';
 import { DASHBOARD_SKELETON_TEXTS } from '@/app/dashboard/constants/skeletonTexts';
-import { WelcomeBannerSkeleton } from './skeletons/WelcomeBannerSkeleton';
-import { OverviewDateFilterSkeleton } from './skeletons/OverviewDateFilterSkeleton';
-import { DashboardMetricsSkeleton } from './skeletons/DashboardMetricsSkeleton';
-import { ServiceQueueSkeleton } from './skeletons/ServiceQueueSkeleton';
-import { TicketBreakdownSkeleton } from './skeletons/TicketBreakdownSkeleton';
-import { QuickLinksSkeleton } from './skeletons/QuickLinksSkeleton';
-import { LiveQueueTableSkeleton } from './skeletons/LiveQueueTableSkeleton';
-import { HourlyArrivalsSkeleton } from './skeletons/HourlyArrivalsSkeleton';
-import { RecentActivitySkeleton } from './skeletons/RecentActivitySkeleton';
+import { WelcomeBannerSkeleton } from '@/app/dashboard/components/skeletons/WelcomeBannerSkeleton';
+import { OverviewDateFilterSkeleton } from '@/app/dashboard/components/skeletons/OverviewDateFilterSkeleton';
+import { DashboardMetricsSkeleton } from '@/app/dashboard/components/skeletons/DashboardMetricsSkeleton';
+import { ServiceQueueSkeleton } from '@/app/dashboard/components/skeletons/ServiceQueueSkeleton';
+import { TicketBreakdownSkeleton } from '@/app/dashboard/components/skeletons/TicketBreakdownSkeleton';
+import { QuickLinksSkeleton } from '@/app/dashboard/components/skeletons/QuickLinksSkeleton';
+import { LiveQueueTableSkeleton } from '@/app/dashboard/components/skeletons/LiveQueueTableSkeleton';
+import { HourlyArrivalsSkeleton } from '@/app/dashboard/components/skeletons/HourlyArrivalsSkeleton';
+import { RecentActivitySkeleton } from '@/app/dashboard/components/skeletons/RecentActivitySkeleton';
 
 /**
  * Renders the full-page skeletal loading surface for the Admin Dashboard overview.

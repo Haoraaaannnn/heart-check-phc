@@ -11,8 +11,8 @@
 
 import React from 'react';
 import { Cubicle, Patient } from '@/types/Types';
-import { SubcategoryPicker, RoomPicker } from './StepPickers';
-import { ServiceBoard } from './ServiceBoard';
+import { SubcategoryPicker, RoomPicker } from '@/app/transfer/components/StepPickers';
+import { ServiceBoard } from '@/app/transfer/components/ServiceBoard';
 import { SelectedTransferPatient } from '@/app/transfer/types/transfer';
 
 /**

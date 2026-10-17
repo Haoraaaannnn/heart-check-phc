@@ -13,10 +13,10 @@
 
 import React from 'react';
 import { Cubicle, Patient } from '@/types/Types';
-import { QueuePanel } from './QueuePanel';
-import { RegistrationCounterSection } from './RegistrationCounterSection';
-import { CubicleCard } from './CubicleCard';
-import { QuickAssignDropdown } from './QuickAssignDropdown';
+import { QueuePanel } from '@/app/transfer/components/QueuePanel';
+import { RegistrationCounterSection } from '@/app/transfer/components/RegistrationCounterSection';
+import { CubicleCard } from '@/app/transfer/components/CubicleCard';
+import { QuickAssignDropdown } from '@/app/transfer/components/QuickAssignDropdown';
 import { transferTexts } from '@/app/transfer/constants/transferTexts';
 import { SelectedTransferPatient } from '@/app/transfer/types/transfer';
 

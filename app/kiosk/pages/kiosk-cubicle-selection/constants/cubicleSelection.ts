@@ -3,13 +3,13 @@
  * @description Centralized barrel exporting style objects and class name dictionaries for cubicle selection.
  */
 
-export * from "./cubicleHeader";
-export * from "./cubicleCard";
-export * from "./cubicleLayout";
-export * from "./cubicleSelectionTexts";
+export * from "@/app/kiosk/pages/kiosk-cubicle-selection/constants/cubicleHeader";
+export * from "@/app/kiosk/pages/kiosk-cubicle-selection/constants/cubicleCard";
+export * from "@/app/kiosk/pages/kiosk-cubicle-selection/constants/cubicleLayout";
+export * from "@/app/kiosk/pages/kiosk-cubicle-selection/constants/cubicleSelectionTexts";
 
-import { CubicleCardClasses } from "./cubicleCard";
-import { CubicleLayoutClasses } from "./cubicleLayout";
+import { CubicleCardClasses } from "@/app/kiosk/pages/kiosk-cubicle-selection/constants/cubicleCard";
+import { CubicleLayoutClasses } from "@/app/kiosk/pages/kiosk-cubicle-selection/constants/cubicleLayout";
 
 /**
  * Composite class dictionary combining cubicle selection utility classes for backward compatibility.

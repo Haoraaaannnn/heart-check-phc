@@ -25,26 +25,26 @@ import React, { useState, useEffect, useMemo, useCallback } from 'react';
 import { useRouter } from 'next/navigation';
 import { supabase } from '@/lib/supabase';
 import { Patient } from '@/types/Types';
-import { NurseSidebar } from './components/NurseSidebar';
-import { NurseHeader } from './components/NurseHeader';
-import { NurseBoard } from './components/NurseBoard';
-import { NurseQuickActionDropdown } from './components/NurseQuickActionDropdown';
-import { NurseDragGhost } from './components/NurseDragGhost';
-import { FinishedDrawer } from './components/FinishedDrawer';
+import { NurseSidebar } from '@/app/nurse/components/NurseSidebar';
+import { NurseHeader } from '@/app/nurse/components/NurseHeader';
+import { NurseBoard } from '@/app/nurse/components/NurseBoard';
+import { NurseQuickActionDropdown } from '@/app/nurse/components/NurseQuickActionDropdown';
+import { NurseDragGhost } from '@/app/nurse/components/NurseDragGhost';
+import { FinishedDrawer } from '@/app/nurse/components/FinishedDrawer';
 
-import { useRequireAuth } from './hooks/useRequireAuth';
-import { useIdleTimeout } from './hooks/useIdleTimeout';
-import { useNurseData } from './hooks/useNurseData';
-import { useNurseActions } from './hooks/useNurseActions';
+import { useRequireAuth } from '@/app/nurse/hooks/useRequireAuth';
+import { useIdleTimeout } from '@/app/nurse/hooks/useIdleTimeout';
+import { useNurseData } from '@/app/nurse/hooks/useNurseData';
+import { useNurseActions } from '@/app/nurse/hooks/useNurseActions';
 import {
   useNurseDragAndDrop,
   isValidStageTransition,
-} from './hooks/useNurseDragAndDrop';
-import { useNurseSelection } from './hooks/useNurseSelection';
-import { useRealtimeSubscription } from './hooks/useRealtimeSubscription';
+} from '@/app/nurse/hooks/useNurseDragAndDrop';
+import { useNurseSelection } from '@/app/nurse/hooks/useNurseSelection';
+import { useRealtimeSubscription } from '@/app/nurse/hooks/useRealtimeSubscription';
 import { useBottleneckNotifications } from '@/app/dashboard/hooks/useBottleneckNotifications';
-import { nurseTexts } from './constants/nurseTexts';
-import { NurseStyle, nurseLayoutTokens } from './constants/nurse';
+import { nurseTexts } from '@/app/nurse/constants/nurseTexts';
+import { NurseStyle, nurseLayoutTokens } from '@/app/nurse/constants/nurse';
 import { useConnectionStatus } from '@/hooks/useConnectionStatus';
 import { useOfflineQueue } from '@/hooks/useOfflineQueue';
 import { ConnectionStatusBanner } from '@/components/reusables/ConnectionStatusBanner';

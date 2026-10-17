@@ -1,5 +1,5 @@
 'use client';
-import { DoctorsPanel } from './DoctorsPanel';
+import { DoctorsPanel } from '@/app/transfer/components/DoctorsPanel';
 import { transferTexts } from '@/app/transfer/constants/transferTexts';
 
 type DoctorsModalProps = {

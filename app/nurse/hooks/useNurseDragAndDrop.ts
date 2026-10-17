@@ -12,7 +12,7 @@
 import { useState, useEffect, useCallback, useRef } from 'react';
 import { Patient } from '@/types/Types';
 import { ClinicalStage, DropFeedback } from '@/app/nurse/types/nurse';
-import { DragPoint, pointOf, findDropTarget, canStartDrag } from './dragUtils';
+import { DragPoint, pointOf, findDropTarget, canStartDrag } from '@/app/nurse/hooks/dragUtils';
 
 /**
  * Return model for the useNurseDragAndDrop hook.

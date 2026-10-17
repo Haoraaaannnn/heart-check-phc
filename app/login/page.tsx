@@ -22,11 +22,11 @@
 import React, { useState, useEffect, useRef, Suspense } from 'react';
 import { useRouter, useSearchParams } from 'next/navigation';
 import { supabase } from '@/lib/supabase';
-import { LOGIN_STYLES } from './constants/loginStyles';
-import { LOGIN_TEXTS } from './constants/loginTexts';
-import { LoginHeader } from './components/LoginHeader';
-import { LoginForm } from './components/LoginForm';
-import { LoginFooter } from './components/LoginFooter';
+import { LOGIN_STYLES } from '@/app/login/constants/loginStyles';
+import { LOGIN_TEXTS } from '@/app/login/constants/loginTexts';
+import { LoginHeader } from '@/app/login/components/LoginHeader';
+import { LoginForm } from '@/app/login/components/LoginForm';
+import { LoginFooter } from '@/app/login/components/LoginFooter';
 
 /**
  * Root login page component wrapped with Suspense boundary.

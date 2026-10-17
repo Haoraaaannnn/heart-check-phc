@@ -3,7 +3,7 @@ import { Geist, Geist_Mono } from "next/font/google";
 import { tiltWarp, Baloo } from "@/fonts/fonts";
 import "@/app/globals.css";
 import "boxicons/css/boxicons.min.css";
-import { ThemeProvider } from "./provider";
+import { ThemeProvider } from "@/app/provider";
 
 
 const geistSans = Geist({

@@ -20,7 +20,7 @@ import { CountersPanel } from '@/app/superadmin/components/CountersPanel';
 import { useIdleTimeout } from '@/app/superadmin/hooks/useIdleTimeout';
 import { useRequireAuth } from '@/app/superadmin/hooks/useRequireAuth';
 import { SuperAdminPageSkeleton } from '@/app/superadmin/components/SuperAdminPageSkeleton';
-import { FACILITIES_TEXTS } from './constants/facilitiesTexts';
+import { FACILITIES_TEXTS } from '@/app/superadmin/facilities/constants/facilitiesTexts';
 import { SUPERADMIN_STYLES } from '@/app/superadmin/constants/superadminStyles';
 
 /**

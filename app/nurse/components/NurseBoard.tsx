@@ -13,9 +13,9 @@ import React from 'react';
 import { Patient } from '@/types/Types';
 import { ClinicalStage, SelectedNursePatient } from '@/app/nurse/types/nurse';
 import { NurseStyle } from '@/app/nurse/constants/nurse';
-import { AssignedSection } from './AssignedSection';
-import { WithDoctorSection } from './WithDoctorSection';
-import { CarryoutSection } from './CarryoutSection';
+import { AssignedSection } from '@/app/nurse/components/AssignedSection';
+import { WithDoctorSection } from '@/app/nurse/components/WithDoctorSection';
+import { CarryoutSection } from '@/app/nurse/components/CarryoutSection';
 
 /**
  * Props for the NurseBoard component.

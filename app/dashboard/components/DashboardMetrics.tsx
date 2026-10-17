@@ -22,7 +22,7 @@ import {
   type OverviewDateRange,
 } from '@/app/dashboard/constants/content';
 import { DASH, TONES } from '@/app/dashboard/constants/styles';
-import { DashboardMetricsSkeleton } from './skeletons/DashboardMetricsSkeleton';
+import { DashboardMetricsSkeleton } from '@/app/dashboard/components/skeletons/DashboardMetricsSkeleton';
 
 const S = DASH.metric;
 

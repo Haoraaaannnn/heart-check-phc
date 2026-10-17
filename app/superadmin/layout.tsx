@@ -18,9 +18,9 @@ import React, { useEffect, useState, Suspense } from 'react';
 import { useRouter } from 'next/navigation';
 import { supabase } from '@/lib/supabase';
 import DashboardBG from '@/components/backgrounds/DashboardBg';
-import { SuperAdminSidebar } from './components/navigation/SuperAdminSidebar';
-import { SuperAdminHeader } from './components/navigation/SuperAdminHeader';
-import { SUPERADMIN_NAV_STYLES } from './constants/superadminNavStyles';
+import { SuperAdminSidebar } from '@/app/superadmin/components/navigation/SuperAdminSidebar';
+import { SuperAdminHeader } from '@/app/superadmin/components/navigation/SuperAdminHeader';
+import { SUPERADMIN_NAV_STYLES } from '@/app/superadmin/constants/superadminNavStyles';
 
 interface SuperAdminLayoutProps {
   /** Page content rendered within the enterprise shell. */

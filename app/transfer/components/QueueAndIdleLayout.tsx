@@ -1,7 +1,7 @@
 'use client';
 import { Patient } from '@/types/Types';
-import { IdleNumbersSection } from './IdleNumbersSection';
-import { OnProgressSection } from './OnProgressSection';
+import { IdleNumbersSection } from '@/app/transfer/components/IdleNumbersSection';
+import { OnProgressSection } from '@/app/transfer/components/OnProgressSection';
 
 type QueueAndIdleLayoutProps = {
   onProgressPatients: Patient[];

@@ -15,19 +15,19 @@
 
 import React, { useState, useEffect, Suspense } from 'react';
 import { useSearchParams, useRouter } from 'next/navigation';
-import { useRequireAuth } from './hooks/useRequireAuth';
-import { useIdleTimeout } from './hooks/useIdleTimeout';
-import { useSuperadminUsers } from './hooks/useSuperadminUsers';
-import { useUserModalState } from './hooks/useUserModalState';
-import { SuperadminUser } from './types/superadmin';
-import { UserStatsCards } from './components/UserStatsCards';
-import { UserTable } from './components/UserTable';
-import { UserModal } from './components/UserModal';
-import { DeleteUserModal } from './components/DeleteUserModal';
-import { SettingsPanel } from './components/SettingsPanel';
-import { SuperAdminPageSkeleton } from './components/SuperAdminPageSkeleton';
-import { SUPERADMIN_TEXTS } from './constants/superadminTexts';
-import { SUPERADMIN_STYLES } from './constants/superadminStyles';
+import { useRequireAuth } from '@/app/superadmin/hooks/useRequireAuth';
+import { useIdleTimeout } from '@/app/superadmin/hooks/useIdleTimeout';
+import { useSuperadminUsers } from '@/app/superadmin/hooks/useSuperadminUsers';
+import { useUserModalState } from '@/app/superadmin/hooks/useUserModalState';
+import { SuperadminUser } from '@/app/superadmin/types/superadmin';
+import { UserStatsCards } from '@/app/superadmin/components/UserStatsCards';
+import { UserTable } from '@/app/superadmin/components/UserTable';
+import { UserModal } from '@/app/superadmin/components/UserModal';
+import { DeleteUserModal } from '@/app/superadmin/components/DeleteUserModal';
+import { SettingsPanel } from '@/app/superadmin/components/SettingsPanel';
+import { SuperAdminPageSkeleton } from '@/app/superadmin/components/SuperAdminPageSkeleton';
+import { SUPERADMIN_TEXTS } from '@/app/superadmin/constants/superadminTexts';
+import { SUPERADMIN_STYLES } from '@/app/superadmin/constants/superadminStyles';
 
 /**
  * SuperAdmin inner content component reading URL search parameters.

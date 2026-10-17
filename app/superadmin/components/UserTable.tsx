@@ -11,7 +11,7 @@ import React, { useState } from 'react';
 import { SuperadminUser } from '@/app/superadmin/types/superadmin';
 import { SUPERADMIN_TEXTS } from '@/app/superadmin/constants/superadminTexts';
 import { SUPERADMIN_STYLES } from '@/app/superadmin/constants/superadminStyles';
-import { UserTableSkeleton } from './UserTableSkeleton';
+import { UserTableSkeleton } from '@/app/superadmin/components/UserTableSkeleton';
 
 interface UserTableProps {
   /** Array of paginated users to render. */

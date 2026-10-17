@@ -17,8 +17,8 @@
 import React from 'react';
 import { SUPERADMIN_SKELETON_STYLES } from '@/app/superadmin/constants/superadminSkeletonStyles';
 import { SUPERADMIN_SKELETON_TEXTS } from '@/app/superadmin/constants/superadminSkeletonTexts';
-import { UserStatsCardsSkeleton } from './UserStatsCardsSkeleton';
-import { UserTableSkeleton } from './UserTableSkeleton';
+import { UserStatsCardsSkeleton } from '@/app/superadmin/components/UserStatsCardsSkeleton';
+import { UserTableSkeleton } from '@/app/superadmin/components/UserTableSkeleton';
 
 export interface SuperAdminPageSkeletonProps {
   /** Active view mode skeleton to render ('users' or 'settings'). Defaults to 'users'. */

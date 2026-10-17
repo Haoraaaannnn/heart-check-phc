@@ -13,7 +13,7 @@
  * @module constants/themeTokens
  */
 
-import { themeColors } from './colors';
+import { themeColors } from '@/constants/colors';
 
 /**
  * Universal theme tokens for surface backgrounds, cards, borders, text, and brand colors.

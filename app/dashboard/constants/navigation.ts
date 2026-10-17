@@ -8,7 +8,7 @@
  * @module app/dashboard/constants/navigation
  */
 
-import { DASHBOARD_NAV_TEXTS } from './dashNavTexts';
+import { DASHBOARD_NAV_TEXTS } from '@/app/dashboard/constants/dashNavTexts';
 
 /** Canonical route paths across the admin dashboard. */
 export const DASHBOARD_ROUTES = {

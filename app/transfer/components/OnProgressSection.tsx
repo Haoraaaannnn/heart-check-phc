@@ -15,11 +15,11 @@
 
 import React from 'react';
 import { Patient } from '@/types/Types';
-import { ElapsedTimer } from './ElapsedTimer';
+import { ElapsedTimer } from '@/app/transfer/components/ElapsedTimer';
 import { transferTexts } from '@/app/transfer/constants/transferTexts';
 import { TransferStyle } from '@/app/transfer/constants/transfer';
 import { SelectedTransferPatient } from '@/app/transfer/types/transfer';
-import { DragHandle } from './DragHandle';
+import { DragHandle } from '@/app/transfer/components/DragHandle';
 
 /**
  * Props for {@link OnProgressSection}.

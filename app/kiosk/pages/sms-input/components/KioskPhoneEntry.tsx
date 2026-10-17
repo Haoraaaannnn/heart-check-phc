@@ -6,11 +6,11 @@ import { supabase } from "@/lib/supabase";
 import { getTimestamp } from "@/lib/logger";
 import { Service } from "@/types/Services";
 import { useKioskLoading } from "@/app/kiosk/context/KioskLoadingContext";
-import PhoneInput from "./PhoneInput";
-import NumPad from "./NumPad";
-import ContinueButton from "./ContinueButton";
-import SMSInstruction from "./SMSInstruction";
-import SMSHeader from "./SMSHeader";
+import PhoneInput from "@/app/kiosk/pages/sms-input/components/PhoneInput";
+import NumPad from "@/app/kiosk/pages/sms-input/components/NumPad";
+import ContinueButton from "@/app/kiosk/pages/sms-input/components/ContinueButton";
+import SMSInstruction from "@/app/kiosk/pages/sms-input/components/SMSInstruction";
+import SMSHeader from "@/app/kiosk/pages/sms-input/components/SMSHeader";
 import { SMS_PHONE_MAX_LENGTH } from "@/app/kiosk/pages/sms-input/constants/smsPhoneInput";
 import {
     SMSLayoutClasses,
@@ -81,6 +81,14 @@ async function resolvePrefixInfo(
     service: Service,
     subcategory?: string
 ): Promise<{ prefix: string; groupBySubcategory: boolean }> {
+    // 1. If service has an explicit queue_prefix defined in the PostgreSQL services table, prioritize it
+    if (service.queue_prefix && service.queue_prefix.trim().length > 0) {
+        return {
+            prefix: service.queue_prefix.trim().toUpperCase(),
+            groupBySubcategory: false,
+        };
+    }
+
     const fallback = getPrefixInfo(service, subcategory);
     try {
         const { data, error } = await supabase

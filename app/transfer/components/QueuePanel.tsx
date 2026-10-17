@@ -11,8 +11,8 @@
 
 import React, { useState } from 'react';
 import { Patient } from '@/types/Types';
-import { OnProgressSection } from './OnProgressSection';
-import { IdleNumbersPanel } from './IdleNumbersPanel';
+import { OnProgressSection } from '@/app/transfer/components/OnProgressSection';
+import { IdleNumbersPanel } from '@/app/transfer/components/IdleNumbersPanel';
 import { NotificationBadge } from '@/components/reusables/NotificationBadge';
 import { transferTexts } from '@/app/transfer/constants/transferTexts';
 import { SelectedTransferPatient } from '@/app/transfer/types/transfer';

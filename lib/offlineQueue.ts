@@ -18,7 +18,7 @@
  * @module lib/offlineQueue
  */
 
-import { supabase } from './supabase';
+import { supabase } from '@/lib/supabase';
 
 /**
  * Representation of an individual mutation record stored in the local outbox.

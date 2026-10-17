@@ -32,4 +32,12 @@ export const CUSTOMIZATION_STYLES = {
   td: `px-5 py-4 ${themeTokens.text.secondary}`,
   tr: `${themeTokens.surface.tableRowHover} border-b ${themeTokens.border.default} last:border-0`,
   selectOption: themeTokens.surface.selectOption,
+  sectionBox: `${themeTokens.surface.card} ${sizeTokens.radius.md} p-4 border ${themeTokens.border.default} bg-slate-50/60 dark:bg-[#141414] space-y-3`,
+  sectionHeader: `flex items-center gap-2 text-xs font-bold uppercase tracking-wider ${themeTokens.text.primary} pb-2 border-b ${themeTokens.border.default}`,
+  sectionSubtitle: `text-xs ${themeTokens.text.secondary}`,
+  helpText: `text-[11px] ${themeTokens.text.muted} mt-1`,
+  previewCard: `flex flex-col sm:flex-row items-start sm:items-center justify-between gap-3 p-3.5 rounded-lg bg-white dark:bg-[#1a1a1a] border ${themeTokens.border.default} shadow-2xs`,
+  ticketBadge: `font-mono text-sm font-bold px-3 py-1 rounded-md bg-rose-50 dark:bg-rose-950/50 text-[#a8071a] dark:text-[#f87171] border border-rose-200 dark:border-rose-900 tracking-wider`,
+  tableTicketBadge: `font-mono text-xs font-semibold px-2 py-0.5 rounded-md bg-rose-50 dark:bg-rose-950/40 text-[#a8071a] dark:text-[#f87171] border border-rose-200/80 dark:border-rose-900/60 inline-flex items-center gap-1.5`,
 } as const;
+

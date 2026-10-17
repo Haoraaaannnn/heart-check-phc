@@ -12,8 +12,8 @@ import { CSSProperties } from "react";
 import { themeColors } from "@/constants/colors";
 
 // Re-export dedicated constants for subcomponents
-export * from "./kioskLoadingOverlay";
-export * from "./kioskBackButton";
+export * from "@/app/kiosk/constants/kioskLoadingOverlay";
+export * from "@/app/kiosk/constants/kioskBackButton";
 
 /**
  * Static inline style definitions for the primary kiosk layout container and content sections.

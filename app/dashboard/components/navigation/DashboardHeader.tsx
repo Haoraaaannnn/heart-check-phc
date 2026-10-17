@@ -18,8 +18,8 @@ import { supabase } from '@/lib/supabase';
 import { handleSignOut } from '@/lib/supabase/signOut';
 import { useBottleneckNotifications } from '@/app/dashboard/hooks/useBottleneckNotifications';
 import NotificationDropdown from '@/app/dashboard/components/NotificationDropdown';
-import HeaderSearch from './HeaderSearch';
-import LiveClock from './LiveClock';
+import HeaderSearch from '@/app/dashboard/components/navigation/HeaderSearch';
+import LiveClock from '@/app/dashboard/components/navigation/LiveClock';
 import { DASHBOARD_NAV_TEXTS } from '@/app/dashboard/constants/dashNavTexts';
 import { DASH } from '@/app/dashboard/constants/styles';
 

@@ -468,23 +468,41 @@ Directory structure:
     │   ├── queueStatus.ts
     │   └── themes.js
     ├── docs/
-    │   ├── ARCHITECTURE.md
-    │   ├── CHANGES_NEEDED.md
-    │   ├── COMPONENTS_GUIDE.md
-    │   ├── DATABASE_SCHEMA.md
-    │   ├── FILE_ARCHITECTURE.md
-    │   ├── IMPROVEMENTS_AND_FEATURE_CHECKLIST.md
-    │   ├── NURSE_DASHBOARD_SYSTEM_DESIGN.md
-    │   ├── OPEN_ISSUES.md
-    │   ├── PRD.md
-    │   ├── SCHEMA_REFERENCE.md
-    │   ├── SECURITY.md
-    │   ├── SECURITY_CHECKLIST.md
-    │   ├── SETUP_AND_SEEDING.md
-    │   ├── SYSTEM_DESIGN.md
-    │   ├── TRANSFER_DASHBOARD.md
-    │   ├── TRANSFER_MANUAL_TWEAKING_GUIDE.md
-    │   └── UAT_USE_CASE_CHECKLIST.md
+    │   ├── README.md
+    │   ├── checklists/
+    │   │   ├── README.md
+    │   │   ├── API_LEAKS_AND_INJECTION_RISKS_AUDIT.md
+    │   │   ├── CHANGES_NEEDED.md
+    │   │   ├── IMPROVEMENTS_AND_FEATURE_CHECKLIST.md
+    │   │   ├── OPEN_ISSUES.md
+    │   │   ├── SECURITY_CHECKLIST.md
+    │   │   └── UAT_USE_CASE_CHECKLIST.md
+    │   ├── migrations/
+    │   │   ├── README.md
+    │   │   └── encrypt_phone_number.sql
+    │   ├── reports/
+    │   │   ├── README.md
+    │   │   └── ml_and_data_validation_report.md
+    │   ├── simulation/
+    │   │   ├── README.md
+    │   │   ├── chapter4_simulation_build_guide.md
+    │   │   ├── chapter4_simulation_comparison.md
+    │   │   └── simulation-master-guide.md
+    │   └── specifications/
+    │       ├── README.md
+    │       ├── ARCHITECTURE.md
+    │       ├── COMPONENTS_GUIDE.md
+    │       ├── CONNECTIVITY_RESILIENCE.md
+    │       ├── DATABASE_SCHEMA.md
+    │       ├── DATA_ENCRYPTION_GUIDE.md
+    │       ├── FILE_ARCHITECTURE.md
+    │       ├── LOCAL_NETWORK_SETUP.md
+    │       ├── NURSE_DASHBOARD_SYSTEM_DESIGN.md
+    │       ├── PRD.md
+    │       ├── SECURITY.md
+    │       ├── SETUP_AND_SEEDING.md
+    │       ├── SYSTEM_DESIGN.md
+    │       └── TRANSFER_DASHBOARD.md
     ├── fonts/
     │   └── fonts.ts
     ├── hooks/

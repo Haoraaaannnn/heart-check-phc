@@ -4,7 +4,7 @@ import { useState, useRef, useEffect, useCallback } from 'react';
 import { supabase } from '@/lib/supabase';
 import { Patient } from '@/types/Types';
 import { MAX_PATIENTS_PER_CUBICLE } from '@/app/transfer/lib/constants';
-import { DragPoint, pointOf, findDropTarget, canStartDrag } from './dragUtils';
+import { DragPoint, pointOf, findDropTarget, canStartDrag } from '@/app/transfer/hooks/dragUtils';
 
 const MANUAL_SERVICES = ['Consultation', 'OPD Screening'];
 
@@ -337,7 +337,7 @@ export function useDragAndDrop(
   };
 }
 
-export { useTransferSelection } from './useTransferSelection';
-export type { UseTransferSelectionOptions, UseTransferSelectionReturn } from './useTransferSelection';
+export { useTransferSelection } from '@/app/transfer/hooks/useTransferSelection';
+export type { UseTransferSelectionOptions, UseTransferSelectionReturn } from '@/app/transfer/hooks/useTransferSelection';
 
 export default useDragAndDrop;
