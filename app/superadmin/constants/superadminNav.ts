@@ -7,7 +7,7 @@
  * @module app/superadmin/constants/superadminNav
  */
 
-import { SUPERADMIN_TEXTS } from './superadminTexts';
+import { SUPERADMIN_TEXTS } from '@/app/superadmin/constants/superadminTexts';
 
 export const SUPERADMIN_ROUTES = {
   USERS: '/superadmin',

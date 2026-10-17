@@ -11,7 +11,7 @@
 import { useState, useCallback, useEffect } from 'react';
 import { Patient } from '@/types/Types';
 import { ClinicalStage, SelectedNursePatient } from '@/app/nurse/types/nurse';
-import { isValidStageTransition } from './useNurseDragAndDrop';
+import { isValidStageTransition } from '@/app/nurse/hooks/useNurseDragAndDrop';
 
 /**
  * Return model for the useNurseSelection hook.

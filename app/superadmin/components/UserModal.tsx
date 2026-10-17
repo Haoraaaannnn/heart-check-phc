@@ -14,8 +14,8 @@ import {
   CLINICAL_ROLES,
   REGISTRATION_ROLES,
 } from '@/app/superadmin/hooks/useUserModalState';
-import { ClinicalAssignmentsSelector } from './ClinicalAssignmentsSelector';
-import { RegistrationAssignmentsSelector } from './RegistrationAssignmentsSelector';
+import { ClinicalAssignmentsSelector } from '@/app/superadmin/components/ClinicalAssignmentsSelector';
+import { RegistrationAssignmentsSelector } from '@/app/superadmin/components/RegistrationAssignmentsSelector';
 import { SUPERADMIN_TEXTS } from '@/app/superadmin/constants/superadminTexts';
 import { SUPERADMIN_STYLES } from '@/app/superadmin/constants/superadminStyles';
 

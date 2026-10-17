@@ -6,11 +6,11 @@ import { supabase } from "@/lib/supabase";
 import { getTimestamp } from "@/lib/logger";
 import { Service } from "@/types/Services";
 import { useKioskLoading } from "@/app/kiosk/context/KioskLoadingContext";
-import PhoneInput from "./PhoneInput";
-import NumPad from "./NumPad";
-import ContinueButton from "./ContinueButton";
-import SMSInstruction from "./SMSInstruction";
-import SMSHeader from "./SMSHeader";
+import PhoneInput from "@/app/kiosk/pages/sms-input/components/PhoneInput";
+import NumPad from "@/app/kiosk/pages/sms-input/components/NumPad";
+import ContinueButton from "@/app/kiosk/pages/sms-input/components/ContinueButton";
+import SMSInstruction from "@/app/kiosk/pages/sms-input/components/SMSInstruction";
+import SMSHeader from "@/app/kiosk/pages/sms-input/components/SMSHeader";
 import { SMS_PHONE_MAX_LENGTH } from "@/app/kiosk/pages/sms-input/constants/smsPhoneInput";
 import {
     SMSLayoutClasses,

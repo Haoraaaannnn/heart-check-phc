@@ -5,6 +5,6 @@
  * @module app/dashboard/constants/dashNav
  */
 
-export * from './navigation';
-export * from './dashNavTexts';
-export * from './dashNavStyles';
+export * from '@/app/dashboard/constants/navigation';
+export * from '@/app/dashboard/constants/dashNavTexts';
+export * from '@/app/dashboard/constants/dashNavStyles';

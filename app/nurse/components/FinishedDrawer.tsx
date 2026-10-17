@@ -13,7 +13,7 @@ import React, { useEffect } from 'react';
 import { Patient } from '@/types/Types';
 import { nurseTexts } from '@/app/nurse/constants/nurseTexts';
 import { NurseStyle } from '@/app/nurse/constants/nurse';
-import { FinishedTable } from './FinishedTable';
+import { FinishedTable } from '@/app/nurse/components/FinishedTable';
 
 /**
  * Props for the FinishedDrawer component.

@@ -7,7 +7,7 @@ import { getServiceColor } from '@/constants/palette';
 const S = DASH.breakdown;
 const C = SECTIONS.serviceQueue;
 
-import { ServiceQueueSkeleton } from './skeletons/ServiceQueueSkeleton';
+import { ServiceQueueSkeleton } from '@/app/dashboard/components/skeletons/ServiceQueueSkeleton';
 
 interface ServiceQueueOverviewProps {
   /** Service name -> patients currently waiting or being served. */

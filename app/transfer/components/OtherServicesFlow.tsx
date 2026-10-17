@@ -11,7 +11,7 @@
 
 import React from 'react';
 import { Cubicle, Patient } from '@/types/Types';
-import { ServiceBoard } from './ServiceBoard';
+import { ServiceBoard } from '@/app/transfer/components/ServiceBoard';
 import { SelectedTransferPatient } from '@/app/transfer/types/transfer';
 
 /**

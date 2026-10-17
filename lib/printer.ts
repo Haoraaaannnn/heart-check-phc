@@ -18,8 +18,8 @@
 
 import fs from 'fs/promises';
 import { existsSync } from 'fs';
-import { getTimestamp } from './logger';
-import { supabase } from './supabase';
+import { getTimestamp } from '@/lib/logger';
+import { supabase } from '@/lib/supabase';
 
 /**
  * Sanitizes input text to prevent binary ESC/POS control code injection.

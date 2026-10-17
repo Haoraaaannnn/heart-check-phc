@@ -3,7 +3,7 @@
 import { useState, useEffect, useCallback } from 'react';
 import { supabase } from '@/lib/supabase';
 import { Patient } from '@/types/Types';
-import { DragPoint, pointOf, findDropTarget, canStartDrag } from './dragUtils';
+import { DragPoint, pointOf, findDropTarget, canStartDrag } from '@/app/transfer/hooks/dragUtils';
 
 /**
  * Hook handling pointer-based drag and drop between registration counters.

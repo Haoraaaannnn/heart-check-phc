@@ -19,8 +19,8 @@ import {
 import { useRequireAuth } from '@/app/superadmin/hooks/useRequireAuth';
 import { useIdleTimeout } from '@/app/superadmin/hooks/useIdleTimeout';
 import { SuperAdminPageSkeleton } from '@/app/superadmin/components/SuperAdminPageSkeleton';
-import { CUSTOMIZATION_TEXTS } from './constants/customizationTexts';
-import { CUSTOMIZATION_STYLES } from './constants/customizationStyles';
+import { CUSTOMIZATION_TEXTS } from '@/app/superadmin/customization/constants/customizationTexts';
+import { CUSTOMIZATION_STYLES } from '@/app/superadmin/customization/constants/customizationStyles';
 import { SUPERADMIN_STYLES } from '@/app/superadmin/constants/superadminStyles';
 
 type PatientType = 'new' | 'old' | 'both';

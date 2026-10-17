@@ -12,7 +12,7 @@
  */
 
 import { ScreenOption } from '@/app/select-screen/types/selectScreen';
-import { SELECT_SCREEN_TEXTS } from './selectScreenTexts';
+import { SELECT_SCREEN_TEXTS } from '@/app/select-screen/constants/selectScreenTexts';
 import { themeTokens, sizeTokens } from '@/constants/themeTokens';
 
 /**

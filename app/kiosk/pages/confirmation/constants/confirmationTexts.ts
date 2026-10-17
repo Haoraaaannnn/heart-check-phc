@@ -3,14 +3,14 @@
  * @description Centralized barrel re-exporting component-scoped text constants for the confirmation screen.
  */
 
-import { ConfirmationDescriptionTexts } from "./confirmationDescriptionTexts";
-import { ConfirmationActionsTexts } from "./confirmationActionsTexts";
-import { ConfirmationLayoutTexts } from "./confirmationLayoutTexts";
+import { ConfirmationDescriptionTexts } from "@/app/kiosk/pages/confirmation/constants/confirmationDescriptionTexts";
+import { ConfirmationActionsTexts } from "@/app/kiosk/pages/confirmation/constants/confirmationActionsTexts";
+import { ConfirmationLayoutTexts } from "@/app/kiosk/pages/confirmation/constants/confirmationLayoutTexts";
 
-export * from "./confirmationDescriptionTexts";
-export * from "./confirmationActionsTexts";
-export * from "./confirmationModalTexts";
-export * from "./confirmationLayoutTexts";
+export * from "@/app/kiosk/pages/confirmation/constants/confirmationDescriptionTexts";
+export * from "@/app/kiosk/pages/confirmation/constants/confirmationActionsTexts";
+export * from "@/app/kiosk/pages/confirmation/constants/confirmationModalTexts";
+export * from "@/app/kiosk/pages/confirmation/constants/confirmationLayoutTexts";
 
 /**
  * Text copy for the service confirmation modal and fallback page.

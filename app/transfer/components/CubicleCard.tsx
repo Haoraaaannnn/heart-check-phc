@@ -16,11 +16,11 @@
 import React, { useState } from 'react';
 import { Patient, Cubicle } from '@/types/Types';
 import { MAX_PATIENTS_PER_CUBICLE } from '@/app/transfer/lib/constants';
-import { ElapsedTimer } from './ElapsedTimer';
+import { ElapsedTimer } from '@/app/transfer/components/ElapsedTimer';
 import { transferTexts } from '@/app/transfer/constants/transferTexts';
 import { TransferStyle } from '@/app/transfer/constants/transfer';
 import { SelectedTransferPatient } from '@/app/transfer/types/transfer';
-import { DragHandle } from './DragHandle';
+import { DragHandle } from '@/app/transfer/components/DragHandle';
 
 /**
  * Props for {@link CubicleCard}.

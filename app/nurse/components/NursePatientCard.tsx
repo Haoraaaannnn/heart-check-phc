@@ -17,8 +17,8 @@ import { Patient } from '@/types/Types';
 import { ClinicalStage } from '@/app/nurse/types/nurse';
 import { nurseTexts } from '@/app/nurse/constants/nurseTexts';
 import { NurseStyle, STAGE_CONFIGS } from '@/app/nurse/constants/nurse';
-import { ElapsedTimer } from './ElapsedTimer';
-import { NurseDragHandle } from './NurseDragHandle';
+import { ElapsedTimer } from '@/app/nurse/components/ElapsedTimer';
+import { NurseDragHandle } from '@/app/nurse/components/NurseDragHandle';
 
 /**
  * Props for the NursePatientCard component.

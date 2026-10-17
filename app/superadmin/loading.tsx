@@ -11,7 +11,7 @@
  */
 
 import React from 'react';
-import { SuperAdminPageSkeleton } from './components/SuperAdminPageSkeleton';
+import { SuperAdminPageSkeleton } from '@/app/superadmin/components/SuperAdminPageSkeleton';
 
 /**
  * Route-level loading component for SuperAdmin.

@@ -20,7 +20,7 @@ import {
   SUPERADMIN_TONES,
   SuperadminToneKey,
 } from '@/app/superadmin/constants/superadminStyles';
-import { UserStatsCardsSkeleton } from './UserStatsCardsSkeleton';
+import { UserStatsCardsSkeleton } from '@/app/superadmin/components/UserStatsCardsSkeleton';
 
 interface UserStatsCardsProps {
   /** Aggregated user counts. */

@@ -16,11 +16,11 @@
 'use client';
 
 import React from 'react';
-import { useCurrentStaff } from './hooks/useCurrentStaff';
-import { SCREEN_OPTIONS, SELECT_SCREEN_STYLES } from './constants/selectScreen';
-import { SELECT_SCREEN_TEXTS } from './constants/selectScreenTexts';
-import SelectScreenHeader from './components/SelectScreenHeader';
-import ScreenOptionCard from './components/ScreenOptionCard';
+import { useCurrentStaff } from '@/app/select-screen/hooks/useCurrentStaff';
+import { SCREEN_OPTIONS, SELECT_SCREEN_STYLES } from '@/app/select-screen/constants/selectScreen';
+import { SELECT_SCREEN_TEXTS } from '@/app/select-screen/constants/selectScreenTexts';
+import SelectScreenHeader from '@/app/select-screen/components/SelectScreenHeader';
+import ScreenOptionCard from '@/app/select-screen/components/ScreenOptionCard';
 
 /**
  * Screen Display Selector main page component.

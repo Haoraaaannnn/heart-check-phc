@@ -22,12 +22,12 @@
 
 import React, { useEffect } from 'react';
 import { supabase } from '@/lib/supabase';
-import { LANDING_STYLES } from './landing/constants/landingStyles';
-import { LandingHeader } from './landing/components/LandingHeader';
-import { LandingHero } from './landing/components/LandingHero';
-import { LandingFeatures } from './landing/components/LandingFeatures';
-import { LandingWorkflow } from './landing/components/LandingWorkflow';
-import { LandingFooter } from './landing/components/LandingFooter';
+import { LANDING_STYLES } from '@/app/landing/constants/landingStyles';
+import { LandingHeader } from '@/app/landing/components/LandingHeader';
+import { LandingHero } from '@/app/landing/components/LandingHero';
+import { LandingFeatures } from '@/app/landing/components/LandingFeatures';
+import { LandingWorkflow } from '@/app/landing/components/LandingWorkflow';
+import { LandingFooter } from '@/app/landing/components/LandingFooter';
 
 /**
  * Public Landing Page root component.

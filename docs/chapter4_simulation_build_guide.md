@@ -63,12 +63,13 @@ Excel sheets covering the consultation room. The following columns are populated
 | `is_historical` | — | `true` for all imported rows |
 | `service` | — | `'consultation'` or `'Consultation'` |
 
-> **Key note on `kiosk_time` for historical rows:** Because PHC did not deploy kiosk ticketing
-> historically, `kiosk_time` (`created_at`) was mapped directly from the Queuing Time column
-> (same value as `reg_start`). This means `wait_registration` (kiosk_time → reg_start) is
-> always 0 for historical rows — which is correct. Historical patients had no kiosk step;
-> they queued at the registration desk directly. This difference is exactly what the simulation
-> compares against.
+> **Key note on `kiosk_time` for historical rows:** Because PHC did not have any digital queuing
+> system historically, `kiosk_time` (`created_at`) was mapped directly from the Queuing Time column
+> (same value as `reg_start`). This means `wait_registration` (kiosk_time to reg_start) is
+> always 0 for historical rows -- which is correct. Historical patients had no kiosk step;
+> they walked directly to the registration desk and joined the pen-and-paper queue.
+> The simulation adds this kiosk step back into Scenario B to model the new system.
+> This difference is exactly what the two scenarios compare.
 
 **What this means for the simulation:**
 - The historical data gives you **real service durations** (`service_registration`, `service_consultation`, `service_carryout`) and **real inter-arrival times**.
@@ -81,24 +82,28 @@ Excel sheets covering the consultation room. The following columns are populated
 
 For each patient record in the historical consultation data, the simulation reconstructs two scenarios:
 
-**Scenario A — Manual (what PHC had before / the baseline captured in the data):**
+**Scenario A -- Traditional Pen-and-Paper Queue (PHC before Heart Check PHC):**
 ```
 reg_start
     + manual_stub_issuance_time (new overhead, added)
+                                 -- staff writes patient name in logbook, issues hand-written stub
+    + queue_announcement_delay  (new overhead, added)
+                                 -- staff calls patient name verbally via PA or by walking to waiting area
     + registration_queue_wait   (derived from M/M/1 Wq using real lambda/mu)
-    + service_registration      (real: reg_end - reg_start)
+    + service_registration      (real: reg_end - reg_start, includes manual data-entry into paper ledger)
     + wait_consultation         (real: consult_start - reg_end)
     + service_consultation      (real: consult_end - consult_start)
     + service_carryout          (real: carryout_end - consult_end, where available)
 = total_opd_time_manual
 ```
 
-**Scenario B — Digital (what Heart Check PHC adds):**
+**Scenario B -- Automated Digital Queue (Heart Check PHC):**
 ```
-kiosk_checkin_time              (new overhead, added — replaces stub issuance)
+kiosk_checkin_time              (new overhead, added)
+                                 -- patient self-registers at touchscreen kiosk; ticket prints automatically
     + digital_registration_wait (derived from M/M/1 Wq with reduced mu)
-    + service_registration      (real: same clinical work, same duration)
-    + wait_consultation         (real: unchanged — clinical flow, not admin)
+    + service_registration      (real: same clinical work, but reduced by kiosk pre-fill of patient record)
+    + wait_consultation         (real: unchanged -- clinical flow, not affected by queue system)
     + service_consultation      (real: unchanged)
     + service_carryout          (real: unchanged)
 = total_opd_time_digital
@@ -123,25 +128,30 @@ Do not rewrite any of these. Import and call them directly.
 
 ---
 
-## 5. How Scenario A (Manual) is Reconstructed
+## 5. How Scenario A (Traditional Pen-and-Paper Queue) is Reconstructed
 
-The historical data already captures the real clinical durations (registration service, consultation, carryout). What it does **not** capture is the administrative overhead that the staff performed before the patient got to the counter — because in the manual process, those steps were invisible to the tracking sheet (the sheet only starts from Queuing Time, which is when the patient reached the desk).
+The historical data already captures the real clinical durations (registration service,
+consultation, carryout). What it does **not** capture is the administrative overhead that
+staff performed before the patient's Queuing Time was recorded -- because in the pen-and-paper
+process, those steps were invisible to the tracking sheet (the sheet only starts from Queuing
+Time, which is when the patient reached the registration desk after being issued their stub).
 
 For Scenario A, add the following overhead **per patient** on top of the real data:
 
 | Overhead Component | Value | Basis |
 |---|---|---|
-| Manual stub issuance time | Normal(mean=3.5 min, sd=0.8) | MISD staff interview / observation |
-| Queue announcement delay | 1.5 min (fixed + small jitter) | Observation: PA call lag before patient responds |
-| **Total pre-desk overhead added** | **~5.0 min per patient (avg)** | |
+| Manual stub issuance time | Normal(mean=3.5 min, sd=0.8) | Staff writes patient name in the physical logbook and issues a hand-written queue stub. Derived from MISD staff interview and observation. |
+| Queue announcement delay | 1.5 min (fixed + small jitter) | Staff calls patient name verbally via PA system or walks to the waiting area. Observation-derived. |
+| **Total pre-desk overhead added** | **~5.0 min per patient (avg)** | Both components combined. |
 
 These values are additive on top of the real timestamps. The real timestamps (reg_start onward) stay unchanged.
 
 ---
 
-## 6. How Scenario B (Digital) is Derived
+## 6. How Scenario B (Automated Digital Queue) is Derived
 
-For Scenario B, replace the manual stub issuance with kiosk check-in time and eliminate the announcement overhead:
+For Scenario B, replace the manual stub issuance and PA announcement with kiosk self-registration.
+The kiosk eliminates both the hand-written stub and the verbal callout entirely:
 
 | Component | Value | Basis |
 |---|---|---|

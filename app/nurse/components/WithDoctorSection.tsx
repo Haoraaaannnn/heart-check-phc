@@ -13,8 +13,8 @@ import React from 'react';
 import { Patient } from '@/types/Types';
 import { ClinicalStage } from '@/app/nurse/types/nurse';
 import { nurseTexts } from '@/app/nurse/constants/nurseTexts';
-import { StageColumn } from './StageColumn';
-import { NursePatientCard } from './NursePatientCard';
+import { StageColumn } from '@/app/nurse/components/StageColumn';
+import { NursePatientCard } from '@/app/nurse/components/NursePatientCard';
 
 /**
  * Props for the WithDoctorSection component.

@@ -4,21 +4,21 @@
  */
 
 import { CSSProperties } from "react";
-import { CategoryLayoutStyle, CategoryLayoutClasses, categoryLayoutSpacing } from "./categoryLayout";
-import { CategoryHeaderStyle, categoryHeaderTypography } from "./categoryHeader";
+import { CategoryLayoutStyle, CategoryLayoutClasses, categoryLayoutSpacing } from "@/app/kiosk/pages/category-selection/constants/categoryLayout";
+import { CategoryHeaderStyle, categoryHeaderTypography } from "@/app/kiosk/pages/category-selection/constants/categoryHeader";
 import {
     CategoryCardsStyle,
     CategoryCardsClasses,
     categoryCardsTheme,
     categoryCardsSpacing,
     categoryCardsTypography,
-} from "./categoryCards";
+} from "@/app/kiosk/pages/category-selection/constants/categoryCards";
 
 // Re-export component constants
-export * from "./categoryLayout";
-export * from "./categoryHeader";
-export * from "./categoryCards";
-export * from "./categorySelectionTexts";
+export * from "@/app/kiosk/pages/category-selection/constants/categoryLayout";
+export * from "@/app/kiosk/pages/category-selection/constants/categoryHeader";
+export * from "@/app/kiosk/pages/category-selection/constants/categoryCards";
+export * from "@/app/kiosk/pages/category-selection/constants/categorySelectionTexts";
 
 /**
  * Backward-compatible composite spacing tokens.

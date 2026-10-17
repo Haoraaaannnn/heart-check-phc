@@ -3,13 +3,13 @@
  * @description Centralized barrel re-exporting component-scoped text constants for queue printing.
  */
 
-import { PrintHeaderTexts } from "./printHeaderTexts";
-import { PrintFooterTexts } from "./printFooterTexts";
-import { QueuePrintTicketTexts } from "./queuePrintTicketTexts";
+import { PrintHeaderTexts } from "@/app/kiosk/pages/queue-print/constants/printHeaderTexts";
+import { PrintFooterTexts } from "@/app/kiosk/pages/queue-print/constants/printFooterTexts";
+import { QueuePrintTicketTexts } from "@/app/kiosk/pages/queue-print/constants/queuePrintTicketTexts";
 
-export * from "./printHeaderTexts";
-export * from "./printFooterTexts";
-export * from "./queuePrintTicketTexts";
+export * from "@/app/kiosk/pages/queue-print/constants/printHeaderTexts";
+export * from "@/app/kiosk/pages/queue-print/constants/printFooterTexts";
+export * from "@/app/kiosk/pages/queue-print/constants/queuePrintTicketTexts";
 
 /**
  * Composite text copy dictionary for queue ticket printing.

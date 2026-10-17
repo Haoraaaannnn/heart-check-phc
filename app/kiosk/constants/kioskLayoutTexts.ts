@@ -7,11 +7,11 @@
  * `kioskLoadingOverlayTexts.ts`) and re-exported here for backwards compatibility.
  */
 
-import { KioskBackButtonTexts } from "./kioskBackButtonTexts";
-import { KioskLoadingOverlayTexts } from "./kioskLoadingOverlayTexts";
+import { KioskBackButtonTexts } from "@/app/kiosk/constants/kioskBackButtonTexts";
+import { KioskLoadingOverlayTexts } from "@/app/kiosk/constants/kioskLoadingOverlayTexts";
 
-export * from "./kioskBackButtonTexts";
-export * from "./kioskLoadingOverlayTexts";
+export * from "@/app/kiosk/constants/kioskBackButtonTexts";
+export * from "@/app/kiosk/constants/kioskLoadingOverlayTexts";
 
 /**
  * Text strings and accessibility labels consumed by the root kiosk layout and overlays.
