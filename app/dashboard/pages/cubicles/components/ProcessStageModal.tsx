@@ -208,7 +208,7 @@ export default function ProcessStageModal({
 
                 <div className="flex items-center gap-2">
                   <span
-                    className={`inline-flex items-center gap-1 rounded-full px-2.5 py-1 text-xs font-bold uppercase ${
+                    className={`inline-flex items-center gap-1 rounded-md px-2.5 py-1 text-xs font-bold uppercase ${
                       CUBICLE_STATUS_STYLES[station.status].badgeBg
                     } ${CUBICLE_STATUS_STYLES[station.status].badgeText}`}
                   >

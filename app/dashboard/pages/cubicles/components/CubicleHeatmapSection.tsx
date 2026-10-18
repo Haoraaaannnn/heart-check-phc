@@ -69,7 +69,7 @@ export default function CubicleHeatmapSection() {
         {loading && rows.length === 0 ? (
           <div className="flex h-56 items-center justify-center rounded-xl border border-line bg-surface-subtle text-center text-sm font-semibold text-content-muted">
             <div className="flex flex-col items-center gap-2.5">
-              <span className="h-6 w-6 animate-spin rounded-full border-2 border-brand-accent border-t-transparent" />
+              <span className="h-6 w-6 animate-spin rounded-full border-2 border-accent border-t-transparent" />
               <p>Analyzing cubicle processing speeds and idle intervals</p>
             </div>
           </div>

@@ -131,7 +131,7 @@ export const RegistrationAssignmentsSelector: React.FC<RegistrationAssignmentsSe
                                 key={roomKey(room)}
                                 type="button"
                                 onClick={() => onToggleRoom(room)}
-                                className={`px-3 py-1 rounded-full text-xs font-semibold border transition cursor-pointer ${
+                                className={`px-2.5 py-1 rounded-md text-xs font-semibold border transition cursor-pointer ${
                                   isSelected
                                     ? 'border-[#a8071a] bg-[#a8071a] text-white shadow-xs'
                                     : 'border-slate-300 dark:border-[#2e2e2e] bg-white dark:bg-[#1f1f1f] text-slate-700 dark:text-[#a3a3a3] hover:border-[#a8071a] hover:bg-[#a8071a]/10 dark:hover:bg-[#a8071a]/20'

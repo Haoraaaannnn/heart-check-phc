@@ -91,8 +91,8 @@ export function BreadcrumbNav({
           onClick={onReset}
           className={`transition-colors cursor-pointer ${
             !selectedCategory
-              ? 'text-[#cc3535] font-bold'
-              : 'text-slate-500 hover:text-slate-900'
+              ? 'text-[#cc3535] dark:text-[#f87171] font-bold'
+              : 'text-slate-500 hover:text-slate-900 dark:text-[#a3a3a3] dark:hover:text-[#f5f5f5]'
           }`}
         >
           {transferTexts.servicesCrumb}
@@ -101,14 +101,14 @@ export function BreadcrumbNav({
         {/* Selected Category */}
         {selectedCategory && (
           <>
-            <span className="text-slate-300 font-normal">/</span>
+            <span className="text-slate-300 dark:text-[#404040] font-normal">/</span>
             <button
               type="button"
               onClick={onResetToCategory}
               className={`transition-colors cursor-pointer ${
                 !selectedSubcategory && !selectedRoom
-                  ? 'text-[#cc3535] font-bold'
-                  : 'text-slate-500 hover:text-slate-900'
+                  ? 'text-[#cc3535] dark:text-[#f87171] font-bold'
+                  : 'text-slate-500 hover:text-slate-900 dark:text-[#a3a3a3] dark:hover:text-[#f5f5f5]'
               }`}
             >
               {selectedCategory}
@@ -119,14 +119,14 @@ export function BreadcrumbNav({
         {/* Subcategory */}
         {selectedSubcategory && (
           <>
-            <span className="text-slate-300 font-normal">/</span>
+            <span className="text-slate-300 dark:text-[#404040] font-normal">/</span>
             <button
               type="button"
               onClick={onResetToSubcategory}
               className={`transition-colors cursor-pointer ${
                 !selectedRoom
-                  ? 'text-[#cc3535] font-bold'
-                  : 'text-slate-500 hover:text-slate-900'
+                  ? 'text-[#cc3535] dark:text-[#f87171] font-bold'
+                  : 'text-slate-500 hover:text-slate-900 dark:text-[#a3a3a3] dark:hover:text-[#f5f5f5]'
               }`}
             >
               {selectedSubcategory}

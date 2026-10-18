@@ -261,7 +261,7 @@ export function QuickAssignDropdown({
                           <path className="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4zm2 5.291A7.962 7.962 0 014 12H0c0 3.042 1.135 5.824 3 7.938l3-2.647z" />
                         </svg>
                       ) : (
-                        <svg className="w-5 h-5 group-hover:scale-105 transition-transform" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                        <svg className="w-5 h-5" fill="none" viewBox="0 0 24 24" stroke="currentColor">
                           <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2.2} d="M11 17l-5-5m0 0l5-5m-5 5h12" />
                         </svg>
                       )}
@@ -309,7 +309,7 @@ export function QuickAssignDropdown({
                           <path className="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4zm2 5.291A7.962 7.962 0 014 12H0c0 3.042 1.135 5.824 3 7.938l3-2.647z" />
                         </svg>
                       ) : (
-                        <svg className="w-5 h-5 group-hover:scale-105 transition-transform" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                        <svg className="w-5 h-5" fill="none" viewBox="0 0 24 24" stroke="currentColor">
                           <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M15.536 8.464a5 5 0 010 7.072m2.828-9.9a9 9 0 010 12.728M5.586 15H4a1 1 0 01-1-1v-4a1 1 0 011-1h1.586l4.707-4.707C10.923 3.663 12 4.109 12 5v14c0 .891-1.077 1.337-1.707.707L5.586 15z" />
                         </svg>
                       )}
@@ -367,7 +367,7 @@ export function QuickAssignDropdown({
                       ? 'border-slate-200 bg-slate-50/70 opacity-60 cursor-not-allowed'
                       : pendingTarget !== null
                       ? 'border-slate-100 bg-slate-50/40 opacity-40 cursor-not-allowed'
-                      : 'border-slate-200/90 bg-white hover:border-emerald-500 hover:bg-emerald-50/40 hover:shadow-xs active:scale-[0.99] cursor-pointer group'
+                      : 'border-slate-200/90 bg-white hover:border-emerald-500 hover:bg-emerald-50/40 cursor-pointer group'
                   }`}
                 >
                   <div className="flex items-center gap-3 min-w-0 flex-1 overflow-hidden">
@@ -377,7 +377,7 @@ export function QuickAssignDropdown({
                           ? 'bg-slate-200 text-slate-500'
                           : isAssigningThis
                           ? 'bg-emerald-600 text-white'
-                          : 'bg-emerald-100 text-emerald-800 border border-emerald-300 group-hover:scale-105 transition-transform'
+                          : 'bg-emerald-100 text-emerald-800 border border-emerald-300'
                       }`}
                       title={cubicle.cubicleNum}
                     >

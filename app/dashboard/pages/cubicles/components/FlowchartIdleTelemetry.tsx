@@ -40,7 +40,7 @@ export default function FlowchartIdleTelemetry({
       <div className={S.telemetryHeader}>
         <div>
           <h4 className={S.telemetryTitle}>
-            <i className="bx bx-timer text-brand-accent text-base" />
+            <i className="bx bx-timer text-accent text-base" />
             <span>{T.title}</span>
           </h4>
           <p className="text-[11px] text-content-muted mt-0.5">{T.subtitle}</p>

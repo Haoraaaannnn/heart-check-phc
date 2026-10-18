@@ -90,7 +90,7 @@ export function QueuePanel({
           className={`flex-1 flex items-center justify-center gap-2 py-1.5 px-3 rounded-xl font-bold text-xs transition-all cursor-pointer min-w-0 ${
             activeTab === 'queue'
               ? 'bg-white text-slate-800 shadow-xs'
-              : 'text-slate-500 hover:text-slate-700 hover:bg-white/50'
+              : 'text-slate-500 hover:text-slate-700 dark:text-[#a3a3a3] dark:hover:text-[#f5f5f5] hover:bg-white/50 dark:hover:bg-[#242424]'
           }`}
         >
           <span className="w-2 h-2 rounded-full bg-emerald-500 shrink-0" />
@@ -108,7 +108,7 @@ export function QueuePanel({
           className={`flex-1 flex items-center justify-center gap-2 py-1.5 px-3 rounded-xl font-bold text-xs transition-all cursor-pointer min-w-0 ${
             activeTab === 'idle'
               ? 'bg-white text-slate-800 shadow-xs'
-              : 'text-slate-500 hover:text-slate-700 hover:bg-white/50'
+              : 'text-slate-500 hover:text-slate-700 dark:text-[#a3a3a3] dark:hover:text-[#f5f5f5] hover:bg-white/50 dark:hover:bg-[#242424]'
           }`}
         >
           <span className="w-2 h-2 rounded-full bg-slate-400 shrink-0" />

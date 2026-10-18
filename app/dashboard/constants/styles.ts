@@ -26,27 +26,27 @@ export interface ToneStyle {
 export const TONES: Record<ToneKey, ToneStyle> = {
   rose: {
     tile: 'border-rose-200 bg-rose-50 dark:border-[#76000d]/50 dark:bg-[#76000d]/20',
-    icon: 'bg-rose-100 text-rose-700 dark:bg-[#76000d]/60 dark:text-[#f87171]',
+    icon: 'text-rose-700 dark:text-[#f87171]',
   },
   blue: {
     tile: 'border-slate-200 bg-slate-50 dark:border-[#2e2e2e] dark:bg-[#1a1a1a]',
-    icon: 'bg-slate-100 text-slate-700 dark:bg-[#242424] dark:text-[#f5f5f5]',
+    icon: 'text-slate-700 dark:text-[#f5f5f5]',
   },
   green: {
     tile: 'border-emerald-200 bg-emerald-50 dark:border-[#2e2e2e] dark:bg-[#1a1a1a]',
-    icon: 'bg-emerald-100 text-emerald-700 dark:bg-emerald-950/60 dark:text-emerald-400',
+    icon: 'text-emerald-700 dark:text-emerald-400',
   },
   emerald: {
     tile: 'border-emerald-200 bg-emerald-50 dark:border-[#2e2e2e] dark:bg-[#1a1a1a]',
-    icon: 'bg-emerald-100 text-emerald-700 dark:bg-emerald-950/60 dark:text-emerald-400',
+    icon: 'text-emerald-700 dark:text-emerald-400',
   },
   purple: {
     tile: 'border-purple-200 bg-purple-50 dark:border-[#2e2e2e] dark:bg-[#1a1a1a]',
-    icon: 'bg-purple-100 text-purple-700 dark:bg-purple-950/60 dark:text-purple-300',
+    icon: 'text-purple-700 dark:text-purple-300',
   },
   amber: {
     tile: 'border-amber-200 bg-amber-50 dark:border-[#2e2e2e] dark:bg-[#1a1a1a]',
-    icon: 'bg-amber-100 text-amber-700 dark:bg-amber-950/60 dark:text-amber-300',
+    icon: 'text-amber-700 dark:text-amber-300',
   },
 };
 
@@ -88,14 +88,14 @@ export const DASH = {
   drawer: {
     backdrop: `fixed inset-0 z-50 ${themeTokens.surface.backdrop} lg:hidden transition-opacity`,
     panel: `fixed inset-y-0 left-0 z-50 w-72 ${themeTokens.surface.drawerPanel} flex flex-col justify-between lg:hidden`,
-    closeButton: `p-2 ${themeTokens.text.muted} hover:${themeTokens.text.primary} ${sizeTokens.radius.sm} hover:bg-slate-100 dark:hover:bg-[#242424]`,
+    closeButton: `p-2 ${themeTokens.text.muted} ${themeTokens.text.primaryHover} ${sizeTokens.radius.sm} hover:bg-slate-100 dark:hover:bg-[#242424] cursor-pointer`,
   },
 
   /** Top sticky header bar with breadcrumbs, Manila clock, and profile chip. */
   header: {
     root: `${themeTokens.surface.header} flex items-center justify-between px-4 sm:px-6 lg:px-8`,
     leftGroup: 'flex items-center gap-3 min-w-0',
-    hamburgerButton: `lg:hidden p-2 ${sizeTokens.radius.sm} ${themeTokens.text.secondary} hover:bg-slate-100 dark:hover:bg-[#242424] transition cursor-pointer`,
+    hamburgerButton: `lg:hidden p-2 ${sizeTokens.radius.sm} ${themeTokens.text.secondary} ${themeTokens.text.primaryHover} hover:bg-slate-100 dark:hover:bg-[#242424] transition cursor-pointer`,
     breadcrumbs: `flex items-center gap-2 text-xs font-medium ${themeTokens.text.secondary} hidden sm:flex whitespace-nowrap`,
     breadcrumbActive: `${themeTokens.text.primary} font-semibold whitespace-nowrap`,
     breadcrumbSeparator: `${themeTokens.text.muted} shrink-0`,
@@ -112,7 +112,7 @@ export const DASH = {
     clockDate: `${sizeTokens.typography.micro} ${themeTokens.text.muted}`,
     clockTime: `text-xs font-mono font-bold ${themeTokens.text.primary}`,
     themeButton:
-      `p-2 ${sizeTokens.radius.md} text-slate-500 hover:text-slate-900 hover:bg-slate-100 dark:text-[#a3a3a3] dark:hover:text-[#f5f5f5] dark:hover:bg-[#242424] transition cursor-pointer text-lg border border-transparent hover:${themeTokens.border.default}`,
+      `p-2 ${sizeTokens.radius.md} text-slate-500 hover:text-slate-900 hover:bg-slate-100 dark:text-[#a3a3a3] dark:hover:text-[#f5f5f5] dark:hover:bg-[#242424] transition cursor-pointer text-lg border border-transparent ${themeTokens.border.defaultHover}`,
     userChip:
       `flex items-center gap-2 px-2.5 py-1.5 ${sizeTokens.radius.md} bg-slate-50 dark:bg-[#1f1f1f] border ${themeTokens.border.default}`,
     userAvatar:
@@ -122,7 +122,7 @@ export const DASH = {
     signOutButton:
       `p-2 ${sizeTokens.radius.md} text-slate-500 hover:text-[#a8071a] hover:bg-[#a8071a]/10 dark:hover:bg-[#a8071a]/20 dark:hover:text-[#f87171] transition cursor-pointer text-lg`,
     selectScreenButton:
-      `flex items-center gap-1.5 px-2.5 py-1.5 ${sizeTokens.radius.md} text-xs font-semibold text-slate-600 dark:text-[#a3a3a3] hover:text-slate-900 dark:hover:text-[#f5f5f5] hover:bg-slate-100 dark:hover:bg-[#1f1f1f] border ${themeTokens.border.default} transition cursor-pointer shrink-0`,
+      `flex items-center gap-1.5 px-2.5 py-1.5 ${sizeTokens.radius.md} text-xs font-semibold ${themeTokens.text.secondary} ${themeTokens.text.primaryHover} hover:bg-slate-100 dark:hover:bg-[#1f1f1f] border ${themeTokens.border.default} transition cursor-pointer shrink-0`,
     // Legacy header keys for backwards compatibility
     brand: 'flex shrink-0 items-center gap-3 md:w-[232px]',
     logo: 'flex h-11 w-11 items-center justify-center rounded-xl bg-brand-gradient text-2xl text-white shadow-md',
@@ -130,14 +130,14 @@ export const DASH = {
     brandTagline: 'hidden text-xs text-content-muted sm:block',
     actions: 'ml-auto flex shrink-0 items-center gap-3',
     iconButton:
-      'relative flex h-10 w-10 items-center justify-center rounded-full border border-line bg-surface text-xl text-content-muted transition hover:bg-surface-muted',
+      'relative flex h-10 w-10 items-center justify-center rounded-lg border border-line bg-surface text-xl text-content-muted transition hover:bg-surface-muted',
     user: 'flex items-center gap-3 border-l border-line pl-4',
-    avatar: 'flex h-10 w-10 items-center justify-center rounded-full bg-brand-gradient text-xl text-white',
+    avatar: 'flex h-10 w-10 items-center justify-center rounded-lg bg-brand-gradient text-xl text-white',
     userText: 'hidden text-left sm:block',
     userName: 'text-sm font-semibold text-content',
     userRole: 'text-xs text-content-muted',
     logout:
-      'flex h-10 w-10 items-center justify-center rounded-full text-xl text-content-muted transition hover:bg-red-50 hover:text-red-600 dark:hover:bg-red-500/10',
+      'flex h-10 w-10 items-center justify-center rounded-lg text-xl text-content-muted transition hover:bg-red-50 hover:text-red-600 dark:hover:bg-red-500/10',
   },
 
   /** Left navigation. Solid surface with crisp right border and categorized groups. */
@@ -155,8 +155,8 @@ export const DASH = {
     navLinkActive:
       `bg-[#a8071a]/10 text-[#a8071a] dark:bg-[#a8071a]/20 dark:text-[#f87171] font-semibold shadow-2xs border border-[#a8071a]/30`,
     navLinkIdle:
-      `${themeTokens.text.secondary} hover:${themeTokens.text.primary} hover:bg-slate-100/80 dark:hover:bg-[#242424]`,
-    navIcon: 'text-base shrink-0 transition-transform group-hover:scale-110',
+      `${themeTokens.text.secondary} ${themeTokens.text.primaryHover} hover:bg-slate-100/80 dark:hover:bg-[#242424]`,
+    navIcon: 'text-base shrink-0',
     navIconActive: themeTokens.text.accent,
     footer: `p-4 border-t ${themeTokens.border.default} space-y-2 bg-slate-50/50 dark:bg-[#141414]/50`,
     statusBadge:
@@ -167,15 +167,15 @@ export const DASH = {
     nav: 'flex flex-col gap-1',
     item: 'flex w-full items-center gap-3 rounded-xl px-4 py-3 text-left text-sm font-medium transition-colors',
     itemIdle: 'text-content-muted hover:bg-surface-muted hover:text-content',
-    itemActive: 'bg-brand-gradient font-semibold text-white shadow-sm',
-    itemGroupActive: 'bg-surface-muted font-semibold text-brand-accent',
+    itemActive: 'bg-[#a8071a] font-semibold text-white shadow-2xs',
+    itemGroupActive: 'bg-surface-muted font-semibold text-accent',
     icon: 'text-xl',
     chevron: 'ml-auto text-lg transition-transform',
     chevronOpen: 'rotate-180',
     subList: 'ml-5 mt-1 flex flex-col gap-0.5 border-l border-line pl-3',
     subItem: 'block rounded-lg px-3 py-2 text-sm transition-colors',
     subIdle: 'text-content-muted hover:text-content',
-    subActive: 'font-semibold text-brand-accent',
+    subActive: 'font-semibold text-accent',
   },
 
     /** Generic dashboard card (DashboardCard component). */
@@ -184,7 +184,7 @@ export const DASH = {
     header: 'mb-5 flex items-start justify-between gap-3',
     headerLeft: 'flex items-center gap-3',
     iconBadge:
-      'flex h-10 w-10 shrink-0 items-center justify-center rounded-full bg-brand-gradient text-xl text-white',
+      'flex shrink-0 items-center justify-center text-xl text-[#a8071a] dark:text-[#f87171]',
     title: 'text-base font-extrabold text-content',
     subtitle: 'text-xs text-content-muted',
     footerLink:'mt-4 flex items-center justify-end gap-1 text-xs font-semibold text-content-muted transition hover:text-accent',
@@ -198,7 +198,7 @@ export const DASH = {
     root: 'relative overflow-hidden rounded-2xl border border-line bg-surface p-6 shadow-sm',
     decor: 'hidden',
     content: 'relative z-10',
-    eyebrow: 'text-xs font-bold uppercase tracking-widest text-brand-accent',
+    eyebrow: 'text-xs font-bold uppercase tracking-widest text-accent',
     title: 'mt-1 text-3xl font-extrabold text-content',
     subtitle: 'mt-1 text-sm text-content-muted',
   },
@@ -206,7 +206,7 @@ export const DASH = {
   /** Top-row metric cards. Solid tiles with subtle elevation. */
   metric: {
     tile: 'flex items-center gap-4 rounded-2xl border p-5 shadow-sm',
-    iconWrap: 'flex h-12 w-12 shrink-0 items-center justify-center rounded-full text-2xl',
+    iconWrap: 'flex shrink-0 items-center justify-center text-2xl',
     label: 'text-xs font-semibold text-content-muted',
     value: 'text-3xl font-extrabold leading-tight text-content',
     unit: 'ml-1 text-lg font-bold',
@@ -230,9 +230,9 @@ export const DASH = {
       'rounded-lg border border-line bg-surface-muted px-3 py-1.5 text-xs font-semibold text-content outline-none',
   },
 
-  /** Status pill (StatusBadge). Color comes from STATUS_STYLES. */
+  /** Status badge (StatusBadge). Color comes from STATUS_STYLES. */
   badge: {
-    base: 'inline-flex w-max items-center gap-1.5 rounded-full px-3 py-1 text-xs font-bold',
+    base: 'inline-flex w-max items-center gap-1.5 rounded-md px-2.5 py-0.5 text-xs font-bold',
     dot: 'h-2 w-2 rounded-full',
   },
 
@@ -256,8 +256,8 @@ export const DASH = {
   /** Quick link tiles (navigation only - the dashboard is read-only). */
   quickLink: {
     grid: 'grid grid-cols-1 gap-3 sm:grid-cols-2 xl:grid-cols-4',
-    tile: 'group flex items-center gap-3 rounded-xl border p-4 text-sm font-semibold text-content transition hover:-translate-y-0.5 hover:shadow-md',
-    icon: 'flex h-10 w-10 shrink-0 items-center justify-center rounded-full text-xl',
+    tile: 'group flex items-center gap-3 rounded-xl border p-4 text-sm font-semibold text-content transition',
+    icon: 'flex shrink-0 items-center justify-center text-xl',
     arrow: 'ml-auto text-lg text-content-subtle transition group-hover:translate-x-0.5',
   },
 

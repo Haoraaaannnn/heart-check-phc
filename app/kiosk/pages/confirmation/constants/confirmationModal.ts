@@ -86,7 +86,7 @@ export const ConfirmationModalStyle = {
         paddingRight: 12,
         paddingTop: 2,
         paddingBottom: 2,
-        borderRadius: 9999,
+        borderRadius: 6,
         marginTop: 4,
     },
     modalBody: {

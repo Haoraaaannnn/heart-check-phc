@@ -96,7 +96,7 @@ export default function HeatmapTable({
             {/* Sticky Daily Summary Header */}
             <th className={S.thSummary}>
               <div className="flex items-center justify-center gap-1">
-                <i className="bx bx-chart text-brand-accent text-sm" />
+                <i className="bx bx-chart text-accent text-sm" />
                 <span>{T.summaryCol}</span>
               </div>
             </th>
@@ -218,7 +218,7 @@ export default function HeatmapTable({
                 <span className="text-[10px] font-bold text-content-muted uppercase">
                   Facility Total
                 </span>
-                <span className="font-mono text-xs font-extrabold text-brand-accent">
+                <span className="font-mono text-xs font-extrabold text-accent">
                   {rows.reduce((acc, r) => acc + r.dailyTotalPatients, 0)} {T.ptsUnit}
                 </span>
               </div>

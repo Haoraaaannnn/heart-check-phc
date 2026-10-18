@@ -68,7 +68,7 @@ export const KioskNewOldLayoutStyle = {
         paddingRight: 16,
         paddingTop: 8,
         paddingBottom: 8,
-        borderRadius: 9999,
+        borderRadius: 12,
         backgroundColor: themeColors.white,
         borderWidth: 1.5,
         borderStyle: "solid",
@@ -113,6 +113,6 @@ export const KioskNewOldLayoutClasses = {
     cardsScrollArea: "max-h-full w-full min-h-0 overflow-y-auto overflow-x-hidden scrollbar-thin [scrollbar-color:#D1D5DB_transparent] [&::-webkit-scrollbar]:w-2 [&::-webkit-scrollbar-track]:bg-transparent [&::-webkit-scrollbar-thumb]:bg-gray-300 [&::-webkit-scrollbar-thumb]:rounded-full hover:[&::-webkit-scrollbar-thumb]:bg-gray-400 flex flex-col items-center pt-0 pb-1 px-2",
     scrollTopShadow: "pointer-events-none absolute top-0 inset-x-0 h-6 bg-gradient-to-b from-white/90 to-transparent z-15",
     scrollBottomShadow: "pointer-events-none absolute bottom-0 inset-x-0 h-12 bg-gradient-to-t from-white/95 to-transparent z-15",
-    scrollIndicator: "group absolute bottom-3 left-1/2 -translate-x-1/2 z-25 flex items-center gap-2 rounded-full border-[1.5px] border-[#ED1C24] bg-white px-5 py-2 text-[#ED1C24] shadow-md shadow-red-500/15 transition-transform active:scale-95",
+    scrollIndicator: "group absolute bottom-3 left-1/2 -translate-x-1/2 z-25 flex items-center gap-2 rounded-xl border-[1.5px] border-[#ED1C24] bg-white px-5 py-2 text-[#ED1C24] shadow-md shadow-red-500/15 transition-transform active:scale-95",
     scrollIndicatorIcon: "animate-bounce text-xl text-[#ED1C24]",
 } as const;

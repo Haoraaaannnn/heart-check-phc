@@ -80,7 +80,7 @@ export function StageColumn({
             {title}
           </h2>
           <span
-            className={`px-2 py-0.5 rounded-full text-xs font-bold shrink-0 ${badgeColorClass}`}
+            className={`px-2 py-0.5 rounded-md text-xs font-bold shrink-0 ${badgeColorClass}`}
           >
             {count}
           </span>

@@ -470,7 +470,7 @@ export default function AdminServicePage() {
                         <div className="h-2.5 w-24 bg-slate-100 dark:bg-[#242424] rounded-md" />
                       </div>
                     </td>
-                    <td className={S.td}><div className="h-5 w-16 bg-slate-100 dark:bg-[#242424] rounded-full" /></td>
+                    <td className={S.td}><div className="h-5 w-16 bg-slate-100 dark:bg-[#242424] rounded-md" /></td>
                     <td className={S.td}><div className="h-5 w-20 bg-slate-100 dark:bg-[#242424] rounded-md" /></td>
                     <td className={S.td}><div className="h-3.5 w-8 bg-slate-100 dark:bg-[#242424] rounded-md" /></td>
                     <td className={`${S.td} text-right`}>
@@ -508,7 +508,7 @@ export default function AdminServicePage() {
                 return (
                   <tr key={service.id} className={S.tr}>
                     <td className={S.td}>
-                      <div className="w-10 h-10 rounded-xl bg-slate-100 dark:bg-[#242424] text-[#a8071a] dark:text-[#f87171] flex items-center justify-center text-2xl shadow-2xs">
+                      <div className="text-[#a8071a] dark:text-[#f87171] flex items-center justify-center text-2xl shrink-0">
                         <i className={`bx ${iconClass}`} aria-hidden="true" />
                       </div>
                     </td>
@@ -522,7 +522,7 @@ export default function AdminServicePage() {
                     </td>
                     <td className={S.td}>
                       <span
-                        className={`px-2.5 py-0.5 rounded-full text-xs font-semibold capitalize border ${
+                        className={`px-2.5 py-0.5 rounded-md text-xs font-semibold capitalize border ${
                           service.patient_type === 'both'
                             ? 'bg-purple-50 text-purple-700 border-purple-200 dark:bg-purple-950/60 dark:text-purple-300'
                             : service.patient_type === 'new'

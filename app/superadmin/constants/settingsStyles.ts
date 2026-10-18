@@ -19,7 +19,7 @@ export const SETTINGS_STYLES = {
   sectionTitle: `text-xl font-bold ${themeTokens.text.primary} flex items-center gap-2`,
   sectionSubtitle: `text-sm ${themeTokens.text.secondary}`,
   grid: 'grid grid-cols-1 md:grid-cols-2 gap-6',
-  card: `${themeTokens.surface.card} ${sizeTokens.radius.lg} p-6 flex flex-col justify-between space-y-4 hover:shadow-sm transition`,
+  card: `${themeTokens.surface.card} ${sizeTokens.radius.lg} p-6 flex flex-col justify-between space-y-4 transition`,
   cardHeader: 'space-y-1.5',
   cardTitle: `text-base font-bold ${themeTokens.text.primary} flex items-center gap-2`,
   cardIcon: `${themeTokens.text.accent} text-lg`,

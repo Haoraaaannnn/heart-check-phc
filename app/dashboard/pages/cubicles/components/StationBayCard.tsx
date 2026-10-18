@@ -74,7 +74,7 @@ export default function StationBayCard({ station, onClick }: StationBayCardProps
           </div>
 
           <span
-            className={`inline-flex items-center gap-1 rounded-full px-2 py-0.5 text-[9px] font-bold uppercase ${statusStyle.badgeBg} ${statusStyle.badgeText}`}
+            className={`inline-flex items-center gap-1 rounded-md px-2 py-0.5 text-[9px] font-bold uppercase ${statusStyle.badgeBg} ${statusStyle.badgeText}`}
           >
             {station.status}
           </span>

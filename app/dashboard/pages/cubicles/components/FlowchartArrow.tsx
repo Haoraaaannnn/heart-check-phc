@@ -27,7 +27,7 @@ export default function FlowchartArrow({ label }: FlowchartArrowProps) {
   return (
     <div className={S.connector} aria-hidden="true">
       <div className={S.connectorCircle}>
-        <i className="bx bx-right-arrow-alt text-brand-accent animate-pulse" />
+        <i className="bx bx-right-arrow-alt text-accent animate-pulse" />
       </div>
       <span className={S.connectorText}>{label}</span>
     </div>

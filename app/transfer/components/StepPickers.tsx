@@ -38,10 +38,10 @@ export function SelectionCard({
     <button
       type="button"
       onClick={onClick}
-      className="w-full bg-white border-2 border-slate-200 hover:border-[#cc3535] rounded-2xl p-6 flex flex-col justify-between gap-3 shadow-xs hover:shadow-md hover:-translate-y-0.5 transition-all duration-200 text-left group cursor-pointer min-h-[116px]"
+      className="w-full bg-white dark:bg-[#1a1a1a] border-2 border-slate-200 dark:border-[#2e2e2e] hover:border-[#cc3535] dark:hover:border-[#cc3535] rounded-2xl p-6 flex flex-col justify-between gap-3 shadow-xs transition-colors duration-200 text-left group cursor-pointer min-h-[116px]"
     >
       <div className="flex items-center justify-between gap-4 w-full">
-        <h3 className="text-slate-800 group-hover:text-[#cc3535] font-bold text-lg transition-colors">
+        <h3 className="text-slate-800 dark:text-[#f5f5f5] group-hover:text-[#cc3535] dark:group-hover:text-[#f87171] font-bold text-lg transition-colors">
           {title}
         </h3>
         {totalCount > 0 && (
@@ -218,10 +218,10 @@ export function RoomPicker({
               key={room}
               type="button"
               onClick={() => onSelectRoom(room)}
-              className="w-full bg-white border-2 border-slate-200 hover:border-[#cc3535] rounded-2xl p-6 flex flex-col justify-between gap-3 shadow-xs hover:shadow-md hover:-translate-y-0.5 transition-all duration-200 text-left group cursor-pointer min-h-[116px]"
+              className="w-full bg-white dark:bg-[#1a1a1a] border-2 border-slate-200 dark:border-[#2e2e2e] hover:border-[#cc3535] dark:hover:border-[#cc3535] rounded-2xl p-6 flex flex-col justify-between gap-3 shadow-xs transition-colors duration-200 text-left group cursor-pointer min-h-[116px]"
             >
               <div className="flex items-center justify-between gap-4 w-full">
-                <h3 className="text-slate-800 group-hover:text-[#cc3535] font-bold text-lg transition-colors">
+                <h3 className="text-slate-800 dark:text-[#f5f5f5] group-hover:text-[#cc3535] dark:group-hover:text-[#f87171] font-bold text-lg transition-colors">
                   {transferTexts.roomPrefix} {room}
                 </h3>
                 {totalCount > 0 && (

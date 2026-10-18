@@ -60,7 +60,7 @@ export const ClinicalAssignmentsSelector: React.FC<ClinicalAssignmentsSelectorPr
             {T.clinicalSectionDesc}
           </p>
         </div>
-        <span className="rounded-full bg-rose-100 dark:bg-rose-950 px-3 py-1 text-xs font-semibold text-rose-800 dark:text-rose-300 border border-rose-200 dark:border-rose-900">
+        <span className="rounded-md bg-rose-100 dark:bg-rose-950 px-2.5 py-0.5 text-xs font-semibold text-rose-800 dark:text-rose-300 border border-rose-200 dark:border-rose-900">
           {selectedCubicleIds.length} {T.clinicalSelectedBadge}
         </span>
       </div>
@@ -103,7 +103,7 @@ export const ClinicalAssignmentsSelector: React.FC<ClinicalAssignmentsSelectorPr
                       </div>
 
                       <span
-                        className={`flex h-5 w-5 shrink-0 items-center justify-center rounded-full border text-xs font-bold transition ${
+                        className={`flex h-5 w-5 shrink-0 items-center justify-center rounded-md border text-xs font-bold transition ${
                           isSelected
                             ? 'border-rose-600 bg-rose-600 text-white'
                             : 'border-slate-300 dark:border-[#2e2e2e] text-transparent'

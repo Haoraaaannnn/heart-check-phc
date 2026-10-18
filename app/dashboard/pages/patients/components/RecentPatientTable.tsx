@@ -199,7 +199,7 @@ export default function RecentPatientsTable({
       <div className={S.toolbar}>
         <div className={S.searchWrap}>
           {isSearching ? (
-            <i className={`bx bx-loader-alt ${S.searchIcon} animate-spin text-brand-accent`} aria-hidden="true" />
+            <i className={`bx bx-loader-alt ${S.searchIcon} animate-spin text-accent`} aria-hidden="true" />
           ) : (
             <i className={`bx bx-search ${S.searchIcon}`} aria-hidden="true" />
           )}

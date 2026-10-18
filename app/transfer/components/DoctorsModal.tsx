@@ -12,7 +12,7 @@ export function DoctorsModal({ onClose }: DoctorsModalProps) {
       <div className="bg-gray-50 rounded-2xl w-full max-w-4xl max-h-[90vh] overflow-y-auto p-6 relative">
         <button
           onClick={onClose}
-          className="absolute top-4 right-4 px-3 py-1 bg-white rounded-lg text-xs font-semibold text-gray-500 hover:text-gray-800 hover:bg-gray-100 transition shadow-sm cursor-pointer"
+          className="absolute top-4 right-4 px-3 py-1 bg-white dark:bg-[#242424] rounded-lg text-xs font-semibold text-gray-500 hover:text-gray-800 hover:bg-gray-100 dark:text-[#a3a3a3] dark:hover:text-[#f5f5f5] dark:hover:bg-[#2e2e2e] transition shadow-xs cursor-pointer"
         >
           {transferTexts.closeBtn}
         </button>

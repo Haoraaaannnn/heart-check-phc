@@ -44,7 +44,7 @@ export const ConfirmationDescriptionStyle = {
         paddingRight: 16,
         paddingTop: 4,
         paddingBottom: 4,
-        borderRadius: 9999,
+        borderRadius: 6,
         boxShadow: "0 1px 2px 0 rgba(0, 0, 0, 0.05)",
     },
     text: {

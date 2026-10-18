@@ -76,7 +76,7 @@ export default function LRForecast({
     <div className="flex items-center gap-3">
       {lrRaw?.trend && (
         <span
-          className="rounded-full px-3 py-1 text-xs font-bold uppercase"
+          className="rounded-md px-2.5 py-0.5 text-xs font-bold uppercase"
           style={{ background: trendBg, color: trendColor }}
         >
           {lrRaw.trend}
@@ -107,7 +107,7 @@ export default function LRForecast({
             {T.nextDayLabel}{' '}
             <span className="font-bold text-content">{lrRaw?.forecast_date || '—'}</span>
           </span>
-          <span className="text-base font-extrabold text-brand-accent">
+          <span className="text-base font-extrabold text-accent">
             {lrRaw?.forecast_value ?? 0} {T.patientsUnit}
           </span>
         </div>

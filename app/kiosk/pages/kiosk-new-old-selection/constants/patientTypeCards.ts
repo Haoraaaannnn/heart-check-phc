@@ -130,7 +130,7 @@ export const PatientTypeCardStyle = {
         paddingRight: 12,
         paddingTop: 4,
         paddingBottom: 4,
-        borderRadius: 9999,
+        borderRadius: 6,
         lineHeight: 1,
     },
     cardsGrid: {

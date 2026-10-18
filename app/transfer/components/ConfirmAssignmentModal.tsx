@@ -81,7 +81,7 @@ export function ConfirmAssignmentModal({
             type="button"
             onClick={onCancel}
             disabled={isConfirming}
-            className="px-2.5 py-1 text-xs font-semibold text-slate-400 hover:text-slate-700 hover:bg-slate-100 rounded-lg transition-colors cursor-pointer disabled:opacity-40"
+            className="px-2.5 py-1 text-xs font-semibold text-slate-400 dark:text-[#737373] hover:text-slate-700 dark:hover:text-[#f5f5f5] hover:bg-slate-100 dark:hover:bg-[#242424] rounded-lg transition-colors cursor-pointer disabled:opacity-40"
             aria-label={transferTexts.closeBtn}
           >
             {transferTexts.closeBtn}

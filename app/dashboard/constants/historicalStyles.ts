@@ -23,7 +23,7 @@ export const HISTORICAL_STYLES = {
     root: 'flex flex-col sm:flex-row sm:items-start sm:justify-between gap-4 pb-6 border-b border-line',
     titleBlock: 'flex items-start gap-3.5 min-w-0',
     iconBadge:
-      'w-11 h-11 rounded-xl bg-rose-50 dark:bg-rose-950/60 border border-rose-200 dark:border-rose-900 text-rose-600 dark:text-rose-400 flex items-center justify-center text-2xl shrink-0 shadow-2xs',
+      'text-rose-600 dark:text-rose-400 flex items-center justify-center text-2xl shrink-0',
     textGroup: 'flex flex-col min-w-0',
     title: 'text-lg sm:text-xl font-extrabold text-content leading-tight',
     subtitle: 'text-xs sm:text-sm text-content-muted mt-1 leading-relaxed max-w-2xl',
@@ -34,7 +34,7 @@ export const HISTORICAL_STYLES = {
 
   /** High-contrast clinical status badges */
   statusBadge: {
-    base: 'inline-flex items-center gap-2 px-3.5 py-1.5 rounded-full text-xs font-bold uppercase tracking-wider select-none shrink-0 shadow-2xs',
+    base: 'inline-flex items-center gap-2 px-3 py-1 rounded-md text-xs font-bold uppercase tracking-wider select-none shrink-0',
     dot: 'w-2 h-2 rounded-full',
     Normal:
       'border border-emerald-300 dark:border-emerald-800 bg-emerald-50 text-emerald-800 dark:bg-emerald-950/60 dark:text-emerald-300',
@@ -53,8 +53,8 @@ export const HISTORICAL_STYLES = {
   cardsGrid: 'grid grid-cols-1 sm:grid-cols-3 gap-4',
 
   card: {
-    tile: 'flex items-start gap-4 rounded-xl border border-line bg-surface-muted p-4 shadow-2xs transition hover:-translate-y-0.5',
-    iconWrap: 'flex h-11 w-11 shrink-0 items-center justify-center rounded-xl text-2xl shadow-2xs',
+    tile: 'flex items-start gap-4 rounded-xl border border-line bg-surface-muted p-4 shadow-2xs transition',
+    iconWrap: 'flex shrink-0 items-center justify-center text-2xl',
     content: 'flex flex-col min-w-0 flex-1',
     label: 'text-[11px] font-bold uppercase tracking-wider text-content-muted',
     value: 'text-2xl font-extrabold leading-tight text-content mt-1 break-words',
@@ -66,15 +66,15 @@ export const HISTORICAL_STYLES = {
   cardTones: {
     amber: {
       tile: 'border-amber-200/80 dark:border-amber-900/60 bg-amber-50/50 dark:bg-amber-950/20',
-      icon: 'bg-amber-100 text-amber-700 dark:bg-amber-900/60 dark:text-amber-300 border border-amber-200 dark:border-amber-800',
+      icon: 'text-amber-700 dark:text-amber-300',
     },
     purple: {
       tile: 'border-purple-200/80 dark:border-purple-900/60 bg-purple-50/50 dark:bg-purple-950/20',
-      icon: 'bg-purple-100 text-purple-700 dark:bg-purple-900/60 dark:text-purple-300 border border-purple-200 dark:border-purple-800',
+      icon: 'text-purple-700 dark:text-purple-300',
     },
     emerald: {
       tile: 'border-emerald-200/80 dark:border-emerald-900/60 bg-emerald-50/50 dark:bg-emerald-950/20',
-      icon: 'bg-emerald-100 text-emerald-700 dark:bg-emerald-900/60 dark:text-emerald-300 border border-emerald-200 dark:border-emerald-800',
+      icon: 'text-emerald-700 dark:text-emerald-300',
     },
   },
 
@@ -124,7 +124,7 @@ export const HISTORICAL_STYLES = {
     root: 'flex items-center justify-between gap-4 p-4 rounded-2xl border border-line bg-surface shadow-2xs transition hover:border-rose-300 dark:hover:border-rose-900 cursor-pointer select-none',
     left: 'flex items-center gap-3.5 min-w-0',
     iconBadge:
-      'w-10 h-10 rounded-xl bg-rose-50 dark:bg-rose-950/60 border border-rose-200 dark:border-rose-900 text-rose-600 dark:text-rose-400 flex items-center justify-center text-xl shrink-0 shadow-2xs',
+      'text-rose-600 dark:text-rose-400 flex items-center justify-center text-xl shrink-0',
     titleWrap: 'flex flex-col min-w-0',
     title: 'text-sm font-extrabold text-content whitespace-nowrap',
     subtitle: 'text-xs text-content-muted whitespace-nowrap hidden sm:inline mt-0.5',

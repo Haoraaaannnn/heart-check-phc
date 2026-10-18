@@ -126,7 +126,7 @@ export function NursePatientCard({
       className={`rounded-2xl p-3.5 flex flex-col gap-2.5 bg-white border transition-all cursor-pointer select-none ${
         isSelected
           ? 'ring-2 ring-red-400 border-[#cc3535] shadow-md'
-          : 'border-slate-200/80 hover:border-slate-300 hover:shadow-xs'
+          : 'border-slate-200/80 hover:border-slate-300'
       }`}
     >
       {/* Top Header: Queue Number, Cubicle, Timer & Drag Handle */}

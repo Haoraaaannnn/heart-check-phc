@@ -220,7 +220,7 @@ export function DoctorsPanel() {
                       </p>
                     </div>
                     <span
-                      className={`shrink-0 text-[10px] font-bold px-2 py-0.5 rounded-full ${
+                      className={`shrink-0 text-[10px] font-bold px-2 py-0.5 rounded-md ${
                         isActive ? 'bg-green-100 text-green-700' : 'bg-gray-100 text-gray-400'
                       }`}
                     >
@@ -279,7 +279,7 @@ export function DoctorsPanel() {
               {selectedDoctor && (
                 <button
                   onClick={() => setSelectedDoctorId(null)}
-                  className="text-xs font-semibold text-gray-500 hover:text-gray-700 px-3 py-1.5 rounded-lg hover:bg-gray-100 transition cursor-pointer"
+                  className="text-xs font-semibold text-gray-500 hover:text-gray-700 px-3 py-1.5 rounded-lg hover:bg-gray-100 dark:text-[#a3a3a3] dark:hover:text-[#f5f5f5] dark:hover:bg-[#242424] transition cursor-pointer"
                 >
                   Done
                 </button>

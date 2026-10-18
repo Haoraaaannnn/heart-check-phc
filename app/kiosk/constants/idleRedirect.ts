@@ -32,51 +32,45 @@ export const IdleRedirectStyle = {
         cursor: "pointer",
         zIndex: 100,
     },
-    /** Fixed overlay positioning for the floating tap-to-start identifier. */
+    /** Full-width fixed bottom overlay with ultra-smooth eased dark upward fade gradient for the tap prompt. */
     tapPromptContainer: {
         position: "fixed",
-        bottom: "clamp(36px, 6vh, 72px)",
-        left: "50%",
-        transform: "translateX(-50%)",
+        bottom: 0,
+        left: 0,
+        right: 0,
+        width: "100%",
+        minHeight: "clamp(120px, 16vh, 160px)",
+        background:
+            "linear-gradient(to top, rgba(0, 0, 0, 0.85) 0%, rgba(0, 0, 0, 0.81) 8%, rgba(0, 0, 0, 0.73) 16%, rgba(0, 0, 0, 0.62) 25%, rgba(0, 0, 0, 0.50) 35%, rgba(0, 0, 0, 0.37) 46%, rgba(0, 0, 0, 0.25) 58%, rgba(0, 0, 0, 0.15) 70%, rgba(0, 0, 0, 0.07) 82%, rgba(0, 0, 0, 0.02) 92%, rgba(0, 0, 0, 0) 100%)",
         pointerEvents: "none",
         zIndex: 102,
         display: "flex",
-        alignItems: "center",
+        alignItems: "flex-end",
         justifyContent: "center",
+        paddingBottom: "clamp(18px, 2.6vh, 30px)",
+        paddingLeft: "16px",
+        paddingRight: "16px",
     },
-    /** Tactile pill surface with solid contrast, red border, and elevation shadow. */
+    /** Bare banner layout without card background, sitting directly on the bottom fade. */
     tapPromptBadge: {
         display: "flex",
         alignItems: "center",
-        gap: "clamp(12px, 1.6vw, 20px)",
-        backgroundColor: themeColors.white,
-        borderWidth: 2,
-        borderStyle: "solid",
-        borderColor: themeColors.brandRed,
-        borderRadius: "9999px",
-        paddingTop: "clamp(12px, 1.5vh, 18px)",
-        paddingBottom: "clamp(12px, 1.5vh, 18px)",
-        paddingLeft: "clamp(20px, 2.5vw, 32px)",
-        paddingRight: "clamp(24px, 3vw, 36px)",
-        boxShadow: "0 20px 40px -12px rgba(0, 0, 0, 0.45)",
+        gap: "clamp(12px, 1.5vw, 20px)",
         userSelect: "none",
     },
-    /** Circular accent icon badge in light red with brand red icon fill. */
+    /** Bare accent icon container with white icon fill. */
     tapIconContainer: {
         display: "flex",
         alignItems: "center",
         justifyContent: "center",
-        width: "clamp(44px, 5.5vmin, 58px)",
-        height: "clamp(44px, 5.5vmin, 58px)",
-        borderRadius: "9999px",
-        backgroundColor: "#FEE2E2",
-        color: themeColors.brandRed,
+        color: themeColors.white,
         flexShrink: 0,
     },
-    /** Sizing token for the tap icon. */
+    /** Sizing token for the kiosk touch hand icon. */
     tapIcon: {
-        fontSize: "clamp(26px, 3.2vmin, 36px)",
+        fontSize: "clamp(30px, 3.8vmin, 44px)",
         lineHeight: 1,
+        filter: "drop-shadow(0 2px 4px rgba(0, 0, 0, 0.6))",
     },
     /** Vertical text container for primary title and bilingual subtitle. */
     tapTextColumn: {
@@ -86,20 +80,22 @@ export const IdleRedirectStyle = {
         justifyContent: "center",
         textAlign: "left",
     },
-    /** Bold primary identifier text. */
+    /** Bold primary identifier text rendered in white with subtle shadow for dark gradient contrast. */
     tapTitle: {
         fontSize: kioskTypography.bannerTitle,
         fontWeight: 800,
-        color: themeColors.black,
+        color: themeColors.white,
         lineHeight: 1.15,
         letterSpacing: "-0.01em",
+        textShadow: "0 2px 6px rgba(0, 0, 0, 0.7)",
     },
-    /** Filipino bilingual subtitle guidance. */
+    /** Filipino bilingual subtitle guidance in crisp light text. */
     tapSubtitle: {
         fontSize: kioskTypography.instructionSecondary,
         fontWeight: 500,
-        color: "#4B5563",
+        color: "rgba(255, 255, 255, 0.85)",
         lineHeight: 1.25,
+        textShadow: "0 1px 4px rgba(0, 0, 0, 0.6)",
     },
 } satisfies Record<string, CSSProperties>;
 
@@ -120,7 +116,7 @@ export const IdleRedirectClasses = {
     tapPromptBadge: "animate-pulse select-none",
 
     /**
-     * Boxicons icon class for the tap pointer.
+     * Boxicons icon class for the touchscreen tap hand gesture.
      */
-    tapIcon: "bx bx-pointer",
+    tapIcon: "bx bxs-hand-up",
 } as const;

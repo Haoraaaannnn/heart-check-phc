@@ -117,13 +117,13 @@ export function Sidebar({
               } py-2.5 rounded-xl transition-all duration-150 group cursor-pointer ${
                 isActive
                   ? 'bg-[#cc3535] text-white shadow-xs font-semibold'
-                  : 'text-slate-600 hover:bg-slate-100 hover:text-slate-900 font-medium'
+                  : 'text-slate-600 hover:bg-slate-100 hover:text-slate-900 dark:text-[#a3a3a3] dark:hover:bg-[#242424] dark:hover:text-[#f5f5f5] font-medium'
               }`}
             >
               <div className="flex items-center gap-3 min-w-0">
                 <i
                   className={`bx ${icon} text-xl shrink-0 ${
-                    isActive ? 'text-white' : 'text-slate-400 group-hover:text-[#cc3535]'
+                    isActive ? 'text-white' : 'text-slate-400 group-hover:text-[#cc3535] dark:group-hover:text-[#f87171]'
                   }`}
                   aria-hidden="true"
                 />
@@ -181,7 +181,7 @@ export function Sidebar({
           aria-label={transferTexts.selectScreenAria}
           className={`w-full flex items-center ${
             isExpanded ? 'justify-start px-3' : 'justify-center px-0'
-          } py-2 rounded-xl text-slate-500 hover:text-slate-800 hover:bg-slate-100 transition-colors font-medium text-sm cursor-pointer`}
+          } py-2 rounded-xl text-slate-500 hover:text-slate-800 hover:bg-slate-100 dark:text-[#a3a3a3] dark:hover:text-[#f5f5f5] dark:hover:bg-[#242424] transition-colors font-medium text-sm cursor-pointer`}
         >
           <i className={`bx ${SIDEBAR_ICONS.selectScreen} text-xl shrink-0`} aria-hidden="true" />
           {isExpanded && (
@@ -198,7 +198,7 @@ export function Sidebar({
           aria-label={transferTexts.logoutLabel}
           className={`w-full flex items-center ${
             isExpanded ? 'justify-start px-3' : 'justify-center px-0'
-          } py-2 rounded-xl text-slate-500 hover:text-[#cc3535] hover:bg-red-50 transition-colors font-medium text-sm cursor-pointer`}
+          } py-2 rounded-xl text-slate-500 hover:text-[#cc3535] hover:bg-red-50 dark:text-[#a3a3a3] dark:hover:text-[#f87171] dark:hover:bg-red-950/30 transition-colors font-medium text-sm cursor-pointer`}
         >
           <i className={`bx ${SIDEBAR_ICONS.logout} text-xl shrink-0`} aria-hidden="true" />
           {isExpanded && (

@@ -58,7 +58,7 @@ export default function ArimaForecast({
           </span>
         </span>
       )}
-      <span className="rounded-full bg-purple-500/15 border border-purple-500/30 px-3 py-1 text-xs font-bold uppercase text-purple-600 dark:text-purple-400">
+      <span className="rounded-md bg-purple-500/15 border border-purple-500/30 px-2.5 py-0.5 text-xs font-bold uppercase text-purple-600 dark:text-purple-400">
         {T.modelTag}
       </span>
     </div>

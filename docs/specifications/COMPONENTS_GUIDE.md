@@ -1,4 +1,9 @@
-# Heart Check PHC: A Kiosk-Based Queue Management and Analytics System — Design System & Reusable Components Guide
+# Heart Check PHC: Design System & Reusable Components Guide
+
+**Last Updated:** 2026-10-18
+
+> [!NOTE]
+> This guide has been merged into the master [docs/specifications/DESIGN.md](file:///home/jensen/Github-Repositories/Heart_Check_PHC/docs/specifications/DESIGN.md) specification, which serves as the authoritative standard for all visual design, layout archetypes, UI component contracts, and styling rules across Heart Check PHC.
 
 ## 1. Overview
 

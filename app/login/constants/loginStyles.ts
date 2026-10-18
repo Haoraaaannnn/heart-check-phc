@@ -29,7 +29,7 @@ export const LOGIN_STYLES = {
     clockContainer: `hidden md:flex flex-col items-end pr-3 border-r ${themeTokens.border.default}`,
     clockDate: `${sizeTokens.typography.micro} ${themeTokens.text.muted}`,
     clockTime: `text-xs font-mono font-bold ${themeTokens.text.primary}`,
-    themeButton: `p-2 ${sizeTokens.radius.md} text-slate-500 hover:text-slate-900 hover:bg-slate-100 dark:text-[#a3a3a3] dark:hover:text-[#f5f5f5] dark:hover:bg-[#242424] transition cursor-pointer text-lg border border-transparent hover:${themeTokens.border.default}`,
+    themeButton: `p-2 ${sizeTokens.radius.md} text-slate-500 hover:text-slate-900 hover:bg-slate-100 dark:text-[#a3a3a3] dark:hover:text-[#f5f5f5] dark:hover:bg-[#242424] transition cursor-pointer text-lg border border-transparent ${themeTokens.border.defaultHover}`,
   },
 
   /** Center authentication card container */

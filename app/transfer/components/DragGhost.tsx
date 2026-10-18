@@ -75,7 +75,7 @@ export function DragGhost({
 
         <div className="shrink-0 text-right">
           <span
-            className={`text-[10px] font-bold px-2 py-0.5 rounded-full ${
+            className={`text-[10px] font-bold px-2 py-0.5 rounded-md ${
               isValidDropTarget
                 ? 'bg-emerald-100 text-emerald-700'
                 : 'bg-red-100 text-[#cc3535]'

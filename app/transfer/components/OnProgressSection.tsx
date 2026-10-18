@@ -84,7 +84,7 @@ export function OnProgressSection({
           <h2 className="text-slate-700 font-bold text-xs tracking-wider uppercase truncate">
             {transferTexts.onProgressHeading}
           </h2>
-          <span className="text-[11px] font-bold px-1.5 py-0.5 rounded-full bg-emerald-100 text-emerald-800 shrink-0">
+          <span className="text-[11px] font-bold px-1.5 py-0.5 rounded-md bg-emerald-100 text-emerald-800 shrink-0">
             {safePatients.length}
           </span>
         </div>

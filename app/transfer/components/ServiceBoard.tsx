@@ -194,7 +194,7 @@ export function ServiceBoard({
                 <h2 className="text-slate-700 font-bold text-xs tracking-wider uppercase truncate">
                   {transferTexts.cubiclesHeading}
                 </h2>
-                <span className="text-[10px] font-bold px-1.5 py-0.2 rounded-full bg-slate-100 text-slate-700 shrink-0">
+                <span className="text-[10px] font-bold px-1.5 py-0.2 rounded-md bg-slate-100 text-slate-700 shrink-0">
                   {cubicles.length}
                 </span>
               </div>

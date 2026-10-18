@@ -1,6 +1,6 @@
 # Heart Check PHC: Master Documentation Portal & Navigation Index
 
-**Last Updated:** 2026-10-17
+**Last Updated:** 2026-10-18
 
 This master index categorizes all technical specifications, operational manuals, quality assurance checklists, security audit matrices, database schemas, Capstone Chapter 4 simulation guides, data validation reports, and developer editing manuals across the Heart Check PHC repository.
 
@@ -30,10 +30,11 @@ docs/
 │   └── OPEN_ISSUES.md                     # Active bug tracking & resolution checklist
 ├── specifications/                        # Core Technical & Architectural Blueprints
 │   ├── README.md                          # Dedicated specifications directory index
+│   ├── DESIGN.md                          # Master visual design & layout standards specification
 │   ├── ARCHITECTURE.md                    # Platform architecture & Next.js/FastAPI stack
 │   ├── SYSTEM_DESIGN.md                   # System design, data pipelines, and state machines
 │   ├── FILE_ARCHITECTURE.md               # Repository file tree & directory map
-│   ├── COMPONENTS_GUIDE.md                # UI design system & shared components
+│   ├── COMPONENTS_GUIDE.md                # UI design system & shared components (Merged into DESIGN.md)
 │   ├── CONNECTIVITY_RESILIENCE.md         # Weak-signal safeguards & real-time resilience
 │   ├── DATABASE_SCHEMA.md                 # Table structures, RLS policies & raw schema appendix
 │   ├── DATA_ENCRYPTION_GUIDE.md           # Patient phone number AES-256-GCM encryption guide
@@ -79,10 +80,11 @@ These documents provide deep architectural specifications, data models, communic
 
 | Specification Document | Category | Key Content |
 | :--- | :--- | :--- |
+| [`docs/specifications/DESIGN.md`](file:///home/jensen/Github-Repositories/Heart_Check_PHC/docs/specifications/DESIGN.md) | **Master Design & Layout Standards** | Visual design system, prohibition of pillbox shapes and icon backgrounds, high-contrast solid surfaces, layout archetypes, color tokens, and reusable components. |
 | [`docs/specifications/ARCHITECTURE.md`](file:///home/jensen/Github-Repositories/Heart_Check_PHC/docs/specifications/ARCHITECTURE.md) | Full-Stack Platform | Full-stack platform architecture, Next.js App Router layout, FastAPI analytics engine, queueing models, and data flows. |
 | [`docs/specifications/SYSTEM_DESIGN.md`](file:///home/jensen/Github-Repositories/Heart_Check_PHC/docs/specifications/SYSTEM_DESIGN.md) | System Specifications | Service contracts, real-time message broadcasting, state transitions, and cross-subsystem interactions. |
 | [`docs/specifications/FILE_ARCHITECTURE.md`](file:///home/jensen/Github-Repositories/Heart_Check_PHC/docs/specifications/FILE_ARCHITECTURE.md) | Codebase Directory Map | Exhaustive file tree documenting every route, component, hook, utility, and constants dictionary in the repository. |
-| [`docs/specifications/COMPONENTS_GUIDE.md`](file:///home/jensen/Github-Repositories/Heart_Check_PHC/docs/specifications/COMPONENTS_GUIDE.md) | Design System | Design system component catalog, shared UI primitives (`BackButton`, `ScrollArea`), and token conventions. |
+| [`docs/specifications/COMPONENTS_GUIDE.md`](file:///home/jensen/Github-Repositories/Heart_Check_PHC/docs/specifications/COMPONENTS_GUIDE.md) | Design System | Design system component catalog, shared UI primitives (`BackButton`, `ScrollArea`), and token conventions (Merged into `DESIGN.md`). |
 | [`docs/specifications/CONNECTIVITY_RESILIENCE.md`](file:///home/jensen/Github-Repositories/Heart_Check_PHC/docs/specifications/CONNECTIVITY_RESILIENCE.md) | Network Resilience | Weak-signal safeguards, WebSocket fallback mechanisms, 300ms debounce, 2s hysteresis, and LAN migration roadmap. |
 | [`docs/specifications/DATABASE_SCHEMA.md`](file:///home/jensen/Github-Repositories/Heart_Check_PHC/docs/specifications/DATABASE_SCHEMA.md) | **Master Database Schema & Policies** | Consolidated table structures, column definitions, primary keys, and **Appendix A: Raw Table Column Schemas & Verified RLS Policies**. |
 | [`docs/specifications/SECURITY.md`](file:///home/jensen/Github-Repositories/Heart_Check_PHC/docs/specifications/SECURITY.md) | **Security Architecture** | Multi-layer access control: Supabase RLS, Next.js server proxy (`proxy.ts`), Layer 3 Rate Limiting & Cost Protection, and Layer 4 SQL Injection Immunity. |

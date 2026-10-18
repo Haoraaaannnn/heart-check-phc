@@ -1,5 +1,5 @@
 @import "tailwindcss";
-@custom-variant dark (&:where(.dark, .dark *));
+@custom-variant dark (&:is(.dark, .dark *));
 
 /* -------------------------------------------------------------------------- */
 /* Semantic theme tokens                                                       */
@@ -15,7 +15,7 @@
   --content-muted: #6b7280;
   --content-subtle: #9ca3af;
   --track: #f1f5f9;
-  --accent: #be123c;
+  --accent: #a8071a;
   --card-shadow: 0 1px 3px 0 rgb(0 0 0 / 0.05), 0 1px 2px -1px rgb(0 0 0 / 0.05);
   --gradient-brand: linear-gradient(135deg, #9f1239 0%, #e11d48 100%);
   --gradient-banner: linear-gradient(115deg, #ffffff 0%, #fff1f2 100%);
@@ -51,6 +51,7 @@
   --color-content-subtle: var(--content-subtle);
   --color-track: var(--track);
   --color-accent: var(--accent);
+  --color-brand-accent: var(--accent);
   --shadow-card: var(--card-shadow);
 }
 
