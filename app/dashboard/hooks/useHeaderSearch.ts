@@ -14,6 +14,7 @@
 import { useCallback, useEffect, useMemo, useRef, useState } from 'react';
 import { useRouter } from 'next/navigation';
 import { supabase } from '@/lib/supabase';
+import { formatSecondsToHMS } from '@/utils/formatMinutesToHMS';
 
 /**
  * Normalized patient record returned by header search query.
@@ -334,7 +335,7 @@ export function useHeaderSearch(): UseHeaderSearchReturn {
 
         let queryBuilder = supabase
           .from('patients')
-          .select('id, patientNum, service, status, created_at, consult_start, phoneNum')
+          .select('id, patientNum, service, status, created_at, consult_start, consult_end, updated_at, phoneNum')
           .order('created_at', { ascending: false })
           .limit(6);
 
@@ -384,13 +385,18 @@ export function useHeaderSearch(): UseHeaderSearchReturn {
         }
 
         const transformed: HeaderSearchPatientResult[] = (data || []).map((row: any) => {
-          let calculatedWait: string | number = '--';
+          let calculatedWait: string | number = '--:--:--';
           if (row.created_at) {
             const registeredTime = new Date(row.created_at).getTime();
             const consultTime = row.consult_start
               ? new Date(row.consult_start).getTime()
-              : now.getTime();
-            calculatedWait = `${Math.max(0, Math.floor((consultTime - registeredTime) / 60000))}m`;
+              : (row.consult_end
+                  ? new Date(row.consult_end).getTime()
+                  : (row.updated_at
+                      ? new Date(row.updated_at).getTime()
+                      : now.getTime()));
+            const diffSecs = Math.max(0, Math.floor((consultTime - registeredTime) / 1000));
+            calculatedWait = formatSecondsToHMS(diffSecs);
           }
 
           const createdAtDate = row.created_at ? new Date(row.created_at) : new Date();

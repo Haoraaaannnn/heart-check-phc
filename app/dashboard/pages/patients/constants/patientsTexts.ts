@@ -39,7 +39,7 @@ export const PATIENTS_TEXTS = {
     },
     avgWaitTime: {
       label: 'Avg Wait Time',
-      unit: 'm',
+      unit: '',
       subtitle: 'Mean duration in queue',
     },
   },

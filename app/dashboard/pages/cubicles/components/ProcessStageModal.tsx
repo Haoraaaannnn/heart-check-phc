@@ -16,6 +16,7 @@ import type {
   FlowchartCubicleStation,
   FlowchartPatientItem,
 } from '@/app/dashboard/pages/cubicles/types/cubicle';
+import { formatMinutesToHMS } from '@/utils/formatMinutesToHMS';
 
 export type ProcessStageTarget =
   | { type: 'stage'; stage: FlowchartStageData }
@@ -238,7 +239,7 @@ export default function ProcessStageModal({
                   <div className="flex items-center justify-between text-xs text-content-muted mt-1">
                     <span>{T.elapsedLabel}</span>
                     <span className="font-mono font-bold text-content">
-                      {station.elapsedMinutes || 0} minutes
+                      {formatMinutesToHMS(station.elapsedMinutes || 0)}
                     </span>
                   </div>
 
@@ -257,7 +258,7 @@ export default function ProcessStageModal({
                       <span>Room Ready for Next Patient</span>
                     </span>
                     <span className="font-mono text-xs font-bold text-content">
-                      Idle: {station.idleMinutes || 0}m
+                      Idle: {formatMinutesToHMS(station.idleMinutes || 0)}
                     </span>
                   </div>
                   <p className="text-[11px] text-content-muted">
@@ -283,7 +284,7 @@ export default function ProcessStageModal({
                   </span>
                   <p className="font-mono text-lg font-extrabold text-content mt-0.5">
                     {station.avgSpeedTodayMinutes > 0
-                      ? `${station.avgSpeedTodayMinutes}m`
+                      ? formatMinutesToHMS(station.avgSpeedTodayMinutes)
                       : '—'}
                   </p>
                 </div>

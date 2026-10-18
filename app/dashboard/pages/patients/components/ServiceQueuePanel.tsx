@@ -24,6 +24,7 @@ import {
   PATIENTS_STYLES,
 } from '@/app/dashboard/pages/patients/constants/patients';
 import { PATIENTS_TEXTS } from '@/app/dashboard/pages/patients/constants/patientsTexts';
+import { ElapsedTimer } from '@/components/reusables/ElapsedTimer';
 
 interface ServiceQueuePanelProps {
   /** The selected service name to track in real time. */
@@ -102,10 +103,26 @@ export default function ServiceQueuePanel({ service }: ServiceQueuePanelProps) {
                         <span className={S.patientNumber}>{patient.ticket}</span>
                         <div className={S.patientMeta}>
                           <span className={S.patientName}>
-                            {isNext ? `★ ${T.servingBadge}` : `${T.waitingPrefix} ${mins}m`}
+                            {isNext ? (
+                              `★ ${T.servingBadge}`
+                            ) : (
+                              <span className="inline-flex items-center gap-1">
+                                {T.waitingPrefix}{' '}
+                                <ElapsedTimer
+                                  startedAt={patient.joinedAtMs}
+                                  showHours={true}
+                                  includeSeconds={true}
+                                />
+                              </span>
+                            )}
                           </span>
                           <span className={S.patientWait}>
-                            {T.waitingPrefix} {mins} mins
+                            {T.waitingPrefix}{' '}
+                            <ElapsedTimer
+                              startedAt={patient.joinedAtMs}
+                              showHours={true}
+                              includeSeconds={true}
+                            />
                           </span>
                         </div>
                       </div>
@@ -113,7 +130,13 @@ export default function ServiceQueuePanel({ service }: ServiceQueuePanelProps) {
                       {isOverdue && (
                         <span className={S.overduePill}>
                           <i className="bx bx-error-circle" />
-                          {T.overdueWarning} ({mins}m)
+                          {T.overdueWarning} (
+                          <ElapsedTimer
+                            startedAt={patient.joinedAtMs}
+                            showHours={true}
+                            includeSeconds={true}
+                          />
+                          )
                         </span>
                       )}
                     </div>

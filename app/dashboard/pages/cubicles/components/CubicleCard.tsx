@@ -11,6 +11,7 @@ import {
 } from '@/app/dashboard/pages/cubicles/constants/cubicles';
 import { CUBICLES_TEXTS } from '@/app/dashboard/pages/cubicles/constants/cubiclesTexts';
 import type { Cubicle } from '@/app/dashboard/pages/cubicles/types/cubicle';
+import { formatSecondsToHMS } from '@/utils/formatMinutesToHMS';
 
 interface CubicleCardProps {
   /** The cubicle data model. */
@@ -38,8 +39,8 @@ export default function CubicleCard({ cubicle, currentTime }: CubicleCardProps) 
   const getTimeRemaining = (endTime?: Date) => {
     if (!endTime) return null;
     const remaining = Math.max(0, endTime.getTime() - currentTime.getTime());
-    const minutes = Math.floor(remaining / 60000);
-    return minutes > 0 ? `${minutes}m` : T.lessThanMinute;
+    const totalSecs = Math.floor(remaining / 1000);
+    return formatSecondsToHMS(totalSecs);
   };
 
   const timeRemaining = cubicle.status === 'occupied' ? getTimeRemaining(cubicle.estimatedEndTime) : null;

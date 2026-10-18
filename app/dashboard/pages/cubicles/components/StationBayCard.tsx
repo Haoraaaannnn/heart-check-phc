@@ -17,6 +17,7 @@ import {
   HEATMAP_IDLE_STYLES,
 } from '@/app/dashboard/pages/cubicles/constants/cubicles';
 import type { FlowchartCubicleStation } from '@/app/dashboard/pages/cubicles/types/cubicle';
+import { formatMinutesToHMS } from '@/utils/formatMinutesToHMS';
 
 interface StationBayCardProps {
   /** The examination room station telemetry model. */
@@ -174,7 +175,7 @@ export default function StationBayCard({ station, onClick }: StationBayCardProps
           Today: <span className="font-mono font-bold text-content">{station.totalConsultationsToday}</span>
         </span>
         <span>
-          Avg: <span className="font-mono font-bold text-content">{station.avgSpeedTodayMinutes > 0 ? `${station.avgSpeedTodayMinutes}m` : '—'}</span>
+          Avg: <span className="font-mono font-bold text-content">{station.avgSpeedTodayMinutes > 0 ? formatMinutesToHMS(station.avgSpeedTodayMinutes) : '—'}</span>
         </span>
       </div>
     </div>

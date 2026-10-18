@@ -13,6 +13,7 @@ import { TONES } from '@/app/dashboard/constants/styles';
 import { CUBICLES_STYLES } from '@/app/dashboard/pages/cubicles/constants/cubicles';
 import { CUBICLES_TEXTS } from '@/app/dashboard/pages/cubicles/constants/cubiclesTexts';
 import type { FlowchartPipelineKpis } from '@/app/dashboard/pages/cubicles/types/cubicle';
+import { formatMinutesToHMS } from '@/utils/formatMinutesToHMS';
 
 interface FlowchartSummaryBarProps {
   /** Facility performance metrics across the active queue pipeline. */
@@ -57,7 +58,7 @@ export default function FlowchartSummaryBar({
     {
       key: 'meanSpeed',
       label: T.meanSpeed,
-      value: `${kpis.facilityAvgSpeedMinutes}m`,
+      value: formatMinutesToHMS(kpis.facilityAvgSpeedMinutes),
       subtext: T.meanSpeedSub,
       icon: 'bx-tachometer',
       tone: TONES.green,
@@ -65,7 +66,7 @@ export default function FlowchartSummaryBar({
     {
       key: 'meanIdle',
       label: T.meanIdle,
-      value: `${kpis.facilityAvgIdleMinutes}m`,
+      value: formatMinutesToHMS(kpis.facilityAvgIdleMinutes),
       subtext: `${kpis.idleCubiclesCount} rooms available`,
       icon: 'bx-time-five',
       tone: TONES.purple,

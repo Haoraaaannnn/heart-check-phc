@@ -21,6 +21,7 @@ import type {
   IdleRating,
   CubicleStatus,
 } from '@/app/dashboard/pages/cubicles/types/cubicle';
+import { formatMinutesToHMS } from '@/utils/formatMinutesToHMS';
 import {
   CUBICLES_REFRESH_INTERVAL_MS,
   CUBICLES_CLOCK_INTERVAL_MS,
@@ -517,7 +518,7 @@ export function useCubicleFlowchartData() {
           icon: 'bx-devices',
           count: waitingList.length,
           metricLabel: 'Mean Wait Time',
-          metricValue: `${meanWaitMinutes}m`,
+          metricValue: formatMinutesToHMS(meanWaitMinutes),
           avgDurationMinutes: meanWaitMinutes,
           patients: waitingList,
           alertCount: waitingList.filter((p) => p.isStalled).length,
@@ -529,7 +530,7 @@ export function useCubicleFlowchartData() {
           icon: 'bx-user-check',
           count: dispatchList.length,
           metricLabel: 'Transit Grace',
-          metricValue: '<5m grace',
+          metricValue: '< 00:05:00 grace',
           patients: dispatchList,
           alertCount: dispatchList.filter((p) => p.isStalled).length,
         },
@@ -551,7 +552,7 @@ export function useCubicleFlowchartData() {
           icon: 'bx-file-blank',
           count: carryoutList.length,
           metricLabel: 'Mean Carryout',
-          metricValue: `${meanCarryoutMinutes}m`,
+          metricValue: formatMinutesToHMS(meanCarryoutMinutes),
           avgDurationMinutes: meanCarryoutMinutes,
           patients: carryoutList,
         },

@@ -19,6 +19,7 @@
 import { useEffect, useRef, useState } from 'react';
 import { HISTORICAL_TEXTS } from '@/app/dashboard/constants/historicalTexts';
 import { HISTORICAL_STYLES } from '@/app/dashboard/constants/historicalStyles';
+import { formatMinutesToHMS } from '@/utils/formatMinutesToHMS';
 
 /**
  * Monthly performance record returned from backend analytics.
@@ -53,17 +54,14 @@ export interface HistoricalContextBannerProps {
 }
 
 /**
- * Formats a duration in minutes into a human-readable "Xh Ym" or "Ym" string.
+ * Formats a duration in minutes into a formal HH:MM:SS string.
  *
  * @param mins - Duration in minutes.
- * @returns Formatted duration string.
+ * @returns Formatted duration string in HH:MM:SS format, or '--' if invalid.
  */
 function formatDuration(mins: number): string {
   if (mins <= 0) return '--';
-  const hrs = Math.floor(mins / 60);
-  const remMins = Math.round(mins % 60);
-  if (hrs === 0) return `${remMins}m`;
-  return `${hrs}h ${remMins}m`;
+  return formatMinutesToHMS(mins);
 }
 
 const API_BASE = process.env.NEXT_PUBLIC_API_URL || 'http://localhost:8000';

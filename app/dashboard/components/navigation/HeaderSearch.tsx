@@ -20,6 +20,7 @@ import {
   useHeaderSearch,
   HeaderSearchResultItem,
 } from '@/app/dashboard/hooks/useHeaderSearch';
+import { formatDurationString } from '@/utils/formatMinutesToHMS';
 
 const S = HEADER_SEARCH_STYLES;
 const T = HEADER_SEARCH_TEXTS;
@@ -241,11 +242,12 @@ export function HeaderSearch() {
                               {patient.id}
                             </span>
                             {patient.waitTime !== undefined &&
-                              patient.waitTime !== '--' && (
+                              patient.waitTime !== '--' &&
+                              patient.waitTime !== '--:--:--' && (
                                 <>
                                   <span>•</span>
                                   <span>
-                                    {patient.waitTime} {T.items.waitTimeSuffix}
+                                    {formatDurationString(patient.waitTime)} {T.items.waitTimeSuffix}
                                   </span>
                                 </>
                               )}
@@ -485,11 +487,12 @@ export function HeaderSearch() {
                             {patient.id}
                           </span>
                           {patient.waitTime !== undefined &&
-                            patient.waitTime !== '--' && (
+                            patient.waitTime !== '--' &&
+                            patient.waitTime !== '--:--:--' && (
                               <>
                                 <span>•</span>
                                 <span>
-                                  {patient.waitTime} {T.items.waitTimeSuffix}
+                                  {formatDurationString(patient.waitTime)} {T.items.waitTimeSuffix}
                                 </span>
                               </>
                             )}

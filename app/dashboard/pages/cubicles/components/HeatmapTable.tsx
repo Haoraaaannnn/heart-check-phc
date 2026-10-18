@@ -22,6 +22,7 @@ import type {
   HeatmapViewMode,
 } from '@/app/dashboard/pages/cubicles/types/cubicle';
 import HeatmapCell from '@/app/dashboard/pages/cubicles/components/HeatmapCell';
+import { formatMinutesToHMS } from '@/utils/formatMinutesToHMS';
 
 interface HeatmapTableProps {
   /** Array of cubicle rows with their calculated hourly analytical cells. */
@@ -156,7 +157,7 @@ export default function HeatmapTable({
                     <div className="flex items-center gap-1 text-[10px] text-content-muted">
                       <span>{T.avgSpeedPrefix}</span>
                       <span className="font-mono font-bold text-content">
-                        {row.dailyAvgSpeedMinutes > 0 ? `${row.dailyAvgSpeedMinutes}m` : '—'}
+                        {row.dailyAvgSpeedMinutes > 0 ? formatMinutesToHMS(row.dailyAvgSpeedMinutes) : '—'}
                       </span>
                     </div>
 

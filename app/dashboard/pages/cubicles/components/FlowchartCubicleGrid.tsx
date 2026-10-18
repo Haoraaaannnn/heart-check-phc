@@ -17,6 +17,7 @@ import {
 } from '@/app/dashboard/pages/cubicles/constants/cubicles';
 import { CUBICLES_TEXTS } from '@/app/dashboard/pages/cubicles/constants/cubiclesTexts';
 import type { FlowchartCubicleStation } from '@/app/dashboard/pages/cubicles/types/cubicle';
+import { formatMinutesToHMS } from '@/utils/formatMinutesToHMS';
 
 interface FlowchartCubicleGridProps {
   /** Array of examination cubicle stations. */
@@ -223,7 +224,7 @@ export default function FlowchartCubicleGrid({
                   {T.todayAvg}{' '}
                   <span className="font-mono font-bold text-content">
                     {station.avgSpeedTodayMinutes > 0
-                      ? `${station.avgSpeedTodayMinutes}m`
+                      ? formatMinutesToHMS(station.avgSpeedTodayMinutes)
                       : '—'}
                   </span>
                 </span>

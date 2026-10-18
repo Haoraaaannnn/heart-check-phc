@@ -1,5 +1,7 @@
 # Patients Dashboard Module Developer Guide: Architecture & Where to Edit
 
+**Last Updated:** 2026-10-19
+
 This document serves as the guide for developers maintaining, modifying, or extending the Patients Dashboard module in `app/dashboard/pages/patients/`.
 
 It details the module architecture, separation-of-concerns principles, and provides an exhaustive mapping showing where to make edits for any visual, textual, layout, logic, or type changes.

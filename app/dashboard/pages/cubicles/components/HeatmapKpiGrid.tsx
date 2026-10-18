@@ -13,6 +13,7 @@ import { TONES } from '@/app/dashboard/constants/styles';
 import { CUBICLES_STYLES } from '@/app/dashboard/pages/cubicles/constants/cubicles';
 import { CUBICLES_TEXTS } from '@/app/dashboard/pages/cubicles/constants/cubiclesTexts';
 import type { HeatmapDayKpis } from '@/app/dashboard/pages/cubicles/types/cubicle';
+import { formatMinutesToHMS } from '@/utils/formatMinutesToHMS';
 
 interface HeatmapKpiGridProps {
   /** Facility-wide performance indicators for the active operational day. */
@@ -43,7 +44,7 @@ export default function HeatmapKpiGrid({ kpis }: HeatmapKpiGridProps) {
     {
       key: 'avgSpeed',
       label: T.avgSpeed.label,
-      value: kpis.facilityAvgSpeedMinutes > 0 ? `${kpis.facilityAvgSpeedMinutes}m` : '—',
+      value: kpis.facilityAvgSpeedMinutes > 0 ? formatMinutesToHMS(kpis.facilityAvgSpeedMinutes) : '—',
       subtitle: kpis.facilityAvgSpeedMinutes > 0 ? 'Target: 15-20m / pt' : T.avgSpeed.subtitle,
       icon: 'bx-tachometer',
       tone: TONES.green,
@@ -51,7 +52,7 @@ export default function HeatmapKpiGrid({ kpis }: HeatmapKpiGridProps) {
     {
       key: 'avgIdle',
       label: T.avgIdle.label,
-      value: kpis.totalPatientsServed > 0 ? `${kpis.facilityAvgIdleMinutes}m` : '—',
+      value: kpis.totalPatientsServed > 0 ? formatMinutesToHMS(kpis.facilityAvgIdleMinutes) : '—',
       subtitle: T.avgIdle.subtitle,
       icon: 'bx-time-five',
       tone: TONES.purple,

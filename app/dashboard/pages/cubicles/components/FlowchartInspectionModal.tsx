@@ -14,6 +14,7 @@ import type {
   FlowchartPatientItem,
   FlowchartCubicleStation,
 } from '@/app/dashboard/pages/cubicles/types/cubicle';
+import { formatMinutesToHMS } from '@/utils/formatMinutesToHMS';
 
 interface FlowchartInspectionModalProps {
   /** Selected patient or cubicle station entity, or null if modal is closed. */
@@ -120,7 +121,7 @@ export default function FlowchartInspectionModal({
                 <div className={S.modalStatCard}>
                   <span className={S.modalStatLabel}>Day Avg Speed</span>
                   <p className="text-base font-extrabold text-content font-mono">
-                    {target.avgSpeedTodayMinutes > 0 ? `${target.avgSpeedTodayMinutes}m` : '—'}
+                    {target.avgSpeedTodayMinutes > 0 ? formatMinutesToHMS(target.avgSpeedTodayMinutes) : '—'}
                   </p>
                 </div>
 
@@ -130,8 +131,8 @@ export default function FlowchartInspectionModal({
                   </span>
                   <p className="text-base font-extrabold text-content font-mono">
                     {target.status === 'occupied'
-                      ? `${target.elapsedMinutes || 0}m`
-                      : `${target.idleMinutes || 0}m`}
+                      ? formatMinutesToHMS(target.elapsedMinutes || 0)
+                      : formatMinutesToHMS(target.idleMinutes || 0)}
                   </p>
                 </div>
               </div>
@@ -163,7 +164,7 @@ export default function FlowchartInspectionModal({
                 <div className={S.modalStatCard}>
                   <span className={S.modalStatLabel}>Stage Elapsed</span>
                   <p className="text-base font-extrabold text-content font-mono">
-                    {target.elapsedMinutes !== undefined ? `${target.elapsedMinutes}m` : '—'}
+                    {target.elapsedMinutes !== undefined ? formatMinutesToHMS(target.elapsedMinutes) : '—'}
                   </p>
                 </div>
 
