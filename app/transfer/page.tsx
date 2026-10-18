@@ -1180,7 +1180,7 @@ export default function TransferPage() {
             <button
               type="button"
               onClick={() => setIsSidebarExpanded(prev => !prev)}
-              className="p-1.5 sm:p-2 rounded-xl text-slate-500 hover:text-slate-800 hover:bg-slate-100 active:bg-slate-200 transition-colors cursor-pointer shrink-0"
+              className="p-1.5 sm:p-2 rounded-xl text-slate-500 hover:text-slate-800 hover:bg-slate-100 active:bg-slate-200 dark:text-[#a3a3a3] dark:hover:text-[#f5f5f5] dark:hover:bg-[#242424] transition-colors cursor-pointer shrink-0"
               title={isSidebarExpanded ? transferTexts.collapseSidebar : transferTexts.expandSidebar}
               aria-label={isSidebarExpanded ? transferTexts.collapseSidebar : transferTexts.expandSidebar}
             >

@@ -331,7 +331,7 @@ export function RoomsPanel() {
                         <span
                           key={`${pr.service}-${pr.subcategory ?? ''}`}
                           title={pr.subcategory ? `${pr.service} (${pr.subcategory})` : pr.service}
-                          className="inline-flex items-center px-1.5 py-0.5 rounded-full text-[10px] font-bold bg-rose-100 dark:bg-rose-950 text-rose-700 dark:text-rose-300 border border-rose-200 dark:border-rose-800 leading-none"
+                          className="inline-flex items-center px-1.5 py-0.5 rounded-md text-[10px] font-bold bg-rose-100 dark:bg-rose-950 text-rose-700 dark:text-rose-300 border border-rose-200 dark:border-rose-800 leading-none"
                         >
                           #{pr.prefix}
                         </span>
@@ -373,7 +373,7 @@ export function RoomsPanel() {
                           <button
                             type="button"
                             onClick={() => confirmDeleteCubicle(c)}
-                            className="p-1 hover:text-red-600 transition"
+                            className="p-1 hover:text-red-600 dark:hover:text-red-400 transition cursor-pointer"
                             title="Delete cubicle"
                           >
                             <i className="bx bx-trash text-sm" aria-hidden="true" />

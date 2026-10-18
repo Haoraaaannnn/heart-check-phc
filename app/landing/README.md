@@ -1,5 +1,7 @@
 # Landing Page Developer Guide & Where to Edit Map
 
+**Last Updated:** 2026-10-18
+
 This guide documents the architecture, component hierarchy, design tokens, and editing locations for the Public Landing Page (`app/page.tsx`).
 
 ---

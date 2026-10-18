@@ -108,7 +108,7 @@ export function NotificationDropdown({
 
           {/* Unread Count Badge */}
           {unreadCount > 0 && (
-            <span className="absolute -top-1 -right-1 inline-flex items-center justify-center px-1.5 py-0.5 text-[10px] font-bold leading-none text-white bg-rose-600 rounded-full shadow-xs">
+            <span className="absolute -top-1 -right-1 inline-flex items-center justify-center px-1.5 py-0.5 text-[10px] font-bold leading-none text-white bg-rose-600 rounded-md shadow-xs">
               {unreadCount > 9 ? '9+' : unreadCount}
             </span>
           )}
@@ -122,7 +122,7 @@ export function NotificationDropdown({
         >
           <span>Alerts</span>
           {unreadCount > 0 && (
-            <span className="px-1.5 py-0.5 rounded-full text-[10px] font-bold bg-rose-600 text-white">
+            <span className="px-1.5 py-0.5 rounded-md text-[10px] font-bold bg-rose-600 text-white">
               {unreadCount > 9 ? '9+' : unreadCount}
             </span>
           )}

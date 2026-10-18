@@ -62,7 +62,7 @@ export default function AlgorithmComparisonTable({
                     <td className={`${S.td} text-content`}>
                       {algo}
                       {isBest && (
-                        <span className="ml-1.5 text-xs text-brand-accent">
+                        <span className="ml-1.5 text-xs text-accent">
                           {T.bestIndicator}
                         </span>
                       )}

@@ -53,12 +53,12 @@ export default function BranchingStationBays({
         </div>
 
         <div className="flex items-center gap-2">
-          <span className="inline-flex items-center gap-1.5 rounded-full bg-rose-50 dark:bg-rose-950/40 px-2.5 py-1 text-xs font-bold text-rose-700 dark:text-rose-300 border border-rose-200 dark:border-rose-900">
+          <span className="inline-flex items-center gap-1.5 rounded-md bg-rose-50 dark:bg-rose-950/40 px-2.5 py-1 text-xs font-bold text-rose-700 dark:text-rose-300 border border-rose-200 dark:border-rose-900">
             <span className="h-1.5 w-1.5 rounded-full bg-rose-500 animate-pulse" />
             <span>{occupiedCount} Occupied</span>
           </span>
 
-          <span className="inline-flex items-center gap-1.5 rounded-full bg-emerald-50 dark:bg-emerald-950/40 px-2.5 py-1 text-xs font-bold text-emerald-700 dark:text-emerald-300 border border-emerald-200 dark:border-emerald-900">
+          <span className="inline-flex items-center gap-1.5 rounded-md bg-emerald-50 dark:bg-emerald-950/40 px-2.5 py-1 text-xs font-bold text-emerald-700 dark:text-emerald-300 border border-emerald-200 dark:border-emerald-900">
             <span className="h-1.5 w-1.5 rounded-full bg-emerald-500" />
             <span>{availableCount} Available</span>
           </span>

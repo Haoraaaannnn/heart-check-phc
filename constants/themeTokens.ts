@@ -28,7 +28,7 @@ export const themeTokens = {
     card: 'bg-white dark:bg-[#1a1a1a] border border-slate-200 dark:border-[#2e2e2e] shadow-xs transition-colors duration-200',
     /** Interactive card with hover elevation and subtle brand border highlight */
     cardInteractive:
-      'bg-white dark:bg-[#1a1a1a] border border-slate-200 dark:border-[#2e2e2e] shadow-xs hover:border-[#a8071a]/40 dark:hover:border-[#a8071a]/50 hover:shadow-md transition-all duration-200',
+      'bg-white dark:bg-[#1a1a1a] border border-slate-200 dark:border-[#2e2e2e] shadow-xs hover:border-[#a8071a]/40 dark:hover:border-[#a8071a]/50 transition-colors duration-200',
     /** Top sticky navigation header bar */
     header:
       'sticky top-0 z-30 h-16 bg-white/95 dark:bg-[#141414]/95 backdrop-blur-md border-b border-slate-200 dark:border-[#2e2e2e] shadow-2xs transition-colors duration-200',
@@ -65,6 +65,7 @@ export const themeTokens = {
   /** Crisp 1-pixel border lines */
   border: {
     default: 'border-slate-200 dark:border-[#2e2e2e]',
+    defaultHover: 'hover:border-slate-200 dark:hover:border-[#2e2e2e]',
     subtle: 'border-slate-100 dark:border-[#242424]',
     interactive: 'hover:border-[#a8071a]/40 dark:hover:border-[#a8071a]/50',
   },
@@ -72,10 +73,14 @@ export const themeTokens = {
   /** Centralized typography colors */
   text: {
     primary: 'text-slate-900 dark:text-[#f5f5f5]',
+    primaryHover: 'hover:text-slate-900 dark:hover:text-[#f5f5f5]',
     secondary: 'text-slate-600 dark:text-[#a3a3a3]',
+    secondaryHover: 'hover:text-slate-600 dark:hover:text-[#a3a3a3]',
     muted: 'text-slate-400 dark:text-[#737373]',
-    accent: 'text-[#a8071a] dark:text-[#f87171]',
-    accentHover: 'hover:text-[#a8071a] dark:hover:text-[#f87171]',
+    mutedHover: 'hover:text-slate-600 dark:hover:text-[#a3a3a3]',
+    accent: 'text-[#a8071a] dark:text-[#f87171] text-accent',
+    accentHover: 'hover:text-[#a8071a] dark:hover:text-[#f87171] hover:text-accent',
+    groupHoverAccent: 'group-hover:text-[#a8071a] dark:group-hover:text-[#f87171] group-hover:text-accent',
   },
 
   /** Philippine Heart Center darkish red brand accents */
@@ -85,9 +90,9 @@ export const themeTokens = {
     badge:
       'bg-gradient-to-br from-[#76000d] to-[#a8071a] text-white shadow-xs tracking-wide shrink-0',
     buttonPrimary:
-      'bg-[#a8071a] hover:bg-[#8e0616] active:bg-[#76000d] text-white font-bold shadow-xs hover:shadow-sm active:scale-[0.98] transition-all duration-150 cursor-pointer disabled:opacity-60 disabled:cursor-not-allowed',
+      'bg-[#a8071a] hover:bg-[#8e0616] active:bg-[#76000d] text-white font-bold shadow-xs transition-colors duration-150 cursor-pointer disabled:opacity-60 disabled:cursor-not-allowed',
     iconWrap:
-      'bg-[#a8071a]/10 dark:bg-[#a8071a]/20 border border-[#a8071a]/25 text-[#a8071a] dark:text-[#f87171] shrink-0',
+      'text-[#a8071a] dark:text-[#f87171] shrink-0',
     spinner:
       'animate-spin rounded-full border-4 border-slate-200 dark:border-[#2e2e2e] border-t-[#a8071a]',
     alertError:
@@ -95,7 +100,7 @@ export const themeTokens = {
     alertLockout:
       'border-amber-200 dark:border-amber-800/80 bg-amber-50 dark:bg-amber-950/40 text-amber-800 dark:text-amber-300',
     pill:
-      'bg-[#a8071a]/10 dark:bg-[#a8071a]/20 border border-[#a8071a]/25 text-[#a8071a] dark:text-[#f87171] font-semibold',
+      'bg-[#a8071a]/10 dark:bg-[#a8071a]/20 border border-[#a8071a]/25 text-[#a8071a] dark:text-[#f87171] font-semibold rounded-md',
     pulseDot:
       'bg-[#a8071a] animate-pulse',
   },

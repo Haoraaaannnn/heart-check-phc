@@ -185,7 +185,7 @@ export const UserTable: React.FC<UserTableProps> = ({
         <UserTableSkeleton includeToolbar={false} />
       ) : users.length === 0 ? (
         <div className="py-16 text-center space-y-2">
-          <div className="w-12 h-12 rounded-full bg-slate-100 dark:bg-[#242424] text-slate-400 mx-auto flex items-center justify-center text-2xl">
+          <div className="text-slate-400 mx-auto flex items-center justify-center text-4xl">
             <i className="bx bx-user-x" aria-hidden="true" />
           </div>
           <p className="text-sm font-bold text-slate-700 dark:text-[#f5f5f5]">
@@ -213,7 +213,7 @@ export const UserTable: React.FC<UserTableProps> = ({
                   <tr key={user.auth_id} className={S.tr}>
                     <td className={S.td}>
                       <div className="flex items-center gap-2.5 font-medium text-slate-900 dark:text-[#f5f5f5]">
-                        <span className="w-7 h-7 rounded-full bg-slate-100 dark:bg-[#242424] text-slate-600 dark:text-[#a3a3a3] flex items-center justify-center text-xs font-bold">
+                        <span className="w-7 h-7 rounded-lg bg-slate-100 dark:bg-[#242424] text-slate-600 dark:text-[#a3a3a3] flex items-center justify-center text-xs font-bold">
                           {user.email.charAt(0).toUpperCase()}
                         </span>
                         <span>{user.email}</span>

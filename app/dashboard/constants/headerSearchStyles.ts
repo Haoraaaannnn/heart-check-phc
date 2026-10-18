@@ -98,13 +98,13 @@ export const HEADER_SEARCH_STYLES = {
   /** Idle item state */
   resultItemIdle: 'hover:bg-slate-50 dark:hover:bg-[#1a1a1a]',
 
-  /** Icon box for navigation links */
+  /** Icon for navigation links */
   itemIconBox:
-    'w-7 h-7 rounded-lg bg-slate-100 dark:bg-[#242424] text-slate-600 dark:text-[#a3a3a3] flex items-center justify-center text-sm shrink-0 transition',
+    'w-5 h-5 text-slate-600 dark:text-[#a3a3a3] flex items-center justify-center text-sm shrink-0 transition',
 
-  /** Active icon box state */
+  /** Active icon state */
   itemIconBoxActive:
-    'bg-[#a8071a]/15 text-[#a8071a] dark:bg-[#a8071a]/30 dark:text-[#f87171]',
+    'text-[#a8071a] dark:text-[#f87171]',
 
   /** Item text content wrapper */
   itemContent: 'flex-1 min-w-0',

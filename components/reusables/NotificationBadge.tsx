@@ -95,7 +95,7 @@ export function NotificationBadge({
 
   return (
     <span
-      className={`inline-flex items-center justify-center min-w-[20px] h-5 px-1.5 rounded-full text-[11px] font-bold leading-none ${bg} ${text} ${ring} ring-1 shadow-xs ${pulseClass} ${className}`.trim()}
+      className={`inline-flex items-center justify-center min-w-[20px] h-5 px-1.5 rounded-md text-[11px] font-bold leading-none ${bg} ${text} ${ring} ring-1 shadow-xs ${pulseClass} ${className}`.trim()}
     >
       {displayCount}
     </span>

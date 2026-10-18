@@ -1,6 +1,6 @@
 # Admin Dashboard Domain Developer Guide: Architecture & Where to Edit
 
-**Last Updated:** 2026-10-16
+**Last Updated:** 2026-10-19
 
 This document serves as the authoritative developer guide for maintaining, extending, and modifying the Admin Dashboard module in `app/dashboard/`.
 
@@ -79,7 +79,8 @@ The Admin Dashboard subsystem adheres strictly to the architectural standards de
 | **Change date filter pill bar component markup or behavior** | [OverviewDateFilter.tsx](file:///home/jensen/Github-Repositories/heart-check-phc/app/dashboard/components/OverviewDateFilter.tsx) |
 | **Change overview data fetching, sequence guards, or realtime hook logic** | [useOverviewData.ts](file:///home/jensen/Github-Repositories/heart-check-phc/app/dashboard/hooks/useOverviewData.ts) / [content.ts](file:///home/jensen/Github-Repositories/heart-check-phc/app/dashboard/constants/content.ts) (`DASHBOARD_REALTIME`) |
 | **Change live queue table styling, ticket badges, or table borders** | [styles.ts](file:///home/jensen/Github-Repositories/heart-check-phc/app/dashboard/constants/styles.ts) (`DASH.table`) |
-| **Change live queue table component or service filter dropdown** | [LiveQueueTable.tsx](file:///home/jensen/Github-Repositories/heart-check-phc/app/dashboard/components/LiveQueueTable.tsx) |
+| **Change live queue table component, ElapsedTimer, or service filter dropdown** | [LiveQueueTable.tsx](file:///home/jensen/Github-Repositories/heart-check-phc/app/dashboard/components/LiveQueueTable.tsx) / [ElapsedTimer.tsx](file:///home/jensen/Github-Repositories/heart-check-phc/components/reusables/ElapsedTimer.tsx) |
+| **Change patient wait time calculations and HH:MM:SS duration formatters** | [waitTime.ts](file:///home/jensen/Github-Repositories/heart-check-phc/utils/waitTime.ts) / [formatMinutesToHMS.ts](file:///home/jensen/Github-Repositories/heart-check-phc/utils/formatMinutesToHMS.ts) |
 | **Change hourly arrival chart dimensions, bar radius, or palette colors** | [charts.ts](file:///home/jensen/Github-Repositories/heart-check-phc/app/dashboard/constants/charts.ts) |
 | **Change historical breakdown text copy, card labels, and table columns** | [historicalTexts.ts](file:///home/jensen/Github-Repositories/heart-check-phc/app/dashboard/constants/historicalTexts.ts) |
 | **Change historical breakdown styles, status badges, and table design** | [historicalStyles.ts](file:///home/jensen/Github-Repositories/heart-check-phc/app/dashboard/constants/historicalStyles.ts) |

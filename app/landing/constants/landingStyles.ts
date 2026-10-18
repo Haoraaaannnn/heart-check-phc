@@ -30,7 +30,7 @@ export const LANDING_STYLES = {
     clockContainer: `hidden md:flex flex-col items-end pr-3 border-r ${themeTokens.border.default}`,
     clockDate: `${sizeTokens.typography.micro} ${themeTokens.text.muted}`,
     clockTime: `text-xs font-mono font-bold ${themeTokens.text.primary}`,
-    themeButton: `p-2 ${sizeTokens.radius.md} text-slate-500 hover:text-slate-900 hover:bg-slate-100 dark:text-[#a3a3a3] dark:hover:text-[#f5f5f5] dark:hover:bg-[#242424] transition cursor-pointer text-lg border border-transparent hover:${themeTokens.border.default}`,
+    themeButton: `p-2 ${sizeTokens.radius.md} text-slate-500 hover:text-slate-900 hover:bg-slate-100 dark:text-[#a3a3a3] dark:hover:text-[#f5f5f5] dark:hover:bg-[#242424] transition cursor-pointer text-lg border border-transparent ${themeTokens.border.defaultHover}`,
     loginButton: `inline-flex items-center gap-2 ${sizeTokens.component.buttonCompactPadding} ${sizeTokens.radius.md} ${themeTokens.brand.buttonPrimary} text-xs font-bold`,
   },
 
@@ -38,7 +38,7 @@ export const LANDING_STYLES = {
   hero: {
     section: `relative overflow-hidden py-16 sm:py-24 border-b ${themeTokens.border.default} bg-white dark:bg-[#141414]/60`,
     container: 'max-w-6xl mx-auto px-4 sm:px-6 lg:px-8 text-center',
-    tagPill: `inline-flex items-center gap-2 px-3.5 py-1.5 ${sizeTokens.radius.full} ${themeTokens.brand.pill} text-xs mb-6 shadow-2xs`,
+    tagPill: `inline-flex items-center gap-2 px-3.5 py-1.5 ${sizeTokens.radius.md} ${themeTokens.brand.pill} text-xs mb-6 shadow-2xs`,
     pulseDot: `w-2 h-2 ${sizeTokens.radius.full} ${themeTokens.brand.pulseDot}`,
     title: `${sizeTokens.typography.heroTitle} ${themeTokens.text.primary} max-w-4xl mx-auto`,
     accentText: themeTokens.text.accent,
@@ -63,7 +63,7 @@ export const LANDING_STYLES = {
     grid: 'grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6 sm:gap-8',
     card: `group flex flex-col justify-between ${sizeTokens.component.cardPadding} ${sizeTokens.radius.lg} ${themeTokens.surface.cardInteractive}`,
     cardTop: 'flex items-start justify-between gap-4 mb-4',
-    iconWrap: `${sizeTokens.component.iconBox} ${sizeTokens.radius.md} ${themeTokens.brand.iconWrap} flex items-center justify-center text-2xl group-hover:scale-105 transition-transform duration-200`,
+    iconWrap: `flex shrink-0 items-center justify-center text-3xl ${themeTokens.brand.iconWrap}`,
     badge: `px-2.5 py-1 ${sizeTokens.radius.sm} bg-slate-100 dark:bg-[#242424] border ${themeTokens.border.default} ${themeTokens.text.secondary} ${sizeTokens.typography.micro}`,
     cardTitle: `${sizeTokens.typography.cardTitle} ${themeTokens.text.primary} ${themeTokens.text.accentHover} transition-colors`,
     cardSubtitle: `text-xs font-medium ${themeTokens.text.accent} mt-0.5`,

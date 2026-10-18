@@ -11,6 +11,7 @@ import { PatientStats } from '@/types/Types';
 import { TONES, type ToneKey } from '@/app/dashboard/constants/styles';
 import { PATIENTS_STYLES } from '@/app/dashboard/pages/patients/constants/patients';
 import { PATIENTS_TEXTS } from '@/app/dashboard/pages/patients/constants/patientsTexts';
+import { formatMinutesToHMS } from '@/utils/formatMinutesToHMS';
 
 interface PatientStatGridProps {
   /** Summary patient statistics. */
@@ -20,7 +21,7 @@ interface PatientStatGridProps {
 interface MetricCardDef {
   key: string;
   label: string;
-  value: number;
+  value: number | string;
   unit?: string;
   subtitle: string;
   icon: string;
@@ -73,7 +74,7 @@ export default function PatientStatGrid({ stats }: PatientStatGridProps) {
     {
       key: 'avgWaitTime',
       label: T.avgWaitTime.label,
-      value: stats.avgWaitTime,
+      value: stats.avgWaitTime > 0 ? formatMinutesToHMS(stats.avgWaitTime) : '--:--:--',
       unit: T.avgWaitTime.unit,
       subtitle: T.avgWaitTime.subtitle,
       icon: 'bx-hourglass',

@@ -36,6 +36,14 @@ export interface RecentPatient {
   phoneNum?: string | null;
   /** Encrypted token or raw database representation for secure authorized lookup. */
   rawPhone?: string | number | null;
+  /** ISO string of patient creation timestamp. */
+  rawCreatedAt?: string | null;
+  /** ISO string of patient consultation start timestamp if begun. */
+  rawConsultStart?: string | null;
+  /** ISO string of patient consultation completion timestamp if finished. */
+  rawConsultEnd?: string | null;
+  /** ISO string of record last updated timestamp. */
+  updatedAt?: string | null;
 }
 
 /**

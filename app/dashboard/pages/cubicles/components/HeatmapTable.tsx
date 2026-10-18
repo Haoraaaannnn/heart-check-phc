@@ -22,6 +22,7 @@ import type {
   HeatmapViewMode,
 } from '@/app/dashboard/pages/cubicles/types/cubicle';
 import HeatmapCell from '@/app/dashboard/pages/cubicles/components/HeatmapCell';
+import { formatMinutesToHMS } from '@/utils/formatMinutesToHMS';
 
 interface HeatmapTableProps {
   /** Array of cubicle rows with their calculated hourly analytical cells. */
@@ -96,7 +97,7 @@ export default function HeatmapTable({
             {/* Sticky Daily Summary Header */}
             <th className={S.thSummary}>
               <div className="flex items-center justify-center gap-1">
-                <i className="bx bx-chart text-brand-accent text-sm" />
+                <i className="bx bx-chart text-accent text-sm" />
                 <span>{T.summaryCol}</span>
               </div>
             </th>
@@ -156,7 +157,7 @@ export default function HeatmapTable({
                     <div className="flex items-center gap-1 text-[10px] text-content-muted">
                       <span>{T.avgSpeedPrefix}</span>
                       <span className="font-mono font-bold text-content">
-                        {row.dailyAvgSpeedMinutes > 0 ? `${row.dailyAvgSpeedMinutes}m` : '—'}
+                        {row.dailyAvgSpeedMinutes > 0 ? formatMinutesToHMS(row.dailyAvgSpeedMinutes) : '—'}
                       </span>
                     </div>
 
@@ -218,7 +219,7 @@ export default function HeatmapTable({
                 <span className="text-[10px] font-bold text-content-muted uppercase">
                   Facility Total
                 </span>
-                <span className="font-mono text-xs font-extrabold text-brand-accent">
+                <span className="font-mono text-xs font-extrabold text-accent">
                   {rows.reduce((acc, r) => acc + r.dailyTotalPatients, 0)} {T.ptsUnit}
                 </span>
               </div>

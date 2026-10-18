@@ -59,7 +59,7 @@ export default function ScreenOptionCard({ option }: ScreenOptionCardProps) {
         {/* Top Header Row with Icon and Badge */}
         <div className={S.topRow}>
           <div className={S.iconWrap}>
-            <i className={`bx ${option.icon}`} />
+            <i className={`bx ${option.icon}`} aria-hidden="true" />
           </div>
           <span className={S.badge}>{option.badge}</span>
         </div>

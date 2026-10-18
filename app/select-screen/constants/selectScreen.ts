@@ -155,12 +155,12 @@ export const SELECT_SCREEN_STYLES = {
     clockContainer: `hidden md:flex flex-col items-end pr-3 border-r ${themeTokens.border.default}`,
     clockDate: `${sizeTokens.typography.micro} ${themeTokens.text.muted}`,
     clockTime: `text-xs font-mono font-bold ${themeTokens.text.primary}`,
-    themeButton: `p-2 ${sizeTokens.radius.md} text-slate-500 hover:text-slate-900 hover:bg-slate-100 dark:text-[#a3a3a3] dark:hover:text-[#f5f5f5] dark:hover:bg-[#242424] transition cursor-pointer text-lg border border-transparent hover:${themeTokens.border.default}`,
+    themeButton: `p-2 ${sizeTokens.radius.md} text-slate-500 hover:text-slate-900 hover:bg-slate-100 dark:text-[#a3a3a3] dark:hover:text-[#f5f5f5] dark:hover:bg-[#242424] transition cursor-pointer text-lg border border-transparent ${themeTokens.border.defaultHover}`,
     userChip: `flex items-center gap-2 px-2.5 py-1.5 ${sizeTokens.radius.md} bg-slate-100 dark:bg-[#1f1f1f] border ${themeTokens.border.default}`,
     userAvatar: `w-7 h-7 ${sizeTokens.radius.sm} bg-[#a8071a]/15 text-[#a8071a] dark:bg-[#a8071a]/30 dark:text-[#f87171] flex items-center justify-center font-bold text-xs uppercase`,
     userName: `text-xs font-semibold ${themeTokens.text.primary} hidden sm:inline whitespace-nowrap`,
     roleTag: `px-2 py-0.5 rounded text-[10px] font-bold uppercase tracking-wider bg-[#a8071a] text-white`,
-    signOutBtn: `p-2 ${sizeTokens.radius.md} text-slate-500 hover:text-[#a8071a] hover:bg-[#a8071a]/10 dark:hover:bg-[#a8071a]/20 dark:hover:text-[#f87171] transition cursor-pointer text-lg`,
+    signOutBtn: `p-2 ${sizeTokens.radius.md} text-slate-500 dark:text-[#a3a3a3] hover:text-[#a8071a] dark:hover:text-[#f87171] hover:text-accent hover:bg-[#a8071a]/10 dark:hover:bg-[#a8071a]/20 transition cursor-pointer text-lg`,
   },
 
   hero: {
@@ -184,9 +184,9 @@ export const SELECT_SCREEN_STYLES = {
   card: {
     root: `group relative flex flex-col justify-between ${sizeTokens.component.cardPaddingCompact} ${sizeTokens.radius.lg} ${themeTokens.surface.cardInteractive}`,
     topRow: 'flex items-start justify-between gap-4 mb-4',
-    iconWrap: `flex ${sizeTokens.component.iconBox} items-center justify-center ${sizeTokens.radius.md} ${themeTokens.brand.iconWrap} shadow-2xs transition group-hover:scale-105 shrink-0`,
+    iconWrap: `flex shrink-0 items-center justify-center text-3xl ${themeTokens.brand.iconWrap}`,
     badge: `px-2.5 py-1 ${sizeTokens.radius.sm} bg-slate-50 dark:bg-[#242424] border ${themeTokens.border.default} ${themeTokens.text.secondary} ${sizeTokens.typography.micro}`,
-    title: `text-base font-bold ${themeTokens.text.primary} ${themeTokens.text.accentHover} transition-colors`,
+    title: `text-base font-bold ${themeTokens.text.primary} ${themeTokens.text.accentHover} ${themeTokens.text.groupHoverAccent} transition-colors`,
     description: `mt-2 ${sizeTokens.typography.bodySmall} ${themeTokens.text.secondary}`,
     noticeBox: `mt-4 p-3 ${sizeTokens.radius.md} ${themeTokens.brand.alertLockout} border text-xs leading-normal flex items-start gap-2`,
     noticeIcon: 'text-base shrink-0 mt-0.5',

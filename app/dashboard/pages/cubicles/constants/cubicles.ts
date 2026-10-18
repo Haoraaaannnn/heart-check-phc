@@ -83,8 +83,8 @@ export const CUBICLES_STYLES = {
 
   /** Metric card style tokens matching DashboardMetrics. */
   metricCard: {
-    tile: 'flex items-center gap-4 rounded-2xl border border-line bg-surface p-5 shadow-sm transition hover:-translate-y-0.5',
-    iconWrap: 'flex h-12 w-12 shrink-0 items-center justify-center rounded-full text-2xl',
+    tile: 'flex items-center gap-4 rounded-2xl border border-line bg-surface p-5 shadow-sm transition',
+    iconWrap: 'flex shrink-0 items-center justify-center text-2xl',
     content: 'flex flex-col min-w-0 flex-1',
     label: 'text-xs font-semibold text-content-muted',
     value: 'text-3xl font-extrabold leading-tight text-content',
@@ -96,10 +96,10 @@ export const CUBICLES_STYLES = {
 
   /** Individual cubicle status card. */
   cubicleCard: {
-    tile: 'flex flex-col justify-between rounded-xl border-2 p-5 shadow-sm transition hover:shadow-md',
+    tile: 'flex flex-col justify-between rounded-xl border-2 p-5 shadow-sm transition',
     headerRow: 'flex items-center justify-between mb-3',
     number: 'text-lg font-extrabold text-content',
-    statusBadge: 'inline-flex items-center gap-1.5 rounded-full px-2.5 py-0.5 text-xs font-bold uppercase',
+    statusBadge: 'inline-flex items-center gap-1.5 rounded-md px-2.5 py-0.5 text-xs font-bold uppercase',
     body: 'flex flex-col gap-1.5 text-xs',
     category: 'font-semibold text-content-muted capitalize',
     detailRow: 'flex items-center gap-1.5 text-content-muted',
@@ -133,7 +133,7 @@ export const CUBICLES_STYLES = {
     dateSelect:
       'bg-transparent text-xs font-semibold text-content focus:outline-hidden cursor-pointer pr-1 dark:bg-[#1a1a1a]',
     liveBadge:
-      'inline-flex items-center gap-1.5 rounded-full bg-emerald-50 dark:bg-emerald-950/60 px-2.5 py-0.5 text-[11px] font-bold text-emerald-700 dark:text-emerald-300 border border-emerald-200 dark:border-emerald-800',
+      'inline-flex items-center gap-1.5 rounded-md bg-emerald-50 dark:bg-emerald-950/60 px-2.5 py-0.5 text-[11px] font-bold text-emerald-700 dark:text-emerald-300 border border-emerald-200 dark:border-emerald-800',
     liveDot: 'h-1.5 w-1.5 rounded-full bg-emerald-500 animate-pulse',
     operationalHoursPill:
       'inline-flex items-center gap-1 rounded-md bg-slate-100 dark:bg-[#242424] px-2 py-0.5 text-[11px] font-medium text-content-muted',
@@ -141,8 +141,8 @@ export const CUBICLES_STYLES = {
     // KPI summary row
     kpiGrid: 'grid grid-cols-1 gap-3 sm:grid-cols-2 lg:grid-cols-4',
     kpiCard:
-      'flex items-center gap-3.5 rounded-xl border border-line bg-surface p-4 shadow-2xs transition hover:shadow-xs',
-    kpiIconWrap: 'flex h-10 w-10 shrink-0 items-center justify-center rounded-xl text-xl',
+      'flex items-center gap-3.5 rounded-xl border border-line bg-surface p-4 shadow-2xs transition',
+    kpiIconWrap: 'flex shrink-0 items-center justify-center text-xl',
     kpiLabel: 'text-[11px] font-semibold text-content-muted',
     kpiValue: 'text-xl font-extrabold text-content',
     kpiSubtitle: 'text-[10px] text-content-subtle',
@@ -172,12 +172,12 @@ export const CUBICLES_STYLES = {
 
     // Cell button
     cellButton:
-      'group relative flex flex-col items-center justify-center w-full min-h-[54px] rounded-lg border p-1 text-center transition-all cursor-pointer focus:outline-none focus:ring-2 focus:ring-rose-500/30 hover:scale-[1.03] hover:shadow-xs',
+      'group relative flex flex-col items-center justify-center w-full min-h-[54px] rounded-lg border p-1 text-center transition-all cursor-pointer focus:outline-hidden focus-visible:ring-2 focus-visible:ring-[#a8071a]/40',
     cellPrimaryValue: 'font-mono text-xs font-extrabold leading-tight',
     cellSecondaryValue: 'font-mono text-[10px] font-medium leading-none opacity-85 mt-0.5',
-    cellBadge: 'inline-flex items-center px-1.5 py-0.5 rounded-full text-[9px] font-extrabold uppercase mt-1',
+    cellBadge: 'inline-flex items-center px-1.5 py-0.5 rounded-md text-[9px] font-extrabold uppercase mt-1',
     cellUpcoming:
-      'opacity-40 bg-slate-50 dark:bg-[#1a1a1a] border-dashed border-line cursor-not-allowed hover:scale-100 hover:shadow-none',
+      'opacity-40 bg-slate-50 dark:bg-[#1a1a1a] border-dashed border-line cursor-not-allowed',
 
     // Summary row
     tfRow: 'border-t-2 border-line bg-surface-subtle/90 font-bold',
@@ -222,28 +222,28 @@ export const CUBICLES_STYLES = {
     summaryPillGroup: 'flex flex-wrap items-center gap-4 sm:gap-6',
     summaryPill: 'flex items-center gap-3',
     summaryIconWrap:
-      'flex h-10 w-10 shrink-0 items-center justify-center rounded-xl text-xl font-bold shadow-2xs',
+      'flex shrink-0 items-center justify-center text-xl font-bold',
     summaryLabel: 'text-[11px] font-semibold text-content-muted leading-none',
     summaryValue: 'font-mono text-xl font-extrabold text-content mt-1 leading-tight',
     summarySubtext: 'text-[10px] text-content-subtle mt-0.5',
     pipelineWrap: 'w-full overflow-x-auto pb-4 pt-1 phc-scroll',
     pipelineRow: 'flex items-stretch gap-2.5 min-w-[1180px] justify-between relative',
     stageCard:
-      'flex-1 flex flex-col rounded-2xl border-2 p-4 shadow-xs transition-all hover:shadow-md min-w-[210px] max-w-[260px]',
+      'flex-1 flex flex-col rounded-2xl border-2 p-4 shadow-xs transition-all min-w-[210px] max-w-[260px]',
     stageHeader: 'flex items-center justify-between pb-3 border-b mb-3',
     stageTitleGroup: 'flex items-center gap-2.5 min-w-0',
     stageIconWrap:
-      'flex h-9 w-9 shrink-0 items-center justify-center rounded-xl text-lg shadow-2xs',
+      'flex shrink-0 items-center justify-center text-xl',
     stageTitle: 'text-sm font-extrabold text-content leading-tight break-words',
     stageSubtitle: 'text-[10px] text-content-muted leading-none mt-0.5 break-words',
     stageBadge:
-      'inline-flex items-center gap-1 rounded-full px-2 py-0.5 font-mono text-xs font-bold shrink-0',
+      'inline-flex items-center gap-1 rounded-md px-2 py-0.5 font-mono text-xs font-bold shrink-0',
     stageBody: 'flex-1 flex flex-col justify-between gap-3',
     stageMetricStrip:
       'flex items-center justify-between rounded-xl px-3 py-2 text-xs border',
     stagePatientList: 'flex flex-col gap-1.5 max-h-[140px] overflow-y-auto phc-scroll pr-1',
     patientPill:
-      'flex items-center justify-between rounded-lg border px-2.5 py-1.5 text-xs font-mono font-bold transition hover:scale-[1.02] cursor-pointer shadow-2xs',
+      'flex items-center justify-between rounded-lg border px-2.5 py-1.5 text-xs font-mono font-bold transition cursor-pointer shadow-2xs',
     connector: 'flex flex-col items-center justify-center shrink-0 w-8 self-center text-center',
     connectorCircle:
       'flex h-8 w-8 items-center justify-center rounded-full border border-line bg-surface text-content-muted shadow-xs text-base',
@@ -253,12 +253,12 @@ export const CUBICLES_STYLES = {
     hubHeader: 'flex flex-wrap items-center justify-between gap-3 pb-3 border-b border-line',
     hubTitleGroup: 'flex items-center gap-3',
     hubTitleIcon:
-      'flex h-10 w-10 items-center justify-center rounded-xl bg-rose-50 dark:bg-rose-950/50 text-rose-600 dark:text-rose-400 text-xl border border-rose-200 dark:border-rose-900',
+      'flex items-center justify-center text-rose-600 dark:text-rose-400 text-2xl shrink-0',
     hubTitle: 'text-base font-extrabold text-content',
     hubSubtitle: 'text-xs text-content-muted',
     stationGrid: 'grid grid-cols-1 gap-3.5 sm:grid-cols-2 lg:grid-cols-4',
     stationCard:
-      'group flex flex-col justify-between rounded-xl border-2 p-4 shadow-xs transition-all hover:scale-[1.01] hover:shadow-md cursor-pointer',
+      'group flex flex-col justify-between rounded-xl border-2 p-4 shadow-xs transition-all cursor-pointer',
     telemetryStrip:
       'flex flex-col gap-3 rounded-2xl border border-line bg-surface p-4 shadow-xs',
     telemetryHeader: 'flex items-center justify-between',
@@ -281,7 +281,7 @@ export const CUBICLES_STYLES = {
     // Rectangular processing stage node tokens
     stageNodeWrap: 'relative z-10 flex flex-col items-center select-none shrink-0',
     stageNodeCard:
-      'group flex flex-col w-[250px] rounded-2xl border-2 p-3.5 shadow-xs transition-all hover:shadow-md cursor-pointer relative bg-surface',
+      'group flex flex-col w-[250px] rounded-2xl border-2 p-3.5 shadow-xs transition-all cursor-pointer relative bg-surface',
     stageNodeCardActive: 'ring-3 ring-rose-500/50 shadow-md scale-[1.02] border-rose-500',
     nodePortIn:
       'absolute -left-2 top-1/2 -translate-y-1/2 w-3.5 h-3.5 rounded-full border-2 border-line bg-surface flex items-center justify-center shadow-xs z-20',
@@ -290,10 +290,10 @@ export const CUBICLES_STYLES = {
     nodePortDot: 'w-1.5 h-1.5 rounded-full bg-rose-500',
     nodeHeader: 'flex items-center justify-between pb-2 border-b border-line/60',
     nodeStagePill: 'font-mono text-[9px] font-bold uppercase tracking-wider px-1.5 py-0.5 rounded border',
-    nodeCountBadge: 'font-mono text-[10px] font-extrabold px-2 py-0.5 rounded-full',
+    nodeCountBadge: 'font-mono text-[10px] font-extrabold px-2 py-0.5 rounded-md',
     nodeIdentity: 'flex items-center gap-2.5 my-2.5',
     nodeIconWrap:
-      'flex h-9 w-9 shrink-0 items-center justify-center rounded-xl text-lg font-bold shadow-2xs',
+      'flex shrink-0 items-center justify-center text-lg font-bold',
     nodeTitle: 'text-xs font-extrabold text-content leading-tight break-words',
     nodeSubtitle: 'text-[10px] text-content-muted leading-tight break-words mt-0.5',
     nodeMetricStrip: 'flex items-center justify-between rounded-lg px-2.5 py-1.5 text-[11px] border mb-2',
@@ -301,7 +301,7 @@ export const CUBICLES_STYLES = {
     nodeQueueHeader:
       'flex items-center justify-between text-[10px] font-bold text-content-subtle uppercase tracking-wider mb-1',
     nodeTicketItem:
-      'flex items-center justify-between rounded-lg border px-2 py-1 text-[11px] font-mono font-bold transition hover:scale-[1.02] cursor-pointer shadow-2xs bg-surface',
+      'flex items-center justify-between rounded-lg border px-2 py-1 text-[11px] font-mono font-bold transition cursor-pointer shadow-2xs bg-surface',
     nodeEmptyBuffer:
       'flex h-12 items-center justify-center rounded-lg border border-dashed border-line text-[10px] text-content-muted text-center',
     nodeAlertBanner:
@@ -313,17 +313,17 @@ export const CUBICLES_STYLES = {
     routeHighway: 'w-full h-1.5 rounded-full bg-slate-200 dark:bg-[#2e2e2e] relative overflow-hidden',
     routeDotItemWrap: 'absolute top-1/2 -translate-y-1/2 phc-queue-dot-motion cursor-pointer z-10 group',
     routeItemDot:
-      'flex items-center justify-center w-4 h-4 rounded-full border-2 text-[8px] font-mono font-bold shadow-xs transition-transform hover:scale-125 cursor-pointer',
+      'flex items-center justify-center w-4 h-4 rounded-full border-2 text-[8px] font-mono font-bold shadow-xs transition-transform cursor-pointer',
     routeItemDotNormal: 'bg-rose-500 border-white dark:border-[#2e2e2e] text-white',
     routeItemDotStalled: 'bg-rose-600 border-rose-300 text-white ring-2 ring-rose-500/40 animate-pulse',
     routeTooltip:
       'absolute -top-7 left-1/2 -translate-x-1/2 hidden group-hover:flex items-center gap-1 rounded bg-slate-900 text-white dark:bg-white dark:text-[#0d0d0d] px-1.5 py-0.5 text-[9px] font-mono whitespace-nowrap shadow-md pointer-events-none z-30',
     routeLabelCapsule:
-      'flex items-center gap-1.5 text-[9px] font-bold tracking-wider uppercase px-2 py-0.5 rounded-full bg-surface border border-line shadow-2xs whitespace-nowrap mt-1',
+      'flex items-center gap-1.5 text-[9px] font-bold tracking-wider uppercase px-2 py-0.5 rounded-md bg-surface border border-line shadow-2xs whitespace-nowrap mt-1',
     routeDotActive: 'w-1.5 h-1.5 rounded-full bg-emerald-500 animate-pulse',
     routeDotIdle: 'w-1.5 h-1.5 rounded-full bg-slate-300 dark:bg-[#404040]',
     routeItemBadge:
-      'font-mono text-[8px] font-extrabold px-1.5 py-0.2 rounded-full border bg-surface text-content-muted',
+      'font-mono text-[8px] font-extrabold px-1.5 py-0.2 rounded-md border bg-surface text-content-muted',
 
     // Branching bays container
     branchingBaysSection:
@@ -331,12 +331,12 @@ export const CUBICLES_STYLES = {
     branchingHeader: 'flex flex-wrap items-center justify-between gap-3',
     branchingTitleWrap: 'flex items-center gap-2.5',
     branchingIcon:
-      'flex h-8 w-8 items-center justify-center rounded-lg bg-rose-100 dark:bg-rose-950 text-rose-600 dark:text-rose-400 text-base border border-rose-200 dark:border-rose-900',
+      'flex items-center justify-center text-rose-600 dark:text-rose-400 text-xl shrink-0',
     branchingTitle: 'text-xs font-extrabold text-content tracking-wide uppercase',
     branchingSubtitle: 'text-[11px] text-content-muted',
     branchingGrid: 'grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 xl:grid-cols-4 gap-3.5',
     bayCard:
-      'group flex flex-col justify-between rounded-xl border-2 p-3.5 shadow-2xs transition-all hover:scale-[1.02] hover:shadow-sm cursor-pointer relative bg-surface',
+      'group flex flex-col justify-between rounded-xl border-2 p-3.5 shadow-2xs transition-all cursor-pointer relative bg-surface',
     bayHeader: 'flex items-center justify-between mb-2',
     bayTitle: 'font-extrabold text-content text-sm flex items-center gap-1.5',
     bayDoctor: 'text-[11px] text-content-muted break-words flex items-center gap-1',
@@ -351,7 +351,7 @@ export const CUBICLES_STYLES = {
     branchStem: 'flex flex-col items-center justify-center my-1 relative z-0',
     branchStemLine: 'w-0.5 h-6 bg-rose-400 dark:bg-rose-600',
     branchStemBadge:
-      'inline-flex items-center gap-1.5 px-3 py-1 rounded-full text-[11px] font-bold bg-surface border border-rose-300 dark:border-rose-800 text-rose-700 dark:text-rose-300 shadow-2xs my-0.5',
+      'inline-flex items-center gap-1.5 px-3 py-1 rounded-md text-[11px] font-bold bg-surface border border-rose-300 dark:border-rose-800 text-rose-700 dark:text-rose-300 shadow-2xs my-0.5',
 
     // Stage focus patient tray
     stageTray:
@@ -361,13 +361,13 @@ export const CUBICLES_STYLES = {
     stageTrayGrid:
       'grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 xl:grid-cols-4 gap-2.5 max-h-[280px] overflow-y-auto phc-scroll p-1',
     stageTrayCard:
-      'flex items-center justify-between rounded-xl border p-3 text-xs transition-all hover:scale-[1.01] hover:shadow-xs cursor-pointer bg-surface',
+      'flex items-center justify-between rounded-xl border p-3 text-xs transition-all cursor-pointer bg-surface',
 
     // Filter pills
     filterPillBase:
-      'inline-flex items-center gap-1.5 rounded-xl border px-3 py-1.5 text-xs font-semibold transition-all cursor-pointer shadow-2xs',
+      'inline-flex items-center gap-1.5 rounded-xl border px-3 py-1.5 text-xs font-semibold transition-all cursor-pointer select-none focus:outline-hidden focus-visible:ring-2 focus-visible:ring-[#a8071a]/50',
     filterPillActive:
-      'bg-rose-600 dark:bg-rose-600 text-white font-bold shadow-xs border-rose-600 ring-2 ring-rose-500/30',
+      'bg-[#a8071a] text-white font-bold border-[#a8071a] shadow-2xs',
     filterPillInactive:
       'bg-surface text-content-muted hover:text-content hover:bg-surface-subtle border-line',
   },
@@ -380,7 +380,7 @@ export const CUBICLES_STYLES = {
       'flex flex-wrap items-center justify-between gap-3 pb-4 border-b border-line mb-3',
     canvasTitleGroup: 'flex items-center gap-3',
     canvasIconWrap:
-      'flex h-9 w-9 items-center justify-center rounded-xl bg-slate-100 dark:bg-[#242424] text-content text-lg border border-line shadow-2xs',
+      'flex items-center justify-center text-content text-2xl shrink-0',
     canvasTitle: 'text-sm font-bold text-content',
     canvasSubtitle: 'text-xs text-content-muted mt-0.5',
     canvasControls: 'flex items-center gap-2',
@@ -391,14 +391,14 @@ export const CUBICLES_STYLES = {
 
     // Rectangular Stage Nodes with Thin Borders
     nodeCard:
-      'group flex flex-col justify-between rounded-xl border bg-surface p-3 text-xs shadow-2xs transition-all hover:scale-[1.02] hover:shadow-sm cursor-pointer relative z-10 select-none',
+      'group flex flex-col justify-between rounded-xl border bg-surface p-3 text-xs shadow-2xs transition-all cursor-pointer relative z-10 select-none',
     nodeCardProcessing:
       'border-rose-500 ring-2 ring-rose-500/30 dark:ring-rose-500/20 shadow-sm',
     nodeCardIdle: 'border-line hover:border-slate-400 dark:hover:border-[#404040]',
     nodeHeader: 'flex items-center justify-between gap-1 mb-1.5',
     nodeTitle: 'text-xs font-bold text-content break-words flex items-center gap-1.5',
     nodeBadge:
-      'inline-flex items-center gap-1 font-mono text-[10px] font-bold px-1.5 py-0.2 rounded-full border',
+      'inline-flex items-center gap-1 font-mono text-[10px] font-bold px-1.5 py-0.2 rounded-md border',
     nodeBody: 'flex flex-col gap-1',
     nodeDoctor: 'text-[11px] text-content-muted break-words flex items-center gap-1',
     nodeCurrentPatient:
@@ -450,7 +450,7 @@ export const CUBICLES_STYLES = {
     stage3Subtitle:
       'text-[10px] text-content-muted leading-tight',
     stage3Badge:
-      'inline-flex items-center gap-1 font-mono text-[10px] font-bold px-2 py-0.5 rounded-full border border-line bg-surface-subtle text-content',
+      'inline-flex items-center gap-1 font-mono text-[10px] font-bold px-2 py-0.5 rounded-md border border-line bg-surface-subtle text-content',
     stage3PodContainer:
       'flex flex-col gap-2.5 overflow-y-auto phc-scroll max-h-[350px] pr-0.5',
     stage3PodSection:
@@ -462,7 +462,7 @@ export const CUBICLES_STYLES = {
     stage3PodGrid:
       'grid grid-cols-1 sm:grid-cols-2 gap-2',
     cubicleSubCard:
-      'flex flex-col justify-between p-2 rounded-lg border border-line/80 bg-surface text-xs shadow-2xs transition-all hover:scale-[1.01] hover:border-slate-400 dark:hover:border-[#404040] cursor-pointer min-h-[66px]',
+      'flex flex-col justify-between p-2 rounded-lg border border-line/80 bg-surface text-xs shadow-2xs transition-all hover:border-slate-400 dark:hover:border-[#404040] cursor-pointer min-h-[66px]',
     cubicleSubCardOccupied:
       'border-rose-400/80 bg-rose-50/20 dark:bg-rose-950/20 ring-1 ring-rose-500/20',
 
@@ -480,17 +480,17 @@ export const CUBICLES_STYLES = {
     serviceBlockSubtitle:
       'text-[10px] text-content-muted leading-tight break-words',
     serviceBlockBadge:
-      'inline-flex items-center gap-1 font-mono text-[10px] font-bold px-1.5 py-0.2 rounded-full border border-line bg-surface-subtle text-content shrink-0',
+      'inline-flex items-center gap-1 font-mono text-[10px] font-bold px-1.5 py-0.2 rounded-md border border-line bg-surface-subtle text-content shrink-0',
     serviceBlockScrollGrid:
       'grid grid-cols-2 lg:grid-cols-3 gap-1.5 overflow-y-auto phc-scroll max-h-[110px] pr-1',
     serviceRoomFilterPill:
       'px-1.5 py-0.2 text-[9px] font-bold rounded border transition cursor-pointer select-none whitespace-nowrap',
     serviceRoomFilterActive:
-      'bg-slate-800 text-white dark:bg-white dark:text-[#0d0d0d] border-transparent',
+      'bg-slate-800 text-white dark:bg-white dark:text-[#0d0d0d] border-slate-800 dark:border-white shadow-2xs',
     serviceRoomFilterInactive:
       'bg-surface-subtle text-content-muted border-line hover:text-content',
     cubicleCompactCard:
-      'flex flex-col justify-between p-1.5 rounded-lg border border-line/80 bg-surface text-xs shadow-2xs transition-all hover:scale-[1.02] hover:border-slate-400 dark:hover:border-[#404040] cursor-pointer min-h-[50px]',
+      'flex flex-col justify-between p-1.5 rounded-lg border border-line/80 bg-surface text-xs shadow-2xs transition-all hover:border-slate-400 dark:hover:border-[#404040] cursor-pointer min-h-[50px]',
     cubicleCompactCardOccupied:
       'border-rose-400/80 bg-rose-50/20 dark:bg-rose-950/20 ring-1 ring-rose-500/25',
     serviceBlockToggleBtn:
@@ -544,7 +544,7 @@ export const PIPELINE_STAGE_STYLES: Record<
     border: 'border-amber-200 dark:border-amber-900/80',
     bg: 'bg-amber-50/40 dark:bg-amber-950/20',
     headerBorder: 'border-amber-200/80 dark:border-amber-900/60',
-    iconBg: 'bg-amber-100 dark:bg-amber-900/50',
+    iconBg: '',
     iconText: 'text-amber-700 dark:text-amber-300',
     badgeBg: 'bg-amber-100 dark:bg-amber-900/60 border border-amber-300 dark:border-amber-800',
     badgeText: 'text-amber-800 dark:text-amber-300',
@@ -558,7 +558,7 @@ export const PIPELINE_STAGE_STYLES: Record<
     border: 'border-purple-200 dark:border-purple-900/80',
     bg: 'bg-purple-50/40 dark:bg-purple-950/20',
     headerBorder: 'border-purple-200/80 dark:border-purple-900/60',
-    iconBg: 'bg-purple-100 dark:bg-purple-900/50',
+    iconBg: '',
     iconText: 'text-purple-700 dark:text-purple-300',
     badgeBg: 'bg-purple-100 dark:bg-purple-900/60 border border-purple-300 dark:border-purple-800',
     badgeText: 'text-purple-800 dark:text-purple-300',
@@ -572,7 +572,7 @@ export const PIPELINE_STAGE_STYLES: Record<
     border: 'border-rose-200 dark:border-rose-900/80',
     bg: 'bg-rose-50/40 dark:bg-rose-950/20',
     headerBorder: 'border-rose-200/80 dark:border-rose-900/60',
-    iconBg: 'bg-rose-100 dark:bg-rose-900/50',
+    iconBg: '',
     iconText: 'text-rose-700 dark:text-rose-300',
     badgeBg: 'bg-rose-100 dark:bg-rose-900/60 border border-rose-300 dark:border-rose-800',
     badgeText: 'text-rose-800 dark:text-rose-300',
@@ -586,7 +586,7 @@ export const PIPELINE_STAGE_STYLES: Record<
     border: 'border-slate-200 dark:border-[#2e2e2e]',
     bg: 'bg-slate-50/60 dark:bg-[#242424]/40',
     headerBorder: 'border-slate-200/80 dark:border-[#2e2e2e]',
-    iconBg: 'bg-slate-100 dark:bg-[#242424]',
+    iconBg: '',
     iconText: 'text-slate-700 dark:text-[#f5f5f5]',
     badgeBg: 'bg-slate-100 dark:bg-[#242424] border border-slate-300 dark:border-[#2e2e2e]',
     badgeText: 'text-slate-800 dark:text-[#f5f5f5]',
@@ -600,7 +600,7 @@ export const PIPELINE_STAGE_STYLES: Record<
     border: 'border-emerald-200 dark:border-emerald-900/80',
     bg: 'bg-emerald-50/40 dark:bg-emerald-950/20',
     headerBorder: 'border-emerald-200/80 dark:border-emerald-900/60',
-    iconBg: 'bg-emerald-100 dark:bg-emerald-900/50',
+    iconBg: '',
     iconText: 'text-emerald-700 dark:text-emerald-300',
     badgeBg: 'bg-emerald-100 dark:bg-emerald-900/60 border border-emerald-300 dark:border-emerald-800',
     badgeText: 'text-emerald-800 dark:text-emerald-300',

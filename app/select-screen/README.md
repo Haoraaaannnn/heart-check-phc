@@ -1,5 +1,7 @@
 # Screen Display Selector Developer Guide: Architecture & Where to Edit Map
 
+**Last Updated:** 2026-10-18
+
 This document is the developer guide for maintaining and extending the Screen Display Selector module located at `app/select-screen/`.
 
 ---

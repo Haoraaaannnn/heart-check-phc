@@ -30,7 +30,7 @@ export default function CubiclesPage() {
       <div className={CUBICLES_STYLES.page}>
         <div className="flex h-64 items-center justify-center rounded-2xl border border-line bg-surface p-12 text-center text-sm font-semibold text-content-muted shadow-card">
           <div className="flex flex-col items-center gap-3">
-            <span className="h-6 w-6 animate-spin rounded-full border-2 border-brand-accent border-t-transparent" />
+            <span className="h-6 w-6 animate-spin rounded-full border-2 border-accent border-t-transparent" />
             <p>{T.loading}</p>
           </div>
         </div>

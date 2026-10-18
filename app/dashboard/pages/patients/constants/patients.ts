@@ -67,8 +67,8 @@ export const PATIENTS_STYLES = {
   filterBar: {
     container: 'flex gap-2 overflow-x-auto pb-1 scrollbar-thin',
     chipBase:
-      'shrink-0 px-4 py-2 rounded-full text-xs md:text-sm font-bold border transition whitespace-nowrap outline-none focus:ring-2 focus:ring-brand-accent/30',
-    chipActive: 'bg-brand-gradient border-transparent text-white shadow-sm',
+      'shrink-0 px-4 py-2 rounded-lg text-xs md:text-sm font-bold border transition whitespace-nowrap cursor-pointer select-none focus:outline-hidden focus-visible:ring-2 focus-visible:ring-[#a8071a]/50',
+    chipActive: 'bg-[#a8071a] border-[#a8071a] text-white shadow-2xs',
     chipIdle:
       'bg-surface border-line text-content-muted hover:bg-surface-muted hover:text-content',
   },
@@ -78,8 +78,8 @@ export const PATIENTS_STYLES = {
 
   /** Individual metric card token matching DashboardMetrics. */
   metricCard: {
-    tile: 'flex items-center gap-4 rounded-2xl border border-line bg-surface p-5 shadow-sm transition hover:-translate-y-0.5',
-    iconWrap: 'flex h-12 w-12 shrink-0 items-center justify-center rounded-full text-2xl',
+    tile: 'flex items-center gap-4 rounded-2xl border border-line bg-surface p-5 shadow-sm transition',
+    iconWrap: 'flex shrink-0 items-center justify-center text-2xl',
     content: 'flex flex-col min-w-0 flex-1',
     label: 'text-xs font-semibold text-content-muted',
     value: 'text-3xl font-extrabold leading-tight text-content',
@@ -98,7 +98,7 @@ export const PATIENTS_STYLES = {
     searchWrap: 'relative flex-1 sm:max-w-sm w-full',
     searchIcon: 'absolute left-3 top-1/2 -translate-y-1/2 text-sm text-content-subtle',
     searchInput:
-      'w-full rounded-xl border border-line bg-surface-muted py-2 pl-9 pr-8 text-xs text-content placeholder:text-content-subtle focus:border-brand-accent focus:bg-surface focus:outline-none transition shadow-2xs',
+      'w-full rounded-xl border border-line bg-surface-muted py-2 pl-9 pr-8 text-xs text-content placeholder:text-content-subtle focus:border-[#a8071a] focus:bg-surface focus:outline-none transition shadow-2xs',
     clearSearchButton:
       'absolute right-2.5 top-1/2 -translate-y-1/2 text-content-subtle hover:text-content text-sm cursor-pointer',
     title: 'text-base md:text-lg font-extrabold text-content',
@@ -116,7 +116,7 @@ export const PATIENTS_STYLES = {
     ticketBadge:
       'inline-block rounded-lg bg-red-50 border border-red-200 px-3 py-1 font-mono text-sm font-extrabold text-red-700 dark:bg-red-950/40 dark:border-red-900 dark:text-red-300 whitespace-nowrap',
     statusBadge:
-      'inline-flex items-center gap-1.5 rounded-full px-3 py-1 text-xs font-bold whitespace-nowrap',
+      'inline-flex items-center gap-1.5 rounded-md px-2.5 py-0.5 text-xs font-bold whitespace-nowrap',
     phoneText: 'font-mono text-xs font-medium text-content whitespace-nowrap',
     phoneProtectedBadge:
       'inline-flex items-center gap-1 rounded-md bg-emerald-50 border border-emerald-200 px-2 py-0.5 font-mono text-xs font-semibold text-emerald-700 dark:bg-emerald-950/40 dark:border-emerald-800 dark:text-emerald-300 transition hover:bg-emerald-100 dark:hover:bg-emerald-900/50 cursor-pointer whitespace-nowrap',
@@ -135,7 +135,7 @@ export const PATIENTS_STYLES = {
     paginationInfo: 'text-xs font-semibold text-content-muted',
     pageJumpWrap: 'flex items-center gap-1.5 text-xs text-content-muted',
     pageJumpInput:
-      'w-14 rounded-lg border border-line bg-surface px-2 py-1 text-center text-xs font-semibold text-content outline-none focus:border-brand-accent',
+      'w-14 rounded-lg border border-line bg-surface px-2 py-1 text-center text-xs font-semibold text-content outline-none focus:border-[#a8071a]',
     pageJumpButton:
       'rounded-lg border border-line bg-surface px-2.5 py-1 text-xs font-semibold text-content transition hover:bg-surface-muted disabled:opacity-40 cursor-pointer',
     selectOption: themeTokens.surface.selectOption,
@@ -145,9 +145,9 @@ export const PATIENTS_STYLES = {
   serviceQueue: {
     statusStrip: 'flex items-center gap-3 flex-wrap',
     badgeActive:
-      'inline-flex items-center gap-2 rounded-full bg-emerald-100 border border-emerald-300 px-3 py-1 text-xs font-extrabold uppercase text-emerald-800 dark:bg-emerald-950/60 dark:border-emerald-800 dark:text-emerald-300',
+      'inline-flex items-center gap-2 rounded-md bg-emerald-100 border border-emerald-300 px-2.5 py-1 text-xs font-extrabold uppercase text-emerald-800 dark:bg-emerald-950/60 dark:border-emerald-800 dark:text-emerald-300',
     badgeStandby:
-      'inline-flex items-center gap-2 rounded-full bg-surface-muted border border-line px-3 py-1 text-xs font-extrabold uppercase text-content-muted',
+      'inline-flex items-center gap-2 rounded-md bg-surface-muted border border-line px-2.5 py-1 text-xs font-extrabold uppercase text-content-muted',
     indicatorDotActive: 'h-2 w-2 rounded-full bg-emerald-500 animate-pulse',
     indicatorDotStandby: 'h-2 w-2 rounded-full bg-content-subtle',
     roomsText: 'text-sm font-semibold text-content-muted',
@@ -158,7 +158,7 @@ export const PATIENTS_STYLES = {
     patientItem:
       'flex items-center justify-between rounded-xl border border-line bg-surface-muted p-4 transition hover:bg-surface-muted/80',
     patientItemNext:
-      'flex items-center justify-between rounded-xl border-2 border-brand-accent bg-rose-50 dark:bg-rose-950/40 p-4 transition',
+      'flex items-center justify-between rounded-xl border-2 border-[#a8071a] dark:border-[#f87171] bg-rose-50 dark:bg-rose-950/40 p-4 transition',
     patientInfo: 'flex items-center gap-3 min-w-0',
     patientNumber:
       'inline-block rounded-lg bg-red-50 border border-red-200 px-3 py-1 font-mono text-sm font-extrabold text-red-700 dark:bg-red-950/40 dark:border-red-900 dark:text-red-300',
@@ -166,7 +166,7 @@ export const PATIENTS_STYLES = {
     patientName: 'text-sm font-semibold text-content truncate',
     patientWait: 'text-xs text-content-muted',
     overduePill:
-      'inline-flex items-center gap-1 rounded-full bg-amber-100 border border-amber-300 px-2.5 py-0.5 text-[11px] font-bold text-amber-800 dark:bg-amber-950/60 dark:border-amber-800 dark:text-amber-300',
+      'inline-flex items-center gap-1 rounded-md bg-amber-100 border border-amber-300 px-2.5 py-0.5 text-[11px] font-bold text-amber-800 dark:bg-amber-950/60 dark:border-amber-800 dark:text-amber-300',
   },
 } as const;
 

@@ -12,9 +12,10 @@
 import { useCallback, useEffect, useRef, useState } from 'react';
 import { supabase } from '@/lib/supabase';
 import { PatientStats, RecentPatient, AllRecentPatient } from '@/types/Types';
+import { formatSecondsToHMS } from '@/utils/formatMinutesToHMS';
 
 const RECENT_LIST_SIZE = 20;
-const PATIENT_COLUMNS = 'id, patientNum, service, status, created_at, consult_start, phoneNum';
+const PATIENT_COLUMNS = 'id, patientNum, service, status, created_at, consult_start, consult_end, updated_at, phoneNum';
 
 /**
  * Return signature of the {@link usePatientData} hook.
@@ -200,17 +201,18 @@ export function usePatientData(
         const transformedToday: RecentPatient[] = todayPatientData
           .slice(0, RECENT_LIST_SIZE)
           .map((patient: any) => {
-            const waitMin =
-              patient.consult_start && patient.created_at
-                ? Math.max(
-                    0,
-                    Math.floor(
-                      (new Date(patient.consult_start).getTime() -
-                        new Date(patient.created_at).getTime()) /
-                        60000
-                    )
-                  )
-                : undefined;
+            let waitSeconds: number | undefined = undefined;
+            if (patient.created_at) {
+              const registered = new Date(patient.created_at).getTime();
+              const consult = patient.consult_start
+                ? new Date(patient.consult_start).getTime()
+                : (patient.consult_end
+                    ? new Date(patient.consult_end).getTime()
+                    : (patient.updated_at
+                        ? new Date(patient.updated_at).getTime()
+                        : now.getTime()));
+              waitSeconds = Math.max(0, Math.floor((consult - registered) / 1000));
+            }
 
             const createdAtDate = patient.created_at ? new Date(patient.created_at) : new Date();
 
@@ -220,13 +222,17 @@ export function usePatientData(
               service: patient.service || 'Unknown',
               status: patient.status || 'Unknown',
               createdAt: createdAtDate.toLocaleString(),
+              rawCreatedAt: patient.created_at,
+              rawConsultStart: patient.consult_start,
+              rawConsultEnd: patient.consult_end,
+              updatedAt: patient.updated_at,
               time: patient.created_at
                 ? new Date(patient.created_at).toLocaleTimeString([], {
                     hour: '2-digit',
                     minute: '2-digit',
                   })
                 : '--',
-              waitTime: waitMin,
+              waitTime: waitSeconds !== undefined ? formatSecondsToHMS(waitSeconds) : undefined,
               phoneNum: formatPhoneNumber(patient.phoneNum),
               rawPhone: patient.phoneNum,
             };
@@ -246,13 +252,18 @@ export function usePatientData(
 
       if (allPatientData) {
         const transformedAll: AllRecentPatient[] = allPatientData.map((patient: any) => {
-          let calculatedWait = '--';
+          let calculatedWait = '--:--:--';
           if (patient.created_at) {
             const registered = new Date(patient.created_at).getTime();
             const consult = patient.consult_start
               ? new Date(patient.consult_start).getTime()
-              : now.getTime();
-            calculatedWait = `${Math.max(0, Math.floor((consult - registered) / 60000))}m`;
+              : (patient.consult_end
+                  ? new Date(patient.consult_end).getTime()
+                  : (patient.updated_at
+                      ? new Date(patient.updated_at).getTime()
+                      : now.getTime()));
+            const diffSecs = Math.max(0, Math.floor((consult - registered) / 1000));
+            calculatedWait = formatSecondsToHMS(diffSecs);
           }
 
           const createdAtDate = patient.created_at ? new Date(patient.created_at) : new Date();
@@ -264,6 +275,10 @@ export function usePatientData(
             status: patient.status || 'Unknown',
             createdAt: createdAtDate.toLocaleString(),
             createdAtDate,
+            rawCreatedAt: patient.created_at,
+            rawConsultStart: patient.consult_start,
+            rawConsultEnd: patient.consult_end,
+            updatedAt: patient.updated_at,
             time: patient.created_at
               ? new Date(patient.created_at).toLocaleTimeString([], {
                   hour: '2-digit',
@@ -364,13 +379,18 @@ export function usePatientData(
 
         // Transform server search results
         const transformedServer: AllRecentPatient[] = (searchRows || []).map((patient: any) => {
-          let calculatedWait = '--';
+          let calculatedWait = '--:--:--';
           if (patient.created_at) {
             const registered = new Date(patient.created_at).getTime();
             const consult = patient.consult_start
               ? new Date(patient.consult_start).getTime()
-              : now.getTime();
-            calculatedWait = `${Math.max(0, Math.floor((consult - registered) / 60000))}m`;
+              : (patient.consult_end
+                  ? new Date(patient.consult_end).getTime()
+                  : (patient.updated_at
+                      ? new Date(patient.updated_at).getTime()
+                      : now.getTime()));
+            const diffSecs = Math.max(0, Math.floor((consult - registered) / 1000));
+            calculatedWait = formatSecondsToHMS(diffSecs);
           }
 
           const createdAtDate = patient.created_at ? new Date(patient.created_at) : new Date();
@@ -382,6 +402,10 @@ export function usePatientData(
             status: patient.status || 'Unknown',
             createdAt: createdAtDate.toLocaleString(),
             createdAtDate,
+            rawCreatedAt: patient.created_at,
+            rawConsultStart: patient.consult_start,
+            rawConsultEnd: patient.consult_end,
+            updatedAt: patient.updated_at,
             time: patient.created_at
               ? new Date(patient.created_at).toLocaleTimeString([], {
                   hour: '2-digit',

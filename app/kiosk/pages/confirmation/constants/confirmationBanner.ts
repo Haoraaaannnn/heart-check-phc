@@ -75,7 +75,7 @@ export const ConfirmationBannerStyle = {
         paddingRight: 16,
         paddingTop: 4,
         paddingBottom: 4,
-        borderRadius: 9999,
+        borderRadius: 6,
         lineHeight: 1,
     },
 } satisfies Record<string, CSSProperties>;

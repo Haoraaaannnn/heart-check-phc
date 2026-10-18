@@ -15,6 +15,7 @@ import {
 } from '@/app/dashboard/pages/cubicles/constants/cubicles';
 import { CUBICLES_TEXTS } from '@/app/dashboard/pages/cubicles/constants/cubiclesTexts';
 import type { HeatmapCellData } from '@/app/dashboard/pages/cubicles/types/cubicle';
+import { formatMinutesToHMS } from '@/utils/formatMinutesToHMS';
 
 interface HeatmapDetailModalProps {
   /** The analytical cell selected by the user, or null if modal is closed. */
@@ -93,7 +94,7 @@ export default function HeatmapDetailModal({ cell, onClose }: HeatmapDetailModal
             <div className={S.modalStatCard}>
               <span className={S.modalStatLabel}>{T.processingSpeed}</span>
               <p className={`font-mono text-base font-extrabold ${speedStyle.text}`}>
-                {cell.avgSpeedMinutes > 0 ? `${cell.avgSpeedMinutes}m` : '—'}
+                {cell.avgSpeedMinutes > 0 ? formatMinutesToHMS(cell.avgSpeedMinutes) : '—'}
               </p>
               <span className={`inline-flex px-1.5 py-0.2 rounded text-[9px] font-bold uppercase mt-0.5 ${speedStyle.badge}`}>
                 {cell.speedRating}
@@ -103,7 +104,7 @@ export default function HeatmapDetailModal({ cell, onClose }: HeatmapDetailModal
             <div className={S.modalStatCard}>
               <span className={S.modalStatLabel}>{T.idleDuration}</span>
               <p className={`font-mono text-base font-extrabold ${idleStyle.text}`}>
-                {cell.idleMinutes}m
+                {formatMinutesToHMS(cell.idleMinutes)}
               </p>
               <span className={`inline-flex px-1.5 py-0.2 rounded text-[9px] font-bold uppercase mt-0.5 ${idleStyle.badge}`}>
                 {cell.idleRating}
@@ -152,7 +153,7 @@ export default function HeatmapDetailModal({ cell, onClose }: HeatmapDetailModal
 
                     <div className="text-right">
                       <span className="font-mono text-xs font-bold text-content">
-                        {patient.durationMinutes} mins
+                        {formatMinutesToHMS(patient.durationMinutes)}
                       </span>
                       <p className="text-[10px] text-content-subtle font-mono">
                         {patient.consultStart} {patient.consultEnd ? `→ ${patient.consultEnd}` : ''}

@@ -73,7 +73,7 @@ export function FinishedDrawer({ isOpen, onClose, patients }: FinishedDrawerProp
                 >
                   {nurseTexts.stageFinishedHeading}
                 </h2>
-                <span className="px-2 py-0.5 rounded-full text-xs font-bold bg-emerald-100 text-emerald-800">
+                <span className="px-2 py-0.5 rounded-md text-xs font-bold bg-emerald-100 text-emerald-800">
                   {patients.length}
                 </span>
               </div>
@@ -86,7 +86,7 @@ export function FinishedDrawer({ isOpen, onClose, patients }: FinishedDrawerProp
           <button
             type="button"
             onClick={onClose}
-            className="px-3 py-1.5 rounded-xl text-xs font-semibold text-slate-500 hover:text-slate-700 hover:bg-slate-200/60 active:bg-slate-300/60 transition cursor-pointer"
+            className="px-3 py-1.5 rounded-xl text-xs font-semibold text-slate-500 hover:text-slate-700 hover:bg-slate-200/60 active:bg-slate-300/60 dark:text-[#a3a3a3] dark:hover:text-[#f5f5f5] dark:hover:bg-[#242424] transition cursor-pointer"
             aria-label={nurseTexts.btnCloseFinished}
           >
             {nurseTexts.btnCloseFinished}

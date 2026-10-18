@@ -49,7 +49,7 @@ export function IdleNumbersPanel({
           <h2 className="text-slate-700 font-bold text-xs tracking-wider uppercase truncate">
             {transferTexts.idleNumbersHeading}
           </h2>
-          <span className="text-[11px] font-bold px-1.5 py-0.5 rounded-full bg-slate-100 text-slate-600 shrink-0">
+          <span className="text-[11px] font-bold px-1.5 py-0.5 rounded-md bg-slate-100 text-slate-600 shrink-0">
             {safePatients.length}
           </span>
         </div>

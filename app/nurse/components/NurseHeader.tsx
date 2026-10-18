@@ -111,7 +111,7 @@ export function NurseHeader({
           <button
             type="button"
             onClick={onToggleSidebar}
-            className="p-1.5 sm:p-2 rounded-xl text-slate-500 hover:text-slate-800 hover:bg-slate-100 active:bg-slate-200 transition-colors cursor-pointer shrink-0"
+            className="p-1.5 sm:p-2 rounded-xl text-slate-500 hover:text-slate-800 hover:bg-slate-100 active:bg-slate-200 dark:text-[#a3a3a3] dark:hover:text-[#f5f5f5] dark:hover:bg-[#242424] transition-colors cursor-pointer shrink-0"
             title={isSidebarOpen ? nurseTexts.collapseSidebar : nurseTexts.expandSidebar}
             aria-label={isSidebarOpen ? nurseTexts.collapseSidebar : nurseTexts.expandSidebar}
           >
@@ -125,7 +125,7 @@ export function NurseHeader({
         {/* Return to Select Screen Button */}
         <Link
           href="/select-screen"
-          className="p-1.5 sm:p-2 rounded-xl text-slate-500 hover:text-slate-800 hover:bg-slate-100 active:bg-slate-200 transition-colors cursor-pointer shrink-0"
+          className="p-1.5 sm:p-2 rounded-xl text-slate-500 hover:text-slate-800 hover:bg-slate-100 active:bg-slate-200 dark:text-[#a3a3a3] dark:hover:text-[#f5f5f5] dark:hover:bg-[#242424] transition-colors cursor-pointer shrink-0"
           title={nurseTexts.selectScreenLabel}
           aria-label={nurseTexts.selectScreenAria}
         >
@@ -185,7 +185,7 @@ export function NurseHeader({
 
         {/* Active Filter Badge (visible when filtered and dropdown is hidden) */}
         {!showCubicleDropdown && (selectedCategory || selectedCubicleNum) && (
-          <div className="flex items-center gap-1.5 px-2.5 py-1 rounded-full bg-slate-100 border border-slate-200 text-xs text-slate-600 min-w-0 shrink">
+          <div className="flex items-center gap-1.5 px-2.5 py-1 rounded-md bg-slate-100 border border-slate-200 text-xs text-slate-600 min-w-0 shrink">
             <span className="font-medium text-slate-400 shrink-0">
               {nurseTexts.filteredByPrefix}
             </span>

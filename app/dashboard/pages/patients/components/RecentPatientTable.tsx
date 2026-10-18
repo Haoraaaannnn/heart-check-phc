@@ -19,6 +19,8 @@ import {
   PATIENT_STATUS_COLORS,
 } from '@/app/dashboard/pages/patients/constants/patients';
 import { PATIENTS_TEXTS } from '@/app/dashboard/pages/patients/constants/patientsTexts';
+import { formatMinutesToHMS, formatDurationString } from '@/utils/formatMinutesToHMS';
+import ElapsedTimer from '@/components/reusables/ElapsedTimer';
 
 /**
  * Properties for RecentPatientsTable component.
@@ -199,7 +201,7 @@ export default function RecentPatientsTable({
       <div className={S.toolbar}>
         <div className={S.searchWrap}>
           {isSearching ? (
-            <i className={`bx bx-loader-alt ${S.searchIcon} animate-spin text-brand-accent`} aria-hidden="true" />
+            <i className={`bx bx-loader-alt ${S.searchIcon} animate-spin text-accent`} aria-hidden="true" />
           ) : (
             <i className={`bx bx-search ${S.searchIcon}`} aria-hidden="true" />
           )}
@@ -321,7 +323,18 @@ export default function RecentPatientsTable({
                         {patient.time || patient.createdAt}
                       </td>
                       <td className={`${S.td} font-mono font-bold text-content whitespace-nowrap`}>
-                        {patient.waitTime !== undefined ? `${patient.waitTime}m` : '-'}
+                        {patient.rawCreatedAt &&
+                        !patient.rawConsultStart &&
+                        new Date(patient.rawCreatedAt).toDateString() === new Date().toDateString() ? (
+                          <ElapsedTimer
+                            startedAt={patient.rawCreatedAt}
+                            showHours={true}
+                            includeSeconds={true}
+                            fallbackText={formatDurationString(patient.waitTime)}
+                          />
+                        ) : (
+                          formatDurationString(patient.waitTime)
+                        )}
                       </td>
                     </tr>
                   );

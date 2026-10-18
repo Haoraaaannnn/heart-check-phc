@@ -23,7 +23,7 @@ export function IdleNumbersSection({ patients, onActivate, onRemove, compact }: 
         <h2 className={`text-gray-500 font-semibold text-xs tracking-widest uppercase flex items-center gap-2 ${collapsed ? '' : 'mb-3'}`}>
           <span className="w-2 h-2 rounded-full bg-gray-400 inline-block" />
           {transferTexts.idleNumbersHeading}
-          <span className="text-[10px] font-bold px-1.5 py-0.5 rounded-full bg-gray-200 text-gray-600 normal-case tracking-normal">
+          <span className="text-[10px] font-bold px-1.5 py-0.5 rounded-md bg-gray-200 text-gray-600 normal-case tracking-normal">
             {patients.length}
           </span>
           <span className="text-xs text-gray-400 font-normal ml-1">

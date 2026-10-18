@@ -7,6 +7,7 @@ Mandatory architectural rules, safety boundaries, and refactoring guidelines for
 For selective context retrieval, domain architecture, and memory workflows, consult the second brain:
 - **Master Index & Navigation:** [brain/INDEX.md](./brain/INDEX.md)
 - **Active State & Branch Context:** [brain/CURRENT.md](./brain/CURRENT.md)
+- **Active Session Handoff:** [brain/SESSION_LOG.md](./brain/SESSION_LOG.md)
 - **Memory Protocols:** [brain/WORKFLOWS.md](./brain/WORKFLOWS.md)
 
 ---
@@ -80,12 +81,23 @@ Prioritize security above convenience or speed in every code write and edit. The
 - Every created or updated Markdown document (`.md`) must include an explicit date stamp in ISO format (`YYYY-MM-DD`, e.g., `_Last updated: 2026-10-18 — ..._` or `**Last Updated:** 2026-10-18`).
 - This standard applies strictly across all documentation files (`docs/`, `brain/`, `README.md`, module guides) to ensure clear temporal tracking across versions.
 
----
-
 ## Memory & Context Retrieval Protocol
 
-1. **Selective Retrieval:** Never load the full `brain/` directory. Check [brain/CURRENT.md](./brain/CURRENT.md) and load only the specific note needed from [brain/INDEX.md](./brain/INDEX.md).
-2. **Post-Task Updates:** Update `brain/CURRENT.md` with completed changes, add an ADR in `brain/decisions/` if architectural decisions were made, and log session handoffs in `brain/handoffs/`.
+1. **Task Classification & Selective Retrieval:**
+   - Classify the task: simple, nontrivial, or architecture/debugging-sensitive.
+   - For simple tasks, avoid loading the second brain unless needed.
+   - For nontrivial tasks, read [brain/INDEX.md](./brain/INDEX.md) before starting.
+   - Retrieve only relevant notes using targeted search (`rg`) and follow relative Markdown links. Avoid reading the entire `brain/` directory by default.
+2. **Verify Against Source Code:**
+   - Always verify important notes against active source code before making changes; brain notes provide context, not guaranteed ground truth.
+3. **Knowledge Updates & Value Verification:**
+   - Before finishing, update only knowledge that is new, verified, reusable, and likely to matter again. Do not update notes merely because a task was completed.
+   - Update [brain/INDEX.md](./brain/INDEX.md) whenever a knowledge file is added, renamed, or removed.
+   - Keep [brain/CURRENT.md](./brain/CURRENT.md) brief with active milestones, blockers, and next steps; replace stale information instead of accumulating a diary.
+   - Record ongoing multi-step handoffs in [brain/SESSION_LOG.md](./brain/SESSION_LOG.md) and lasting architectural decisions in [brain/decisions/](./brain/decisions/README.md).
+4. **Token-Efficiency & Output Discipline:**
+   - Summarize only important outcomes and avoid dumping large command outputs or entire files.
+   - Prefer targeted search (`rg`) and line-sliced file inspection to conserve context window.
 
 ---
 
@@ -111,5 +123,5 @@ Prioritize security above convenience or speed in every code write and edit. The
 - [ ] No ellipsis or truncated text (`truncate`, `text-ellipsis`) exists on clinical data.
 - [ ] Operational terminal commands received explicit user confirmation prior to execution.
 - [ ] Developer guide markdown files (`README.md`) are updated with "Where to Edit" tables.
-- [ ] Second brain notes (`brain/CURRENT.md`, `brain/handoffs/`) are updated after significant work.
+- [ ] Second brain notes (`brain/CURRENT.md`, `brain/INDEX.md`, `brain/SESSION_LOG.md`) updated if reusable knowledge was created or modified.
 - [ ] Updated or created Markdown documentation files include an explicit ISO date stamp (YYYY-MM-DD).

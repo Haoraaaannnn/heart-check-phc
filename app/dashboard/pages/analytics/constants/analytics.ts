@@ -62,7 +62,7 @@ export const ANALYTICS_STYLES = {
     subtitle: 'text-sm text-content-muted',
     actions: 'flex items-center gap-3 flex-wrap',
     refreshPill: 'flex items-center gap-1.5 text-xs text-content-muted',
-    refreshDot: 'h-2 w-2 rounded-full bg-brand-accent animate-pulse',
+    refreshDot: 'h-2 w-2 rounded-full bg-accent animate-pulse',
     importButton:
       'inline-flex items-center gap-2 rounded-xl bg-[#a8071a] px-3.5 py-2 text-xs font-semibold text-white shadow-xs transition-colors hover:bg-[#8e0616] focus:outline-none focus:ring-2 focus:ring-[#a8071a]/50',
   },
@@ -72,8 +72,8 @@ export const ANALYTICS_STYLES = {
 
   /** Individual metric card tokens. */
   metricCard: {
-    tile: 'flex items-center gap-4 rounded-2xl border border-line bg-surface p-5 shadow-sm transition hover:-translate-y-0.5',
-    iconWrap: 'flex h-12 w-12 shrink-0 items-center justify-center rounded-full text-2xl',
+    tile: 'flex items-center gap-4 rounded-2xl border border-line bg-surface p-5 shadow-sm transition',
+    iconWrap: 'flex shrink-0 items-center justify-center text-2xl',
     content: 'flex flex-col min-w-0 flex-1',
     label: 'text-xs font-semibold text-content-muted',
     value: 'text-3xl font-extrabold leading-tight text-content',
@@ -109,7 +109,7 @@ export const ANALYTICS_STYLES = {
     Elevated: 'bg-amber-100 text-amber-800 dark:bg-amber-950/60 dark:text-amber-300 border border-amber-300 dark:border-amber-800',
     Overwhelmed: 'bg-rose-100 text-rose-800 dark:bg-rose-950/60 dark:text-rose-300 border border-rose-300 dark:border-rose-800',
     'No Data': 'bg-surface-muted text-content-muted border border-line',
-    base: 'inline-flex items-center rounded-full px-2.5 py-1 text-xs font-bold',
+    base: 'inline-flex items-center rounded-md px-2.5 py-0.5 text-xs font-bold',
   },
 
   /** Export button styling. */
@@ -195,8 +195,8 @@ export const ANALYTICS_STYLES = {
   rangeSelector: {
     wrap: 'flex items-center gap-1.5 flex-wrap',
     pillBase:
-      'flex items-center gap-1.5 rounded-lg border px-3 py-1.5 text-xs font-semibold transition outline-none',
-    pillActive: 'bg-brand-gradient border-transparent text-white shadow-sm',
+      'flex items-center gap-1.5 rounded-lg border px-3 py-1.5 text-xs font-semibold transition cursor-pointer select-none focus:outline-hidden focus-visible:ring-2 focus-visible:ring-[#a8071a]/50',
+    pillActive: 'bg-[#a8071a] border-[#a8071a] text-white shadow-2xs',
     pillIdle:
       'bg-surface border-line text-content-muted hover:bg-surface-muted hover:text-content',
     spinner: 'h-3 w-3 animate-spin',
@@ -225,13 +225,13 @@ export const ANALYTICS_STYLES = {
     kpiLabel: 'text-[11px] font-bold uppercase tracking-wider text-content-muted',
     kpiValue: 'mt-1 text-2xl font-extrabold text-content',
     kpiSub: 'mt-0.5 text-xs text-content-subtle',
-    systemStatusBadge: 'mt-2 inline-flex items-center rounded-full px-2.5 py-0.5 text-xs font-bold w-fit',
+    systemStatusBadge: 'mt-2 inline-flex items-center rounded-md px-2.5 py-0.5 text-xs font-bold w-fit',
     hintBanner: 'flex items-center justify-between gap-3 rounded-xl border border-slate-200 bg-slate-50 dark:border-[#2e2e2e] dark:bg-[#242424]/40 px-4 py-3 text-xs text-slate-800 dark:text-[#f5f5f5]',
     hintContent: 'flex items-center gap-2.5',
     hintIcon: 'text-lg text-slate-600 dark:text-[#a3a3a3] shrink-0',
     emptyNotice: 'flex flex-col items-center justify-center p-8 text-center text-xs text-content-muted rounded-xl border border-line bg-surface-muted gap-2',
     loadingNotice: 'flex items-center justify-center gap-2.5 p-8 text-center text-xs text-content-muted rounded-xl border border-line bg-surface-muted font-medium',
-    spinner: 'h-4 w-4 animate-spin text-brand-accent',
+    spinner: 'h-4 w-4 animate-spin text-accent',
     errorBanner: 'flex items-center justify-between gap-3 rounded-xl border border-rose-200 bg-rose-50 dark:border-rose-900/50 dark:bg-rose-950/30 p-4 text-xs font-medium text-rose-700 dark:text-rose-300',
     retryBtn: 'rounded-lg border border-rose-300 bg-surface px-2.5 py-1 text-xs font-semibold text-rose-700 hover:bg-rose-100 transition cursor-pointer dark:border-rose-800 dark:bg-rose-900 dark:text-rose-200',
   },

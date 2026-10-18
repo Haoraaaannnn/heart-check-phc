@@ -12,6 +12,7 @@
 import { TONES } from '@/app/dashboard/constants/styles';
 import { ANALYTICS_STYLES } from '@/app/dashboard/pages/analytics/constants/analytics';
 import { ANALYTICS_TEXTS } from '@/app/dashboard/pages/analytics/constants/analyticsTexts';
+import { formatMinutesToHMS } from '@/utils/formatMinutesToHMS';
 
 interface AnalyticsMetricCardsProps {
   /** Raw analytics payload from the FastAPI backend. */
@@ -40,9 +41,7 @@ export default function AnalyticsMetricCards({ data }: AnalyticsMetricCardsProps
   const primary = bottleneck?.primary_bottleneck;
 
   const totalMins = data.system_time?.avg_total_time ?? 0;
-  const hrs = Math.floor(totalMins / 60);
-  const mins = Math.round(totalMins % 60);
-  const formattedPatientTime = `${hrs}h ${mins}m`;
+  const formattedPatientTime = totalMins > 0 ? formatMinutesToHMS(totalMins) : '--:--:--';
 
   const forecastValue = data.computational_forecasting?.next_day_forecast ?? 0;
   const forecastDate = data.lr_chart_data?.forecast_date || T.nextDayForecast.defaultDate;

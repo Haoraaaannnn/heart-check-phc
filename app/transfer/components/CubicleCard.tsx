@@ -113,9 +113,9 @@ export function CubicleCard({
       style={isTargetEligible ? TransferStyle.assignTargetCard : undefined}
       className={`rounded-xl border p-2 flex flex-col justify-between transition-all select-none min-h-[76px] ${
         isOver && isDraggable
-          ? 'border-[#cc3535] bg-red-50/80 scale-[1.01] shadow-xs phc-dropzone'
+          ? 'border-[#cc3535] bg-red-50/80 shadow-xs phc-dropzone'
           : isTargetEligible
-          ? 'border-emerald-500 bg-emerald-50/40 ring-2 ring-emerald-500/20 hover:border-emerald-600 hover:shadow-xs cursor-pointer'
+          ? 'border-emerald-500 bg-emerald-50/40 ring-2 ring-emerald-500/20 hover:border-emerald-600 cursor-pointer'
           : isFull
           ? 'border-rose-200 bg-rose-50/20'
           : 'border-slate-200 bg-slate-50/60 hover:bg-slate-50'
@@ -169,7 +169,7 @@ export function CubicleCard({
           </button>
         ) : (
           <span
-            className={`text-[9px] font-bold px-1.5 py-0.2 rounded-full shrink-0 ${
+            className={`text-[9px] font-bold px-1.5 py-0.2 rounded-md shrink-0 ${
               isFull
                 ? 'bg-rose-100 text-rose-700'
                 : 'bg-emerald-100 text-emerald-800'

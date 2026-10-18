@@ -15,7 +15,8 @@ import DashboardCard from '@/app/dashboard/components/DashboardCard';
 import StatusBadge from '@/app/dashboard/components/StatusBadge';
 import { EMPTY_CELL, LIVE_QUEUE_COLUMNS, SECTIONS } from '@/app/dashboard/constants/content';
 import { DASH } from '@/app/dashboard/constants/styles';
-import { getPatientWaitTime } from '@/utils/waitTime';
+import { getPatientWaitEndTime } from '@/utils/waitTime';
+import { ElapsedTimer } from '@/components/reusables/ElapsedTimer';
 import { LiveQueueTableSkeleton } from '@/app/dashboard/components/skeletons/LiveQueueTableSkeleton';
 
 const S = DASH.table;
@@ -110,7 +111,14 @@ export default function LiveQueueTable({
                   </td>
                   <td className={S.td}>{patient.service || 'General'}</td>
                   <td className={S.td}>{patient.cubicleNum || EMPTY_CELL}</td>
-                  <td className={S.td}>{getPatientWaitTime(patient, currentTime)} min</td>
+                  <td className={S.td}>
+                    <ElapsedTimer
+                      startedAt={patient.created_at}
+                      endedAt={getPatientWaitEndTime(patient)}
+                      showHours={true}
+                      includeSeconds={true}
+                    />
+                  </td>
                   <td className={S.td}>
                     <StatusBadge status={patient.status || 'Pending'} />
                   </td>

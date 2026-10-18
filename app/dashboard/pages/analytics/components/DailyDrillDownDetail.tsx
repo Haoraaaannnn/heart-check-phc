@@ -107,7 +107,7 @@ export default function DailyDrillDownDetail({
               <i className="bx bx-target-lock text-sm" />
               <span>{date}</span>
             </span>
-            <span className="inline-flex items-center gap-1 rounded-full px-2.5 py-0.5 text-[11px] font-bold bg-slate-100 text-slate-800 dark:bg-[#242424] dark:text-[#f5f5f5] border border-slate-200 dark:border-[#2e2e2e]">
+            <span className="inline-flex items-center gap-1 rounded-md px-2.5 py-0.5 text-[11px] font-bold bg-slate-100 text-slate-800 dark:bg-[#242424] dark:text-[#f5f5f5] border border-slate-200 dark:border-[#2e2e2e]">
               {T.activeBadge}
             </span>
           </div>
@@ -206,7 +206,7 @@ export default function DailyDrillDownDetail({
       <div className="flex flex-col gap-3">
         <div className="flex flex-col gap-0.5">
           <h4 className="text-sm font-bold text-content flex items-center gap-2">
-            <i className="bx bx-git-commit text-brand-accent text-base" />
+            <i className="bx bx-git-commit text-accent text-base" />
             <span>{T.bottleneckSectionTitle}</span>
           </h4>
           <p className="text-xs text-content-muted">

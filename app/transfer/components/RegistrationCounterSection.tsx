@@ -78,7 +78,7 @@ export function RegistrationCounterSection({
           <h2 className="text-slate-700 font-bold text-xs tracking-wider uppercase truncate">
             {transferTexts.registrationHeading}
           </h2>
-          <span className="text-[10px] font-bold px-1.5 py-0.2 rounded-full bg-blue-100 text-blue-700 shrink-0">
+          <span className="text-[10px] font-bold px-1.5 py-0.2 rounded-md bg-blue-100 text-blue-700 shrink-0">
             {safePatients.length}
           </span>
         </div>

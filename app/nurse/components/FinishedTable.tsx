@@ -12,6 +12,7 @@
 import React, { useState, useMemo } from 'react';
 import { Patient } from '@/types/Types';
 import { nurseTexts } from '@/app/nurse/constants/nurseTexts';
+import { formatSecondsToHMS } from '@/utils/formatMinutesToHMS';
 
 /**
  * Props for the FinishedTable component.
@@ -41,11 +42,11 @@ function formatTime(isoString?: string | null): string {
 }
 
 /**
- * Calculates total session duration in minutes between start and completion.
+ * Calculates total session duration in standard HH:MM:SS format between start and completion.
  *
  * @param start - Starting ISO timestamp.
  * @param end - Completion ISO timestamp.
- * @returns Formatted duration string (e.g. '18 min') or '-'.
+ * @returns Formatted duration string (e.g. '00:18:23') or '-'.
  */
 function calculateDuration(start?: string | null, end?: string | null): string {
   if (!start || !end) return '-';
@@ -53,8 +54,8 @@ function calculateDuration(start?: string | null, end?: string | null): string {
     const s = new Date(start).getTime();
     const e = new Date(end).getTime();
     if (isNaN(s) || isNaN(e) || e < s) return '-';
-    const totalMinutes = Math.round((e - s) / 60000);
-    return `${totalMinutes} min`;
+    const totalSeconds = Math.round((e - s) / 1000);
+    return formatSecondsToHMS(totalSeconds);
   } catch {
     return '-';
   }

@@ -42,7 +42,7 @@ export const DASHBOARD_SKELETON_STYLES = {
   metrics: {
     grid: 'grid grid-cols-1 gap-4 sm:grid-cols-2 xl:grid-cols-4',
     card: 'flex items-center gap-4 rounded-2xl border border-line bg-surface p-5 shadow-sm',
-    icon: 'w-12 h-12 rounded-full bg-surface-muted border border-line shrink-0',
+    icon: 'w-7 h-7 rounded-md bg-surface-muted shrink-0',
     content: 'flex flex-col gap-2 min-w-0 flex-1',
     label: 'h-3.5 w-24 rounded-md bg-surface-muted',
     value: 'h-7 w-20 rounded-md bg-surface-muted',
@@ -68,7 +68,7 @@ export const DASHBOARD_SKELETON_STYLES = {
     root: `${cardSurface} rounded-2xl p-6`,
     header: 'mb-5 flex items-start justify-between gap-3',
     headerLeft: 'flex items-center gap-3',
-    iconBadge: 'w-10 h-10 rounded-full bg-surface-muted border border-line shrink-0',
+    iconBadge: 'w-6 h-6 rounded-md bg-surface-muted shrink-0',
     headerTextGroup: 'space-y-1.5',
     title: 'h-4 w-36 rounded-md bg-surface-muted',
     subtitle: 'h-3 w-24 rounded-md bg-surface-muted',
@@ -110,7 +110,7 @@ export const DASHBOARD_SKELETON_STYLES = {
     td: 'px-3 py-3',
     cellBar: 'h-3.5 rounded-md bg-surface-muted',
     ticketBadge: 'h-5 w-16 rounded-md bg-surface-muted border border-line',
-    statusBadge: 'h-5 w-20 rounded-full bg-surface-muted border border-line',
+    statusBadge: 'h-5 w-20 rounded-md bg-surface-muted border border-line',
   },
 
   /** Hourly arrival bar chart skeleton */

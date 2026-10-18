@@ -36,7 +36,7 @@ import {
 import { ANALYTICS_TEXTS } from '@/app/dashboard/pages/analytics/constants/analyticsTexts';
 import { useDailyDrilldown } from '@/app/dashboard/pages/analytics/hooks/useDailyDrilldown';
 import DailyDrillDownDetail from '@/app/dashboard/pages/analytics/components/DailyDrillDownDetail';
-import { formatMinutesToHMS } from '@/utils/formatMinutesToHMS';
+import { formatMinutesToHMS, formatMinutesToHM, formatDurationString } from '@/utils/formatMinutesToHMS';
 
 interface VolumeAndWaitChartsProps {
   /** Array of daily summary logs. */
@@ -412,7 +412,7 @@ export default function VolumeAndWaitCharts({
                   tick={{ fontSize: 10, fill: axisColor }}
                   tickFormatter={
                     hourlyMode === 'waittime'
-                      ? (mins: number) => `${Math.round(mins)}m`
+                      ? (mins: number) => formatMinutesToHM(mins)
                       : (pts: number) => `${pts}`
                   }
                   axisLine={{ stroke: gridColor }}
@@ -425,7 +425,7 @@ export default function VolumeAndWaitCharts({
                       return ['N/A', name];
                     }
                     if (hourlyMode === 'waittime') {
-                      return [typeof val === 'number' ? formatMinutesToHMS(val) : `${val}m`, name];
+                      return [formatDurationString(val), name];
                     }
                     return [`${val} patients`, name];
                   }}
@@ -618,7 +618,7 @@ export default function VolumeAndWaitCharts({
               />
               <YAxis
                 tick={{ fontSize: 10, fill: axisColor }}
-                tickFormatter={(mins: number) => `${Math.round(mins)}m`}
+                tickFormatter={(mins: number) => formatMinutesToHM(mins)}
                 axisLine={{ stroke: gridColor }}
                 tickLine={false}
               />

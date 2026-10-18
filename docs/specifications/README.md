@@ -1,6 +1,6 @@
 # Technical Specifications, System Architecture, and Operational Guides
 
-**Last Updated:** 2026-10-17
+**Last Updated:** 2026-10-18
 
 This directory contains all core architectural blueprints, database schemas, cryptographic specifications, UI design guidelines, and station manuals for the Heart Check PHC platform.
 
@@ -10,6 +10,7 @@ This directory contains all core architectural blueprints, database schemas, cry
 
 | Specification Document | Category | Key Topics Covered | Status |
 | :--- | :--- | :--- | :---: |
+| [`DESIGN.md`](file:///home/jensen/Github-Repositories/Heart_Check_PHC/docs/specifications/DESIGN.md) | **Master Design & Layout Standards** | Visual design system, prohibition of pillbox shapes and icon backgrounds, high-contrast solid surfaces, layout archetypes, color tokens, and reusable components. | Authoritative Master Doc |
 | [`ARCHITECTURE.md`](file:///home/jensen/Github-Repositories/Heart_Check_PHC/docs/specifications/ARCHITECTURE.md) | Platform Architecture | Full-stack platform architecture, Next.js App Router layout, FastAPI analytics engine, queueing models, and data flows. | Active |
 | [`SYSTEM_DESIGN.md`](file:///home/jensen/Github-Repositories/Heart_Check_PHC/docs/specifications/SYSTEM_DESIGN.md) | System Design | Detailed service contracts, communication protocols, state machine transitions, and cross-subsystem interactions. | Active |
 | [`DATABASE_SCHEMA.md`](file:///home/jensen/Github-Repositories/Heart_Check_PHC/docs/specifications/DATABASE_SCHEMA.md) | **Master Database Schema & Policies** | Consolidated table structures, column dictionaries, relationships, primary keys, and **Appendix A: Raw Table Column Schemas & Verified RLS Policies**. | Authoritative Master Doc |
@@ -17,7 +18,7 @@ This directory contains all core architectural blueprints, database schemas, cry
 | [`TRANSFER_DASHBOARD.md`](file:///home/jensen/Github-Repositories/Heart_Check_PHC/docs/specifications/TRANSFER_DASHBOARD.md) | **Master Transfer Dashboard Guide** | Consolidated Patient Transfer station architecture, FIFO queue lock, pointer event drag-and-drop, and **Section 7 Developer Customization & Where to Edit Guide**. | Authoritative Master Doc |
 | [`DATA_ENCRYPTION_GUIDE.md`](file:///home/jensen/Github-Repositories/Heart_Check_PHC/docs/specifications/DATA_ENCRYPTION_GUIDE.md) | Cryptography & Privacy | Patient phone number AES-256-GCM encryption architecture, key derivation, and PII masking. | Active |
 | [`FILE_ARCHITECTURE.md`](file:///home/jensen/Github-Repositories/Heart_Check_PHC/docs/specifications/FILE_ARCHITECTURE.md) | Directory Mapping | Complete directory tree mapping every file, route, component, and utility in the codebase. | Active |
-| [`COMPONENTS_GUIDE.md`](file:///home/jensen/Github-Repositories/Heart_Check_PHC/docs/specifications/COMPONENTS_GUIDE.md) | UI Design System | Catalog of reusable UI components (`BackButton`, `ScrollArea`), token conventions, and styling rules. | Active |
+| [`COMPONENTS_GUIDE.md`](file:///home/jensen/Github-Repositories/Heart_Check_PHC/docs/specifications/COMPONENTS_GUIDE.md) | UI Design System | Catalog of reusable UI components (`BackButton`, `ScrollArea`), token conventions, and styling rules (Merged into `DESIGN.md`). | Merged into `DESIGN.md` |
 | [`CONNECTIVITY_RESILIENCE.md`](file:///home/jensen/Github-Repositories/Heart_Check_PHC/docs/specifications/CONNECTIVITY_RESILIENCE.md) | Network Resilience | Weak-signal safeguards, WebSocket fallback mechanisms, 300ms debounce, and LAN migration roadmap. | Active |
 | [`SETUP_AND_SEEDING.md`](file:///home/jensen/Github-Repositories/Heart_Check_PHC/docs/specifications/SETUP_AND_SEEDING.md) | Environment Setup | Local environment setup, database migrations, Python virtual environment, and simulated queue traffic generation. | Active |
 | [`LOCAL_NETWORK_SETUP.md`](file:///home/jensen/Github-Repositories/Heart_Check_PHC/docs/specifications/LOCAL_NETWORK_SETUP.md) | Multi-Device Deployment | Local network sharing, IP binding with `npm start`, and station setup for kiosks, monitors, and tablets. | Active |

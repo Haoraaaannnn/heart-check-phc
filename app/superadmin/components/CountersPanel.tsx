@@ -169,7 +169,7 @@ export function CountersPanel() {
               />
 
               {c.inUse > 0 && (
-                <span className="text-[11px] font-bold px-2.5 py-0.5 rounded-full bg-amber-100 dark:bg-amber-950 text-amber-800 dark:text-amber-300 border border-amber-200 dark:border-amber-800 shrink-0">
+                <span className="text-[11px] font-bold px-2.5 py-0.5 rounded-md bg-amber-100 dark:bg-amber-950 text-amber-800 dark:text-amber-300 border border-amber-200 dark:border-amber-800 shrink-0">
                   {c.inUse} {T.inUseBadge}
                 </span>
               )}
@@ -185,7 +185,7 @@ export function CountersPanel() {
                     })
                   )
                 }
-                className={`text-xs font-semibold px-3 py-1 rounded-full transition cursor-pointer shrink-0 ${
+                className={`text-xs font-semibold px-2.5 py-1 rounded-md transition cursor-pointer shrink-0 ${
                   c.active
                     ? 'bg-emerald-100 text-emerald-800 dark:bg-emerald-950/80 dark:text-emerald-300 border border-emerald-200 dark:border-emerald-800'
                     : 'bg-slate-100 text-slate-500 dark:bg-[#242424] dark:text-[#a3a3a3] border border-slate-200 dark:border-[#2e2e2e]'
@@ -205,7 +205,7 @@ export function CountersPanel() {
                     );
                   }
                 }}
-                className="p-1.5 text-slate-400 hover:text-red-600 transition cursor-pointer"
+                className="p-1.5 text-slate-400 dark:text-[#737373] hover:text-red-600 dark:hover:text-red-400 transition cursor-pointer"
                 title="Delete counter station"
               >
                 <i className="bx bx-trash text-lg" aria-hidden="true" />

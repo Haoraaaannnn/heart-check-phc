@@ -180,7 +180,7 @@ export const METRIC_CARDS: readonly MetricCardConfig[] = [
   { key: 'todayCount', label: 'Total Patients Today', icon: 'bxs-group', tone: 'rose', showTrend: true },
   { key: 'onQueue', label: 'On Queue', icon: 'bxs-user', tone: 'blue', subtitle: 'Waiting to be served' },
   { key: 'served', label: 'Served', icon: 'bx-check', tone: 'green', subtitle: "Today's completed" },
-  { key: 'avgWait', label: 'Avg. Waiting Time', icon: 'bx-hourglass', tone: 'purple', unit: 'min' },
+  { key: 'avgWait', label: 'Avg. Waiting Time', icon: 'bx-hourglass', tone: 'purple' },
 ];
 
 // ---------------------------------------------------------------------------
