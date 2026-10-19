@@ -1,6 +1,6 @@
 # Heart Check PHC: Master Documentation Portal & Navigation Index
 
-**Last Updated:** 2026-10-18
+**Last Updated:** 2026-10-19
 
 This master index categorizes all technical specifications, operational manuals, quality assurance checklists, security audit matrices, database schemas, Capstone Chapter 4 simulation guides, data validation reports, and developer editing manuals across the Heart Check PHC repository.
 
@@ -46,6 +46,7 @@ docs/
 │   └── TRANSFER_DASHBOARD.md              # Patient transfer station architecture & customization guide
 ├── simulation/                            # Capstone Chapter 4 Queue Simulation Guides
 │   ├── README.md                          # Simulation documentation directory index
+│   ├── SIMULATION_EXECUTION_GUIDELINE.md  # Step-by-step execution & reproduction guide
 │   ├── simulation-master-guide.md         # Master methodology guide, baseline analysis & decision rationale
 │   ├── chapter4_simulation_comparison.md  # Granular comparison tables (Scenario A vs Scenario B)
 │   └── chapter4_simulation_build_guide.md # Code skeleton, database extraction pipeline & runner guide
@@ -103,6 +104,7 @@ These documents detail the statistical simulation, queuing theory models, and co
 
 | Simulation Document | Category | Key Content |
 | :--- | :--- | :--- |
+| [`docs/simulation/SIMULATION_EXECUTION_GUIDELINE.md`](file:///home/jensen/Github-Repositories/Heart_Check_PHC/docs/simulation/SIMULATION_EXECUTION_GUIDELINE.md) | **Step-by-Step Execution Guideline** | Comprehensive instructions to set up the environment, execute the simulation, interpret outputs, and export CSV tables. |
 | [`docs/simulation/simulation-master-guide.md`](file:///home/jensen/Github-Repositories/Heart_Check_PHC/docs/simulation/simulation-master-guide.md) | **Master Simulation Guide** | Consolidated research strategy, validation pillars, M/M/1 queue models, Section 9 Comprehensive Decision Rationale, and Section 10 Grand Mean vs. Monthly Means Analysis. |
 | [`docs/simulation/chapter4_simulation_comparison.md`](file:///home/jensen/Github-Repositories/Heart_Check_PHC/docs/simulation/chapter4_simulation_comparison.md) | **Comparative Results Manuscript** | Granular side-by-side results (Manual Scenario A vs Digital Scenario B), wait time reductions, traffic intensity changes, and compliance shifts. |
 | [`docs/simulation/chapter4_simulation_build_guide.md`](file:///home/jensen/Github-Repositories/Heart_Check_PHC/docs/simulation/chapter4_simulation_build_guide.md) | **Implementation & Runner Guide** | Complete code skeleton, Supabase historical data extraction, M/M/1 runner, and terminal execution walkthrough. |

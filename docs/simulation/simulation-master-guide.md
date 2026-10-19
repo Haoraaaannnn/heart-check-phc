@@ -1,8 +1,9 @@
 # Chapter 4 Simulation — Master Guide
 ## How to Build a Valid and Reasonable Simulation to Compare Queue Time and Prove the System Works
 
-**Last Updated:** 2026-10-17
+**Last Updated:** 2026-10-19
 **Cross-references & Consolidated Sections:**
+- `docs/simulation/SIMULATION_EXECUTION_GUIDELINE.md` — Complete step-by-step execution and output reproduction guide
 - `docs/simulation/chapter4_simulation_build_guide.md` — Full implementation code and script skeleton
 - Section 9 — Comprehensive Methodology Decision Rationale (Integrated)
 - Section 10 — Baseline Computation Analysis: Grand Mean vs. Mean of Monthly Means (Integrated)
@@ -72,8 +73,8 @@ and only change the variables that the system actually controls.
 
 ### Step 2 — Fetch Real Data
 
-Pull all historical consultation records from Supabase (`is_historical = true`, `service = 'consultation'`).
-These records cover March 2024 to December 2025. Use the full range — more data means a more stable baseline.
+Pull all historical consultation records from Supabase (`is_historical = true`, `service = 'consultation'`) or local Excel workbooks (`data_entries/2024_*.xls`).
+These records cover the **whole year of 2024 (January 1, 2024 to December 31, 2024, 12 full calendar months, N = 26,753 validated patient visits)**. Use the full calendar year range — analyzing the complete 12-month continuum ensures maximum statistical stability and academic defensibility.
 
 After fetching, run through `preprocess_queue_data()` to get these columns per patient:
 
@@ -265,7 +266,7 @@ After running the simulation, your thesis Chapter 4 must be able to state all th
 
 | Examiner Question | Your Answer |
 |-------------------|-------------|
-| "Where did your data come from?" | Real PHC consultation room Excel logs, imported into Supabase (March 2024 to December 2025, N = XXXX records, is_historical = true). |
+| "Where did your data come from?" | Real PHC consultation room Excel logs, imported into Supabase and available via local Excel workbooks (Whole Year 2024: January 1 to December 31, 2024, N = 26,753 validated records, is_historical = true). |
 | "Where did your overhead values come from?" | Structured MISD staff interview and direct clinic observation, both conducted at PHC. Not invented. |
 | "Why M/M/1?" | PHC's registration counter is a single-server queue. M/M/1 is the standard closed-form model for this configuration. Arrivals are approximately Poisson (random walk-in OPD). |
 | "Why peak hours only for M/M/1?" | PHC's morning surge (08:00 to 12:00) is when queue pressure is real. A whole-day arrival rate dilutes lambda and understates the bottleneck. |
