@@ -60,19 +60,19 @@ export function ConfirmAssignmentModal({
       role="dialog"
       aria-modal="true"
       aria-labelledby="confirm-assignment-title"
-      className="fixed inset-0 z-50 flex items-center justify-center bg-slate-900/60 backdrop-blur-xs p-4 sm:p-6 transition-opacity animate-in fade-in duration-150"
+      className="fixed inset-0 z-50 flex items-center justify-center bg-slate-900/60 dark:bg-black/70 backdrop-blur-xs p-4 sm:p-6 transition-opacity animate-in fade-in duration-150"
     >
-      <div className="bg-white rounded-2xl shadow-xl border border-slate-200 w-full max-w-lg overflow-hidden flex flex-col max-h-[90vh]">
+      <div className="bg-white dark:bg-[#1a1a1a] rounded-2xl shadow-xl border border-slate-200 dark:border-[#2e2e2e] w-full max-w-lg overflow-hidden flex flex-col max-h-[90vh]">
         {/* Modal Header */}
-        <div className="px-6 pt-6 pb-4 border-b border-slate-100 flex items-start justify-between gap-4">
+        <div className="px-6 pt-6 pb-4 border-b border-slate-100 dark:border-[#2e2e2e] flex items-start justify-between gap-4">
           <div>
             <h2
               id="confirm-assignment-title"
-              className="text-lg font-bold text-slate-800 tracking-tight"
+              className="text-lg font-bold text-slate-800 dark:text-[#f5f5f5] tracking-tight"
             >
               {modalTitle}
             </h2>
-            <p className="text-xs text-slate-500 mt-1 leading-relaxed">
+            <p className="text-xs text-slate-500 dark:text-[#a3a3a3] mt-1 leading-relaxed">
               {transferTexts.confirmAssignmentModalDesc}
             </p>
           </div>
@@ -93,41 +93,41 @@ export function ConfirmAssignmentModal({
           {pendingPatients.map(patient => (
             <div
               key={patient.id}
-              className="p-3.5 rounded-xl border border-slate-200 bg-slate-50/70 flex items-center justify-between gap-3 shadow-2xs"
+              className="p-3.5 rounded-xl border border-slate-200 dark:border-[#2e2e2e] bg-slate-50/70 dark:bg-[#1f1f1f]/70 flex items-center justify-between gap-3 shadow-2xs"
             >
               <div className="flex items-center gap-3 min-w-0 flex-1">
-                <span className="w-10 h-10 rounded-xl bg-red-50 border border-red-200 text-[#cc3535] font-black text-sm flex items-center justify-center shrink-0">
+                <span className="w-10 h-10 rounded-xl bg-red-50 dark:bg-red-950/40 border border-red-200 dark:border-red-900/50 text-[#cc3535] dark:text-[#f87171] font-black text-sm flex items-center justify-center shrink-0">
                   {patient.patientNum}
                 </span>
 
                 <div className="min-w-0 flex-1">
                   <div className="flex items-center gap-2">
-                    <span className="text-xs font-bold text-slate-800 truncate">
+                    <span className="text-xs font-bold text-slate-800 dark:text-[#f5f5f5] truncate">
                       {patient.service}
                     </span>
                     {patient.subcategory && (
-                      <span className="text-[10px] font-medium px-1.5 py-0.5 rounded bg-slate-200/80 text-slate-600 truncate">
+                      <span className="text-[10px] font-medium px-1.5 py-0.5 rounded bg-slate-200/80 dark:bg-[#242424] text-slate-600 dark:text-[#a3a3a3] truncate">
                         {patient.subcategory}
                       </span>
                     )}
                   </div>
 
-                  <p className="text-[11px] text-slate-500 font-medium mt-0.5 truncate">
+                  <p className="text-[11px] text-slate-500 dark:text-[#a3a3a3] font-medium mt-0.5 truncate">
                     {transferTexts.assignedToLabel}:{' '}
-                    <span className="font-bold text-slate-700">
+                    <span className="font-bold text-slate-700 dark:text-[#f5f5f5]">
                       {patient.cubicleNum || transferTexts.queueTabTitle}
                     </span>
                   </p>
 
                   {Boolean(patient.phoneNum) && (
-                    <p className="text-[10px] text-blue-600 font-medium mt-0.5 break-words leading-tight">
+                    <p className="text-[10px] text-blue-600 dark:text-blue-400 font-medium mt-0.5 break-words leading-tight">
                       {transferTexts.smsNotificationNotice}
                     </p>
                   )}
                 </div>
               </div>
 
-              <span className="text-xs font-bold text-emerald-700 bg-emerald-50 border border-emerald-200 px-2 py-1 rounded-lg shrink-0 whitespace-nowrap">
+              <span className="text-xs font-bold text-emerald-700 dark:text-emerald-300 bg-emerald-50 dark:bg-emerald-950/50 border border-emerald-200 dark:border-emerald-900 px-2 py-1 rounded-lg shrink-0 whitespace-nowrap">
                 {patient.cubicleNum || 'Queue'}
               </span>
             </div>
@@ -135,12 +135,12 @@ export function ConfirmAssignmentModal({
         </div>
 
         {/* Modal Footer: Action Buttons */}
-        <div className="px-6 py-4 border-t border-slate-100 bg-slate-50/50 flex items-center justify-end gap-3 shrink-0">
+        <div className="px-6 py-4 border-t border-slate-100 dark:border-[#2e2e2e] bg-slate-50/50 dark:bg-[#141414] flex items-center justify-end gap-3 shrink-0">
           <button
             type="button"
             onClick={onCancel}
             disabled={isConfirming}
-            className="px-4 py-2 text-xs font-semibold rounded-xl border border-slate-300 text-slate-700 hover:bg-slate-100 active:bg-slate-200 transition-colors cursor-pointer disabled:opacity-50"
+            className="px-4 py-2 text-xs font-semibold rounded-xl border border-slate-300 dark:border-[#2e2e2e] text-slate-700 dark:text-[#a3a3a3] hover:bg-slate-100 dark:hover:bg-[#242424] hover:text-slate-900 dark:hover:text-[#f5f5f5] active:bg-slate-200 transition-colors cursor-pointer disabled:opacity-50"
           >
             {transferTexts.cancelAssignmentBtn}
           </button>

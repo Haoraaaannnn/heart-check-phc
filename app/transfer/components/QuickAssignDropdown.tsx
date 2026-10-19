@@ -193,14 +193,14 @@ export function QuickAssignDropdown({
       role="dialog"
       aria-modal="true"
       aria-labelledby="quick-assign-title"
-      className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-slate-900/20 backdrop-blur-[2px] animate-in fade-in duration-150"
+      className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-slate-900/20 dark:bg-black/60 backdrop-blur-[2px] animate-in fade-in duration-150"
     >
       <div
         ref={panelRef}
-        className="w-full max-w-sm sm:max-w-md bg-white rounded-2xl shadow-2xl border border-slate-200 overflow-hidden flex flex-col max-h-[85vh] animate-in zoom-in-95 duration-150"
+        className="w-full max-w-sm sm:max-w-md bg-white dark:bg-[#1a1a1a] rounded-2xl shadow-2xl border border-slate-200 dark:border-[#2e2e2e] overflow-hidden flex flex-col max-h-[85vh] animate-in zoom-in-95 duration-150"
       >
         {/* Dropdown Header */}
-        <div className="px-5 py-3.5 border-b border-slate-100 flex items-start justify-between gap-3 bg-slate-50/90">
+        <div className="px-5 py-3.5 border-b border-slate-100 dark:border-[#2e2e2e] flex items-start justify-between gap-3 bg-slate-50/90 dark:bg-[#141414]">
           <div className="min-w-0">
             <div className="flex items-center gap-2">
               <span className="px-2.5 py-1 rounded-lg bg-[#cc3535] text-white font-black text-sm tracking-tight shadow-2xs">
@@ -209,11 +209,11 @@ export function QuickAssignDropdown({
               <div className="min-w-0">
                 <h3
                   id="quick-assign-title"
-                  className="text-sm font-bold text-slate-900 truncate"
+                  className="text-sm font-bold text-slate-900 dark:text-[#f5f5f5] truncate"
                 >
                   {isFromCubicle ? transferTexts.managePatientTitle : transferTexts.quickAssignTitle}
                 </h3>
-                <p className="text-[11px] text-slate-500 truncate mt-0.5">
+                <p className="text-[11px] text-slate-500 dark:text-[#a3a3a3] truncate mt-0.5">
                   {isFromCubicle
                     ? transferTexts.managePatientSubtitle
                     : transferTexts.quickAssignSubtitle}
@@ -226,7 +226,7 @@ export function QuickAssignDropdown({
             type="button"
             onClick={onClose}
             disabled={pendingTarget !== null}
-            className="w-8 h-8 rounded-lg text-slate-400 hover:text-slate-700 hover:bg-slate-200/60 flex items-center justify-center transition cursor-pointer shrink-0 disabled:opacity-40"
+            className="w-8 h-8 rounded-lg text-slate-400 dark:text-[#737373] hover:text-slate-700 dark:hover:text-[#f5f5f5] hover:bg-slate-200/60 dark:hover:bg-[#242424] flex items-center justify-center transition cursor-pointer shrink-0 disabled:opacity-40"
             aria-label={transferTexts.closeBtn}
           >
             <svg className="w-4 h-4" fill="none" viewBox="0 0 24 24" stroke="currentColor">
@@ -239,7 +239,7 @@ export function QuickAssignDropdown({
         <div className="p-3.5 overflow-y-auto space-y-2 phc-scroll flex-1">
           {/* Station Management Actions (if tapped from inside a cubicle) */}
           {isFromCubicle && currentCubicleNum && (
-            <div className="mb-3 pb-3 border-b border-slate-200 space-y-2">
+            <div className="mb-3 pb-3 border-b border-slate-200 dark:border-[#2e2e2e] space-y-2">
               {onMoveBackToQueue && (
                 <button
                   type="button"
@@ -247,10 +247,10 @@ export function QuickAssignDropdown({
                   onClick={handleMoveBackQueue}
                   className={`w-full flex items-center justify-between p-3 rounded-xl border transition-all text-left shadow-2xs select-none ${
                     pendingTarget === 'queue'
-                      ? 'border-amber-400 bg-amber-100/90 cursor-wait'
+                      ? 'border-amber-400 bg-amber-100/90 dark:bg-amber-900/80 cursor-wait'
                       : pendingTarget !== null
-                      ? 'border-amber-100 bg-amber-50/30 opacity-40 cursor-not-allowed'
-                      : 'border-amber-200 bg-amber-50/60 hover:bg-amber-100/70 text-amber-950 cursor-pointer active:scale-[0.99] group'
+                      ? 'border-amber-100 dark:border-amber-950 bg-amber-50/30 dark:bg-amber-950/20 opacity-40 cursor-not-allowed'
+                      : 'border-amber-200 dark:border-amber-900/60 bg-amber-50/60 dark:bg-amber-950/40 hover:bg-amber-100/70 dark:hover:bg-amber-900/60 text-amber-950 dark:text-amber-100 cursor-pointer active:scale-[0.99] group'
                   }`}
                 >
                   <div className="flex items-center gap-3 min-w-0 flex-1 overflow-hidden">
@@ -267,21 +267,21 @@ export function QuickAssignDropdown({
                       )}
                     </div>
                     <div className="min-w-0">
-                      <p className="text-sm font-bold text-slate-900 group-hover:text-amber-950 transition-colors">
+                      <p className="text-sm font-bold text-slate-900 dark:text-[#f5f5f5] group-hover:text-amber-950 dark:group-hover:text-amber-100 transition-colors">
                         {transferTexts.moveToQueueBtn}
                       </p>
-                      <p className="text-xs text-amber-700">
+                      <p className="text-xs text-amber-700 dark:text-amber-300">
                         {transferTexts.moveToQueueSubtitle}
                       </p>
                     </div>
                   </div>
                   {pendingTarget === 'queue' ? (
-                    <span className="text-[11px] font-bold px-2 py-0.5 rounded-md bg-amber-200 text-amber-900 flex items-center gap-1.5 shrink-0 animate-pulse">
+                    <span className="text-[11px] font-bold px-2 py-0.5 rounded-md bg-amber-200 dark:bg-amber-900 text-amber-900 dark:text-amber-100 flex items-center gap-1.5 shrink-0 animate-pulse">
                       <span className="w-1.5 h-1.5 rounded-full bg-amber-700 animate-ping" />
                       {transferTexts.movingToQueue}
                     </span>
                   ) : (
-                    <span className="text-[11px] font-semibold px-2 py-0.5 rounded-md bg-amber-200 text-amber-800 shrink-0">
+                    <span className="text-[11px] font-semibold px-2 py-0.5 rounded-md bg-amber-200 dark:bg-amber-950/70 text-amber-800 dark:text-amber-300 shrink-0">
                       {transferTexts.badgeReturn}
                     </span>
                   )}
@@ -295,10 +295,10 @@ export function QuickAssignDropdown({
                   onClick={handleSpeakAction}
                   className={`w-full flex items-center justify-between p-3 rounded-xl border transition-all text-left shadow-2xs select-none ${
                     pendingTarget === 'call'
-                      ? 'border-blue-400 bg-blue-100/90 cursor-wait'
+                      ? 'border-blue-400 bg-blue-100/90 dark:bg-blue-900/80 cursor-wait'
                       : pendingTarget !== null
-                      ? 'border-blue-100 bg-blue-50/30 opacity-40 cursor-not-allowed'
-                      : 'border-blue-200 bg-blue-50/60 hover:bg-blue-100/70 text-blue-950 cursor-pointer active:scale-[0.99] group'
+                      ? 'border-blue-100 dark:border-blue-950 bg-blue-50/30 dark:bg-blue-950/20 opacity-40 cursor-not-allowed'
+                      : 'border-blue-200 dark:border-blue-900/60 bg-blue-50/60 dark:bg-blue-950/40 hover:bg-blue-100/70 dark:hover:bg-blue-900/60 text-blue-950 dark:text-blue-100 cursor-pointer active:scale-[0.99] group'
                   }`}
                 >
                   <div className="flex items-center gap-3 min-w-0 flex-1 overflow-hidden">
@@ -315,28 +315,28 @@ export function QuickAssignDropdown({
                       )}
                     </div>
                     <div className="min-w-0">
-                      <p className="text-sm font-bold text-slate-900 group-hover:text-blue-950 transition-colors">
+                      <p className="text-sm font-bold text-slate-900 dark:text-[#f5f5f5] group-hover:text-blue-950 dark:group-hover:text-blue-100 transition-colors">
                         {transferTexts.callPatientAudioBtn}
                       </p>
-                      <p className="text-xs text-blue-700">
+                      <p className="text-xs text-blue-700 dark:text-blue-300">
                         {transferTexts.callPatientAudioSubtitle}
                       </p>
                     </div>
                   </div>
                   {pendingTarget === 'call' ? (
-                    <span className="text-[11px] font-bold px-2 py-0.5 rounded-md bg-blue-200 text-blue-900 flex items-center gap-1.5 shrink-0 animate-pulse">
+                    <span className="text-[11px] font-bold px-2 py-0.5 rounded-md bg-blue-200 dark:bg-blue-900 text-blue-900 dark:text-blue-100 flex items-center gap-1.5 shrink-0 animate-pulse">
                       <span className="w-1.5 h-1.5 rounded-full bg-blue-700 animate-ping" />
                       {transferTexts.callingBtn}
                     </span>
                   ) : (
-                    <span className="text-[11px] font-semibold px-2 py-0.5 rounded-md bg-blue-200 text-blue-800 shrink-0">
+                    <span className="text-[11px] font-semibold px-2 py-0.5 rounded-md bg-blue-200 dark:bg-blue-950/70 text-blue-800 dark:text-blue-300 shrink-0">
                       {transferTexts.badgeSpeaker}
                     </span>
                   )}
                 </button>
               )}
 
-              <p className="text-[11px] font-bold text-slate-500 uppercase tracking-wider pt-1.5 px-1">
+              <p className="text-[11px] font-bold text-slate-500 dark:text-[#a3a3a3] uppercase tracking-wider pt-1.5 px-1">
                 {transferTexts.moveToOtherCubicleHeading}
               </p>
             </div>
@@ -344,7 +344,7 @@ export function QuickAssignDropdown({
 
           {/* List of Destination Stations */}
           {availableCubicles.length === 0 ? (
-            <p className="text-xs text-slate-500 text-center py-6">
+            <p className="text-xs text-slate-500 dark:text-[#a3a3a3] text-center py-6">
               {transferTexts.noCubiclesConfigured}
             </p>
           ) : (
@@ -362,22 +362,22 @@ export function QuickAssignDropdown({
                   onClick={() => handleAssignStation(cubicle.cubicleNum)}
                   className={`w-full flex items-center justify-between p-3 rounded-xl border transition-all text-left min-h-[54px] select-none ${
                     isAssigningThis
-                      ? 'border-emerald-500 bg-emerald-100/90 shadow-2xs cursor-wait'
+                      ? 'border-emerald-500 bg-emerald-100/90 dark:bg-emerald-950/70 shadow-2xs cursor-wait'
                       : isFull
-                      ? 'border-slate-200 bg-slate-50/70 opacity-60 cursor-not-allowed'
+                      ? 'border-slate-200 dark:border-[#2e2e2e] bg-slate-50/70 dark:bg-[#1a1a1a]/50 opacity-60 cursor-not-allowed'
                       : pendingTarget !== null
-                      ? 'border-slate-100 bg-slate-50/40 opacity-40 cursor-not-allowed'
-                      : 'border-slate-200/90 bg-white hover:border-emerald-500 hover:bg-emerald-50/40 cursor-pointer group'
+                      ? 'border-slate-100 dark:border-[#242424] bg-slate-50/40 dark:bg-[#1a1a1a]/30 opacity-40 cursor-not-allowed'
+                      : 'border-slate-200/90 dark:border-[#2e2e2e] bg-white dark:bg-[#1f1f1f] hover:border-emerald-500 dark:hover:border-emerald-500 hover:bg-emerald-50/40 dark:hover:bg-emerald-950/30 cursor-pointer group'
                   }`}
                 >
                   <div className="flex items-center gap-3 min-w-0 flex-1 overflow-hidden">
                     <span
                       className={`w-9 h-9 rounded-xl flex items-center justify-center font-black text-xs shrink-0 shadow-2xs overflow-hidden select-none ${
                         isFull
-                          ? 'bg-slate-200 text-slate-500'
+                          ? 'bg-slate-200 dark:bg-[#2e2e2e] text-slate-500 dark:text-[#737373]'
                           : isAssigningThis
                           ? 'bg-emerald-600 text-white'
-                          : 'bg-emerald-100 text-emerald-800 border border-emerald-300'
+                          : 'bg-emerald-100 dark:bg-emerald-950/60 text-emerald-800 dark:text-emerald-300 border border-emerald-300 dark:border-emerald-900'
                       }`}
                       title={cubicle.cubicleNum}
                     >
@@ -392,13 +392,13 @@ export function QuickAssignDropdown({
                     </span>
 
                     <div className="min-w-0 flex-1">
-                      <p className="text-xs font-bold text-slate-900 truncate group-hover:text-emerald-950 transition-colors">
+                      <p className="text-xs font-bold text-slate-900 dark:text-[#f5f5f5] truncate group-hover:text-emerald-950 dark:group-hover:text-emerald-200 transition-colors">
                         {cubicle.room && !cubicle.cubicleNum.toLowerCase().startsWith('room')
                           ? `${transferTexts.roomPrefix} ${cubicle.room} · `
                           : ''}
                         {cubicle.cubicleNum}
                       </p>
-                      <p className="text-[11px] text-slate-500 truncate mt-0.5">
+                      <p className="text-[11px] text-slate-500 dark:text-[#a3a3a3] truncate mt-0.5">
                         {doctorName
                           ? `${transferTexts.doctorPrefix} ${doctorName}`
                           : transferTexts.unassignedDoctor}
@@ -411,10 +411,10 @@ export function QuickAssignDropdown({
                     <span
                       className={`px-2 py-0.5 rounded-md text-[10px] font-bold tracking-tight ${
                         isFull
-                          ? 'bg-rose-100 text-rose-700'
+                          ? 'bg-rose-100 dark:bg-rose-950/60 text-rose-700 dark:text-rose-300 border border-rose-200 dark:border-rose-900'
                           : occupants === 0
-                          ? 'bg-emerald-100 text-emerald-800 border border-emerald-200'
-                          : 'bg-amber-100 text-amber-800 border border-amber-200'
+                          ? 'bg-emerald-100 dark:bg-emerald-950/60 text-emerald-800 dark:text-emerald-300 border border-emerald-200 dark:border-emerald-900'
+                          : 'bg-amber-100 dark:bg-amber-950/60 text-amber-800 dark:text-amber-300 border border-amber-200 dark:border-amber-900'
                       }`}
                     >
                       {isFull
@@ -442,15 +442,15 @@ export function QuickAssignDropdown({
         </div>
 
         {/* Footer */}
-        <div className="px-4 py-2.5 bg-slate-50/80 border-t border-slate-100 flex items-center justify-between">
-          <span className="text-[11px] text-slate-400 font-medium">
+        <div className="px-4 py-2.5 bg-slate-50/80 dark:bg-[#141414] border-t border-slate-100 dark:border-[#2e2e2e] flex items-center justify-between">
+          <span className="text-[11px] text-slate-400 dark:text-[#737373] font-medium">
             {transferTexts.dismissHint}
           </span>
           <button
             type="button"
             onClick={onClose}
             disabled={pendingTarget !== null}
-            className="px-3 py-1.5 rounded-lg text-xs font-bold text-slate-600 hover:text-slate-900 bg-white hover:bg-slate-100 border border-slate-200 shadow-2xs transition cursor-pointer disabled:opacity-40"
+            className="px-3 py-1.5 rounded-lg text-xs font-bold text-slate-600 dark:text-[#a3a3a3] hover:text-slate-900 dark:hover:text-[#f5f5f5] bg-white dark:bg-[#242424] hover:bg-slate-100 dark:hover:bg-[#2e2e2e] border border-slate-200 dark:border-[#2e2e2e] shadow-2xs transition cursor-pointer disabled:opacity-40"
           >
             {transferTexts.closeBtn}
           </button>

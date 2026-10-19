@@ -113,21 +113,21 @@ export function CubicleCard({
       style={isTargetEligible ? TransferStyle.assignTargetCard : undefined}
       className={`rounded-xl border p-2 flex flex-col justify-between transition-all select-none min-h-[76px] ${
         isOver && isDraggable
-          ? 'border-[#cc3535] bg-red-50/80 shadow-xs phc-dropzone'
+          ? 'border-[#cc3535] bg-red-50/80 dark:bg-red-950/50 shadow-xs phc-dropzone'
           : isTargetEligible
-          ? 'border-emerald-500 bg-emerald-50/40 ring-2 ring-emerald-500/20 hover:border-emerald-600 cursor-pointer'
+          ? 'border-emerald-500 bg-emerald-50/40 dark:bg-emerald-950/30 ring-2 ring-emerald-500/20 hover:border-emerald-600 cursor-pointer'
           : isFull
-          ? 'border-rose-200 bg-rose-50/20'
-          : 'border-slate-200 bg-slate-50/60 hover:bg-slate-50'
+          ? 'border-rose-200 dark:border-rose-900/40 bg-rose-50/20 dark:bg-rose-950/20'
+          : 'border-slate-200 dark:border-[#2e2e2e] bg-slate-50/60 dark:bg-[#1f1f1f]/60 hover:bg-slate-50 dark:hover:bg-[#242424]'
       }`}
     >
       {/* Cubicle Tile Header: Cubicle Num + Doctor + Assign / Capacity */}
       <div className="flex items-center justify-between gap-1 mb-1">
         <div className="min-w-0 flex-1">
-          <span className="text-[11px] font-bold text-slate-800 truncate block leading-none">
+          <span className="text-[11px] font-bold text-slate-800 dark:text-[#f5f5f5] truncate block leading-none">
             {cubicle.cubicleNum}
           </span>
-          <span className="text-[9px] text-slate-500 font-medium truncate block leading-none mt-0.5">
+          <span className="text-[9px] text-slate-500 dark:text-[#a3a3a3] font-medium truncate block leading-none mt-0.5">
             {doctorName
               ? `${transferTexts.doctorPrefix} ${doctorName}`
               : transferTexts.unassignedDoctor}
@@ -171,8 +171,8 @@ export function CubicleCard({
           <span
             className={`text-[9px] font-bold px-1.5 py-0.2 rounded-md shrink-0 ${
               isFull
-                ? 'bg-rose-100 text-rose-700'
-                : 'bg-emerald-100 text-emerald-800'
+                ? 'bg-rose-100 dark:bg-rose-950/60 text-rose-700 dark:text-rose-300'
+                : 'bg-emerald-100 dark:bg-emerald-950/60 text-emerald-800 dark:text-emerald-300'
             }`}
           >
             {visibleAssigned.length}/{MAX_PATIENTS_PER_CUBICLE}
@@ -198,12 +198,12 @@ export function CubicleCard({
               onMouseDown={e => onDragStart?.(e, topPatient, cubicle.cubicleNum)}
               onClick={handleTopPatientClick}
               style={isTopSelected ? TransferStyle.selectedPatientRow : undefined}
-              className={`p-1.5 bg-white rounded-lg border transition-all flex items-center justify-between gap-1 shadow-2xs cursor-pointer ${
+              className={`p-1.5 bg-white dark:bg-[#1a1a1a] rounded-lg border transition-all flex items-center justify-between gap-1 shadow-2xs cursor-pointer ${
                 draggedPatientId === topPatient.id
                   ? 'opacity-40'
                   : isTopSelected
-                  ? 'border-[#cc3535] bg-red-50/80 ring-2 ring-[#cc3535]'
-                  : 'border-slate-200 hover:border-slate-300'
+                  ? 'border-[#cc3535] bg-red-50/80 dark:bg-red-950/60 ring-2 ring-[#cc3535]'
+                  : 'border-slate-200 dark:border-[#2e2e2e] hover:border-slate-300 dark:hover:border-[#404040]'
               }`}
             >
               <div className="flex items-center gap-1 min-w-0 flex-1 overflow-hidden">
@@ -247,8 +247,8 @@ export function CubicleCard({
                   title={transferTexts.callPatientTooltip}
                   className={`px-1.5 py-0.5 rounded text-[10px] font-semibold transition-colors cursor-pointer whitespace-nowrap shrink-0 ${
                     speakingId === topPatient.id
-                      ? 'bg-blue-100 text-blue-300 cursor-not-allowed'
-                      : 'bg-blue-50 hover:bg-blue-100 text-blue-600'
+                      ? 'bg-blue-100 dark:bg-blue-950/60 text-blue-300 dark:text-blue-400 cursor-not-allowed'
+                      : 'bg-blue-50 dark:bg-blue-950/40 hover:bg-blue-100 dark:hover:bg-blue-900/50 text-blue-600 dark:text-blue-300'
                   }`}
                 >
                   {speakingId === topPatient.id ? transferTexts.callingBtn : transferTexts.callBtn}
@@ -271,12 +271,12 @@ export function CubicleCard({
                     }
                   }}
                   title={transferTexts.moveToQueueTooltip}
-                  className={`px-1.5 py-0.5 rounded text-[10px] font-semibold bg-amber-50 hover:bg-amber-100 text-amber-700 transition-colors cursor-pointer select-none whitespace-nowrap shrink-0 ${
+                  className={`px-1.5 py-0.5 rounded text-[10px] font-semibold bg-amber-50 dark:bg-amber-950/40 hover:bg-amber-100 dark:hover:bg-amber-900/50 text-amber-700 dark:text-amber-300 transition-colors cursor-pointer select-none whitespace-nowrap shrink-0 ${
                     isBackPending ? 'cursor-wait opacity-80' : ''
                   }`}
                 >
                   {isBackPending ? (
-                    <svg className="w-3 h-3 animate-spin inline-block text-amber-700" fill="none" viewBox="0 0 24 24">
+                    <svg className="w-3 h-3 animate-spin inline-block text-amber-700 dark:text-amber-300" fill="none" viewBox="0 0 24 24">
                       <circle className="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" strokeWidth="4" />
                       <path className="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4zm2 5.291A7.962 7.962 0 014 12H0c0 3.042 1.135 5.824 3 7.938l3-2.647z" />
                     </svg>
@@ -289,7 +289,7 @@ export function CubicleCard({
           );
         })()
       ) : (
-        <div className="py-2 text-center text-slate-400 text-[11px] italic">
+        <div className="py-2 text-center text-slate-400 dark:text-[#737373] text-[11px] italic">
           {isTargetEligible ? transferTexts.cubicleSelectTargetHint : 'Available'}
         </div>
       )}
@@ -297,7 +297,7 @@ export function CubicleCard({
       {/* Additional Waiting Patients in this Cubicle Lane */}
       {waitingPatients.length > 0 && (
         <div className="flex items-center gap-1 mt-1 overflow-hidden">
-          <span className="text-[9px] text-slate-400 font-bold uppercase shrink-0">
+          <span className="text-[9px] text-slate-400 dark:text-[#737373] font-bold uppercase shrink-0">
             Next:
           </span>
           {waitingPatients.slice(0, 2).map(p => {
@@ -313,8 +313,8 @@ export function CubicleCard({
                 }}
                 className={`text-[10px] font-semibold px-1 py-0.5 rounded border shadow-2xs cursor-pointer transition-colors ${
                   isWaitingSelected
-                    ? 'bg-red-50 text-[#cc3535] border-[#cc3535] ring-1 ring-[#cc3535]'
-                    : 'bg-white border-slate-200 text-slate-600 hover:border-slate-300'
+                    ? 'bg-red-50 dark:bg-red-950/60 text-[#cc3535] dark:text-[#f87171] border-[#cc3535] ring-1 ring-[#cc3535]'
+                    : 'bg-white dark:bg-[#1a1a1a] border-slate-200 dark:border-[#2e2e2e] text-slate-600 dark:text-[#a3a3a3] hover:border-slate-300 dark:hover:border-[#404040]'
                 }`}
               >
                 {p.patientNum}
@@ -322,7 +322,7 @@ export function CubicleCard({
             );
           })}
           {waitingPatients.length > 2 && (
-            <span className="text-[9px] text-slate-400 font-medium shrink-0">
+            <span className="text-[9px] text-slate-400 dark:text-[#737373] font-medium shrink-0">
               +{waitingPatients.length - 2}
             </span>
           )}

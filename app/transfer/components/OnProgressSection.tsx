@@ -78,17 +78,17 @@ export function OnProgressSection({
   return (
     <div className="h-full flex flex-col min-h-0 overflow-hidden select-none">
       {/* Header */}
-      <div className="flex items-center justify-between gap-2 mb-2 pb-1.5 border-b border-slate-100 shrink-0">
+      <div className="flex items-center justify-between gap-2 mb-2 pb-1.5 border-b border-slate-100 dark:border-[#2e2e2e] shrink-0">
         <div className="flex items-center gap-2 min-w-0 flex-1">
           <span className="w-2.5 h-2.5 rounded-full bg-emerald-500 animate-pulse inline-block shrink-0" />
-          <h2 className="text-slate-700 font-bold text-xs tracking-wider uppercase truncate">
+          <h2 className="text-slate-700 dark:text-[#f5f5f5] font-bold text-xs tracking-wider uppercase truncate">
             {transferTexts.onProgressHeading}
           </h2>
-          <span className="text-[11px] font-bold px-1.5 py-0.5 rounded-md bg-emerald-100 text-emerald-800 shrink-0">
+          <span className="text-[11px] font-bold px-1.5 py-0.5 rounded-md bg-emerald-100 dark:bg-emerald-950/60 text-emerald-800 dark:text-emerald-300 shrink-0">
             {safePatients.length}
           </span>
         </div>
-        <span className="text-[11px] text-slate-400 font-medium shrink-0 hidden sm:inline">
+        <span className="text-[11px] text-slate-400 dark:text-[#737373] font-medium shrink-0 hidden sm:inline">
           {isDraggable
             ? transferTexts.dragToCubiclesHint
             : transferTexts.autoAssigningHint}
@@ -97,7 +97,7 @@ export function OnProgressSection({
 
       {/* Patient List (The only scrollable container in the Active Queue) */}
       {safePatients.length === 0 ? (
-        <div className="py-8 text-center text-slate-400 text-xs">
+        <div className="py-8 text-center text-slate-400 dark:text-[#737373] text-xs">
           {transferTexts.noPatientsInQueue}
         </div>
       ) : (
@@ -138,12 +138,12 @@ export function OnProgressSection({
                 style={isSelected ? TransferStyle.selectedPatientRow : undefined}
                 className={`relative flex items-center justify-between border rounded-xl p-2 transition-all select-none ${
                   isBeingDragged
-                    ? 'opacity-30 border-[#cc3535] bg-red-50'
+                    ? 'opacity-30 border-[#cc3535] bg-red-50 dark:bg-red-950/40'
                     : isSelected
-                    ? 'border-[#cc3535] bg-red-50/80 shadow-xs ring-2 ring-[#cc3535] cursor-pointer'
+                    ? 'border-[#cc3535] bg-red-50/80 dark:bg-red-950/50 shadow-xs ring-2 ring-[#cc3535] cursor-pointer'
                     : isTop
-                    ? 'border-emerald-300 bg-emerald-50/40 shadow-2xs cursor-grab active:cursor-grabbing hover:border-emerald-400'
-                    : 'border-slate-200 bg-slate-50/60 opacity-80 cursor-not-allowed'
+                    ? 'border-emerald-300 dark:border-emerald-800/60 bg-emerald-50/40 dark:bg-emerald-950/30 shadow-2xs cursor-grab active:cursor-grabbing hover:border-emerald-400 dark:hover:border-emerald-700'
+                    : 'border-slate-200 dark:border-[#2e2e2e] bg-slate-50/60 dark:bg-[#1f1f1f]/60 opacity-80 cursor-not-allowed'
                 }`}
               >
                 {/* Left Patient Details */}
@@ -161,7 +161,7 @@ export function OnProgressSection({
                     ) : (
                       <span
                         title={transferTexts.lockedInStack}
-                        className="inline-flex items-center justify-center px-1 py-0.5 rounded text-[10px] font-bold text-slate-400 bg-slate-100 shrink-0"
+                        className="inline-flex items-center justify-center px-1 py-0.5 rounded text-[10px] font-bold text-slate-400 dark:text-[#737373] bg-slate-100 dark:bg-[#242424] shrink-0"
                       >
                         WAIT
                       </span>
@@ -175,7 +175,7 @@ export function OnProgressSection({
                         ? 'bg-[#cc3535] text-white shadow-2xs'
                         : isTop
                         ? 'bg-[#cc3535] text-white shadow-2xs'
-                        : 'bg-slate-200 text-slate-700'
+                        : 'bg-slate-200 dark:bg-[#2e2e2e] text-slate-700 dark:text-[#a3a3a3]'
                     }`}
                   >
                     {p.patientNum}
@@ -184,11 +184,11 @@ export function OnProgressSection({
                   {/* Service info & Position */}
                   <div className="min-w-0 flex-1 flex flex-col justify-center">
                     <div className="flex items-center gap-1 min-w-0">
-                      <span className="text-slate-800 text-xs font-semibold truncate">
+                      <span className="text-slate-800 dark:text-[#f5f5f5] text-xs font-semibold truncate">
                         {p.service}
                         {p.subcategory && ` · ${p.subcategory}`}
                       </span>
-                      <span className="text-[10px] text-slate-400 font-medium shrink-0">
+                      <span className="text-[10px] text-slate-400 dark:text-[#737373] font-medium shrink-0">
                         {transferTexts.queuePositionPrefix}
                         {index + 1}
                       </span>
@@ -196,15 +196,15 @@ export function OnProgressSection({
 
                     <div className="min-w-0">
                       {isSelected ? (
-                        <span className="text-[10px] text-[#cc3535] font-bold tracking-tight truncate block">
+                        <span className="text-[10px] text-[#cc3535] dark:text-[#f87171] font-bold tracking-tight truncate block">
                           {transferTexts.selectedBadge} · {transferTexts.selectedQueuePatientHint}
                         </span>
                       ) : isTop ? (
-                        <span className="text-[10px] text-emerald-600 font-bold tracking-tight truncate block">
+                        <span className="text-[10px] text-emerald-600 dark:text-emerald-400 font-bold tracking-tight truncate block">
                           {transferTexts.servingNext}
                         </span>
                       ) : (
-                        <span className="text-[10px] text-slate-400 truncate block">
+                        <span className="text-[10px] text-slate-400 dark:text-[#737373] truncate block">
                           {transferTexts.lockedInStack}
                         </span>
                       )}
@@ -242,8 +242,8 @@ export function OnProgressSection({
                     title={transferTexts.callPatientTooltip}
                     className={`px-2 py-0.5 rounded-md text-xs font-semibold transition-colors cursor-pointer whitespace-nowrap ${
                       speakingId === p.id
-                        ? 'bg-blue-100 text-blue-300 cursor-not-allowed'
-                        : 'bg-blue-50 hover:bg-blue-100 text-blue-600'
+                        ? 'bg-blue-100 dark:bg-blue-950/60 text-blue-300 dark:text-blue-400 cursor-not-allowed'
+                        : 'bg-blue-50 dark:bg-blue-950/40 hover:bg-blue-100 dark:hover:bg-blue-900/50 text-blue-600 dark:text-blue-300'
                     }`}
                   >
                     {speakingId === p.id ? transferTexts.callingBtn : transferTexts.callBtn}
@@ -260,7 +260,7 @@ export function OnProgressSection({
                         onAssignNow(p);
                       }}
                       title={transferTexts.assignNowTooltip}
-                      className="px-2 py-0.5 rounded-md text-xs font-semibold bg-emerald-50 hover:bg-emerald-100 text-emerald-700 transition-colors cursor-pointer whitespace-nowrap"
+                      className="px-2 py-0.5 rounded-md text-xs font-semibold bg-emerald-50 dark:bg-emerald-950/40 hover:bg-emerald-100 dark:hover:bg-emerald-900/50 text-emerald-700 dark:text-emerald-300 transition-colors cursor-pointer whitespace-nowrap"
                     >
                       {transferTexts.assignBtn}
                     </button>

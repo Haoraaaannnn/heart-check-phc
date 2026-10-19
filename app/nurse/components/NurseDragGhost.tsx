@@ -67,9 +67,9 @@ export function NurseDragGhost({
       }}
     >
       <div
-        className={`w-64 p-3 rounded-2xl bg-white border-2 shadow-2xl backdrop-blur-md flex items-center justify-between gap-3 ${
+        className={`w-64 p-3 rounded-2xl bg-white dark:bg-[#1a1a1a] border-2 shadow-2xl backdrop-blur-md flex items-center justify-between gap-3 ${
           isValidDropTarget
-            ? 'border-emerald-500 ring-2 ring-emerald-400/40 bg-emerald-50/95'
+            ? 'border-emerald-500 ring-2 ring-emerald-400/40 bg-emerald-50/95 dark:bg-emerald-950/90'
             : 'border-[#cc3535] ring-2 ring-red-400/30'
         }`}
       >
@@ -78,12 +78,12 @@ export function NurseDragGhost({
             {patient.patientNum}
           </div>
           <div className="min-w-0">
-            <p className="text-xs font-bold text-gray-800 truncate">
+            <p className="text-xs font-bold text-gray-800 dark:text-[#f5f5f5] truncate">
               {patient.service}
               {patient.subcategory ? ` · ${patient.subcategory}` : ''}
             </p>
             {originLabel && (
-              <p className="text-[10px] text-gray-500 font-medium truncate">
+              <p className="text-[10px] text-gray-500 dark:text-[#a3a3a3] font-medium truncate">
                 {originLabel}
               </p>
             )}
@@ -94,8 +94,8 @@ export function NurseDragGhost({
           <span
             className={`text-[10px] font-bold px-2 py-0.5 rounded-md ${
               isValidDropTarget
-                ? 'bg-emerald-100 text-emerald-700'
-                : 'bg-red-100 text-[#cc3535]'
+                ? 'bg-emerald-100 dark:bg-emerald-950/70 text-emerald-700 dark:text-emerald-300'
+                : 'bg-red-100 dark:bg-red-950/70 text-[#cc3535] dark:text-red-400'
             }`}
           >
             {isValidDropTarget ? 'Ready to drop' : 'Moving'}

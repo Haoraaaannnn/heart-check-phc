@@ -61,7 +61,7 @@ export function WithDoctorSection({
     <StageColumn
       stage="with_doctor"
       title={nurseTexts.stageWithDoctorHeading}
-      badgeColorClass="bg-purple-100 text-purple-700"
+      badgeColorClass="bg-purple-100 text-purple-700 dark:bg-purple-950/50 dark:text-purple-300"
       count={patients.length}
       emptyText={nurseTexts.emptyWithDoctor}
       isDragOver={isDragOver}

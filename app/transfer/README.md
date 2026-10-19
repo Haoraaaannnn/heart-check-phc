@@ -1,6 +1,6 @@
 # Patient Transfer Module Developer Guide
 
-**Last Updated:** 2026-10-16
+**Last Updated:** 2026-10-19
 
 This document provides architectural standards and an exhaustive developer mapping for the Patient Transfer module in the Heart Check PHC application.
 
@@ -11,6 +11,16 @@ This document provides architectural standards and an exhaustive developer mappi
 The Patient Transfer dashboard manages patient queues, cubicle room assignments, registration counter flow, auto-rotation timers, text-to-speech audio announcements, and SMS alerts.
 
 The module incorporates offline-resilient Write-Ahead Logging (WAL) via an IndexedDB outbox. When assignments are confirmed or counter releases occur, actions are recorded on disk before/concurrently with network transmission to Supabase. This guarantees that pending transfers are never lost due to sudden power outages or network dropouts.
+
+### Dual-Theme (Light / Dark) Standard (AGENTS.md Rule 10 Parity)
+- **Zero Inline Background Overrides:** The workstation enforces pure Tailwind CSS dual-theme classes across all surfaces. Hardcoded inline `backgroundColor` properties in `TransferStyle` have been removed to prevent theme inversion conflicts.
+- **Surface Contrast Hierarchy:**
+  - Viewport Canvas: `bg-slate-50 dark:bg-[#0d0d0d]`
+  - Sidebar & Sticky Header: `bg-white dark:bg-[#141414]` with `border-slate-200 dark:border-[#2e2e2e]`
+  - Boards, Cards & Modals: `bg-white dark:bg-[#1a1a1a]` with `border-slate-200 dark:border-[#2e2e2e]`
+  - Recessed Cards & Wells: `bg-slate-50/70 dark:bg-[#1f1f1f]/70`
+  - Active Button / Surface Wells: `dark:bg-[#242424]`
+- **Header Theme Toggle:** `transfer/page.tsx` provides an interactive sun/moon toggle connected to `next-themes` with `mounted` hydration-flicker protection.
 
 ### Navigation Sidebar & Board Display Standard
 - **Navigation Sidebar:** Uses centralized Boxicons defined in the root `constants/icons.ts` (`SIDEBAR_ICONS`, `CATEGORY_ICONS`, and `resolveServiceIcon`). Supports two view modes: an icon-only rail (`w-18` / 72px) to maximize workstation screen space, and an expanded panel (`w-64` / 256px) displaying full service category text labels and patient count badges. Can be toggled between icon-only and expanded-with-text modes via the dedicated single toggle button in the top header bar next to the title. To maintain a clean UI and avoid duplicate controls, no toggle buttons are placed inside the sidebar itself. The main transfer board smoothly offsets between `ml-18` and `ml-64`.
@@ -46,7 +56,7 @@ Use this table to quickly identify the exact file to modify for any given requir
 | Selection button standard tokens & dimensions | `app/transfer/constants/transfer.ts` | `selectionCardTokens`, `transferLayoutTokens` |
 | Transfer UI thresholds & categories | `app/transfer/lib/constants.ts` | Queue capacities, service names, cooldowns |
 | Connection banner messages | `constants/connectionTexts.ts` | Centralized network and offline sync copy |
-| Main transfer orchestrator | `app/transfer/page.tsx` | Flow routing, confirm persistence, 0ms direct realtime payload patching, and monotonic sequence guarding |
+| Main transfer orchestrator & theme toggle | `app/transfer/page.tsx` | Flow routing, confirm persistence, 0ms direct realtime payload patching, and dual-theme toggle |
 | Confirm assignment modal | `app/transfer/components/ConfirmAssignmentModal.tsx` | Dialog for reviewing pending patient assignments and SMS alerts |
 | Navigation sidebar | `app/transfer/components/Sidebar.tsx` | Service category navigation and centralized icons |
 | Drag-and-drop grip handle | `app/transfer/components/DragHandle.tsx` | Pure CSS indicator lines with touch drag gating |

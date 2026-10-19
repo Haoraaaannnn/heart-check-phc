@@ -71,7 +71,6 @@ export const transferColorTokens = {
 export const TransferStyle = {
   pageContainer: {
     minHeight: '100vh',
-    backgroundColor: '#f8fafc',
     display: 'flex',
     position: 'relative',
     overflowX: 'hidden',
@@ -93,15 +92,12 @@ export const TransferStyle = {
   } as CSSProperties,
 
   panelCard: {
-    backgroundColor: '#ffffff',
     borderRadius: '1.25rem',
-    border: '1px solid #e2e8f0',
     boxShadow: '0 1px 3px 0 rgba(0, 0, 0, 0.05)',
   } as CSSProperties,
 
   activeDropzone: {
     borderColor: '#cc3535',
-    backgroundColor: '#fff1f2',
     boxShadow: '0 0 0 3px rgba(204, 53, 53, 0.2)',
   } as CSSProperties,
 
@@ -118,13 +114,11 @@ export const TransferStyle = {
 
   selectedPatientRow: {
     borderColor: '#cc3535',
-    backgroundColor: '#fff1f2',
     boxShadow: '0 0 0 2px rgba(204, 53, 53, 0.25)',
   } as CSSProperties,
 
   assignTargetCard: {
     borderColor: '#10b981',
-    backgroundColor: 'rgba(236, 253, 245, 0.5)',
     boxShadow: '0 0 0 2px rgba(16, 185, 129, 0.25)',
   } as CSSProperties,
 

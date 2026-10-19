@@ -310,13 +310,13 @@ export default function NursePage() {
   // Loading State Render
   if (checking || isLoading) {
     return (
-      <div className="flex h-screen items-center justify-center bg-slate-50">
+      <div className="flex h-screen items-center justify-center bg-slate-50 dark:bg-[#0d0d0d]">
         <div className="text-center">
-          <div className="w-12 h-12 border-4 border-red-200 border-t-[#cc3535] rounded-full animate-spin mx-auto mb-4" />
-          <p className="text-sm font-bold text-slate-700">
+          <div className="w-12 h-12 border-4 border-red-200 dark:border-red-950/60 border-t-[#cc3535] rounded-full animate-spin mx-auto mb-4" />
+          <p className="text-sm font-bold text-slate-700 dark:text-[#f5f5f5]">
             {nurseTexts.loadingDashboard}
           </p>
-          <p className="text-xs text-slate-400 mt-1">{nurseTexts.pleaseWait}</p>
+          <p className="text-xs text-slate-400 dark:text-[#737373] mt-1">{nurseTexts.pleaseWait}</p>
         </div>
       </div>
     );
@@ -328,7 +328,7 @@ export default function NursePage() {
     isValidStageTransition(dragSourceStage, dragOverStage);
 
   return (
-    <div style={NurseStyle.viewportContainer} className="select-none">
+    <div style={NurseStyle.viewportContainer} className="select-none bg-slate-50 dark:bg-[#0d0d0d] text-slate-900 dark:text-[#f5f5f5]">
       {/* Connection status banner — visible on weak signal, offline, or pending sync */}
       <ConnectionStatusBanner
         isOnline={isOnline}
@@ -396,7 +396,7 @@ export default function NursePage() {
         {actionError && (
           <div
             role="alert"
-            className="mx-6 mt-3 px-4 py-3 rounded-xl bg-red-50 border border-red-200 text-red-800 text-xs font-semibold flex items-center justify-between shrink-0 shadow-xs animate-in fade-in duration-150"
+            className="mx-6 mt-3 px-4 py-3 rounded-xl bg-red-50 dark:bg-red-950/40 border border-red-200 dark:border-red-900/60 text-red-800 dark:text-red-300 text-xs font-semibold flex items-center justify-between shrink-0 shadow-xs animate-in fade-in duration-150"
           >
             <div className="flex items-center gap-2">
               <span>{actionError}</span>
@@ -404,7 +404,7 @@ export default function NursePage() {
             <button
               type="button"
               onClick={clearActionError}
-              className="text-red-500 hover:text-red-800 font-bold ml-4 cursor-pointer text-xs underline"
+              className="text-red-500 hover:text-red-800 dark:text-red-400 dark:hover:text-red-200 font-bold ml-4 cursor-pointer text-xs underline"
             >
               {nurseTexts.dismiss}
             </button>
@@ -414,11 +414,11 @@ export default function NursePage() {
         {/* Workspace: Unassigned Empty State vs 3-Column Pipeline Board */}
         {assignmentStatus === 'unassigned' ? (
           <div className="flex-1 flex items-center justify-center p-8">
-            <div className="rounded-3xl border border-amber-200 bg-amber-50/70 p-8 text-center shadow-sm max-w-md">
-              <h2 className="text-base font-bold text-slate-900">
+            <div className="rounded-3xl border border-amber-200 dark:border-amber-900/50 bg-amber-50/70 dark:bg-amber-950/30 p-8 text-center shadow-sm max-w-md">
+              <h2 className="text-base font-bold text-slate-900 dark:text-[#f5f5f5]">
                 {nurseTexts.unassignedTitle}
               </h2>
-              <p className="mt-2 text-xs text-slate-600 leading-relaxed">
+              <p className="mt-2 text-xs text-slate-600 dark:text-[#a3a3a3] leading-relaxed">
                 {nurseTexts.unassignedDesc}
               </p>
             </div>

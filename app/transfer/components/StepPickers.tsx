@@ -54,7 +54,7 @@ export function SelectionCard({
       </div>
 
       {counts && (
-        <p className="text-xs text-slate-500 font-medium leading-relaxed">
+        <p className="text-xs text-slate-500 dark:text-[#a3a3a3] font-medium leading-relaxed">
           {counts.queue !== undefined && counts.queue > 0 && `${counts.queue} ${transferTexts.inQueueSuffix}`}
           {counts.queue !== undefined && counts.queue > 0 && (counts.registration || counts.idle) ? ' · ' : ''}
           {counts.registration !== undefined && counts.registration > 0 && `${counts.registration} ${transferTexts.atCounterSuffix}`}
@@ -94,16 +94,16 @@ export function SubcategoryPicker({
 }: SubcategoryPickerProps) {
   if (subcategories.length === 0) {
     return (
-      <div className="bg-amber-50 border-2 border-amber-200 rounded-2xl p-8 text-center max-w-md mx-auto mt-8 shadow-xs">
-        <h4 className="text-slate-700 font-bold text-sm">{emptyTitle}</h4>
-        <p className="text-slate-500 text-xs mt-1">{emptyMessage}</p>
+      <div className="bg-amber-50 dark:bg-amber-950/30 border-2 border-amber-200 dark:border-amber-900/50 rounded-2xl p-8 text-center max-w-md mx-auto mt-8 shadow-xs">
+        <h4 className="text-slate-700 dark:text-amber-100 font-bold text-sm">{emptyTitle}</h4>
+        <p className="text-slate-500 dark:text-amber-300 text-xs mt-1">{emptyMessage}</p>
       </div>
     );
   }
 
   return (
     <div className="w-full max-w-4xl mx-auto mt-8 px-4">
-      <h2 className="text-sm font-bold text-slate-700 uppercase tracking-wider mb-5 text-center">
+      <h2 className="text-sm font-bold text-slate-700 dark:text-[#f5f5f5] uppercase tracking-wider mb-5 text-center">
         {transferTexts.selectSubcategoryTitle}
       </h2>
       <div className="grid grid-cols-1 sm:grid-cols-2 gap-6">
@@ -157,11 +157,11 @@ export function RoomPicker({
 }: RoomPickerProps) {
   if (rooms.length === 0) {
     return (
-      <div className="bg-amber-50 border-2 border-amber-200 rounded-2xl p-8 text-center max-w-md mx-auto mt-8 shadow-xs">
-        <h4 className="text-slate-700 font-bold text-sm">
+      <div className="bg-amber-50 dark:bg-amber-950/30 border-2 border-amber-200 dark:border-amber-900/50 rounded-2xl p-8 text-center max-w-md mx-auto mt-8 shadow-xs">
+        <h4 className="text-slate-700 dark:text-amber-100 font-bold text-sm">
           {transferTexts.noRoomsConfiguredTitle} {serviceContext ? `(${serviceContext})` : ''}
         </h4>
-        <p className="text-slate-500 text-xs mt-1">
+        <p className="text-slate-500 dark:text-amber-300 text-xs mt-1">
           {transferTexts.noRoomsConfiguredDesc}
         </p>
       </div>
@@ -172,7 +172,7 @@ export function RoomPicker({
 
   return (
     <div className={`w-full ${isTwoRooms ? 'max-w-4xl' : 'max-w-5xl'} mx-auto mt-8 px-4`}>
-      <h2 className="text-sm font-bold text-slate-700 uppercase tracking-wider mb-5 text-center">
+      <h2 className="text-sm font-bold text-slate-700 dark:text-[#f5f5f5] uppercase tracking-wider mb-5 text-center">
         {transferTexts.selectRoomTitle}
       </h2>
       <div className={`grid grid-cols-1 sm:grid-cols-2 ${isTwoRooms ? '' : 'lg:grid-cols-3'} gap-6`}>
@@ -233,7 +233,7 @@ export function RoomPicker({
                 )}
               </div>
 
-              <p className="text-xs text-slate-500 font-medium leading-relaxed">
+              <p className="text-xs text-slate-500 dark:text-[#a3a3a3] font-medium leading-relaxed">
                 {roomCubicles.length} {roomCubicles.length === 1 ? 'cubicle' : 'cubicles'}
                 {totalQueued > 0 && ` · ${totalQueued} ${transferTexts.inQueueSuffix}`}
                 {totalAssigned > 0 && ` · ${totalAssigned} ${transferTexts.assignedSuffix}`}

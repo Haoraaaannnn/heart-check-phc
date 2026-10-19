@@ -128,6 +128,8 @@ export const nurseTexts = {
   alerts: "Alerts",
   collapse: "Collapse",
   expand: "Expand",
+  themeToggleLight: "Switch to light mode",
+  themeToggleDark: "Switch to dark mode",
 } as const;
 
 export default nurseTexts;

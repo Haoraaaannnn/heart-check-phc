@@ -68,7 +68,7 @@ export function BreadcrumbNav({
     >
       <Link
         href="/select-screen"
-        className="inline-flex items-center gap-1.5 min-w-[36px] min-h-[36px] px-2.5 py-1.5 rounded-xl text-xs font-semibold text-slate-600 bg-white hover:bg-slate-50 border border-slate-200 hover:border-slate-300 transition-colors shadow-2xs shrink-0 cursor-pointer"
+        className="inline-flex items-center gap-1.5 min-w-[36px] min-h-[36px] px-2.5 py-1.5 rounded-xl text-xs font-semibold text-slate-600 dark:text-[#a3a3a3] bg-white dark:bg-[#1a1a1a] hover:bg-slate-50 dark:hover:bg-[#242424] border border-slate-200 dark:border-[#2e2e2e] hover:border-slate-300 dark:hover:border-[#404040] transition-colors shadow-2xs shrink-0 cursor-pointer"
         title={transferTexts.selectScreenLabel}
         aria-label={transferTexts.selectScreenAria}
       >
@@ -137,8 +137,8 @@ export function BreadcrumbNav({
         {/* Room */}
         {selectedRoom && (
           <>
-            <span className="text-slate-300 font-normal">/</span>
-            <span className="text-[#cc3535] font-bold">
+            <span className="text-slate-300 dark:text-[#404040] font-normal">/</span>
+            <span className="text-[#cc3535] dark:text-[#f87171] font-bold">
               {transferTexts.roomCrumbPrefix} {selectedRoom}
             </span>
           </>

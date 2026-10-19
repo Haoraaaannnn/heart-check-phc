@@ -43,24 +43,24 @@ export function IdleNumbersPanel({
   return (
     <div className="h-full flex flex-col min-h-0 overflow-hidden select-none">
       {/* Header */}
-      <div className="flex items-center justify-between gap-2 mb-2 pb-1.5 border-b border-slate-100 shrink-0">
+      <div className="flex items-center justify-between gap-2 mb-2 pb-1.5 border-b border-slate-100 dark:border-[#2e2e2e] shrink-0">
         <div className="flex items-center gap-2 min-w-0 flex-1">
           <span className="w-2.5 h-2.5 rounded-full bg-slate-400 inline-block shrink-0" />
-          <h2 className="text-slate-700 font-bold text-xs tracking-wider uppercase truncate">
+          <h2 className="text-slate-700 dark:text-[#f5f5f5] font-bold text-xs tracking-wider uppercase truncate">
             {transferTexts.idleNumbersHeading}
           </h2>
-          <span className="text-[11px] font-bold px-1.5 py-0.5 rounded-md bg-slate-100 text-slate-600 shrink-0">
+          <span className="text-[11px] font-bold px-1.5 py-0.5 rounded-md bg-slate-100 dark:bg-[#242424] text-slate-600 dark:text-[#a3a3a3] shrink-0">
             {safePatients.length}
           </span>
         </div>
-        <span className="text-[11px] text-slate-400 font-normal shrink-0 hidden sm:inline">
+        <span className="text-[11px] text-slate-400 dark:text-[#737373] font-normal shrink-0 hidden sm:inline">
           {transferTexts.idleSubtitle}
         </span>
       </div>
 
       {/* Patients List (Scrollable when exceeding height) */}
       {safePatients.length === 0 ? (
-        <div className="py-6 text-center text-slate-400 text-xs">
+        <div className="py-6 text-center text-slate-400 dark:text-[#737373] text-xs">
           {transferTexts.noIdleNumbers}
         </div>
       ) : (
@@ -68,17 +68,17 @@ export function IdleNumbersPanel({
           {safePatients.map(p => (
             <div
               key={p.id}
-              className="flex items-center justify-between border border-slate-100 rounded-xl px-2.5 py-1.5 bg-slate-50/70 hover:bg-slate-100/80 transition-colors gap-2"
+              className="flex items-center justify-between border border-slate-100 dark:border-[#2e2e2e] rounded-xl px-2.5 py-1.5 bg-slate-50/70 dark:bg-[#1f1f1f]/70 hover:bg-slate-100/80 dark:hover:bg-[#242424] transition-colors gap-2"
             >
               <div className="flex items-center gap-2 min-w-0 flex-1 overflow-hidden">
-                <span className="text-slate-800 font-black text-xs shrink-0">
+                <span className="text-slate-800 dark:text-[#f5f5f5] font-black text-xs shrink-0">
                   {p.patientNum}
                 </span>
-                <span className="text-slate-500 text-xs truncate min-w-0 flex-1">
+                <span className="text-slate-500 dark:text-[#a3a3a3] text-xs truncate min-w-0 flex-1">
                   {p.service}
                   {p.subcategory && ` · ${p.subcategory}`}
                 </span>
-                <span className="text-[10px] font-bold px-1.5 py-0.2 rounded-md bg-amber-100 text-amber-800 shrink-0">
+                <span className="text-[10px] font-bold px-1.5 py-0.2 rounded-md bg-amber-100 dark:bg-amber-950/60 text-amber-800 dark:text-amber-300 shrink-0">
                   {transferTexts.rotationCountPrefix}
                   {p.rotation_count ?? 0}
                 </span>
@@ -89,7 +89,7 @@ export function IdleNumbersPanel({
                   type="button"
                   onClick={() => onActivate(p)}
                   title={transferTexts.activateIdleTooltip}
-                  className="px-2 py-0.5 text-[11px] font-bold rounded-md text-emerald-700 bg-emerald-50 hover:bg-emerald-100 transition-colors cursor-pointer whitespace-nowrap shrink-0"
+                  className="px-2 py-0.5 text-[11px] font-bold rounded-md text-emerald-700 dark:text-emerald-300 bg-emerald-50 dark:bg-emerald-950/40 hover:bg-emerald-100 dark:hover:bg-emerald-900/50 transition-colors cursor-pointer whitespace-nowrap shrink-0"
                 >
                   {transferTexts.activateBtn}
                 </button>
@@ -97,7 +97,7 @@ export function IdleNumbersPanel({
                   type="button"
                   onClick={() => onRemove(p)}
                   title={transferTexts.removeIdleTooltip}
-                  className="px-2 py-0.5 text-[11px] font-bold rounded-md text-rose-600 bg-rose-50 hover:bg-rose-100 transition-colors cursor-pointer whitespace-nowrap shrink-0"
+                  className="px-2 py-0.5 text-[11px] font-bold rounded-md text-rose-600 dark:text-rose-300 bg-rose-50 dark:bg-rose-950/40 hover:bg-rose-100 dark:hover:bg-rose-900/50 transition-colors cursor-pointer whitespace-nowrap shrink-0"
                 >
                   {transferTexts.removeBtn}
                 </button>

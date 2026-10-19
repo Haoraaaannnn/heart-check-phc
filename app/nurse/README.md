@@ -1,6 +1,6 @@
 # Nurse Station Module Developer Guide
 
-**Last Updated:** 2026-10-16
+**Last Updated:** 2026-10-19
 
 This document provides architectural standards and an exhaustive developer mapping for the Nurse Station module in the Heart Check PHC application.
 
@@ -15,6 +15,16 @@ The Nurse Station dashboard manages outpatient consultation workflows across cli
 4. Done (archived for the day)
 
 The module implements optimistic state transitions backed by an offline-resilient Write-Ahead Logging (WAL) outbox pattern. Clinical actions are committed to local persistent disk storage (IndexedDB) prior to or concurrently with network transmission to Supabase, guaranteeing zero data loss during power outages, workstation reboots, or network disconnects.
+
+### Dual-Theme (Light / Dark) Standard (AGENTS.md Rule 10 Parity)
+- **Zero Inline Background Overrides:** The workstation enforces pure Tailwind CSS dual-theme classes across all surfaces. Hardcoded inline `backgroundColor` properties in `NurseStyle` have been removed to prevent theme inversion conflicts.
+- **Surface Contrast Hierarchy:**
+  - Viewport Canvas: `bg-slate-50 dark:bg-[#0d0d0d]`
+  - Sidebar & Sticky Header: `bg-white dark:bg-[#141414]` with `border-slate-200 dark:border-[#2e2e2e]`
+  - Kanban Stage Columns & Cards: `bg-white dark:bg-[#1a1a1a]` with `border-slate-200 dark:border-[#2e2e2e]`
+  - Secondary Wells & Dropdowns: `bg-slate-50/70 dark:bg-[#1f1f1f]/70`
+  - Active Button / Surface Wells: `dark:bg-[#242424]`
+- **Header Theme Toggle:** `NurseHeader.tsx` provides an interactive sun/moon toggle connected to `next-themes` with `mounted` hydration-flicker protection.
 
 ### Navigation Sidebar & Presentation Standard (Transfer Dashboard Parity)
 - **Unified Responsive Sidebar Standard:** The Nurse Dashboard navigation sidebar (`NurseSidebar.tsx`) follows the exact responsive architecture of the Patient Transfer dashboard (`Sidebar.tsx`).
@@ -43,7 +53,7 @@ Use this table to quickly identify the exact file to modify for any given requir
 | Centralized navigation & sidebar icons | `constants/icons.ts` | Centralized `SIDEBAR_ICONS` and `CATEGORY_ICONS` |
 | Navigation rail sidebar | `app/nurse/components/NurseSidebar.tsx` | Fixed responsive rail matching Transfer standard (`w-18 2xl:w-64`) |
 | Banner messages & offline sync alerts | `constants/connectionTexts.ts` | Shared across nurse and transfer dashboards |
-| Inline styles and layout tokens | `app/nurse/constants/nurse.ts` | CSSProperties and column dimension tokens |
+| Layout dimension tokens (no hardcoded bg colors) | `app/nurse/constants/nurse.ts` | Layout width and column dimension tokens |
 | Clinical stage progression actions | `app/nurse/hooks/useNurseActions.ts` | Optimistic mutations with in-flight stage pinning and outbox persistence |
 | Patient data loading & cubicle scoping | `app/nurse/hooks/useNurseData.ts` | Cached cubicle discovery, request sequencing, in-flight mutation overlay, and 0ms realtime patching |
 | Offline queue outbox engine | `lib/offlineQueue.ts` | IndexedDB persistent outbox queue and flush worker |
@@ -55,7 +65,7 @@ Use this table to quickly identify the exact file to modify for any given requir
 | Board columns and cards | `app/nurse/components/NurseBoard.tsx` | 3-column clinical pipeline Kanban |
 | Patient card & quick actions | `app/nurse/components/NursePatientCard.tsx` | Clinical card with in-button loading spinners for weak signal feedback |
 | Quick-action dropdown (tap-to-act) | `app/nurse/components/NurseQuickActionDropdown.tsx` | Contextual popover for direct 1-tap stage progression with in-button loading spinners and auto-dismiss |
-| Header bar & desktop cubicle dropdown | `app/nurse/components/NurseHeader.tsx` | Header bar, sync indicators, station dropdown |
+| Header bar, station dropdown & theme toggle | `app/nurse/components/NurseHeader.tsx` | Header bar, sync indicators, station dropdown, and dual-theme toggle |
 | Finished patient archive drawer | `app/nurse/components/FinishedDrawer.tsx` | Slide-over drawer for completed patients |
 | Audio announcements (TTS) | `app/nurse/page.tsx` | Deepgram Text-to-Speech integration |
 | Patient types and schemas | `types/Types.ts` | Core domain model for patient records |

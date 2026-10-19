@@ -9,8 +9,9 @@
 
 'use client';
 
-import React from 'react';
+import React, { useState, useEffect, useMemo } from 'react';
 import Link from 'next/link';
+import { useTheme } from 'next-themes';
 import NotificationDropdown from '@/app/dashboard/components/NotificationDropdown';
 import { AssignedNurseCubicle } from '@/app/nurse/types/nurse';
 import { nurseTexts } from '@/app/nurse/constants/nurseTexts';
@@ -81,6 +82,17 @@ export function NurseHeader({
   onDismissNotification,
   onClearAllNotifications,
 }: NurseHeaderProps) {
+  // Theme switching hook
+  const { resolvedTheme, setTheme } = useTheme();
+  const [mounted, setMounted] = useState(false);
+
+  useEffect(() => {
+    setMounted(true);
+  }, []);
+
+  const isDark = mounted && resolvedTheme === 'dark';
+  const toggleTheme = () => setTheme(isDark ? 'light' : 'dark');
+
   // Find attending physician if a single cubicle is selected
   const activeCubicle = selectedCubicleNum
     ? assignedCubicles.find((c) => c.cubicleNum === selectedCubicleNum)
@@ -89,7 +101,7 @@ export function NurseHeader({
   const doctorName = activeCubicle?.doctorName;
 
   // Group cubicles by service category for desktop dropdown
-  const services = React.useMemo(
+  const services = useMemo(
     () =>
       assignedCubicles.reduce<Record<string, AssignedNurseCubicle[]>>(
         (groups, cubicle) => {
@@ -103,7 +115,10 @@ export function NurseHeader({
   );
 
   return (
-    <header style={NurseStyle.headerBar}>
+    <header
+      style={NurseStyle.headerBar}
+      className="bg-white/95 dark:bg-[#141414]/95 border-b border-slate-200 dark:border-[#2e2e2e] transition-colors"
+    >
       {/* Left: Sidebar Toggle, Station Title & Active Filters / Desktop Dropdown */}
       <div className="flex items-center gap-2 sm:gap-3 min-w-0 flex-1 overflow-hidden">
         {/* Sidebar Hide/Open Toggle Button */}
@@ -133,15 +148,15 @@ export function NurseHeader({
         </Link>
 
         <div className="flex items-center gap-2 shrink-0">
-          <span className="text-slate-600 text-sm font-semibold tracking-tight hidden md:inline truncate max-w-[170px] xl:max-w-none">
+          <span className="text-slate-600 dark:text-[#a3a3a3] text-sm font-semibold tracking-tight hidden md:inline truncate max-w-[170px] xl:max-w-none">
             {nurseTexts.patientManagement}
           </span>
         </div>
 
         {/* Desktop Station / Cubicle Selector Dropdown */}
         {showCubicleDropdown && onSelectCategory && onSelectCubicle && assignedCubicles.length > 0 && (
-          <div className="flex items-center gap-1.5 bg-slate-100/90 hover:bg-slate-200/80 border border-slate-200 rounded-xl px-2.5 py-1 transition-colors min-w-0 shrink">
-            <span className="text-[11px] font-bold text-slate-500 uppercase tracking-wider shrink-0">
+          <div className="flex items-center gap-1.5 bg-slate-100/90 hover:bg-slate-200/80 dark:bg-[#1f1f1f] dark:hover:bg-[#242424] border border-slate-200 dark:border-[#2e2e2e] rounded-xl px-2.5 py-1 transition-colors min-w-0 shrink">
+            <span className="text-[11px] font-bold text-slate-500 dark:text-[#a3a3a3] uppercase tracking-wider shrink-0">
               {nurseTexts.cubicleSelectLabel}
             </span>
             <select
@@ -163,16 +178,16 @@ export function NurseHeader({
                 }
               }}
               aria-label={nurseTexts.selectCubicleDropdown}
-              className="bg-transparent text-xs font-bold text-slate-800 outline-none cursor-pointer py-0.5 pr-1 max-w-[160px] lg:max-w-[200px] truncate"
+              className="bg-transparent text-xs font-bold text-slate-800 dark:text-[#f5f5f5] outline-none cursor-pointer py-0.5 pr-1 max-w-[160px] lg:max-w-[200px] truncate"
             >
-              <option value="ALL">{nurseTexts.allMyCubicles}</option>
+              <option value="ALL" className="bg-white dark:bg-[#1a1a1a] text-slate-900 dark:text-[#f5f5f5]">{nurseTexts.allMyCubicles}</option>
               {Object.entries(services).map(([service, cubicles]) => (
-                <optgroup key={service} label={service}>
-                  <option value={`CAT:${service}`}>
+                <optgroup key={service} label={service} className="bg-white dark:bg-[#1a1a1a] text-slate-900 dark:text-[#f5f5f5]">
+                  <option value={`CAT:${service}`} className="bg-white dark:bg-[#1a1a1a] text-slate-900 dark:text-[#f5f5f5]">
                     {service} ({nurseTexts.allShort})
                   </option>
                   {cubicles.map((c) => (
-                    <option key={c.id} value={c.cubicleNum}>
+                    <option key={c.id} value={c.cubicleNum} className="bg-white dark:bg-[#1a1a1a] text-slate-900 dark:text-[#f5f5f5]">
                       {nurseTexts.cubiclePrefix} {c.cubicleNum} - {nurseTexts.roomPrefix} {c.room}
                       {c.subcategory ? ` (${c.subcategory})` : ''}
                     </option>
@@ -185,11 +200,11 @@ export function NurseHeader({
 
         {/* Active Filter Badge (visible when filtered and dropdown is hidden) */}
         {!showCubicleDropdown && (selectedCategory || selectedCubicleNum) && (
-          <div className="flex items-center gap-1.5 px-2.5 py-1 rounded-md bg-slate-100 border border-slate-200 text-xs text-slate-600 min-w-0 shrink">
-            <span className="font-medium text-slate-400 shrink-0">
+          <div className="flex items-center gap-1.5 px-2.5 py-1 rounded-md bg-slate-100 dark:bg-[#1f1f1f] border border-slate-200 dark:border-[#2e2e2e] text-xs text-slate-600 dark:text-[#a3a3a3] min-w-0 shrink">
+            <span className="font-medium text-slate-400 dark:text-[#737373] shrink-0">
               {nurseTexts.filteredByPrefix}
             </span>
-            <span className="font-bold text-slate-800 truncate max-w-[120px]">
+            <span className="font-bold text-slate-800 dark:text-[#f5f5f5] truncate max-w-[120px]">
               {selectedCubicleNum
                 ? `${nurseTexts.cubiclePrefix} ${selectedCubicleNum}`
                 : selectedCategory}
@@ -197,7 +212,7 @@ export function NurseHeader({
             <button
               type="button"
               onClick={onClearFilter}
-              className="ml-1 text-slate-400 hover:text-[#cc3535] cursor-pointer font-semibold underline text-[11px] shrink-0"
+              className="ml-1 text-slate-400 hover:text-[#cc3535] dark:text-[#737373] dark:hover:text-[#f87171] cursor-pointer font-semibold underline text-[11px] shrink-0"
               title={nurseTexts.clearFilter}
               aria-label={nurseTexts.clearFilter}
             >
@@ -208,27 +223,27 @@ export function NurseHeader({
 
         {/* Attending Physician Indicator */}
         {selectedCubicleNum && (
-          <div className="hidden xl:flex items-center gap-1.5 px-2.5 py-1 rounded-lg bg-purple-50 text-purple-700 text-xs border border-purple-100 min-w-0 shrink max-w-[220px]">
-            <span className="font-medium text-purple-600 shrink-0">{nurseTexts.doctorOnDuty}</span>
+          <div className="hidden xl:flex items-center gap-1.5 px-2.5 py-1 rounded-lg bg-purple-50 dark:bg-purple-950/40 text-purple-700 dark:text-purple-300 text-xs border border-purple-100 dark:border-purple-800/50 min-w-0 shrink max-w-[220px]">
+            <span className="font-medium text-purple-600 dark:text-purple-400 shrink-0">{nurseTexts.doctorOnDuty}</span>
             <span className="font-bold truncate">{doctorName || nurseTexts.noDoctorAssigned}</span>
           </div>
         )}
       </div>
 
-      {/* Right: Sync Status, Finished Ledger Button & Notifications */}
+      {/* Right: Sync Status, Finished Ledger Button, Theme Toggle & Notifications */}
       <div className="flex items-center gap-2 sm:gap-3 shrink-0 ml-2">
         {/* Sync Indicator */}
         {isSyncing ? (
-          <div className="flex items-center gap-2 px-3 py-1.5 bg-blue-50 border border-blue-200 rounded-lg">
+          <div className="flex items-center gap-2 px-3 py-1.5 bg-blue-50 dark:bg-blue-950/40 border border-blue-200 dark:border-blue-800/50 rounded-lg">
             <div className="w-3.5 h-3.5 border-2 border-blue-500 border-t-transparent rounded-full animate-spin" />
-            <span className="text-xs text-blue-600 font-semibold">
+            <span className="text-xs text-blue-600 dark:text-blue-400 font-semibold">
               {nurseTexts.syncingBadge}
             </span>
           </div>
         ) : (
-          <div className="hidden sm:flex items-center gap-1.5 px-2.5 py-1 bg-emerald-50 border border-emerald-200/80 rounded-lg">
+          <div className="hidden sm:flex items-center gap-1.5 px-2.5 py-1 bg-emerald-50 dark:bg-emerald-950/40 border border-emerald-200/80 dark:border-emerald-800/50 rounded-lg">
             <span className="w-2 h-2 rounded-full bg-emerald-500 inline-block animate-pulse" />
-            <span className="text-xs text-emerald-700 font-semibold">
+            <span className="text-xs text-emerald-700 dark:text-emerald-400 font-semibold">
               {nurseTexts.liveStatus}
             </span>
           </div>
@@ -238,13 +253,35 @@ export function NurseHeader({
         <button
           type="button"
           onClick={onOpenFinishedLedger}
-          className="inline-flex items-center gap-2 px-3 py-1.5 rounded-xl text-xs font-bold bg-white hover:bg-slate-50 text-slate-700 border border-slate-200 shadow-2xs transition-all cursor-pointer"
+          className="inline-flex items-center gap-2 px-3 py-1.5 rounded-xl text-xs font-bold bg-white dark:bg-[#1a1a1a] hover:bg-slate-50 dark:hover:bg-[#242424] text-slate-700 dark:text-[#f5f5f5] border border-slate-200 dark:border-[#2e2e2e] shadow-2xs transition-all cursor-pointer"
           title={nurseTexts.viewFinishedLedger}
         >
           <span className="hidden sm:inline">{nurseTexts.stageFinishedHeading}</span>
-          <span className="px-1.5 py-0.5 rounded-md bg-emerald-100 text-emerald-800 text-[11px] font-bold">
+          <span className="px-1.5 py-0.5 rounded-md bg-emerald-100 dark:bg-emerald-950/50 text-emerald-800 dark:text-emerald-300 text-[11px] font-bold">
             {finishedCount}
           </span>
+        </button>
+
+        {/* Theme Toggle Button */}
+        <button
+          type="button"
+          onClick={toggleTheme}
+          className="p-1.5 sm:p-2 rounded-xl text-slate-500 hover:text-slate-800 hover:bg-slate-100 active:bg-slate-200 dark:text-[#a3a3a3] dark:hover:text-[#f5f5f5] dark:hover:bg-[#242424] transition-colors cursor-pointer shrink-0"
+          title={isDark ? nurseTexts.themeToggleLight : nurseTexts.themeToggleDark}
+          aria-label={isDark ? nurseTexts.themeToggleLight : nurseTexts.themeToggleDark}
+        >
+          {mounted ? (
+            <i
+              className={`bx ${
+                isDark
+                  ? 'bx-sun text-amber-400'
+                  : 'bx-moon text-slate-600 dark:text-[#a3a3a3]'
+              } text-xl block`}
+              aria-hidden="true"
+            />
+          ) : (
+            <div className="w-5 h-5" />
+          )}
         </button>
 
         {/* Bottleneck Alerts & Notifications */}

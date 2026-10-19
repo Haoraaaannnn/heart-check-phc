@@ -70,26 +70,26 @@ export function RegistrationCounterSection({
   const safePatients = Array.isArray(patients) ? patients : [];
 
   return (
-    <div className="bg-white border border-slate-200 rounded-2xl shadow-xs p-2.5 sm:p-3 select-none shrink-0 overflow-hidden">
+    <div className="bg-white dark:bg-[#1a1a1a] border border-slate-200 dark:border-[#2e2e2e] rounded-2xl shadow-xs p-2.5 sm:p-3 select-none shrink-0 overflow-hidden">
       {/* Section Header */}
-      <div className="flex items-center justify-between gap-2 mb-2 pb-1.5 border-b border-slate-100">
+      <div className="flex items-center justify-between gap-2 mb-2 pb-1.5 border-b border-slate-100 dark:border-[#2e2e2e]">
         <div className="flex items-center gap-2 min-w-0">
           <span className="w-2 h-2 rounded-full bg-blue-500 animate-pulse inline-block shrink-0" />
-          <h2 className="text-slate-700 font-bold text-xs tracking-wider uppercase truncate">
+          <h2 className="text-slate-700 dark:text-[#f5f5f5] font-bold text-xs tracking-wider uppercase truncate">
             {transferTexts.registrationHeading}
           </h2>
-          <span className="text-[10px] font-bold px-1.5 py-0.2 rounded-md bg-blue-100 text-blue-700 shrink-0">
+          <span className="text-[10px] font-bold px-1.5 py-0.2 rounded-md bg-blue-100 dark:bg-blue-950/60 text-blue-700 dark:text-blue-300 shrink-0">
             {safePatients.length}
           </span>
         </div>
-        <span className="text-[10px] text-slate-400 font-medium shrink-0 hidden sm:inline">
+        <span className="text-[10px] text-slate-400 dark:text-[#737373] font-medium shrink-0 hidden sm:inline">
           {transferTexts.dragCounterHint}
         </span>
       </div>
 
       {/* Non-scrollable Horizontal Counters Grid */}
       {counters.length === 0 ? (
-        <p className="text-slate-400 text-xs py-2 text-center">
+        <p className="text-slate-400 dark:text-[#737373] text-xs py-2 text-center">
           {transferTexts.noCountersAssigned}
         </p>
       ) : (
@@ -127,24 +127,24 @@ export function RegistrationCounterSection({
                 style={isTargetEligible ? TransferStyle.assignTargetCard : undefined}
                 className={`rounded-xl border p-2 flex flex-col justify-between transition-all select-none min-h-[76px] ${
                   isOver
-                    ? 'border-blue-500 bg-blue-50/80 shadow-xs phc-dropzone'
+                    ? 'border-blue-500 bg-blue-50/80 dark:bg-blue-950/50 shadow-xs phc-dropzone'
                     : isTargetEligible
-                    ? 'border-blue-500 bg-blue-50/40 ring-2 ring-blue-500/20 hover:bg-blue-50/70 cursor-pointer'
-                    : 'border-slate-200 bg-slate-50/60 hover:bg-slate-50'
+                    ? 'border-blue-500 bg-blue-50/40 dark:bg-blue-950/30 ring-2 ring-blue-500/20 hover:bg-blue-50/70 dark:hover:bg-blue-950/50 cursor-pointer'
+                    : 'border-slate-200 dark:border-[#2e2e2e] bg-slate-50/60 dark:bg-[#1f1f1f]/60 hover:bg-slate-50 dark:hover:bg-[#242424]'
                 }`}
               >
                 {/* Counter Tile Header */}
                 <div className="flex items-center justify-between gap-1 mb-1 min-w-0">
-                  <span className="text-[11px] font-bold text-slate-700 truncate min-w-0 flex-1">
+                  <span className="text-[11px] font-bold text-slate-700 dark:text-[#f5f5f5] truncate min-w-0 flex-1">
                     {transferTexts.counterPrefix} {counterNum}
                   </span>
 
                   {isTargetEligible ? (
-                    <span className="text-[10px] font-bold text-blue-600 bg-blue-100 px-1.5 py-0.5 rounded shrink-0 whitespace-nowrap">
+                    <span className="text-[10px] font-bold text-blue-600 dark:text-blue-300 bg-blue-100 dark:bg-blue-950/60 px-1.5 py-0.5 rounded shrink-0 whitespace-nowrap">
                       {transferTexts.moveToCounterBtn}
                     </span>
                   ) : (
-                    <span className="text-[10px] text-slate-400 font-medium shrink-0">
+                    <span className="text-[10px] text-slate-400 dark:text-[#737373] font-medium shrink-0">
                       {counterPatients.length} {counterPatients.length === 1 ? 'pt' : 'pts'}
                     </span>
                   )}
@@ -168,12 +168,12 @@ export function RegistrationCounterSection({
                         onMouseDown={e => onDragStart?.(e, topPatient)}
                         onClick={handleTopPatientClick}
                         style={isTopSelected ? TransferStyle.selectedPatientRow : undefined}
-                        className={`p-1.5 bg-white rounded-lg border transition-all flex items-center justify-between gap-1 shadow-2xs cursor-pointer ${
+                        className={`p-1.5 bg-white dark:bg-[#1a1a1a] rounded-lg border transition-all flex items-center justify-between gap-1 shadow-2xs cursor-pointer ${
                           draggedPatient?.id === topPatient.id
                             ? 'opacity-40'
                             : isTopSelected
-                            ? 'border-[#cc3535] bg-red-50/80 ring-2 ring-[#cc3535]'
-                            : 'border-slate-200 hover:border-slate-300'
+                            ? 'border-[#cc3535] bg-red-50/80 dark:bg-red-950/60 ring-2 ring-[#cc3535]'
+                            : 'border-slate-200 dark:border-[#2e2e2e] hover:border-slate-300 dark:hover:border-[#404040]'
                         }`}
                       >
                         <div className="flex items-center gap-1 min-w-0 flex-1 overflow-hidden">
@@ -209,7 +209,7 @@ export function RegistrationCounterSection({
                     );
                   })()
                 ) : (
-                  <div className="py-2 text-center text-slate-400 text-[11px] italic">
+                  <div className="py-2 text-center text-slate-400 dark:text-[#737373] text-[11px] italic">
                     {isTargetEligible ? transferTexts.counterSelectTargetHint : 'Available'}
                   </div>
                 )}
@@ -217,7 +217,7 @@ export function RegistrationCounterSection({
                 {/* Additional Waiting Queue in Lane */}
                 {waitingPatients.length > 0 && (
                   <div className="flex items-center gap-1 mt-1 overflow-hidden">
-                    <span className="text-[9px] text-slate-400 font-bold uppercase shrink-0">
+                    <span className="text-[9px] text-slate-400 dark:text-[#737373] font-bold uppercase shrink-0">
                       Next:
                     </span>
                     {waitingPatients.slice(0, 2).map(p => {
@@ -233,8 +233,8 @@ export function RegistrationCounterSection({
                           }}
                           className={`text-[10px] font-semibold px-1 py-0.5 rounded border shadow-2xs cursor-pointer transition-colors ${
                             isWaitingSelected
-                              ? 'bg-red-50 text-[#cc3535] border-[#cc3535] ring-1 ring-[#cc3535]'
-                              : 'bg-white border-slate-200 text-slate-600 hover:border-slate-300'
+                              ? 'bg-red-50 dark:bg-red-950/60 text-[#cc3535] dark:text-[#f87171] border-[#cc3535] ring-1 ring-[#cc3535]'
+                              : 'bg-white dark:bg-[#1a1a1a] border-slate-200 dark:border-[#2e2e2e] text-slate-600 dark:text-[#a3a3a3] hover:border-slate-300 dark:hover:border-[#404040]'
                           }`}
                         >
                           {p.patientNum}
@@ -242,7 +242,7 @@ export function RegistrationCounterSection({
                       );
                     })}
                     {waitingPatients.length > 2 && (
-                      <span className="text-[9px] text-slate-400 font-medium shrink-0">
+                      <span className="text-[9px] text-slate-400 dark:text-[#737373] font-medium shrink-0">
                         +{waitingPatients.length - 2}
                       </span>
                     )}

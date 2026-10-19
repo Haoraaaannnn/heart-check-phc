@@ -67,16 +67,16 @@ export function StageColumn({
     <section
       data-stage-id={stage}
       style={columnStyle}
-      className={`transition-all duration-150 ${
+      className={`transition-all duration-150 bg-white dark:bg-[#1a1a1a] border border-slate-200 dark:border-[#2e2e2e] ${
         isTargetActive
-          ? 'border-emerald-500 ring-2 ring-emerald-400/40 bg-emerald-50/20'
+          ? 'border-emerald-500 ring-2 ring-emerald-400/40 bg-emerald-50/20 dark:bg-emerald-950/30'
           : ''
       }`}
     >
       {/* Column Header */}
-      <div style={NurseStyle.stageColumnHeader} className="flex items-center justify-between gap-2 min-w-0">
+      <div style={NurseStyle.stageColumnHeader} className="flex items-center justify-between gap-2 min-w-0 border-b border-slate-100 dark:border-[#2e2e2e]">
         <div className="flex items-center gap-2 min-w-0 flex-1 overflow-hidden">
-          <h2 className="text-sm font-bold text-slate-800 tracking-tight truncate">
+          <h2 className="text-sm font-bold text-slate-800 dark:text-[#f5f5f5] tracking-tight truncate">
             {title}
           </h2>
           <span
@@ -102,7 +102,7 @@ export function StageColumn({
       <div style={NurseStyle.stageColumnContent} className="phc-scroll">
         {count === 0 ? (
           <div className="flex-1 flex flex-col items-center justify-center p-8 text-center min-h-[160px]">
-            <p className="text-xs text-slate-400 font-medium max-w-[200px]">
+            <p className="text-xs text-slate-400 dark:text-[#737373] font-medium max-w-[200px]">
               {emptyText}
             </p>
           </div>

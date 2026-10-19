@@ -92,7 +92,6 @@ export const NurseStyle = {
     height: '100vh',
     display: 'flex',
     overflow: 'hidden',
-    backgroundColor: '#f8fafc',
     position: 'relative',
   } as CSSProperties,
 
@@ -108,9 +107,6 @@ export const NurseStyle = {
 
   headerBar: {
     height: nurseLayoutTokens.headerHeight,
-    backgroundColor: 'rgba(255, 255, 255, 0.9)',
-    backdropFilter: 'blur(8px)',
-    borderBottom: '1px solid #e2e8f0',
     display: 'flex',
     alignItems: 'center',
     justifyContent: 'space-between',
@@ -130,11 +126,9 @@ export const NurseStyle = {
   } as CSSProperties,
 
   stageColumn: {
-    backgroundColor: '#ffffff',
     borderRadius: '1rem',
     borderWidth: '1px',
     borderStyle: 'solid',
-    borderColor: '#e2e8f0',
     display: 'flex',
     flexDirection: 'column',
     minHeight: 0,
@@ -147,7 +141,6 @@ export const NurseStyle = {
     padding: '0.875rem 1rem',
     borderBottomWidth: '1px',
     borderBottomStyle: 'solid',
-    borderBottomColor: '#f1f5f9',
     display: 'flex',
     alignItems: 'center',
     justifyContent: 'space-between',
@@ -168,7 +161,6 @@ export const NurseStyle = {
     borderWidth: '1px',
     borderStyle: 'solid',
     borderColor: '#10b981',
-    backgroundColor: 'rgba(236, 253, 245, 0.6)',
     boxShadow: '0 0 0 2px rgba(16, 185, 129, 0.25)',
   } as CSSProperties,
 
@@ -176,7 +168,6 @@ export const NurseStyle = {
     borderWidth: '1px',
     borderStyle: 'solid',
     borderColor: '#10b981',
-    backgroundColor: 'rgba(236, 253, 245, 0.4)',
     boxShadow: '0 0 0 2px rgba(16, 185, 129, 0.2)',
   } as CSSProperties,
 
@@ -184,7 +175,6 @@ export const NurseStyle = {
     borderWidth: '1px',
     borderStyle: 'solid',
     borderColor: '#cc3535',
-    backgroundColor: '#fff1f2',
     boxShadow: '0 0 0 2px rgba(204, 53, 53, 0.25)',
   } as CSSProperties,
 
@@ -195,7 +185,7 @@ export const NurseStyle = {
   drawerOverlay: {
     position: 'fixed',
     inset: 0,
-    backgroundColor: 'rgba(15, 23, 42, 0.4)',
+    backgroundColor: 'rgba(0, 0, 0, 0.6)',
     backdropFilter: 'blur(4px)',
     zIndex: 40,
     display: 'flex',
@@ -206,7 +196,6 @@ export const NurseStyle = {
     width: '100%',
     maxWidth: nurseLayoutTokens.drawerWidth,
     height: '100%',
-    backgroundColor: '#ffffff',
     display: 'flex',
     flexDirection: 'column',
     boxShadow: '-10px 0 25px -5px rgba(0, 0, 0, 0.1)',

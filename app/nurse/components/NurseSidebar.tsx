@@ -81,14 +81,14 @@ export function NurseSidebar({
 
   return (
     <aside
-      className={`fixed left-0 top-0 h-full bg-white border-r border-slate-200 shadow-xs z-30 flex flex-col transition-all duration-300 select-none ${
+      className={`fixed left-0 top-0 h-full bg-white dark:bg-[#141414] border-r border-slate-200 dark:border-[#2e2e2e] shadow-xs z-30 flex flex-col transition-all duration-300 select-none ${
         isExpanded ? 'w-64' : 'w-18'
       }`}
       aria-label="Nurse Station navigation"
     >
       {/* Brand Header */}
       <div
-        className={`h-16 flex items-center border-b border-slate-100 shrink-0 transition-all duration-300 ${
+        className={`h-16 flex items-center border-b border-slate-100 dark:border-[#2e2e2e] shrink-0 transition-all duration-300 ${
           isExpanded ? 'px-4' : 'justify-center px-2'
         }`}
       >
@@ -98,10 +98,10 @@ export function NurseSidebar({
           </div>
           {isExpanded && (
             <div className="min-w-0 animate-in fade-in duration-200">
-              <h1 className="text-sm font-bold text-slate-800 tracking-tight truncate">
+              <h1 className="text-sm font-bold text-slate-800 dark:text-[#f5f5f5] tracking-tight truncate">
                 {nurseTexts.dashboardTitle}
               </h1>
-              <p className="text-[11px] font-medium text-slate-400">PHC Clinical</p>
+              <p className="text-[11px] font-medium text-slate-400 dark:text-[#737373]">PHC Clinical</p>
             </div>
           )}
         </div>
@@ -171,7 +171,7 @@ export function NurseSidebar({
         </button>
 
         {isExpanded && (
-          <p className="mb-2 px-2 text-[10px] font-bold uppercase tracking-wider text-slate-400 animate-in fade-in duration-200">
+          <p className="mb-2 px-2 text-[10px] font-bold uppercase tracking-wider text-slate-400 dark:text-[#737373] animate-in fade-in duration-200">
             {nurseTexts.myCoverage}
           </p>
         )}
@@ -198,7 +198,7 @@ export function NurseSidebar({
                     isCategoryActive
                       ? 'bg-[#cc3535] text-white shadow-xs font-semibold'
                       : isServiceSelected
-                      ? 'bg-red-50/80 text-[#cc3535] font-semibold'
+                      ? 'bg-red-50/80 dark:bg-red-950/40 text-[#cc3535] dark:text-[#f87171] font-semibold'
                       : 'text-slate-600 hover:bg-slate-100 hover:text-slate-900 dark:text-[#a3a3a3] dark:hover:bg-[#242424] dark:hover:text-[#f5f5f5] font-medium'
                   }`}
                 >
@@ -208,7 +208,7 @@ export function NurseSidebar({
                         isCategoryActive
                           ? 'text-white'
                           : isServiceSelected
-                          ? 'text-[#cc3535]'
+                          ? 'text-[#cc3535] dark:text-[#f87171]'
                           : 'text-slate-400 group-hover:text-[#cc3535] dark:group-hover:text-[#f87171]'
                       }`}
                       aria-hidden="true"
@@ -251,7 +251,7 @@ export function NurseSidebar({
 
                 {/* Expanded Cubicles under active service */}
                 {isExpanded && isServiceSelected && cubicles.length > 0 && (
-                  <div className="ml-5 space-y-1 border-l-2 border-slate-200 pl-2.5 pt-1 animate-in fade-in duration-200">
+                  <div className="ml-5 space-y-1 border-l-2 border-slate-200 dark:border-[#2e2e2e] pl-2.5 pt-1 animate-in fade-in duration-200">
                     {cubicles.map((cubicle) => {
                       const active = selectedCubicleNum === cubicle.cubicleNum;
 
@@ -271,7 +271,7 @@ export function NurseSidebar({
                           </p>
                           <p
                             className={`text-[10px] leading-tight truncate ${
-                              active ? 'text-white/80' : 'text-slate-400'
+                              active ? 'text-white/80' : 'text-slate-400 dark:text-[#737373]'
                             }`}
                           >
                             {nurseTexts.roomPrefix} {cubicle.room}
@@ -289,7 +289,7 @@ export function NurseSidebar({
       </nav>
 
       {/* Footer / Workstation Controls */}
-      <div className="p-2 border-t border-slate-100 space-y-1 shrink-0">
+      <div className="p-2 border-t border-slate-100 dark:border-[#2e2e2e] space-y-1 shrink-0">
         {/* Return to Select Screen */}
         <button
           type="button"
