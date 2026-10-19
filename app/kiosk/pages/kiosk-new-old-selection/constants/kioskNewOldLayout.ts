@@ -106,6 +106,7 @@ export const KioskNewOldLayoutClasses = {
     layoutLandscapeRightCol: "flex w-[55%] h-full min-h-0 flex-col items-center justify-center gap-0 overflow-hidden",
     bannerWrapper: "w-full shrink-0 flex flex-col items-center justify-center pb-0",
     layoutPortraitMain: "flex h-full w-full min-h-0 flex-1 flex-col overflow-hidden items-center justify-center gap-2 sm:gap-3 py-2 sm:py-4 px-2 sm:px-4 m-auto",
+    portraitHeaderWrapper: "w-full shrink-0 flex flex-col items-center justify-center pt-1 sm:pt-3 px-4",
     portraitSelectionGroup: "w-full flex flex-col items-center justify-center gap-0",
     cardsArea: "w-full overflow-hidden flex items-center justify-center",
     layoutChildrenWrapper: "w-full max-w-[1100px] mx-auto flex items-center justify-center",
