@@ -1,6 +1,6 @@
 # Patient Transfer Module Developer Guide
 
-**Last Updated:** 2026-10-19
+**Last Updated:** 2026-10-20
 
 This document provides architectural standards and an exhaustive developer mapping for the Patient Transfer module in the Heart Check PHC application.
 
@@ -56,7 +56,7 @@ Use this table to quickly identify the exact file to modify for any given requir
 | Selection button standard tokens & dimensions | `app/transfer/constants/transfer.ts` | `selectionCardTokens`, `transferLayoutTokens` |
 | Transfer UI thresholds & categories | `app/transfer/lib/constants.ts` | Queue capacities, service names, cooldowns |
 | Connection banner messages | `constants/connectionTexts.ts` | Centralized network and offline sync copy |
-| Main transfer orchestrator & theme toggle | `app/transfer/page.tsx` | Flow routing, confirm persistence, 0ms direct realtime payload patching, and dual-theme toggle |
+| Main transfer orchestrator & theme toggle | `app/transfer/page.tsx` | Flow routing, confirm persistence, 0ms direct realtime payload patching, system notifications dropdown, and dual-theme toggle |
 | Confirm assignment modal | `app/transfer/components/ConfirmAssignmentModal.tsx` | Dialog for reviewing pending patient assignments and SMS alerts |
 | Navigation sidebar | `app/transfer/components/Sidebar.tsx` | Service category navigation and centralized icons |
 | Drag-and-drop grip handle | `app/transfer/components/DragHandle.tsx` | Pure CSS indicator lines with touch drag gating |

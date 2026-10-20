@@ -20,6 +20,8 @@ import { useTheme } from 'next-themes';
 import { supabase } from '@/lib/supabase';
 import { handleSignOut as executeSignOut } from '@/lib/supabase/signOut';
 import { LiveClock } from '@/components/reusables/LiveClock';
+import { useBottleneckNotifications } from '@/app/dashboard/hooks/useBottleneckNotifications';
+import NotificationDropdown from '@/app/dashboard/components/NotificationDropdown';
 import { SUPERADMIN_TEXTS } from '@/app/superadmin/constants/superadminTexts';
 import { SUPERADMIN_NAV_STYLES } from '@/app/superadmin/constants/superadminNavStyles';
 
@@ -43,6 +45,15 @@ export function SuperAdminHeader({ onOpenMobileDrawer }: SuperAdminHeaderProps) 
   const [mounted, setMounted] = useState(false);
 
   const { resolvedTheme, setTheme } = useTheme();
+
+  const {
+    notifications,
+    unreadCount,
+    markAsRead,
+    markAllAsRead,
+    dismissNotification,
+    clearAll,
+  } = useBottleneckNotifications();
 
   const S = SUPERADMIN_NAV_STYLES.header;
   const T = SUPERADMIN_TEXTS.navigation;
@@ -140,6 +151,18 @@ export function SuperAdminHeader({ onOpenMobileDrawer }: SuperAdminHeaderProps) 
       <div className={S.rightGroup}>
         {/* Live Manila Clock */}
         <LiveClock />
+
+        {/* System Notifications Dropdown */}
+        {mounted && (
+          <NotificationDropdown
+            notifications={notifications}
+            unreadCount={unreadCount}
+            onMarkAsRead={markAsRead}
+            onMarkAllAsRead={markAllAsRead}
+            onDismiss={dismissNotification}
+            onClearAll={clearAll}
+          />
+        )}
 
         {/* Theme Toggle Button */}
         <button

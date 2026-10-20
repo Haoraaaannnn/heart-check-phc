@@ -67,6 +67,23 @@
    - Dynamic Monitor Calling Layout (`useMonitorData.ts`): dynamically evaluates `service.monitor_layout` ('table' vs 'cubicle') with backward-compatible fallback.
    - Dynamic Admin Dashboard Navigation (`DashSideNavigation.tsx`): services rail category dynamically populates from PostgreSQL `services` catalog.
 
+7. **System-Wide Operational & Clinical Notifications Upgrade (Completed):**
+   - Centralized all notification copy, status tags (`[Alert]`, `[Warning]`, `[Info]`, `[Notice]`), and parameterized clinical message builders into `app/dashboard/constants/notificationTexts.ts` with strict zero-emoji enforcement and natural text wrapping (`break-words`, `whitespace-normal`).
+   - Centralized all solid-surface dropdown classes, severity accent borders, and status icon tokens into `app/dashboard/constants/notificationStyles.ts`.
+   - Overhauled `useBottleneckNotifications.ts` (and exported `useSystemNotifications` alias) to comprehensively monitor:
+     1. Extended physician consultations (>15 min bottleneck alert)
+     2. Prolonged queue waiting times (>30 min critical bottleneck alert, >15 min warning)
+     3. Department queue congestion and volume surges (>=5 warning, >=10 congestion alert)
+     4. Unattended idle / skipped patient tickets awaiting triage action
+     5. Available examination stations with on-duty physicians while queues wait
+     6. Daily clinic intake milestones (10, 25, 50, 100, 200, 250, 500) and completed consultation milestones
+     7. Browser offline loss and background synchronization recovery notices
+   - Enforced database security boundaries: queries active patients with `is_historical = false` and scopes to current day.
+   - Integrated deterministic notification IDs, persistent dismissed and read state sets, auto-purge of resolved conditions, and a 500ms debounced Supabase Realtime channel subscription on `patients` table alongside 25s polling.
+   - Upgraded `NotificationDropdown.tsx` with high-contrast solid styling, category filter tabs (`All`, `Alerts`, `Warnings`, `Notices`), clean Boxicons, keyboard accessibility, and outside-click dismissal.
+   - Integrated `NotificationDropdown` into `SuperAdminHeader.tsx` and `app/transfer/page.tsx` top navigation bars, providing universal notification visibility across SuperAdmin, Admin Dashboard, Nurse Station, and Transfer Station.
+   - Updated developer guides (`app/dashboard/README.md`, `app/superadmin/README.md`, `app/transfer/README.md`) with explicit "Where to Edit" tables and ISO date stamps.
+
 ---
 
 ## Current Blockers & Risks

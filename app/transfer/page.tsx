@@ -41,6 +41,8 @@ import { useOfflineQueue } from '@/hooks/useOfflineQueue';
 import { enqueueMutation, removeMutation } from '@/lib/offlineQueue';
 import { ConnectionStatusBanner } from '@/components/reusables/ConnectionStatusBanner';
 import { NotificationBadge } from '@/components/reusables/NotificationBadge';
+import { useBottleneckNotifications } from '@/app/dashboard/hooks/useBottleneckNotifications';
+import NotificationDropdown from '@/app/dashboard/components/NotificationDropdown';
 import { transferTexts } from '@/app/transfer/constants/transferTexts';
 
 
@@ -63,6 +65,15 @@ export default function TransferPage() {
   const toggleTheme = () => {
     setTheme(theme === 'dark' ? 'light' : 'dark');
   };
+
+  const {
+    notifications,
+    unreadCount,
+    markAsRead,
+    markAllAsRead,
+    dismissNotification,
+    clearAll: clearAllNotifications,
+  } = useBottleneckNotifications();
 
   // Selected Service and Room State
   const [selectedCategory, setSelectedCategory] = useState<string | null>(null);
@@ -1222,6 +1233,18 @@ export default function TransferPage() {
             >
               {transferTexts.doctorsBtn}
             </button>
+
+            {/* System Notifications Dropdown */}
+            {mounted && (
+              <NotificationDropdown
+                notifications={notifications}
+                unreadCount={unreadCount}
+                onMarkAsRead={markAsRead}
+                onMarkAllAsRead={markAllAsRead}
+                onDismiss={dismissNotification}
+                onClearAll={clearAllNotifications}
+              />
+            )}
 
             {/* Dual Theme Toggle */}
             {mounted && (

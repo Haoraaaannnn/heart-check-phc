@@ -1,6 +1,6 @@
 # Admin Dashboard Domain Developer Guide: Architecture & Where to Edit
 
-**Last Updated:** 2026-10-19
+**Last Updated:** 2026-10-20
 
 This document serves as the authoritative developer guide for maintaining, extending, and modifying the Admin Dashboard module in `app/dashboard/`.
 
@@ -71,7 +71,10 @@ The Admin Dashboard subsystem adheres strictly to the architectural standards de
 | **Change header search text copy, placeholders, aria labels, or category headers** | [headerSearchTexts.ts](file:///home/jensen/Github-Repositories/Heart_Check_PHC/app/dashboard/constants/headerSearchTexts.ts) / [content.ts](file:///home/jensen/Github-Repositories/Heart_Check_PHC/app/dashboard/constants/content.ts) |
 | **Change header search styles, status badges, dropdown dimensions, or keycaps** | [headerSearchStyles.ts](file:///home/jensen/Github-Repositories/Heart_Check_PHC/app/dashboard/constants/headerSearchStyles.ts) / [styles.ts](file:///home/jensen/Github-Repositories/Heart_Check_PHC/app/dashboard/constants/styles.ts) |
 | **Change header search query debouncing, Supabase lookup, or keyboard shortcuts** | [useHeaderSearch.ts](file:///home/jensen/Github-Repositories/Heart_Check_PHC/app/dashboard/hooks/useHeaderSearch.ts) |
-| **Change bottleneck notification dropdown styling, colors, or action handlers** | [NotificationDropdown.tsx](file:///home/jensen/Github-Repositories/heart-check-phc/app/dashboard/components/NotificationDropdown.tsx) |
+| **Change notification texts, message templates, tags, or filter labels** | [notificationTexts.ts](file:///home/jensen/Github-Repositories/Heart_Check_PHC/app/dashboard/constants/notificationTexts.ts) |
+| **Change notification dropdown styles, severity colors, borders, or layout** | [notificationStyles.ts](file:///home/jensen/Github-Repositories/Heart_Check_PHC/app/dashboard/constants/notificationStyles.ts) |
+| **Change system bottleneck and operational notification controller logic, polling, or thresholds** | [useBottleneckNotifications.ts](file:///home/jensen/Github-Repositories/Heart_Check_PHC/app/dashboard/hooks/useBottleneckNotifications.ts) |
+| **Change bottleneck notification dropdown component, filter tabs, or action handlers** | [NotificationDropdown.tsx](file:///home/jensen/Github-Repositories/heart-check-phc/app/dashboard/components/NotificationDropdown.tsx) |
 | **Change overview metric cards, tones, and status colors** | [styles.ts](file:///home/jensen/Github-Repositories/heart-check-phc/app/dashboard/constants/styles.ts) (`TONES`, `DASH.metric`) |
 | **Change overview card labels, welcome greetings, or activity text** | [content.ts](file:///home/jensen/Github-Repositories/heart-check-phc/app/dashboard/constants/content.ts) |
 | **Change date filter pill presets, labels, or range descriptions** | [content.ts](file:///home/jensen/Github-Repositories/heart-check-phc/app/dashboard/constants/content.ts) (`OVERVIEW_DATE_PRESETS`, `OVERVIEW_DATE_FILTER_TEXTS`) |

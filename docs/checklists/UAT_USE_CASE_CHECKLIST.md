@@ -1,5 +1,7 @@
 # Heart Check PHC: User Acceptance Testing (UAT) Use Case Checklist & Verification Matrix
 
+**Last Updated:** 2026-10-20
+
 This document provides a comprehensive, structured checklist for User Acceptance Testing (UAT) across the **Heart Check PHC** Queue Management and Analytics System. It is designed for developers, quality assurance testers, Philippine Heart Center (PHC) MIS evaluators, and clinical workstation operators to validate system behavior, verify functional flows, and log operational remarks.
 
 ---
@@ -168,14 +170,33 @@ Validates error recovery when network connections drop, API servers timeout, or 
 
 ---
 
-## 11. UAT Sign-Off & Evaluator Summary
+## 11. System-Wide Operational & Clinical Notifications Subsystem (`useBottleneckNotifications.ts`, `NotificationDropdown.tsx`)
+
+The System Notifications Subsystem actively monitors live clinical queues and station statuses across SuperAdmin, Admin Dashboard, Nurse Station, and Transfer workstations, evaluating live operations against clinical safety thresholds.
+
+| Use Case ID | Scenario / Feature | Preconditions | Test Execution Steps | Expected Result | Status | Remarks & Tester Notes |
+| :--- | :--- | :--- | :--- | :--- | :---: | :--- |
+| **UC-NOT-001** | Extended Consultation Bottleneck Alert (>15 Min) | Patient record in consultation (`status = 'with doctor'` or equivalent) with `consult_start` exceeding 15 minutes. | 1. Open workstation header (Dashboard, Nurse, SuperAdmin, or Transfer).<br>2. Observe unread badge on bell trigger button.<br>3. Click bell icon to open NotificationDropdown.<br>4. Inspect the consultation alert card. | Unread badge increments; notification card renders with red border (`border-rose-600`) and tag `[Alert]`; title displays "Extended Consultation Time"; message reads "Patient ticket <ticket> in Cubicle <num> has been with the physician for <mins> minutes (exceeds 15-minute consultation threshold)."; text wraps naturally without truncation; strictly zero emojis. | [ ] PASS<br>[ ] FAIL<br>[ ] BLCK | |
+| **UC-NOT-002** | Prolonged Queue Waiting Time Warning & Critical Bottleneck | Patient created today with status `WAITING` or `PENDING` without station assignment. | 1. Allow patient wait time to exceed 15 minutes.<br>2. Inspect notification card.<br>3. Allow wait time to exceed 30 minutes.<br>4. Re-inspect notification card. | At 16 minutes, amber `[Warning]` card triggers with title "Extended Queue Waiting Time"; at 31 minutes, escalates to red `[Alert]` with title "Prolonged Queue Wait Time"; message provides exact ticket number, service, and elapsed wait minutes. | [ ] PASS<br>[ ] FAIL<br>[ ] BLCK | |
+| **UC-NOT-003** | Department Queue Volume Surge & Congestion Alerts | Multiple patients check in at kiosk for the same service. | 1. Create 5 waiting patients in "Consultation".<br>2. Open NotificationDropdown.<br>3. Add 5 more patients (total 10 waiting).<br>4. Observe notification updates. | At 5 waiting patients, an amber `[Warning]` triggers with "Queue Volume Surge: Consultation: 5 patients are currently queued for service."; at 10 waiting patients, escalates to red `[Alert]` with "Queue Congestion Alert: Consultation: High volume detected with 10 patients currently waiting in queue. Congestion threshold exceeded." | [ ] PASS<br>[ ] FAIL<br>[ ] BLCK | |
+| **UC-NOT-004** | Unattended Idle / Skipped Tickets Action Alert | One or more patients marked as `IDLE` or `SKIPPED` in clinic queues. | 1. In Transfer or Nurse station, mark a patient as Idle/No-Show.<br>2. Inspect NotificationDropdown.<br>3. Reactivate or remove the idle ticket.<br>4. Re-inspect NotificationDropdown. | Amber `[Warning]` triggers with title "Unattended Idle Tickets"; message reads "<count> patient ticket(s) are currently marked as idle or skipped. Staff action required to reactivate or triage."; resolving or clearing all idle tickets automatically auto-purges notification from dropdown. | [ ] PASS<br>[ ] FAIL<br>[ ] BLCK | |
+| **UC-NOT-005** | Available Examination Station with Doctor On Duty | Cubicle has an active assigned physician, no patient in consultation, and patients waiting in that service queue. | 1. Verify Cubicle 2 has assigned doctor with active status.<br>2. Ensure 2 patients are waiting in Consultation and Cubicle 2 is currently empty.<br>3. Open NotificationDropdown. | Blue `[Info]` card appears with title "Available Clinical Station"; message reads "Cubicle 2 (Consultation) is available with Dr. <name> while patients are waiting in queue.", eliminating station idle gaps. | [ ] PASS<br>[ ] FAIL<br>[ ] BLCK | |
+| **UC-NOT-006** | Daily Operational Intake & Service Milestones | Active patient registrations or completions reach milestone thresholds (10, 25, 50, 100, 200, 250, 500). | 1. Check in 10th patient of the day at kiosk.<br>2. Open NotificationDropdown.<br>3. Mark 10 patients completed in nurse station.<br>4. Inspect dropdown. | Neutral `[Notice]` cards trigger with title "Daily Intake Milestone" ("10 patient tickets have been registered today across outpatient clinic services.") and "Daily Service Milestone" ("10 patients have completed clinical consultation and service today."). | [ ] PASS<br>[ ] FAIL<br>[ ] BLCK | |
+| **UC-NOT-007** | Network Disconnection & Synchronization Recovery Telemetry | Browser workstation loses internet/intranet connection. | 1. Disconnect Ethernet or toggle browser DevTools Offline mode.<br>2. Inspect NotificationDropdown.<br>3. Reconnect network.<br>4. Re-inspect NotificationDropdown. | On disconnect, amber `[Warning]` triggers with "System Offline Mode: Network connection unavailable. Operating in local offline cache mode..."; on reconnection, blue `[Info]` triggers with "System Online Synchronized: Network connection restored. Real-time queue updates and background synchronizer are active." | [ ] PASS<br>[ ] FAIL<br>[ ] BLCK | |
+| **UC-NOT-008** | Notification Severity Filter Tabs Navigation | Multiple notifications of diverse severities exist in dropdown. | 1. Open NotificationDropdown.<br>2. Click "Alerts (<count>)" tab.<br>3. Click "Warnings (<count>)" tab.<br>4. Click "Notices (<count>)" tab.<br>5. Click "All (<count>)" tab. | Tab filtering immediately scopes cards to selected severity level; counts on each tab reconcile with category totals; active tab displays solid inverted surface (`bg-slate-900 text-white dark:bg-white dark:text-slate-900`). | [ ] PASS<br>[ ] FAIL<br>[ ] BLCK | |
+| **UC-NOT-009** | Notification Lifecycle (Mark as Read, Dismiss, Clear All, Auto-Purge) | Multiple active unread notifications present. | 1. Click "Read" on an individual card.<br>2. Click "Dismiss" on an individual card.<br>3. Allow 25-second polling interval to elapse.<br>4. Click "Mark all as read".<br>5. Click "Clear all". | "Read" dims card opacity and decrements unread counter; "Dismiss" immediately removes card and prevents recreation on subsequent polling ticks; "Mark all as read" zeroes badge counter; "Clear all" purges list to clean empty state; resolved conditions auto-purge from active list. | [ ] PASS<br>[ ] FAIL<br>[ ] BLCK | |
+| **UC-NOT-010** | Universal Workstation Access & Dual-Theme Consistency | Evaluator accesses all hospital workstation views. | 1. Inspect top header on `/superadmin`.<br>2. Inspect top header on `/dashboard`.<br>3. Inspect top header on `/nurse`.<br>4. Inspect top header on `/transfer`.<br>5. Toggle dark/light theme switch on each workstation. | Notification bell button and dropdown render consistently across all 4 workstation headers; unread badge synchronizes state; dark/light theme toggle retains solid surfaces without hydration flicker or blurred glassmorphism. | [ ] PASS<br>[ ] FAIL<br>[ ] BLCK | |
+
+---
+
+## 12. UAT Sign-Off & Evaluator Summary
 
 Upon completion of the test cases above, the lead evaluator and developers must document their sign-off status below:
 
 | Metric | Target | Actual | Notes |
 | :--- | :--- | :--- | :--- |
-| **Total Test Cases Executed** | 45 | | |
-| **Total Passed** | 45 | | |
+| **Total Test Cases Executed** | 63 | | Across Kiosk, Monitor, Nurse, Transfer, Dashboard, SuperAdmin, Auth, Resilience & Notifications |
+| **Total Passed** | 63 | | |
 | **Total Failed** | 0 | | |
 | **Total Blocked / Skipped** | 0 | | |
 | **Pass Rate Percentage** | 100% | | |
@@ -188,7 +209,7 @@ Upon completion of the test cases above, the lead evaluator and developers must 
 
 ---
 
-## 12. Developer "Where to Edit" Reference Guide
+## 13. Developer "Where to Edit" Reference Guide
 
 When defects are flagged during UAT execution, consult the following component map to locate and patch the relevant code:
 
@@ -199,6 +220,7 @@ When defects are flagged during UAT execution, consult the following component m
 | **Nurse Station** | Patient triage, vitals modal, calling logic | [app/nurse/README.md](file:///home/jensen/Github-Repositories/heart-check-phc/app/nurse/README.md), [app/nurse/page.tsx](file:///home/jensen/Github-Repositories/heart-check-phc/app/nurse/page.tsx) |
 | **Transfer Dashboard** | Drag-and-drop, doctor cubicle assignment | `app/transfer/`, [docs/specifications/TRANSFER_DASHBOARD.md](file:///home/jensen/Github-Repositories/Heart_Check_PHC/docs/specifications/TRANSFER_DASHBOARD.md) |
 | **Admin Analytics** | Overview KPIs, charts, forecasting, Excel export | [app/dashboard/README.md](file:///home/jensen/Github-Repositories/Heart_Check_PHC/app/dashboard/README.md), [app/dashboard/pages/analytics/README.md](file:///home/jensen/Github-Repositories/Heart_Check_PHC/app/dashboard/pages/analytics/README.md) |
+| **System Notifications** | Bottleneck alerts, queue surges, filter tabs, copy | [notificationTexts.ts](file:///home/jensen/Github-Repositories/Heart_Check_PHC/app/dashboard/constants/notificationTexts.ts), [useBottleneckNotifications.ts](file:///home/jensen/Github-Repositories/Heart_Check_PHC/app/dashboard/hooks/useBottleneckNotifications.ts), [NotificationDropdown.tsx](file:///home/jensen/Github-Repositories/Heart_Check_PHC/app/dashboard/components/NotificationDropdown.tsx) |
 | **SuperAdmin Governance**| RBAC users, desk access, operating hours | [app/superadmin/README.md](file:///home/jensen/Github-Repositories/Heart_Check_PHC/app/superadmin/README.md), `app/superadmin/components/` |
 | **Authentication & Proxy**| Route guards, session validation, cookie security | [proxy.ts](file:///home/jensen/Github-Repositories/Heart_Check_PHC/proxy.ts), `app/api/auth/` |
 | **Python Backend API** | FastAPI endpoints, ARIMA, queue modeling, export | [python_backend/main.py](file:///home/jensen/Github-Repositories/Heart_Check_PHC/python_backend/main.py), `python_backend/analytics/` |
