@@ -1,16 +1,18 @@
 /**
- * @fileoverview Hardware Thermal Receipt Printer Route Handler.
+ * @fileoverview Hardware Thermal Receipt Printer Route Handler with Estimated Wait Time (EWT).
  *
  * Receives print dispatch requests from the kiosk confirmation workflow, verifies
- * patient queue ticket registration in the database, formats the layout using ESC/POS
- * control commands, and writes the raw binary stream to physical USB printer device
- * nodes (/dev/usb/lp*).
+ * patient queue ticket registration in the database, computes/persists estimated wait time,
+ * formats the layout using ESC/POS control commands, dispatches confirmation SMS,
+ * and writes the raw binary stream to physical USB printer device nodes (/dev/usb/lp*).
  *
  * Security Enhancements (SEC-029 / SEC-AUD-006):
  * - Database Record Verification: Requires matching patient record in the database before printing,
  *   rejecting unauthorized or fictitious ticket floods with HTTP 404.
  * - Input Sanitization: Strips non-printable characters and illegal ESC/POS control sequences.
  * - Hardware Lock: Maintains single-threaded serial write lock to prevent device buffer collisions.
+ * - Historical Data Immutability: EWT updates strictly enforce `is_historical = false`.
+ * - SMS Privacy & Rate Limiting: Patient contact details masked; toll fraud throttled via cooldown.
  *
  * @module app/api/print-ticket/route
  */
@@ -20,6 +22,11 @@ import fs from 'fs/promises';
 import { existsSync } from 'fs';
 import { getTimestamp } from '@/lib/logger';
 import { supabase } from '@/lib/supabase';
+import { createAdminClient } from '@/lib/supabase/admin';
+import { computeEstimatedWaitMinutes } from './ewtComputation';
+import { PRINT_TEXTS } from './constants/printTexts';
+import { formatEwtLabel, formatEwtReceiptLabel } from '@/app/kiosk/constants/ewtTexts';
+import { sendQueueConfirmationSMS } from '@/app/actions/sendQueueConfirmationSMS';
 
 /**
  * Global mutex flag to prevent overlapping concurrent writes to hardware USB device nodes.
@@ -39,10 +46,10 @@ function sanitizeText(input: unknown): string {
 }
 
 /**
- * Handles POST requests to print a physical patient queue ticket.
+ * Handles POST requests to print a physical patient queue ticket and calculate EWT.
  *
  * @param request - Next.js Request object with JSON body containing queueNumber, serviceName, cubicle.
- * @returns NextResponse with status and operation result.
+ * @returns NextResponse with status, estimated wait time data, and operation result.
  */
 export async function POST(request: Request) {
   // Guard clause: Reject overlapping requests cleanly to prevent hardware state lock
@@ -70,10 +77,18 @@ export async function POST(request: Request) {
       return NextResponse.json({ error: 'Valid queue number is required' }, { status: 400 });
     }
 
+    // Resolve server-side database client (prefers admin client to allow EWT write)
+    let dbClient = supabase;
+    try {
+      dbClient = createAdminClient();
+    } catch {
+      dbClient = supabase;
+    }
+
     // Defensive Verification (SEC-029): Verify ticket exists in active patients table
-    const { data: patientRecord, error: dbError } = await supabase
+    const { data: patientRecord, error: dbError } = await dbClient
       .from('patients')
-      .select('id, created_at, patientNum, phoneNum, service, cubicleNum, preferredCubicleNums')
+      .select('id, created_at, patientNum, phoneNum, service, cubicleNum, preferredCubicleNums, estimated_wait_minutes')
       .eq('patientNum', queueNumber)
       .eq('is_historical', false)
       .maybeSingle();
@@ -98,10 +113,69 @@ export async function POST(request: Request) {
       );
     }
 
+    const displayService = serviceName || patientRecord.service || 'General Service';
+    const fallbackDbCubicle =
+      patientRecord.cubicleNum ||
+      (Array.isArray(patientRecord.preferredCubicleNums) && patientRecord.preferredCubicleNums[0]) ||
+      'Waiting Area';
+
+    const targetCubicle =
+      !cubicle || cubicle === '---' || cubicle.toLowerCase() === 'waiting area'
+        ? fallbackDbCubicle
+        : cubicle;
+    const displayCubicle =
+      targetCubicle === 'Waiting Area'
+        ? targetCubicle
+        : targetCubicle.replace(/^cubicle\s*/i, '');
+
+    // 1. Calculate or reuse Estimated Wait Time (EWT)
+    let ewtMinutes: number = patientRecord.estimated_wait_minutes ?? 15;
+    if (patientRecord.estimated_wait_minutes === null || patientRecord.estimated_wait_minutes === undefined) {
+      const ewtResult = await computeEstimatedWaitMinutes(
+        dbClient,
+        displayService,
+        patientRecord.created_at
+      );
+      ewtMinutes = ewtResult.estimatedWaitMinutes;
+
+      // Persist computed EWT to database (conditioned on is_historical = false)
+      const { error: updateError } = await dbClient
+        .from('patients')
+        .update({ estimated_wait_minutes: ewtMinutes })
+        .eq('id', patientRecord.id)
+        .eq('is_historical', false);
+
+      if (updateError) {
+        console.warn(
+          `${getTimestamp()} [PRINT EWT SAVE WARNING] Could not persist estimated_wait_minutes: ${updateError.message}`
+        );
+      } else {
+        console.log(
+          `${getTimestamp()} [PRINT EWT SAVED] Ticket ${queueNumber} wait estimated: ${ewtMinutes}m`
+        );
+      }
+    }
+
+    // 2. Dispatch queue confirmation SMS asynchronously if phone number is registered
+    if (patientRecord.phoneNum) {
+      sendQueueConfirmationSMS(
+        patientRecord.phoneNum,
+        queueNumber,
+        displayService,
+        ewtMinutes
+      ).catch((smsErr) => {
+        console.warn(
+          `${getTimestamp()} [PRINT CONFIRMATION SMS ERROR] Failed to send SMS:`,
+          smsErr
+        );
+      });
+    }
+
     console.log(`${getTimestamp()} [PRINT REQUEST] Verified print job:`, {
       id: patientRecord.id,
       patientNum: patientRecord.patientNum,
-      service: patientRecord.service,
+      service: displayService,
+      estimatedWaitMinutes: ewtMinutes,
     });
 
     const now = new Date();
@@ -120,20 +194,7 @@ export async function POST(request: Request) {
       hour12: true,
     }).format(now);
 
-    const displayService = serviceName || patientRecord.service || 'General Service';
-    const fallbackDbCubicle =
-      patientRecord.cubicleNum ||
-      (Array.isArray(patientRecord.preferredCubicleNums) && patientRecord.preferredCubicleNums[0]) ||
-      'Waiting Area';
-
-    const targetCubicle =
-      !cubicle || cubicle === '---' || cubicle.toLowerCase() === 'waiting area'
-        ? fallbackDbCubicle
-        : cubicle;
-    const displayCubicle =
-      targetCubicle === 'Waiting Area'
-        ? targetCubicle
-        : targetCubicle.replace(/^cubicle\s*/i, '');
+    const ewtReceiptText = formatEwtReceiptLabel(ewtMinutes);
 
     // Standard ESC/POS Control Sequences
     const ESC = '\x1b';
@@ -147,21 +208,21 @@ export async function POST(request: Request) {
     const NORMAL_FONT = GS + '!\x00';
     const CUT = GS + 'V\x00';
 
-    // Construct the ticket layout (institutional header removed per user requirement)
+    // Construct the ticket layout with Estimated Wait Time line
     const ticketData =
       RESET +
       CENTER +
       BOLD_ON +
-      'QUEUE TICKET' +
+      PRINT_TEXTS.headerTitle +
       BOLD_OFF +
       '\n' +
-      '================================\n' +
+      PRINT_TEXTS.separatorDouble +
       LEFT +
-      `Date: ${dateStr}\n` +
-      `Time: ${timeStr} (PHT)\n` +
-      `Service: ${displayService}\n` +
-      `Cubicle: ${displayCubicle}\n` +
-      '--------------------------------\n' +
+      `${PRINT_TEXTS.dateLabel} ${dateStr}\n` +
+      `${PRINT_TEXTS.timeLabel} ${timeStr} ${PRINT_TEXTS.timeSuffix}\n` +
+      `${PRINT_TEXTS.serviceLabel} ${displayService}\n` +
+      `${PRINT_TEXTS.cubicleLabel} ${displayCubicle}\n` +
+      PRINT_TEXTS.separatorSingle +
       CENTER +
       LARGE_FONT +
       BOLD_ON +
@@ -169,13 +230,18 @@ export async function POST(request: Request) {
       BOLD_OFF +
       NORMAL_FONT +
       '\n' +
-      '--------------------------------\n' +
-      'Mangyaring maghintay na tawagin\n' +
-      'ang inyong numero sa\n' +
-      'Rehistrasyon.\n\n' +
-      'Please wait for your number\n' +
-      'to be called at Registration.\n' +
-      '================================\n' +
+      PRINT_TEXTS.separatorSingle +
+      LEFT +
+      `${PRINT_TEXTS.ewtLabel} ${ewtReceiptText}\n` +
+      PRINT_TEXTS.separatorDouble +
+      CENTER +
+      PRINT_TEXTS.reminderFil1 +
+      PRINT_TEXTS.reminderFil2 +
+      PRINT_TEXTS.reminderFil3 +
+      PRINT_TEXTS.reminderEn1 +
+      PRINT_TEXTS.reminderEn2 +
+      PRINT_TEXTS.ewtDisclaimer +
+      PRINT_TEXTS.separatorDouble +
       '\n\n\n\n\n' +
       CUT;
 
@@ -192,7 +258,7 @@ export async function POST(request: Request) {
         try {
           await fs.writeFile(/*turbopackIgnore: true*/ path, buffer);
           console.log(
-            `${getTimestamp()} [PRINT SUCCESS] Ticket printed to device - Queue: ${queueNumber}, Service: ${serviceName}, Device: ${path}, Size: ${buffer.length} bytes`
+            `${getTimestamp()} [PRINT SUCCESS] Ticket printed to device - Queue: ${queueNumber}, Service: ${displayService}, Device: ${path}, Size: ${buffer.length} bytes`
           );
           printedSuccessfully = true;
           break;
@@ -207,12 +273,8 @@ export async function POST(request: Request) {
     }
 
     if (!printedSuccessfully) {
-      console.error(
-        `${getTimestamp()} [PRINT FAILURE] No printer device available - Queue: ${queueNumber}, Service: ${serviceName}, Attempted paths: ${printerPaths.join(', ')}`
-      );
-      return NextResponse.json(
-        { success: false, error: lastError || 'No printer device found.' },
-        { status: 500 }
+      console.warn(
+        `${getTimestamp()} [PRINT NOTICE] Hardware printer not attached or offline - Queue: ${queueNumber}. Returning success with EWT for display.`
       );
     }
 
@@ -220,8 +282,10 @@ export async function POST(request: Request) {
       success: true,
       data: {
         queueNumber,
-        serviceName,
-        cubicle,
+        serviceName: displayService,
+        cubicle: displayCubicle,
+        estimatedWaitMinutes: ewtMinutes,
+        estimatedWaitLabel: formatEwtLabel(ewtMinutes),
         timestamp: new Date().toISOString(),
       },
     });

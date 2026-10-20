@@ -34,5 +34,13 @@ export const QueuePrintTicketTexts = {
     reminderEn: "Please wait for your number to be called at Registration.",
     /** Timezone indicator suffix for Philippine Standard Time. */
     manilaTzSuffix: "PHT",
+    /** Primary English section header for estimated wait time. */
+    ewtLabel: "Estimated Wait Time",
+    /** Secondary Filipino section header for estimated wait time. */
+    ewtLabelFil: "Tinatayang Oras ng Paghihintay",
+    /** English disclaimer note below estimated wait time callout. */
+    ewtDisclaimer: "* Wait time is an estimate and may vary depending on clinic volume.",
+    /** Filipino disclaimer note below estimated wait time callout. */
+    ewtDisclaimerFil: "* Pagtatantya lamang ito at maaaring magbago depende sa dami ng pasyente.",
 } as const;
 

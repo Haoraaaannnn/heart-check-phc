@@ -11,6 +11,7 @@ import {
     QueuePrintTicketStyle,
 } from "@/app/kiosk/pages/queue-print/constants/queuePrintTicket";
 import { QueuePrintTicketTexts } from "@/app/kiosk/pages/queue-print/constants/queuePrintTicketTexts";
+import { formatEwtLabel, EWT_TEXTS } from "@/app/kiosk/constants/ewtTexts";
 
 /** Props for {@link QueuePrintContent}. */
 interface QueuePrintContentProps {
@@ -23,13 +24,14 @@ interface QueuePrintContentProps {
 }
 
 /**
- * Display card presenting the generated queue number and triggering physical ticket printing.
+ * Display card presenting the generated queue number, estimated wait time,
+ * and triggering physical ticket printing.
  *
  * @remarks
  * Displays the refined physical ticket preview (queue number, service, Manila Standard Time,
- * destination cubicle, and bilingual patient reminder without institutional header),
+ * destination cubicle, dynamic Estimated Wait Time range, and bilingual patient reminder),
  * sends an ESC/POS print dispatch request to `/api/print-ticket`, and automatically redirects
- * back to the kiosk welcome screen after a 5-second countdown.
+ * back to the kiosk welcome screen after the configured countdown.
  *
  * @param props - Component props.
  * @returns The printed ticket confirmation card.
@@ -48,6 +50,7 @@ export default function QueuePrintContent({
     const [manilaDate, setManilaDate] = useState<string>("");
     const [manilaTime, setManilaTime] = useState<string>("");
     const [activeCubicle, setActiveCubicle] = useState<string>(cubicleNum);
+    const [estimatedWaitLabel, setEstimatedWaitLabel] = useState<string>(EWT_TEXTS.calculating);
 
     useEffect(() => {
         if (cubicleNum && cubicleNum !== "---" && cubicleNum.toLowerCase() !== "waiting area") {
@@ -76,7 +79,8 @@ export default function QueuePrintContent({
         hasFired.current = true;
 
         /**
-         * Queries the newly created patient record for diagnostic logging and cubicle fallback.
+         * Queries the newly created patient record for diagnostic logging, cubicle fallback,
+         * and pre-existing estimated wait time.
          */
         const fetchAndLogPatientRecord = async () => {
             try {
@@ -89,7 +93,7 @@ export default function QueuePrintContent({
 
                 const { data: patientRecord, error } = await supabase
                     .from("patients")
-                    .select("id, created_at, patientNum, phoneNum, service, cubicleNum, preferredCubicleNums")
+                    .select("id, created_at, patientNum, phoneNum, service, cubicleNum, preferredCubicleNums, estimated_wait_minutes")
                     .eq("patientNum", patientNum)
                     .gte("created_at", startOfDay)
                     .order("created_at", { ascending: false })
@@ -110,6 +114,10 @@ export default function QueuePrintContent({
                     setActiveCubicle(dbCubicle);
                 }
 
+                if (patientRecord?.estimated_wait_minutes) {
+                    setEstimatedWaitLabel(formatEwtLabel(patientRecord.estimated_wait_minutes));
+                }
+
                 console.log(`${getTimestamp()} [QUEUE PRINT PAGE] Loaded:`, {
                     id: patientRecord?.id,
                     created_at: patientRecord?.created_at,
@@ -117,6 +125,7 @@ export default function QueuePrintContent({
                     hasPhone: Boolean(patientRecord?.phoneNum),
                     service: patientRecord?.service,
                     cubicle: dbCubicle,
+                    estimatedWaitMinutes: patientRecord?.estimated_wait_minutes,
                 });
             } catch (err) {
                 const errorMessage = err instanceof Error ? err.message : String(err);
@@ -132,7 +141,8 @@ export default function QueuePrintContent({
         );
 
         /**
-         * Dispatches print payload to the hardware printer endpoint.
+         * Dispatches print payload to the hardware printer endpoint, which computes
+         * and persists the Estimated Wait Time.
          */
         const printTicket = async () => {
             try {
@@ -152,8 +162,13 @@ export default function QueuePrintContent({
                 const data = await response.json();
 
                 if (response.ok) {
+                    const ewtMin = data?.data?.estimatedWaitMinutes;
+                    const ewtDisplay = data?.data?.estimatedWaitLabel || (ewtMin ? formatEwtLabel(ewtMin) : null);
+                    if (ewtDisplay) {
+                        setEstimatedWaitLabel(ewtDisplay);
+                    }
                     console.log(
-                        `${getTimestamp()} [PRINT SUCCESS] Ticket successfully printed - Queue: ${patientNum}`
+                        `${getTimestamp()} [PRINT SUCCESS] Ticket printed - Queue: ${patientNum}, EWT: ${ewtDisplay || 'N/A'}`
                     );
                 } else {
                     console.warn(
@@ -172,7 +187,7 @@ export default function QueuePrintContent({
         };
 
         printTicket();
-    }, [patientNum, serviceName, displayCubicle]);
+    }, [patientNum, serviceName, displayCubicle, activeCubicle]);
 
     // Automatic navigation timer redirecting back to kiosk entrance
     useEffect(() => {
@@ -220,6 +235,25 @@ export default function QueuePrintContent({
             {/* Separator Divider */}
             <div style={QueuePrintTicketStyle.divider} />
 
+            {/* Estimated Wait Time Callout - Range Display without False Precision */}
+            <div style={QueuePrintTicketStyle.ewtContainer}>
+                <span style={QueuePrintTicketStyle.ewtLabel}>
+                    {QueuePrintTicketTexts.ewtLabel}
+                </span>
+                <span style={QueuePrintTicketStyle.ewtLabelFil}>
+                    {QueuePrintTicketTexts.ewtLabelFil}
+                </span>
+                <span style={QueuePrintTicketStyle.ewtValue}>
+                    {estimatedWaitLabel}
+                </span>
+                <span style={QueuePrintTicketStyle.ewtDisclaimer}>
+                    {QueuePrintTicketTexts.ewtDisclaimer}
+                </span>
+            </div>
+
+            {/* Separator Divider */}
+            <div style={QueuePrintTicketStyle.divider} />
+
             {/* Ticket Metadata - Clean Text without Pillbox */}
             <div style={QueuePrintTicketStyle.metaContainer}>
                 <div style={QueuePrintTicketStyle.cubicleRow}>
@@ -239,5 +273,4 @@ export default function QueuePrintContent({
             </div>
         </div>
     );
-
 }

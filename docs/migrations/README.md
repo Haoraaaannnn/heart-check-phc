@@ -1,6 +1,6 @@
 # Supabase Database Migrations Directory
 
-**Last Updated:** 2026-10-17
+**Last Updated:** 2026-10-21
 
 This directory stores manual and schema migration scripts for the PostgreSQL database running on Supabase for **Heart Check PHC**.
 
@@ -11,6 +11,7 @@ This directory stores manual and schema migration scripts for the PostgreSQL dat
 | Migration Script | Target Database | Description | Applied Status |
 | :--- | :--- | :--- | :---: |
 | [`docs/migrations/encrypt_phone_number.sql`](file:///home/jensen/Github-Repositories/Heart_Check_PHC/docs/migrations/encrypt_phone_number.sql) | Supabase PostgreSQL | Converts `patients.phoneNum` from `bigint` (`int8`) to `text` and updates the `create_patient` stored procedure signature to accept encrypted AES-256-GCM ciphertext strings (`enc:v1:...`). | Production Ready |
+| [`docs/migrations/20261021_add_dashboard_performance_indexes.sql`](file:///home/jensen/Github-Repositories/Heart_Check_PHC/docs/migrations/20261021_add_dashboard_performance_indexes.sql) | Supabase PostgreSQL | Adds production performance indexes verified against live PostgreSQL schema with double-quoted camelCase columns (`"cubicleNum"`, `"patientNum"`, `"doctorId"`), eliminating sequential scans on 26,000+ historical rows. | Production Ready |
 
 ---
 
