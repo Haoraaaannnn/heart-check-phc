@@ -1,5 +1,7 @@
 # Heart Check PHC: A Kiosk-Based Queue Management and Analytics System — Database Schema Documentation
 
+**Last Updated:** 2026-10-20
+
 ## Overview
 
 Database: Supabase (PostgreSQL 15) for development, with an intended handoff to PHC's own on-premises PostgreSQL server for production. This document covers the primary tables, access policies, key gotchas, and the reasoning behind schema decisions that deviate from a textbook normalized design.
@@ -43,6 +45,7 @@ PostgreSQL Row-Level Security (RLS) strictly enforces this separation using REST
 | `counter_top_started_at` | `timestamptz` | Nullable | Timestamp when patient arrived at the head of the counter queue. |
 | `idle_at` | `timestamptz` | Nullable | Timestamp when patient was moved to idle status (no-show / unassigned pool). |
 | `removed_at` | `timestamptz` | Nullable | Timestamp marking removal from active queue flow. |
+| `estimated_wait_minutes` | `int4` | Nullable | Computed estimated wait time in minutes generated at kiosk check-in. |
 
 ### Key Gotcha: `patientNum` vs `id`
 

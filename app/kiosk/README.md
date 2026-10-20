@@ -4,7 +4,7 @@ This document is the definitive guide for developers maintaining, modifying, or 
 
 It explains the system architecture, separation-of-concerns conventions, and provides an exhaustive directory mapping showing exactly which files to edit for any visual, textual, layout, or behavioral changes.
 
-_Last updated: 2026-10-17_
+_Last updated: 2026-10-20_
 
 ---
 
@@ -51,6 +51,7 @@ Use this lookup table to immediately find the file you need:
 | **Change the universal back button appearance or label** | [kioskBackButtonTexts.ts](file:///home/jensen/Github-Repositories/heart-check-phc/app/kiosk/constants/kioskBackButtonTexts.ts) / [kioskBackButton.ts](file:///home/jensen/Github-Repositories/heart-check-phc/app/kiosk/constants/kioskBackButton.ts). |
 | **Change the hardware ticket print API payload or format** | [QueuePrintContent.tsx](file:///home/jensen/Github-Repositories/heart-check-phc/app/kiosk/pages/queue-print/components/QueuePrintContent.tsx), [route.ts](file:///home/jensen/Github-Repositories/heart-check-phc/app/api/print-ticket/route.ts), and [printer.ts](file:///home/jensen/Github-Repositories/heart-check-phc/lib/printer.ts). |
 | **Change mobile phone number validation rules** | [phoneValidation.ts](file:///home/jensen/Github-Repositories/heart-check-phc/app/kiosk/pages/sms-input/utils/phoneValidation.ts) (NTC prefixes, sequential runs, repetition limits) and [KioskPhoneEntry.tsx](file:///home/jensen/Github-Repositories/heart-check-phc/app/kiosk/pages/sms-input/components/KioskPhoneEntry.tsx). |
+| **Change Estimated Wait Time (EWT) formulas, ranges, or labels** | [ewtTexts.ts](file:///home/jensen/Github-Repositories/heart-check-phc/app/kiosk/constants/ewtTexts.ts), [ewtComputation.ts](file:///home/jensen/Github-Repositories/heart-check-phc/app/api/print-ticket/ewtComputation.ts), [sendQueueConfirmationSMS.ts](file:///home/jensen/Github-Repositories/heart-check-phc/app/actions/sendQueueConfirmationSMS.ts), and [ESTIMATED_WAIT_TIME.md](file:///home/jensen/Github-Repositories/heart-check-phc/docs/specifications/ESTIMATED_WAIT_TIME.md). |
 | **Change phone encryption, reveal actions, or security** | [phoneSecurity.ts](file:///home/jensen/Github-Repositories/heart-check-phc/app/actions/phoneSecurity.ts), [phoneEncryption.ts](file:///home/jensen/Github-Repositories/heart-check-phc/lib/crypto/phoneEncryption.ts), and [DATA_ENCRYPTION_GUIDE.md](file:///home/jensen/Github-Repositories/heart-check-phc/docs/specifications/DATA_ENCRYPTION_GUIDE.md). |
 | **Change queue ticket prefixes and numeric rules** | [smsPrefixRules.ts](file:///home/jensen/Github-Repositories/heart-check-phc/app/kiosk/pages/sms-input/constants/smsPrefixRules.ts). |
 
@@ -248,7 +249,8 @@ Final completion screen presenting the physical queue ticket preview, triggering
 - **Where to Edit Texts:**
   - [printHeaderTexts.ts](file:///home/jensen/Github-Repositories/heart-check-phc/app/kiosk/pages/queue-print/constants/printHeaderTexts.ts): Header thank you copy (`PrintHeaderTexts`).
   - [printFooterTexts.ts](file:///home/jensen/Github-Repositories/heart-check-phc/app/kiosk/pages/queue-print/constants/printFooterTexts.ts): Footer waiting instructions (`PrintFooterTexts`).
-  - [queuePrintTicketTexts.ts](file:///home/jensen/Github-Repositories/heart-check-phc/app/kiosk/pages/queue-print/constants/queuePrintTicketTexts.ts): Ticket card labels, metadata prefixes, default destination, and accessible copy (`QueuePrintTicketTexts`).
+  - [queuePrintTicketTexts.ts](file:///home/jensen/Github-Repositories/heart-check-phc/app/kiosk/pages/queue-print/constants/queuePrintTicketTexts.ts): Ticket card labels, metadata prefixes, default destination, accessible copy, and EWT section headers (`QueuePrintTicketTexts`).
+  - [ewtTexts.ts](file:///home/jensen/Github-Repositories/heart-check-phc/app/kiosk/constants/ewtTexts.ts): Centralized Estimated Wait Time range definitions, bilingual labels, and disclaimers (`EWT_TEXTS`, `formatEwtLabel`).
 - **Where to Edit Styles:**
   - [printHeader.ts](file:///home/jensen/Github-Repositories/heart-check-phc/app/kiosk/pages/queue-print/constants/printHeader.ts): Header typography (`PrintHeaderStyle`).
   - [printFooter.ts](file:///home/jensen/Github-Repositories/heart-check-phc/app/kiosk/pages/queue-print/constants/printFooter.ts): Footer notice typography (`PrintFooterStyle`).

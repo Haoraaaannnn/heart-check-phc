@@ -12,34 +12,38 @@ This document serves as an optional, high-signal, token-efficient session handof
 
 ## Active Session Status
 
-- **Active Milestone / Task:** System-Wide Operational & Clinical Notifications Upgrade (Completed)
+- **Active Milestone / Task:** Estimated Wait Time (EWT) Full System Implementation (Completed)
 - **Active Git Branch:** `patch/after-client-consultation-patches`
-- **Session Focus:** Added comprehensive, multi-event system notifications across Heart Check PHC, fixed and standardized all notification message copy to professional clinical standards, eliminated emojis completely, and extended real-time notifications to SuperAdmin and Transfer workstations.
+- **Session Focus:** Implemented complete end-to-end Estimated Wait Time system across kiosk screen, ESC/POS hardware thermal printing, database persistence, and automated SMS confirmation dispatch.
 
 ---
 
 ## Decisions Made
 
-1. **Dedicated Notification Copy and Style Dictionaries:** Created `app/dashboard/constants/notificationTexts.ts` and `app/dashboard/constants/notificationStyles.ts` to strictly separate presentation, copy, and styling in compliance with AGENTS.md Rule 2 and Rule 6 (zero emojis).
-2. **Comprehensive System Notification Coverage:** Overhauled `useBottleneckNotifications.ts` to track 7 critical operational events: extended doctor consultation (>15m bottleneck), prolonged queue wait times (>30m critical, >15m warning), department queue surges (>=5 warning, >=10 bottleneck), unattended idle/skipped tickets, available stations with doctors on duty while queues wait, daily intake and completion milestones, and network offline/online status.
-3. **Database Security & Immutability:** Enforced `is_historical = false` and day-scoping on all notification patient queries to preserve historical research data boundaries.
-4. **Deterministic Notification Identity & Debounced Realtime:** Used deterministic event IDs to prevent duplicate notifications during polling ticks, remembered user-dismissed and read states, auto-purged stale conditions, and added 500ms debounced Supabase Realtime subscription on `patients` table.
-5. **Severity Filtering in Dropdown:** Upgraded `NotificationDropdown.tsx` with severity filter tabs (`All`, `Alerts`, `Warnings`, `Notices`), clean Boxicons, high-contrast solid surfaces, and natural text wrapping (`break-words`, `whitespace-normal`).
-6. **Universal Workstation Visibility:** Integrated `NotificationDropdown` into `SuperAdminHeader.tsx` and `app/transfer/page.tsx`, bringing real-time notification alerts to SuperAdmin and Transfer workstations alongside the existing Admin Dashboard and Nurse Station.
+1. **Hybrid Position-Based + Rolling Rate Formula:** Calculated EWT from live queue depth (`created_at < current`), active serving stations (`status = 'in-progress'`), and rolling duration averages for completed consultations in the service lane, with cold-start buffers and nearest 5-minute interval rounding.
+2. **Range Display Standards (Zero False Precision):** Formatted raw calculated wait minutes into friendly ranges (`formatEwtLabel`, `formatEwtReceiptLabel`, `formatEwtSmsLabel`) to reflect clinical realities and reduce patient anxiety.
+3. **Database Security & RLS Compliance:** Prepared migration `20261020_add_estimated_wait_minutes.sql`. Route handler `/api/print-ticket` uses `createAdminClient()` on the server to persist `estimated_wait_minutes` while strictly honoring `is_historical = false` RESTRICTIVE policies.
+4. **Hardware Receipt Integration:** Formatted ESC/POS layout with condensed `Est. Wait: ~XX min - XX hr` line within the 32-column constraint without disrupting the ticket barcode or cut command.
+5. **Initial Confirmation SMS Alert:** Added `sendQueueConfirmationSMS.ts` to dispatch bilingual Taglish confirmation SMS upon ticket generation, with 30-second cooldown protection against toll fraud and server-side phone decryption.
+6. **Accessible Kiosk UI Display:** Rendered prominent Estimated Wait Time callout on `QueuePrintContent.tsx` with senior-friendly typography, natural text wrapping, and bilingual disclaimers.
 
 ---
 
 ## Files Changed or Created
 
-- `app/dashboard/constants/notificationTexts.ts` (Created: centralized UI copy, status tags, and message templates)
-- `app/dashboard/constants/notificationStyles.ts` (Created: centralized Tailwind style tokens for dropdown and cards)
-- `app/dashboard/hooks/useBottleneckNotifications.ts` (Upgraded: multi-event system notifications controller with debounced realtime sync)
-- `app/dashboard/components/NotificationDropdown.tsx` (Upgraded: enterprise dropdown with filter tabs, clean icons, zero emojis)
-- `app/superadmin/components/navigation/SuperAdminHeader.tsx` (Updated: wired `useBottleneckNotifications` and `NotificationDropdown`)
-- `app/transfer/page.tsx` (Updated: wired `useBottleneckNotifications` and `NotificationDropdown` in top header bar)
-- `app/dashboard/README.md` (Updated: added notification files to Where to Edit table and bumped date to 2026-10-20)
-- `app/superadmin/README.md` (Updated: updated Where to Edit table and date)
-- `app/transfer/README.md` (Updated: updated Where to Edit table and date)
+- `docs/migrations/20261020_add_estimated_wait_minutes.sql` (Created: schema migration adding `estimated_wait_minutes` and performance index)
+- `docs/specifications/ESTIMATED_WAIT_TIME.md` (Created: complete feature design and implementation guideline)
+- `docs/specifications/DATABASE_SCHEMA.md` (Updated: documented `estimated_wait_minutes` column and date stamp)
+- `docs/specifications/README.md` (Updated: indexed `ESTIMATED_WAIT_TIME.md`)
+- `app/kiosk/constants/ewtTexts.ts` (Created: centralized EWT copy dictionary and range formatting functions)
+- `app/api/print-ticket/constants/printTexts.ts` (Created: ESC/POS layout text constants)
+- `app/api/print-ticket/ewtComputation.ts` (Created: server-side dynamic EWT calculation engine)
+- `app/api/print-ticket/route.ts` (Updated: calculates/persists EWT, formats thermal receipt, and triggers confirmation SMS)
+- `app/actions/sendQueueConfirmationSMS.ts` (Created: server action for automated confirmation SMS with EWT)
+- `app/kiosk/pages/queue-print/constants/queuePrintTicketTexts.ts` (Updated: added EWT section labels and disclaimers)
+- `app/kiosk/pages/queue-print/constants/queuePrintTicket.ts` (Updated: added EWT typography tokens and CSS styles)
+- `app/kiosk/pages/queue-print/components/QueuePrintContent.tsx` (Updated: renders dynamic EWT on kiosk confirmation card)
+- `app/kiosk/README.md` (Updated: added EWT files to Where to Edit table and date stamp)
 - `brain/CURRENT.md` (Updated: added Milestone 7)
 - `brain/SESSION_LOG.md` (Updated: session handoff)
 

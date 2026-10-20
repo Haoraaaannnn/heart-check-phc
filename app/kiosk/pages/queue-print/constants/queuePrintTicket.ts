@@ -36,6 +36,14 @@ export const QueuePrintTicketTypography = {
     locationValueSize: "clamp(18px, 2vw, 22px)",
     /** Timestamp text font scale. */
     metaDateSize: "clamp(15px, 1.6vw, 18px)",
+    /** Primary English EWT title text scale. */
+    ewtLabelSize: "clamp(16px, 1.8vw, 19px)",
+    /** Secondary Filipino EWT title text scale. */
+    ewtLabelFilSize: "clamp(13px, 1.4vw, 15px)",
+    /** Highlighted estimated wait time range value typography scale. */
+    ewtValueSize: "clamp(22px, 2.6vw, 28px)",
+    /** Disclaimer typography scale. */
+    ewtDisclaimerSize: "clamp(11px, 1.1vw, 13px)",
 } as const;
 
 /** Inline styles for `QueuePrintContent`. */
@@ -207,6 +215,55 @@ export const QueuePrintTicketStyle = {
     metaDot: {
         color: "#9CA3AF",
         fontWeight: 700,
+    },
+    /** Container wrapping the Estimated Wait Time callout on the ticket. */
+    ewtContainer: {
+        display: "flex",
+        flexDirection: "column",
+        alignItems: "center",
+        justifyContent: "center",
+        width: "100%",
+        paddingTop: 4,
+        paddingBottom: 4,
+        flexShrink: 0,
+    },
+    /** English EWT title. */
+    ewtLabel: {
+        fontSize: "clamp(16px, 1.8vw, 19px)",
+        fontWeight: 700,
+        color: "#4B5563",
+        lineHeight: 1.25,
+        margin: 0,
+    },
+    /** Filipino secondary EWT title. */
+    ewtLabelFil: {
+        fontSize: "clamp(13px, 1.4vw, 15px)",
+        fontWeight: 600,
+        color: "#6B7280",
+        lineHeight: 1.2,
+        marginTop: 2,
+        marginBottom: 0,
+    },
+    /** Highlighted EWT range text. */
+    ewtValue: {
+        fontSize: "clamp(22px, 2.6vw, 28px)",
+        fontWeight: 900,
+        color: "#1E40AF",
+        lineHeight: 1.2,
+        marginTop: 4,
+        marginBottom: 2,
+        wordBreak: "break-word",
+        whiteSpace: "normal",
+    },
+    /** Disclaimer notice below EWT range. */
+    ewtDisclaimer: {
+        fontSize: "clamp(11px, 1.1vw, 13px)",
+        fontWeight: 500,
+        color: "#6B7280",
+        lineHeight: 1.3,
+        marginTop: 3,
+        wordBreak: "break-word",
+        whiteSpace: "normal",
     },
 } satisfies Record<string, CSSProperties>;
 
