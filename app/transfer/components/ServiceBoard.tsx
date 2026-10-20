@@ -187,18 +187,18 @@ export function ServiceBoard({
           )}
 
           {/* Consultation & Screening Cubicles - Horizontal row same as counters */}
-          <div className="bg-white border border-slate-200 rounded-2xl shadow-xs p-2.5 sm:p-3 select-none shrink-0 overflow-hidden">
-            <div className="flex items-center justify-between gap-2 mb-2 pb-1.5 border-b border-slate-100">
+          <div className="bg-white dark:bg-[#1a1a1a] border border-slate-200 dark:border-[#2e2e2e] rounded-2xl shadow-xs p-2.5 sm:p-3 select-none shrink-0 overflow-hidden">
+            <div className="flex items-center justify-between gap-2 mb-2 pb-1.5 border-b border-slate-100 dark:border-[#2e2e2e]">
               <div className="flex items-center gap-2 min-w-0">
-                <span className="w-2 h-2 rounded-full bg-slate-700 inline-block shrink-0" />
-                <h2 className="text-slate-700 font-bold text-xs tracking-wider uppercase truncate">
+                <span className="w-2 h-2 rounded-full bg-slate-700 dark:bg-slate-300 inline-block shrink-0" />
+                <h2 className="text-slate-700 dark:text-[#f5f5f5] font-bold text-xs tracking-wider uppercase truncate">
                   {transferTexts.cubiclesHeading}
                 </h2>
-                <span className="text-[10px] font-bold px-1.5 py-0.2 rounded-md bg-slate-100 text-slate-700 shrink-0">
+                <span className="text-[10px] font-bold px-1.5 py-0.2 rounded-md bg-slate-100 dark:bg-[#242424] text-slate-700 dark:text-[#a3a3a3] shrink-0">
                   {cubicles.length}
                 </span>
               </div>
-              <span className="text-[10px] text-slate-400 font-medium shrink-0 truncate max-w-[120px] sm:max-w-none">
+              <span className="text-[10px] text-slate-400 dark:text-[#737373] font-medium shrink-0 truncate max-w-[120px] sm:max-w-none">
                 {category}
               </span>
             </div>
@@ -211,7 +211,7 @@ export function ServiceBoard({
 
               if (safeCubicles.length === 0) {
                 return (
-                  <p className="text-slate-400 text-xs py-2 text-center">
+                  <p className="text-slate-400 dark:text-[#737373] text-xs py-2 text-center">
                     {transferTexts.noRoomsConfiguredDesc}
                   </p>
                 );

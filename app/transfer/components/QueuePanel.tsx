@@ -81,15 +81,15 @@ export function QueuePanel({
   const safeIdle = Array.isArray(idlePatients) ? idlePatients : [];
 
   return (
-    <div className="h-full flex flex-col min-h-0 bg-white border border-slate-200 rounded-2xl shadow-xs overflow-hidden">
+    <div className="h-full flex flex-col min-h-0 bg-white dark:bg-[#1a1a1a] border border-slate-200 dark:border-[#2e2e2e] rounded-2xl shadow-xs overflow-hidden">
       {/* Tab Switcher Header */}
-      <div className="shrink-0 flex border-b border-slate-200 bg-slate-50/80 p-1.5 gap-1.5 select-none">
+      <div className="shrink-0 flex border-b border-slate-200 dark:border-[#2e2e2e] bg-slate-50/80 dark:bg-[#141414] p-1.5 gap-1.5 select-none">
         <button
           type="button"
           onClick={() => setActiveTab('queue')}
           className={`flex-1 flex items-center justify-center gap-2 py-1.5 px-3 rounded-xl font-bold text-xs transition-all cursor-pointer min-w-0 ${
             activeTab === 'queue'
-              ? 'bg-white text-slate-800 shadow-xs'
+              ? 'bg-white dark:bg-[#242424] text-slate-800 dark:text-[#f5f5f5] shadow-xs'
               : 'text-slate-500 hover:text-slate-700 dark:text-[#a3a3a3] dark:hover:text-[#f5f5f5] hover:bg-white/50 dark:hover:bg-[#242424]'
           }`}
         >
@@ -107,7 +107,7 @@ export function QueuePanel({
           onClick={() => setActiveTab('idle')}
           className={`flex-1 flex items-center justify-center gap-2 py-1.5 px-3 rounded-xl font-bold text-xs transition-all cursor-pointer min-w-0 ${
             activeTab === 'idle'
-              ? 'bg-white text-slate-800 shadow-xs'
+              ? 'bg-white dark:bg-[#242424] text-slate-800 dark:text-[#f5f5f5] shadow-xs'
               : 'text-slate-500 hover:text-slate-700 dark:text-[#a3a3a3] dark:hover:text-[#f5f5f5] hover:bg-white/50 dark:hover:bg-[#242424]'
           }`}
         >

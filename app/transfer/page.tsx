@@ -10,6 +10,7 @@
 
 import React, { useState, useEffect, useCallback, useRef } from 'react';
 import { useRouter } from 'next/navigation';
+import { useTheme } from 'next-themes';
 import { supabase } from '@/lib/supabase';
 import { Sidebar } from '@/app/transfer/components/Sidebar';
 import { BreadcrumbNav } from '@/app/transfer/components/BreadcrumbNav';
@@ -53,6 +54,16 @@ export default function TransferPage() {
   const checking = useRequireAuth();
   useIdleTimeout();
   const router = useRouter();
+  const { theme, setTheme } = useTheme();
+  const [mounted, setMounted] = useState<boolean>(false);
+
+  useEffect(() => {
+    setMounted(true);
+  }, []);
+
+  const toggleTheme = () => {
+    setTheme(theme === 'dark' ? 'light' : 'dark');
+  };
 
   // Selected Service and Room State
   const [selectedCategory, setSelectedCategory] = useState<string | null>(null);
@@ -987,19 +998,19 @@ export default function TransferPage() {
 
   if (checking) {
     return (
-      <div className="flex min-h-screen items-center justify-center bg-slate-50">
-        <div className="w-10 h-10 border-4 border-slate-200 border-t-[#cc3535] rounded-full animate-spin" />
+      <div className="flex min-h-screen items-center justify-center bg-slate-50 dark:bg-[#0d0d0d]">
+        <div className="w-10 h-10 border-4 border-slate-200 dark:border-[#2e2e2e] border-t-[#cc3535] rounded-full animate-spin" />
       </div>
     );
   }
 
   if (isLoading) {
     return (
-      <div className="flex min-h-screen items-center justify-center bg-slate-50">
+      <div className="flex min-h-screen items-center justify-center bg-slate-50 dark:bg-[#0d0d0d]">
         <div className="text-center">
-          <div className="w-12 h-12 border-4 border-slate-200 border-t-[#cc3535] rounded-full animate-spin mx-auto mb-4" />
-          <p className="text-slate-700 font-bold text-sm">Loading dashboard...</p>
-          <p className="text-slate-400 text-xs mt-1">Synchronizing patients and cubicles</p>
+          <div className="w-12 h-12 border-4 border-slate-200 dark:border-[#2e2e2e] border-t-[#cc3535] rounded-full animate-spin mx-auto mb-4" />
+          <p className="text-slate-700 dark:text-[#f5f5f5] font-bold text-sm">Loading dashboard...</p>
+          <p className="text-slate-400 dark:text-[#737373] text-xs mt-1">Synchronizing patients and cubicles</p>
         </div>
       </div>
     );
@@ -1010,8 +1021,8 @@ export default function TransferPage() {
       return (
         <div className="flex items-center justify-center h-[65vh]">
           <div className="text-center max-w-sm">
-            <h2 className="text-base font-bold text-slate-800">{transferTexts.noServiceSelectedTitle}</h2>
-            <p className="text-slate-500 text-xs mt-1">
+            <h2 className="text-base font-bold text-slate-800 dark:text-[#f5f5f5]">{transferTexts.noServiceSelectedTitle}</h2>
+            <p className="text-slate-500 dark:text-[#a3a3a3] text-xs mt-1">
               {transferTexts.noServiceSelectedDesc}
             </p>
           </div>
@@ -1141,7 +1152,7 @@ export default function TransferPage() {
   const showConfirmModal = (isConsultation || isOPScreening) && pendingUpdates.length > 0;
 
   return (
-    <div className="flex h-screen overflow-hidden bg-slate-50 font-sans text-slate-800">
+    <div className="flex h-screen overflow-hidden bg-slate-50 dark:bg-[#0d0d0d] font-sans text-slate-800 dark:text-[#f5f5f5]">
       {/* Connection status banner — visible on weak signal, offline, or pending sync */}
       <ConnectionStatusBanner
         isOnline={isOnline}
@@ -1174,7 +1185,7 @@ export default function TransferPage() {
         }`}
       >
         {/* Top Header Bar (Fixed) */}
-        <header className="h-16 px-4 sm:px-6 bg-white border-b border-slate-200 flex items-center justify-between gap-3 sm:gap-4 shrink-0 z-30 shadow-2xs">
+        <header className="h-16 px-4 sm:px-6 bg-white dark:bg-[#141414] border-b border-slate-200 dark:border-[#2e2e2e] flex items-center justify-between gap-3 sm:gap-4 shrink-0 z-30 shadow-2xs">
           <div className="flex items-center gap-2 sm:gap-3 min-w-0">
             {/* Sidebar Expand / Collapse Toggle Button */}
             <button
@@ -1190,7 +1201,7 @@ export default function TransferPage() {
               />
             </button>
 
-            <span className="text-xs font-bold text-slate-400 uppercase tracking-widest hidden sm:inline">
+            <span className="text-xs font-bold text-slate-400 dark:text-[#737373] uppercase tracking-widest hidden sm:inline">
               PHC Transfer
             </span>
           </div>
@@ -1203,8 +1214,8 @@ export default function TransferPage() {
                 onClick={() => setShowUnassignedMenu(v => !v)}
                 className={`flex items-center gap-1.5 px-3 py-1.5 rounded-xl border text-xs font-bold transition-all cursor-pointer whitespace-nowrap shrink-0 ${
                   totalUnassigned > 0
-                    ? 'bg-red-50 border-red-200 text-[#cc3535] hover:bg-red-100'
-                    : 'bg-slate-50 border-slate-200 text-slate-400'
+                    ? 'bg-red-50 dark:bg-red-950/40 border-red-200 dark:border-red-900/60 text-[#cc3535] dark:text-[#f87171] hover:bg-red-100 dark:hover:bg-red-900/50'
+                    : 'bg-slate-50 dark:bg-[#1f1f1f] border-slate-200 dark:border-[#2e2e2e] text-slate-400 dark:text-[#737373]'
                 }`}
                 title="Patients waiting to be assigned"
               >
@@ -1217,15 +1228,15 @@ export default function TransferPage() {
                     className="fixed inset-0 z-30"
                     onClick={() => setShowUnassignedMenu(false)}
                   />
-                  <div className="absolute right-0 mt-2 w-72 bg-white rounded-2xl shadow-xl border border-slate-200 z-40 overflow-hidden">
-                    <div className="px-4 py-2.5 border-b border-slate-100 text-xs font-bold text-slate-600 uppercase tracking-wider bg-slate-50">
+                  <div className="absolute right-0 mt-2 w-72 bg-white dark:bg-[#1a1a1a] rounded-2xl shadow-xl border border-slate-200 dark:border-[#2e2e2e] z-40 overflow-hidden">
+                    <div className="px-4 py-2.5 border-b border-slate-100 dark:border-[#2e2e2e] text-xs font-bold text-slate-600 dark:text-[#a3a3a3] uppercase tracking-wider bg-slate-50 dark:bg-[#141414]">
                       Needs Attention
                     </div>
                     <div className="max-h-72 overflow-y-auto phc-scroll">
                       {Object.entries(queueCounts)
                         .filter(([cat]) => myServices.includes(cat))
                         .filter(([, n]) => n > 0).length === 0 ? (
-                        <p className="px-4 py-6 text-xs text-slate-400 text-center">
+                        <p className="px-4 py-6 text-xs text-slate-400 dark:text-[#737373] text-center">
                           {transferTexts.allCaughtUp}
                         </p>
                       ) : (
@@ -1238,9 +1249,9 @@ export default function TransferPage() {
                               key={cat}
                               type="button"
                               onClick={() => jumpToCategory(cat)}
-                              className="w-full flex items-center justify-between px-4 py-2.5 text-xs font-semibold hover:bg-red-50 transition-colors text-left border-b border-slate-50"
+                              className="w-full flex items-center justify-between px-4 py-2.5 text-xs font-semibold hover:bg-red-50 dark:hover:bg-[#242424] transition-colors text-left border-b border-slate-50 dark:border-[#2e2e2e]"
                             >
-                              <span className="text-slate-700">{cat}</span>
+                              <span className="text-slate-700 dark:text-[#f5f5f5]">{cat}</span>
                               <NotificationBadge count={n} color="brand" />
                             </button>
                           ))
@@ -1253,8 +1264,8 @@ export default function TransferPage() {
 
             {/* Syncing Indicator */}
             {isSyncing && !isConfirming && (
-              <div className="flex items-center gap-2 px-3 py-1 bg-blue-50 text-blue-700 border border-blue-200 rounded-xl text-xs font-semibold whitespace-nowrap shrink-0">
-                <div className="w-2.5 h-2.5 border-2 border-blue-600 border-t-transparent rounded-full animate-spin" />
+              <div className="flex items-center gap-2 px-3 py-1 bg-blue-50 dark:bg-blue-950/40 text-blue-700 dark:text-blue-300 border border-blue-200 dark:border-blue-900/60 rounded-xl text-xs font-semibold whitespace-nowrap shrink-0">
+                <div className="w-2.5 h-2.5 border-2 border-blue-600 dark:border-blue-400 border-t-transparent rounded-full animate-spin" />
                 <span>Syncing...</span>
               </div>
             )}
@@ -1263,16 +1274,32 @@ export default function TransferPage() {
             <button
               type="button"
               onClick={() => setShowDoctorsModal(true)}
-              className="px-3 py-1.5 bg-slate-100 hover:bg-slate-200 active:bg-slate-300 rounded-xl text-xs font-bold transition-colors text-slate-700 cursor-pointer shadow-2xs whitespace-nowrap shrink-0"
+              className="px-3 py-1.5 bg-slate-100 dark:bg-[#242424] hover:bg-slate-200 dark:hover:bg-[#2e2e2e] active:bg-slate-300 dark:active:bg-[#404040] rounded-xl text-xs font-bold transition-colors text-slate-700 dark:text-[#f5f5f5] border border-transparent dark:border-[#2e2e2e] cursor-pointer shadow-2xs whitespace-nowrap shrink-0"
               title="Manage Doctors"
             >
               {transferTexts.doctorsBtn}
             </button>
+
+            {/* Dual Theme Toggle */}
+            {mounted && (
+              <button
+                type="button"
+                onClick={toggleTheme}
+                className="p-1.5 sm:p-2 rounded-xl text-slate-500 hover:text-slate-800 hover:bg-slate-100 active:bg-slate-200 dark:text-[#a3a3a3] dark:hover:text-[#f5f5f5] dark:hover:bg-[#242424] transition-colors cursor-pointer shrink-0"
+                title={theme === 'dark' ? transferTexts.themeToggleLight : transferTexts.themeToggleDark}
+                aria-label={theme === 'dark' ? transferTexts.themeToggleLight : transferTexts.themeToggleDark}
+              >
+                <i
+                  className={`bx ${theme === 'dark' ? 'bx-sun' : 'bx-moon'} text-xl block`}
+                  aria-hidden="true"
+                />
+              </button>
+            )}
           </div>
         </header>
 
         {/* Sticky Sub-Header: Back Button & Breadcrumb Navigation (Permanently Pinned) */}
-        <div className="shrink-0 px-4 sm:px-6 py-2.5 bg-white/95 backdrop-blur-md border-b border-slate-200/90 z-20 flex items-center min-h-[52px]">
+        <div className="shrink-0 px-4 sm:px-6 py-2.5 bg-white/95 dark:bg-[#141414]/95 backdrop-blur-md border-b border-slate-200/90 dark:border-[#2e2e2e] z-20 flex items-center min-h-[52px]">
           <BreadcrumbNav
             selectedCategory={selectedCategory}
             selectedSubcategory={
@@ -1302,21 +1329,21 @@ export default function TransferPage() {
           {accessStatus === 'loading' ? (
             <div className="flex items-center justify-center py-20">
               <div className="text-center">
-                <div className="w-8 h-8 border-3 border-slate-200 border-t-[#cc3535] rounded-full animate-spin mx-auto mb-3" />
-                <p className="text-slate-500 text-xs font-medium">Verifying account access...</p>
+                <div className="w-8 h-8 border-3 border-slate-200 dark:border-[#2e2e2e] border-t-[#cc3535] rounded-full animate-spin mx-auto mb-3" />
+                <p className="text-slate-500 dark:text-[#a3a3a3] text-xs font-medium">Verifying account access...</p>
               </div>
             </div>
           ) : accessStatus === 'error' ? (
-            <div className="rounded-2xl border border-red-200 bg-red-50 p-6 text-center max-w-md mx-auto my-12">
-              <h2 className="text-sm font-bold text-red-800">Unable to load access</h2>
-              <p className="mt-1 text-xs text-red-600">
+            <div className="rounded-2xl border border-red-200 dark:border-red-900/50 bg-red-50 dark:bg-red-950/30 p-6 text-center max-w-md mx-auto my-12">
+              <h2 className="text-sm font-bold text-red-800 dark:text-red-200">Unable to load access</h2>
+              <p className="mt-1 text-xs text-red-600 dark:text-red-400">
                 Please refresh the page or contact a Super Admin.
               </p>
             </div>
           ) : accessStatus === 'unassigned' ? (
-            <div className="rounded-2xl border border-amber-200 bg-amber-50 p-6 text-center max-w-md mx-auto my-12 shadow-xs">
-              <h2 className="text-sm font-bold text-slate-800">No services assigned</h2>
-              <p className="mt-1 text-xs text-slate-600">
+            <div className="rounded-2xl border border-amber-200 dark:border-amber-900/50 bg-amber-50 dark:bg-amber-950/30 p-6 text-center max-w-md mx-auto my-12 shadow-xs">
+              <h2 className="text-sm font-bold text-slate-800 dark:text-amber-100">No services assigned</h2>
+              <p className="mt-1 text-xs text-slate-600 dark:text-amber-300">
                 Ask a Super Admin to assign your services, rooms, and counters before managing patients.
               </p>
             </div>

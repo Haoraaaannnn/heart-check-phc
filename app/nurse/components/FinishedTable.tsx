@@ -91,7 +91,7 @@ export function FinishedTable({ patients, className = '' }: FinishedTableProps) 
             value={searchTerm}
             onChange={(e) => setSearchTerm(e.target.value)}
             placeholder={nurseTexts.searchFinishedPlaceholder}
-            className="w-full px-3.5 py-2 rounded-xl text-xs bg-slate-50 border border-slate-200 text-slate-700 placeholder-slate-400 focus:outline-hidden focus:ring-2 focus:ring-[#cc3535]/30 focus:border-[#cc3535] transition"
+            className="w-full px-3.5 py-2 rounded-xl text-xs bg-slate-50 dark:bg-[#1f1f1f] border border-slate-200 dark:border-[#2e2e2e] text-slate-700 dark:text-[#f5f5f5] placeholder-slate-400 dark:placeholder-[#737373] focus:outline-hidden focus:ring-2 focus:ring-[#cc3535]/30 focus:border-[#cc3535] transition"
           />
         </div>
       )}
@@ -99,14 +99,14 @@ export function FinishedTable({ patients, className = '' }: FinishedTableProps) 
       {/* Table Content */}
       {filteredPatients.length === 0 ? (
         <div className="py-12 text-center">
-          <p className="text-xs text-slate-400 font-medium">
+          <p className="text-xs text-slate-400 dark:text-[#737373] font-medium">
             {searchTerm ? nurseTexts.noMatchingPatients : nurseTexts.emptyFinished}
           </p>
         </div>
       ) : (
-        <div className="overflow-x-auto rounded-xl border border-slate-200">
+        <div className="overflow-x-auto rounded-xl border border-slate-200 dark:border-[#2e2e2e]">
           <table className="w-full text-xs text-left">
-            <thead className="bg-slate-50 text-slate-500 font-semibold border-b border-slate-200">
+            <thead className="bg-slate-50 dark:bg-[#1f1f1f] text-slate-500 dark:text-[#a3a3a3] font-semibold border-b border-slate-200 dark:border-[#2e2e2e]">
               <tr>
                 <th scope="col" className="px-3.5 py-3">
                   {nurseTexts.tableQueueNo}
@@ -128,7 +128,7 @@ export function FinishedTable({ patients, className = '' }: FinishedTableProps) 
                 </th>
               </tr>
             </thead>
-            <tbody className="divide-y divide-slate-100 bg-white">
+            <tbody className="divide-y divide-slate-100 dark:divide-[#2e2e2e] bg-white dark:bg-[#1a1a1a]">
               {filteredPatients.map((patient) => {
                 const totalDuration = calculateDuration(
                   patient.consult_start || patient.created_at,
@@ -138,25 +138,25 @@ export function FinishedTable({ patients, className = '' }: FinishedTableProps) 
                 return (
                   <tr
                     key={patient.id}
-                    className="hover:bg-slate-50/80 transition-colors"
+                    className="hover:bg-slate-50/80 dark:hover:bg-[#242424] transition-colors"
                   >
                     <td className="px-3.5 py-2.5 font-black text-[#cc3535]">
                       {patient.patientNum}
                     </td>
-                    <td className="px-3.5 py-2.5 font-medium text-slate-700">
+                    <td className="px-3.5 py-2.5 font-medium text-slate-700 dark:text-[#f5f5f5]">
                       {patient.service}
                       {patient.subcategory ? ` · ${patient.subcategory}` : ''}
                     </td>
-                    <td className="px-3.5 py-2.5 text-slate-600 font-semibold">
+                    <td className="px-3.5 py-2.5 text-slate-600 dark:text-[#a3a3a3] font-semibold">
                       {patient.cubicleNum || '-'}
                     </td>
-                    <td className="px-3.5 py-2.5 text-slate-500">
+                    <td className="px-3.5 py-2.5 text-slate-500 dark:text-[#737373]">
                       {formatTime(patient.consult_end)}
                     </td>
-                    <td className="px-3.5 py-2.5 text-slate-500">
+                    <td className="px-3.5 py-2.5 text-slate-500 dark:text-[#737373]">
                       {formatTime(patient.carryout_end)}
                     </td>
-                    <td className="px-3.5 py-2.5 text-right font-mono text-slate-600">
+                    <td className="px-3.5 py-2.5 text-right font-mono text-slate-600 dark:text-[#a3a3a3]">
                       {totalDuration}
                     </td>
                   </tr>

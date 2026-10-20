@@ -60,24 +60,24 @@ export function FinishedDrawer({ isOpen, onClose, patients }: FinishedDrawerProp
       <div
         style={NurseStyle.drawerContent}
         onClick={(e) => e.stopPropagation()}
-        className="animate-in slide-in-from-right duration-250 border-l border-slate-200"
+        className="animate-in slide-in-from-right duration-250 border-l border-slate-200 dark:border-[#2e2e2e] bg-white dark:bg-[#1a1a1a]"
       >
         {/* Drawer Header */}
-        <div className="flex items-center justify-between p-5 border-b border-slate-200 bg-slate-50/80 backdrop-blur-xs shrink-0">
+        <div className="flex items-center justify-between p-5 border-b border-slate-200 dark:border-[#2e2e2e] bg-slate-50/80 dark:bg-[#141414]/90 backdrop-blur-xs shrink-0">
           <div className="flex items-center gap-3">
             <div>
               <div className="flex items-center gap-2">
                 <h2
                   id="finished-drawer-title"
-                  className="text-base font-bold text-slate-800 tracking-tight"
+                  className="text-base font-bold text-slate-800 dark:text-[#f5f5f5] tracking-tight"
                 >
                   {nurseTexts.stageFinishedHeading}
                 </h2>
-                <span className="px-2 py-0.5 rounded-md text-xs font-bold bg-emerald-100 text-emerald-800">
+                <span className="px-2 py-0.5 rounded-md text-xs font-bold bg-emerald-100 dark:bg-emerald-950/60 text-emerald-800 dark:text-emerald-300">
                   {patients.length}
                 </span>
               </div>
-              <p className="text-xs text-slate-500 font-medium">
+              <p className="text-xs text-slate-500 dark:text-[#a3a3a3] font-medium">
                 {nurseTexts.drawerSubtitle}
               </p>
             </div>
@@ -99,11 +99,11 @@ export function FinishedDrawer({ isOpen, onClose, patients }: FinishedDrawerProp
         </div>
 
         {/* Drawer Footer */}
-        <div className="p-4 border-t border-slate-200 bg-slate-50 flex items-center justify-end shrink-0">
+        <div className="p-4 border-t border-slate-200 dark:border-[#2e2e2e] bg-slate-50 dark:bg-[#141414] flex items-center justify-end shrink-0">
           <button
             type="button"
             onClick={onClose}
-            className="px-4 py-2 rounded-xl text-xs font-bold bg-slate-200 hover:bg-slate-300 text-slate-700 transition cursor-pointer"
+            className="px-4 py-2 rounded-xl text-xs font-bold bg-slate-200 dark:bg-[#242424] hover:bg-slate-300 dark:hover:bg-[#2e2e2e] text-slate-700 dark:text-[#f5f5f5] border border-transparent dark:border-[#2e2e2e] transition cursor-pointer"
           >
             {nurseTexts.btnCloseFinished}
           </button>

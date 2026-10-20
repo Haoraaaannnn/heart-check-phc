@@ -163,33 +163,33 @@ export function DoctorsPanel() {
   };
 
   if (loading) {
-    return <p className="text-gray-400 text-sm">Loading...</p>;
+    return <p className="text-gray-400 dark:text-[#a3a3a3] text-sm">Loading...</p>;
   }
 
   return (
     <div className="flex flex-col gap-6">
       <div className="flex items-start justify-between gap-4">
         <div>
-          <h2 className="text-lg font-bold text-gray-900">Doctors</h2>
-          <p className="text-gray-500 text-sm mt-1">
+          <h2 className="text-lg font-bold text-gray-900 dark:text-[#f5f5f5]">Doctors</h2>
+          <p className="text-gray-500 dark:text-[#a3a3a3] text-sm mt-1">
             Add doctors, then pick one below to choose which cubicles they cover.
           </p>
         </div>
         <button
           onClick={handleAddClick}
-          className="shrink-0 px-4 py-2 bg-blue-600 text-white rounded-lg hover:bg-blue-700 transition text-sm font-medium cursor-pointer"
+          className="shrink-0 px-4 py-2 bg-blue-600 hover:bg-blue-700 text-white rounded-lg transition text-sm font-medium cursor-pointer"
         >
           + Add Doctor
         </button>
       </div>
 
       {doctors.length === 0 ? (
-        <div className="bg-white rounded-2xl border-2 border-dashed border-gray-200 p-10 text-center">
-          <p className="text-gray-700 font-semibold">{transferTexts.noRoomsConfiguredTitle}</p>
-          <p className="text-gray-400 text-sm mt-1 mb-4">Add a doctor to start assigning them to cubicles.</p>
+        <div className="bg-white dark:bg-[#1a1a1a] rounded-2xl border-2 border-dashed border-gray-200 dark:border-[#2e2e2e] p-10 text-center">
+          <p className="text-gray-700 dark:text-[#f5f5f5] font-semibold">{transferTexts.noRoomsConfiguredTitle}</p>
+          <p className="text-gray-400 dark:text-[#a3a3a3] text-sm mt-1 mb-4">Add a doctor to start assigning them to cubicles.</p>
           <button
             onClick={handleAddClick}
-            className="px-4 py-2 bg-blue-600 text-white rounded-lg hover:bg-blue-700 transition text-sm cursor-pointer"
+            className="px-4 py-2 bg-blue-600 hover:bg-blue-700 text-white rounded-lg transition text-sm cursor-pointer"
           >
             + Add Doctor
           </button>
@@ -208,20 +208,22 @@ export function DoctorsPanel() {
                   onClick={() => setSelectedDoctorId(isSelected ? null : doc.id)}
                   className={`rounded-2xl border-2 p-4 flex flex-col gap-3 transition cursor-pointer ${
                     isSelected
-                      ? 'border-blue-500 bg-blue-50/70 shadow-sm'
-                      : 'border-gray-100 bg-white hover:border-blue-200'
+                      ? 'border-blue-500 bg-blue-50/70 dark:bg-blue-950/40 shadow-sm'
+                      : 'border-gray-100 dark:border-[#2e2e2e] bg-white dark:bg-[#1a1a1a] hover:border-blue-200 dark:hover:border-blue-800'
                   } ${!isActive ? 'opacity-70' : ''}`}
                 >
                   <div className="flex items-start justify-between gap-2">
                     <div className="min-w-0">
-                      <p className="font-semibold text-gray-900 truncate">{doc.full_name}</p>
-                      <p className={`text-xs mt-0.5 truncate ${doc.specialty ? 'text-gray-500' : 'text-gray-300 italic'}`}>
+                      <p className="font-semibold text-gray-900 dark:text-[#f5f5f5] truncate">{doc.full_name}</p>
+                      <p className={`text-xs mt-0.5 truncate ${doc.specialty ? 'text-gray-500 dark:text-[#a3a3a3]' : 'text-gray-300 dark:text-[#737373] italic'}`}>
                         {doc.specialty || 'No specialty set'}
                       </p>
                     </div>
                     <span
                       className={`shrink-0 text-[10px] font-bold px-2 py-0.5 rounded-md ${
-                        isActive ? 'bg-green-100 text-green-700' : 'bg-gray-100 text-gray-400'
+                        isActive
+                          ? 'bg-green-100 dark:bg-emerald-950/60 text-green-700 dark:text-emerald-300'
+                          : 'bg-gray-100 dark:bg-[#242424] text-gray-400 dark:text-[#737373]'
                       }`}
                     >
                       {isActive ? 'Active' : 'Inactive'}
@@ -229,25 +231,25 @@ export function DoctorsPanel() {
                   </div>
 
                   <div className="flex items-center justify-between">
-                    <span className="text-xs text-gray-500">
+                    <span className="text-xs text-gray-500 dark:text-[#a3a3a3]">
                       {roomCount} cubicle{roomCount === 1 ? '' : 's'} assigned
                     </span>
                     <div className="flex items-center gap-1.5" onClick={e => e.stopPropagation()}>
                       <button
                         onClick={() => handleToggleActive(doc)}
-                        className="px-2 py-0.5 rounded-lg text-xs font-semibold text-gray-500 hover:bg-gray-100 transition cursor-pointer"
+                        className="px-2 py-0.5 rounded-lg text-xs font-semibold text-gray-500 dark:text-[#a3a3a3] hover:bg-gray-100 dark:hover:bg-[#242424] hover:text-gray-800 dark:hover:text-[#f5f5f5] transition cursor-pointer"
                       >
                         {isActive ? transferTexts.deactivateBtn : transferTexts.activateBtn}
                       </button>
                       <button
                         onClick={() => handleEditClick(doc)}
-                        className="px-2 py-0.5 rounded-lg text-xs font-semibold text-blue-600 hover:bg-blue-50 transition cursor-pointer"
+                        className="px-2 py-0.5 rounded-lg text-xs font-semibold text-blue-600 dark:text-blue-400 hover:bg-blue-50 dark:hover:bg-blue-950/40 transition cursor-pointer"
                       >
                         {transferTexts.editBtn}
                       </button>
                       <button
                         onClick={() => setShowDeleteConfirm(doc)}
-                        className="px-2 py-0.5 rounded-lg text-xs font-semibold text-red-600 hover:bg-red-50 transition cursor-pointer"
+                        className="px-2 py-0.5 rounded-lg text-xs font-semibold text-red-600 dark:text-red-400 hover:bg-red-50 dark:hover:bg-red-950/40 transition cursor-pointer"
                       >
                         {transferTexts.deleteBtn}
                       </button>
@@ -255,7 +257,7 @@ export function DoctorsPanel() {
                   </div>
 
                   {isSelected && (
-                    <p className="text-[11px] font-semibold text-blue-600 -mb-1">
+                    <p className="text-[11px] font-semibold text-blue-600 dark:text-blue-400 -mb-1">
                       {transferTexts.editingDoctorNotice}
                     </p>
                   )}
@@ -264,13 +266,13 @@ export function DoctorsPanel() {
             })}
           </div>
 
-          <div className="bg-white rounded-2xl border border-gray-100 shadow-sm overflow-hidden">
-            <div className="px-6 py-4 border-b border-gray-100 flex items-center justify-between gap-3 flex-wrap">
+          <div className="bg-white dark:bg-[#1a1a1a] rounded-2xl border border-gray-100 dark:border-[#2e2e2e] shadow-sm overflow-hidden">
+            <div className="px-6 py-4 border-b border-gray-100 dark:border-[#2e2e2e] flex items-center justify-between gap-3 flex-wrap">
               <div>
-                <h3 className="text-base font-bold text-gray-900">
+                <h3 className="text-base font-bold text-gray-900 dark:text-[#f5f5f5]">
                   {selectedDoctor ? `Cubicles for ${selectedDoctor.full_name}` : 'Cubicle assignments'}
                 </h3>
-                <p className="text-gray-500 text-xs mt-0.5">
+                <p className="text-gray-500 dark:text-[#a3a3a3] text-xs mt-0.5">
                   {selectedDoctor
                     ? 'Tap a cubicle to assign it to them, or tap again to remove it.'
                     : 'Select a doctor above to assign their cubicles.'}
@@ -279,7 +281,7 @@ export function DoctorsPanel() {
               {selectedDoctor && (
                 <button
                   onClick={() => setSelectedDoctorId(null)}
-                  className="text-xs font-semibold text-gray-500 hover:text-gray-700 px-3 py-1.5 rounded-lg hover:bg-gray-100 dark:text-[#a3a3a3] dark:hover:text-[#f5f5f5] dark:hover:bg-[#242424] transition cursor-pointer"
+                  className="text-xs font-semibold text-gray-500 dark:text-[#a3a3a3] hover:text-gray-700 dark:hover:text-[#f5f5f5] px-3 py-1.5 rounded-lg hover:bg-gray-100 dark:hover:bg-[#242424] transition cursor-pointer"
                 >
                   Done
                 </button>
@@ -289,7 +291,7 @@ export function DoctorsPanel() {
             <div className="p-6 flex flex-col gap-5 max-h-[420px] overflow-y-auto">
               {Object.entries(groupedCubicles).map(([groupLabel, groupCubicles]) => (
                 <div key={groupLabel}>
-                  <p className="text-xs font-bold uppercase tracking-wide text-gray-400 mb-2">{groupLabel}</p>
+                  <p className="text-xs font-bold uppercase tracking-wide text-gray-400 dark:text-[#737373] mb-2">{groupLabel}</p>
                   <div className="flex flex-wrap gap-2">
                     {groupCubicles.map(cube => {
                       const assignedName = cube.doctorId ? doctorNameById.get(cube.doctorId) : null;
@@ -314,30 +316,30 @@ export function DoctorsPanel() {
                             isThisDoctor
                               ? 'border-blue-600 bg-blue-600 text-white shadow-sm'
                               : isOtherDoctor
-                              ? 'border-gray-200 bg-gray-50 text-gray-600'
-                              : 'border-gray-200 bg-white text-gray-700'
+                              ? 'border-gray-200 dark:border-[#2e2e2e] bg-gray-50 dark:bg-[#1f1f1f] text-gray-600 dark:text-[#a3a3a3]'
+                              : 'border-gray-200 dark:border-[#2e2e2e] bg-white dark:bg-[#1f1f1f] text-gray-700 dark:text-[#f5f5f5]'
                           } ${
                             selectedDoctor && !isSaving
                               ? isThisDoctor
                                 ? 'hover:bg-blue-700'
-                                : 'hover:border-blue-300 hover:bg-blue-50 cursor-pointer'
+                                : 'hover:border-blue-300 dark:hover:border-blue-700 hover:bg-blue-50 dark:hover:bg-blue-950/30 cursor-pointer'
                               : 'cursor-default'
                           }`}
                         >
                           <span className="text-xs font-semibold">{cube.cubicleNum}</span>
-                          <span className={`text-[11px] ${isThisDoctor ? 'text-blue-100' : 'text-gray-400'}`}>
+                          <span className={`text-[11px] ${isThisDoctor ? 'text-blue-100' : 'text-gray-400 dark:text-[#737373]'}`}>
                             Room {cube.room}
                           </span>
                           {assignedName && (
-                            <span className={`text-[10px] font-medium mt-0.5 ${isThisDoctor ? 'text-blue-100' : 'text-gray-500'}`}>
+                            <span className={`text-[10px] font-medium mt-0.5 ${isThisDoctor ? 'text-blue-100' : 'text-gray-500 dark:text-[#a3a3a3]'}`}>
                               {isThisDoctor ? 'Assigned' : `Dr. ${assignedName}`}
                             </span>
                           )}
                           {!assignedName && (
-                            <span className="text-[10px] font-medium mt-0.5 text-gray-300">Unassigned</span>
+                            <span className="text-[10px] font-medium mt-0.5 text-gray-300 dark:text-[#525252]">Unassigned</span>
                           )}
                           {isSaving && (
-                            <span className="absolute inset-0 flex items-center justify-center bg-white/70 rounded-xl">
+                            <span className="absolute inset-0 flex items-center justify-center bg-white/70 dark:bg-black/70 rounded-xl">
                               <span className="w-3.5 h-3.5 border-2 border-blue-400 border-t-transparent rounded-full animate-spin" />
                             </span>
                           )}
@@ -353,49 +355,49 @@ export function DoctorsPanel() {
       )}
 
       {showModal && (
-        <div className="fixed inset-0 bg-black/70 flex items-center justify-center z-50 p-4">
-          <div className="bg-white rounded-lg p-6 w-full max-w-md">
-            <h2 className="text-xl font-bold text-gray-900 mb-4">
+        <div className="fixed inset-0 bg-black/70 flex items-center justify-center z-50 p-4 backdrop-blur-xs">
+          <div className="bg-white dark:bg-[#1a1a1a] border border-gray-100 dark:border-[#2e2e2e] rounded-lg p-6 w-full max-w-md shadow-2xl">
+            <h2 className="text-xl font-bold text-gray-900 dark:text-[#f5f5f5] mb-4">
               {editingDoctor ? 'Edit Doctor' : 'Add Doctor'}
             </h2>
 
             {formError && (
-              <div className="mb-4 p-3 bg-red-100 border border-red-200 text-red-700 rounded-lg text-sm">
+              <div className="mb-4 p-3 bg-red-100 dark:bg-red-950/50 border border-red-200 dark:border-red-900/60 text-red-700 dark:text-red-300 rounded-lg text-sm">
                 {formError}
               </div>
             )}
             {formSuccess && (
-              <div className="mb-4 p-3 bg-green-100 border border-green-200 text-green-700 rounded-lg text-sm">
+              <div className="mb-4 p-3 bg-green-100 dark:bg-emerald-950/50 border border-green-200 dark:border-emerald-900/60 text-green-700 dark:text-emerald-300 rounded-lg text-sm">
                 {formSuccess}
               </div>
             )}
 
             <form onSubmit={handleSubmit}>
-              <label className="block text-sm font-medium text-gray-700 mb-1">Full name</label>
+              <label className="block text-sm font-medium text-gray-700 dark:text-[#a3a3a3] mb-1">Full name</label>
               <input
                 type="text"
                 placeholder="e.g. Juan Dela Cruz"
                 value={formName}
                 onChange={(e) => setFormName(e.target.value)}
-                className="w-full p-2 border border-gray-300 rounded-lg mb-3 text-gray-900 placeholder-gray-400 focus:outline-none focus:ring-2 focus:ring-blue-500"
+                className="w-full p-2 border border-gray-300 dark:border-[#2e2e2e] bg-white dark:bg-[#1f1f1f] rounded-lg mb-3 text-gray-900 dark:text-[#f5f5f5] placeholder-gray-400 dark:placeholder-[#737373] focus:outline-none focus:ring-2 focus:ring-blue-500"
                 required
               />
 
-              <label className="block text-sm font-medium text-gray-700 mb-1">Specialty</label>
+              <label className="block text-sm font-medium text-gray-700 dark:text-[#a3a3a3] mb-1">Specialty</label>
               <input
                 type="text"
                 placeholder="Optional, e.g. Cardiology"
                 value={formSpecialty}
                 onChange={(e) => setFormSpecialty(e.target.value)}
-                className="w-full p-2 border border-gray-300 rounded-lg mb-4 text-gray-900 placeholder-gray-400 focus:outline-none focus:ring-2 focus:ring-blue-500"
+                className="w-full p-2 border border-gray-300 dark:border-[#2e2e2e] bg-white dark:bg-[#1f1f1f] rounded-lg mb-4 text-gray-900 dark:text-[#f5f5f5] placeholder-gray-400 dark:placeholder-[#737373] focus:outline-none focus:ring-2 focus:ring-blue-500"
               />
 
-              <label className="flex items-center gap-2 mb-5 text-sm text-gray-700 cursor-pointer">
+              <label className="flex items-center gap-2 mb-5 text-sm text-gray-700 dark:text-[#a3a3a3] cursor-pointer">
                 <input
                   type="checkbox"
                   checked={formActive}
                   onChange={(e) => setFormActive(e.target.checked)}
-                  className="rounded border-gray-300 text-blue-600 focus:ring-blue-500"
+                  className="rounded border-gray-300 dark:border-[#2e2e2e] text-blue-600 focus:ring-blue-500"
                 />
                 Active — available for cubicle assignment
               </label>
@@ -404,14 +406,14 @@ export function DoctorsPanel() {
                 <button
                   type="button"
                   onClick={() => { setShowModal(false); setEditingDoctor(null); setFormError(''); setFormSuccess(''); }}
-                  className="px-4 py-2 bg-gray-200 text-gray-700 rounded-lg hover:bg-gray-300 transition cursor-pointer"
+                  className="px-4 py-2 bg-gray-200 dark:bg-[#242424] text-gray-700 dark:text-[#a3a3a3] hover:bg-gray-300 dark:hover:bg-[#2e2e2e] hover:text-gray-900 dark:hover:text-[#f5f5f5] rounded-lg transition cursor-pointer"
                 >
                   Cancel
                 </button>
                 <button
                   type="submit"
                   disabled={formLoading}
-                  className="px-4 py-2 bg-blue-600 text-white rounded-lg hover:bg-blue-700 transition disabled:opacity-50 cursor-pointer"
+                  className="px-4 py-2 bg-blue-600 hover:bg-blue-700 text-white rounded-lg transition disabled:opacity-50 cursor-pointer"
                 >
                   {formLoading ? 'Saving...' : (editingDoctor ? 'Update' : 'Create')}
                 </button>
@@ -422,18 +424,18 @@ export function DoctorsPanel() {
       )}
 
       {showDeleteConfirm && (
-        <div className="fixed inset-0 bg-black/70 flex items-center justify-center z-50 p-4">
-          <div className="bg-white rounded-lg p-6 w-full max-w-md">
-            <h2 className="text-xl font-bold text-red-600 mb-4">Confirm Delete</h2>
+        <div className="fixed inset-0 bg-black/70 flex items-center justify-center z-50 p-4 backdrop-blur-xs">
+          <div className="bg-white dark:bg-[#1a1a1a] border border-gray-100 dark:border-[#2e2e2e] rounded-lg p-6 w-full max-w-md shadow-2xl">
+            <h2 className="text-xl font-bold text-red-600 dark:text-red-400 mb-4">Confirm Delete</h2>
             {formError && (
-              <div className="mb-4 p-3 bg-red-100 border border-red-200 text-red-700 rounded-lg text-sm">
+              <div className="mb-4 p-3 bg-red-100 dark:bg-red-950/50 border border-red-200 dark:border-red-900/60 text-red-700 dark:text-red-300 rounded-lg text-sm">
                 {formError}
               </div>
             )}
-            <p className="text-gray-700">
-              Are you sure you want to delete <span className="font-semibold">{showDeleteConfirm.full_name}</span>?
+            <p className="text-gray-700 dark:text-[#a3a3a3]">
+              Are you sure you want to delete <span className="font-semibold text-gray-900 dark:text-[#f5f5f5]">{showDeleteConfirm.full_name}</span>?
               <br />
-              <span className="text-sm text-red-500">
+              <span className="text-sm text-red-500 dark:text-red-400">
                 They&apos;ll be unassigned from {cubicleCountByDoctor[showDeleteConfirm.id] || 0} cubicle
                 {(cubicleCountByDoctor[showDeleteConfirm.id] || 0) === 1 ? '' : 's'}. This cannot be undone.
               </span>
@@ -441,14 +443,14 @@ export function DoctorsPanel() {
             <div className="flex justify-end gap-2 mt-6">
               <button
                 onClick={() => { setShowDeleteConfirm(null); setFormError(''); }}
-                className="px-4 py-2 bg-gray-200 text-gray-700 rounded-lg hover:bg-gray-300 transition cursor-pointer"
+                className="px-4 py-2 bg-gray-200 dark:bg-[#242424] text-gray-700 dark:text-[#a3a3a3] hover:bg-gray-300 dark:hover:bg-[#2e2e2e] hover:text-gray-900 dark:hover:text-[#f5f5f5] rounded-lg transition cursor-pointer"
               >
                 Cancel
               </button>
               <button
                 onClick={() => handleDelete(showDeleteConfirm)}
                 disabled={formLoading}
-                className="px-4 py-2 bg-red-600 text-white rounded-lg hover:bg-red-700 transition cursor-pointer disabled:opacity-50"
+                className="px-4 py-2 bg-red-600 hover:bg-red-700 text-white rounded-lg transition cursor-pointer disabled:opacity-50"
               >
                 {formLoading ? 'Deleting...' : 'Delete'}
               </button>

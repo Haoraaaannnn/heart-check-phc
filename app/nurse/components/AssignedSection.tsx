@@ -64,7 +64,7 @@ export function AssignedSection({
     <StageColumn
       stage="assigned"
       title={nurseTexts.stageAssignedHeading}
-      badgeColorClass="bg-blue-100 text-blue-700"
+      badgeColorClass="bg-blue-100 text-blue-700 dark:bg-blue-950/50 dark:text-blue-300"
       count={patients.length}
       emptyText={nurseTexts.emptyAssigned}
       isDragOver={isDragOver}

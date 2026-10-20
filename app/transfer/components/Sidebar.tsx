@@ -66,14 +66,14 @@ export function Sidebar({
 
   return (
     <aside
-      className={`fixed left-0 top-0 h-full bg-white border-r border-slate-200 shadow-xs z-30 flex flex-col transition-all duration-300 select-none ${
+      className={`fixed left-0 top-0 h-full bg-white dark:bg-[#141414] border-r border-slate-200 dark:border-[#2e2e2e] shadow-xs z-30 flex flex-col transition-all duration-300 select-none ${
         isExpanded ? 'w-64' : 'w-18'
       }`}
       aria-label="Dashboard navigation"
     >
       {/* Brand Header */}
       <div
-        className={`h-16 flex items-center border-b border-slate-100 shrink-0 transition-all duration-300 ${
+        className={`h-16 flex items-center border-b border-slate-100 dark:border-[#2e2e2e] shrink-0 transition-all duration-300 ${
           isExpanded ? 'px-4' : 'justify-center px-2'
         }`}
       >
@@ -83,10 +83,10 @@ export function Sidebar({
           </div>
           {isExpanded && (
             <div className="min-w-0 animate-in fade-in duration-200">
-              <h1 className="text-sm font-bold text-slate-800 tracking-tight truncate">
+              <h1 className="text-sm font-bold text-slate-800 dark:text-[#f5f5f5] tracking-tight truncate">
                 {transferTexts.dashboardTitle}
               </h1>
-              <p className="text-[11px] font-medium text-slate-400">PHC Management</p>
+              <p className="text-[11px] font-medium text-slate-400 dark:text-[#737373]">PHC Management</p>
             </div>
           )}
         </div>
@@ -172,7 +172,7 @@ export function Sidebar({
       </nav>
 
       {/* Footer / Workstation Controls */}
-      <div className="p-2 border-t border-slate-100 space-y-1 shrink-0">
+      <div className="p-2 border-t border-slate-100 dark:border-[#2e2e2e] space-y-1 shrink-0">
         {/* Return to Select Screen */}
         <button
           type="button"

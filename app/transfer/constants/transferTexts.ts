@@ -17,6 +17,8 @@ export const transferTexts = {
   roomCrumbPrefix: "Room",
   selectScreenLabel: "Select Screen",
   selectScreenAria: "Return to Select Screen",
+  themeToggleLight: "Switch to light mode",
+  themeToggleDark: "Switch to dark mode",
 
   // Queue Panel & On Progress Section
   queueTabTitle: "Active Queue",
