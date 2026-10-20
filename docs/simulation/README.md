@@ -1,6 +1,6 @@
 # Capstone Chapter 4 Queue Simulation: Documentation Portal & Guide Index
 
-**Last Updated:** 2026-10-17
+**Last Updated:** 2026-10-19
 
 This directory contains the authoritative research documentation, mathematical formulations, baseline calibration data, execution build guides, and comparative analysis tables for the **Capstone Chapter 4 Simulation** of the Heart Check PHC queue management system.
 
@@ -14,6 +14,7 @@ For academic review, thesis defense preparation, or reproduction of experimental
 
 | Document | Primary Focus | Key Content & Academic Purpose | Status |
 | :--- | :--- | :--- | :---: |
+| [`docs/simulation/SIMULATION_EXECUTION_GUIDELINE.md`](file:///home/jensen/Github-Repositories/Heart_Check_PHC/docs/simulation/SIMULATION_EXECUTION_GUIDELINE.md) | **Step-by-Step Execution Guideline** | Comprehensive instructions to set up the environment, execute the simulation, interpret outputs, and export CSV tables. | Operational Guide |
 | [`docs/simulation/simulation-master-guide.md`](file:///home/jensen/Github-Repositories/Heart_Check_PHC/docs/simulation/simulation-master-guide.md) | **Master Research & Methodology Guide** | Consolidated master methodology guide: research hypothesis, validation pillars, M/M/1 queuing foundations, Section 9 Comprehensive Decision Rationale, and Section 10 Grand Mean vs. Monthly Means Analysis. | Authoritative Master Guide |
 | [`docs/simulation/chapter4_simulation_comparison.md`](file:///home/jensen/Github-Repositories/Heart_Check_PHC/docs/simulation/chapter4_simulation_comparison.md) | **Results & Discussion Manuscript** | Granular side-by-side comparison tables (Manual Scenario A vs. Digital Scenario B), waiting time reduction percentages, traffic intensity reduction, and compliance shifts for thesis Chapter 4. | Primary Manuscript |
 | [`docs/simulation/chapter4_simulation_build_guide.md`](file:///home/jensen/Github-Repositories/Heart_Check_PHC/docs/simulation/chapter4_simulation_build_guide.md) | **Implementation & Script Guide** | Complete Python code skeleton, database extraction pipeline, SimPy/M/M/1 logic, and step-by-step execution instructions. | Technical Guide |
@@ -35,7 +36,7 @@ For academic review, thesis defense preparation, or reproduction of experimental
 
 | Component | Repository Path | Description |
 | :--- | :--- | :--- |
-| **Simulation Script** | [`python_backend/chapter4_simulation.py`](file:///home/jensen/Github-Repositories/Heart_Check_PHC/python_backend/chapter4_simulation.py) | Standalone simulation runner processing historical patient arrival streams. |
+| **Primary Research Notebook** | [`python_backend/chapter4_simulation.ipynb`](file:///home/jensen/Github-Repositories/Heart_Check_PHC/python_backend/chapter4_simulation.ipynb) | Interactive research notebook with zero DB insertion, local 2024 Excel ingestion, M/M/1 analysis, and visual tables. |
 | **Queue Math Helpers** | [`python_backend/analytics/helpers.py`](file:///home/jensen/Github-Repositories/Heart_Check_PHC/python_backend/analytics/helpers.py) | Closed-form M/M/1 queueing formulations, Little's Law, and rho utilization calculations. |
-| **Historical Data Source** | Supabase `patients` (`is_historical = true`) | Real clinical stage records from PHC consultation rooms (March 2024 to December 2025). |
-| **Output Appendices** | `python_backend/output/chapter4_*.csv` | Reproducible CSV datasets for thesis document appendices. |
+| **Historical Data Source** | Local `python_backend/data_entries/2024_*.xls` | Real clinical stage records from PHC consultation rooms across the whole year of 2024 (January to December, 12 full months). |
+| **Execution Guideline** | [`docs/simulation/SIMULATION_EXECUTION_GUIDELINE.md`](file:///home/jensen/Github-Repositories/Heart_Check_PHC/docs/simulation/SIMULATION_EXECUTION_GUIDELINE.md) | Comprehensive interactive notebook reproduction and interpretation manual. |

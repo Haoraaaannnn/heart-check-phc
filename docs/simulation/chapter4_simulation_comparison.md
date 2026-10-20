@@ -4,6 +4,9 @@
 **Philippine Heart Center — Outpatient Department (OPD)**
 **STI College Caloocan — BS Computer Science**
 **Team:** Justin Dayle D. Caasi, Reign Daniel C. Gutierrez, Lenardo R. Jualo, Jensen B. Urrutia
+**Last Updated:** 2026-10-19  
+**Simulation Notebook:** [`python_backend/chapter4_simulation.ipynb`](file:///home/jensen/Github-Repositories/Heart_Check_PHC/python_backend/chapter4_simulation.ipynb)  
+**Execution Guideline:** [`docs/simulation/SIMULATION_EXECUTION_GUIDELINE.md`](file:///home/jensen/Github-Repositories/Heart_Check_PHC/docs/simulation/SIMULATION_EXECUTION_GUIDELINE.md)
 
 ---
 
@@ -492,10 +495,10 @@ The elimination of the announcement overhead (1.50 min per patient on average) r
 
 4. **Fixed appointment caps.** PHC's appointment system enforces a daily patient cap, which prevents queue instability at extreme volumes. The simulation reflects this using patients_per_day = 120 with normal(scale=8) variation, representing realistic day-to-day fluctuation within the cap.
 
-5. **Simulation period.** The 25-day simulation window provides a statistically representative sample for thesis evaluation. A longer-term deployment would allow comparison against PHC's actual historical data (March 2024 - December 2025, imported via `import_phc_data.py`).
+5. **Simulation period and empirical grounding.** The empirical simulation is executed across the entire calendar year of 2024 (January 1 to December 31, 2024, 12 full months, N = 26,753 validated patient visits), capturing real seasonal, weekly, and monthly operational variation at the Philippine Heart Center.
 
 6. **Kiosk terminal count.** The simulation assumes a single kiosk terminal matching the prototype setup. Multiple terminals would further reduce the self-service check-in queue wait, potentially reducing the 0.67-minute figure toward zero.
 
 ---
 
-_This document is produced as part of Chapter 4 (Results and Discussion) for the Heart Check PHC capstone project. All simulation parameters are traceable to the system source code at `python_backend/db_seeder.py` and `python_backend/analytics/`. All M/M/1 metrics are computed using the closed-form formulas implemented in `python_backend/analytics/helpers.py`._
+_This document is produced as part of Chapter 4 (Results and Discussion) for the Heart Check PHC capstone project. All simulation parameters and empirical baseline durations are grounded in the whole year 2024 PHC clinical dataset and executable via [`python_backend/chapter4_simulation.ipynb`](file:///home/jensen/Github-Repositories/Heart_Check_PHC/python_backend/chapter4_simulation.ipynb). All M/M/1 metrics are computed using the closed-form formulas implemented in `python_backend/analytics/helpers.py`._
