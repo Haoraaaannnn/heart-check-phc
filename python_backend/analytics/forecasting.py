@@ -64,9 +64,15 @@ def _backtest_arima(volumes: np.ndarray, window_size: int, refit_interval: int =
     result = None
     steps_since_refit = 0
 
+    effective_refit = refit_interval
+    if len(volumes) > 365:
+        effective_refit = max(refit_interval, 21)
+    elif len(volumes) > 180:
+        effective_refit = max(refit_interval, 14)
+
     for i in range(window_size, len(volumes)):
         history = volumes[:i]
-        need_refit = result is None or steps_since_refit >= refit_interval
+        need_refit = result is None or steps_since_refit >= effective_refit
 
         try:
             with warnings.catch_warnings():

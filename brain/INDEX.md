@@ -1,6 +1,6 @@
 # Heart Check PHC — Second Brain Index
 
-**Last Updated:** 2026-10-20
+**Last Updated:** 2026-10-21
 
 Welcome to the repository-local second brain for **Heart Check PHC**. This directory functions as a token-efficient, portable knowledge repository designed to work seamlessly with AI coding agents (Antigravity), terminal workflows, and local Markdown tools (Obsidian, GitHub).
 

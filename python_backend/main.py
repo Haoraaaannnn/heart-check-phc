@@ -4,6 +4,8 @@ FastAPI Backend for Heart Check PHC
 Connects to Supabase and serves the analytics payload to the frontend.
 """
 
+import concurrent.futures
+import math
 import os
 import time
 import traceback
@@ -65,16 +67,16 @@ DEFAULT_RANGE = "90d"
 # separate handshakes just to pull the full patients table.
 _http_client = httpx.Client(timeout=30.0)
 
-# Simple in-memory TTL cache for the per-year monthly breakdown and the
-# available-years list. Historical years don't change once imported, so
-# this mostly just avoids recomputing the same year repeatedly across
-# page loads within the cache window. Not thread-safe / not persisted —
-# fine for a single-process dev/thesis deployment.
+# Simple in-memory TTL cache for the per-year monthly breakdown, available-years,
+# and dashboard analytics payload. Historical data and aggregated analytics do not
+# change frequently once imported, so caching avoids recomputing tens of thousands
+# of rows repeatedly across page loads and layout context requests.
 CACHE_TTL_SECONDS = 300
 _monthly_cache: dict[int, tuple[float, list[dict]]] = {}
 _years_cache: tuple[float, list[int]] | None = None
 _export_dates_cache: tuple[float, dict] | None = None
 _daily_drilldown_cache: dict[str, tuple[float, dict]] = {}
+_dashboard_cache: dict[str, tuple[float, dict]] = {}
 
 
 def _supabase_headers() -> dict:
@@ -101,21 +103,82 @@ def fetch_supabase_table(
     if end_date:
         date_filter += f"&created_at=lt.{end_date}"
 
-    all_data = []
-    page = 0
     page_size = 1000
+    base_url = (
+        f"{SUPABASE_URL}/rest/v1/{table_name}"
+        f"?select={select}{date_filter}&order=created_at.asc"
+    )
 
+    # Probe page 0 with count=exact to determine total records upfront
+    first_resp = _http_client.get(
+        base_url,
+        headers={
+            **_supabase_headers(),
+            "Range": f"0-{page_size - 1}",
+            "Prefer": "count=exact",
+        },
+    )
+
+    if first_resp.status_code == 416:
+        return []
+
+    first_resp.raise_for_status()
+    first_page_data = first_resp.json()
+    if not first_page_data:
+        return []
+
+    if len(first_page_data) < page_size:
+        return first_page_data
+
+    # Parse total rows from Content-Range header (e.g. "0-999/26753")
+    content_range = first_resp.headers.get("content-range", "")
+    total_rows = None
+    if "/" in content_range:
+        total_str = content_range.split("/")[-1].strip()
+        if total_str.isdigit():
+            total_rows = int(total_str)
+
+    # Concurrently fetch remaining pages in parallel when dataset exceeds 1000 records
+    if total_rows and total_rows > page_size:
+        total_pages = math.ceil(total_rows / page_size)
+        remaining_pages = list(range(1, total_pages))
+
+        def _fetch_page(page_idx: int) -> tuple[int, list[dict]]:
+            start = page_idx * page_size
+            end = start + page_size - 1
+            resp = _http_client.get(
+                base_url,
+                headers={**_supabase_headers(), "Range": f"{start}-{end}"},
+            )
+            if resp.status_code == 416:
+                return (page_idx, [])
+            resp.raise_for_status()
+            return (page_idx, resp.json())
+
+        results: dict[int, list[dict]] = {}
+        max_workers = min(8, len(remaining_pages))
+        with concurrent.futures.ThreadPoolExecutor(max_workers=max_workers) as executor:
+            future_to_page = {
+                executor.submit(_fetch_page, p): p for p in remaining_pages
+            }
+            for future in concurrent.futures.as_completed(future_to_page):
+                page_idx, page_rows = future.result()
+                results[page_idx] = page_rows
+
+        all_data = list(first_page_data)
+        for p in remaining_pages:
+            all_data.extend(results.get(p, []))
+        return all_data
+
+    # Fallback sequential pagination if Content-Range was not returned
+    all_data = list(first_page_data)
+    page = 1
     while True:
         start = page * page_size
         end = start + page_size - 1
 
-        url = (
-            f"{SUPABASE_URL}/rest/v1/{table_name}"
-            f"?select={select}{date_filter}&order=created_at.asc"
-        )
-
         response = _http_client.get(
-            url,
+            base_url,
             headers={**_supabase_headers(), "Range": f"{start}-{end}"},
         )
 
@@ -218,6 +281,11 @@ def health_check():
 
 @app.get("/api/dashboard-data")
 def get_dashboard_data(range: str = DEFAULT_RANGE):
+    now = time.time()
+    cached = _dashboard_cache.get(range)
+    if cached and (now - cached[0]) < CACHE_TTL_SECONDS:
+        return cached[1]
+
     start_date, end_date = resolve_date_range(range)
 
     try:
@@ -246,6 +314,7 @@ def get_dashboard_data(range: str = DEFAULT_RANGE):
 
     try:
         report = generate_report(df)
+        _dashboard_cache[range] = (now, report)
         return report
     except Exception:
         print("=" * 60)
@@ -775,7 +844,7 @@ async def import_file(
     When mode='inspect', parses the file and returns summary metrics and preview rows without inserting.
     When mode='commit', writes valid records to Supabase patients table in batches.
     """
-    global _monthly_cache, _years_cache, _export_dates_cache, _daily_drilldown_cache
+    global _monthly_cache, _years_cache, _export_dates_cache, _daily_drilldown_cache, _dashboard_cache
 
     try:
         file_bytes = await request.body()
@@ -836,6 +905,7 @@ async def import_file(
     _years_cache = None
     _export_dates_cache = None
     _daily_drilldown_cache.clear()
+    _dashboard_cache.clear()
 
     payload = {
         "success": len(errors) == 0,

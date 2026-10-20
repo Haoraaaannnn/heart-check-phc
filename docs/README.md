@@ -1,6 +1,6 @@
 # Heart Check PHC: Master Documentation Portal & Navigation Index
 
-**Last Updated:** 2026-10-19
+**Last Updated:** 2026-10-21
 
 This master index categorizes all technical specifications, operational manuals, quality assurance checklists, security audit matrices, database schemas, Capstone Chapter 4 simulation guides, data validation reports, and developer editing manuals across the Heart Check PHC repository.
 
@@ -128,6 +128,7 @@ These scripts manage database schema evolutions, stored procedure definitions, a
 | Migration Document | Category | Key Content |
 | :--- | :--- | :--- |
 | [`docs/migrations/encrypt_phone_number.sql`](file:///home/jensen/Github-Repositories/Heart_Check_PHC/docs/migrations/encrypt_phone_number.sql) | Schema Migration | Alters `patients.phoneNum` to text and updates `create_patient` stored procedure signature for AES-256-GCM ciphertext tokens. |
+| [`docs/migrations/20261021_add_dashboard_performance_indexes.sql`](file:///home/jensen/Github-Repositories/Heart_Check_PHC/docs/migrations/20261021_add_dashboard_performance_indexes.sql) | Performance Migration | Adds 8 production performance indexes on `patients` and `cubicle` with double-quoted camelCase columns, eliminating full table sequential scans under 26,000+ historical rows. |
 
 ---
 

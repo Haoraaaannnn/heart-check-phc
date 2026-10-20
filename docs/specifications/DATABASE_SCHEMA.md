@@ -1,6 +1,6 @@
 # Heart Check PHC: A Kiosk-Based Queue Management and Analytics System — Database Schema Documentation
 
-**Last Updated:** 2026-10-20
+**Last Updated:** 2026-10-21
 
 ## Overview
 
@@ -376,4 +376,19 @@ This appendix provides a literal reference dump of the verified database schema 
 
 ---
 
-_Last updated: 2026-10-20 — Master database architecture and schema reference consolidated. Includes full column definitions, customizable queue ticket prefixes/padding, service clinical workflow checklist flags, staff-scoping join tables, rate-limiting models, and verified RLS policies._
+### Appendix B: Production Performance Indexes
+
+| Table | Index Name | Columns / Expressions | Type | Target Queries & Accelerations |
+| :--- | :--- | :--- | :---: | :--- |
+| **`patients`** | `idx_patients_is_historical_created_at` | `(is_historical, created_at DESC)` | B-Tree | `useBottleneckNotifications`, `useOverviewData`, RLS `patients_select_public_live` |
+| **`patients`** | `idx_patients_live_active_created` | `(created_at DESC) WHERE is_historical = false` | Partial B-Tree | Sub-millisecond live queue queries, active ticket polling, and monitor feeds |
+| **`patients`** | `idx_patients_created_at_desc` | `(created_at DESC)` | B-Tree | Timeframe date boundaries (`today`, `yesterday`, `7d`, `mtd`), `usePatientsData` (LIMIT 300) |
+| **`patients`** | `idx_patients_status` | `(status)` | B-Tree | Queue status breakdown, department Kanban status groupings |
+| **`patients`** | `idx_patients_cubicle_active` | `("cubicleNum", status) WHERE "cubicleNum" IS NOT NULL` | Partial B-Tree | `useCubiclesData`, `useCubicleHeatmapData`, RLS `patients_select_nurse_scoped` |
+| **`patients`** | `idx_patients_patient_num` | `("patientNum") WHERE "patientNum" IS NOT NULL` | Partial B-Tree | Ticket code instant lookup (`useHeaderSearch`, `usePatientsData`) |
+| **`patients`** | `idx_patients_service` | `(service)` | B-Tree | Clinical department filtering and service load analytics |
+| **`cubicle`** | `idx_cubicle_doctor_id` | `("doctorId") WHERE "doctorId" IS NOT NULL` | Partial B-Tree | Station-to-doctor join acceleration (`useCubiclesData`, `useCubicleHeatmapData`) |
+
+---
+
+_Last updated: 2026-10-21 — Master database architecture, verified PostgreSQL schema definitions, customizable queue ticket prefixes/padding, service clinical workflow checklist flags, staff-scoping join tables, rate-limiting models, active RLS policies, and production performance indexes._
