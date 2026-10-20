@@ -12,35 +12,36 @@ This document serves as an optional, high-signal, token-efficient session handof
 
 ## Active Session Status
 
-- **Active Milestone / Task:** Full System Reflection for Dynamic & Customized Clinical Services (Completed)
+- **Active Milestone / Task:** System-Wide Operational & Clinical Notifications Upgrade (Completed)
 - **Active Git Branch:** `patch/after-client-consultation-patches`
-- **Session Focus:** Complete system-wide reflection of customized services across Kiosk, Patient Transfer, Public TV Monitor, SuperAdmin, and Analytics Dashboard. Ensured newly created and customized services dynamically appear in sidebars, queues, registration desks, monitor calling views, and navigation rails without hardcoded constants.
+- **Session Focus:** Added comprehensive, multi-event system notifications across Heart Check PHC, fixed and standardized all notification message copy to professional clinical standards, eliminated emojis completely, and extended real-time notifications to SuperAdmin and Transfer workstations.
 
 ---
 
 ## Decisions Made
 
-1. **Transfer Sidebar Dynamic Categories:** Updated `Sidebar.tsx` to load services directly from PostgreSQL `services` table instead of filtering `allowedServices` against hardcoded constants (`CATEGORIES`). Any newly created or renamed service immediately appears in the Transfer Sidebar.
-2. **Superadmin / Admin Bypass Parity:** Updated `useMyAccess.ts` so superadmin and admin accounts always gain access to all live hospital services loaded dynamically from the `services` table.
-3. **Registration Flow for All Services:** Extended `OtherServicesFlow.tsx` and `app/transfer/page.tsx` to support registration desk intake, patient release, auto-assignment, and doctor mapping for any service that has `requires_registration = true`.
-4. **Dynamic TV Monitor Hub:** Refactored `app/monitor/page.tsx` from a static array to a live query from `services` table, filtering by `show_on_monitor !== false` and evaluating `has_subcategories`.
-5. **Dynamic Monitor Layout Style:** Updated `useMonitorData.ts` to inspect `service.monitor_layout` from the database ('table' vs 'cubicle') with graceful fallback.
-6. **Dynamic Dashboard Navigation:** Updated `DashSideNavigation.tsx` so the "Services" left-rail group automatically populates with all active clinical services from PostgreSQL.
+1. **Dedicated Notification Copy and Style Dictionaries:** Created `app/dashboard/constants/notificationTexts.ts` and `app/dashboard/constants/notificationStyles.ts` to strictly separate presentation, copy, and styling in compliance with AGENTS.md Rule 2 and Rule 6 (zero emojis).
+2. **Comprehensive System Notification Coverage:** Overhauled `useBottleneckNotifications.ts` to track 7 critical operational events: extended doctor consultation (>15m bottleneck), prolonged queue wait times (>30m critical, >15m warning), department queue surges (>=5 warning, >=10 bottleneck), unattended idle/skipped tickets, available stations with doctors on duty while queues wait, daily intake and completion milestones, and network offline/online status.
+3. **Database Security & Immutability:** Enforced `is_historical = false` and day-scoping on all notification patient queries to preserve historical research data boundaries.
+4. **Deterministic Notification Identity & Debounced Realtime:** Used deterministic event IDs to prevent duplicate notifications during polling ticks, remembered user-dismissed and read states, auto-purged stale conditions, and added 500ms debounced Supabase Realtime subscription on `patients` table.
+5. **Severity Filtering in Dropdown:** Upgraded `NotificationDropdown.tsx` with severity filter tabs (`All`, `Alerts`, `Warnings`, `Notices`), clean Boxicons, high-contrast solid surfaces, and natural text wrapping (`break-words`, `whitespace-normal`).
+6. **Universal Workstation Visibility:** Integrated `NotificationDropdown` into `SuperAdminHeader.tsx` and `app/transfer/page.tsx`, bringing real-time notification alerts to SuperAdmin and Transfer workstations alongside the existing Admin Dashboard and Nurse Station.
 
 ---
 
 ## Files Changed or Created
 
-- `app/transfer/components/Sidebar.tsx` (Dynamic categories from PostgreSQL `services` table)
-- `app/transfer/hooks/useMyAccess.ts` (Superadmin bypass to all dynamic services)
-- `app/transfer/components/OtherServicesFlow.tsx` (Added registration counters, patient release, assign now, and doctor map props)
-- `app/transfer/page.tsx` (Passed dynamic registration props and auto-assign to `OtherServicesFlow`)
-- `app/monitor/page.tsx` (Dynamic monitor selection screen filtering on `show_on_monitor`)
-- `app/monitor/hooks/useMonitorData.ts` (Dynamic `monitor_layout` evaluation from database)
-- `app/dashboard/components/navigation/DashSideNavigation.tsx` (Dynamic services navigation links)
-- `app/transfer/constants/transferTexts.ts` (Added error modal copy)
-- `brain/CURRENT.md` (Added Milestone 5 and 2026-10-20 stamp)
-- `brain/SESSION_LOG.md` (Updated session handoff)
+- `app/dashboard/constants/notificationTexts.ts` (Created: centralized UI copy, status tags, and message templates)
+- `app/dashboard/constants/notificationStyles.ts` (Created: centralized Tailwind style tokens for dropdown and cards)
+- `app/dashboard/hooks/useBottleneckNotifications.ts` (Upgraded: multi-event system notifications controller with debounced realtime sync)
+- `app/dashboard/components/NotificationDropdown.tsx` (Upgraded: enterprise dropdown with filter tabs, clean icons, zero emojis)
+- `app/superadmin/components/navigation/SuperAdminHeader.tsx` (Updated: wired `useBottleneckNotifications` and `NotificationDropdown`)
+- `app/transfer/page.tsx` (Updated: wired `useBottleneckNotifications` and `NotificationDropdown` in top header bar)
+- `app/dashboard/README.md` (Updated: added notification files to Where to Edit table and bumped date to 2026-10-20)
+- `app/superadmin/README.md` (Updated: updated Where to Edit table and date)
+- `app/transfer/README.md` (Updated: updated Where to Edit table and date)
+- `brain/CURRENT.md` (Updated: added Milestone 7)
+- `brain/SESSION_LOG.md` (Updated: session handoff)
 
 ---
 

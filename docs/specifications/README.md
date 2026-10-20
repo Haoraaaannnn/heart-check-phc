@@ -1,6 +1,6 @@
 # Technical Specifications, System Architecture, and Operational Guides
 
-**Last Updated:** 2026-10-18
+**Last Updated:** 2026-10-20
 
 This directory contains all core architectural blueprints, database schemas, cryptographic specifications, UI design guidelines, and station manuals for the Heart Check PHC platform.
 
@@ -24,3 +24,4 @@ This directory contains all core architectural blueprints, database schemas, cry
 | [`LOCAL_NETWORK_SETUP.md`](file:///home/jensen/Github-Repositories/Heart_Check_PHC/docs/specifications/LOCAL_NETWORK_SETUP.md) | Multi-Device Deployment | Local network sharing, IP binding with `npm start`, and station setup for kiosks, monitors, and tablets. | Active |
 | [`PRD.md`](file:///home/jensen/Github-Repositories/Heart_Check_PHC/docs/specifications/PRD.md) | Product Requirements | Product Requirements Document: problem statement, thesis objectives, user personas, and core operational needs. | Active |
 | [`NURSE_DASHBOARD_SYSTEM_DESIGN.md`](file:///home/jensen/Github-Repositories/Heart_Check_PHC/docs/specifications/NURSE_DASHBOARD_SYSTEM_DESIGN.md) | Clinical Design | Consultation cubicle intake, 3-column Kanban board, optimistic state updates, and IndexedDB outbox queue. | Active |
+| [`ESTIMATED_WAIT_TIME.md`](file:///home/jensen/Github-Repositories/Heart_Check_PHC/docs/specifications/ESTIMATED_WAIT_TIME.md) | Feature Design Guideline | Hybrid EWT formula, DB queries, thermal receipt ESC/POS integration, kiosk Screen 6 display, SMS confirmation message, security checklist, and 8-step implementation roadmap. | Active |

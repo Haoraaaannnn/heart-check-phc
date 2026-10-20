@@ -1,6 +1,6 @@
 # Quality Assurance, Security Audits & Operational Checklists
 
-**Last Updated:** 2026-10-18
+**Last Updated:** 2026-10-20
 
 This directory contains the central audit matrices, compliance checklists, operational trackers, and verification protocols for the **Heart Check PHC** Queue Management and Analytics System.
 
@@ -14,7 +14,7 @@ This directory contains the central audit matrices, compliance checklists, opera
 | **Database RLS & Schema** | **100% Active** | All 6 security migration steps executed and verified on live Supabase instance. Historical records locked with RESTRICTIVE policies. | [CHANGES_NEEDED.md](file:///home/jensen/Github-Repositories/Heart_Check_PHC/docs/checklists/CHANGES_NEEDED.md) |
 | **System Security (OWASP Top 10)** | **100% Core Protected** | 28 of 32 tracked items patched in active code. Remaining 4 items are designated for physical on-premise hospital deployment. | [SECURITY_CHECKLIST.md](file:///home/jensen/Github-Repositories/Heart_Check_PHC/docs/checklists/SECURITY_CHECKLIST.md) |
 | **Active Open Issues** | **3 Action Items** | Core system is stable. 3 items pending: Chapter 4 simulation runner execution, Dependabot review, and FastAPI rate limiting. | [OPEN_ISSUES.md](file:///home/jensen/Github-Repositories/Heart_Check_PHC/docs/checklists/OPEN_ISSUES.md) |
-| **User Acceptance Testing (UAT)** | **Ready for Evaluation** | Structured test scripts covering Kiosk intake, Nurse Kanban, Transfer routing, and Executive analytics. | [UAT_USE_CASE_CHECKLIST.md](file:///home/jensen/Github-Repositories/Heart_Check_PHC/docs/checklists/UAT_USE_CASE_CHECKLIST.md) |
+| **User Acceptance Testing (UAT)** | **Ready for Evaluation (63 Scenarios)** | Structured test scripts covering Kiosk intake, Nurse Kanban, Transfer routing, Executive analytics, and Real-Time Notifications. | [UAT_USE_CASE_CHECKLIST.md](file:///home/jensen/Github-Repositories/Heart_Check_PHC/docs/checklists/UAT_USE_CASE_CHECKLIST.md) |
 | **Feature Roadmap & Backlog** | **Tracked** | Living backlog of completed architectural milestones and future clinical enhancements. | [IMPROVEMENTS_AND_FEATURE_CHECKLIST.md](file:///home/jensen/Github-Repositories/Heart_Check_PHC/docs/checklists/IMPROVEMENTS_AND_FEATURE_CHECKLIST.md) |
 
 ---
