@@ -36,12 +36,25 @@ export interface OtherServicesFlowProps {
   idlePatients: Patient[];
   onActivateIdle: (patient: Patient) => void;
   onRemoveIdle: (patient: Patient) => void;
+  onAssignNow?: (patient: Patient) => void;
+  cubicleDoctorMap?: Record<string, string>;
+
+  // Registration counter props (for services requiring registration)
+  registrationPatients?: Patient[];
+  regDraggedPatient?: Patient | null;
+  dragOverCounter?: number | null;
+  onRegPointerDown?: (e: React.PointerEvent, patient: Patient) => void;
+  onRegDragStart?: (e: React.MouseEvent, patient: Patient) => void;
+  onReleaseFromCounter?: (patient: Patient) => void;
+  allowedCounters?: number[];
 
   // Click-to-Select tablet mode props
   selectedPatient?: SelectedTransferPatient | null;
   onSelectQueuePatient?: (patient: Patient) => void;
   onSelectCubiclePatient?: (patient: Patient, cubicleNum: string) => void;
+  onSelectCounterPatient?: (patient: Patient, counterNum: number) => void;
   onTargetCubicleClick?: (cubicleNum: string) => void;
+  onTargetCounterClick?: (counterNum: number) => void;
   onCancelSelection?: () => void;
 }
 
@@ -70,10 +83,21 @@ export function OtherServicesFlow({
   idlePatients,
   onActivateIdle,
   onRemoveIdle,
+  onAssignNow,
+  cubicleDoctorMap,
+  registrationPatients,
+  regDraggedPatient,
+  dragOverCounter,
+  onRegPointerDown,
+  onRegDragStart,
+  onReleaseFromCounter,
+  allowedCounters,
   selectedPatient,
   onSelectQueuePatient,
   onSelectCubiclePatient,
+  onSelectCounterPatient,
   onTargetCubicleClick,
+  onTargetCounterClick,
   onCancelSelection,
 }: OtherServicesFlowProps) {
   return (
@@ -93,13 +117,24 @@ export function OtherServicesFlow({
       onDragStartFromQueue={onDragStartFromQueue}
       onPointerDownFromCubicle={onPointerDownFromCubicle}
       onDragStartFromCubicle={onDragStartFromCubicle}
+      onAssignNow={onAssignNow}
       onActivateIdle={onActivateIdle}
       onRemoveIdle={onRemoveIdle}
       warnAfterSeconds={rotateTimeoutMs / 1000}
+      cubicleDoctorMap={cubicleDoctorMap}
+      registrationPatients={registrationPatients}
+      regDraggedPatient={regDraggedPatient}
+      dragOverCounter={dragOverCounter}
+      onRegPointerDown={onRegPointerDown}
+      onRegDragStart={onRegDragStart}
+      onReleaseFromCounter={onReleaseFromCounter}
+      allowedCounters={allowedCounters}
       selectedPatient={selectedPatient}
       onSelectQueuePatient={onSelectQueuePatient}
       onSelectCubiclePatient={onSelectCubiclePatient}
+      onSelectCounterPatient={onSelectCounterPatient}
       onTargetCubicleClick={onTargetCubicleClick}
+      onTargetCounterClick={onTargetCounterClick}
       onCancelSelection={onCancelSelection}
     />
   );

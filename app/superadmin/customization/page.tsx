@@ -22,6 +22,7 @@ import { SuperAdminPageSkeleton } from '@/app/superadmin/components/SuperAdminPa
 import { CUSTOMIZATION_TEXTS } from '@/app/superadmin/customization/constants/customizationTexts';
 import { CUSTOMIZATION_STYLES } from '@/app/superadmin/customization/constants/customizationStyles';
 import { SUPERADMIN_STYLES } from '@/app/superadmin/constants/superadminStyles';
+import { DeleteServiceModal } from '@/app/superadmin/customization/components/DeleteServiceModal';
 
 type PatientType = 'new' | 'old' | 'both';
 
@@ -35,6 +36,13 @@ const EMPTY_FORM: Omit<Service, 'id'> = {
   patient_type: 'both',
   queue_prefix: '',
   queue_pad_length: 3,
+  requires_registration: false,
+  has_subcategories: false,
+  requires_cubicle: false,
+  requires_nurse: false,
+  show_on_monitor: true,
+  auto_assign: false,
+  monitor_layout: 'cubicle',
 };
 
 /**
@@ -60,6 +68,10 @@ export default function AdminServicePage() {
   const [form, setForm] = useState<Omit<Service, 'id'>>(EMPTY_FORM);
   const [iconQuery, setIconQuery] = useState('');
   const [saving, setSaving] = useState(false);
+
+  const [deletingService, setDeletingService] = useState<Service | null>(null);
+  const [deleteLoading, setDeleteLoading] = useState(false);
+  const [deleteError, setDeleteError] = useState<string | null>(null);
 
   const allIconNames = useMemo(() => AVAILABLE_SERVICE_BOXICONS, []);
 
@@ -99,6 +111,13 @@ export default function AdminServicePage() {
         : 0,
       queue_prefix: '',
       queue_pad_length: 3,
+      requires_registration: false,
+      has_subcategories: false,
+      requires_cubicle: false,
+      requires_nurse: false,
+      show_on_monitor: true,
+      auto_assign: false,
+      monitor_layout: 'cubicle',
     });
     setIconQuery('');
   }
@@ -110,6 +129,13 @@ export default function AdminServicePage() {
       ...rest,
       queue_prefix: rest.queue_prefix ?? '',
       queue_pad_length: rest.queue_pad_length ?? 3,
+      requires_registration: Boolean(rest.requires_registration),
+      has_subcategories: Boolean(rest.has_subcategories),
+      requires_cubicle: Boolean(rest.requires_cubicle),
+      requires_nurse: Boolean(rest.requires_nurse),
+      show_on_monitor: rest.show_on_monitor !== false,
+      auto_assign: Boolean(rest.auto_assign),
+      monitor_layout: rest.monitor_layout || 'cubicle',
     });
     setIconQuery(service.icon_src);
   }
@@ -168,15 +194,32 @@ export default function AdminServicePage() {
     loadServices();
   }
 
-  async function handleDelete(id: number) {
-    if (!confirm(T.table.deleteConfirm)) return;
+  function requestDelete(service: Service) {
+    setDeleteError(null);
+    setDeletingService(service);
+  }
 
-    const { error: delErr } = await supabase.from('services').delete().eq('id', id);
+  async function handleConfirmDelete() {
+    if (!deletingService) return;
+
+    setDeleteLoading(true);
+    setDeleteError(null);
+
+    const { error: delErr } = await supabase.from('services').delete().eq('id', deletingService.id);
     if (delErr) {
-      setError(delErr.message);
+      setDeleteError(delErr.message);
+      setDeleteLoading(false);
     } else {
+      setDeleteLoading(false);
+      setDeletingService(null);
       loadServices();
     }
+  }
+
+  function handleCancelDelete() {
+    if (deleteLoading) return;
+    setDeletingService(null);
+    setDeleteError(null);
   }
 
   const isEditing = editingId !== null;
@@ -375,6 +418,172 @@ export default function AdminServicePage() {
               </div>
             </div>
 
+            {/* Service Routing & System Capabilities Checklist */}
+            <div className={S.sectionBox}>
+              <div className={S.sectionHeader}>
+                <i className="bx bx-check-shield text-base text-rose-600 dark:text-rose-400" aria-hidden="true" />
+                <span>{T.form.workflowSectionTitle}</span>
+              </div>
+              <p className={S.sectionSubtitle}>{T.form.workflowSectionSubtitle}</p>
+
+              <div className={S.checklistGrid}>
+                {/* 1. Requires Registration */}
+                <label
+                  className={`${S.checkCard} ${
+                    form.requires_registration ? S.checkCardActive : S.checkCardInactive
+                  }`}
+                >
+                  <input
+                    type="checkbox"
+                    checked={Boolean(form.requires_registration)}
+                    onChange={(e) =>
+                      setForm({ ...form, requires_registration: e.target.checked })
+                    }
+                    className={S.checkbox}
+                  />
+                  <div>
+                    <span className={S.checkTitle}>{T.form.requiresRegistrationLabel}</span>
+                    <span className={S.checkDescription}>{T.form.requiresRegistrationDesc}</span>
+                  </div>
+                </label>
+
+                {/* 2. Has Subcategories (Adult / Pedia) */}
+                <label
+                  className={`${S.checkCard} ${
+                    form.has_subcategories ? S.checkCardActive : S.checkCardInactive
+                  }`}
+                >
+                  <input
+                    type="checkbox"
+                    checked={Boolean(form.has_subcategories)}
+                    onChange={(e) =>
+                      setForm({ ...form, has_subcategories: e.target.checked })
+                    }
+                    className={S.checkbox}
+                  />
+                  <div>
+                    <span className={S.checkTitle}>{T.form.hasSubcategoriesLabel}</span>
+                    <span className={S.checkDescription}>{T.form.hasSubcategoriesDesc}</span>
+                  </div>
+                </label>
+
+                {/* 3. Requires Physical Cubicle / Doctor Selection */}
+                <label
+                  className={`${S.checkCard} ${
+                    form.requires_cubicle ? S.checkCardActive : S.checkCardInactive
+                  }`}
+                >
+                  <input
+                    type="checkbox"
+                    checked={Boolean(form.requires_cubicle)}
+                    onChange={(e) =>
+                      setForm({ ...form, requires_cubicle: e.target.checked })
+                    }
+                    className={S.checkbox}
+                  />
+                  <div>
+                    <span className={S.checkTitle}>{T.form.requiresCubicleLabel}</span>
+                    <span className={S.checkDescription}>{T.form.requiresCubicleDesc}</span>
+                  </div>
+                </label>
+
+                {/* 4. Requires Nurse Kanban */}
+                <label
+                  className={`${S.checkCard} ${
+                    form.requires_nurse ? S.checkCardActive : S.checkCardInactive
+                  }`}
+                >
+                  <input
+                    type="checkbox"
+                    checked={Boolean(form.requires_nurse)}
+                    onChange={(e) =>
+                      setForm({ ...form, requires_nurse: e.target.checked })
+                    }
+                    className={S.checkbox}
+                  />
+                  <div>
+                    <span className={S.checkTitle}>{T.form.requiresNurseLabel}</span>
+                    <span className={S.checkDescription}>{T.form.requiresNurseDesc}</span>
+                  </div>
+                </label>
+
+                {/* 5. Show on Public TV Monitor */}
+                <label
+                  className={`${S.checkCard} ${
+                    form.show_on_monitor ? S.checkCardActive : S.checkCardInactive
+                  }`}
+                >
+                  <input
+                    type="checkbox"
+                    checked={form.show_on_monitor !== false}
+                    onChange={(e) =>
+                      setForm({ ...form, show_on_monitor: e.target.checked })
+                    }
+                    className={S.checkbox}
+                  />
+                  <div>
+                    <span className={S.checkTitle}>{T.form.showOnMonitorLabel}</span>
+                    <span className={S.checkDescription}>{T.form.showOnMonitorDesc}</span>
+                  </div>
+                </label>
+
+                {/* 6. Auto-Assign Transfer Queue */}
+                <label
+                  className={`${S.checkCard} ${
+                    form.auto_assign ? S.checkCardActive : S.checkCardInactive
+                  }`}
+                >
+                  <input
+                    type="checkbox"
+                    checked={Boolean(form.auto_assign)}
+                    onChange={(e) =>
+                      setForm({ ...form, auto_assign: e.target.checked })
+                    }
+                    className={S.checkbox}
+                  />
+                  <div>
+                    <span className={S.checkTitle}>{T.form.autoAssignLabel}</span>
+                    <span className={S.checkDescription}>{T.form.autoAssignDesc}</span>
+                  </div>
+                </label>
+              </div>
+
+              {/* Monitor Layout Selector */}
+              <div className="pt-2 border-t border-slate-200 dark:border-[#2e2e2e]">
+                <label className={S.label}>{T.form.monitorLayoutLabel}</label>
+                <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
+                  <button
+                    type="button"
+                    onClick={() => setForm({ ...form, monitor_layout: 'cubicle' })}
+                    className={`p-3 rounded-xl border text-left transition cursor-pointer ${
+                      (form.monitor_layout || 'cubicle') === 'cubicle'
+                        ? 'border-rose-400 dark:border-rose-800 bg-rose-50/50 dark:bg-rose-950/20 text-rose-800 dark:text-rose-200'
+                        : 'border-slate-200 dark:border-[#2e2e2e] bg-white dark:bg-[#1a1a1a] text-slate-700 dark:text-[#a3a3a3]'
+                    }`}
+                  >
+                    <div className="flex items-center gap-2">
+                      <i className="bx bx-window-alt text-base" aria-hidden="true" />
+                      <span className="text-xs font-bold">{T.form.monitorLayoutCubicle}</span>
+                    </div>
+                  </button>
+                  <button
+                    type="button"
+                    onClick={() => setForm({ ...form, monitor_layout: 'table' })}
+                    className={`p-3 rounded-xl border text-left transition cursor-pointer ${
+                      form.monitor_layout === 'table'
+                        ? 'border-rose-400 dark:border-rose-800 bg-rose-50/50 dark:bg-rose-950/20 text-rose-800 dark:text-rose-200'
+                        : 'border-slate-200 dark:border-[#2e2e2e] bg-white dark:bg-[#1a1a1a] text-slate-700 dark:text-[#a3a3a3]'
+                    }`}
+                  >
+                    <div className="flex items-center gap-2">
+                      <i className="bx bx-grid-alt text-base" aria-hidden="true" />
+                      <span className="text-xs font-bold">{T.form.monitorLayoutTable}</span>
+                    </div>
+                  </button>
+                </div>
+              </div>
+            </div>
+
             {/* Icon Selector */}
             <div>
               <label className={S.label}>{T.form.iconLabel}</label>
@@ -492,6 +701,7 @@ export default function AdminServicePage() {
                 <th className={S.th}>{T.table.colLabels}</th>
                 <th className={S.th}>{T.table.colPatientType}</th>
                 <th className={S.th}>{T.table.colQueueTicket}</th>
+                <th className={S.th}>{T.table.colCapabilities}</th>
                 <th className={S.th}>{T.table.colOrder}</th>
                 <th className={`${S.th} text-right`}>{T.table.colActions}</th>
               </tr>
@@ -551,6 +761,46 @@ export default function AdminServicePage() {
                       )}
                     </td>
                     <td className={S.td}>
+                      <div className={S.badgeContainer}>
+                        {service.requires_registration && (
+                          <span className={S.badgeRegistration}>
+                            <i className="bx bx-id-card text-xs" aria-hidden="true" />
+                            <span>{T.table.badgeRegistration}</span>
+                          </span>
+                        )}
+                        {service.has_subcategories && (
+                          <span className={S.badgeSubcategories}>
+                            <i className="bx bx-group text-xs" aria-hidden="true" />
+                            <span>{T.table.badgeSubcategories}</span>
+                          </span>
+                        )}
+                        {service.requires_cubicle && (
+                          <span className={S.badgeCubicles}>
+                            <i className="bx bx-door-open text-xs" aria-hidden="true" />
+                            <span>{T.table.badgeCubicles}</span>
+                          </span>
+                        )}
+                        {service.requires_nurse && (
+                          <span className={S.badgeNurse}>
+                            <i className="bx bx-clipboard text-xs" aria-hidden="true" />
+                            <span>{T.table.badgeNurse}</span>
+                          </span>
+                        )}
+                        {service.show_on_monitor !== false && (
+                          <span className={S.badgeMonitor}>
+                            <i className="bx bx-tv text-xs" aria-hidden="true" />
+                            <span>{T.table.badgeMonitor}</span>
+                          </span>
+                        )}
+                        {service.auto_assign && (
+                          <span className={S.badgeAutoAssign}>
+                            <i className="bx bx-shuffle text-xs" aria-hidden="true" />
+                            <span>{T.table.badgeAutoAssign}</span>
+                          </span>
+                        )}
+                      </div>
+                    </td>
+                    <td className={S.td}>
                       <span className="font-mono text-xs font-semibold px-2 py-1 bg-slate-100 dark:bg-[#242424] text-slate-700 dark:text-[#a3a3a3] rounded-md">
                         #{service.display_order}
                       </span>
@@ -567,7 +817,7 @@ export default function AdminServicePage() {
                         </button>
                         <button
                           type="button"
-                          onClick={() => handleDelete(service.id)}
+                          onClick={() => requestDelete(service)}
                           className="px-2.5 py-1 rounded-lg text-xs font-semibold text-red-600 dark:text-red-400 hover:bg-red-50 dark:hover:bg-red-950/60 transition cursor-pointer flex items-center gap-1"
                         >
                           <i className="bx bx-trash text-sm" aria-hidden="true" />
@@ -580,7 +830,7 @@ export default function AdminServicePage() {
               })}
               {services.length === 0 && (
                 <tr>
-                  <td colSpan={6} className="p-12 text-center text-xs text-slate-400">
+                  <td colSpan={7} className="p-12 text-center text-xs text-slate-400">
                     {T.table.emptyTitle}
                   </td>
                 </tr>
@@ -589,6 +839,15 @@ export default function AdminServicePage() {
           </table>
         )}
       </div>
+
+      {/* Service Deletion Confirmation Modal */}
+      <DeleteServiceModal
+        service={deletingService}
+        loading={deleteLoading}
+        error={deleteError}
+        onClose={handleCancelDelete}
+        onConfirm={handleConfirmDelete}
+      />
     </div>
   );
 }

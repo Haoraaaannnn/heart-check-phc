@@ -10,12 +10,15 @@
 
 'use client';
 
-import React from 'react';
+import React, { useState, useEffect } from 'react';
 import Link from 'next/link';
 import { usePathname, useSearchParams } from 'next/navigation';
 import 'boxicons/css/boxicons.min.css';
+import { supabase } from '@/lib/supabase';
+import { resolveServiceIcon } from '@/constants/icons';
 import {
   DASHBOARD_NAV_GROUPS,
+  DASHBOARD_ROUTES,
   DashboardNavLink,
 } from '@/app/dashboard/constants/navigation';
 import { DASHBOARD_NAV_TEXTS } from '@/app/dashboard/constants/dashNavTexts';
@@ -43,6 +46,19 @@ export function DashSideNavigation({
 }: DashSideNavigationProps) {
   const pathname = usePathname();
   const searchParams = useSearchParams();
+  const [dynamicServices, setDynamicServices] = useState<{ id: number; label_en: string; icon_src: string }[]>([]);
+
+  useEffect(() => {
+    supabase
+      .from('services')
+      .select('id, label_en, icon_src')
+      .order('display_order', { ascending: true })
+      .then(({ data }) => {
+        if (data && data.length > 0) {
+          setDynamicServices(data);
+        }
+      });
+  }, []);
 
   const S = DASH.sidebar;
   const T = DASHBOARD_NAV_TEXTS;
@@ -128,34 +144,47 @@ export function DashSideNavigation({
 
       {/* Nav Groups Scroll Area */}
       <div className={S.navScrollArea}>
-        {DASHBOARD_NAV_GROUPS.map((group) => (
-          <div key={group.key} className={S.groupSection}>
-            <div className={S.groupTitle}>{group.title}</div>
-            <div className="space-y-1">
-              {group.items.map((item) => {
-                const active = isLinkActive(item);
-                return (
-                  <Link
-                    key={item.key}
-                    href={item.href}
-                    onClick={onNavigate}
-                    className={`${S.navLink} ${
-                      active ? S.navLinkActive : S.navLinkIdle
-                    }`}
-                  >
-                    <i
-                      className={`bx ${item.icon} ${S.navIcon} ${
-                        active ? S.navIconActive : ''
+        {DASHBOARD_NAV_GROUPS.map((group) => {
+          const items: readonly DashboardNavLink[] =
+            group.key === 'services' && dynamicServices.length > 0
+              ? dynamicServices.map((svc) => ({
+                  key: `svc-${svc.id}`,
+                  label: svc.label_en,
+                  icon: resolveServiceIcon(svc.icon_src || svc.label_en),
+                  href: `${DASHBOARD_ROUTES.PATIENTS}?service=${encodeURIComponent(svc.label_en)}`,
+                  matchQueryParam: { key: 'service', value: svc.label_en },
+                }))
+              : group.items;
+
+          return (
+            <div key={group.key} className={S.groupSection}>
+              <div className={S.groupTitle}>{group.title}</div>
+              <div className="space-y-1">
+                {items.map((item) => {
+                  const active = isLinkActive(item);
+                  return (
+                    <Link
+                      key={item.key}
+                      href={item.href}
+                      onClick={onNavigate}
+                      className={`${S.navLink} ${
+                        active ? S.navLinkActive : S.navLinkIdle
                       }`}
-                      aria-hidden="true"
-                    />
-                    <span>{item.label}</span>
-                  </Link>
-                );
-              })}
+                    >
+                      <i
+                        className={`bx ${item.icon} ${S.navIcon} ${
+                          active ? S.navIconActive : ''
+                        }`}
+                        aria-hidden="true"
+                      />
+                      <span>{item.label}</span>
+                    </Link>
+                  );
+                })}
+              </div>
             </div>
-          </div>
-        ))}
+          );
+        })}
       </div>
 
       {/* Footer System Status & Workstation Link */}

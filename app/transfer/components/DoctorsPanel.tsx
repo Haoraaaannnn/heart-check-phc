@@ -19,6 +19,7 @@ export function DoctorsPanel() {
   const [formSuccess, setFormSuccess] = useState('');
 
   const [showDeleteConfirm, setShowDeleteConfirm] = useState<Doctor | null>(null);
+  const [actionErrorModal, setActionErrorModal] = useState<{ title: string; message: string } | null>(null);
 
   const [selectedDoctorId, setSelectedDoctorId] = useState<string | null>(null);
   const [savingCubicleId, setSavingCubicleId] = useState<number | null>(null);
@@ -138,7 +139,10 @@ export function DoctorsPanel() {
     const { error } = await supabase.from('doctors').update({ active: nextActive }).eq('id', doc.id);
     if (error) {
       setDoctors(prev => prev.map(d => (d.id === doc.id ? { ...d, active: doc.active } : d)));
-      alert(`Failed to update doctor: ${error.message}`);
+      setActionErrorModal({
+        title: transferTexts.doctorUpdateFailedTitle,
+        message: error.message,
+      });
     }
   };
 
@@ -157,7 +161,10 @@ export function DoctorsPanel() {
 
     if (error) {
       setCubicles(prev => prev.map(c => (c.id === cubicle.id ? { ...c, doctorId: previousDoctorId } : c)));
-      alert(`Failed to update assignment: ${error.message}`);
+      setActionErrorModal({
+        title: transferTexts.assignmentUpdateFailedTitle,
+        message: error.message,
+      });
     }
     setSavingCubicleId(null);
   };
@@ -453,6 +460,34 @@ export function DoctorsPanel() {
                 className="px-4 py-2 bg-red-600 hover:bg-red-700 text-white rounded-lg transition cursor-pointer disabled:opacity-50"
               >
                 {formLoading ? 'Deleting...' : 'Delete'}
+              </button>
+            </div>
+          </div>
+        </div>
+      )}
+
+      {/* Action Error Alert Modal */}
+      {actionErrorModal && (
+        <div className="fixed inset-0 bg-black/70 flex items-center justify-center z-50 p-4 backdrop-blur-xs" role="dialog" aria-modal="true" aria-labelledby="doctor-action-error-title">
+          <div className="bg-white dark:bg-[#1a1a1a] border border-gray-100 dark:border-[#2e2e2e] rounded-xl p-6 w-full max-w-md shadow-2xl space-y-4">
+            <div className="flex items-center gap-3">
+              <div className="w-10 h-10 rounded-xl bg-red-100 dark:bg-red-950/60 text-red-600 dark:text-red-400 flex items-center justify-center text-xl shrink-0">
+                <i className="bx bx-error text-2xl" aria-hidden="true" />
+              </div>
+              <h3 id="doctor-action-error-title" className="text-base font-bold text-gray-900 dark:text-[#f5f5f5]">
+                {actionErrorModal.title}
+              </h3>
+            </div>
+            <p className="text-sm text-gray-700 dark:text-[#a3a3a3] break-words">
+              {actionErrorModal.message}
+            </p>
+            <div className="flex justify-end pt-2">
+              <button
+                type="button"
+                onClick={() => setActionErrorModal(null)}
+                className="px-4 py-2 bg-gray-200 dark:bg-[#242424] text-gray-700 dark:text-[#a3a3a3] hover:bg-gray-300 dark:hover:bg-[#2e2e2e] hover:text-gray-900 dark:hover:text-[#f5f5f5] rounded-lg transition cursor-pointer text-sm font-semibold"
+              >
+                {transferTexts.errorModalDismiss}
               </button>
             </div>
           </div>

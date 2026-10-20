@@ -1,6 +1,6 @@
 # SuperAdmin Domain Developer Guide: Architecture & Where to Edit
 
-**Last Updated:** 2026-10-17
+**Last Updated:** 2026-10-20
 
 This document serves as the authoritative developer guide for maintaining, extending, and modifying the SuperAdmin module in `app/superadmin/`.
 
@@ -28,7 +28,7 @@ The SuperAdmin subsystem adheres strictly to the architectural standards defined
 3. **Sub-Modules and Canonical Pages:**
    - `app/superadmin/page.tsx`: Core portal orchestrator hosting User Accounts management and System Automation Settings.
    - `app/superadmin/facilities/`: Clinical rooms, doctor/nurse cubicles, and physical front-desk registration counters.
-   - `app/superadmin/customization/`: Outpatient kiosk services catalog, print queue ticket prefixes (`queue_prefix`), digit padding (`queue_pad_length`), bilingual Tagalog/English copy, and Boxicon assignments.
+   - `app/superadmin/customization/`: Outpatient kiosk services catalog, print queue ticket prefixes (`queue_prefix`), digit padding (`queue_pad_length`), clinical workflow checklist capabilities, bilingual Tagalog/English copy, and Boxicon assignments.
 
 ---
 
@@ -46,6 +46,7 @@ The SuperAdmin subsystem adheres strictly to the architectural standards defined
 | **Change kiosk customization text copy, bilingual placeholders, or prompts** | [customizationTexts.ts](file:///home/jensen/Github-Repositories/heart-check-phc/app/superadmin/customization/constants/customizationTexts.ts) |
 | **Change kiosk customization form styles, icon dropdown, or table layout** | [customizationStyles.ts](file:///home/jensen/Github-Repositories/heart-check-phc/app/superadmin/customization/constants/customizationStyles.ts) |
 | **Change print queue ticket prefix, digit padding, or live ticket preview** | [customization/page.tsx](file:///home/jensen/Github-Repositories/heart-check-phc/app/superadmin/customization/page.tsx) / [customizationTexts.ts](file:///home/jensen/Github-Repositories/heart-check-phc/app/superadmin/customization/constants/customizationTexts.ts) / [customizationStyles.ts](file:///home/jensen/Github-Repositories/heart-check-phc/app/superadmin/customization/constants/customizationStyles.ts) |
+| **Change service workflow checklist (registration, subcategories, cubicles, nurse, monitor, auto-assign, monitor layout)** | [customization/page.tsx](file:///home/jensen/Github-Repositories/heart-check-phc/app/superadmin/customization/page.tsx) / [customizationTexts.ts](file:///home/jensen/Github-Repositories/heart-check-phc/app/superadmin/customization/constants/customizationTexts.ts) / [customizationStyles.ts](file:///home/jensen/Github-Repositories/heart-check-phc/app/superadmin/customization/constants/customizationStyles.ts) |
 | **Change queue prefix and room mapping card (Settings tab)** | [QueuePrefixPanel.tsx](file:///home/jensen/Github-Repositories/heart-check-phc/app/superadmin/components/QueuePrefixPanel.tsx) / [queuePrefixTexts.ts](file:///home/jensen/Github-Repositories/heart-check-phc/app/superadmin/constants/queuePrefixTexts.ts) |
 
 | **Change user data fetching, search logic, role filter, or pagination** | [useSuperadminUsers.ts](file:///home/jensen/Github-Repositories/heart-check-phc/app/superadmin/hooks/useSuperadminUsers.ts) |

@@ -14,6 +14,7 @@ import { adminApi } from '@/app/superadmin/lib/adminApi';
 import { FACILITIES_TEXTS } from '@/app/superadmin/facilities/constants/facilitiesTexts';
 import { FACILITIES_STYLES } from '@/app/superadmin/facilities/constants/facilitiesStyles';
 import { SUPERADMIN_STYLES } from '@/app/superadmin/constants/superadminStyles';
+import { DeleteCounterModal } from '@/app/superadmin/components/DeleteCounterModal';
 
 interface Counter {
   counter_number: number;
@@ -38,6 +39,10 @@ export function CountersPanel() {
   const [error, setError] = useState('');
   const [newNumber, setNewNumber] = useState('');
   const [newLabel, setNewLabel] = useState('');
+
+  const [deletingCounter, setDeletingCounter] = useState<Counter | null>(null);
+  const [deleteLoading, setDeleteLoading] = useState(false);
+  const [deleteError, setDeleteError] = useState('');
 
   const load = useCallback(async () => {
     try {
@@ -79,6 +84,23 @@ export function CountersPanel() {
       setNewNumber('');
       setNewLabel('');
     });
+
+  const handleConfirmDeleteCounter = async () => {
+    if (!deletingCounter) return;
+    setDeleteLoading(true);
+    setDeleteError('');
+    try {
+      await adminApi('/api/superadmin/counters', 'DELETE', {
+        counter_number: deletingCounter.counter_number,
+      });
+      setDeletingCounter(null);
+      await load();
+    } catch (e: any) {
+      setDeleteError(e.message || 'Failed to delete counter station.');
+    } finally {
+      setDeleteLoading(false);
+    }
+  };
 
   if (loading) {
     return (
@@ -197,13 +219,8 @@ export function CountersPanel() {
               <button
                 type="button"
                 onClick={() => {
-                  if (confirm(T.deleteConfirm)) {
-                    run(() =>
-                      adminApi('/api/superadmin/counters', 'DELETE', {
-                        counter_number: c.counter_number,
-                      })
-                    );
-                  }
+                  setDeleteError('');
+                  setDeletingCounter(c);
                 }}
                 className="p-1.5 text-slate-400 dark:text-[#737373] hover:text-red-600 dark:hover:text-red-400 transition cursor-pointer"
                 title="Delete counter station"
@@ -214,6 +231,20 @@ export function CountersPanel() {
           ))
         )}
       </div>
+
+      {/* Delete Counter Station Confirmation Modal */}
+      <DeleteCounterModal
+        counter={deletingCounter}
+        loading={deleteLoading}
+        error={deleteError}
+        onClose={() => {
+          if (!deleteLoading) {
+            setDeletingCounter(null);
+            setDeleteError('');
+          }
+        }}
+        onConfirm={handleConfirmDeleteCounter}
+      />
     </div>
   );
 }
