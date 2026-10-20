@@ -44,4 +44,45 @@ export type Service = {
      * For example, 3 produces "001" (yielding "C001" or "1001"), while 4 produces "0001".
      */
     queue_pad_length?: number;
+
+    /**
+     * Whether the patient must check in at Registration Counters 1 to 5
+     * for document verification and initial triage before continuing.
+     */
+    requires_registration?: boolean | null;
+
+    /**
+     * Whether the kiosk prompts the patient for Adult (19+) vs Pedia (18 and below)
+     * age bracket triage before continuing.
+     */
+    has_subcategories?: boolean | null;
+
+    /**
+     * Whether the kiosk displays doctor and cubicle selection cards,
+     * routing patients to physical examination rooms.
+     */
+    requires_cubicle?: boolean | null;
+
+    /**
+     * Whether this service appears on the 3-stage Nurse Station Kanban
+     * point-of-care workstation (/nurse: Assigned -> With Doctor -> Carryout -> Done).
+     */
+    requires_nurse?: boolean | null;
+
+    /**
+     * Whether this service queue is broadcast on public TV monitors in waiting areas.
+     */
+    show_on_monitor?: boolean | null;
+
+    /**
+     * Whether the transfer coordinator automatically distributes waiting patients
+     * to available stations FIFO without staff manual drag-and-drop.
+     */
+    auto_assign?: boolean | null;
+
+    /**
+     * TV monitor calling layout style: 'cubicle' for paired doctor card split-screen,
+     * or 'table' for multi-patient matrix grid.
+     */
+    monitor_layout?: 'cubicle' | 'table' | string | null;
 };

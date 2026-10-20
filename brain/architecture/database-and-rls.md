@@ -19,7 +19,7 @@ This document details the PostgreSQL schema, row partitioning strategy, Row-Leve
 | Table | Primary Key | Description | Security & Mutability Rules |
 | :--- | :--- | :--- | :--- |
 | `patients` | `id` (`int8`) | Unified store for live kiosk check-ins and historical imported OPD records. | RLS enforced; `is_historical = true` is strictly immutable via RESTRICTIVE policies. |
-| `services` | `id` (`int4`) | Departmental service directory (Consultation, OPD Screening, ECG, Warfarin, etc.). Includes `queue_prefix` (first letter/number on queue ticket) and `queue_pad_length` (digit padding). | Read-only for public; Superadmin edit only (`is_superadmin()`). |
+| `services` | `id` (`int4`) | Departmental service directory. Includes queue prefixing (`queue_prefix`, `queue_pad_length`) and dynamic clinical workflow checklist flags (`requires_registration`, `has_subcategories`, `requires_cubicle`, `requires_nurse`, `show_on_monitor`, `auto_assign`, `monitor_layout`). | Read-only for public; Superadmin edit only (`is_superadmin()`). |
 | `cubicle` | `id` (`int8`) | Consultation cubicles and triage stations within OPD rooms. | Public read; doctor assignment managed by registration staff or admin. |
 | `counters` | `counter_number` (`int4`) | Physical registration desk counters. | Public read for desk and monitor displays. |
 | `doctors` | `id` (`uuid`) | Physician directory for consultation cubicles. | Authenticated read; managed by registration staff or admin. |
@@ -127,5 +127,5 @@ To protect Patient Health Information (PHI) and Personally Identifiable Informat
 
 ---
 
-_Last updated: 2026-10-17 — Reconciled with live Supabase schema and active RLS policies._
+_Last updated: 2026-10-20 — Reconciled with live Supabase schema, services capability checklist, and active RLS policies._
 

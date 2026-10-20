@@ -8,14 +8,13 @@
  * and multi-stage workflow transitions.
  */
 
-import React, { useState, useEffect, useCallback, useRef } from 'react';
+import React, { useState, useEffect, useCallback, useRef, useMemo } from 'react';
 import { useRouter } from 'next/navigation';
 import { useTheme } from 'next-themes';
 import { supabase } from '@/lib/supabase';
 import { Sidebar } from '@/app/transfer/components/Sidebar';
 import { BreadcrumbNav } from '@/app/transfer/components/BreadcrumbNav';
 import { ConsultationFlow } from '@/app/transfer/components/ConsultationFlow';
-import { OPScreeningFlow } from '@/app/transfer/components/OPScreeningFlow';
 import { OtherServicesFlow } from '@/app/transfer/components/OtherServicesFlow';
 import { DragGhost } from '@/app/transfer/components/DragGhost';
 import { DoctorsModal } from '@/app/transfer/components/DoctorsModal';
@@ -82,7 +81,7 @@ export default function TransferPage() {
   const pendingUpdatesRef = useRef<Patient[]>([]);
   const dragInProgressRef = useRef<boolean>(false);
 
-  const { myServices, myRooms, myCounters, accessStatus, fetchMyAccess } = useMyAccess();
+  const { myServices, myRooms, myCounters, accessStatus, fetchMyAccess, allServices } = useMyAccess();
 
   const [isLoading, setIsLoading] = useState<boolean>(true);
   const [isSyncing, setIsSyncing] = useState<boolean>(false);
@@ -482,7 +481,8 @@ export default function TransferPage() {
     setPendingUpdates,
     setOnProgressPatients,
     setAssignedPatients,
-    autoAssignBusy
+    autoAssignBusy,
+    allServices
   );
 
   useAutoRotate(
@@ -509,9 +509,15 @@ export default function TransferPage() {
     pendingAutoRotateIdsRef.current = new Set(pendingUpdates.map(p => p.id));
   }, [pendingUpdates]);
 
-  const isConsultation = selectedCategory === 'Consultation';
-  const isOPScreening = selectedCategory === 'OPD Screening';
-  const isDragEnabled = isConsultation || isOPScreening;
+  const currentService = useMemo(
+    () => allServices?.find(s => s.label_en === selectedCategory),
+    [allServices, selectedCategory]
+  );
+  const serviceHasSubcategories = currentService?.has_subcategories ?? (selectedCategory === 'Consultation' || selectedCategory === 'OPD Screening');
+  const serviceRequiresCubicle = currentService?.requires_cubicle ?? (selectedCategory === 'Consultation' || selectedCategory === 'OPD Screening');
+  const isConsultation = serviceHasSubcategories;
+  const isOPScreening = false;
+  const isDragEnabled = serviceRequiresCubicle;
 
   useEffect(() => {
     const cleanup = setupGlobalDragHandlers(isDragEnabled);
@@ -823,16 +829,15 @@ export default function TransferPage() {
         .map(c => c.room);
     };
 
-    if (isConsultation && selectedSubcategory)
+    if (serviceHasSubcategories && selectedSubcategory)
       return [...new Set(roomsFor(selectedSubcategory))].sort((a, b) => a - b);
-    if (isOPScreening && selectedOPSubcategory)
-      return [...new Set(roomsFor(selectedOPSubcategory))].sort((a, b) => a - b);
-    if (!isConsultation && !isOPScreening && selectedCategory)
+    if (!serviceHasSubcategories && selectedCategory)
       return [...new Set(roomsFor(null))].sort((a, b) => a - b);
     return [];
   };
 
-  const getAllowedSubcategories = (service: string) => {
+  const getAllowedSubcategories = (service: string | null) => {
+    if (!service) return ['Adult', 'Pedia'];
     const fromMyRooms = myRooms
       .filter(r => r.service === service && r.subcategory)
       .map(r => r.subcategory as string);
@@ -845,7 +850,8 @@ export default function TransferPage() {
   };
 
   const getVisibleCubicles = () => {
-    if (isConsultation && selectedSubcategory) {
+    if (!selectedCategory) return [];
+    if (serviceHasSubcategories && selectedSubcategory) {
       if (selectedRoom) {
         return cubicles.filter(
           c =>
@@ -857,19 +863,7 @@ export default function TransferPage() {
       return cubicles.filter(
         c => c.category === selectedCategory && c.subcategory === selectedSubcategory
       );
-    } else if (isOPScreening && selectedOPSubcategory) {
-      if (selectedRoom) {
-        return cubicles.filter(
-          c =>
-            c.category === selectedCategory &&
-            c.subcategory === selectedOPSubcategory &&
-            c.room === selectedRoom
-        );
-      }
-      return cubicles.filter(
-        c => c.category === selectedCategory && c.subcategory === selectedOPSubcategory
-      );
-    } else if (!isConsultation && !isOPScreening && selectedCategory) {
+    } else if (!serviceHasSubcategories && selectedCategory) {
       const allowedRooms = myRooms
         .filter(r => r.service === selectedCategory && r.subcategory === null)
         .map(r => r.room);
@@ -888,19 +882,10 @@ export default function TransferPage() {
 
   const matchesSelectedService = (p: Patient, requireSubcategory: boolean) => {
     if (!selectedCategory) return true;
-    if (isConsultation) {
-      if (p.service !== 'Consultation') return false;
-      if (requireSubcategory && selectedSubcategory)
-        return p.subcategory === selectedSubcategory;
-      return true;
-    }
-    if (isOPScreening) {
-      if (p.service !== 'OPD Screening') return false;
-      if (requireSubcategory && selectedOPSubcategory)
-        return p.subcategory === selectedOPSubcategory;
-      return true;
-    }
-    return p.service === selectedCategory;
+    if (p.service !== selectedCategory) return false;
+    if (serviceHasSubcategories && requireSubcategory && selectedSubcategory)
+      return p.subcategory === selectedSubcategory;
+    return true;
   };
 
   /**
@@ -924,40 +909,30 @@ export default function TransferPage() {
 
   const visibleRegistrationPatients = registrationPatients.filter(p => {
     if (!matchesMyCounters(p)) return false;
-    if (isConsultation) {
-      if (p.service !== 'Consultation') return false;
-      if (selectedSubcategory) return p.subcategory === selectedSubcategory;
-      return true;
-    }
-    if (isOPScreening) {
-      if (p.service !== 'OPD Screening') return false;
-      if (selectedOPSubcategory) return p.subcategory === selectedOPSubcategory;
-      return true;
-    }
+    if (selectedCategory && p.service !== selectedCategory) return false;
+    if (serviceHasSubcategories && selectedSubcategory) return p.subcategory === selectedSubcategory;
     return true;
   });
 
-  const queueCounts: Record<string, number> = {
-    Consultation: onProgressPatients.filter(p => p.service === 'Consultation').length,
-    'OPD Screening': onProgressPatients.filter(p => p.service === 'OPD Screening').length,
-    'OPD Card': onProgressPatients.filter(p => p.service === 'OPD Card').length,
-    'Refill Prescription': onProgressPatients.filter(p => p.service === 'Refill Prescription').length,
-    ECG: onProgressPatients.filter(p => p.service === 'ECG').length,
-    Warfarin: onProgressPatients.filter(p => p.service === 'Warfarin').length,
-    'OPD Reschedule': onProgressPatients.filter(p => p.service === 'OPD Reschedule').length,
-    Benzathine: onProgressPatients.filter(p => p.service === 'Benzathine').length,
-  };
+  const queueCounts: Record<string, number> = useMemo(() => {
+    const counts: Record<string, number> = {};
+    for (const p of onProgressPatients) {
+      if (p.service) {
+        counts[p.service] = (counts[p.service] || 0) + 1;
+      }
+    }
+    return counts;
+  }, [onProgressPatients]);
 
-  const idleCounts: Record<string, number> = {
-    Consultation: idlePatients.filter(p => p.service === 'Consultation').length,
-    'OPD Screening': idlePatients.filter(p => p.service === 'OPD Screening').length,
-    'OPD Card': idlePatients.filter(p => p.service === 'OPD Card').length,
-    'Refill Prescription': idlePatients.filter(p => p.service === 'Refill Prescription').length,
-    ECG: idlePatients.filter(p => p.service === 'ECG').length,
-    Warfarin: idlePatients.filter(p => p.service === 'Warfarin').length,
-    'OPD Reschedule': idlePatients.filter(p => p.service === 'OPD Reschedule').length,
-    Benzathine: idlePatients.filter(p => p.service === 'Benzathine').length,
-  };
+  const idleCounts: Record<string, number> = useMemo(() => {
+    const counts: Record<string, number> = {};
+    for (const p of idlePatients) {
+      if (p.service) {
+        counts[p.service] = (counts[p.service] || 0) + 1;
+      }
+    }
+    return counts;
+  }, [idlePatients]);
 
   const totalUnassigned = Object.entries(queueCounts)
     .filter(([cat]) => myServices.includes(cat))
@@ -1063,7 +1038,7 @@ export default function TransferPage() {
           onActivateIdle={handleActivateIdle}
           onRemoveIdle={handleRemoveIdle}
           allowedCounters={myCounters}
-          allowedSubcategories={getAllowedSubcategories('Consultation')}
+          allowedSubcategories={getAllowedSubcategories(selectedCategory)}
           selectedPatient={selectedPatient}
           onSelectQueuePatient={handleSelectQueuePatient}
           onSelectCubiclePatient={handleSelectCubiclePatient}
@@ -1075,50 +1050,7 @@ export default function TransferPage() {
       );
     }
 
-    if (isOPScreening) {
-      return (
-        <OPScreeningFlow
-          selectedSubcategory={selectedOPSubcategory}
-          onSelectSubcategory={setSelectedOPSubcategory}
-          selectedRoom={selectedRoom}
-          rooms={rooms}
-          visibleCubicles={visibleCubicles}
-          visibleOnProgress={visibleOnProgress}
-          assignedPatients={assignedPatients}
-          draggedPatient={draggedPatient}
-          dragOverCubicle={dragOverCubicle}
-          speaking={speaking}
-          onSelectRoom={setSelectedRoom}
-          onPointerDownFromQueue={handlePointerDownFromQueue}
-          onDragStartFromQueue={handleDragStartFromQueue}
-          onPointerDownFromCubicle={handlePointerDownFromCubicle}
-          onDragStartFromCubicle={handleDragStartFromCubicle}
-          onSpeak={speak}
-          onMoveBackToProgress={handleMoveBackToProgress}
-          isDragEnabled={isDragEnabled}
-          registrationPatients={visibleRegistrationPatients}
-          regDraggedPatient={regDraggedPatient}
-          dragOverCounter={dragOverCounter}
-          onRegPointerDown={handleRegPointerDown}
-          onRegDragStart={handleRegDragStart}
-          cubicleDoctorMap={cubicleDoctorMap}
-          onReleaseFromCounter={handleReleaseFromCounter}
-          onAssignNow={handleAssignNow}
-          idlePatients={visibleIdlePatients}
-          onActivateIdle={handleActivateIdle}
-          onRemoveIdle={handleRemoveIdle}
-          allowedCounters={myCounters}
-          allowedSubcategories={getAllowedSubcategories('OPD Screening')}
-          selectedPatient={selectedPatient}
-          onSelectQueuePatient={handleSelectQueuePatient}
-          onSelectCubiclePatient={handleSelectCubiclePatient}
-          onSelectCounterPatient={handleSelectCounterPatient}
-          onTargetCubicleClick={handleTargetCubicleClick}
-          onTargetCounterClick={handleTargetCounterClick}
-          onCancelSelection={clearSelection}
-        />
-      );
-    }
+    const requiresReg = currentService?.requires_registration ?? (selectedCategory === 'Consultation' || selectedCategory === 'OPD Screening');
 
     return (
       <OtherServicesFlow
@@ -1140,10 +1072,21 @@ export default function TransferPage() {
         idlePatients={visibleIdlePatients}
         onActivateIdle={handleActivateIdle}
         onRemoveIdle={handleRemoveIdle}
+        onAssignNow={handleAssignNow}
+        cubicleDoctorMap={cubicleDoctorMap}
+        registrationPatients={requiresReg ? visibleRegistrationPatients : undefined}
+        regDraggedPatient={requiresReg ? regDraggedPatient : undefined}
+        dragOverCounter={requiresReg ? dragOverCounter : undefined}
+        onRegPointerDown={requiresReg ? handleRegPointerDown : undefined}
+        onRegDragStart={requiresReg ? handleRegDragStart : undefined}
+        onReleaseFromCounter={requiresReg ? handleReleaseFromCounter : undefined}
+        allowedCounters={myCounters}
         selectedPatient={selectedPatient}
         onSelectQueuePatient={handleSelectQueuePatient}
         onSelectCubiclePatient={handleSelectCubiclePatient}
+        onSelectCounterPatient={handleSelectCounterPatient}
         onTargetCubicleClick={handleTargetCubicleClick}
+        onTargetCounterClick={handleTargetCounterClick}
         onCancelSelection={clearSelection}
       />
     );

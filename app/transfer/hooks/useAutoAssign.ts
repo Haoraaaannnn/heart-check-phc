@@ -1,36 +1,46 @@
 'use client';
 import { useEffect, useRef } from 'react';
 import { Patient, Cubicle } from '@/types/Types';
+import { Service } from '@/types/Services';
 import { AUTO_ASSIGN_SERVICES, MAX_PATIENTS_PER_CUBICLE } from '@/app/transfer/lib/constants';
 import { supabase } from "@/lib/supabase";
 
-  export function useAutoAssign(
-    selectedCategory: string | null,
-    onProgressPatients: Patient[],
-    assignedPatients: Record<string, Patient[]>,
-    cubicles: Cubicle[],
-    setPendingUpdates: React.Dispatch<React.SetStateAction<Patient[]>>,
-    setOnProgressPatients: React.Dispatch<React.SetStateAction<Patient[]>>,
-    setAssignedPatients: React.Dispatch<React.SetStateAction<Record<string, Patient[]>>>,
-    busyRef: React.MutableRefObject<boolean>
-  ) {
-    const autoAssignPatients = async () => {
-      if (busyRef.current) return;
-      busyRef.current = true;
+export function useAutoAssign(
+  selectedCategory: string | null,
+  onProgressPatients: Patient[],
+  assignedPatients: Record<string, Patient[]>,
+  cubicles: Cubicle[],
+  setPendingUpdates: React.Dispatch<React.SetStateAction<Patient[]>>,
+  setOnProgressPatients: React.Dispatch<React.SetStateAction<Patient[]>>,
+  setAssignedPatients: React.Dispatch<React.SetStateAction<Record<string, Patient[]>>>,
+  busyRef: React.MutableRefObject<boolean>,
+  allServices?: Service[]
+) {
+  const autoAssignPatients = async () => {
+    if (busyRef.current) return;
+    busyRef.current = true;
 
-      const isOnCooldown = (p: Patient) =>
-     !!p.cooldown_until && new Date(p.cooldown_until).getTime() > Date.now();
+    const isOnCooldown = (p: Patient) =>
+      !!p.cooldown_until && new Date(p.cooldown_until).getTime() > Date.now();
 
     try {
       const dbUpdates: { id: number; cubicleNum: string; status: string; reg_end: string; called_at: string; queue_position: number }[] = [];
       const allAssignedIds: number[] = [];
       let anyAutoAssigned = false;
 
-      for (const service of AUTO_ASSIGN_SERVICES) {
+      // Resolve eligible auto-assign services from live database catalog or fallback
+      const targetServices = allServices && allServices.length > 0
+        ? allServices.filter(s => s.auto_assign).map(s => s.label_en)
+        : AUTO_ASSIGN_SERVICES;
+
+      for (const service of targetServices) {
+        const serviceObj = allServices?.find(s => s.label_en === service);
         const availableCubicles = cubicles.filter(c => c.category === service);
         const waitingPatients = onProgressPatients.filter(p => {
           if (p.service !== service) return false;
-          if ((service === 'Consultation' || service === 'OPD Screening') && !p.reg_end) {
+          // If this service requires registration desk intake, do not assign until registration is finished
+          const requiresReg = serviceObj ? serviceObj.requires_registration : (service === 'Consultation' || service === 'OPD Screening');
+          if (requiresReg && !p.reg_end) {
             return false;
           }
           if (isOnCooldown(p)) return false;
@@ -65,7 +75,8 @@ import { supabase } from "@/lib/supabase";
             called_at: now,
           };
 
-          if (patient.service === "Consultation" || patient.service === "OPD Screening") {
+          const hasSubcats = serviceObj ? serviceObj.has_subcategories : (patient.service === "Consultation" || patient.service === "OPD Screening");
+          if (hasSubcats) {
             setPendingUpdates(prev => [
               ...prev.filter(p => p.id !== patient.id),
               updatedPatient,
@@ -97,26 +108,27 @@ import { supabase } from "@/lib/supabase";
         cubicleCounts[cubicleNum] = patients.length;
       }
 
-      const consultationPreferred = onProgressPatients.filter(
-        (patient) =>
-          patient.service === "Consultation" &&
-          patient.reg_end &&
-          !isOnCooldown(patient) &&
-          patient.subcategory &&
-          patient.preferredCubicleNums &&
-          patient.preferredCubicleNums.length > 0
+      // Auto-assign patients with preferred cubicles (matching any service with preferred stations)
+      const preferredPatients = onProgressPatients.filter(
+        (patient) => {
+          const sObj = allServices?.find(s => s.label_en === patient.service);
+          const requiresReg = sObj ? sObj.requires_registration : true;
+          if (requiresReg && !patient.reg_end) return false;
+          if (isOnCooldown(patient)) return false;
+          return Boolean(patient.preferredCubicleNums && patient.preferredCubicleNums.length > 0);
+        }
       );
 
       const now2 = new Date().toISOString();
 
-      for (const patient of consultationPreferred) {
+      for (const patient of preferredPatients) {
         const freeCubicle = patient.preferredCubicleNums!
           .map((cubicleNum) =>
             cubicles.find(
               (cubicle) =>
                 cubicle.cubicleNum === cubicleNum &&
-                cubicle.category === "Consultation" &&
-                cubicle.subcategory === patient.subcategory
+                cubicle.category === patient.service &&
+                (!patient.subcategory || cubicle.subcategory === patient.subcategory)
             )
           )
           .find(

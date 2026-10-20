@@ -1,6 +1,6 @@
 # Active Session Handoff Log
 
-**Last Updated:** 2026-10-19
+**Last Updated:** 2026-10-20
 
 This document serves as an optional, high-signal, token-efficient session handoff for multi-step tasks across AI model invocations or developer shifts.
 
@@ -12,68 +12,45 @@ This document serves as an optional, high-signal, token-efficient session handof
 
 ## Active Session Status
 
-- **Active Milestone / Task:** Chapter 4 Queue Simulation Implementation & Whole-Year 2024 Alignment (Completed)
-- **Active Git Branch:** `feat/simulation`
-- **Session Focus:** Creation of `python_backend/chapter4_simulation.py` grounded in the whole year of 2024 (January to December, 26,753 patient records), M/M/1 queuing calculation for registration bottleneck during morning peak (08:00-12:00), compliance evaluation, sensitivity analysis, authoring `docs/simulation/SIMULATION_EXECUTION_GUIDELINE.md`, and aligning all simulation documents.
+- **Active Milestone / Task:** Full System Reflection for Dynamic & Customized Clinical Services (Completed)
+- **Active Git Branch:** `patch/after-client-consultation-patches`
+- **Session Focus:** Complete system-wide reflection of customized services across Kiosk, Patient Transfer, Public TV Monitor, SuperAdmin, and Analytics Dashboard. Ensured newly created and customized services dynamically appear in sidebars, queues, registration desks, monitor calling views, and navigation rails without hardcoded constants.
 
 ---
 
 ## Decisions Made
 
-1. **Whole-Year 2024 Dataset Alignment:** Grounded the simulation strictly in 12 full calendar months of real PHC consultation room data (January 1 to December 31, 2024, N = 26,753 validated records), replacing previous references to "March to Dec" or 2025.
-2. **Dual Data Ingestion Strategy:** Built `chapter4_simulation.py` to support both live Supabase REST API queries and deterministic offline/local extraction from `python_backend/data_entries/2024_*.xls` via the `--local` flag.
-3. **M/M/1 Morning Peak Formulation:** Scoped closed-form M/M/1 registration queuing analysis to the 08:00 to 12:00 morning arrival window to accurately reflect clinical queue pressure without dilution from afternoon hours.
-4. **Authoritative Execution Guide:** Authored `docs/simulation/SIMULATION_EXECUTION_GUIDELINE.md` with step-by-step reproduction instructions, CLI reference, table interpretations, and defense cheatsheet.
+1. **Transfer Sidebar Dynamic Categories:** Updated `Sidebar.tsx` to load services directly from PostgreSQL `services` table instead of filtering `allowedServices` against hardcoded constants (`CATEGORIES`). Any newly created or renamed service immediately appears in the Transfer Sidebar.
+2. **Superadmin / Admin Bypass Parity:** Updated `useMyAccess.ts` so superadmin and admin accounts always gain access to all live hospital services loaded dynamically from the `services` table.
+3. **Registration Flow for All Services:** Extended `OtherServicesFlow.tsx` and `app/transfer/page.tsx` to support registration desk intake, patient release, auto-assignment, and doctor mapping for any service that has `requires_registration = true`.
+4. **Dynamic TV Monitor Hub:** Refactored `app/monitor/page.tsx` from a static array to a live query from `services` table, filtering by `show_on_monitor !== false` and evaluating `has_subcategories`.
+5. **Dynamic Monitor Layout Style:** Updated `useMonitorData.ts` to inspect `service.monitor_layout` from the database ('table' vs 'cubicle') with graceful fallback.
+6. **Dynamic Dashboard Navigation:** Updated `DashSideNavigation.tsx` so the "Services" left-rail group automatically populates with all active clinical services from PostgreSQL.
 
 ---
 
 ## Files Changed or Created
 
-- `python_backend/chapter4_simulation.ipynb` (Created and preserved as primary standalone research notebook)
-- `python_backend/chapter4_simulation.py` & `python_backend/output/` (Cleaned up and deleted per user request; only notebook and markdown guides retained)
-- `docs/simulation/SIMULATION_EXECUTION_GUIDELINE.md` (Created authoritative reproduction and execution manual)
-- `docs/simulation/README.md` (Updated portal with 2024 full year scope and execution guideline link)
-- `docs/simulation/chapter4_simulation_build_guide.md` (Updated with whole-year 2024 scope and notebook instructions)
-- `docs/simulation/simulation-master-guide.md` (Updated baseline references to full year 2024)
-- `docs/simulation/chapter4_simulation_comparison.md` (Updated limitations and grounding to full year 2024)
-- `docs/README.md` (Updated master index with SIMULATION_EXECUTION_GUIDELINE.md)
-- `brain/CURRENT.md` & `brain/INDEX.md` (Synchronized active milestones and dates)
-
-- `constants/themeTokens.ts` (Removed icon background and updated pill tokens to `rounded-md`)
-- `app/landing/constants/landingStyles.ts` (Updated `tagPill` radius from `full` to `md`)
-- `app/dashboard/constants/styles.ts` (Removed icon background from tones, badges to `rounded-md`, buttons to `rounded-lg`)
-- `app/dashboard/constants/skeletonStyles.ts` (Removed icon borders/backgrounds, status badges to `rounded-md`)
-- `app/dashboard/constants/historicalStyles.ts` (Removed icon backgrounds, status badges to `rounded-md`)
-- `app/dashboard/constants/headerSearchStyles.ts` (Removed icon container background from `itemIconBox`)
-- `app/dashboard/pages/analytics/constants/analytics.ts` (Removed icon background, badges to `rounded-md`)
-- `app/dashboard/pages/cubicles/constants/cubicles.ts` (Removed icon background from `canvasIconWrap`, badges to `rounded-md`)
-- `app/dashboard/pages/export/constants/exportStyles.ts` (Removed icon wrappers, badges to `rounded-md`)
-- `app/dashboard/pages/import/constants/importStyles.ts` (Removed icon wrappers, badges to `rounded-md`)
-- `app/dashboard/pages/patients/constants/patients.ts` (Filter chips to `rounded-lg`, badges to `rounded-md`)
-- `app/superadmin/constants/superadminStyles.ts` (Removed icon background from tones, pills to `rounded-md`)
-- `app/superadmin/constants/superadminSkeletonStyles.ts` (Removed icon backgrounds, avatars and pills to `rounded-md`/`rounded-lg`)
-- `app/superadmin/facilities/constants/facilitiesStyles.ts` (Removed icon backgrounds)
-- `app/superadmin/components/ClinicalAssignmentsSelector.tsx` (Checkbox indicators to `rounded-md`)
-- `app/superadmin/components/UserTable.tsx` (Avatars to `rounded-lg`)
-- `app/kiosk/pages/kiosk-services/constants/kioskServices.ts` (Pills to `borderRadius: 6`, scroll indicator to `rounded-xl`)
-- `app/kiosk/pages/confirmation/constants/*.ts` (Pills to `borderRadius: 6`)
-- `app/kiosk/pages/sms-input/constants/smsInstruction.ts` (Service badge to `borderRadius: 6`)
-- `app/kiosk/pages/category-selection/constants/*.ts` (Badges to `borderRadius: 6`, scroll indicators to `12`)
-- `app/kiosk/pages/kiosk-new-old-selection/constants/*.ts` (Badges to `borderRadius: 6`, scroll indicators to `12`)
-- `app/kiosk/constants/idleRedirect.ts` (Tap prompt to `16px`, tap icon container background removed)
-- `docs/specifications/DESIGN.md` (Created master visual design and layout standards specification)
-- `docs/specifications/COMPONENTS_GUIDE.md` (Updated with merge notice pointing to `DESIGN.md`)
-- `docs/specifications/README.md` & `docs/README.md` (Updated specifications index and portal with `DESIGN.md`)
-- `brain/INDEX.md` & `brain/CURRENT.md` (Updated second brain active milestones and links)
+- `app/transfer/components/Sidebar.tsx` (Dynamic categories from PostgreSQL `services` table)
+- `app/transfer/hooks/useMyAccess.ts` (Superadmin bypass to all dynamic services)
+- `app/transfer/components/OtherServicesFlow.tsx` (Added registration counters, patient release, assign now, and doctor map props)
+- `app/transfer/page.tsx` (Passed dynamic registration props and auto-assign to `OtherServicesFlow`)
+- `app/monitor/page.tsx` (Dynamic monitor selection screen filtering on `show_on_monitor`)
+- `app/monitor/hooks/useMonitorData.ts` (Dynamic `monitor_layout` evaluation from database)
+- `app/dashboard/components/navigation/DashSideNavigation.tsx` (Dynamic services navigation links)
+- `app/transfer/constants/transferTexts.ts` (Added error modal copy)
+- `brain/CURRENT.md` (Added Milestone 5 and 2026-10-20 stamp)
+- `brain/SESSION_LOG.md` (Updated session handoff)
 
 ---
 
 ## Checks Performed
 
-1. **Comprehensive Grep & Python AST Scans:** Verified zero remaining pillbox shapes (`rounded-full` or `borderRadius: 9999`) on buttons, badges, chips, or tags across the codebase.
-2. **Icon Background Audit:** Verified all icon wrappers have had resting background boxes and tints removed.
-3. **Zero Emojis Standard:** Verified zero emojis across all modified code and documentation files.
-4. **Explicit ISO Date Stamps:** Verified `2026-10-18` date stamp on all created and updated documentation files.
+1. **Zero Native Browser Dialogs:** Verified via `git grep -nE '\b(confirm|alert|prompt)\s*\('` that 0 occurrences remain in active code across the entire repository.
+2. **Zero Emojis Standard:** Verified zero emojis across all code, comments, JSDocs, and markdown documentation files.
+3. **Explicit ISO Date Stamps:** Verified `2026-10-20` date stamp on all created and updated documentation files (`.md`).
+4. **Separation of Concerns:** Verified all copy resides in `*Texts.ts` and styling in `*Styles.ts`.
+5. **Dark Mode & Enterprise Surfaces:** Verified solid surfaces with 1px borders, zero blurry glassmorphism, and dual-theme compatibility.
 
 ---
 
@@ -85,5 +62,4 @@ This document serves as an optional, high-signal, token-efficient session handof
 
 ## Next Actions
 
-1. Present summary of design updates and documentation to user.
-2. Follow the selective retrieval protocol for all subsequent tasks (read `INDEX.md` only for nontrivial tasks).
+1. Review with user and verify user satisfaction.

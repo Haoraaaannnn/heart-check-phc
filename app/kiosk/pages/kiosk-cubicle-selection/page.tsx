@@ -73,9 +73,9 @@ export default async function KioskCubicleSelectionPage({
 
     const serviceLabel = service?.label_en?.trim().toLowerCase();
 
-    // Guard: Cubicle selection is strictly restricted to Consultation.
-    // If accessed for OPD Screening or any other service, redirect to SMS input.
-    if (!service || serviceLabel !== "consultation") {
+    // Guard: Cubicle selection is strictly restricted to services requiring cubicles.
+    // If accessed for a service without cubicles, redirect to SMS input.
+    if (!service || !service.requires_cubicle) {
         const params = new URLSearchParams();
         if (serviceId) params.set("serviceId", serviceId);
         if (type) params.set("type", type);
@@ -103,11 +103,11 @@ export default async function KioskCubicleSelectionPage({
         console.error(`${getTimestamp()} [CUBICLE SELECTOR ERROR]:`, error);
     }
 
-    // Direct query for consultation cubicles to build fallback name-to-doctor mapping
+    // Direct query for active service cubicles to build fallback name-to-doctor mapping
     const { data: directCubicles } = await supabase
         .from("cubicle")
         .select(`"cubicleNum", category, subcategory, "doctorId"`)
-        .eq("category", "Consultation");
+        .eq("category", service.label_en);
 
     const cubicleDocIdMap = new Map<string, string>();
     (directCubicles || []).forEach((c: { cubicleNum: string | null; doctorId: string | null }) => {

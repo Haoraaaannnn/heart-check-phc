@@ -23,6 +23,15 @@ export async function GET(request: Request) {
     .from('cubicle')
     .select('category, subcategory, room');
 
+  const { data: serviceRows } = await supabaseAdmin
+    .from('services')
+    .select('label_en')
+    .order('display_order', { ascending: true });
+
+  const dynamicServices = (serviceRows && serviceRows.length > 0)
+    ? serviceRows.map(s => s.label_en)
+    : SERVICES;
+
   const { data: counterRows } = await supabaseAdmin
     .from('counters').select('counter_number').eq('active', true).order ('counter_number');
     const COUNTERS = (counterRows ?? []).map(c => c.counter_number);
@@ -101,7 +110,7 @@ export async function GET(request: Request) {
   }
 
   return NextResponse.json({
-    services: SERVICES,
+    services: dynamicServices,
     consultationSubcategories: CONSULTATION_SUBCATEGORIES,
     counters: COUNTERS,
     availableRooms,

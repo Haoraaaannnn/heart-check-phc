@@ -58,5 +58,13 @@ export const FACILITIES_TEXTS = {
     inactiveStatus: 'Inactive',
     deleteButton: 'Delete',
     deleteConfirm: 'Delete counter station? Staff currently assigned to it will lose this station assignment.',
+    deleteModalTitle: 'Confirm Counter Deletion',
+    deleteModalWarning: 'Are you sure you want to delete this counter station?',
+    deleteModalTarget: 'Target Counter Station:',
+    deleteModalInUseWarning: (count: number) => `Station currently has ${count} active staff member${count === 1 ? '' : 's'} assigned.`,
+    deleteModalDangerNote: 'This action cannot be undone. Staff currently assigned to it will lose this station assignment.',
+    confirmDeleteButton: 'Delete Counter',
+    cancelDeleteButton: 'Cancel',
+    deletingButton: 'Deleting...',
   },
 } as const;

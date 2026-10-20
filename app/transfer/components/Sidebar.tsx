@@ -14,7 +14,7 @@
 
 'use client';
 
-import React from 'react';
+import React, { useState, useEffect } from 'react';
 import { useRouter } from 'next/navigation';
 import { supabase } from '@/lib/supabase';
 import { handleSignOut } from '@/lib/supabase/signOut';
@@ -56,9 +56,24 @@ export function Sidebar({
   isExpanded = false,
 }: SidebarProps) {
   const router = useRouter();
-  const visibleCategories = allowedServices
-    ? CATEGORIES.filter(c => allowedServices.includes(c))
-    : CATEGORIES;
+  const [dbServices, setDbServices] = useState<string[]>([]);
+
+  useEffect(() => {
+    supabase
+      .from('services')
+      .select('label_en')
+      .order('display_order', { ascending: true })
+      .then(({ data }) => {
+        if (data && data.length > 0) {
+          setDbServices(data.map(s => s.label_en));
+        }
+      });
+  }, []);
+
+  const defaultCategories = dbServices.length > 0 ? dbServices : CATEGORIES;
+  const visibleCategories = (allowedServices && allowedServices.length > 0)
+    ? allowedServices
+    : defaultCategories;
 
   const handleLogout = async () => {
     await handleSignOut();

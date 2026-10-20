@@ -152,6 +152,9 @@ export const transferTexts = {
   badgeReturn: "Return",
   badgeSpeaker: "Speaker",
   dismissHint: "Tap outside or press Esc to close",
+  doctorUpdateFailedTitle: "Doctor Update Failed",
+  assignmentUpdateFailedTitle: "Assignment Update Failed",
+  errorModalDismiss: "Dismiss",
 } as const;
 
 export default transferTexts;

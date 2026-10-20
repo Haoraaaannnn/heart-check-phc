@@ -1,5 +1,6 @@
 'use client';
-import { useState, useRef } from 'react';
+
+import { useState, useRef, useEffect } from 'react';
 import { supabase } from '@/lib/supabase';
 import { Patient, Cubicle } from '@/types/Types';
 
@@ -9,12 +10,28 @@ export function useMonitorData(category: string, subcategory: string | null, cat
   const [registrationPatients, setRegistrationPatients] = useState<Patient[]>([]);
   const [currentTime, setCurrentTime] = useState(new Date());
   const [cubicleDoctorMap, setCubicleDoctorMap] = useState<Record<string, string>>({});
+  const [monitorLayout, setMonitorLayout] = useState<string | null>(null);
 
   const announcementQueue = useRef<{ patient: Patient; message: string }[]>([]);
   const isPlayingRef = useRef(false);
   const announcedCubiclePatients = useRef<Map<string, Set<number>>>(new Map());
-  
-  const isTableLayoutService = (category === 'Consultation' && subcategory) || category === 'OPD Screening';
+
+  useEffect(() => {
+    supabase
+      .from('services')
+      .select('monitor_layout')
+      .eq('label_en', category)
+      .maybeSingle()
+      .then(({ data }) => {
+        if (data?.monitor_layout) {
+          setMonitorLayout(data.monitor_layout);
+        }
+      });
+  }, [category]);
+
+  const isTableLayoutService = monitorLayout
+    ? monitorLayout === 'table'
+    : (category === 'Consultation' && subcategory) || category === 'OPD Screening';
 
   const speak = async (text: string, patientId: number, times: number = 3) => {
     return new Promise<void>((resolve) => {

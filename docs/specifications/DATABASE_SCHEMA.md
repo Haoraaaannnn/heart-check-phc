@@ -76,6 +76,13 @@ Direct `INSERT` statements on `patients` are restricted by RLS to authenticated 
 | `patient_type` | `text` | Nullable | Routing flag: `'new'`, `'old'`, or `'both'`. Governs triage registration routing. |
 | `queue_prefix` | `text` | Nullable | Leading character/prefix (letter or number, e.g. `C`, `1`, `S`) for printed queue tickets. Serves as the first number or letter on the queue number. |
 | `queue_pad_length` | `int4` | NOT NULL | Number of padded numeric digits following the prefix (e.g. `3` produces `001` yielding `C001` or `1001`; `4` produces `0001` yielding `C0001`). |
+| `requires_registration` | `bool` | Nullable | Whether patients must check in at Registration Counters 1 to 5 for document verification before queueing. |
+| `has_subcategories` | `bool` | Nullable | Whether kiosk prompts for age category triage (Adult 19+ vs Pedia 18 and below). |
+| `requires_cubicle` | `bool` | Nullable | Whether kiosk displays doctor and examination cubicle selection cards, routing to physical rooms. |
+| `requires_nurse` | `bool` | Nullable | Whether this service appears on the 3-stage Nurse Station Kanban (/nurse: Assigned -> With Doctor -> Carryout -> Done). |
+| `show_on_monitor` | `bool` | Nullable | Whether this service queue is broadcast on public TV monitors in waiting areas (/monitor). |
+| `auto_assign` | `bool` | Nullable | Whether the transfer coordinator automatically distributes waiting patients FIFO without manual staff drag-and-drop. |
+| `monitor_layout` | `varchar` | Nullable | TV calling display layout: `'cubicle'` (split-screen doctor cards) or `'table'` (multi-patient matrix grid). |
 
 **RLS Enforcement:**
 - Public read access for anonymous and authenticated users (`Enable read access for all users`).
@@ -366,4 +373,4 @@ This appendix provides a literal reference dump of the verified database schema 
 
 ---
 
-_Last updated: 2026-10-17 — Master database architecture and schema reference consolidated. Includes full column definitions, customizable queue ticket prefixes/padding, staff-scoping join tables, rate-limiting models, and verified RLS policies._
+_Last updated: 2026-10-20 — Master database architecture and schema reference consolidated. Includes full column definitions, customizable queue ticket prefixes/padding, service clinical workflow checklist flags, staff-scoping join tables, rate-limiting models, and verified RLS policies._

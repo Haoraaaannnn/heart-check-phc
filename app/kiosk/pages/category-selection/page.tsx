@@ -3,6 +3,8 @@
 import { Suspense, useState, useRef, useCallback, useEffect } from "react";
 import { useSearchParams } from "next/navigation";
 import { useKioskNavigate } from "@/app/kiosk/hooks/useKioskNavigate";
+import { createClient } from "@/lib/supabase/client";
+import { Service } from "@/types/Services";
 import { CategoryHeaderTexts } from "@/app/kiosk/pages/category-selection/constants/categoryHeaderTexts";
 import { CategoryHeaderStyle } from "@/app/kiosk/pages/category-selection/constants/categoryHeader";
 import { CategoryCardsTexts } from "@/app/kiosk/pages/category-selection/constants/categoryCardsTexts";
@@ -27,6 +29,22 @@ function CategorySelectionContent() {
     const serviceId = searchParams.get("serviceId");
     const patientType = searchParams.get("type");
     const serviceLabel = searchParams.get("serviceLabel")?.trim().toLowerCase();
+
+    const [service, setService] = useState<Service | null>(null);
+
+    // Fetch active service record to inspect clinical capabilities checklist
+    useEffect(() => {
+        if (!serviceId) return;
+        const supabase = createClient();
+        supabase
+            .from("services")
+            .select("*")
+            .eq("id", parseInt(serviceId, 10))
+            .maybeSingle()
+            .then(({ data }) => {
+                if (data) setService(data as Service);
+            });
+    }, [serviceId]);
 
     // Scroll state tracking
     const scrollContainerRef = useRef<HTMLDivElement>(null);
@@ -94,9 +112,9 @@ function CategorySelectionContent() {
         if (serviceLabel) params.set("serviceLabel", serviceLabel);
         params.set("subcategory", subcategory);
 
-        // Consultation → cubicle selection, OPD Screening → SMS input.
+        // If service requires cubicle/doctor selection, route to cubicle selection; otherwise to SMS input.
         const nextPath =
-            serviceLabel === "consultation"
+            service?.requires_cubicle
                 ? "/kiosk/pages/kiosk-cubicle-selection"
                 : "/kiosk/pages/sms-input";
 

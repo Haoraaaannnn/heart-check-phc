@@ -16,6 +16,7 @@
 
 import React, { useCallback, useEffect, useMemo, useState } from 'react';
 import { adminApi } from '@/app/superadmin/lib/adminApi';
+import { createClient } from '@/lib/supabase/client';
 import { SERVICES, SERVICES_WITH_SUBCATEGORIES, SUBCATEGORIES } from '@/lib/facilities';
 import { FACILITIES_TEXTS } from '@/app/superadmin/facilities/constants/facilitiesTexts';
 import { FACILITIES_STYLES } from '@/app/superadmin/facilities/constants/facilitiesStyles';
@@ -58,6 +59,9 @@ export function RoomsPanel() {
   const B = SUPERADMIN_STYLES.buttons;
   const T = FACILITIES_TEXTS.rooms;
 
+  const [availableServices, setAvailableServices] = useState<string[]>(SERVICES);
+  const [subcatServices, setSubcatServices] = useState<string[]>(SERVICES_WITH_SUBCATEGORIES);
+
   const [cubicles, setCubicles] = useState<Cubicle[]>([]);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState('');
@@ -70,6 +74,31 @@ export function RoomsPanel() {
   const [fRoom, setFRoom] = useState('');
   const [fCount, setFCount] = useState('1');
   const [fName, setFName] = useState('');
+
+  useEffect(() => {
+    const supabase = createClient();
+    supabase
+      .from('services')
+      .select('label_en, has_subcategories, requires_cubicle')
+      .order('display_order', { ascending: true })
+      .then(({ data }) => {
+        if (data && data.length > 0) {
+          const cubicleServices = data
+            .filter((s: any) => s.requires_cubicle !== false)
+            .map((s: any) => s.label_en);
+          const subServices = data
+            .filter((s: any) => s.has_subcategories)
+            .map((s: any) => s.label_en);
+          if (cubicleServices.length > 0) {
+            setAvailableServices(cubicleServices);
+            setFCategory(cubicleServices[0]);
+          }
+          if (subServices.length > 0) {
+            setSubcatServices(subServices);
+          }
+        }
+      });
+  }, []);
 
   /**
    * Stored rows from the `queue_prefix_map` app_setting.
@@ -180,7 +209,7 @@ export function RoomsPanel() {
     setModal(m);
   };
 
-  const needsSub = SERVICES_WITH_SUBCATEGORIES.includes(fCategory);
+  const needsSub = subcatServices.includes(fCategory);
 
   const submit = async (e: React.FormEvent) => {
     e.preventDefault();
@@ -470,7 +499,7 @@ export function RoomsPanel() {
                         onChange={(e) => setFCategory(e.target.value)}
                         className={S.select}
                       >
-                        {SERVICES.map((s) => (
+                        {availableServices.map((s) => (
                           <option key={s} value={s} className={S.selectOption}>
                             {s}
                           </option>

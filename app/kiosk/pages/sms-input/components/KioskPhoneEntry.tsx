@@ -146,11 +146,10 @@ function buildCancelHref(
     patientType: string | null,
     subcategory: string | undefined
 ): string {
-    const serviceName = service?.label_en?.trim().toLowerCase();
     const serviceId = service?.id;
 
-    // Consultation uses cubicles, so backing returns to cubicle selection
-    if (serviceName === "consultation") {
+    // 1. Services requiring cubicle selection back up to the cubicle selector
+    if (service?.requires_cubicle) {
         const params = new URLSearchParams();
         if (serviceId !== undefined) params.set("serviceId", String(serviceId));
         if (patientType) params.set("type", patientType);
@@ -158,14 +157,8 @@ function buildCancelHref(
         return `/kiosk/pages/kiosk-cubicle-selection?${params.toString()}`;
     }
 
-    // OPD Screening (and any service with an Adult/Pedia age category) bypasses cubicles
-    // and returns directly to category selection
-    if (
-        serviceName === "opd screening" ||
-        serviceName === "opd-screening" ||
-        serviceName === "opdscreening" ||
-        Boolean(subcategory)
-    ) {
+    // 2. Services prompting subcategories (or if a subcategory was chosen) back up to category selection
+    if (service?.has_subcategories || Boolean(subcategory)) {
         const params = new URLSearchParams();
         if (serviceId !== undefined) params.set("serviceId", String(serviceId));
         if (patientType) params.set("type", patientType);
@@ -173,7 +166,7 @@ function buildCancelHref(
         return `/kiosk/pages/category-selection?${params.toString()}`;
     }
 
-    // All other direct services return to the main kiosk services menu
+    // 3. All other direct services return to the main kiosk services menu
     return patientType
         ? `/kiosk/pages/kiosk-services?type=${encodeURIComponent(patientType)}`
         : "/kiosk/pages/kiosk-services";

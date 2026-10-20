@@ -39,5 +39,23 @@ export const CUSTOMIZATION_STYLES = {
   previewCard: `flex flex-col sm:flex-row items-start sm:items-center justify-between gap-3 p-3.5 rounded-lg bg-white dark:bg-[#1a1a1a] border ${themeTokens.border.default} shadow-2xs`,
   ticketBadge: `font-mono text-sm font-bold px-3 py-1 rounded-md bg-rose-50 dark:bg-rose-950/50 text-[#a8071a] dark:text-[#f87171] border border-rose-200 dark:border-rose-900 tracking-wider`,
   tableTicketBadge: `font-mono text-xs font-semibold px-2 py-0.5 rounded-md bg-rose-50 dark:bg-rose-950/40 text-[#a8071a] dark:text-[#f87171] border border-rose-200/80 dark:border-rose-900/60 inline-flex items-center gap-1.5`,
+
+  /* Capability Checklist Form Styles */
+  checklistGrid: 'grid grid-cols-1 md:grid-cols-2 gap-3',
+  checkCard: `flex items-start gap-3 p-3.5 rounded-xl border transition cursor-pointer select-none`,
+  checkCardActive: `border-rose-300 dark:border-rose-900 bg-rose-50/60 dark:bg-rose-950/20 shadow-2xs`,
+  checkCardInactive: `border-slate-200 dark:border-[#2e2e2e] bg-white dark:bg-[#1a1a1a] hover:border-slate-300 dark:hover:border-[#3a3a3a]`,
+  checkbox: `mt-0.5 h-4 w-4 rounded border-slate-300 text-rose-600 focus:ring-rose-500 dark:border-[#3e3e3e] dark:bg-[#242424] shrink-0 cursor-pointer`,
+  checkTitle: `text-xs font-bold text-slate-800 dark:text-[#f5f5f5] block`,
+  checkDescription: `text-[11px] text-slate-500 dark:text-[#a3a3a3] mt-0.5 block leading-relaxed`,
+
+  /* Table Capability Badges */
+  badgeContainer: 'flex flex-wrap gap-1 max-w-xs',
+  badgeRegistration: `px-1.5 py-0.5 rounded-md text-[10px] font-semibold bg-blue-50 text-blue-700 border border-blue-200/80 dark:bg-blue-950/50 dark:text-blue-300 dark:border-blue-900/60 inline-flex items-center gap-1`,
+  badgeCubicles: `px-1.5 py-0.5 rounded-md text-[10px] font-semibold bg-emerald-50 text-emerald-700 border border-emerald-200/80 dark:bg-emerald-950/50 dark:text-emerald-300 dark:border-emerald-900/60 inline-flex items-center gap-1`,
+  badgeNurse: `px-1.5 py-0.5 rounded-md text-[10px] font-semibold bg-amber-50 text-amber-700 border border-amber-200/80 dark:bg-amber-950/50 dark:text-amber-300 dark:border-amber-900/60 inline-flex items-center gap-1`,
+  badgeMonitor: `px-1.5 py-0.5 rounded-md text-[10px] font-semibold bg-purple-50 text-purple-700 border border-purple-200/80 dark:bg-purple-950/50 dark:text-purple-300 dark:border-purple-900/60 inline-flex items-center gap-1`,
+  badgeAutoAssign: `px-1.5 py-0.5 rounded-md text-[10px] font-semibold bg-teal-50 text-teal-700 border border-teal-200/80 dark:bg-teal-950/50 dark:text-teal-300 dark:border-teal-900/60 inline-flex items-center gap-1`,
+  badgeSubcategories: `px-1.5 py-0.5 rounded-md text-[10px] font-semibold bg-indigo-50 text-indigo-700 border border-indigo-200/80 dark:bg-indigo-950/50 dark:text-indigo-300 dark:border-indigo-900/60 inline-flex items-center gap-1`,
 } as const;
 

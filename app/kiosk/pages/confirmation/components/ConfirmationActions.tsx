@@ -48,10 +48,6 @@ export default function ConfirmationActions({
     const handleContinue = () => {
         onContinue?.();
 
-        const label = service.label_en?.trim().toLowerCase();
-        const isConsultation = label === "consultation";
-        const isOPDScreening = label === "opd screening";
-
         const serviceType =
             service.patient_type === "new" || service.patient_type === "old"
                 ? service.patient_type
@@ -66,24 +62,27 @@ export default function ConfirmationActions({
             return `${path}?${params.toString()}`;
         };
 
-        if (isConsultation) {
+        // 1. If service requires age subcategories (Adult vs Pedia), route to subcategory selection
+        if (service.has_subcategories) {
             console.log(
-                `${getTimestamp()} [CONFIRMATION ACCEPTED] Consultation service - Redirecting to category selection - ServiceId: ${service.id}`
+                `${getTimestamp()} [CONFIRMATION ACCEPTED] Subcategory service (${service.label_en}) - Redirecting to category selection - ServiceId: ${service.id}`
             );
-            navigate(buildUrl("/kiosk/pages/category-selection", "Consultation"));
+            navigate(buildUrl("/kiosk/pages/category-selection", service.label_en));
             return;
         }
 
-        if (isOPDScreening) {
+        // 2. If service requires physical doctor cubicle selection directly, route to cubicle selection
+        if (service.requires_cubicle) {
             console.log(
-                `${getTimestamp()} [CONFIRMATION ACCEPTED] OPD Screening service - Redirecting to category selection - ServiceId: ${service.id}`
+                `${getTimestamp()} [CONFIRMATION ACCEPTED] Cubicle service (${service.label_en}) - Redirecting to cubicle selection - ServiceId: ${service.id}`
             );
-            navigate(buildUrl("/kiosk/pages/category-selection", "OPD Screening"));
+            navigate(buildUrl("/kiosk/pages/kiosk-cubicle-selection", service.label_en));
             return;
         }
 
+        // 3. Direct services route straight to phone number / queue ticket generation
         console.log(
-            `${getTimestamp()} [CONFIRMATION ACCEPTED] Service confirmed - Redirecting to SMS input - ServiceId: ${service.id}${
+            `${getTimestamp()} [CONFIRMATION ACCEPTED] Direct service (${service.label_en}) - Redirecting to SMS input - ServiceId: ${service.id}${
                 resolvedType ? ` - type: ${resolvedType}` : ""
             }`
         );

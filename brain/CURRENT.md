@@ -1,6 +1,6 @@
 # Current Project State
 
-**Last Updated:** 2026-10-19
+**Last Updated:** 2026-10-20
 
 ---
 
@@ -43,6 +43,29 @@
    - Evaluated sensitivity analysis across 1.0 min, 2.0 min, and 3.0 min desk acceleration assumptions.
    - Verified uninterrupted monthly continuity across all 12 calendar months of 2024 and justified pooled Grand Mean baseline selection.
    - Authored comprehensive operational reproduction guide `docs/simulation/SIMULATION_EXECUTION_GUIDELINE.md` and updated simulation indices (`docs/simulation/README.md`, `docs/simulation/chapter4_simulation_build_guide.md`, `docs/simulation/simulation-master-guide.md`, `docs/simulation/chapter4_simulation_comparison.md`, `docs/README.md`). Removed temporary script/output files per user request, keeping only `.ipynb` and markdown guides.
+
+4. **Dynamic Clinical Services & Customization System (Completed):**
+   - Enforced zero hardcoded service names across the entire stack: eliminated hardcoded "Consultation" and "OPD Screening" baseline logic from Kiosk, Nurse, Transfer, Superadmin, and Public TV Monitor screens.
+   - Reconciled PostgreSQL `services` schema with 7 clinical capability checklist flags: `requires_registration`, `has_subcategories`, `requires_cubicle`, `requires_nurse`, `show_on_monitor`, `auto_assign`, and `monitor_layout`.
+   - Updated Kiosk routing (`ConfirmationActions`, `category-selection`, `kiosk-cubicle-selection`, `KioskPhoneEntry`): services dynamically prompt for subcategories if `has_subcategories = true`, cubicles if `requires_cubicle = true`, or straight to ticket issuance.
+   - Updated Transfer Workstation (`useAutoAssign`, `transfer/page.tsx`): dynamically evaluates `auto_assign` and `requires_registration`, matching preferred cubicles for any service without hardcoded strings.
+   - Updated Superadmin Customization (`app/superadmin/customization/`): added interactive form checklist controls with full bilingual texts and styling, saving directly to PostgreSQL, and rendered capability badges in the services catalog table.
+   - Updated Superadmin Access Route (`/api/superadmin/access`) and Rooms Panel (`RoomsPanel.tsx`): reads services dynamically from database, enabling immediate staff assignment of newly created services.
+
+5. **Elimination of Native Browser Dialogs in Favor of Accessible Modals (Completed):**
+   - Audited codebase and verified all locations using browser native popups (`confirm` / `alert`).
+   - Created `DeleteServiceModal.tsx` in `app/superadmin/customization/components/` replacing `confirm(T.table.deleteConfirm)` with an accessible high-contrast modal displaying target service details (bilingual labels, icon, eligibility, ticket format) and destructive deletion controls.
+   - Created `DeleteCounterModal.tsx` in `app/superadmin/components/` replacing `confirm(T.deleteConfirm)` with an accessible modal displaying counter number, station label, active staff warning, and confirmation controls.
+   - Refactored `DoctorsPanel.tsx` in `app/transfer/components/` replacing `alert(...)` calls with a theme-aware error modal dialog for doctor and cubicle assignment failures.
+   - Updated `app/superadmin/customization/README.md` and feature copy dictionaries (`customizationTexts.ts`, `facilitiesTexts.ts`, `transferTexts.ts`).
+
+6. **Full System Reflection for Dynamic & Customized Clinical Services (Completed):**
+   - Fixed Transfer Dashboard (`Sidebar.tsx`): dynamic categories now load directly from PostgreSQL `services` rather than filtering against hardcoded constants, ensuring custom services appear immediately.
+   - Fixed Transfer Superadmin Permissions (`useMyAccess.ts`): superadmin/admin bypass unconditionally resolves all hospital services.
+   - Extended Other Services Workflow (`OtherServicesFlow.tsx`, `transfer/page.tsx`): added dynamic registration intake counters, patient release callback, auto-assign, and cubicle doctor mapping for all services requiring registration.
+   - Dynamic TV Monitor Hub (`app/monitor/page.tsx`): loads active services directly from database, respects `show_on_monitor` flag and `has_subcategories`.
+   - Dynamic Monitor Calling Layout (`useMonitorData.ts`): dynamically evaluates `service.monitor_layout` ('table' vs 'cubicle') with backward-compatible fallback.
+   - Dynamic Admin Dashboard Navigation (`DashSideNavigation.tsx`): services rail category dynamically populates from PostgreSQL `services` catalog.
 
 ---
 
