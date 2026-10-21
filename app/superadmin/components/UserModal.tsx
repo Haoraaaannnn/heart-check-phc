@@ -164,6 +164,9 @@ export const UserModal: React.FC<UserModalProps> = ({ modalState, onSuccess }) =
             {/* Role-Specific Assignment Grids */}
             {isClinical && (
               <ClinicalAssignmentsSelector
+                services={modalState.accessOptions.services}
+                selectedServices={modalState.selectedServices}
+                onToggleService={modalState.toggleService}
                 cubicles={modalState.cubicles}
                 selectedCubicleIds={modalState.selectedCubicleIds}
                 onToggleCubicle={modalState.toggleCubicle}

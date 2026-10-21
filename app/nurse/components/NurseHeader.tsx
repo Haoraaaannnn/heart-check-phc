@@ -29,6 +29,8 @@ export interface NurseHeaderProps {
   selectedCubicleNum: string | null;
   /** List of cubicles assigned to the user or hospital. */
   assignedCubicles: AssignedNurseCubicle[];
+  /** List of service categories assigned to the user or hospital. */
+  assignedServices?: string[];
   /** Total count of completed patients in today's ledger. */
   finishedCount: number;
   /** Callback to open the finished patient ledger drawer. */
@@ -67,6 +69,7 @@ export function NurseHeader({
   selectedCategory,
   selectedCubicleNum,
   assignedCubicles,
+  assignedServices = [],
   finishedCount,
   onOpenFinishedLedger,
   onClearFilter,
@@ -104,19 +107,22 @@ export function NurseHeader({
 
   const doctorName = activeCubicle?.doctorName;
 
-  // Group cubicles by service category for desktop dropdown
-  const services = useMemo(
-    () =>
-      assignedCubicles.reduce<Record<string, AssignedNurseCubicle[]>>(
-        (groups, cubicle) => {
-          groups[cubicle.category] ??= [];
-          groups[cubicle.category].push(cubicle);
-          return groups;
-        },
-        {}
-      ),
-    [assignedCubicles]
-  );
+  // Group cubicles by service category for desktop dropdown, including assigned services
+  const services = useMemo(() => {
+    const groups: Record<string, AssignedNurseCubicle[]> = {};
+    (assignedServices || []).forEach((service) => {
+      if (service) {
+        groups[service] = [];
+      }
+    });
+    assignedCubicles.forEach((cubicle) => {
+      if (cubicle.category) {
+        groups[cubicle.category] ??= [];
+        groups[cubicle.category].push(cubicle);
+      }
+    });
+    return groups;
+  }, [assignedServices, assignedCubicles]);
 
   return (
     <header
@@ -148,7 +154,7 @@ export function NurseHeader({
         </div>
 
         {/* Desktop Station / Cubicle Selector Dropdown */}
-        {showCubicleDropdown && onSelectCategory && onSelectCubicle && assignedCubicles.length > 0 && (
+        {showCubicleDropdown && onSelectCategory && onSelectCubicle && (assignedCubicles.length > 0 || Object.keys(services).length > 0) && (
           <div className="flex items-center gap-1.5 bg-slate-100/90 hover:bg-slate-200/80 dark:bg-[#1f1f1f] dark:hover:bg-[#242424] border border-slate-200 dark:border-[#2e2e2e] rounded-xl px-2.5 py-1 transition-colors min-w-0 shrink">
             <span className="text-[11px] font-bold text-slate-500 dark:text-[#a3a3a3] uppercase tracking-wider shrink-0">
               {nurseTexts.cubicleSelectLabel}

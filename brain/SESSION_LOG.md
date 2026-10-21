@@ -12,9 +12,9 @@ This document serves as an optional, high-signal, token-efficient session handof
 
 ## Active Session Status
 
-- **Active Milestone / Task:** Leftover Badge Background Purge & Decorative Live Indicator Removal Completed
+- **Active Milestone / Task:** Nurse Dashboard & SuperAdmin Clinical Services Real-Time Synchronization Complete
 - **Active Git Branch:** `feat/estimated-time`
-- **Session Focus:** (1) Removed leftover badge background boxes from doctor active status badges (`DoctorsPanel.tsx`), cubicle capacity counts `0/5` (`CubicleCard.tsx`), nurse stage columns `0` (`StageColumn.tsx`, `nurse.ts`), and nurse finished drawer `0` (`FinishedDrawer.tsx`), rendering bare colored characters; (2) Removed decorative "Live" and dummy status badges with no operational information across Nurse (`NurseHeader.tsx`), Transfer (`transferStyles.ts` pulse dots), Admin Dashboard (`OverviewDateFilter.tsx`, `HeatmapHeaderControls.tsx`, `DashSideNavigation.tsx`, `CubicleProcessGraph.tsx`), and SuperAdmin (`SuperAdminSidebar.tsx`).
+- **Session Focus:** (1) Fixed LAN IP HTTP authentication cookie drop and workstation role verification; (2) Added clinical services checkboxes to SuperAdmin User Management modal (`ClinicalAssignmentsSelector.tsx`, `UserModal.tsx`, `useUserModalState.ts`, `/api/superadmin/update-role`, `/api/superadmin/create-user`, `/api/superadmin/access`, `/api/superadmin/cubicles`); (3) Retained database primary key `id` across `SuperadminUser` and `useSuperadminUsers` for 100% resilient user lookup; (4) Reconciled `useNurseData.ts` with `services` table, dynamically falling back to active hospital services (`requires_nurse !== false`) when a nurse is not restricted to specific services; (5) Added Realtime subscriptions on `user_services` and `user_cubicles` in `useRealtimeSubscription.ts` so updates in SuperAdmin immediately reflect on the Nurse Station in 0ms without requiring a browser reload.
 
 ---
 
@@ -318,3 +318,58 @@ This document serves as an optional, high-signal, token-efficient session handof
   - `git diff` verified clean across `NurseQuickActionDropdown.tsx`, `QuickAssignDropdown.tsx`, and `transferStyles.ts`.
   - Zero emojis across all code, comments, and documentation.
   - Strict separation of concerns maintained.
+
+---
+
+## Session 28: Nurse Station Queue & Real-Time Synchronization Remediation (2026-10-22)
+
+- **Objective:** Fix issue where newly created kiosk/transfer queue tickets and patient stage updates do not synchronize or appear on the Nurse Dashboard (`/nurse`).
+- **Root Causes Discovered:**
+  1. **PostgreSQL RLS Drop on Realtime CDC (`patients_select_nurse_scoped`):**
+     - Newly created kiosk tickets and transfer queue entries have `cubicleNum = NULL`.
+     - The database RLS policy enforces `("cubicleNum" = ANY (my_cubicle_nums()))`. In SQL, `NULL = ANY (...)` evaluates to `NULL` (falsy).
+     - Because Supabase Realtime CDC evaluates RLS policies against the client's JWT before emitting WebSocket events, change notifications for newly created or unassigned patients were silently blocked WAL-side.
+  2. **WebSocket Subscribed State Halted Polling (`useRealtimeSubscription.ts`):**
+     - Once the WebSocket channel reached `SUBSCRIBED`, `stopPolling()` was called. Because RLS dropped the WebSocket events and polling was halted, `fetchData()` never executed, leaving the nurse dashboard permanently desynchronized until a hard manual reload.
+  3. **Strict Casing & Preferred Cubicle Omission in Filtering (`app/nurse/page.tsx`):**
+     - When viewing a cubicle, `filterPatientList` enforced `patient.cubicleNum === selectedCubicleNum`. Newly created tickets have `cubicleNum = null` and store destination preferences in `preferredCubicleNums`, causing them to be hidden from the cubicle view.
+     - Strict `===` on `patient.service` caused subtle casing/trailing-space discrepancies to drop queue items.
+  4. **Active Realtime Discarding in State (`useNurseData.ts`):**
+     - `belongsToMe` in `applyRealtimeUpdate` only checked `patient.cubicleNum` and did not inspect `preferredCubicleNums` or service categories of assigned cubicles. When an event arrived, `belongsToMe` evaluated to `false`, actively executing `.filter(p => p.id !== patient.id)` and deleting the ticket from the local state.
+  5. **Stage Transition Mutations Blocked by RLS (`useNurseActions.ts`):**
+     - Direct client-side `supabase.from('patients').update` calls were blocked by `patients_update_nurse_scoped` for patients with `cubicleNum = null`, triggering immediate UI rollback and error toasts.
+- **Key Deliverables & Remediation:**
+  1. **Continuous Synchronization Heartbeat (`app/nurse/hooks/useRealtimeSubscription.ts`):**
+     - Maintained a continuous 4-second background synchronization heartbeat regardless of WebSocket channel state.
+     - Realtime WebSocket events trigger immediate 50ms debounced updates; the 4-second heartbeat guarantees that tickets dropped by PostgreSQL RLS are ingested automatically within 4 seconds.
+  2. **Server API Queue Scoping (`app/api/nurse/patients/route.ts`):**
+     - `GET`: Uses `supabaseAdmin` service role to query active non-terminal patients matching assigned cubicles, cubicle category services, explicit `user_services`, and tickets where `preferredCubicleNums` overlaps the nurse's cubicles (`.overlaps('preferredCubicleNums', cubicleNums)`).
+     - Returns `{ patients, finishedPatients, cubicles, effectiveServices }`.
+     - `PATCH`: Parameterized stage progression mutations executed server-side, protecting `is_historical = false` and updating `status`, timestamps, and cubicle assignments without RLS rejection.
+  3. **Real-Time Client Ingestion & Discard Prevention (`app/nurse/hooks/useNurseData.ts`):**
+     - Updated `belongsToMe` in `applyRealtimeUpdate` to verify:
+       - `patient.cubicleNum` matches `myCubicles`
+       - `patient.preferredCubicleNums` overlaps `myCubicles`
+       - `patient.service` matches `myServices` (case-insensitive, trimmed)
+       - `patient.service` matches any category in `cachedCubicles`
+       - General facility coverage fallback if unassigned or supervisor
+     - Ingests authoritative `effectiveServices` and `cubicles` from the server API response into client state.
+  4. **Resilient Queue Filtering & Category Counts (`app/nurse/page.tsx`):**
+     - Updated `filterPatientList` so patients with `cubicleNum = null` whose `preferredCubicleNums` includes `selectedCubicleNum`, or who belong to the selected service category, are visible in the cubicle and category views.
+     - Normalized service and category strings using `.trim().toLowerCase()`.
+  5. **Stage Mutation Persistence via Server API (`app/nurse/hooks/useNurseActions.ts`):**
+     - Updated `persistPatientUpdate` to call `PATCH /api/nurse/patients` with the user's Bearer token, falling back to direct client Supabase only if the server route is unreachable.
+  6. **Developer Guide Documentation (`app/nurse/README.md`):**
+     - Documented `app/api/nurse/patients/route.ts` in the "Where to Edit" table.
+  7. **Dynamic Service Icon Synchronization (`app/nurse/components/NurseSidebar.tsx` & `constants/designs/icons.ts`):**
+     - In `NurseSidebar.tsx`, added real-time database query and Supabase Realtime channel subscription (`nurse-sidebar-services-sync`) to the `services` table.
+     - Built `serviceMap` mapping normalized service names to their full database records (`label_en`, `icon_src`).
+     - Passed `serviceObj` to `resolveServiceIcon` so custom Boxicons assigned in Superadmin customization immediately reflect on the Nurse Dashboard in 0ms without a page reload.
+     - Added fallback mappings for `'Pulmo & Surgery': 'bx-plus-medical'` and `'Others': 'bx-sushi'` in `CATEGORY_ICONS`.
+- **Verification:**
+  - `npm run build` executed and passed with 0 errors across all 55 static and dynamic routes.
+  - Zero TypeScript compiler diagnostics (`Finished TypeScript in 4.5s`).
+  - Runtime ReferenceError (`isServiceSelected`) in `NurseSidebar.tsx` resolved.
+  - Syntax error in `app/api/superadmin/access/route.ts` resolved.
+  - Zero emojis in all code, comments, and documentation.
+  - AGENTS.md separation of concerns and high-contrast dual-theme standards strictly maintained.

@@ -17,7 +17,10 @@ export async function GET(request: Request) {
   const guard = await requireSuperadmin(request);
   if (!guard.authorized) return guard.response;
 
-  const authId = new URL(request.url).searchParams.get('authId');
+  const { searchParams } = new URL(request.url);
+  const authId = searchParams.get('authId');
+  const userId = searchParams.get('userId');
+  const email = searchParams.get('email');
 
   const { data: cubicles, error: cubicleError } = await supabaseAdmin
     .from('cubicle')
@@ -59,11 +62,42 @@ export async function GET(request: Request) {
   let assignedRooms: { service: string; subcategory: string | null; room: number }[] = [];
   let assignedCounters: number[] = [];
 
-  if (authId) {
-    const { data: user } = await supabaseAdmin
-      .from('users').select('id').eq('auth_id', authId).single();
+  let user: { id: number | string; email?: string } | null = null;
 
-    if (user) {
+  if (userId) {
+    const { data: userById } = await supabaseAdmin
+      .from('users').select('id, email, auth_id').eq('id', userId).maybeSingle();
+    if (userById) user = userById;
+  }
+
+  if (!user && authId) {
+    const { data: userByAuth } = await supabaseAdmin
+      .from('users').select('id, email, auth_id').eq('auth_id', authId).maybeSingle();
+    if (userByAuth) user = userByAuth;
+  }
+
+  if (!user && email) {
+    const { data: userByEmail } = await supabaseAdmin
+      .from('users').select('id, email, auth_id').ilike('email', email).maybeSingle();
+    if (userByEmail) user = userByEmail;
+  }
+
+  if (!user && authId) {
+    const { data: authUser } = await supabaseAdmin.auth.admin.getUserById(authId);
+    if (authUser?.user?.email) {
+      const { data: userByAuthEmail } = await supabaseAdmin
+        .from('users').select('id, email, auth_id').ilike('email', authUser.user.email).maybeSingle();
+      if (userByAuthEmail) {
+        user = userByAuthEmail;
+      }
+    }
+  }
+
+  if (user && authId && (!user as any).auth_id) {
+    await supabaseAdmin.from('users').update({ auth_id: authId }).eq('id', user.id);
+  }
+
+  if (user) {
         const [
         { data: services, error: servicesError },
         { data: rooms, error: roomsError },
@@ -107,7 +141,6 @@ export async function GET(request: Request) {
         assignedRooms = (rooms ?? []) as typeof assignedRooms;
         assignedCounters = (counters ?? []).map(c => c.counter);
     }
-  }
 
   return NextResponse.json({
     services: dynamicServices,

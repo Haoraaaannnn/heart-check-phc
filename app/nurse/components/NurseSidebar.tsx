@@ -35,6 +35,8 @@ export interface NurseSidebarProps {
   categoryCounts: Record<string, number>;
   /** Roster of cubicles assigned to the user or hospital. */
   assignedCubicles: AssignedNurseCubicle[];
+  /** Roster of service categories assigned to the user or hospital. */
+  assignedServices?: string[];
   /** Handler to select a category filter. */
   onSelectCategory: (category: string | null) => void;
   /** Handler to select an individual cubicle filter. */
@@ -54,21 +56,79 @@ export function NurseSidebar({
   selectedCubicleNum,
   categoryCounts,
   assignedCubicles,
+  assignedServices = [],
   onSelectCategory,
   onSelectCubicle,
   isExpanded = false,
 }: NurseSidebarProps) {
   const router = useRouter();
 
-  // Group cubicles by service category
-  const services = assignedCubicles.reduce<Record<string, AssignedNurseCubicle[]>>(
-    (groups, cubicle) => {
-      groups[cubicle.category] ??= [];
-      groups[cubicle.category].push(cubicle);
-      return groups;
-    },
-    {}
-  );
+  // Real-time synchronization with services catalog for dynamic custom icons
+  const [dbServices, setDbServices] = React.useState<Array<{ label_en: string; icon_src: string }>>([]);
+
+  React.useEffect(() => {
+    let isDisposed = false;
+
+    const fetchServices = async () => {
+      try {
+        const { data, error } = await supabase
+          .from('services')
+          .select('label_en, icon_src')
+          .order('display_order', { ascending: true });
+
+        if (!error && data && !isDisposed) {
+          setDbServices(data as Array<{ label_en: string; icon_src: string }>);
+        }
+      } catch (err) {
+        console.warn('NurseSidebar: failed to fetch services catalog:', err);
+      }
+    };
+
+    void fetchServices();
+
+    const channel = supabase
+      .channel('nurse-sidebar-services-sync')
+      .on(
+        'postgres_changes',
+        { event: '*', schema: 'public', table: 'services' },
+        () => {
+          void fetchServices();
+        }
+      )
+      .subscribe();
+
+    return () => {
+      isDisposed = true;
+      void supabase.removeChannel(channel);
+    };
+  }, []);
+
+  const serviceMap = React.useMemo(() => {
+    const map = new Map<string, { label_en: string; icon_src: string }>();
+    dbServices.forEach((s) => {
+      if (s.label_en) {
+        map.set(s.label_en.trim().toLowerCase(), s);
+      }
+    });
+    return map;
+  }, [dbServices]);
+
+  // Group cubicles by service category, guaranteeing assigned services exist as buckets
+  const services = React.useMemo(() => {
+    const groups: Record<string, AssignedNurseCubicle[]> = {};
+    (assignedServices || []).forEach((service) => {
+      if (service) {
+        groups[service] = [];
+      }
+    });
+    assignedCubicles.forEach((cubicle) => {
+      if (cubicle.category) {
+        groups[cubicle.category] ??= [];
+        groups[cubicle.category].push(cubicle);
+      }
+    });
+    return groups;
+  }, [assignedServices, assignedCubicles]);
 
   const totalPatients = Object.values(categoryCounts).reduce(
     (total, count) => total + count,
@@ -182,7 +242,10 @@ export function NurseSidebar({
             const count = categoryCounts[service] || 0;
             const isCategoryActive = selectedCategory === service && !selectedCubicleNum;
             const isServiceSelected = selectedCategory === service;
-            const icon = resolveServiceIcon(service);
+            const serviceObj = serviceMap.get(service.trim().toLowerCase());
+            const icon = resolveServiceIcon(
+              serviceObj ? { label_en: service, icon_src: serviceObj.icon_src } : service
+            );
             const tooltip = `${service}${count > 0 ? ` — ${count} active` : ''}`;
 
             return (

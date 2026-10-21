@@ -65,26 +65,26 @@ export async function POST(request: Request) {
       }
     }
 
-  if (role === 'registration') {
-    if (Array.isArray(serviceAssignments) && serviceAssignments.length > 0) {
-      const { error } = await supabaseAdmin
-        .from('user_services')
-        .insert(
-          serviceAssignments.map((service: string) => ({
-            user_id: userRow.id,
-            service,
-          }))
-        );
+  if (Array.isArray(serviceAssignments) && serviceAssignments.length > 0) {
+    const { error } = await supabaseAdmin
+      .from('user_services')
+      .insert(
+        serviceAssignments.map((service: string) => ({
+          user_id: userRow.id,
+          service,
+        }))
+      );
 
-      if (error) {
-        console.error('user_services insert error:', error);
-        return NextResponse.json(
-          { error: `Service assignment failed: ${error.message}` },
-          { status: 400 }
-        );
-      }
+    if (error) {
+      console.error('user_services insert error:', error);
+      return NextResponse.json(
+        { error: `Service assignment failed: ${error.message}` },
+        { status: 400 }
+      );
     }
+  }
 
+  if (role === 'registration') {
     if (Array.isArray(roomAssignments) && roomAssignments.length > 0) {
       const { error } = await supabaseAdmin
         .from('user_rooms')

@@ -1,8 +1,15 @@
 import { createServerClient } from '@supabase/ssr'
-import { cookies } from 'next/headers'
+import { cookies, headers } from 'next/headers'
 
 export async function createClient() {
   const cookieStore = await cookies()
+  const headerStore = await headers()
+  const proto = headerStore.get('x-forwarded-proto')
+  const isSecure =
+    proto === 'https' ||
+    headerStore.get('referer')?.startsWith('https:') ||
+    headerStore.get('origin')?.startsWith('https:') ||
+    false
 
   return createServerClient(
     process.env.NEXT_PUBLIC_SUPABASE_URL!,
@@ -21,7 +28,7 @@ export async function createClient() {
                   maxAge: 0,
                   expires: new Date(0),
                   sameSite: 'lax',
-                  secure: process.env.NODE_ENV === 'production',
+                  secure: isSecure,
                 })
               } else {
                 const sessionOptions = { ...options }
@@ -31,7 +38,7 @@ export async function createClient() {
                   ...sessionOptions,
                   path: '/',
                   sameSite: 'lax',
-                  secure: process.env.NODE_ENV === 'production',
+                  secure: isSecure,
                 })
               }
             })

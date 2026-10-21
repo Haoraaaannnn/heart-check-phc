@@ -91,9 +91,13 @@ export function useUserModalState(): UseUserModalStateReturn {
   /**
    * Loads cubicles list and assigned cubicles for a user from API.
    */
-  const loadCubicles = useCallback(async (authId?: string) => {
+  const loadCubicles = useCallback(async (authId?: string, userId?: number | string, email?: string) => {
     const { data: { session } } = await supabase.auth.getSession();
-    const query = authId ? `?authId=${encodeURIComponent(authId)}` : '';
+    const params = new URLSearchParams();
+    if (authId) params.append('authId', authId);
+    if (userId !== undefined && userId !== null) params.append('userId', String(userId));
+    if (email) params.append('email', email);
+    const query = params.toString() ? `?${params.toString()}` : '';
     const response = await fetch(`/api/superadmin/cubicles${query}`, {
       headers: { Authorization: `Bearer ${session?.access_token}` },
     });
@@ -106,9 +110,13 @@ export function useUserModalState(): UseUserModalStateReturn {
   /**
    * Loads registration access options (services, rooms, counters) from API.
    */
-  const loadAccess = useCallback(async (authId?: string) => {
+  const loadAccess = useCallback(async (authId?: string, userId?: number | string, email?: string) => {
     const { data: { session } } = await supabase.auth.getSession();
-    const query = authId ? `?authId=${encodeURIComponent(authId)}` : '';
+    const params = new URLSearchParams();
+    if (authId) params.append('authId', authId);
+    if (userId !== undefined && userId !== null) params.append('userId', String(userId));
+    if (email) params.append('email', email);
+    const query = params.toString() ? `?${params.toString()}` : '';
     const response = await fetch(`/api/superadmin/access${query}`, {
       headers: { Authorization: `Bearer ${session?.access_token}` },
     });
@@ -165,8 +173,8 @@ export function useUserModalState(): UseUserModalStateReturn {
 
     try {
       await Promise.all([
-        loadCubicles(user.auth_id),
-        loadAccess(user.auth_id),
+        loadCubicles(user.auth_id, user.id, user.email),
+        loadAccess(user.auth_id, user.id, user.email),
       ]);
     } catch (err: any) {
       setFormError(err.message || 'Failed to load user access assignments.');
@@ -248,12 +256,13 @@ export function useUserModalState(): UseUserModalStateReturn {
             Authorization: `Bearer ${session?.access_token}`,
           },
           body: JSON.stringify({
+            userId: editingUser.id,
             authId: editingUser.auth_id,
             email: formEmail,
             username: formUsername,
             role: formRole,
             cubicleIds: isClinical ? selectedCubicleIds : [],
-            serviceAssignments: isRegistration ? selectedServices : [],
+            serviceAssignments: selectedServices,
             roomAssignments: isRegistration ? selectedRooms : [],
             counterAssignments: isRegistration ? selectedCounters : [],
           }),
@@ -279,7 +288,7 @@ export function useUserModalState(): UseUserModalStateReturn {
             username: formUsername,
             role: formRole,
             cubicleIds: isClinical ? selectedCubicleIds : [],
-            serviceAssignments: isRegistration ? selectedServices : [],
+            serviceAssignments: selectedServices,
             roomAssignments: isRegistration ? selectedRooms : [],
             counterAssignments: isRegistration ? selectedCounters : [],
           }),
