@@ -45,8 +45,8 @@ export default function QueuePrintFallbackCard({
   const T = QueuePrintTicketTexts;
 
   // Resolve bilingual hardware failure rationale
-  let reasonFil = T.reasonNotDetectedFil;
-  let reasonEn = T.reasonNotDetectedEn;
+  let reasonFil: string = T.reasonNotDetectedFil;
+  let reasonEn: string = T.reasonNotDetectedEn;
 
   if (condition === 'out_of_paper') {
     reasonFil = T.reasonOutOfPaperFil;
