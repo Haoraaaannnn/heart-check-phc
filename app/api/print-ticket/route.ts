@@ -59,7 +59,8 @@ export async function POST(request: Request) {
   // Guard clause: Reject overlapping requests cleanly to prevent hardware state lock
   if (isPrinterBusy) {
     console.warn(
-      `${getTimestamp()} [PRINTER BUSY] Duplicate print request received - rejecting to prevent hardware conflict.`
+      '%s [PRINTER BUSY] Duplicate print request received - rejecting to prevent hardware conflict.',
+      getTimestamp()
     );
     return NextResponse.json({ success: true, message: 'Printer busy, skipped.' });
   }
@@ -77,7 +78,7 @@ export async function POST(request: Request) {
     const cubicle = sanitizeText(rawCubicle);
 
     if (!queueNumber) {
-      console.error(`${getTimestamp()} [PRINT VALIDATION] Missing or invalid queue number`);
+      console.error('%s [PRINT VALIDATION] Missing or invalid queue number', getTimestamp());
       return NextResponse.json({ error: 'Valid queue number is required' }, { status: 400 });
     }
 
@@ -99,7 +100,9 @@ export async function POST(request: Request) {
 
     if (dbError) {
       console.error(
-        `${getTimestamp()} [PRINT DB ERROR] Error fetching patient ticket: ${dbError.message}`
+        '%s [PRINT DB ERROR] Error fetching patient ticket: %s',
+        getTimestamp(),
+        dbError.message
       );
       return NextResponse.json(
         { error: 'Database verification failed prior to print.' },
@@ -109,7 +112,9 @@ export async function POST(request: Request) {
 
     if (!patientRecord) {
       console.warn(
-        `${getTimestamp()} [PRINT REJECTED] Unregistered queue ticket: ${queueNumber}`
+        '%s [PRINT REJECTED] Unregistered queue ticket: %s',
+        getTimestamp(),
+        queueNumber
       );
       return NextResponse.json(
         { error: 'Queue ticket not found or invalid for printing.' },
@@ -151,11 +156,16 @@ export async function POST(request: Request) {
 
       if (updateError) {
         console.warn(
-          `${getTimestamp()} [PRINT EWT SAVE WARNING] Could not persist estimated_wait_minutes: ${updateError.message}`
+          '%s [PRINT EWT SAVE WARNING] Could not persist estimated_wait_minutes: %s',
+          getTimestamp(),
+          updateError.message
         );
       } else {
         console.log(
-          `${getTimestamp()} [PRINT EWT SAVED] Ticket ${queueNumber} wait estimated: ${ewtMinutes}m`
+          '%s [PRINT EWT SAVED] Ticket %s wait estimated: %dm',
+          getTimestamp(),
+          queueNumber,
+          ewtMinutes
         );
       }
     }
@@ -169,18 +179,19 @@ export async function POST(request: Request) {
         ewtMinutes
       ).catch((smsErr) => {
         console.warn(
-          `${getTimestamp()} [PRINT CONFIRMATION SMS ERROR] Failed to send SMS:`,
-          smsErr
+          '%s [PRINT CONFIRMATION SMS ERROR] Failed to send SMS: %s',
+          getTimestamp(),
+          smsErr instanceof Error ? smsErr.message : String(smsErr)
         );
       });
     }
 
-    console.log(`${getTimestamp()} [PRINT REQUEST] Verified print job:`, {
+    console.log('%s [PRINT REQUEST] Verified print job: %s', getTimestamp(), JSON.stringify({
       id: patientRecord.id,
       patientNum: patientRecord.patientNum,
       service: displayService,
       estimatedWaitMinutes: ewtMinutes,
-    });
+    }));
 
     const now = new Date();
     const dateStr = new Intl.DateTimeFormat('en-PH', {
@@ -269,22 +280,29 @@ export async function POST(request: Request) {
     let printMethod: 'network' | 'device' | 'client_webusb_required' | 'none' = 'client_webusb_required';
     let lastError = '';
 
-    // 1. Attempt Network Ethernet / Wi-Fi Printer if host IP is configured
-    const configuredPrinterIp = (body?.printerIp || process.env.PRINTER_IP || process.env.PRINTER_HOST || '').trim();
+    // 1. Attempt Network Ethernet / Wi-Fi Printer if host IP is configured in server environment
+    const configuredPrinterIp = (process.env.PRINTER_IP || process.env.PRINTER_HOST || '').trim();
     if (configuredPrinterIp && isValidPrinterHost(configuredPrinterIp)) {
       console.log(
-        `${getTimestamp()} [PRINT DISPATCH] Attempting network socket dispatch to ${configuredPrinterIp}:9100`
+        '%s [PRINT DISPATCH] Attempting network socket dispatch to %s:9100',
+        getTimestamp(),
+        configuredPrinterIp
       );
       const networkResult = await sendToNetworkPrinter(configuredPrinterIp, buffer, 9100, 3500);
       if (networkResult.success) {
         printedSuccessfully = true;
         printMethod = 'network';
         console.log(
-          `${getTimestamp()} [PRINT SUCCESS] Ticket printed via Network Socket: ${configuredPrinterIp}:9100`
+          '%s [PRINT SUCCESS] Ticket printed via Network Socket: %s:9100',
+          getTimestamp(),
+          configuredPrinterIp
         );
       } else {
         console.warn(
-          `${getTimestamp()} [NETWORK PRINT RETRY] Network print to ${configuredPrinterIp} failed: ${networkResult.message}`
+          '%s [NETWORK PRINT RETRY] Network print to %s failed: %s',
+          getTimestamp(),
+          configuredPrinterIp,
+          networkResult.message
         );
       }
     }
@@ -297,7 +315,12 @@ export async function POST(request: Request) {
           try {
             await fs.writeFile(/*turbopackIgnore: true*/ path, buffer);
             console.log(
-              `${getTimestamp()} [PRINT SUCCESS] Ticket printed to device node - Queue: ${queueNumber}, Service: ${displayService}, Device: ${path}, Size: ${buffer.length} bytes`
+              '%s [PRINT SUCCESS] Ticket printed to device node - Queue: %s, Service: %s, Device: %s, Size: %d bytes',
+              getTimestamp(),
+              queueNumber,
+              displayService,
+              path,
+              buffer.length
             );
             printedSuccessfully = true;
             printMethod = 'device';
@@ -306,7 +329,11 @@ export async function POST(request: Request) {
             const message = e instanceof Error ? e.message : String(e);
             lastError = `Access denied on ${path}: ${message}`;
             console.warn(
-              `${getTimestamp()} [PRINTER DEVICE ERROR] Failed to write to device node - Path: ${path}, Queue: ${queueNumber}, Error: ${message}`
+              '%s [PRINTER DEVICE ERROR] Failed to write to device node - Path: %s, Queue: %s, Error: %s',
+              getTimestamp(),
+              path,
+              queueNumber,
+              message
             );
           }
         }
@@ -315,7 +342,10 @@ export async function POST(request: Request) {
 
     if (!printedSuccessfully) {
       console.log(
-        `${getTimestamp()} [PRINT NOTICE] Server hardware printer not reached - Queue: ${queueNumber}${lastError ? ` (${lastError})` : ''}. Returning ESC/POS base64 payload for client-side WebUSB/Serial dispatch.`
+        '%s [PRINT NOTICE] Server hardware printer not reached - Queue: %s%s. Returning ESC/POS base64 payload for client-side WebUSB/Serial dispatch.',
+        getTimestamp(),
+        queueNumber,
+        lastError ? ` (${lastError})` : ''
       );
     }
 
@@ -335,7 +365,8 @@ export async function POST(request: Request) {
   } catch (error: unknown) {
     const message = error instanceof Error ? error.message : 'Unexpected server error';
     console.error(
-      `${getTimestamp()} [PRINT SERVER ERROR] Unexpected error in print route:`,
+      '%s [PRINT SERVER ERROR] Unexpected error in print route: %s',
+      getTimestamp(),
       message
     );
     return NextResponse.json({ success: false, error: 'Internal server print error.' }, { status: 500 });

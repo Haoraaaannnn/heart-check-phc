@@ -118,6 +118,12 @@
    - **Functional Test Matrix (`docs/checklists/UAT_USE_CASE_CHECKLIST.md`):** Completely recreated 69 verified test scenarios arranged strictly in operational sequence without referring to outdated specifications, fully reflecting the pure queue management architecture (zero patient ID input at kiosk, zero vitals documentation on workstations).
    - **Documentation Portals Synchronized:** Updated `docs/checklists/README.md` and `brain/INDEX.md` with explicit ISO date stamps (`2026-10-21`) and zero emojis.
 
+11. **CodeQL Static Analysis Remediation (Completed):**
+   - **Server-Side Request Forgery Remediation (`app/api/tts/route.ts` - CWE-918):** Eliminated CodeQL Alert 3 (`js/request-forgery`) by enforcing an immutable allowlist (`ALLOWED_VOICE_MODELS`) of validated Deepgram Aura voice models. Enforced input validation returning HTTP 400 on unrecognized models, resolved model selection strictly from the constant dictionary, and constructed the outbound API endpoint via standard `URL` and `URLSearchParams` objects.
+   - **Externally-Controlled Format String Remediation (`lib/printer/networkPrinter.ts` - CWE-134):** Eliminated CodeQL Alerts 4 and 5 (`js/tainted-format-string`) by replacing dynamic template string concatenation in `console.warn` calls with static literal format strings using `%s` and `%d` format specifiers.
+   - **Printer Destination Security Hardening (`app/api/print-ticket/route.ts` & `lib/printer/networkPrinter.ts`):** Restricted hardware network receipt printer IP resolution in `/api/print-ticket` to server environment variables (`PRINTER_IP` / `PRINTER_HOST`), eliminating user-controllable `body?.printerIp` on the unauthenticated ticket endpoint. Hardened `isValidPrinterHost` to reject cloud link-local metadata addresses (`169.254.0.0/16`) to provide defense-in-depth against metadata service SSRF.
+   - **Standardized Static Format String Logging:** Updated all logging statements across `app/actions/sendQueueConfirmationSMS.ts`, `app/api/print-ticket/route.ts`, and `app/api/superadmin/test-printer/route.ts` to use static format string literals with `%s` and `%d` parameters.
+
 ---
 
 ## Current Blockers & Risks

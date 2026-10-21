@@ -30,6 +30,7 @@ export interface NetworkPrintResult {
 
 /**
  * Validates whether an IP address or hostname string is well-formed for local network usage.
+ * Rejects link-local metadata ranges (169.254.0.0/16) to protect against Server-Side Request Forgery (SSRF).
  *
  * @param host - Raw host string to validate.
  * @returns True if host is a valid IPv4 address or alphanumeric LAN hostname.
@@ -39,6 +40,12 @@ export function isValidPrinterHost(host: unknown): boolean {
     return false;
   }
   const clean = host.trim();
+
+  // Block link-local metadata service (e.g. AWS/GCP 169.254.169.254)
+  if (clean.startsWith('169.254.')) {
+    return false;
+  }
+
   // Standard IPv4 match
   const ipv4Regex = /^(?:25[0-5]|2[0-4]\d|1\d\d|[1-9]?\d)(?:\.(?:25[0-5]|2[0-4]\d|1\d\d|[1-9]?\d)){3}$/;
   if (ipv4Regex.test(clean)) {
@@ -92,7 +99,10 @@ export async function sendToNetworkPrinter(
       socket.write(buffer, (err) => {
         if (err) {
           console.warn(
-            `${getTimestamp()} [NETWORK PRINTER WRITE ERROR] Failed sending buffer to ${cleanHost}:${port}:`,
+            '%s [NETWORK PRINTER WRITE ERROR] Failed sending buffer to %s:%d: %s',
+            getTimestamp(),
+            cleanHost,
+            port,
             err.message
           );
           if (!isSettled) {
@@ -117,7 +127,11 @@ export async function sendToNetworkPrinter(
         isSettled = true;
         cleanup();
         console.log(
-          `${getTimestamp()} [NETWORK PRINTER SUCCESS] Printed ${buffer.length} bytes to ${cleanHost}:${port}`
+          '%s [NETWORK PRINTER SUCCESS] Printed %d bytes to %s:%d',
+          getTimestamp(),
+          buffer.length,
+          cleanHost,
+          port
         );
         resolve({
           success: true,
@@ -131,7 +145,11 @@ export async function sendToNetworkPrinter(
         isSettled = true;
         cleanup();
         console.warn(
-          `${getTimestamp()} [NETWORK PRINTER TIMEOUT] Connection to ${cleanHost}:${port} timed out after ${timeoutMs}ms`
+          '%s [NETWORK PRINTER TIMEOUT] Connection to %s:%d timed out after %dms',
+          getTimestamp(),
+          cleanHost,
+          port,
+          timeoutMs
         );
         resolve({
           success: false,
@@ -146,7 +164,10 @@ export async function sendToNetworkPrinter(
         isSettled = true;
         cleanup();
         console.warn(
-          `${getTimestamp()} [NETWORK PRINTER ERROR] Socket error on ${cleanHost}:${port}:`,
+          '%s [NETWORK PRINTER ERROR] Socket error on %s:%d: %s',
+          getTimestamp(),
+          cleanHost,
+          port,
           err.message
         );
         resolve({

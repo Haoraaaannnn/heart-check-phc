@@ -103,7 +103,11 @@ export async function POST(request: Request) {
         );
       }
 
-      console.log(`${getTimestamp()} [SUPERADMIN TEST PRINT] Dispatching to ${rawIp}:9100`);
+      console.log(
+        '%s [SUPERADMIN TEST PRINT] Dispatching to %s:9100',
+        getTimestamp(),
+        rawIp
+      );
       const result = await sendToNetworkPrinter(rawIp, buffer, 9100, 4000);
       if (!result.success) {
         return NextResponse.json(
@@ -128,7 +132,7 @@ export async function POST(request: Request) {
           try {
             await fs.writeFile(/*turbopackIgnore: true*/ path, buffer);
             written = true;
-            console.log(`${getTimestamp()} [SUPERADMIN TEST PRINT] Written to ${path}`);
+            console.log('%s [SUPERADMIN TEST PRINT] Written to %s', getTimestamp(), path);
             break;
           } catch (e: unknown) {
             lastErr = e instanceof Error ? e.message : String(e);

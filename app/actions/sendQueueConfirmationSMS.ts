@@ -126,7 +126,9 @@ export async function sendQueueConfirmationSMS(
     const formattedRecipient = normalizePhilippinePhone(phoneNum);
     if (!formattedRecipient) {
       console.warn(
-        `${getTimestamp()} [CONFIRMATION SMS] Invalid phone format for ticket ${patientNum}`
+        '%s [CONFIRMATION SMS] Invalid phone format for ticket %s',
+        getTimestamp(),
+        patientNum
       );
       return { success: false, error: 'Invalid Philippine phone number format.' };
     }
@@ -135,7 +137,9 @@ export async function sendQueueConfirmationSMS(
     const cooldown = checkConfirmationCooldown(formattedRecipient);
     if (!cooldown.allowed) {
       console.warn(
-        `${getTimestamp()} [CONFIRMATION SMS] Cooldown throttle active for ${formattedRecipient}`
+        '%s [CONFIRMATION SMS] Cooldown throttle active for %s',
+        getTimestamp(),
+        formattedRecipient
       );
       return {
         success: false,
@@ -158,7 +162,8 @@ export async function sendQueueConfirmationSMS(
 
     if (!process.env.UNISMS_API_KEY) {
       console.warn(
-        `${getTimestamp()} [CONFIRMATION SMS] UNISMS_API_KEY is not configured in server environment; simulated dispatch.`
+        '%s [CONFIRMATION SMS] UNISMS_API_KEY is not configured in server environment; simulated dispatch.',
+        getTimestamp()
       );
       return { success: true, message: 'SMS service simulated (missing API key).' };
     }
@@ -180,18 +185,22 @@ export async function sendQueueConfirmationSMS(
 
     if (!response.ok) {
       console.error(
-        `${getTimestamp()} [CONFIRMATION SMS] UniSMS gateway rejected dispatch status: ${response.status}`
+        '%s [CONFIRMATION SMS] UniSMS gateway rejected dispatch status: %d',
+        getTimestamp(),
+        response.status
       );
       return { success: false, error: 'SMS delivery gateway rejected message.' };
     }
 
     console.log(
-      `${getTimestamp()} [CONFIRMATION SMS SUCCESS] Dispatched confirmation for Ticket: ${safePatientNum}`
+      '%s [CONFIRMATION SMS SUCCESS] Dispatched confirmation for Ticket: %s',
+      getTimestamp(),
+      safePatientNum
     );
     return { success: true };
   } catch (err: unknown) {
     const errorMsg = err instanceof Error ? err.message : 'Unknown dispatch error';
-    console.error(`${getTimestamp()} [CONFIRMATION SMS ERROR]:`, errorMsg);
+    console.error('%s [CONFIRMATION SMS ERROR]: %s', getTimestamp(), errorMsg);
     return { success: false, error: 'Failed to process confirmation SMS.' };
   }
 }
