@@ -1,6 +1,6 @@
 # Quality Assurance, Security Audits & Operational Checklists
 
-**Last Updated:** 2026-10-20
+**Last Updated:** 2026-10-21
 
 This directory contains the central audit matrices, compliance checklists, operational trackers, and verification protocols for the **Heart Check PHC** Queue Management and Analytics System.
 
@@ -14,7 +14,7 @@ This directory contains the central audit matrices, compliance checklists, opera
 | **Database RLS & Schema** | **100% Active** | All 6 security migration steps executed and verified on live Supabase instance. Historical records locked with RESTRICTIVE policies. | [CHANGES_NEEDED.md](file:///home/jensen/Github-Repositories/Heart_Check_PHC/docs/checklists/CHANGES_NEEDED.md) |
 | **System Security (OWASP Top 10)** | **100% Core Protected** | 28 of 32 tracked items patched in active code. Remaining 4 items are designated for physical on-premise hospital deployment. | [SECURITY_CHECKLIST.md](file:///home/jensen/Github-Repositories/Heart_Check_PHC/docs/checklists/SECURITY_CHECKLIST.md) |
 | **Active Open Issues** | **3 Action Items** | Core system is stable. 3 items pending: Chapter 4 simulation runner execution, Dependabot review, and FastAPI rate limiting. | [OPEN_ISSUES.md](file:///home/jensen/Github-Repositories/Heart_Check_PHC/docs/checklists/OPEN_ISSUES.md) |
-| **User Acceptance Testing (UAT)** | **Ready for Evaluation (63 Scenarios)** | Structured test scripts covering Kiosk intake, Nurse Kanban, Transfer routing, Executive analytics, and Real-Time Notifications. | [UAT_USE_CASE_CHECKLIST.md](file:///home/jensen/Github-Repositories/Heart_Check_PHC/docs/checklists/UAT_USE_CASE_CHECKLIST.md) |
+| **User Acceptance Testing (UAT)** | **Ready for Evaluation (69 Scenarios + ISO 25010:2023 Instruments)** | Structured test scripts, role-based questionnaire (58 items across 6 roles), and construction guide. | [UAT_USE_CASE_CHECKLIST.md](file:///home/jensen/Github-Repositories/Heart_Check_PHC/docs/checklists/UAT_USE_CASE_CHECKLIST.md) |
 | **Feature Roadmap & Backlog** | **Tracked** | Living backlog of completed architectural milestones and future clinical enhancements. | [IMPROVEMENTS_AND_FEATURE_CHECKLIST.md](file:///home/jensen/Github-Repositories/Heart_Check_PHC/docs/checklists/IMPROVEMENTS_AND_FEATURE_CHECKLIST.md) |
 
 ---
@@ -22,7 +22,7 @@ This directory contains the central audit matrices, compliance checklists, opera
 ## Master Checklist Index
 
 ### 1. [OPEN_ISSUES.md](file:///home/jensen/Github-Repositories/Heart_Check_PHC/docs/checklists/OPEN_ISSUES.md) — Master Issues & Action Items Tracker
-- **Purpose:** Central running list of current work. Delineates the 3 active action items from post-capstone deployment tasks and the completed milestones archive.
+- **Purpose:** Central running list of current work. Delineates active action items from post-capstone deployment tasks and the completed milestones archive.
 - **When to Use:** Consult at the start of any work session to check active priorities and verified resolutions.
 
 ### 2. [API_LEAKS_AND_INJECTION_RISKS_AUDIT.md](file:///home/jensen/Github-Repositories/Heart_Check_PHC/docs/checklists/API_LEAKS_AND_INJECTION_RISKS_AUDIT.md) — Vulnerability Audit & Exploit Proofs
@@ -43,7 +43,15 @@ This directory contains the central audit matrices, compliance checklists, opera
 - **Purpose:** End-to-end clinical verification scenarios: kiosk ticket issuance, SMS notifications, triage calling, queue rotation, and executive analytics.
 - **When to Use:** Consult during client demonstrations, clinical trial runs, and thesis defense presentations.
 
-### 6. [IMPROVEMENTS_AND_FEATURE_CHECKLIST.md](file:///home/jensen/Github-Repositories/Heart_Check_PHC/docs/checklists/IMPROVEMENTS_AND_FEATURE_CHECKLIST.md) — Feature Roadmap & Polish Backlog
+### 6. [UAT_QUESTIONNAIRE_GUIDE.md](file:///home/jensen/Github-Repositories/Heart_Check_PHC/docs/checklists/UAT_QUESTIONNAIRE_GUIDE.md) — ISO/IEC 25010:2023 UAT Questionnaire Construction Guide
+- **Purpose:** Comprehensive construction, administration, psychometric design, and statistical analysis methodology for ISO/IEC 25010:2023 quality evaluations.
+- **When to Use:** Consult prior to designing or administering UAT trials across clinical, administrative, and technical stakeholder groups.
+
+### 7. [UAT_ROLE_BASED_QUESTIONNAIRE.md](file:///home/jensen/Github-Repositories/Heart_Check_PHC/docs/checklists/UAT_ROLE_BASED_QUESTIONNAIRE.md) — Role-Based UAT Questionnaire Instrument
+- **Purpose:** Ready-to-administer 58-item evaluation questionnaire mapped to ISO/IEC 25010:2023 across 6 distinct stakeholder roles (Patient, Nurse, Transfer Officer, Admin, SuperAdmin, QA Auditor).
+- **When to Use:** Administer directly to trial evaluators during clinical acceptance testing and thesis evaluations.
+
+### 8. [IMPROVEMENTS_AND_FEATURE_CHECKLIST.md](file:///home/jensen/Github-Repositories/Heart_Check_PHC/docs/checklists/IMPROVEMENTS_AND_FEATURE_CHECKLIST.md) — Feature Roadmap & Polish Backlog
 - **Purpose:** Subsystem-by-subsystem enhancement backlog (Kiosk, Dashboard, Nurse, Transfer, Monitor, SuperAdmin).
 - **When to Use:** Consult when scoping new user experience enhancements, tablet layouts, or ergonomic polish.
 
@@ -54,10 +62,12 @@ This directory contains the central audit matrices, compliance checklists, opera
 ```
 docs/checklists/
 |-- README.md                                  <- You are here: Executive status dashboard & navigation
-|-- OPEN_ISSUES.md                             <- Active action items (3 items) & resolved archive
+|-- OPEN_ISSUES.md                             <- Active action items & resolved archive
 |-- SECURITY_CHECKLIST.md                      <- Master 32-point security matrix (100% core patched)
 |-- API_LEAKS_AND_INJECTION_RISKS_AUDIT.md     <- 9 API routes & printer audit (100% patched)
 |-- CHANGES_NEEDED.md                          <- Database SQL migrations log (100% executed)
 |-- UAT_USE_CASE_CHECKLIST.md                  <- Clinical test scenarios & acceptance protocols
+|-- UAT_QUESTIONNAIRE_GUIDE.md                 <- ISO/IEC 25010:2023 construction & scoring guide
+|-- UAT_ROLE_BASED_QUESTIONNAIRE.md            <- Ready-to-administer 6-role evaluation questionnaire
 `-- IMPROVEMENTS_AND_FEATURE_CHECKLIST.md      <- Subsystem feature roadmap & enhancements
 ```

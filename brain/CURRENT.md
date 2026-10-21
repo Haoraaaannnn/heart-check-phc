@@ -111,6 +111,13 @@
    - **SuperAdmin Configuration & Diagnostics (`HardwarePrinterConfigCard.tsx`):** Provides live USB status, WebUSB pairing triggers, local IP storage, and test receipt dispatch guarded by `requireSuperadmin`.
    - **Authoritative Operational Guide (`docs/specifications/PRINTER_SETUP_GUIDE.md`):** Comprehensive documentation covering WebUSB setup, permanent Linux udev rule (eliminating `chmod` commands permanently), network socket setup, and troubleshooting.
 
+10. **ISO/IEC 25010:2023 UAT Questionnaire & Guide Framework (Completed):**
+   - **Authoritative Questionnaire Guide (`docs/checklists/UAT_QUESTIONNAIRE_GUIDE.md`):** Created a comprehensive functional capabilities and question formulation guide detailing the revised ISO/IEC 25010:2023 standard (9 characteristics including Safety, Flexibility, and Interaction Capability), full-system scope across all 8 subsystems in operational sequence (`Kiosk -> Transfer -> Nurse -> Monitor -> Dashboard -> SuperAdmin -> Core -> Notifications`), psychometric design (5-point Likert scale with mandatory feedback on ratings <= 3), statistical formulas (CQI, PQR), and developer remediation maps.
+   - **Role-Based Evaluation Instrument (`docs/checklists/UAT_ROLE_BASED_QUESTIONNAIRE.md`):** Finalized the exhaustive 180-item evaluation questionnaire (30 questions per role across 6 roles) mapped strictly to ISO/IEC 25010:2023 quality dimensions (Functional Suitability, Performance Efficiency, Compatibility, Interaction Capability, Reliability, Security, Flexibility, Safety, Maintainability).
+   - **UAT Feature Gap Analysis & Checklist Upgrade (`docs/checklists/IMPROVEMENTS_AND_FEATURE_CHECKLIST.md`):** Systematically cross-referenced all 180 UAT questions against the codebase. Elevated critical missing features to P0/P1 and added missing functionality (e.g., Deliberate NO_SHOW Archival Modal with reason capture, Transfer 20-second assignment undo toast, Physician "On Break" status toggle with drop target disabling, Kiosk "Are You Still There?" countdown modal with chime, TV Screen Wake-Lock API, SuperAdmin audit log viewer with before/after diffs, and Pre-Announcement Chime + Bilingual Tagalog TTS).
+   - **Functional Test Matrix (`docs/checklists/UAT_USE_CASE_CHECKLIST.md`):** Completely recreated 69 verified test scenarios arranged strictly in operational sequence without referring to outdated specifications, fully reflecting the pure queue management architecture (zero patient ID input at kiosk, zero vitals documentation on workstations).
+   - **Documentation Portals Synchronized:** Updated `docs/checklists/README.md` and `brain/INDEX.md` with explicit ISO date stamps (`2026-10-21`) and zero emojis.
+
 ---
 
 ## Current Blockers & Risks
