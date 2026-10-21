@@ -11,6 +11,8 @@
  * Represents a registered hospital user in the system.
  */
 export interface SuperadminUser {
+  /** Database primary key identifier. */
+  id?: number | string;
   /** Supabase Auth UUID linking the user record. */
   auth_id: string;
   /** Primary contact and login email address. */

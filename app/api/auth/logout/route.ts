@@ -20,10 +20,14 @@ import { createServerClient } from '@supabase/ssr';
 /**
  * Handles POST requests to terminate the active session and revoke cookies.
  *
+ * @param request - Next.js Request object used to inspect protocol security.
  * @returns JSON response indicating successful sign-out.
  */
-export async function POST(): Promise<NextResponse> {
+export async function POST(request: Request): Promise<NextResponse> {
   try {
+    const isSecure =
+      request.headers.get('x-forwarded-proto') === 'https' ||
+      new URL(request.url).protocol === 'https:';
     const cookieStore = await cookies();
 
     const supabase = createServerClient(
@@ -55,7 +59,7 @@ export async function POST(): Promise<NextResponse> {
           maxAge: 0,
           expires: new Date(0),
           sameSite: 'lax',
-          secure: process.env.NODE_ENV === 'production',
+          secure: isSecure,
         });
       }
     });

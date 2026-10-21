@@ -26,6 +26,8 @@ export const CATEGORY_ICONS: Record<string, string> = {
   'OPD Reschedule': 'bx-calendar',
   'Benzathine': 'bx-injection',
   'OPD Screening': 'bx-search-alt-2',
+  'Pulmo & Surgery': 'bx-plus-medical',
+  'Others': 'bx-sushi',
 };
 
 /**

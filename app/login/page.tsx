@@ -215,15 +215,26 @@ function LoginPageInner() {
         return;
       }
 
+      if (data.role) {
+        setLoading(false);
+        setEmail('');
+        setPassword('');
+        window.location.replace('/select-screen');
+        return;
+      }
+
       const { data: roleData, error: dbError } = await supabase
         .from('users')
         .select('role')
-        .ilike('email', emailValue)
-        .single();
+        .or(`auth_id.eq.${data.user?.id},email.ilike.${emailValue}`)
+        .maybeSingle();
 
       setLoading(false);
 
-      if (dbError || !roleData) {
+      if (dbError || !roleData?.role) {
+        if (dbError) {
+          console.error('[LOGIN ROLE ERROR]:', dbError);
+        }
         setError(T.alerts.userRoleNotFound);
         return;
       }
