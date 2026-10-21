@@ -10,7 +10,6 @@
 'use client';
 
 import React from 'react';
-import Link from 'next/link';
 import { BackButton } from '@/components/reusables/BackButton';
 import { transferTexts } from '@/constants/texts/transferTexts';
 import { breadcrumbStyles } from '@/constants/designs/transferStyles';
@@ -73,16 +72,6 @@ export function BreadcrumbNav({
 
   return (
     <nav className={breadcrumbStyles.nav} aria-label="Breadcrumb navigation">
-      <Link
-        href="/select-screen"
-        className={breadcrumbStyles.selectScreenBtn}
-        title={transferTexts.selectScreenLabel}
-        aria-label={transferTexts.selectScreenAria}
-      >
-        <i className="bx bx-grid-alt text-sm" aria-hidden="true" />
-        <span className="hidden sm:inline">{transferTexts.selectScreenLabel}</span>
-      </Link>
-
       {canGoBack && (
         <BackButton
           onClick={handleStepBack}

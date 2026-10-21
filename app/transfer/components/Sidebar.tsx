@@ -194,14 +194,14 @@ export function Sidebar({
                       count={queueCount}
                       color={isActive ? 'brand' : 'amber'}
                       pulse={queueCount > 3}
-                      className={isActive ? '!bg-white !text-[#cc3535] ring-transparent' : ''}
+                      className={isActive ? '!text-white' : ''}
                     />
                   )}
                   {idleCount > 0 && (
                     <NotificationBadge
                       count={idleCount}
                       color="gray"
-                      className={isActive ? '!bg-white/20 !text-white ring-transparent' : ''}
+                      className={isActive ? '!text-white/80' : ''}
                     />
                   )}
                 </div>

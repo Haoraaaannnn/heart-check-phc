@@ -24,8 +24,8 @@ interface HeatmapHeaderControlsProps {
   onDateChange: (date: string) => void;
   /** List of dates containing recorded patient consultations. */
   availableDates: string[];
-  /** Whether the selected date is today's live queue. */
-  isLive: boolean;
+  /** Whether the selected date is today's live queue. (Kept for interface compatibility) */
+  isLive?: boolean;
   /** Callback to manually trigger a data refresh. */
   onRefresh: () => void;
   /** Loading state indicator. */
@@ -44,7 +44,7 @@ export default function HeatmapHeaderControls({
   selectedDate,
   onDateChange,
   availableDates,
-  isLive,
+  isLive: _isLive,
   onRefresh,
   isLoading,
 }: HeatmapHeaderControlsProps) {
@@ -88,14 +88,6 @@ export default function HeatmapHeaderControls({
       </div>
 
       <div className={S.controlsGroup}>
-        {/* Live sync indicator */}
-        {isLive && (
-          <span className={S.liveBadge}>
-            <span className={S.liveDot} />
-            <span>{T.date.liveIndicator}</span>
-          </span>
-        )}
-
         {/* Operational date selector */}
         <div className={S.dateSelectorWrap}>
           <span className={S.dateLabel}>

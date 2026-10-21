@@ -73,7 +73,7 @@ export function FinishedDrawer({ isOpen, onClose, patients }: FinishedDrawerProp
                 >
                   {nurseTexts.stageFinishedHeading}
                 </h2>
-                <span className="px-2 py-0.5 rounded-md text-xs font-bold bg-emerald-100 text-emerald-800 border border-emerald-300 dark:bg-emerald-950/70 dark:text-emerald-300 dark:border-emerald-800/80">
+                <span className="font-mono text-xs font-extrabold text-emerald-600 dark:text-emerald-400 shrink-0">
                   {patients.length}
                 </span>
               </div>

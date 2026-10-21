@@ -353,6 +353,25 @@ export default function AdminServicePage() {
       setDeleteError(delErr.message);
       setDeleteLoading(false);
     } else {
+      // Cascading cleanup: autodelete rooms, cubicles, and staff associations for this service
+      try {
+        const { data: cubiclesToDelete } = await supabase
+          .from('cubicle')
+          .select('id')
+          .eq('category', deletingService.label_en);
+
+        if (cubiclesToDelete && cubiclesToDelete.length > 0) {
+          const cubicleIds = cubiclesToDelete.map((c: any) => c.id);
+          await supabase.from('user_cubicles').delete().in('cubicle_id', cubicleIds);
+          await supabase.from('cubicle').delete().eq('category', deletingService.label_en);
+        }
+
+        await supabase.from('user_services').delete().eq('service', deletingService.label_en);
+        await supabase.from('user_rooms').delete().eq('service', deletingService.label_en);
+      } catch (cascadeErr) {
+        console.error('Cascading cleanup of cubicles failed:', cascadeErr);
+      }
+
       // Clean up deleted service from queue_prefix_map in app_settings
       try {
         const { data: settingData } = await supabase

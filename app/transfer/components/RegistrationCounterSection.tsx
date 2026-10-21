@@ -178,7 +178,7 @@ export function RegistrationCounterSection({
                             : registrationCounterStyles.topPatientCard
                         }
                       >
-                        <div className="flex items-center gap-1 min-w-0 flex-1 overflow-hidden">
+                        <div className="flex items-center gap-1.5 shrink-0">
                           {isTopSelected ? (
                             <span className="px-1 py-0.5 rounded bg-[#cc3535] text-white text-[9px] font-bold shrink-0">
                               SEL
@@ -189,7 +189,7 @@ export function RegistrationCounterSection({
                           <span className={registrationCounterStyles.patientNum}>
                             {topPatient.patientNum}
                           </span>
-                          <span className="shrink-0 flex items-center">
+                          <span className="shrink-0 flex items-center font-mono text-[11px] font-bold">
                             <ElapsedTimer startedAt={topPatient.counter_top_started_at ?? undefined} />
                           </span>
                         </div>

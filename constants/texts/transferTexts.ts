@@ -54,7 +54,7 @@ export const transferTexts = {
   dragCounterHint: '(Drag to reassign counter)',
   noCountersAssigned: 'No counters assigned to your account.',
   noPatientsAtCounter: '— No patients waiting —',
-  sendToQueueBtn: 'Send to Queue →',
+  sendToQueueBtn: 'Queue →',
   servingAtCounter: 'Now at Counter',
 
   // Cubicles & Lanes

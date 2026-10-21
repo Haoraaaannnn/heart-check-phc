@@ -11,9 +11,9 @@
 'use client';
 
 import React, { useState, useEffect } from 'react';
-import Link from 'next/link';
 import { useRouter, usePathname, useSearchParams } from 'next/navigation';
 import { useTheme } from 'next-themes';
+import { toggleThemeWithRipple } from '@/lib/theme/themeTransition';
 import { supabase } from '@/lib/supabase';
 import { handleSignOut } from '@/lib/supabase/signOut';
 import { useBottleneckNotifications } from '@/app/dashboard/hooks/useBottleneckNotifications';
@@ -97,7 +97,11 @@ export function DashboardHeader({ onOpenMobileDrawer }: DashboardHeaderProps) {
   };
 
   const isDark = mounted && resolvedTheme === 'dark';
-  const toggleTheme = () => setTheme(isDark ? 'light' : 'dark');
+  const toggleTheme = (e: React.MouseEvent<HTMLButtonElement>) => {
+    toggleThemeWithRipple(e, () => {
+      setTheme(isDark ? 'light' : 'dark');
+    });
+  };
 
   /**
    * Computes dynamic breadcrumb labels according to the active route and query parameters.
@@ -228,11 +232,10 @@ export function DashboardHeader({ onOpenMobileDrawer }: DashboardHeaderProps) {
         >
           {mounted ? (
             <i
-              className={`bx ${
-                isDark
+              className={`bx ${isDark
                   ? 'bx-sun text-amber-400'
                   : 'bx-moon text-slate-600 dark:text-[#a3a3a3]'
-              }`}
+                }`}
               aria-hidden="true"
             />
           ) : (
@@ -251,17 +254,6 @@ export function DashboardHeader({ onOpenMobileDrawer }: DashboardHeaderProps) {
             onClearAll={clearAll}
           />
         )}
-
-        {/* Return to Select Screen Button */}
-        <Link
-          href="/select-screen"
-          className={S.selectScreenButton}
-          title={T.actions.selectScreen}
-          aria-label={T.actions.selectScreenAria}
-        >
-          <i className="bx bx-grid-alt text-base" aria-hidden="true" />
-          <span className="hidden md:inline">{T.actions.selectScreen}</span>
-        </Link>
 
         {/* Authenticated User Identity Chip */}
         <div className={S.userChip}>

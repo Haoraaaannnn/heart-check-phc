@@ -218,10 +218,6 @@ export function DashSideNavigation({
           <i className={`bx bx-grid-alt ${S.navIcon}`} aria-hidden="true" />
           <span>{T.actions.selectScreen}</span>
         </Link>
-        <div className={S.statusBadge}>
-          <span className={S.statusDot} />
-          <span>{T.system.statusOnline}</span>
-        </div>
         <div className={S.footerText}>{T.system.footerAttribution}</div>
       </div>
     </>

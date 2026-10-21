@@ -24,8 +24,6 @@ import { themeColors } from "@/constants/colors";
 export const InactivityTimerColors = {
   /** Soft clinical grayish track representing depleted/empty countdown seconds. */
   emptyTrack: "#E2E8F0",
-  /** Dark mode track stroke color. */
-  emptyTrackDark: "#334155",
   /** PHC brand red active progress ring stroke. */
   brandRed: themeColors.brandRed,
   /** Urgent bright red progress ring stroke for the critical final 5 seconds. */
@@ -93,37 +91,37 @@ export const InactivityModalClasses = {
    * Enlarged modal dialog card with solid clinical background, uniform border, and shadow.
    */
   card:
-    "bg-white dark:bg-slate-900 border border-slate-200 dark:border-slate-800 rounded-3xl shadow-2xl w-[94vw] max-w-[560px] sm:max-w-xl p-6 sm:p-10 flex flex-col items-center text-center animate-in zoom-in-95 duration-200",
+    "bg-white border border-slate-200 rounded-3xl shadow-2xl w-[94vw] max-w-[560px] sm:max-w-xl p-6 sm:p-10 flex flex-col items-center text-center animate-in zoom-in-95 duration-200",
 
   /**
    * Enlarged circular alert icon box styled with PHC brand red tone and subtle border.
    */
   iconWrap:
-    "w-20 h-20 rounded-2xl bg-red-50 dark:bg-red-950/40 border border-red-200 dark:border-red-900/60 flex items-center justify-center text-[#a8071a] dark:text-[#f15b6c] text-4xl mb-4 shrink-0 shadow-sm",
+    "w-20 h-20 rounded-2xl bg-red-50 border border-red-200 flex items-center justify-center text-[#a8071a] text-4xl mb-4 shrink-0 shadow-sm",
 
   /**
    * Enlarged primary English heading typography.
    */
   title:
-    "text-3xl sm:text-4xl font-extrabold text-slate-900 dark:text-white break-words tracking-tight leading-tight",
+    "text-3xl sm:text-4xl font-extrabold text-slate-900 break-words tracking-tight leading-tight",
 
   /**
    * Secondary Filipino heading in PHC brand red.
    */
   subtitle:
-    "text-sm sm:text-base font-bold text-[#a8071a] dark:text-[#f15b6c] mt-1.5 uppercase tracking-wider",
+    "text-sm sm:text-base font-bold text-[#a8071a] mt-1.5 uppercase tracking-wider",
 
   /**
    * Enlarged primary explanatory paragraph copy.
    */
   description:
-    "text-base sm:text-lg text-slate-600 dark:text-slate-300 mt-3 break-words whitespace-normal leading-relaxed max-w-lg",
+    "text-base sm:text-lg text-slate-600 mt-3 break-words whitespace-normal leading-relaxed max-w-lg",
 
   /**
    * Secondary English translation paragraph copy.
    */
   descriptionEnglish:
-    "text-sm sm:text-base text-slate-500 dark:text-slate-400 mt-1 italic break-words whitespace-normal leading-normal max-w-lg",
+    "text-sm sm:text-base text-slate-500 mt-1 italic break-words whitespace-normal leading-normal max-w-lg",
 
   /**
    * Central countdown container organizing the circular progress ring and numerical display.
@@ -147,19 +145,19 @@ export const InactivityModalClasses = {
    * Large bold remaining seconds text centered inside the circular countdown progress ring.
    */
   timerCountText:
-    "text-4xl sm:text-5xl font-black text-slate-900 dark:text-white tabular-nums tracking-tight",
+    "text-4xl sm:text-5xl font-black text-slate-900 tabular-nums tracking-tight",
 
   /**
    * Notice text below the countdown circle.
    */
   countdownNotice:
-    "mt-3 text-sm sm:text-base font-medium text-slate-700 dark:text-slate-300 flex items-center gap-2",
+    "mt-3 text-sm sm:text-base font-medium text-slate-700 flex items-center gap-2",
 
   /**
    * Pill badge highlighting remaining seconds with PHC red branding.
    */
   countdownBadge:
-    "font-bold text-[#a8071a] dark:text-[#f15b6c] bg-red-50 dark:bg-red-950/50 px-3 py-1 rounded-lg border border-red-200 dark:border-red-900/60",
+    "font-bold text-[#a8071a] bg-red-50 px-3 py-1 rounded-lg border border-red-200",
 
   /**
    * Responsive two-button actions grid with guaranteed equal 50/50 sizing across columns.
@@ -183,11 +181,11 @@ export const InactivityModalClasses = {
    * Secondary "Start Over" action button with equal width, solid surface, and subtle border.
    */
   resetButton:
-    "w-full min-h-[66px] sm:min-h-[74px] py-4 px-5 sm:px-6 rounded-2xl bg-slate-100 dark:bg-slate-800 hover:bg-slate-200 dark:hover:bg-slate-700 text-slate-700 dark:text-slate-200 font-bold text-base sm:text-lg transition-colors flex flex-col items-center justify-center gap-1 cursor-pointer border-2 border-slate-300 dark:border-slate-700 focus:outline-none focus-visible:ring-2 focus-visible:ring-slate-400 focus-visible:ring-offset-2",
+    "w-full min-h-[66px] sm:min-h-[74px] py-4 px-5 sm:px-6 rounded-2xl bg-slate-100 hover:bg-slate-200 text-slate-700 font-bold text-base sm:text-lg transition-colors flex flex-col items-center justify-center gap-1 cursor-pointer border-2 border-slate-300 focus:outline-none focus-visible:ring-2 focus-visible:ring-slate-400 focus-visible:ring-offset-2",
 
   /**
    * Subtitle under secondary button text.
    */
   resetSub:
-    "text-xs sm:text-sm font-medium text-slate-500 dark:text-slate-400",
+    "text-xs sm:text-sm font-medium text-slate-500",
 } as const;

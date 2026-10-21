@@ -14,9 +14,9 @@
 'use client';
 
 import React, { useState, useEffect } from 'react';
-import Link from 'next/link';
 import { useRouter, usePathname, useSearchParams } from 'next/navigation';
 import { useTheme } from 'next-themes';
+import { toggleThemeWithRipple } from '@/lib/theme/themeTransition';
 import { supabase } from '@/lib/supabase';
 import { handleSignOut as executeSignOut } from '@/lib/supabase/signOut';
 import { LiveClock } from '@/components/reusables/LiveClock';
@@ -79,7 +79,11 @@ export function SuperAdminHeader({ onOpenMobileDrawer }: SuperAdminHeaderProps) 
   };
 
   const isDark = mounted && resolvedTheme === 'dark';
-  const toggleTheme = () => setTheme(isDark ? 'light' : 'dark');
+  const toggleTheme = (e: React.MouseEvent<HTMLButtonElement>) => {
+    toggleThemeWithRipple(e, () => {
+      setTheme(isDark ? 'light' : 'dark');
+    });
+  };
 
   /**
    * Computes dynamic breadcrumb labels according to current route and tab.
@@ -174,28 +178,16 @@ export function SuperAdminHeader({ onOpenMobileDrawer }: SuperAdminHeaderProps) 
         >
           {mounted ? (
             <i
-              className={`bx ${
-                isDark
+              className={`bx ${isDark
                   ? 'bx-sun text-amber-400'
                   : 'bx-moon text-slate-600 dark:text-[#a3a3a3]'
-              }`}
+                }`}
               aria-hidden="true"
             />
           ) : (
             <div className="w-5 h-5" />
           )}
         </button>
-
-        {/* Return to Select Screen Button */}
-        <Link
-          href="/select-screen"
-          className={S.selectScreenButton}
-          title={T.selectScreen}
-          aria-label={T.selectScreenAria}
-        >
-          <i className="bx bx-grid-alt text-base" aria-hidden="true" />
-          <span className="hidden md:inline">{T.selectScreen}</span>
-        </Link>
 
         {/* User Identity Chip */}
         <div className={S.userChip}>

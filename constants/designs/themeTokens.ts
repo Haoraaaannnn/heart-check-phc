@@ -99,18 +99,18 @@ export const themeTokens = {
     groupHoverAccent: 'group-hover:text-[#a8071a] dark:group-hover:text-[#f87171] group-hover:text-accent',
   },
 
-  /** Standardized badges, tags, and status pills */
+  /** Standardized badges, tags, and status count tokens */
   badge: {
     neutral:
-      'bg-slate-100 dark:bg-[#262626] text-slate-700 dark:text-[#e5e5e5] border border-slate-300 dark:border-[#3a3a3a] rounded-md font-bold',
+      'text-slate-600 dark:text-[#a3a3a3] font-extrabold',
     brand:
-      'bg-red-50 dark:bg-[#76000d]/40 text-[#a8071a] dark:text-[#fca5a5] border border-red-200 dark:border-[#a8071a]/70 rounded-md font-bold',
+      'text-[#cc3535] dark:text-[#f87171] font-extrabold',
     activeEmerald:
-      'bg-emerald-50 dark:bg-emerald-950/70 text-emerald-800 dark:text-emerald-300 border border-emerald-300 dark:border-emerald-800/80 rounded-md font-bold',
+      'text-emerald-600 dark:text-emerald-400 font-extrabold',
     warningAmber:
-      'bg-amber-50 dark:bg-amber-950/70 text-amber-800 dark:text-amber-300 border border-amber-300 dark:border-amber-800/80 rounded-md font-bold',
+      'text-amber-600 dark:text-amber-400 font-extrabold',
     infoBlue:
-      'bg-blue-50 dark:bg-blue-950/70 text-blue-800 dark:text-blue-300 border border-blue-300 dark:border-blue-800/80 rounded-md font-bold',
+      'text-blue-600 dark:text-blue-400 font-extrabold',
   },
 
   /** Standardized action buttons */

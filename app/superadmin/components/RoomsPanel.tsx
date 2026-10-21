@@ -172,8 +172,14 @@ export function RoomsPanel() {
   }, [loadPrefixMap]);
 
   const sections = useMemo(() => {
+    const activeServiceSet = new Set(
+      availableServices.map((s) => s.trim().toLowerCase())
+    );
     const groups = new Map<string, Group>();
     for (const c of cubicles) {
+      if (activeServiceSet.size > 0 && !activeServiceSet.has((c.category || '').trim().toLowerCase())) {
+        continue; // Autodelete/exclude unavailable service rooms from display
+      }
       const key = `${c.category}::${c.subcategory ?? ''}::${c.room}`;
       if (!groups.has(key)) {
         groups.set(key, {

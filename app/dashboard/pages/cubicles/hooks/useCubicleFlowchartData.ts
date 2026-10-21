@@ -337,13 +337,24 @@ export function useCubicleFlowchartData() {
             )
           : 0;
 
-      // Build Cubicle Stations Telemetry
+      // Resolve clinical services dynamically from Superadmin services table
+      let finalServices: Service[] = (servicesData as Service[]) || [];
+      const knownCategorySet = new Set(
+        finalServices.map((s) => s.label_en.trim().toLowerCase())
+      );
+
+      // Filter out cubicles belonging to deleted or unavailable services
+      const validCubicles = finalServices.length > 0
+        ? rawCubicles.filter((c: any) => knownCategorySet.has((c.category || '').trim().toLowerCase()))
+        : rawCubicles;
+
+      // Build Cubicle Stations Telemetry for valid active services only
       let occupiedCount = 0;
       let totalConsultDurationsToday = 0;
       let totalConsultCountToday = 0;
       let totalIdleMinutesSum = 0;
 
-      const stations: FlowchartCubicleStation[] = rawCubicles.map((cubicle: any) => {
+      const stations: FlowchartCubicleStation[] = validCubicles.map((cubicle: any) => {
         const normKey = cubicle.cubicleNum.trim().toLowerCase();
         const activePatient = activeByCubicle[normKey];
         const completedForCubicle = completedByCubicle[normKey] || [];
@@ -419,33 +430,6 @@ export function useCubicleFlowchartData() {
           avgSpeedTodayMinutes: cubicleAvgSpeed,
         };
       });
-
-      // Resolve clinical services dynamically from Superadmin services table
-      const rawServices: Service[] = (servicesData as Service[]) || [];
-      const knownCategorySet = new Set(
-        rawServices.map((s) => s.label_en.trim().toLowerCase())
-      );
-
-      // Append any cubicle categories not yet registered in services table
-      const extraServices: Service[] = [];
-      rawCubicles.forEach((c: any) => {
-        const cat = (c.category || '').trim();
-        if (cat && !knownCategorySet.has(cat.toLowerCase())) {
-          knownCategorySet.add(cat.toLowerCase());
-          extraServices.push({
-            id: 9000 + extraServices.length,
-            label_en: cat,
-            label_fil: cat,
-            icon_src: 'bx-clinic',
-            display_order: 100 + extraServices.length,
-            description_en: `${cat} Clinical Services`,
-            description_fil: `${cat} Kagawaran`,
-            patient_type: 'both',
-          });
-        }
-      });
-
-      let finalServices = [...rawServices, ...extraServices];
 
       // Fallback only if database services and cubicles are completely unseeded (fresh DB)
       if (finalServices.length === 0) {

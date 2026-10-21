@@ -11,6 +11,7 @@
 import React, { useState, useEffect, useCallback, useRef, useMemo } from 'react';
 import { useRouter } from 'next/navigation';
 import { useTheme } from 'next-themes';
+import { toggleThemeWithRipple } from '@/lib/theme/themeTransition';
 import { supabase } from '@/lib/supabase';
 import { Sidebar } from '@/app/transfer/components/Sidebar';
 import { BreadcrumbNav } from '@/app/transfer/components/BreadcrumbNav';
@@ -66,8 +67,10 @@ export default function TransferPage() {
 
   const isDark = mounted && resolvedTheme === 'dark';
 
-  const toggleTheme = () => {
-    setTheme(isDark ? 'light' : 'dark');
+  const toggleTheme = (e: React.MouseEvent<HTMLButtonElement>) => {
+    toggleThemeWithRipple(e, () => {
+      setTheme(isDark ? 'light' : 'dark');
+    });
   };
 
   const {
@@ -639,8 +642,8 @@ export default function TransferPage() {
       preferred.length > 0
         ? preferred
         : serviceCubicles.filter(
-            c => (assignedPatients[c.cubicleNum]?.length ?? 0) < MAX_PATIENTS_PER_CUBICLE
-          );
+          c => (assignedPatients[c.cubicleNum]?.length ?? 0) < MAX_PATIENTS_PER_CUBICLE
+        );
 
     if (candidates.length === 0) {
       console.warn('No available cubicle to assign this patient right now.');
@@ -649,7 +652,7 @@ export default function TransferPage() {
 
     const bestCubicle = candidates.reduce((best, c) =>
       (assignedPatients[c.cubicleNum]?.length ?? 0) <
-      (assignedPatients[best.cubicleNum]?.length ?? 0)
+        (assignedPatients[best.cubicleNum]?.length ?? 0)
         ? c
         : best
     );
@@ -1238,7 +1241,7 @@ export default function TransferPage() {
                     <div className={transferLayoutStyles.unassignedDropdownHeader}>
                       Needs Attention
                     </div>
-                    <div className="max-h-72 overflow-y-auto phc-scroll">
+                    <div className="flex-1 min-h-0 max-h-72 overflow-y-auto phc-scroll">
                       {Object.entries(queueCounts)
                         .filter(([cat]) => myServices.includes(cat))
                         .filter(([, n]) => n > 0).length === 0 ? (
@@ -1390,8 +1393,8 @@ export default function TransferPage() {
           draggedPatient
             ? dragOrigin
             : regDraggedPatient
-            ? `Counter ${regDraggedPatient.counter}`
-            : null
+              ? `Counter ${regDraggedPatient.counter}`
+              : null
         }
         isValidDropTarget={Boolean(dragOverCubicle || dragOverCounter)}
       />
