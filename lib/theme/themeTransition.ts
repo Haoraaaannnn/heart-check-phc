@@ -16,9 +16,9 @@ import { MouseEvent } from "react";
 import { flushSync } from "react-dom";
 
 /**
- * Extended Document interface declaring the View Transitions API signature.
+ * View Transitions API signature interface for browser compatibility.
  */
-interface DocumentWithViewTransition extends Document {
+interface DocumentWithViewTransition {
   startViewTransition?: (callback: () => Promise<void> | void) => {
     ready: Promise<void>;
     finished: Promise<void>;
@@ -39,7 +39,7 @@ export function toggleThemeWithRipple(
   event: MouseEvent<HTMLElement>,
   toggleFn: () => void
 ): void {
-  const doc = document as DocumentWithViewTransition;
+  const doc = document as unknown as DocumentWithViewTransition;
 
   // Fallback immediately if browser doesn't support View Transitions or prefers reduced motion
   if (

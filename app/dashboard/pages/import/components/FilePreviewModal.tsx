@@ -157,7 +157,7 @@ export default function FilePreviewModal({
                         {row.carryout_end ? String(row.carryout_end).slice(0, 19).replace('T', ' ') : '—'}
                       </td>
                       <td className="px-3 py-2">
-                        <span className={S.table.previewRowStatus}>
+                        <span className={S.previewRowStatus}>
                           {row.status || 'Done'}
                         </span>
                       </td>

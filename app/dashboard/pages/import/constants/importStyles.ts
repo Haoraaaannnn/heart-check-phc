@@ -102,6 +102,7 @@ export const IMPORT_STYLES = {
     kpiValue: 'text-lg font-bold text-slate-900 dark:text-[#f5f5f5] mt-0.5',
     tableTitle: 'text-xs font-bold uppercase tracking-wider text-slate-700 dark:text-[#a3a3a3] mb-2',
     tableWrapper: 'overflow-x-auto rounded-lg border border-slate-200 dark:border-[#2e2e2e] max-h-64',
+    previewRowStatus: 'rounded-md bg-emerald-50 px-2 py-0.5 text-[10px] font-semibold text-emerald-700 dark:bg-emerald-950/70 dark:text-emerald-300 border border-emerald-200 dark:border-emerald-800/80',
     footer: 'flex items-center justify-end gap-2 border-t border-slate-200 p-4 dark:border-[#2e2e2e] bg-slate-50/50 dark:bg-[#141414]',
     cancelBtn: 'rounded-lg border border-slate-200 bg-white px-4 py-2 text-xs font-semibold text-slate-700 hover:bg-slate-50 dark:border-[#2e2e2e] dark:bg-[#242424] dark:text-[#f5f5f5] dark:hover:bg-[#2e2e2e]',
     confirmBtn: 'inline-flex items-center gap-1.5 rounded-lg bg-[#a8071a] px-4 py-2 text-xs font-semibold text-white hover:bg-[#8e0616] transition-colors',
