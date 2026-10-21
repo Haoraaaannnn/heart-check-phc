@@ -29,7 +29,7 @@ export const SMSPhoneInputTypography = {
 /** Inline styles for `PhoneInput`. */
 export const SMSPhoneInputStyle = {
     backspaceIcon: {
-        fontSize: 32,
+        fontSize: 26,
         lineHeight: 1,
     },
     container: {
@@ -40,11 +40,11 @@ export const SMSPhoneInputStyle = {
         borderWidth: 2,
         borderStyle: "solid",
         borderColor: "#D1D5DB",
-        borderRadius: 20,
+        borderRadius: 18,
         boxShadow: "0 2px 4px rgba(0, 0, 0, 0.05)",
         paddingLeft: "clamp(16px, 2.5vw, 24px)",
         paddingRight: "clamp(16px, 2.5vw, 24px)",
-        height: "clamp(70px, 8.5vh, 88px)",
+        height: "clamp(58px, 7.5vh, 76px)",
         transition: "border-color 0.2s ease, background-color 0.2s ease",
     },
     containerError: {
@@ -74,10 +74,10 @@ export const SMSPhoneInputStyle = {
         justifyContent: "center",
         color: themeColors.white,
         backgroundColor: themeColors.brandRed,
-        borderRadius: 14,
-        paddingLeft: "clamp(16px, 2vw, 22px)",
-        paddingRight: "clamp(16px, 2vw, 22px)",
-        height: "clamp(50px, 6.5vh, 58px)",
+        borderRadius: 12,
+        paddingLeft: "clamp(14px, 1.8vw, 20px)",
+        paddingRight: "clamp(14px, 1.8vw, 20px)",
+        height: "clamp(44px, 5.8vh, 52px)",
         border: "none",
         cursor: "pointer",
     },

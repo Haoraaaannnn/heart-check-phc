@@ -15,6 +15,12 @@
 
 import net from 'net';
 import { getTimestamp } from '@/lib/logger';
+import { PrinterHardwareStatus } from './types';
+import {
+  ESC_POS_STATUS_QUERY,
+  parseEscPosStatusBytes,
+  buildHardwareStatus,
+} from './statusParser';
 
 /**
  * Result of a network socket print attempt.
@@ -194,3 +200,201 @@ export async function sendToNetworkPrinter(
     }
   });
 }
+
+/**
+ * Queries real-time hardware telemetry from a network thermal printer over TCP socket.
+ *
+ * @param host - Network printer IP address or local hostname.
+ * @param port - Raw printer socket port (defaults to 9100).
+ * @param timeoutMs - Socket timeout in milliseconds (defaults to 2500ms).
+ * @returns Promise resolving to {@link PrinterHardwareStatus} telemetry state.
+ */
+export async function queryNetworkPrinterStatus(
+  host: string,
+  port = 9100,
+  timeoutMs = 2500
+): Promise<PrinterHardwareStatus> {
+  const cleanHost = (host || '').trim();
+
+  if (!isValidPrinterHost(cleanHost)) {
+    return buildHardwareStatus(
+      'not_detected',
+      'none',
+      'No Network Host',
+      `Invalid or unconfigured host IP: "${cleanHost}"`
+    );
+  }
+
+  return new Promise((resolve) => {
+    const socket = new net.Socket();
+    let isSettled = false;
+    let isConnected = false;
+    const receivedChunks: Buffer[] = [];
+
+    const cleanup = () => {
+      try {
+        socket.removeAllListeners();
+        socket.destroy();
+      } catch {
+        // Ignore cleanup destruction error
+      }
+    };
+
+    socket.setTimeout(timeoutMs);
+
+    socket.on('connect', () => {
+      isConnected = true;
+      try {
+        // Transmit DLE EOT status query
+        socket.write(ESC_POS_STATUS_QUERY);
+      } catch (writeErr) {
+        if (!isSettled) {
+          isSettled = true;
+          cleanup();
+          const msg = writeErr instanceof Error ? writeErr.message : String(writeErr);
+          resolve(
+            buildHardwareStatus('offline', 'network', cleanHost, `Write query error: ${msg}`)
+          );
+        }
+      }
+    });
+
+    socket.on('data', (chunk) => {
+      receivedChunks.push(chunk);
+      const combined = Buffer.concat(receivedChunks);
+
+      // Once 4 response bytes are received, parse status
+      if (combined.length >= 4) {
+        if (!isSettled) {
+          isSettled = true;
+          cleanup();
+          const parsed = parseEscPosStatusBytes(combined);
+          resolve(
+            buildHardwareStatus(
+              parsed.condition,
+              'network',
+              `Network Printer (${cleanHost})`,
+              `Port ${port} [${parsed.rawHex}]`,
+              parsed.paperLow
+            )
+          );
+        }
+      }
+    });
+
+    socket.on('timeout', () => {
+      if (!isSettled) {
+        isSettled = true;
+        cleanup();
+        if (isConnected) {
+          // If connection succeeded but no telemetry bytes were echoed back
+          // (some thermal models do not reply to status queries on raw spool ports),
+          // check if we received any partial bytes
+          if (receivedChunks.length > 0) {
+            const combined = Buffer.concat(receivedChunks);
+            const parsed = parseEscPosStatusBytes(combined);
+            resolve(
+              buildHardwareStatus(
+                parsed.condition,
+                'network',
+                `Network Printer (${cleanHost})`,
+                `Port ${port} [${parsed.rawHex}]`,
+                parsed.paperLow
+              )
+            );
+          } else {
+            resolve(
+              buildHardwareStatus(
+                'ready',
+                'network',
+                `Network Printer (${cleanHost})`,
+                `Socket reachable at ${cleanHost}:${port}`
+              )
+            );
+          }
+        } else {
+          resolve(
+            buildHardwareStatus(
+              'offline',
+              'network',
+              `Network Printer (${cleanHost})`,
+              `Connection timed out after ${timeoutMs}ms`
+            )
+          );
+        }
+      }
+    });
+
+    socket.on('error', (err) => {
+      if (!isSettled) {
+        isSettled = true;
+        cleanup();
+        resolve(
+          buildHardwareStatus(
+            'offline',
+            'network',
+            `Network Printer (${cleanHost})`,
+            `Socket error: ${err.message}`
+          )
+        );
+      }
+    });
+
+    socket.on('close', () => {
+      if (!isSettled) {
+        isSettled = true;
+        cleanup();
+        if (receivedChunks.length > 0) {
+          const combined = Buffer.concat(receivedChunks);
+          const parsed = parseEscPosStatusBytes(combined);
+          resolve(
+            buildHardwareStatus(
+              parsed.condition,
+              'network',
+              `Network Printer (${cleanHost})`,
+              `Port ${port} [${parsed.rawHex}]`,
+              parsed.paperLow
+            )
+          );
+        } else if (isConnected) {
+          resolve(
+            buildHardwareStatus(
+              'ready',
+              'network',
+              `Network Printer (${cleanHost})`,
+              `Port ${port} connection succeeded`
+            )
+          );
+        } else {
+          resolve(
+            buildHardwareStatus(
+              'offline',
+              'network',
+              `Network Printer (${cleanHost})`,
+              'Connection closed before establishing link'
+            )
+          );
+        }
+      }
+    });
+
+    try {
+      socket.connect(port, cleanHost);
+    } catch (connectErr: unknown) {
+      if (!isSettled) {
+        isSettled = true;
+        cleanup();
+        const msg = connectErr instanceof Error ? connectErr.message : String(connectErr);
+        resolve(
+          buildHardwareStatus(
+            'offline',
+            'network',
+            `Network Printer (${cleanHost})`,
+            `Failed to initiate socket: ${msg}`
+          )
+        );
+      }
+    }
+  });
+}
+

@@ -35,7 +35,7 @@ export function HardwarePrinterConfigCard() {
   const S = CUSTOMIZATION_STYLES;
   const B = SUPERADMIN_STYLES.buttons;
 
-  const { status, pairUsb, pairSerial } = useWebPrinter();
+  const { status, hardwareStatus, pairUsb, pairSerial } = useWebPrinter();
 
   const [networkIp, setNetworkIp] = useState<string>('');
   const [testingUsb, setTestingUsb] = useState<boolean>(false);
@@ -189,15 +189,23 @@ export function HardwarePrinterConfigCard() {
             <span className="text-xs font-bold text-slate-800 dark:text-[#f5f5f5]">
               {T.usbSectionTitle}
             </span>
-            <span
-              className={`px-2 py-0.5 rounded-md text-[10px] font-semibold border ${
-                status.connected
-                  ? 'bg-emerald-50 text-emerald-700 border-emerald-200 dark:bg-emerald-950/60 dark:text-emerald-300'
-                  : 'bg-slate-100 text-slate-600 border-slate-200 dark:bg-[#242424] dark:text-[#a3a3a3]'
-              }`}
-            >
-              {status.connected ? T.usbConnectedBadge : T.usbNotConnectedBadge}
-            </span>
+            <div className="flex items-center gap-1.5">
+              <span
+                className={`px-2 py-0.5 rounded-md text-[10px] font-semibold border ${
+                  status.connected
+                    ? 'bg-emerald-50 text-emerald-700 border-emerald-200 dark:bg-emerald-950/60 dark:text-emerald-300'
+                    : 'bg-slate-100 text-slate-600 border-slate-200 dark:bg-[#242424] dark:text-[#a3a3a3]'
+                }`}
+              >
+                {status.connected ? T.usbConnectedBadge : T.usbNotConnectedBadge}
+              </span>
+              {hardwareStatus.condition !== 'ready' &&
+                hardwareStatus.condition !== 'not_detected' && (
+                  <span className="px-2 py-0.5 rounded-md text-[10px] font-semibold border bg-amber-50 text-amber-800 border-amber-200 dark:bg-amber-950/60 dark:text-amber-200 uppercase">
+                    {hardwareStatus.condition.replace(/_/g, ' ')}
+                  </span>
+                )}
+            </div>
           </div>
 
           <p className="text-[11px] text-slate-500 dark:text-[#a3a3a3] leading-relaxed">

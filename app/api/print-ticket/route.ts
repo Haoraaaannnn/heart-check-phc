@@ -30,7 +30,12 @@ import {
 } from './ewtComputation';
 import { PRINT_TEXTS } from './constants/printTexts';
 import { sendQueueConfirmationSMS } from '@/app/actions/sendQueueConfirmationSMS';
-import { sendToNetworkPrinter, isValidPrinterHost } from '@/lib/printer/networkPrinter';
+import {
+  sendToNetworkPrinter,
+  isValidPrinterHost,
+  queryNetworkPrinterStatus,
+} from '@/lib/printer/networkPrinter';
+import { buildHardwareStatus } from '@/lib/printer/statusParser';
 
 /**
  * Global mutex flag to prevent overlapping concurrent writes to hardware USB device nodes.
@@ -349,6 +354,20 @@ export async function POST(request: Request) {
       );
     }
 
+    const hardwareStatus = printedSuccessfully
+      ? buildHardwareStatus(
+          'ready',
+          printMethod === 'client_webusb_required' ? 'none' : printMethod,
+          printMethod === 'network' ? `Network (${configuredPrinterIp})` : 'Linux USB Node',
+          'Ticket printed successfully'
+        )
+      : buildHardwareStatus(
+          'not_detected',
+          'none',
+          'No Server Printer Reached',
+          lastError || 'Server did not print ticket; client fallback active'
+        );
+
     return NextResponse.json({
       success: true,
       data: {
@@ -358,6 +377,8 @@ export async function POST(request: Request) {
         estimatedWaitMinutes: ewtMinutes,
         estimatedWaitLabel: formatEwtLabel(ewtMinutes),
         printMethod,
+        printed: printedSuccessfully,
+        hardwareStatus,
         escposBase64: buffer.toString('base64'),
         timestamp: new Date().toISOString(),
       },
@@ -375,5 +396,63 @@ export async function POST(request: Request) {
     setTimeout(() => {
       isPrinterBusy = false;
     }, 500);
+  }
+}
+
+/**
+ * Handles GET requests to probe server-configured printer hardware status.
+ *
+ * @returns NextResponse with {@link PrinterHardwareStatus} diagnostic telemetry.
+ */
+export async function GET() {
+  try {
+    const configuredPrinterIp = (process.env.PRINTER_IP || process.env.PRINTER_HOST || '').trim();
+    if (configuredPrinterIp && isValidPrinterHost(configuredPrinterIp)) {
+      const status = await queryNetworkPrinterStatus(configuredPrinterIp, 9100, 2000);
+      return NextResponse.json({ success: true, status });
+    }
+
+    // Check local Linux USB printer device nodes (/dev/usb/lp*)
+    const printerPaths = ['/dev/usb/lp2', '/dev/usb/lp0', '/dev/usb/lp1'];
+    for (const path of printerPaths) {
+      if (existsSync(/*turbopackIgnore: true*/ path)) {
+        try {
+          await fs.access(/*turbopackIgnore: true*/ path, 2 /* W_OK */);
+          const status = buildHardwareStatus(
+            'ready',
+            'device',
+            `Linux USB Node (${path})`,
+            'Device node writable'
+          );
+          return NextResponse.json({ success: true, status });
+        } catch {
+          const status = buildHardwareStatus(
+            'offline',
+            'device',
+            `Linux USB Node (${path})`,
+            'Permission denied (EACCES) on device node'
+          );
+          return NextResponse.json({ success: true, status });
+        }
+      }
+    }
+
+    const notDetectedStatus = buildHardwareStatus(
+      'not_detected',
+      'none',
+      'No Server Printer Configured',
+      'No network IP or local USB device node configured on the server.'
+    );
+    return NextResponse.json({ success: true, status: notDetectedStatus });
+  } catch (err: unknown) {
+    const msg = err instanceof Error ? err.message : String(err);
+    return NextResponse.json(
+      {
+        success: false,
+        error: msg,
+        status: buildHardwareStatus('offline', 'none', 'Error Probing Printer', msg),
+      },
+      { status: 500 }
+    );
   }
 }

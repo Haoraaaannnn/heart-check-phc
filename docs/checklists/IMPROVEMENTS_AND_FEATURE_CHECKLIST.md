@@ -1,5 +1,7 @@
 # Heart Check PHC: Dashboards & Kiosk Improvement Roadmap and Living Checklist
 
+**Last Updated:** 2026-10-21
+
 This document serves as the master tracking checklist and improvement roadmap for the **Heart Check PHC** Queue Management System. It outlines recommended feature additions, user experience enhancements, architectural refinements, and operational upgrades across the **Patient Self-Service Kiosk** and all **Administrative, Clinical, and Monitoring Dashboards**.
 
 ---
@@ -23,7 +25,7 @@ The Kiosk is the primary physical entry point for outpatients arriving at the ho
 
 | Status | Priority | Feature / Improvement | Description | Target Files / Module |
 | :---: | :---: | :--- | :--- | :--- |
-| [ ] | Priority | **ESC/POS Thermal Printer Status Telemetry** | Integrate printer hardware status detection (out of paper, paper jam, printer offline) to prevent patient queueing when physical tickets cannot be issued. Provide on-screen fallback to photo/SMS ticket. | [queue-print/page.tsx](file:///home/jensen/Github-Repositories/heart-check-phc/app/kiosk/pages/queue-print/page.tsx), `app/kiosk/lib/` |
+| [x] | Priority | **ESC/POS Thermal Printer Status Telemetry** | Integrate printer hardware status detection (out of paper, paper jam, printer offline, not detected) while permitting queueing even without printer detected. Provide on-screen fallback to photo/SMS ticket. | [QueuePrintContent.tsx](file:///home/jensen/Github-Repositories/Heart_Check_PHC/app/kiosk/pages/queue-print/components/QueuePrintContent.tsx), [QueuePrintFallbackCard.tsx](file:///home/jensen/Github-Repositories/Heart_Check_PHC/app/kiosk/pages/queue-print/components/QueuePrintFallbackCard.tsx), [statusParser.ts](file:///home/jensen/Github-Repositories/Heart_Check_PHC/lib/printer/statusParser.ts), [useWebPrinter.ts](file:///home/jensen/Github-Repositories/Heart_Check_PHC/app/kiosk/hooks/useWebPrinter.ts), [route.ts](file:///home/jensen/Github-Repositories/Heart_Check_PHC/app/api/print-ticket/route.ts) |
 | [ ] | Priority | **Offline Queueing Resilience (Local Queue Buffer)** | If hospital LAN or Supabase connection drops, buffer ticket generation in browser IndexedDB with deterministic offline sequence numbering, syncing immediately when connectivity restores. | [docs/specifications/CONNECTIVITY_RESILIENCE.md](file:///home/jensen/Github-Repositories/Heart_Check_PHC/docs/specifications/CONNECTIVITY_RESILIENCE.md), [app/kiosk/README.md](file:///home/jensen/Github-Repositories/Heart_Check_PHC/app/kiosk/README.md) |
 | [ ] | Priority | **Inactivity Timeout Countdown Modal ("Are You Still There?")** | Implement a 30-second warning countdown modal with audible chime before session reset, giving hesitant or elderly patients a chance to tap "Continue" before wiping entered details (Role 1 Q27, Role 6 Q30). | [IdleRedirectWrapper.tsx](file:///home/jensen/Github-Repositories/Heart_Check_PHC/app/kiosk/components/IdleRedirectWrapper.tsx) |
 | [ ] | Priority | **Dynamic Service Quota Dimming & Clinic Operating Hours Closure** | Evaluate clinic operating hours from database to dim/disable service cards and display polite closed notices outside scheduled clinic hours (Role 1 Q29, Role 5 Q4). | [kiosk-services/page.tsx](file:///home/jensen/Github-Repositories/heart-check-phc/app/kiosk/pages/kiosk-services/page.tsx) |

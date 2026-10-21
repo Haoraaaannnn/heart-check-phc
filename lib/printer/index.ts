@@ -7,4 +7,6 @@
  */
 
 export * from './types';
+export * from './statusParser';
+export * from './networkPrinter';
 export * from './webPrinter';

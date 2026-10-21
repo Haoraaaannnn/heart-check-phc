@@ -1,17 +1,21 @@
 /**
  * @file printHeader.ts
- * @description Centralized visual styles for `PrintHeader`.
+ * @description Centralized visual styles for `PrintHeader` on `/kiosk/pages/queue-print`.
+ *
+ * Sized with responsive fluid viewport-height (`vh`) clamps to ensure the header
+ * remains prominent and legible while preserving maximum vertical space for the
+ * queue ticket card in both landscape and portrait orientations.
+ *
+ * @module app/kiosk/pages/queue-print/constants/printHeader
  */
 
 import { CSSProperties } from "react";
-import { kioskTypography } from "@/constants/kiosk";
 
-/** Typography tokens for print header, referencing centralized root typography scale. */
+/** Typography tokens for print header, referencing responsive fluid clamps. */
 export const PrintHeaderTypography = {
-    titleSize: "clamp(32px, 3.8vw, 44px)",
-    subtitleSize: "clamp(18px, 2vw, 24px)",
+    titleSize: "clamp(24px, 3.2vh, 36px)",
+    subtitleSize: "clamp(14px, 1.8vh, 20px)",
 } as const;
-
 
 /** Inline styles for `PrintHeader`. */
 export const PrintHeaderStyle = {
@@ -24,8 +28,8 @@ export const PrintHeaderStyle = {
         flexShrink: 0,
         paddingLeft: 16,
         paddingRight: 16,
-        paddingTop: "clamp(8px, 1.2vh, 14px)",
-        paddingBottom: "clamp(4px, 0.8vh, 8px)",
+        paddingTop: "clamp(6px, 1vh, 12px)",
+        paddingBottom: "clamp(3px, 0.5vh, 8px)",
         textAlign: "center",
     },
     title: {
@@ -36,7 +40,7 @@ export const PrintHeaderStyle = {
         margin: 0,
     },
     subtitle: {
-        marginTop: 4,
+        marginTop: 2,
         fontSize: PrintHeaderTypography.subtitleSize,
         color: "#4B5563",
         fontWeight: 600,
@@ -44,4 +48,5 @@ export const PrintHeaderStyle = {
         margin: 0,
     },
 } satisfies Record<string, CSSProperties>;
+
 

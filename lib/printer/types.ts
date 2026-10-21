@@ -18,6 +18,40 @@ export type PrinterConnectionType =
   | 'simulated'
   | 'none';
 
+export type PrinterHardwareCondition =
+  | 'ready'
+  | 'out_of_paper'
+  | 'paper_jam'
+  | 'cover_open'
+  | 'offline'
+  | 'not_detected';
+
+/**
+ * Detailed telemetry state of the thermal printer mechanism.
+ */
+export interface PrinterHardwareStatus {
+  /** High-level operational state. */
+  condition: PrinterHardwareCondition;
+  /** Whether the printer is fully ready to execute a print job. */
+  isReady: boolean;
+  /** Whether physical printing can proceed or if on-screen fallback is needed. */
+  canPrintPhysical: boolean;
+  /** Connection interface in use. */
+  connectionType: PrinterConnectionType;
+  /** Human-readable device name. */
+  name: string;
+  /** Diagnostic technical details. */
+  details?: string;
+  /** Warning flag if paper roll is running low (near-end). */
+  paperLow?: boolean;
+  /** ISO timestamp of last diagnostic status query. */
+  checkedAt: string;
+  /** English status summary for patient/staff display. */
+  message: string;
+  /** Filipino status summary for patient/staff display. */
+  messageFil: string;
+}
+
 /**
  * Diagnostic status of the thermal printer peripheral.
  */
@@ -32,6 +66,8 @@ export interface PrinterStatus {
   details?: string;
   /** Whether the browser environment supports WebUSB or WebSerial. */
   isSupported?: boolean;
+  /** Detailed hardware telemetry status if probed. */
+  hardware?: PrinterHardwareStatus;
 }
 
 /**
@@ -135,6 +171,7 @@ export interface MinimalUSBDevice {
   claimInterface(interfaceNumber: number): Promise<void>;
   releaseInterface(interfaceNumber: number): Promise<void>;
   transferOut(endpointNumber: number, data: USBBufferSource): Promise<{ status: string; bytesWritten?: number }>;
+  transferIn?(endpointNumber: number, length: number): Promise<{ status: string; data?: DataView }>;
 }
 
 export interface MinimalUSBManager {

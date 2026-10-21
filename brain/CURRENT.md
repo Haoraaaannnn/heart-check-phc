@@ -124,9 +124,39 @@
    - **Printer Destination Security Hardening (`app/api/print-ticket/route.ts` & `lib/printer/networkPrinter.ts`):** Restricted hardware network receipt printer IP resolution in `/api/print-ticket` to server environment variables (`PRINTER_IP` / `PRINTER_HOST`), eliminating user-controllable `body?.printerIp` on the unauthenticated ticket endpoint. Hardened `isValidPrinterHost` to reject cloud link-local metadata addresses (`169.254.0.0/16`) to provide defense-in-depth against metadata service SSRF.
    - **Standardized Static Format String Logging:** Updated all logging statements across `app/actions/sendQueueConfirmationSMS.ts`, `app/api/print-ticket/route.ts`, and `app/api/superadmin/test-printer/route.ts` to use static format string literals with `%s` and `%d` parameters.
 
+12. **ESC/POS Thermal Printer Status Telemetry & On-Screen Fallback (Completed):**
+   - **Real-Time Hardware Status Telemetry (`lib/printer/statusParser.ts`):** Implemented standard ESC/POS real-time status transmission parsing (DLE EOT 1-4) detecting `out_of_paper`, `paper_jam` (auto-cutter error), `cover_open`, `offline`, and `not_detected` conditions with bilingual English and Filipino telemetry messages.
+   - **Network & USB Hardware Probing:** Added `queryNetworkPrinterStatus` in `lib/printer/networkPrinter.ts` for TCP socket port 9100 telemetry and `getClientPrinterHardwareStatus` in `lib/printer/webPrinter.ts` for WebUSB / WebSerial bulk IN endpoint telemetry. Added `GET /api/print-ticket` endpoint for server device node and network status polling.
+   - **Unrestricted Queueing Without Printer Detected:** Preserved continuous hospital OPD intake operations in `KioskPhoneEntry.tsx`. If physical printing is unavailable, an advisory notice is displayed while keeping "Continue" and "Skip" fully operational without blocking patient intake.
+   - **On-Screen Fallback Card (`QueuePrintFallbackCard.tsx`):** If physical printing cannot be completed (out of paper, paper jam, offline, or not detected), dynamically activates an accessible on-screen fallback displaying:
+     1. Hardware failure diagnostic banner explaining why physical tickets cannot be issued.
+     2. Smartphone camera photo guidance instructing patients to photograph their digital ticket card.
+     3. SMS delivery fallback displaying masked contact (`0917 •••• 567`) or an interactive mobile input allowing patients who skipped phone entry to receive their ticket via `/api/print-ticket/send-sms`.
+     4. High-contrast "I've Saved My Ticket / Finish" button alongside an extended 25-second auto-close countdown.
+   - **Documentation & Roadmaps Synchronized:** Updated `docs/checklists/IMPROVEMENTS_AND_FEATURE_CHECKLIST.md` (marked `[x]`), `app/kiosk/README.md`, `docs/specifications/PRINTER_SETUP_GUIDE.md`, and `brain/CURRENT.md`.
+
+13. **Kiosk SMS Input UI Centering & Vertical Balance (Completed):**
+   - **Root Cause Resolution:** Fixed vertical clipping on `/kiosk/pages/sms-input` where the title was cut off at the top and the skip button was hidden behind the footer wave in normal browsing mode.
+   - **Unified Fallback Card:** Replaced stacked duplicate warning and hint cards with a unified `SMSInstruction` component supporting `isFallbackMode`, saving over 150px of vertical height.
+   - **Balanced Touch Scaling:** Tuned fluid vertical clamps for keypad key buttons (`clamp(58px, 7.5vh, 80px)`), phone input container (`clamp(58px, 7.5vh, 76px)`), continue/skip buttons (`clamp(46px, 5.5vh, 58px)` / `clamp(42px, 5vh, 52px)`), and container gaps (`clamp(4px, 1.2vh, 14px)`). Removed `marginTop: "auto"` on button wrapper to prevent artificial stretching.
+   - **Viewport Symmetry:** Ensured the left form column and right keypad measure ~270px–290px each, comfortably centering within available viewport space without overflow clipping across both standard browsing and inspect modes.
+
+14. **Kiosk Queue Print Screen Zero-Scroll Optimization for Landscape & Portrait (Completed):**
+   - **Landscape 2-Column Side-by-Side Grid:** When physical printing fallback is active, dynamically displays Ticket Card on the left and Fallback Action Card on the right in a guaranteed 2-column grid (`useIsLandscape()` driving `grid grid-cols-2 gap-4 sm:gap-6 lg:gap-8 max-w-[1040px] items-center justify-center`). Completely eliminates vertical stacking on widescreen/desktop kiosks, reducing required vertical height from ~920px down to ~320px with zero scrolling.
+   - **Compact Centered Portrait Stack:** When in portrait orientation (tablet or mobile kiosk), stacks the ticket and fallback cards vertically with compact `vh`-based fluid scaling (`~498px` combined height), fitting with ~190px–410px breathing room without scrollbars.
+   - **Conditional Printing Status Notice:** Moved `<PrintFooter />` from outer shell `QueuePrintLayout` to `QueuePrintContent.tsx`, rendering it only during active physical print dispatch. In fallback mode, contradictory "Your ticket is being printed" notice is omitted, freeing up 50px of vertical height.
+   - **Fluid Viewport-Height Scaling:** Scaled `QueuePrintTicketStyle.ticketContainer`, `QueuePrintFallbackStyles.fallbackWrapper`, `PrintHeaderStyle`, and `PrintFooterStyle` with fluid `vh` clamps and tighter dividers/paddings. Replaced inline fontSize style on finish button icon with `finishButtonIcon`.
+   - **Full Documentation & Architectural Compliance:** Verified against AGENTS.md rules (Rules 1, 2, 6, 8, 9, 10, 11, 13); updated `app/kiosk/README.md` with explicit "Where to Edit" lookup table mapping.
+
+15. **Removal of Redundant Phone Number Reconfirmation on Queue Print Screen (Completed):**
+   - **Eliminated Duplicate Phone Entry:** Removed the SMS delivery card, phone input field, SMS send button, sent phone badge, and resend controls from `QueuePrintFallbackCard.tsx`. Patients already provide or skip phone contact on the previous `/kiosk/pages/sms-input` screen, where automated SMS alerts are dispatched upon queue generation.
+   - **Streamlined Fallback View:** Fallback card is now clean and dedicated strictly to: (1) Hardware error status diagnostic banner, (2) Smartphone photo guidance, and (3) Finish button with auto-close countdown. Card height reduced from ~300px to ~210px, providing abundant vertical breathing room.
+   - **Prop & State Cleanup:** Streamlined `QueuePrintFallbackCardProps` to `{ condition, onFinish, countdownSeconds }`, removing unused `patientPhone` state and deprecated props from `QueuePrintContent.tsx`. Cleaned up dead styles in `queuePrintFallbackStyles.ts` and dead tokens in `queuePrintTicketTexts.ts`.
+
 ---
 
 ## Current Blockers & Risks
+
 
 - **Blockers:** None currently blocking.
 - **Risks:** Maintain consistency between thesis Chapter 4 manuscript numbers and exported CSV datasets in `python_backend/output/`.

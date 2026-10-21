@@ -1,18 +1,42 @@
+/**
+ * @fileoverview Queue Ticket Printing Confirmation Content.
+ *
+ * Displays the patient queue number, estimated wait time, destination cubicle,
+ * and handles ESC/POS hardware print dispatch. When physical tickets cannot be issued
+ * (out of paper, paper jam, cover open, printer offline, or not detected), dynamically
+ * activates the on-screen fallback card providing smartphone photo instructions
+ * and immediate completion controls. Phone entry is already handled on the preceding SMS screen.
+ *
+ * Architectural & Operational Rules:
+ * - High-Quality Documentation: Full JSDocs across all symbols (Rule 1).
+ * - Separation of Concerns: Copy from `queuePrintTicketTexts.ts`, styles from `queuePrintTicket.ts`
+ *   and `queuePrintFallbackStyles.ts` (Rule 2).
+ * - Kiosk Centering: Elements centered vertically and horizontally between topNav and wave footer (Rule 9).
+ * - Zero Emojis Standard: Replaced with Boxicons and clean text (Rule 6).
+ * - Non-Truncated Clinical Data: Natural wrapping without ellipsis (Rule 11).
+ *
+ * @module app/kiosk/pages/queue-print/components/QueuePrintContent
+ */
+
 "use client";
 
 import { useRouter } from "next/navigation";
-import { useEffect, useRef, useState } from "react";
+import { useEffect, useRef, useState, useCallback } from "react";
 import { Service } from "@/types/Services";
 import { getTimestamp } from "@/lib/logger";
 import { supabase } from "@/lib/supabase";
 import { formatManilaNumericDate, formatManilaTime } from "@/utils/formatDateTime";
 import {
-    QUEUE_PRINT_REDIRECT_DELAY_MS,
     QueuePrintTicketStyle,
 } from "@/app/kiosk/pages/queue-print/constants/queuePrintTicket";
 import { QueuePrintTicketTexts } from "@/app/kiosk/pages/queue-print/constants/queuePrintTicketTexts";
 import { formatEwtLabel, EWT_TEXTS } from "@/app/kiosk/constants/ewtTexts";
-import { printViaConnectedWebPrinter } from "@/lib/printer/webPrinter";
+import { useWebPrinter } from "@/app/kiosk/hooks/useWebPrinter";
+import { PrinterHardwareCondition } from "@/lib/printer/types";
+import QueuePrintFallbackCard from "@/app/kiosk/pages/queue-print/components/QueuePrintFallbackCard";
+import PrintFooter from "@/app/kiosk/pages/queue-print/components/PrintFooter";
+import { useIsLandscape } from "@/hooks/useIsLandscape";
+import { useIsMounted } from "@/hooks/useIsMounted";
 
 /** Props for {@link QueuePrintContent}. */
 interface QueuePrintContentProps {
@@ -26,16 +50,10 @@ interface QueuePrintContentProps {
 
 /**
  * Display card presenting the generated queue number, estimated wait time,
- * and triggering physical ticket printing.
- *
- * @remarks
- * Displays the refined physical ticket preview (queue number, service, Manila Standard Time,
- * destination cubicle, dynamic Estimated Wait Time range, and bilingual patient reminder),
- * sends an ESC/POS print dispatch request to `/api/print-ticket`, and automatically redirects
- * back to the kiosk welcome screen after the configured countdown.
+ * and triggering physical ticket printing with on-screen fallback resilience.
  *
  * @param props - Component props.
- * @returns The printed ticket confirmation card.
+ * @returns The printed ticket confirmation view.
  */
 export default function QueuePrintContent({
     service,
@@ -43,6 +61,9 @@ export default function QueuePrintContent({
     cubicleNum,
 }: QueuePrintContentProps) {
     const router = useRouter();
+    const { hardwareStatus, printEscPos } = useWebPrinter();
+    const isLandscape = useIsLandscape();
+    const mounted = useIsMounted();
 
     // Guard against React StrictMode initiating double print API requests
     const hasFired = useRef(false);
@@ -52,6 +73,10 @@ export default function QueuePrintContent({
     const [manilaTime, setManilaTime] = useState<string>("");
     const [activeCubicle, setActiveCubicle] = useState<string>(cubicleNum);
     const [estimatedWaitLabel, setEstimatedWaitLabel] = useState<string>(EWT_TEXTS.calculating);
+    // Fallback state when physical tickets cannot be issued
+    const [isFallbackActive, setIsFallbackActive] = useState<boolean>(false);
+    const [fallbackCondition, setFallbackCondition] = useState<PrinterHardwareCondition>('not_detected');
+    const [countdownSeconds, setCountdownSeconds] = useState<number>(7);
 
     useEffect(() => {
         if (cubicleNum && cubicleNum !== "---" && cubicleNum.toLowerCase() !== "waiting area") {
@@ -81,7 +106,7 @@ export default function QueuePrintContent({
 
         /**
          * Queries the newly created patient record for diagnostic logging, cubicle fallback,
-         * and pre-existing estimated wait time.
+         * pre-existing estimated wait time, and phone contact for SMS fallback.
          */
         const fetchAndLogPatientRecord = async () => {
             try {
@@ -143,7 +168,7 @@ export default function QueuePrintContent({
 
         /**
          * Dispatches print payload to the hardware printer endpoint, which computes
-         * and persists the Estimated Wait Time.
+         * and persists the Estimated Wait Time, attempting physical printing.
          */
         const printTicket = async () => {
             try {
@@ -164,6 +189,7 @@ export default function QueuePrintContent({
 
                 if (response.ok) {
                     const ewtMin = data?.data?.estimatedWaitMinutes;
+                    if (ewtMin) setEwtMinutes(ewtMin);
                     const ewtDisplay = data?.data?.estimatedWaitLabel || (ewtMin ? formatEwtLabel(ewtMin) : null);
                     if (ewtDisplay) {
                         setEstimatedWaitLabel(ewtDisplay);
@@ -171,34 +197,54 @@ export default function QueuePrintContent({
 
                     const printMethod = data?.data?.printMethod;
                     const escposBase64 = data?.data?.escposBase64;
+                    const printedByServer = Boolean(data?.data?.printed);
 
-                    if (printMethod === "network") {
+                    if (printedByServer) {
                         console.log(
-                            `${getTimestamp()} [PRINT SUCCESS] Printed via Network Ethernet Socket - Queue: ${patientNum}, EWT: ${ewtDisplay || 'N/A'}`
+                            `${getTimestamp()} [PRINT SUCCESS] Printed by server via ${printMethod} - Queue: ${patientNum}, EWT: ${ewtDisplay || 'N/A'}`
                         );
-                    } else if (printMethod === "device") {
-                        console.log(
-                            `${getTimestamp()} [PRINT SUCCESS] Printed via Server USB Device Node - Queue: ${patientNum}, EWT: ${ewtDisplay || 'N/A'}`
-                        );
+                        setIsFallbackActive(false);
+                        setCountdownSeconds(7);
                     } else if (escposBase64) {
                         // Dispatch to connected WebUSB / WebSerial printer on this client device
                         try {
-                            const clientPrint = await printViaConnectedWebPrinter(escposBase64);
+                            const clientPrint = await printEscPos(escposBase64);
                             if (clientPrint.success) {
                                 console.log(
-                                    `${getTimestamp()} [PRINT SUCCESS] Printed via Client ${clientPrint.method} - Queue: ${patientNum}, EWT: ${ewtDisplay || 'N/A'}`
+                                    `${getTimestamp()} [PRINT SUCCESS] Printed via Client WebUSB/Serial - Queue: ${patientNum}, EWT: ${ewtDisplay || 'N/A'}`
                                 );
+                                setIsFallbackActive(false);
+                                setCountdownSeconds(7);
                             } else {
                                 console.log(
-                                    `${getTimestamp()} [PRINT NOTICE] Client hardware printer not connected (${clientPrint.message}) - Queue: ${patientNum}. Displaying on-screen ticket.`
+                                    `${getTimestamp()} [PRINT FALLBACK] Client printer not ready (${clientPrint.message}) - Queue: ${patientNum}. Activating on-screen photo/SMS fallback.`
                                 );
+                                setIsFallbackActive(true);
+                                setFallbackCondition(
+                                    hardwareStatus?.condition !== 'ready'
+                                        ? hardwareStatus.condition
+                                        : 'not_detected'
+                                );
+                                setCountdownSeconds(25);
                             }
                         } catch (clientErr) {
                             console.warn(
                                 `${getTimestamp()} [CLIENT PRINT ERROR]`,
                                 clientErr
                             );
+                            setIsFallbackActive(true);
+                            setFallbackCondition('offline');
+                            setCountdownSeconds(25);
                         }
+                    } else {
+                        // Server did not print and no client payload was returned
+                        setIsFallbackActive(true);
+                        setFallbackCondition(
+                            hardwareStatus?.condition !== 'ready'
+                                ? hardwareStatus.condition
+                                : 'not_detected'
+                        );
+                        setCountdownSeconds(25);
                     }
                 } else {
                     console.warn(
@@ -206,6 +252,9 @@ export default function QueuePrintContent({
                         response.status,
                         data.error || "Unknown error"
                     );
+                    setIsFallbackActive(true);
+                    setFallbackCondition('offline');
+                    setCountdownSeconds(25);
                 }
             } catch (error) {
                 const errorMessage = error instanceof Error ? error.message : String(error);
@@ -213,25 +262,45 @@ export default function QueuePrintContent({
                     `${getTimestamp()} [PRINT FETCH ERROR] Failed to call print API:`,
                     errorMessage
                 );
+                setIsFallbackActive(true);
+                setFallbackCondition('offline');
+                setCountdownSeconds(25);
             }
         };
 
         printTicket();
-    }, [patientNum, serviceName, displayCubicle, activeCubicle]);
+    }, [patientNum, serviceName, displayCubicle, activeCubicle, hardwareStatus, printEscPos]);
 
-    // Automatic navigation timer redirecting back to kiosk entrance
+    // Live auto-close countdown ticking to redirect back to kiosk entrance
     useEffect(() => {
-        const redirectTimer = setTimeout(() => {
-            console.log(
-                `${getTimestamp()} [REDIRECT TIMER] Timeout completed - Redirecting back to kiosk entrance.`
-            );
-            router.push("/kiosk/pages/kiosk-new-old-selection");
-        }, QUEUE_PRINT_REDIRECT_DELAY_MS);
+        const timer = setInterval(() => {
+            setCountdownSeconds((prev) => {
+                if (prev <= 1) {
+                    clearInterval(timer);
+                    console.log(
+                        `${getTimestamp()} [REDIRECT TIMER] Countdown completed - Redirecting to entrance.`
+                    );
+                    router.push("/kiosk/pages/kiosk-new-old-selection");
+                    return 0;
+                }
+                return prev - 1;
+            });
+        }, 1000);
 
-        return () => clearTimeout(redirectTimer);
+        return () => clearInterval(timer);
     }, [router]);
 
-    return (
+    /**
+     * Completes queue ticket viewing immediately upon patient action.
+     */
+    const handleFinish = useCallback(() => {
+        console.log(
+            `${getTimestamp()} [TICKET FINISH TAP] Patient tapped finish - returning to entrance.`
+        );
+        router.push("/kiosk/pages/kiosk-new-old-selection");
+    }, [router]);
+
+    const ticketCardElement = (
         <div style={QueuePrintTicketStyle.ticketContainer}>
             {/* Service Information - Large & Clean Typography (No Pillbox) */}
             <div style={QueuePrintTicketStyle.serviceHeader}>
@@ -301,6 +370,36 @@ export default function QueuePrintContent({
                     <span>{manilaTime || "--:--:-- --"}</span>
                 </div>
             </div>
+        </div>
+    );
+
+    const isEffectiveLandscape = mounted ? isLandscape : false;
+
+    return (
+        <div className="m-auto flex flex-col items-center justify-center w-full max-h-full overflow-hidden px-3 sm:px-6 py-2">
+            {isFallbackActive ? (
+                /* Fallback Mode: 2-column side-by-side in Landscape, compact vertical stack in Portrait */
+                <div
+                    className={
+                        isEffectiveLandscape
+                            ? "grid grid-cols-2 gap-4 sm:gap-6 lg:gap-8 items-center justify-center w-full max-w-[1040px] max-h-full m-auto"
+                            : "flex flex-col gap-3 items-center justify-center w-full max-w-[480px] max-h-full m-auto"
+                    }
+                >
+                    {ticketCardElement}
+                    <QueuePrintFallbackCard
+                        condition={fallbackCondition}
+                        onFinish={handleFinish}
+                        countdownSeconds={countdownSeconds}
+                    />
+                </div>
+            ) : (
+                /* Normal Mode: Ticket Card centered with PrintFooter below */
+                <div className="flex flex-col items-center justify-center w-full max-w-lg max-h-full overflow-hidden gap-3 sm:gap-4">
+                    {ticketCardElement}
+                    <PrintFooter />
+                </div>
+            )}
         </div>
     );
 }
