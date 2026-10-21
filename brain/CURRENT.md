@@ -153,6 +153,14 @@
    - **Streamlined Fallback View:** Fallback card is now clean and dedicated strictly to: (1) Hardware error status diagnostic banner, (2) Smartphone photo guidance, and (3) Finish button with auto-close countdown. Card height reduced from ~300px to ~210px, providing abundant vertical breathing room.
    - **Prop & State Cleanup:** Streamlined `QueuePrintFallbackCardProps` to `{ condition, onFinish, countdownSeconds }`, removing unused `patientPhone` state and deprecated props from `QueuePrintContent.tsx`. Cleaned up dead styles in `queuePrintFallbackStyles.ts` and dead tokens in `queuePrintTicketTexts.ts`.
 
+16. **Kiosk Inactivity Timeout Countdown Modal ("Are You Still There?") (Completed):**
+   - **Inactivity Detection & Timing Standard:** Configured `INACTIVITY_WARNING_MS = 45000` (45 seconds) and `COUNTDOWN_GRACE_SECONDS = 15` (15 seconds) in `kioskNavigation.ts` matching TC-KIO-012, Role 1 Q27, and Role 6 Q30. Scoped strictly to active patient-intake routes (`kiosk-services`, `category-selection`, `kiosk-cubicle-selection`, `sms-input`). The entrance route (`kiosk-new-old-selection`) silently resets to `/kiosk/slideshow` on idle without the warning modal; `/kiosk/pages/queue-print` maintains its own ticket countdown.
+   - **Acoustic Hospital Chime Synthesizer (`kioskChime.ts`):** Synthesized browser-native Web Audio API two-tone acoustic warning chime (D5 587.33 Hz, A5 880 Hz with exponential gain decay) playing immediately upon warning trigger without external audio media assets or network latency.
+   - **Accessible Countdown Modal (`InactivityTimeoutModal.tsx`):** Centered modal dialog featuring continuous 60fps fluid countdown progress ring (`CountdownProgressRing` using `requestAnimationFrame` decoupled from discrete 1-second state updates), borderless soft circular pod, bold tabular seconds counter, bilingual English and Filipino copy with Filipino priority, and prominent 50/50 touch action buttons ("Continue Session" / "Start Over").
+   - **Separation of Concerns:** Copy isolated in `inactivityModalTexts.ts`, styles in `inactivityModalStyles.ts`, state controller in `IdleRedirectWrapper.tsx`.
+   - **State Preservation & Privacy Reset:** Tapping "Continue Session" dismisses modal and preserves patient inputs; tapping "Start Over" ("Magsimula Muli") purges session storage and redirects to `/kiosk/pages/kiosk-new-old-selection` to restart check-in; unacknowledged countdown expiration safely resets to `/kiosk/slideshow`.
+
+
 ---
 
 ## Current Blockers & Risks

@@ -26,8 +26,13 @@ export const KIOSK_TIMING = {
     PRINT_REDIRECT_MS: 5000,
     /** Page fade-in transition duration (300ms). */
     TRANSITION_DURATION_MS: 300,
-    /** Patient-flow inactivity period before showing the slideshow (3 minutes). */
-    IDLE_REDIRECT_MS: 25 * 1000,
+    /** Inactivity duration before displaying the "Are You Still There?" countdown modal (45 seconds). */
+    INACTIVITY_WARNING_MS: 45 * 1000,
+    /** Grace period countdown duration in seconds before session reset in warning modal (15 seconds). */
+    COUNTDOWN_GRACE_SECONDS: 15,
+    /** Patient-flow inactivity threshold before showing the slideshow (deprecated alias). */
+    IDLE_REDIRECT_MS: 45 * 1000,
     /** Time each idle slideshow image remains visible. */
     SLIDESHOW_INTERVAL_MS: 3000,
 } as const;
+
