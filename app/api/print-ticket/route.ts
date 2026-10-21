@@ -23,10 +23,14 @@ import { existsSync } from 'fs';
 import { getTimestamp } from '@/lib/logger';
 import { supabase } from '@/lib/supabase';
 import { createAdminClient } from '@/lib/supabase/admin';
-import { computeEstimatedWaitMinutes } from './ewtComputation';
+import {
+  computeEstimatedWaitMinutes,
+  formatEwtLabel,
+  formatEwtReceiptLabel,
+} from './ewtComputation';
 import { PRINT_TEXTS } from './constants/printTexts';
-import { formatEwtLabel, formatEwtReceiptLabel } from '@/app/kiosk/constants/ewtTexts';
 import { sendQueueConfirmationSMS } from '@/app/actions/sendQueueConfirmationSMS';
+import { sendToNetworkPrinter, isValidPrinterHost } from '@/lib/printer/networkPrinter';
 
 /**
  * Global mutex flag to prevent overlapping concurrent writes to hardware USB device nodes.
@@ -55,7 +59,8 @@ export async function POST(request: Request) {
   // Guard clause: Reject overlapping requests cleanly to prevent hardware state lock
   if (isPrinterBusy) {
     console.warn(
-      `${getTimestamp()} [PRINTER BUSY] Duplicate print request received - rejecting to prevent hardware conflict.`
+      '%s [PRINTER BUSY] Duplicate print request received - rejecting to prevent hardware conflict.',
+      getTimestamp()
     );
     return NextResponse.json({ success: true, message: 'Printer busy, skipped.' });
   }
@@ -73,7 +78,7 @@ export async function POST(request: Request) {
     const cubicle = sanitizeText(rawCubicle);
 
     if (!queueNumber) {
-      console.error(`${getTimestamp()} [PRINT VALIDATION] Missing or invalid queue number`);
+      console.error('%s [PRINT VALIDATION] Missing or invalid queue number', getTimestamp());
       return NextResponse.json({ error: 'Valid queue number is required' }, { status: 400 });
     }
 
@@ -95,7 +100,9 @@ export async function POST(request: Request) {
 
     if (dbError) {
       console.error(
-        `${getTimestamp()} [PRINT DB ERROR] Error fetching patient ticket: ${dbError.message}`
+        '%s [PRINT DB ERROR] Error fetching patient ticket: %s',
+        getTimestamp(),
+        dbError.message
       );
       return NextResponse.json(
         { error: 'Database verification failed prior to print.' },
@@ -105,7 +112,9 @@ export async function POST(request: Request) {
 
     if (!patientRecord) {
       console.warn(
-        `${getTimestamp()} [PRINT REJECTED] Unregistered queue ticket: ${queueNumber}`
+        '%s [PRINT REJECTED] Unregistered queue ticket: %s',
+        getTimestamp(),
+        queueNumber
       );
       return NextResponse.json(
         { error: 'Queue ticket not found or invalid for printing.' },
@@ -147,11 +156,16 @@ export async function POST(request: Request) {
 
       if (updateError) {
         console.warn(
-          `${getTimestamp()} [PRINT EWT SAVE WARNING] Could not persist estimated_wait_minutes: ${updateError.message}`
+          '%s [PRINT EWT SAVE WARNING] Could not persist estimated_wait_minutes: %s',
+          getTimestamp(),
+          updateError.message
         );
       } else {
         console.log(
-          `${getTimestamp()} [PRINT EWT SAVED] Ticket ${queueNumber} wait estimated: ${ewtMinutes}m`
+          '%s [PRINT EWT SAVED] Ticket %s wait estimated: %dm',
+          getTimestamp(),
+          queueNumber,
+          ewtMinutes
         );
       }
     }
@@ -165,18 +179,19 @@ export async function POST(request: Request) {
         ewtMinutes
       ).catch((smsErr) => {
         console.warn(
-          `${getTimestamp()} [PRINT CONFIRMATION SMS ERROR] Failed to send SMS:`,
-          smsErr
+          '%s [PRINT CONFIRMATION SMS ERROR] Failed to send SMS: %s',
+          getTimestamp(),
+          smsErr instanceof Error ? smsErr.message : String(smsErr)
         );
       });
     }
 
-    console.log(`${getTimestamp()} [PRINT REQUEST] Verified print job:`, {
+    console.log('%s [PRINT REQUEST] Verified print job: %s', getTimestamp(), JSON.stringify({
       id: patientRecord.id,
       patientNum: patientRecord.patientNum,
       service: displayService,
       estimatedWaitMinutes: ewtMinutes,
-    });
+    }));
 
     const now = new Date();
     const dateStr = new Intl.DateTimeFormat('en-PH', {
@@ -200,6 +215,12 @@ export async function POST(request: Request) {
     const ESC = '\x1b';
     const GS = '\x1d';
     const RESET = ESC + '@';
+    // High-Density Thermal Parameters: ESC 7 <max_dots=7> <heat_time=20> <heat_interval=2>
+    // Increases dot burn time to eliminate faint/washed-out printing on thermal paper
+    const HIGH_DENSITY = ESC + '7\x07\x14\x02';
+    // Double-strike mode: pulses thermal elements twice per dot for rich, solid black text
+    const DOUBLE_STRIKE_ON = ESC + 'G\x01';
+    const DOUBLE_STRIKE_OFF = ESC + 'G\x00';
     const CENTER = ESC + 'a\x01';
     const LEFT = ESC + 'a\x00';
     const BOLD_ON = ESC + 'E\x01';
@@ -208,9 +229,11 @@ export async function POST(request: Request) {
     const NORMAL_FONT = GS + '!\x00';
     const CUT = GS + 'V\x00';
 
-    // Construct the ticket layout with Estimated Wait Time line
+    // Construct the ticket layout with Estimated Wait Time line and high-density dark burn
     const ticketData =
       RESET +
+      HIGH_DENSITY +
+      DOUBLE_STRIKE_ON +
       CENTER +
       BOLD_ON +
       PRINT_TEXTS.headerTitle +
@@ -220,8 +243,10 @@ export async function POST(request: Request) {
       LEFT +
       `${PRINT_TEXTS.dateLabel} ${dateStr}\n` +
       `${PRINT_TEXTS.timeLabel} ${timeStr} ${PRINT_TEXTS.timeSuffix}\n` +
+      BOLD_ON +
       `${PRINT_TEXTS.serviceLabel} ${displayService}\n` +
       `${PRINT_TEXTS.cubicleLabel} ${displayCubicle}\n` +
+      BOLD_OFF +
       PRINT_TEXTS.separatorSingle +
       CENTER +
       LARGE_FONT +
@@ -232,7 +257,9 @@ export async function POST(request: Request) {
       '\n' +
       PRINT_TEXTS.separatorSingle +
       LEFT +
+      BOLD_ON +
       `${PRINT_TEXTS.ewtLabel} ${ewtReceiptText}\n` +
+      BOLD_OFF +
       PRINT_TEXTS.separatorDouble +
       CENTER +
       PRINT_TEXTS.reminderFil1 +
@@ -242,39 +269,83 @@ export async function POST(request: Request) {
       PRINT_TEXTS.reminderEn2 +
       PRINT_TEXTS.ewtDisclaimer +
       PRINT_TEXTS.separatorDouble +
+      DOUBLE_STRIKE_OFF +
       '\n\n\n\n\n' +
       CUT;
 
     // Convert string to latin1 printer buffer
     const buffer = Buffer.from(ticketData, 'latin1');
 
-    // Candidate thermal printer USB device nodes
-    const printerPaths = ['/dev/usb/lp2', '/dev/usb/lp0', '/dev/usb/lp1'];
     let printedSuccessfully = false;
+    let printMethod: 'network' | 'device' | 'client_webusb_required' | 'none' = 'client_webusb_required';
     let lastError = '';
 
-    for (const path of printerPaths) {
-      if (existsSync(/*turbopackIgnore: true*/ path)) {
-        try {
-          await fs.writeFile(/*turbopackIgnore: true*/ path, buffer);
-          console.log(
-            `${getTimestamp()} [PRINT SUCCESS] Ticket printed to device - Queue: ${queueNumber}, Service: ${displayService}, Device: ${path}, Size: ${buffer.length} bytes`
-          );
-          printedSuccessfully = true;
-          break;
-        } catch (e: unknown) {
-          const message = e instanceof Error ? e.message : String(e);
-          lastError = `Access denied on ${path}: ${message}`;
-          console.warn(
-            `${getTimestamp()} [PRINTER DEVICE ERROR] Failed to write to device - Path: ${path}, Queue: ${queueNumber}, Error: ${message}`
-          );
+    // 1. Attempt Network Ethernet / Wi-Fi Printer if host IP is configured in server environment
+    const configuredPrinterIp = (process.env.PRINTER_IP || process.env.PRINTER_HOST || '').trim();
+    if (configuredPrinterIp && isValidPrinterHost(configuredPrinterIp)) {
+      console.log(
+        '%s [PRINT DISPATCH] Attempting network socket dispatch to %s:9100',
+        getTimestamp(),
+        configuredPrinterIp
+      );
+      const networkResult = await sendToNetworkPrinter(configuredPrinterIp, buffer, 9100, 3500);
+      if (networkResult.success) {
+        printedSuccessfully = true;
+        printMethod = 'network';
+        console.log(
+          '%s [PRINT SUCCESS] Ticket printed via Network Socket: %s:9100',
+          getTimestamp(),
+          configuredPrinterIp
+        );
+      } else {
+        console.warn(
+          '%s [NETWORK PRINT RETRY] Network print to %s failed: %s',
+          getTimestamp(),
+          configuredPrinterIp,
+          networkResult.message
+        );
+      }
+    }
+
+    // 2. Fallback: Check local Linux USB printer device nodes (/dev/usb/lp*)
+    if (!printedSuccessfully) {
+      const printerPaths = ['/dev/usb/lp2', '/dev/usb/lp0', '/dev/usb/lp1'];
+      for (const path of printerPaths) {
+        if (existsSync(/*turbopackIgnore: true*/ path)) {
+          try {
+            await fs.writeFile(/*turbopackIgnore: true*/ path, buffer);
+            console.log(
+              '%s [PRINT SUCCESS] Ticket printed to device node - Queue: %s, Service: %s, Device: %s, Size: %d bytes',
+              getTimestamp(),
+              queueNumber,
+              displayService,
+              path,
+              buffer.length
+            );
+            printedSuccessfully = true;
+            printMethod = 'device';
+            break;
+          } catch (e: unknown) {
+            const message = e instanceof Error ? e.message : String(e);
+            lastError = `Access denied on ${path}: ${message}`;
+            console.warn(
+              '%s [PRINTER DEVICE ERROR] Failed to write to device node - Path: %s, Queue: %s, Error: %s',
+              getTimestamp(),
+              path,
+              queueNumber,
+              message
+            );
+          }
         }
       }
     }
 
     if (!printedSuccessfully) {
-      console.warn(
-        `${getTimestamp()} [PRINT NOTICE] Hardware printer not attached or offline - Queue: ${queueNumber}. Returning success with EWT for display.`
+      console.log(
+        '%s [PRINT NOTICE] Server hardware printer not reached - Queue: %s%s. Returning ESC/POS base64 payload for client-side WebUSB/Serial dispatch.',
+        getTimestamp(),
+        queueNumber,
+        lastError ? ` (${lastError})` : ''
       );
     }
 
@@ -286,13 +357,16 @@ export async function POST(request: Request) {
         cubicle: displayCubicle,
         estimatedWaitMinutes: ewtMinutes,
         estimatedWaitLabel: formatEwtLabel(ewtMinutes),
+        printMethod,
+        escposBase64: buffer.toString('base64'),
         timestamp: new Date().toISOString(),
       },
     });
   } catch (error: unknown) {
     const message = error instanceof Error ? error.message : 'Unexpected server error';
     console.error(
-      `${getTimestamp()} [PRINT SERVER ERROR] Unexpected error in print route:`,
+      '%s [PRINT SERVER ERROR] Unexpected error in print route: %s',
+      getTimestamp(),
       message
     );
     return NextResponse.json({ success: false, error: 'Internal server print error.' }, { status: 500 });

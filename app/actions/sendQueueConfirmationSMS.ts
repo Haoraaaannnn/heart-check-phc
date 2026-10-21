@@ -18,7 +18,7 @@
 'use server';
 
 import { decryptPhoneNumber } from '@/lib/crypto/phoneEncryption';
-import { formatEwtSmsLabel } from '@/app/kiosk/constants/ewtTexts';
+import { formatEwtSmsLabel } from '@/constants/ewtTexts';
 import { getTimestamp } from '@/lib/logger';
 
 /**
@@ -93,6 +93,13 @@ function checkConfirmationCooldown(recipient: string): { allowed: boolean; reaso
 }
 
 /**
+ * Response structure returned by queue confirmation SMS dispatch.
+ */
+export type QueueConfirmationSMSResponse =
+  | { success: true; message?: string }
+  | { success: false; error: string };
+
+/**
  * Dispatches an automated confirmation SMS to a newly queued patient with their EWT.
  *
  * @param phoneNum - Target Philippine mobile number (raw or AES-256-GCM ciphertext).
@@ -109,7 +116,7 @@ export async function sendQueueConfirmationSMS(
   patientNum: string,
   serviceName: string,
   ewtMinutes: number | null | undefined
-): Promise<{ success: boolean; message?: string; error?: string }> {
+): Promise<QueueConfirmationSMSResponse> {
   try {
     if (!phoneNum) {
       return { success: true, message: 'No phone number provided; SMS skipped.' };
@@ -119,18 +126,25 @@ export async function sendQueueConfirmationSMS(
     const formattedRecipient = normalizePhilippinePhone(phoneNum);
     if (!formattedRecipient) {
       console.warn(
-        `${getTimestamp()} [CONFIRMATION SMS] Invalid phone format for ticket ${patientNum}`
+        '%s [CONFIRMATION SMS] Invalid phone format for ticket %s',
+        getTimestamp(),
+        patientNum
       );
-      return { error: 'Invalid Philippine phone number format.' };
+      return { success: false, error: 'Invalid Philippine phone number format.' };
     }
 
     // 2. Cooldown check to prevent duplicate toll charges
     const cooldown = checkConfirmationCooldown(formattedRecipient);
     if (!cooldown.allowed) {
       console.warn(
-        `${getTimestamp()} [CONFIRMATION SMS] Cooldown throttle active for ${formattedRecipient}`
+        '%s [CONFIRMATION SMS] Cooldown throttle active for %s',
+        getTimestamp(),
+        formattedRecipient
       );
-      return { error: cooldown.reason };
+      return {
+        success: false,
+        error: cooldown.reason || 'Confirmation SMS sent too recently to this phone number.',
+      };
     }
 
     // 3. Sanitize template inputs (SEC-AUD-005)
@@ -148,7 +162,8 @@ export async function sendQueueConfirmationSMS(
 
     if (!process.env.UNISMS_API_KEY) {
       console.warn(
-        `${getTimestamp()} [CONFIRMATION SMS] UNISMS_API_KEY is not configured in server environment; simulated dispatch.`
+        '%s [CONFIRMATION SMS] UNISMS_API_KEY is not configured in server environment; simulated dispatch.',
+        getTimestamp()
       );
       return { success: true, message: 'SMS service simulated (missing API key).' };
     }
@@ -170,18 +185,22 @@ export async function sendQueueConfirmationSMS(
 
     if (!response.ok) {
       console.error(
-        `${getTimestamp()} [CONFIRMATION SMS] UniSMS gateway rejected dispatch status: ${response.status}`
+        '%s [CONFIRMATION SMS] UniSMS gateway rejected dispatch status: %d',
+        getTimestamp(),
+        response.status
       );
-      return { error: 'SMS delivery gateway rejected message.' };
+      return { success: false, error: 'SMS delivery gateway rejected message.' };
     }
 
     console.log(
-      `${getTimestamp()} [CONFIRMATION SMS SUCCESS] Dispatched confirmation for Ticket: ${safePatientNum}`
+      '%s [CONFIRMATION SMS SUCCESS] Dispatched confirmation for Ticket: %s',
+      getTimestamp(),
+      safePatientNum
     );
     return { success: true };
   } catch (err: unknown) {
     const errorMsg = err instanceof Error ? err.message : 'Unknown dispatch error';
-    console.error(`${getTimestamp()} [CONFIRMATION SMS ERROR]:`, errorMsg);
-    return { error: 'Failed to process confirmation SMS.' };
+    console.error('%s [CONFIRMATION SMS ERROR]: %s', getTimestamp(), errorMsg);
+    return { success: false, error: 'Failed to process confirmation SMS.' };
   }
 }

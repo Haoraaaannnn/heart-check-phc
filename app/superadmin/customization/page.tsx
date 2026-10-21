@@ -23,6 +23,7 @@ import { CUSTOMIZATION_TEXTS } from '@/app/superadmin/customization/constants/cu
 import { CUSTOMIZATION_STYLES } from '@/app/superadmin/customization/constants/customizationStyles';
 import { SUPERADMIN_STYLES } from '@/app/superadmin/constants/superadminStyles';
 import { DeleteServiceModal } from '@/app/superadmin/customization/components/DeleteServiceModal';
+import { HardwarePrinterConfigCard } from '@/app/superadmin/customization/components/HardwarePrinterConfigCard';
 
 type PatientType = 'new' | 'old' | 'both';
 
@@ -653,6 +654,9 @@ export default function AdminServicePage() {
           </div>
         </div>
       )}
+
+      {/* Hardware Thermal Printer Configuration & Telemetry */}
+      {!isEditing && <HardwarePrinterConfigCard />}
 
       {/* Services Table */}
       <div className={S.tableContainer}>

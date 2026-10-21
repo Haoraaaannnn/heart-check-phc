@@ -19,12 +19,56 @@
  */
 
 import { NextResponse } from 'next/server';
+import { getTimestamp } from '@/lib/logger';
 
 /** Maximum permissible text character length for queue voice announcements. */
 const MAX_TEXT_LENGTH = 500;
 
 /** Default Deepgram Aura voice model for English / Tagalog announcements. */
 const DEFAULT_MODEL = 'aura-2-amalthea-en';
+
+/**
+ * Strict allowlist of validated Deepgram Aura voice models.
+ * Enforces an immutable mapping to prevent Server-Side Request Forgery (SSRF) and model injection (CWE-918).
+ */
+const ALLOWED_VOICE_MODELS = {
+  'aura-2-amalthea-en': 'aura-2-amalthea-en',
+  'aura-2-asteria-en': 'aura-2-asteria-en',
+  'aura-2-luna-en': 'aura-2-luna-en',
+  'aura-2-stella-en': 'aura-2-stella-en',
+  'aura-2-zeus-en': 'aura-2-zeus-en',
+  'aura-2-orion-en': 'aura-2-orion-en',
+  'aura-asteria-en': 'aura-asteria-en',
+  'aura-luna-en': 'aura-luna-en',
+  'aura-stella-en': 'aura-stella-en',
+  'aura-athena-en': 'aura-athena-en',
+  'aura-hera-en': 'aura-hera-en',
+  'aura-orion-en': 'aura-orion-en',
+  'aura-arcas-en': 'aura-arcas-en',
+  'aura-perseus-en': 'aura-perseus-en',
+  'aura-angus-en': 'aura-angus-en',
+  'aura-orpheus-en': 'aura-orpheus-en',
+  'aura-helios-en': 'aura-helios-en',
+  'aura-zeus-en': 'aura-zeus-en',
+} as const;
+
+type AllowedVoiceModel = keyof typeof ALLOWED_VOICE_MODELS;
+
+/**
+ * Validates and resolves the requested voice model against the strict allowlist.
+ *
+ * @param requestedModel - Raw model name string from request payload.
+ * @returns Validated model identifier safe for Deepgram API dispatch.
+ */
+function resolveVoiceModel(requestedModel: unknown): string {
+  if (
+    typeof requestedModel === 'string' &&
+    Object.prototype.hasOwnProperty.call(ALLOWED_VOICE_MODELS, requestedModel.trim())
+  ) {
+    return ALLOWED_VOICE_MODELS[requestedModel.trim() as AllowedVoiceModel];
+  }
+  return DEFAULT_MODEL;
+}
 
 /** Maximum permitted TTS synthesis requests per client IP within the rolling window. */
 const TTS_RATE_LIMIT_MAX = 20;
@@ -171,7 +215,17 @@ export async function POST(request: Request) {
       );
     }
 
-    const modelName = typeof body?.model === 'string' && body.model.trim() ? body.model.trim() : DEFAULT_MODEL;
+    if (typeof body?.model === 'string' && body.model.trim()) {
+      const requested = body.model.trim();
+      if (!Object.prototype.hasOwnProperty.call(ALLOWED_VOICE_MODELS, requested)) {
+        return NextResponse.json(
+          { error: 'Invalid or unsupported speech synthesis model.' },
+          { status: 400 }
+        );
+      }
+    }
+
+    const modelName = resolveVoiceModel(body?.model);
     const cacheKey = `${modelName}::${cleanText}`;
 
     // 2. Check in-memory audio buffer cache (zero external API calls for duplicate callouts)
@@ -189,24 +243,31 @@ export async function POST(request: Request) {
 
     const apiKey = process.env.DEEPGRAM_API_KEY || process.env.NEXT_PUBLIC_DEEPGRAM_KEY;
     if (!apiKey) {
-      console.error('[TTS ERROR] DEEPGRAM_API_KEY is not configured in server environment');
+      console.error(
+        '%s [TTS ERROR] DEEPGRAM_API_KEY is not configured in server environment',
+        getTimestamp()
+      );
       return NextResponse.json({ error: 'Speech synthesis service is not configured.' }, { status: 500 });
     }
 
-    const deepgramResponse = await fetch(
-      `https://api.deepgram.com/v1/speak?model=${encodeURIComponent(modelName)}`,
-      {
-        method: 'POST',
-        headers: {
-          Authorization: `Token ${apiKey}`,
-          'Content-Type': 'application/json',
-        },
-        body: JSON.stringify({ text: cleanText }),
-      }
-    );
+    const deepgramUrl = new URL('https://api.deepgram.com/v1/speak');
+    deepgramUrl.searchParams.set('model', modelName);
+
+    const deepgramResponse = await fetch(deepgramUrl.toString(), {
+      method: 'POST',
+      headers: {
+        Authorization: `Token ${apiKey}`,
+        'Content-Type': 'application/json',
+      },
+      body: JSON.stringify({ text: cleanText }),
+    });
 
     if (!deepgramResponse.ok) {
-      console.error('[TTS DEEPGRAM ERROR] Deepgram returned status:', deepgramResponse.status);
+      console.error(
+        '%s [TTS DEEPGRAM ERROR] Deepgram returned status: %d',
+        getTimestamp(),
+        deepgramResponse.status
+      );
       return NextResponse.json({ error: 'Speech synthesis generation failed.' }, { status: deepgramResponse.status });
     }
 
@@ -225,7 +286,7 @@ export async function POST(request: Request) {
     });
   } catch (error: unknown) {
     const message = error instanceof Error ? error.message : 'Unknown server error';
-    console.error('[TTS SERVER ERROR]:', message);
+    console.error('%s [TTS SERVER ERROR]: %s', getTimestamp(), message);
     return NextResponse.json({ error: 'Internal server error processing speech.' }, { status: 500 });
   }
 }

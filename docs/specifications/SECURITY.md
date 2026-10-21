@@ -12,7 +12,7 @@ Staff roles are defined in the `users` table, linked to Supabase Auth via `users
 | :--- | :--- |
 | `superadmin` | System governance, account provisioning, department configuration, and audit access. |
 | `admin` | Administrative and analytics oversight, operational queue monitoring. |
-| `nurse` | Clinical station queue handling, patient triage, vital assessments, and station callouts. |
+| `nurse` | Cubicle consultation queue pipeline, patient calling, and stage progression. |
 | `staff` | Triage and desk operations, patient transfer desk, registration, and queue routing. |
 | _(public / anon)_ | Physical self-service kiosks (`/kiosk`) and waiting room television monitors (`/monitor`). |
 

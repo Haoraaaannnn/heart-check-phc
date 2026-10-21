@@ -16,8 +16,9 @@
  * @module lib/printer
  */
 
-import fs from 'fs/promises';
-import { existsSync } from 'fs';
+export * from './printer/types';
+export * from './printer/webPrinter';
+
 import { getTimestamp } from '@/lib/logger';
 import { supabase } from '@/lib/supabase';
 
@@ -146,10 +147,13 @@ export const sendToPrinter = async (
   const candidatePaths = ['/dev/usb/lp2', '/dev/usb/lp0', '/dev/usb/lp1'];
   let lastError: string | null = null;
 
+  const fsPromises = await import('fs/promises');
+  const fsSync = await import('fs');
+
   for (const path of candidatePaths) {
-    if (existsSync(/*turbopackIgnore: true*/ path)) {
+    if (fsSync.existsSync(/*turbopackIgnore: true*/ path)) {
       try {
-        await fs.writeFile(/*turbopackIgnore: true*/ path, buffer);
+        await fsPromises.writeFile(/*turbopackIgnore: true*/ path, buffer);
         console.log(
           `${getTimestamp()} [PRINT SUCCESS] Direct device print completed:`,
           {

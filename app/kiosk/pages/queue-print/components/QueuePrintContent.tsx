@@ -12,6 +12,7 @@ import {
 } from "@/app/kiosk/pages/queue-print/constants/queuePrintTicket";
 import { QueuePrintTicketTexts } from "@/app/kiosk/pages/queue-print/constants/queuePrintTicketTexts";
 import { formatEwtLabel, EWT_TEXTS } from "@/app/kiosk/constants/ewtTexts";
+import { printViaConnectedWebPrinter } from "@/lib/printer/webPrinter";
 
 /** Props for {@link QueuePrintContent}. */
 interface QueuePrintContentProps {
@@ -167,9 +168,38 @@ export default function QueuePrintContent({
                     if (ewtDisplay) {
                         setEstimatedWaitLabel(ewtDisplay);
                     }
-                    console.log(
-                        `${getTimestamp()} [PRINT SUCCESS] Ticket printed - Queue: ${patientNum}, EWT: ${ewtDisplay || 'N/A'}`
-                    );
+
+                    const printMethod = data?.data?.printMethod;
+                    const escposBase64 = data?.data?.escposBase64;
+
+                    if (printMethod === "network") {
+                        console.log(
+                            `${getTimestamp()} [PRINT SUCCESS] Printed via Network Ethernet Socket - Queue: ${patientNum}, EWT: ${ewtDisplay || 'N/A'}`
+                        );
+                    } else if (printMethod === "device") {
+                        console.log(
+                            `${getTimestamp()} [PRINT SUCCESS] Printed via Server USB Device Node - Queue: ${patientNum}, EWT: ${ewtDisplay || 'N/A'}`
+                        );
+                    } else if (escposBase64) {
+                        // Dispatch to connected WebUSB / WebSerial printer on this client device
+                        try {
+                            const clientPrint = await printViaConnectedWebPrinter(escposBase64);
+                            if (clientPrint.success) {
+                                console.log(
+                                    `${getTimestamp()} [PRINT SUCCESS] Printed via Client ${clientPrint.method} - Queue: ${patientNum}, EWT: ${ewtDisplay || 'N/A'}`
+                                );
+                            } else {
+                                console.log(
+                                    `${getTimestamp()} [PRINT NOTICE] Client hardware printer not connected (${clientPrint.message}) - Queue: ${patientNum}. Displaying on-screen ticket.`
+                                );
+                            }
+                        } catch (clientErr) {
+                            console.warn(
+                                `${getTimestamp()} [CLIENT PRINT ERROR]`,
+                                clientErr
+                            );
+                        }
+                    }
                 } else {
                     console.warn(
                         `${getTimestamp()} [PRINT WARNING] Print API error status:`,

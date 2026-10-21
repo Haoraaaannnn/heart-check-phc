@@ -92,10 +92,11 @@ Printed queue tickets are formatted using service parameters configured in the S
 ## Cross-References
 
 - [PHC OPD Operational Workflow](./phc-opd-workflow.md)
+- [Thermal Receipt Printer Setup Guide (`docs/specifications/PRINTER_SETUP_GUIDE.md`)](../../docs/specifications/PRINTER_SETUP_GUIDE.md)
 - [Kiosk Developer Guide (`app/kiosk/README.md`)](file:///home/jensen/Github-Repositories/Heart_Check_PHC/app/kiosk/README.md)
 - [Common System Issues & Troubleshooting](../debugging/common-issues.md)
 
 ---
 
-_Last updated: 2026-10-17 — Reconciled with live database schema and SuperAdmin print queue ticket customization._
+_Last updated: 2026-10-21 — Reconciled with dual-mode WebUSB and Network Socket Port 9100 printer architecture._
 

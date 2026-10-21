@@ -6,8 +6,8 @@
 
 ## Active Environment & Branch Status
 
-- **Active Git Branch:** `feat/simulation`
-- **Latest Commit:** `8da3bd6` ("removed obsolete and unnecessary files")
+- **Active Git Branch:** `feat/estimated-time`
+- **Latest Commit:** `75a1a7c` ("queue printer now work with just connecting it and have proper communication with the browser")
 - **Working Tree:** Second brain standardization active; live Supabase database synchronized.
 - **Primary AI Pairing Tool:** Antigravity IDE (Gemini 3.8 Flash High)
 - **Local Knowledge Vault:** Obsidian-compatible repository root (`.obsidian/` gitignored)
@@ -100,6 +100,29 @@
    - **Client-Side Session Storage Caching (`HistoricalSummaryContext.tsx`):** Added 15-minute `sessionStorage` caching (`phc_historical_summary_cache_v1`) to `HistoricalSummaryProvider`. Page reloads, tab navigation, and subpage switches render instant 0ms cached metrics without blocking the network pipe.
    - **PostgreSQL Database Performance Indexes (`20261021_add_dashboard_performance_indexes.sql`):** Prepared migration introducing composite B-Tree indexes on `patients` (`(is_historical, created_at DESC)`, `created_at DESC`, `status`, `(cubicleNum, status)`). Eliminates full table Sequential Scans on 26,000+ historical rows for live queue queries, pagination limits, and active cubicle lookups.
    - **Updated Migration Documentation:** Updated `docs/migrations/README.md` with explicit ISO date stamp (`2026-10-21`).
+
+9. **Universal Web-Based Hardware Thermal Printer Architecture (Completed):**
+   - **Architectural Problem Solved:** Eliminated the web sandbox constraint and Linux `/dev/usb/lp*` command requirements (`sudo chmod`) by implementing a dual-mode hybrid architecture supporting both Direct USB and Network Ethernet (LAN Port 9100).
+   - **Client-Side Direct USB Driver (`lib/printer/webPrinter.ts` & `useWebPrinter.ts`):** Enabled browser-native WebUSB (`navigator.usb`) and Web Serial (`navigator.serial`) direct streaming to thermal printer bulk OUT endpoints. Includes auto-detection of paired devices on page load, real-time hot-plug connection listeners, and zero terminal commands.
+   - **Linux usblp vs WebUSB claimInterface Resolution:** When `usblp` is active on Linux, it holds exclusive claim over interface 0, causing `claimInterface` to return `Unable to claim interface`. The system detects this condition and automatically routes the print job through `/dev/usb/lp*` (which has `0666` permissions from udev). On Windows and Android, WebUSB claims the interface directly without host kernel conflicts.
+   - **Server-Side Network Socket Driver (`lib/printer/networkPrinter.ts`):** Implemented direct TCP/IP socket streaming to Port 9100 with host validation, SSRF immunity, and strict 4-second timeout. Allows any device (tablets, smartphones, laptops) across the clinic Wi-Fi to print wirelessly.
+   - **Route Handler Upgrade (`app/api/print-ticket/route.ts`):** Supports network IP dispatch, local device fallback, and returns base64 ESC/POS payload for client-side WebUSB execution.
+   - **Kiosk Print Integration (`QueuePrintContent.tsx`):** Dispatches print job to server; automatically triggers local WebUSB execution if server hardware is not directly attached.
+   - **SuperAdmin Configuration & Diagnostics (`HardwarePrinterConfigCard.tsx`):** Provides live USB status, WebUSB pairing triggers, local IP storage, and test receipt dispatch guarded by `requireSuperadmin`.
+   - **Authoritative Operational Guide (`docs/specifications/PRINTER_SETUP_GUIDE.md`):** Comprehensive documentation covering WebUSB setup, permanent Linux udev rule (eliminating `chmod` commands permanently), network socket setup, and troubleshooting.
+
+10. **ISO/IEC 25010:2023 UAT Questionnaire & Guide Framework (Completed):**
+   - **Authoritative Questionnaire Guide (`docs/checklists/UAT_QUESTIONNAIRE_GUIDE.md`):** Created a comprehensive functional capabilities and question formulation guide detailing the revised ISO/IEC 25010:2023 standard (9 characteristics including Safety, Flexibility, and Interaction Capability), full-system scope across all 8 subsystems in operational sequence (`Kiosk -> Transfer -> Nurse -> Monitor -> Dashboard -> SuperAdmin -> Core -> Notifications`), psychometric design (5-point Likert scale with mandatory feedback on ratings <= 3), statistical formulas (CQI, PQR), and developer remediation maps.
+   - **Role-Based Evaluation Instrument (`docs/checklists/UAT_ROLE_BASED_QUESTIONNAIRE.md`):** Finalized the exhaustive 180-item evaluation questionnaire (30 questions per role across 6 roles) mapped strictly to ISO/IEC 25010:2023 quality dimensions (Functional Suitability, Performance Efficiency, Compatibility, Interaction Capability, Reliability, Security, Flexibility, Safety, Maintainability).
+   - **UAT Feature Gap Analysis & Checklist Upgrade (`docs/checklists/IMPROVEMENTS_AND_FEATURE_CHECKLIST.md`):** Systematically cross-referenced all 180 UAT questions against the codebase. Elevated critical missing features to P0/P1 and added missing functionality (e.g., Deliberate NO_SHOW Archival Modal with reason capture, Transfer 20-second assignment undo toast, Physician "On Break" status toggle with drop target disabling, Kiosk "Are You Still There?" countdown modal with chime, TV Screen Wake-Lock API, SuperAdmin audit log viewer with before/after diffs, and Pre-Announcement Chime + Bilingual Tagalog TTS).
+   - **Functional Test Matrix (`docs/checklists/UAT_USE_CASE_CHECKLIST.md`):** Completely recreated 69 verified test scenarios arranged strictly in operational sequence without referring to outdated specifications, fully reflecting the pure queue management architecture (zero patient ID input at kiosk, zero vitals documentation on workstations).
+   - **Documentation Portals Synchronized:** Updated `docs/checklists/README.md` and `brain/INDEX.md` with explicit ISO date stamps (`2026-10-21`) and zero emojis.
+
+11. **CodeQL Static Analysis Remediation (Completed):**
+   - **Server-Side Request Forgery Remediation (`app/api/tts/route.ts` - CWE-918):** Eliminated CodeQL Alert 3 (`js/request-forgery`) by enforcing an immutable allowlist (`ALLOWED_VOICE_MODELS`) of validated Deepgram Aura voice models. Enforced input validation returning HTTP 400 on unrecognized models, resolved model selection strictly from the constant dictionary, and constructed the outbound API endpoint via standard `URL` and `URLSearchParams` objects.
+   - **Externally-Controlled Format String Remediation (`lib/printer/networkPrinter.ts` - CWE-134):** Eliminated CodeQL Alerts 4 and 5 (`js/tainted-format-string`) by replacing dynamic template string concatenation in `console.warn` calls with static literal format strings using `%s` and `%d` format specifiers.
+   - **Printer Destination Security Hardening (`app/api/print-ticket/route.ts` & `lib/printer/networkPrinter.ts`):** Restricted hardware network receipt printer IP resolution in `/api/print-ticket` to server environment variables (`PRINTER_IP` / `PRINTER_HOST`), eliminating user-controllable `body?.printerIp` on the unauthenticated ticket endpoint. Hardened `isValidPrinterHost` to reject cloud link-local metadata addresses (`169.254.0.0/16`) to provide defense-in-depth against metadata service SSRF.
+   - **Standardized Static Format String Logging:** Updated all logging statements across `app/actions/sendQueueConfirmationSMS.ts`, `app/api/print-ticket/route.ts`, and `app/api/superadmin/test-printer/route.ts` to use static format string literals with `%s` and `%d` parameters.
 
 ---
 
