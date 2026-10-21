@@ -26,6 +26,32 @@ export async function GET(request: Request) {
     return NextResponse.json({ error: cubicleError.message }, { status: 400 });
   }
 
+  // Fetch active services to identify and auto-delete cubicles for unavailable services
+  const { data: activeServices } = await supabaseAdmin
+    .from('services')
+    .select('label_en');
+
+  const activeServiceSet = new Set(
+    (activeServices || []).map((s: any) => (s.label_en || '').trim().toLowerCase())
+  );
+
+  const validCubicles: typeof cubicles = [];
+  const orphanedIds: number[] = [];
+
+  for (const c of cubicles || []) {
+    if (activeServiceSet.size === 0 || activeServiceSet.has((c.category || '').trim().toLowerCase())) {
+      validCubicles.push(c);
+    } else {
+      orphanedIds.push(c.id);
+    }
+  }
+
+  // Automatically delete orphaned cubicles and user assignments for deleted services
+  if (orphanedIds.length > 0) {
+    await supabaseAdmin.from('user_cubicles').delete().in('cubicle_id', orphanedIds);
+    await supabaseAdmin.from('cubicle').delete().in('id', orphanedIds);
+  }
+
   let assignedCubicleIds: number[] = [];
 
   if (authId) {
@@ -39,7 +65,7 @@ export async function GET(request: Request) {
     }
   }
 
-  return NextResponse.json({ cubicles, assignedCubicleIds });
+  return NextResponse.json({ cubicles: validCubicles, assignedCubicleIds });
 }
 
 export async function POST(request: Request) {

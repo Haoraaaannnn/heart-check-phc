@@ -99,7 +99,7 @@ export const CUBICLES_STYLES = {
     tile: 'flex flex-col justify-between rounded-xl border-2 p-5 shadow-sm transition',
     headerRow: 'flex items-center justify-between mb-3',
     number: 'text-lg font-extrabold text-content',
-    statusBadge: 'inline-flex items-center gap-1.5 rounded-md px-2.5 py-0.5 text-xs font-bold uppercase',
+    statusBadge: 'inline-flex items-center gap-1.5 text-xs font-bold uppercase shrink-0',
     body: 'flex flex-col gap-1.5 text-xs',
     category: 'font-semibold text-content-muted capitalize',
     detailRow: 'flex items-center gap-1.5 text-content-muted',
@@ -237,7 +237,7 @@ export const CUBICLES_STYLES = {
     stageTitle: 'text-sm font-extrabold text-content leading-tight break-words',
     stageSubtitle: 'text-[10px] text-content-muted leading-none mt-0.5 break-words',
     stageBadge:
-      'inline-flex items-center gap-1 rounded-md px-2 py-0.5 font-mono text-xs font-bold shrink-0',
+      'inline-flex items-center font-mono text-xs font-extrabold shrink-0',
     stageBody: 'flex-1 flex flex-col justify-between gap-3',
     stageMetricStrip:
       'flex items-center justify-between rounded-xl px-3 py-2 text-xs border',
@@ -290,7 +290,7 @@ export const CUBICLES_STYLES = {
     nodePortDot: 'w-1.5 h-1.5 rounded-full bg-rose-500',
     nodeHeader: 'flex items-center justify-between pb-2 border-b border-line/60',
     nodeStagePill: 'font-mono text-[9px] font-bold uppercase tracking-wider px-1.5 py-0.5 rounded border',
-    nodeCountBadge: 'font-mono text-[10px] font-extrabold px-2 py-0.5 rounded-md',
+    nodeCountBadge: 'font-mono text-[10px] font-extrabold shrink-0',
     nodeIdentity: 'flex items-center gap-2.5 my-2.5',
     nodeIconWrap:
       'flex shrink-0 items-center justify-center text-lg font-bold',
@@ -398,7 +398,7 @@ export const CUBICLES_STYLES = {
     nodeHeader: 'flex items-center justify-between gap-1 mb-1.5',
     nodeTitle: 'text-xs font-bold text-content break-words flex items-center gap-1.5',
     nodeBadge:
-      'inline-flex items-center gap-1 font-mono text-[10px] font-bold px-1.5 py-0.2 rounded-md border',
+      'inline-flex items-center gap-1 font-mono text-[11px] font-extrabold shrink-0',
     nodeBody: 'flex flex-col gap-1',
     nodeDoctor: 'text-[11px] text-content-muted break-words flex items-center gap-1',
     nodeCurrentPatient:
@@ -424,19 +424,19 @@ export const CUBICLES_STYLES = {
     groupSectionHeader:
       'text-[10px] font-bold uppercase tracking-wider text-content-muted flex items-center gap-1',
     groupBadgeOpd:
-      'bg-rose-50 dark:bg-rose-950/40 text-rose-700 dark:text-rose-300 border-rose-200 dark:border-rose-900',
+      'text-rose-600 dark:text-rose-400 font-bold',
     groupBadgeWarfarin:
-      'bg-slate-100 dark:bg-[#242424] text-slate-700 dark:text-[#f5f5f5] border-slate-200 dark:border-[#2e2e2e]',
+      'text-slate-600 dark:text-[#a3a3a3] font-bold',
     groupBadgeSpecialized:
-      'bg-purple-50 dark:bg-purple-950/40 text-purple-700 dark:text-purple-300 border-purple-200 dark:border-purple-900',
+      'text-purple-600 dark:text-purple-400 font-bold',
     groupBadgeEcg:
-      'bg-emerald-50 dark:bg-emerald-950/40 text-emerald-700 dark:text-emerald-300 border-emerald-200 dark:border-emerald-900',
+      'text-emerald-600 dark:text-emerald-400 font-bold',
     groupBadgeRefill:
-      'bg-teal-50 dark:bg-teal-950/40 text-teal-700 dark:text-teal-300 border-teal-200 dark:border-teal-900',
+      'text-teal-600 dark:text-teal-400 font-bold',
     groupBadgeBenzathine:
-      'bg-slate-100 dark:bg-[#242424] text-slate-700 dark:text-[#f5f5f5] border-slate-200 dark:border-[#2e2e2e]',
+      'text-rose-600 dark:text-rose-400 font-bold',
     groupBadgeReschedule:
-      'bg-slate-100 dark:bg-[#242424] text-slate-700 dark:text-[#f5f5f5] border-slate-200 dark:border-[#2e2e2e]',
+      'text-slate-600 dark:text-[#a3a3a3] font-bold',
 
     // Unified Stage 3 Container Block
     stage3Container:
@@ -450,7 +450,7 @@ export const CUBICLES_STYLES = {
     stage3Subtitle:
       'text-[10px] text-content-muted leading-tight',
     stage3Badge:
-      'inline-flex items-center gap-1 font-mono text-[10px] font-bold px-2 py-0.5 rounded-md border border-line bg-surface-subtle text-content',
+      'inline-flex items-center gap-1 font-mono text-[10px] font-extrabold text-content shrink-0',
     stage3PodContainer:
       'flex flex-col gap-2.5 overflow-y-auto phc-scroll max-h-[350px] pr-0.5',
     stage3PodSection:
@@ -480,7 +480,7 @@ export const CUBICLES_STYLES = {
     serviceBlockSubtitle:
       'text-[10px] text-content-muted leading-tight break-words',
     serviceBlockBadge:
-      'inline-flex items-center gap-1 font-mono text-[10px] font-bold px-1.5 py-0.2 rounded-md border border-line bg-surface-subtle text-content shrink-0',
+      'inline-flex items-center gap-1 font-mono text-[10px] font-bold text-content shrink-0',
     serviceBlockScrollGrid:
       'grid grid-cols-2 lg:grid-cols-3 gap-1.5 overflow-y-auto phc-scroll max-h-[110px] pr-1',
     serviceRoomFilterPill:
@@ -546,8 +546,8 @@ export const PIPELINE_STAGE_STYLES: Record<
     headerBorder: 'border-amber-200/80 dark:border-amber-900/60',
     iconBg: '',
     iconText: 'text-amber-700 dark:text-amber-300',
-    badgeBg: 'bg-amber-100 dark:bg-amber-900/60 border border-amber-300 dark:border-amber-800',
-    badgeText: 'text-amber-800 dark:text-amber-300',
+    badgeBg: '',
+    badgeText: 'text-amber-600 dark:text-amber-400 font-extrabold',
     metricBg: 'bg-white/90 dark:bg-[#1a1a1a]/90',
     metricBorder: 'border-amber-200/80 dark:border-amber-900/60',
     pillBg: 'bg-white dark:bg-[#1a1a1a] hover:bg-amber-50 dark:hover:bg-amber-950/40',
@@ -560,8 +560,8 @@ export const PIPELINE_STAGE_STYLES: Record<
     headerBorder: 'border-purple-200/80 dark:border-purple-900/60',
     iconBg: '',
     iconText: 'text-purple-700 dark:text-purple-300',
-    badgeBg: 'bg-purple-100 dark:bg-purple-900/60 border border-purple-300 dark:border-purple-800',
-    badgeText: 'text-purple-800 dark:text-purple-300',
+    badgeBg: '',
+    badgeText: 'text-purple-600 dark:text-purple-400 font-extrabold',
     metricBg: 'bg-white/90 dark:bg-[#1a1a1a]/90',
     metricBorder: 'border-purple-200/80 dark:border-purple-900/60',
     pillBg: 'bg-white dark:bg-[#1a1a1a] hover:bg-purple-50 dark:hover:bg-purple-950/40',
@@ -574,8 +574,8 @@ export const PIPELINE_STAGE_STYLES: Record<
     headerBorder: 'border-rose-200/80 dark:border-rose-900/60',
     iconBg: '',
     iconText: 'text-rose-700 dark:text-rose-300',
-    badgeBg: 'bg-rose-100 dark:bg-rose-900/60 border border-rose-300 dark:border-rose-800',
-    badgeText: 'text-rose-800 dark:text-rose-300',
+    badgeBg: '',
+    badgeText: 'text-rose-600 dark:text-rose-400 font-extrabold',
     metricBg: 'bg-white/90 dark:bg-[#1a1a1a]/90',
     metricBorder: 'border-rose-200/80 dark:border-rose-900/60',
     pillBg: 'bg-white dark:bg-[#1a1a1a] hover:bg-rose-50 dark:hover:bg-rose-950/40',
@@ -588,8 +588,8 @@ export const PIPELINE_STAGE_STYLES: Record<
     headerBorder: 'border-slate-200/80 dark:border-[#2e2e2e]',
     iconBg: '',
     iconText: 'text-slate-700 dark:text-[#f5f5f5]',
-    badgeBg: 'bg-slate-100 dark:bg-[#242424] border border-slate-300 dark:border-[#2e2e2e]',
-    badgeText: 'text-slate-800 dark:text-[#f5f5f5]',
+    badgeBg: '',
+    badgeText: 'text-slate-600 dark:text-[#a3a3a3] font-extrabold',
     metricBg: 'bg-white/90 dark:bg-[#1a1a1a]/90',
     metricBorder: 'border-slate-200/80 dark:border-[#2e2e2e]',
     pillBg: 'bg-white dark:bg-[#1a1a1a] hover:bg-slate-50 dark:hover:bg-[#242424]',
@@ -602,8 +602,8 @@ export const PIPELINE_STAGE_STYLES: Record<
     headerBorder: 'border-emerald-200/80 dark:border-emerald-900/60',
     iconBg: '',
     iconText: 'text-emerald-700 dark:text-emerald-300',
-    badgeBg: 'bg-emerald-100 dark:bg-emerald-900/60 border border-emerald-300 dark:border-emerald-800',
-    badgeText: 'text-emerald-800 dark:text-emerald-300',
+    badgeBg: '',
+    badgeText: 'text-emerald-600 dark:text-emerald-400 font-extrabold',
     metricBg: 'bg-white/90 dark:bg-[#1a1a1a]/90',
     metricBorder: 'border-emerald-200/80 dark:border-emerald-900/60',
     pillBg: 'bg-white dark:bg-[#1a1a1a] hover:bg-emerald-50 dark:hover:bg-emerald-950/40',
@@ -628,32 +628,32 @@ export const CUBICLE_STATUS_STYLES: Record<
   available: {
     border: 'border-emerald-200 dark:border-emerald-900',
     bg: 'bg-emerald-50 dark:bg-emerald-950/40',
-    badgeBg: 'bg-emerald-100 border border-emerald-300 dark:bg-emerald-900/50 dark:border-emerald-800',
-    badgeText: 'text-emerald-800 dark:text-emerald-300',
+    badgeBg: '',
+    badgeText: 'text-emerald-600 dark:text-emerald-400 font-extrabold',
     dot: 'bg-emerald-500',
     icon: 'bx-check-circle',
   },
   occupied: {
     border: 'border-rose-200 dark:border-rose-900',
     bg: 'bg-rose-50 dark:bg-rose-950/40',
-    badgeBg: 'bg-rose-100 border border-rose-300 dark:bg-rose-900/50 dark:border-rose-800',
-    badgeText: 'text-rose-800 dark:text-rose-300',
+    badgeBg: '',
+    badgeText: 'text-rose-600 dark:text-rose-400 font-extrabold',
     dot: 'bg-rose-500 animate-pulse',
     icon: 'bx-user',
   },
   maintenance: {
     border: 'border-amber-200 dark:border-amber-900',
     bg: 'bg-amber-50 dark:bg-amber-950/40',
-    badgeBg: 'bg-amber-100 border border-amber-300 dark:bg-amber-900/50 dark:border-amber-800',
-    badgeText: 'text-amber-800 dark:text-amber-300',
+    badgeBg: '',
+    badgeText: 'text-amber-600 dark:text-amber-400 font-extrabold',
     dot: 'bg-amber-500',
     icon: 'bx-wrench',
   },
   cleaning: {
     border: 'border-teal-200 dark:border-teal-900',
     bg: 'bg-teal-50 dark:bg-teal-950/40',
-    badgeBg: 'bg-teal-100 border border-teal-300 dark:bg-teal-900/50 dark:border-teal-800',
-    badgeText: 'text-teal-800 dark:text-teal-300',
+    badgeBg: '',
+    badgeText: 'text-teal-600 dark:text-teal-400 font-extrabold',
     dot: 'bg-teal-500',
     icon: 'bx-brush',
   },

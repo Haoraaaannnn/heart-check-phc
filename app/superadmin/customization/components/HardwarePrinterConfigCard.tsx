@@ -191,17 +191,17 @@ export function HardwarePrinterConfigCard() {
             </span>
             <div className="flex items-center gap-1.5">
               <span
-                className={`px-2 py-0.5 rounded-md text-[10px] font-semibold border ${
+                className={
                   status.connected
-                    ? 'bg-emerald-50 text-emerald-700 border-emerald-200 dark:bg-emerald-950/60 dark:text-emerald-300'
-                    : 'bg-slate-100 text-slate-600 border-slate-200 dark:bg-[#242424] dark:text-[#a3a3a3]'
-                }`}
+                    ? S.printerConnectedBadge
+                    : S.printerDisconnectedBadge
+                }
               >
                 {status.connected ? T.usbConnectedBadge : T.usbNotConnectedBadge}
               </span>
               {hardwareStatus.condition !== 'ready' &&
                 hardwareStatus.condition !== 'not_detected' && (
-                  <span className="px-2 py-0.5 rounded-md text-[10px] font-semibold border bg-amber-50 text-amber-800 border-amber-200 dark:bg-amber-950/60 dark:text-amber-200 uppercase">
+                  <span className={S.printerConditionBadge}>
                     {hardwareStatus.condition.replace(/_/g, ' ')}
                   </span>
                 )}
@@ -263,7 +263,7 @@ export function HardwarePrinterConfigCard() {
             <span className="text-xs font-bold text-slate-800 dark:text-[#f5f5f5]">
               {T.networkSectionTitle}
             </span>
-            <span className="px-2 py-0.5 rounded-md text-[10px] font-semibold bg-blue-50 text-blue-700 border border-blue-200 dark:bg-blue-950/60 dark:text-blue-300">
+            <span className={S.printerLanBadge}>
               LAN Port 9100
             </span>
           </div>

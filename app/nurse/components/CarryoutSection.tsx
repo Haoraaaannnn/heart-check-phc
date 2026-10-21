@@ -13,6 +13,7 @@ import React from 'react';
 import { Patient } from '@/types/Types';
 import { ClinicalStage } from '@/app/nurse/types/nurse';
 import { nurseTexts } from '@/app/nurse/constants/nurseTexts';
+import { STAGE_CONFIGS } from '@/app/nurse/constants/nurse';
 import { StageColumn } from '@/app/nurse/components/StageColumn';
 import { NursePatientCard } from '@/app/nurse/components/NursePatientCard';
 
@@ -61,7 +62,7 @@ export function CarryoutSection({
     <StageColumn
       stage="carryout"
       title={nurseTexts.stageCarryoutHeading}
-      badgeColorClass="bg-orange-100 text-orange-700 dark:bg-orange-950/50 dark:text-orange-300"
+      badgeColorClass={STAGE_CONFIGS.carryout.badgeColor}
       count={patients.length}
       emptyText={nurseTexts.emptyCarryout}
       isDragOver={isDragOver}

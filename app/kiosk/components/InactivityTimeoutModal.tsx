@@ -130,7 +130,6 @@ function CountdownProgressRing({ totalSeconds }: CountdownProgressRingProps) {
         r={radius}
         stroke={InactivityTimerColors.emptyTrack}
         strokeWidth="8"
-        className="dark:stroke-slate-700"
         fill="none"
       />
       {/* Fluid 60fps Continuous Depletion Progress Ring - Clockwise from 12 o'clock */}
@@ -249,7 +248,7 @@ export default function InactivityTimeoutModal({
             <div className={InactivityModalClasses.timerCenterDisc}>
               <span
                 className={`${InactivityModalClasses.timerCountText} ${
-                  isCriticalTime ? "text-[#c9142b] dark:text-[#f15b6c]" : ""
+                  isCriticalTime ? "text-[#c9142b]" : ""
                 }`}
                 aria-live={InactivityModalTexts.ariaCountdownLive}
                 aria-label={`${InactivityModalTexts.countdownNotice} ${remainingSeconds} ${secondsSuffix}`}

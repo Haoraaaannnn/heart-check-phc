@@ -91,7 +91,8 @@ export function useAutoRotate(
             };
           }
 
-          const alreadyRegistered = p.service === 'Consultation' || p.service === 'OPD Screening';
+          // Patients who completed registration desk intake return to 'On Progress' with cooldown
+          const alreadyRegistered = Boolean(p.reg_start) || p.service === 'Consultation' || p.service === 'OPD Screening';
 
           if (alreadyRegistered) {
             return {

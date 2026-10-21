@@ -121,7 +121,8 @@ export function useDragAndDrop(
     movingBackIds.current.add(patient.id);
 
     try {
-      const isManual = !!patient.service && MANUAL_SERVICES.includes(patient.service);
+      // Registered patients or manual consultation patients return to queue with cooldown
+      const isManual = Boolean(patient.reg_start) || (!!patient.service && MANUAL_SERVICES.includes(patient.service));
 
       unpinConfirmedPatient?.(patient.id);
       if (isManual) {

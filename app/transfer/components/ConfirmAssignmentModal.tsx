@@ -5,6 +5,9 @@
  * modal workflow. Displays affected patient numbers, designated destination cubicles,
  * and outbound SMS alert statuses before committing changes to Supabase and IndexedDB.
  *
+ * Adheres strictly to AGENTS.md separation-of-concerns standards by consuming centralized
+ * styles from transferStyles.ts.
+ *
  * @module app/transfer/components/ConfirmAssignmentModal
  */
 
@@ -12,7 +15,8 @@
 
 import React from 'react';
 import { Patient } from '@/types/Types';
-import { transferTexts } from '@/app/transfer/constants/transferTexts';
+import { transferTexts } from '@/constants/texts/transferTexts';
+import { transferModalStyles } from '@/constants/designs/transferStyles';
 
 /**
  * Props for {@link ConfirmAssignmentModal}.
@@ -60,19 +64,19 @@ export function ConfirmAssignmentModal({
       role="dialog"
       aria-modal="true"
       aria-labelledby="confirm-assignment-title"
-      className="fixed inset-0 z-50 flex items-center justify-center bg-slate-900/60 dark:bg-black/70 backdrop-blur-xs p-4 sm:p-6 transition-opacity animate-in fade-in duration-150"
+      className={transferModalStyles.backdrop}
     >
-      <div className="bg-white dark:bg-[#1a1a1a] rounded-2xl shadow-xl border border-slate-200 dark:border-[#2e2e2e] w-full max-w-lg overflow-hidden flex flex-col max-h-[90vh]">
+      <div className={transferModalStyles.dialogCard}>
         {/* Modal Header */}
-        <div className="px-6 pt-6 pb-4 border-b border-slate-100 dark:border-[#2e2e2e] flex items-start justify-between gap-4">
+        <div className={transferModalStyles.header}>
           <div>
             <h2
               id="confirm-assignment-title"
-              className="text-lg font-bold text-slate-800 dark:text-[#f5f5f5] tracking-tight"
+              className={transferModalStyles.title}
             >
               {modalTitle}
             </h2>
-            <p className="text-xs text-slate-500 dark:text-[#a3a3a3] mt-1 leading-relaxed">
+            <p className={transferModalStyles.description}>
               {transferTexts.confirmAssignmentModalDesc}
             </p>
           </div>
@@ -81,7 +85,7 @@ export function ConfirmAssignmentModal({
             type="button"
             onClick={onCancel}
             disabled={isConfirming}
-            className="px-2.5 py-1 text-xs font-semibold text-slate-400 dark:text-[#737373] hover:text-slate-700 dark:hover:text-[#f5f5f5] hover:bg-slate-100 dark:hover:bg-[#242424] rounded-lg transition-colors cursor-pointer disabled:opacity-40"
+            className={transferModalStyles.closeBtn}
             aria-label={transferTexts.closeBtn}
           >
             {transferTexts.closeBtn}
@@ -89,45 +93,45 @@ export function ConfirmAssignmentModal({
         </div>
 
         {/* Modal Body: List of Pending Patient Assignments */}
-        <div className="px-6 py-4 overflow-y-auto space-y-2.5 phc-scroll flex-1">
+        <div className={transferModalStyles.bodyList}>
           {pendingPatients.map(patient => (
             <div
               key={patient.id}
-              className="p-3.5 rounded-xl border border-slate-200 dark:border-[#2e2e2e] bg-slate-50/70 dark:bg-[#1f1f1f]/70 flex items-center justify-between gap-3 shadow-2xs"
+              className={transferModalStyles.patientRow}
             >
               <div className="flex items-center gap-3 min-w-0 flex-1">
-                <span className="w-10 h-10 rounded-xl bg-red-50 dark:bg-red-950/40 border border-red-200 dark:border-red-900/50 text-[#cc3535] dark:text-[#f87171] font-black text-sm flex items-center justify-center shrink-0">
+                <span className={transferModalStyles.patientNumBadge}>
                   {patient.patientNum}
                 </span>
 
                 <div className="min-w-0 flex-1">
                   <div className="flex items-center gap-2">
-                    <span className="text-xs font-bold text-slate-800 dark:text-[#f5f5f5] truncate">
+                    <span className={transferModalStyles.patientServiceText}>
                       {patient.service}
                     </span>
                     {patient.subcategory && (
-                      <span className="text-[10px] font-medium px-1.5 py-0.5 rounded bg-slate-200/80 dark:bg-[#242424] text-slate-600 dark:text-[#a3a3a3] truncate">
+                      <span className={transferModalStyles.patientSubcategoryBadge}>
                         {patient.subcategory}
                       </span>
                     )}
                   </div>
 
-                  <p className="text-[11px] text-slate-500 dark:text-[#a3a3a3] font-medium mt-0.5 truncate">
+                  <p className={transferModalStyles.assignedLabel}>
                     {transferTexts.assignedToLabel}:{' '}
-                    <span className="font-bold text-slate-700 dark:text-[#f5f5f5]">
+                    <span className={transferModalStyles.assignedTargetVal}>
                       {patient.cubicleNum || transferTexts.queueTabTitle}
                     </span>
                   </p>
 
                   {Boolean(patient.phoneNum) && (
-                    <p className="text-[10px] text-blue-600 dark:text-blue-400 font-medium mt-0.5 break-words leading-tight">
+                    <p className={transferModalStyles.smsNotice}>
                       {transferTexts.smsNotificationNotice}
                     </p>
                   )}
                 </div>
               </div>
 
-              <span className="text-xs font-bold text-emerald-700 dark:text-emerald-300 bg-emerald-50 dark:bg-emerald-950/50 border border-emerald-200 dark:border-emerald-900 px-2 py-1 rounded-lg shrink-0 whitespace-nowrap">
+              <span className={transferModalStyles.destinationBadge}>
                 {patient.cubicleNum || 'Queue'}
               </span>
             </div>
@@ -135,12 +139,12 @@ export function ConfirmAssignmentModal({
         </div>
 
         {/* Modal Footer: Action Buttons */}
-        <div className="px-6 py-4 border-t border-slate-100 dark:border-[#2e2e2e] bg-slate-50/50 dark:bg-[#141414] flex items-center justify-end gap-3 shrink-0">
+        <div className={transferModalStyles.footer}>
           <button
             type="button"
             onClick={onCancel}
             disabled={isConfirming}
-            className="px-4 py-2 text-xs font-semibold rounded-xl border border-slate-300 dark:border-[#2e2e2e] text-slate-700 dark:text-[#a3a3a3] hover:bg-slate-100 dark:hover:bg-[#242424] hover:text-slate-900 dark:hover:text-[#f5f5f5] active:bg-slate-200 transition-colors cursor-pointer disabled:opacity-50"
+            className={transferModalStyles.cancelBtn}
           >
             {transferTexts.cancelAssignmentBtn}
           </button>
@@ -149,7 +153,7 @@ export function ConfirmAssignmentModal({
             type="button"
             onClick={() => void onConfirm()}
             disabled={isConfirming}
-            className="px-5 py-2 text-xs font-bold rounded-xl bg-[#cc3535] hover:bg-red-700 active:bg-red-800 text-white transition-colors shadow-xs flex items-center gap-2 cursor-pointer disabled:opacity-50"
+            className={transferModalStyles.confirmBtn}
           >
             {isConfirming ? (
               <>

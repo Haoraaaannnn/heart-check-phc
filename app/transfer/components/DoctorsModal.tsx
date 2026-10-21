@@ -1,24 +1,51 @@
+/**
+ * @fileoverview Modal dialog wrapper presenting the Doctors and Cubicles assignment panel.
+ *
+ * Adheres strictly to AGENTS.md separation-of-concerns standards by consuming centralized
+ * styles from transferStyles.ts.
+ *
+ * @module app/transfer/components/DoctorsModal
+ */
+
 'use client';
+
+import React from 'react';
 import { DoctorsPanel } from '@/app/transfer/components/DoctorsPanel';
-import { transferTexts } from '@/app/transfer/constants/transferTexts';
+import { transferTexts } from '@/constants/texts/transferTexts';
+import { transferModalStyles } from '@/constants/designs/transferStyles';
 
-type DoctorsModalProps = {
+/**
+ * Props for {@link DoctorsModal}.
+ */
+export interface DoctorsModalProps {
+  /** Callback to close the doctors modal. */
   onClose: () => void;
-};
+}
 
+/**
+ * High-contrast modal container for managing hospital physicians and cubicle associations.
+ *
+ * @param props - Close callback.
+ * @returns Rendered modal element.
+ */
 export function DoctorsModal({ onClose }: DoctorsModalProps) {
   return (
-    <div className="fixed inset-0 bg-black/70 flex items-center justify-center z-50 p-6 backdrop-blur-xs">
-      <div className="bg-gray-50 dark:bg-[#1a1a1a] border border-transparent dark:border-[#2e2e2e] rounded-2xl w-full max-w-4xl max-h-[90vh] overflow-y-auto p-6 relative">
+    <div className={transferModalStyles.backdrop}>
+      <div className={transferModalStyles.dialogCardLarge}>
         <button
+          type="button"
           onClick={onClose}
-          className="absolute top-4 right-4 px-3 py-1 bg-white dark:bg-[#242424] rounded-lg text-xs font-semibold text-gray-500 hover:text-gray-800 hover:bg-gray-100 dark:text-[#a3a3a3] dark:hover:text-[#f5f5f5] dark:hover:bg-[#2e2e2e] border border-gray-200 dark:border-[#2e2e2e] transition shadow-xs cursor-pointer"
+          className={transferModalStyles.closeBtnAbsolute}
         >
           {transferTexts.closeBtn}
         </button>
-        <h1 className="text-2xl font-bold text-gray-900 dark:text-[#f5f5f5] mb-6">Doctors</h1>
+        <h1 className={transferModalStyles.largeTitle}>
+          {transferTexts.doctorsBtn}
+        </h1>
         <DoctorsPanel />
       </div>
     </div>
   );
 }
+
+export default DoctorsModal;

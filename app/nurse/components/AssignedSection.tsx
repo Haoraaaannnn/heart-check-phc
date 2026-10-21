@@ -13,6 +13,7 @@ import React from 'react';
 import { Patient } from '@/types/Types';
 import { ClinicalStage } from '@/app/nurse/types/nurse';
 import { nurseTexts } from '@/app/nurse/constants/nurseTexts';
+import { STAGE_CONFIGS } from '@/app/nurse/constants/nurse';
 import { StageColumn } from '@/app/nurse/components/StageColumn';
 import { NursePatientCard } from '@/app/nurse/components/NursePatientCard';
 
@@ -64,7 +65,7 @@ export function AssignedSection({
     <StageColumn
       stage="assigned"
       title={nurseTexts.stageAssignedHeading}
-      badgeColorClass="bg-blue-100 text-blue-700 dark:bg-blue-950/50 dark:text-blue-300"
+      badgeColorClass={STAGE_CONFIGS.assigned.badgeColor}
       count={patients.length}
       emptyText={nurseTexts.emptyAssigned}
       isDragOver={isDragOver}

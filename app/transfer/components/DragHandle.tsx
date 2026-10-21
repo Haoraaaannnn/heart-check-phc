@@ -28,12 +28,12 @@ export function DragHandle({ className = '', title = 'Drag to move patient' }: D
     <span
       data-drag-handle="true"
       title={title}
-      className={`inline-flex flex-col items-center justify-center gap-[3px] w-7 h-7 rounded-lg hover:bg-gray-100 dark:hover:bg-[#242424] cursor-grab active:cursor-grabbing touch-none select-none transition-colors ${className}`.trim()}
+      className={`inline-flex flex-col items-center justify-center gap-[3px] w-7 h-7 rounded-lg hover:bg-slate-100 dark:hover:bg-[#242424] cursor-grab active:cursor-grabbing touch-none select-none transition-colors ${className}`.trim()}
       aria-label={title}
     >
-      <span className="w-3.5 h-[2px] bg-slate-300 dark:bg-[#404040] rounded-full" />
-      <span className="w-3.5 h-[2px] bg-slate-300 dark:bg-[#404040] rounded-full" />
-      <span className="w-3.5 h-[2px] bg-slate-300 dark:bg-[#404040] rounded-full" />
+      <span className="w-3.5 h-[2px] bg-slate-400 dark:bg-[#737373] rounded-full" />
+      <span className="w-3.5 h-[2px] bg-slate-400 dark:bg-[#737373] rounded-full" />
+      <span className="w-3.5 h-[2px] bg-slate-400 dark:bg-[#737373] rounded-full" />
     </span>
   );
 }

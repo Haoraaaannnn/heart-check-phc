@@ -1,6 +1,6 @@
 # Active Session Handoff Log
 
-**Last Updated:** 2026-10-21
+**Last Updated:** 2026-10-22
 
 This document serves as an optional, high-signal, token-efficient session handoff for multi-step tasks across AI model invocations or developer shifts.
 
@@ -12,68 +12,82 @@ This document serves as an optional, high-signal, token-efficient session handof
 
 ## Active Session Status
 
-- **Active Milestone / Task:** Inactivity Timeout Countdown Modal ("Are You Still There?") (Completed)
+- **Active Milestone / Task:** Leftover Badge Background Purge & Decorative Live Indicator Removal Completed
 - **Active Git Branch:** `feat/estimated-time`
-- **Session Focus:** Implemented the 45-second inactivity watcher, Web Audio API acoustic hospital warning chime, and 15-second countdown grace modal ("Are You Still There?") across the Kiosk patient check-in flow, fulfilling UAT checklist TC-KIO-012, Role 1 Q27, and Role 6 Q30.
+- **Session Focus:** (1) Removed leftover badge background boxes from doctor active status badges (`DoctorsPanel.tsx`), cubicle capacity counts `0/5` (`CubicleCard.tsx`), nurse stage columns `0` (`StageColumn.tsx`, `nurse.ts`), and nurse finished drawer `0` (`FinishedDrawer.tsx`), rendering bare colored characters; (2) Removed decorative "Live" and dummy status badges with no operational information across Nurse (`NurseHeader.tsx`), Transfer (`transferStyles.ts` pulse dots), Admin Dashboard (`OverviewDateFilter.tsx`, `HeatmapHeaderControls.tsx`, `DashSideNavigation.tsx`, `CubicleProcessGraph.tsx`), and SuperAdmin (`SuperAdminSidebar.tsx`).
 
 ---
 
 ## Decisions Made
 
-1. **Inactivity Timing Standards & Route Scoping:**
-   - Standardized `INACTIVITY_WARNING_MS = 45000` (45 seconds) and `COUNTDOWN_GRACE_SECONDS = 15` (15 seconds) in `kioskNavigation.ts`.
-   - Inactivity watcher is scoped strictly to `/kiosk/pages/*` patient-flow routes (`kiosk-new-old-selection`, `kiosk-services`, `category-selection`, `kiosk-cubicle-selection`, `sms-input`, `confirmation`).
-   - Safely excluded `/kiosk/slideshow` (which is already the idle screensaver) and `/kiosk/pages/queue-print` (which has its own 7s/25s ticket viewing auto-close countdown).
-2. **Web Audio API Hospital Acoustic Chime (`kioskChime.ts`):**
-   - Synthesizes a two-tone gentle acoustic hospital chime (D5 587.33 Hz followed by A5 880 Hz with natural exponential gain decay).
-   - Zero external audio media assets or network requests; fully operates offline.
-   - Automatically handles suspended `AudioContext` states and catches all errors gracefully.
-3. **Accessible Countdown Modal (`InactivityTimeoutModal.tsx`):**
-   - Built an enlarged high-contrast clinical dialog card (`w-[94vw] max-w-[560px] sm:max-w-xl`, padding `p-6 sm:p-10`) with clean, uniform borders, solid surfaces (`bg-white dark:bg-slate-900`), and dark backdrop scrim (`z-[250]`).
-   - Integrated the official Heart Check PHC color palette (`themeColors.brandRed` `#a8071a`, `brightRed` `#c9142b`, `deepRed` `#76000d`):
-     - Enlarged 80px icon wrap with PHC red tint and `text-[#a8071a] dark:text-[#f15b6c]`.
-     - Subtitle and countdown badge highlighted with PHC red branding.
-     - Upgraded the countdown ring: empty track is pure white (`#FFFFFF`) framed within a soft background disc, and the progress arc starts at 12 o'clock and drains clockwise strictly synchronized with the remaining seconds (`dashLength = circumference * (remainingSeconds / totalSeconds)`).
-     - Guaranteed equal 50/50 sizing across both buttons via a balanced CSS grid (`grid grid-cols-1 sm:grid-cols-2`), with identical min-heights (`min-h-[66px] sm:min-h-[74px]`), padding, and typography.
-     - Primary "Continue Session" action button styled in solid PHC brand red (`#a8071a`) (text only, zero button icons).
-     - Secondary "Start Over" button with clean text and subtitle.
-   - Standardized Filipino as the priority language across the idle prompt and inactivity modal, with English translations directly below it ("Naririto Pa Ba Kayo?" / "Are You Still There?", "Magpatuloy" / "Continue Session").
-   - Auto-focuses "Continue Session" button on mount; supports `Escape` key to continue.
-4. **Clean Session Reset & State Preservation:**
-   - Tapping "Continue Session" dismisses the modal and restarts the 45-second inactivity timer while preserving all entered form data and URL params.
-   - If the 15-second countdown expires or the patient taps "Start Over", `sessionStorage` is safely purged and the browser is cleanly redirected to `/kiosk/slideshow`.
-5. **Separation of Concerns:**
-   - Isolated copy in `inactivityModalTexts.ts` and `idleRedirectTexts.ts`, styles in `inactivityModalStyles.ts`, chime in `kioskChime.ts`, presentation in `InactivityTimeoutModal.tsx`, and state in `IdleRedirectWrapper.tsx`. Zero inline styles.
+1. **Global Constants Organization (`constants/designs/`, `constants/texts/`):**
+   - Dark mode is an application-wide system standard, not a page-specific concern. All universal surfaces, dark mode palettes (`#0d0d0d`, `#141414`, `#1a1a1a`, `#1f1f1f`, `#242424`, `#2e2e2e`, `#383838`), typography scales, badge tones, and border tokens now reside in `constants/designs/themeTokens.ts`.
+   - Global color palettes reside in `constants/designs/colors.ts` and `constants/designs/palette.ts`.
+   - Global text dictionaries reside in `constants/texts/` (`connectionTexts.ts`, `ewtTexts.ts`, `queueStatus.ts`).
+   - Root `constants/` files re-export from these dedicated directories, ensuring 100% backward compatibility across all modules without breaking existing imports.
+2. **Feature-Scoped Style Centralization (`app/transfer/constants/transferStyles.ts`):**
+   - Authored unified styling dictionaries for all transfer subcomponents: `transferLayoutStyles`, `breadcrumbStyles`, `queuePanelStyles`, `onProgressStyles`, `idlePanelStyles`, `registrationCounterStyles`, `cubicleStyles`, `transferModalStyles`, `selectionBannerStyles`, `stepPickerStyles`, and `sidebarStyles`.
+   - Each dictionary consumes centralized `themeTokens` and `sizeTokens`.
+3. **Pure Presentation Components (Rule 2 Parity):**
+   - Refactored `IdleNumbersPanel.tsx`, `RegistrationCounterSection.tsx`, `CubicleCard.tsx`, `OnProgressSection.tsx`, `QueuePanel.tsx`, `BreadcrumbNav.tsx`, `ConfirmAssignmentModal.tsx`, `DoctorsModal.tsx`, `SelectionBanner.tsx`, `StepPickers.tsx`, `Sidebar.tsx`, and `app/transfer/page.tsx` into pure presentation components.
+   - Removed all ad-hoc inline classes, raw hex codes, and fractional dark-mode opacities (`dark:bg-[#1f1f1f]/70`).
+4. **Dark Mode Readability & Contrast Restoration (Rule 10 Parity):**
+   - Idle patient rows render solid dark surfaces (`bg-white dark:bg-[#1a1a1a]`, `border-slate-200 dark:border-[#2e2e2e]`, hover `dark:hover:bg-[#242424]`), completely eliminating the light-gray flash seen in user screenshots.
+   - Station indicators, unassigned doctor titles, and "Available" labels render high-contrast text (`dark:text-[#f5f5f5]`, `dark:text-[#d4d4d4]`, `dark:text-[#a3a3a3]`, `dark:text-[#b3b3b3]`).
+   - Breadcrumb navigation renders high-contrast links (`dark:text-[#d4d4d4]`, active `dark:text-[#f87171]`, dividers `dark:text-[#737373]`).
+   - Replaced all hardcoded copy ('Available', 'Queue ->') with centralized keys from `transferTexts.ts`.
+5. **Registration Counter Auto-Rotation & Timer Persistence:**
+   - Replaced failing PostgREST `.upsert(startUpdates)` in `fetchRegistrationPatients` with targeted `.update({ counter_top_started_at: now }).in('id', startIds).eq('is_historical', false).is('counter_top_started_at', null)`.
+   - Maintained `registrationPatientsRef` in `app/transfer/page.tsx` to preserve running timers in memory across 15-second background sync queries, eliminating the 15-second timer reset.
+   - Preserved running timer timestamps unless patient actually rotated (`rotation_count` or `counter_rejoin_at` changed) or switched counter stations.
+   - Refactored `useRegistrationRotate` hook to stabilize polling intervals via `registrationRef`, pass `expected: { counter: p.counter }` optimistic concurrency locks, gate rotation during user confirmation modals (`confirmingRef`), and call `syncNow` upon rotation to update both registration lanes and idle pools.
 
 ---
 
 ## Files Changed or Created
 
-- `app/kiosk/constants/idleRedirectTexts.ts` (Updated: set Filipino as the primary priority language with English below)
-- `app/kiosk/constants/inactivityModalTexts.ts` (Created & Updated: set Filipino as the priority language with English below, zero emojis)
-- `app/kiosk/constants/inactivityModalStyles.ts` (Created & Updated: solid clinical surface styles, InactivityTimerColors, equal 50/50 button grid, removed outer blueish wrapper background and inner disc shadow)
-- `app/kiosk/lib/kioskChime.ts` (Created: Web Audio API two-tone acoustic hospital chime synthesizer)
-- `app/kiosk/components/InactivityTimeoutModal.tsx` (Created & Refined: centered accessible dialog with continuous 60fps CountdownProgressRing, grayish empty fill, decoupled from 1-second ticks)
-- `app/kiosk/constants/kioskNavigation.ts` (Updated: added `INACTIVITY_WARNING_MS` and `COUNTDOWN_GRACE_SECONDS` timing constants)
-- `app/kiosk/components/IdleRedirectWrapper.tsx` (Updated: implemented 45s idle watcher, chime playback, 15s countdown modal, Magsimula Muli redirect to kiosk-new-old-selection, and idle slideshow expiry reset)
-- `app/kiosk/constants/kioskLoadingOverlay.ts` (Updated: switched loading spinner from blue to official Heart Check PHC brand red #a8071a)
-- `docs/checklists/UAT_USE_CASE_CHECKLIST.md` (Updated: refined TC-KIO-007, TC-KIO-010, TC-KIO-011, TC-KIO-012, and TC-KIO-013 with comprehensive steps and expected outcomes for printer telemetry, zero-scroll fallback, and inactivity countdown modal; appended Section 12 Developer Where to Edit Reference Guide)
-- `docs/checklists/IMPROVEMENTS_AND_FEATURE_CHECKLIST.md` (Updated: marked item as completed `[x]`, updated target files, standardized lowercase repo links)
-- `app/kiosk/README.md` (Updated: "Where to Edit" table, common components breakdown, and idle watcher description)
-- `brain/CURRENT.md` (Updated: Milestone 16 documentation)
+- `constants/designs/themeTokens.ts` (Created: centralized global surfaces, dark mode palettes, borders, text contrast, badges, and sizing tokens)
+- `constants/designs/colors.ts` (Created: centralized brand red palette and utility colors)
+- `constants/designs/palette.ts` (Created: centralized clinical service chart and accent colors)
+- `constants/texts/connectionTexts.ts` (Created: centralized connection health and offline sync text dictionary)
+- `constants/texts/ewtTexts.ts` (Created: centralized Estimated Wait Time range definitions and formatters)
+- `constants/texts/queueStatus.ts` (Created: centralized queue status types, groups, styles, and matcher)
+- `constants/themeTokens.ts` (Updated: re-exports from `constants/designs/themeTokens.ts`)
+- `constants/colors.ts` (Updated: re-exports from `constants/designs/colors.ts`)
+- `constants/palette.ts` (Updated: re-exports from `constants/designs/palette.ts`)
+- `constants/connectionTexts.ts` (Updated: re-exports from `constants/texts/connectionTexts.ts`)
+- `constants/ewtTexts.ts` (Updated: re-exports from `constants/texts/ewtTexts.ts`)
+- `constants/queueStatus.ts` (Updated: re-exports from `constants/texts/queueStatus.ts`)
+- `app/transfer/constants/transferStyles.ts` (Created: comprehensive style dictionaries for all transfer components)
+- `app/transfer/constants/transfer.ts` (Updated: re-exports `transferStyles` and `transferTexts`)
+- `app/transfer/components/IdleNumbersPanel.tsx` (Refactored: pure presentation consuming `idlePanelStyles`)
+- `app/transfer/components/RegistrationCounterSection.tsx` (Refactored: pure presentation consuming `registrationCounterStyles`)
+- `app/transfer/components/CubicleCard.tsx` (Refactored: pure presentation consuming `cubicleStyles`)
+- `app/transfer/components/OnProgressSection.tsx` (Refactored: pure presentation consuming `onProgressStyles`)
+- `app/transfer/components/QueuePanel.tsx` (Refactored: pure presentation consuming `queuePanelStyles`)
+- `app/transfer/components/BreadcrumbNav.tsx` (Refactored: pure presentation consuming `breadcrumbStyles`)
+- `app/transfer/components/ConfirmAssignmentModal.tsx` (Refactored: pure presentation consuming `transferModalStyles`)
+- `app/transfer/components/DoctorsModal.tsx` (Refactored: pure presentation consuming `transferModalStyles`)
+- `app/transfer/components/SelectionBanner.tsx` (Refactored: pure presentation consuming `selectionBannerStyles`)
+- `app/transfer/components/StepPickers.tsx` (Refactored: pure presentation consuming `stepPickerStyles`)
+- `app/transfer/components/Sidebar.tsx` (Refactored: pure presentation consuming `sidebarStyles`)
+- `app/transfer/hooks/useRegistrationRotate.ts` (Refactored: polling interval stabilization via `registrationRef`, optimistic concurrency locking, `confirmingRef` modal gating, full JSDoc)
+- `app/transfer/page.tsx` (Updated: fixed 15s timer reset, replaced failing upsert with parameterized `.update()` satisfying Rule 12, added `registrationPatientsRef`, connected `syncNow` to counter rotation)
+- `app/transfer/README.md` (Updated: "Where to Edit" lookup table and design architecture)
+- `brain/CURRENT.md` (Updated: counter rotation and timer reset milestone documentation)
 - `brain/SESSION_LOG.md` (Updated: active session handoff log)
 
 ---
 
 ## Checks Performed
 
-1. **Zero Text Truncation (Rule 11):** Verified all modal copy wraps naturally (`break-words`, `whitespace-normal`).
-2. **Zero Emojis Standard (Rule 6):** Verified zero emojis in all code, comments, JSDocs, and UI strings.
-3. **Strict Separation of Concerns (Rule 2):** Copy in `inactivityModalTexts.ts`, styles in `inactivityModalStyles.ts`, UI in `InactivityTimeoutModal.tsx`.
-4. **Centering Standard (Rule 9):** Modal and countdown ring perfectly centered horizontally and vertically.
-5. **High-Contrast Solid Surfaces (Rule 10):** Solid backgrounds (`bg-white dark:bg-slate-900`) with 1px crisp borders.
-6. **High-Quality Documentation (Rule 1):** Full symbol and module level JSDocs across all created and edited files.
-7. **Explicit Date Stamp Standard (Rule 13):** Verified `2026-10-21` across updated markdown documentation.
+1. **Zero Text Truncation (Rule 11):** Verified all doctor names, station labels, and patient details wrap naturally (`break-words`, `whitespace-normal`).
+2. **Zero Emojis Standard (Rule 6):** Verified strictly zero emojis across all code, comments, JSDocs, and markdown documentation.
+3. **Strict Separation of Concerns (Rule 2):** Verified UI components assemble presentation only; zero hardcoded copy or inline style objects. Copy in `transferTexts.ts`, styles in `transferStyles.ts`.
+4. **Constants Scope Standard (Rule 3):** Global design and dark mode tokens isolated in `constants/designs/` and `constants/texts/`; feature-scoped styles isolated in `app/transfer/constants/transferStyles.ts`.
+5. **High-Contrast Solid Surfaces (Rule 10):** Verified pure neutral solid dark surfaces (`#0d0d0d`, `#141414`, `#1a1a1a`, `#1f1f1f`, `#242424`, `#2e2e2e`) with crisp 1px borders and high text contrast.
+6. **High-Quality Documentation (Rule 1):** Full symbol and file level JSDocs across all created and refactored files.
+7. **Explicit Date Stamp Standard (Rule 13):** Verified ISO date stamps (`2026-10-21`) on all updated markdown documentation.
 
 ---
 
@@ -85,4 +99,202 @@ This document serves as an optional, high-signal, token-efficient session handof
 
 ## Next Actions
 
-1. Run browser verification on Kiosk routes to test the 45-second inactivity trigger, acoustic chime, 15-second countdown, and "Continue" / "Start Over" interactions.
+1. Review the Patient Transfer workstation in browser across light and dark modes to verify visual contrast, theme switching, and drag-and-drop operations.
+
+---
+
+## Session Update: Global Constants Architecture & Universal Dark Mode (2026-10-21)
+
+### Work Completed
+1. **Centralized Global Folder Architecture under `constants/`:**
+   - `constants/designs/`:
+     - `themeTokens.ts`: Global surfaces, text contrast, dark mode palettes, borders, badges, buttons.
+     - `colors.ts`: Base color hex values and mappings.
+     - `palette.ts`: Color palette configuration.
+     - `transferStyles.ts`: Complete transfer design dictionary (layouts, panels, counters, cubicles, modals, selection banners, step pickers, quick-assign popover, doctor management panel, drag ghost).
+     - `kioskTypography.ts`: Global fluid clamp() scales and card dimensions.
+     - `icons.ts`: Central Boxicons icon configuration and resolvers.
+   - `constants/texts/`:
+     - `transferTexts.ts`: Centralized text copy for the entire Transfer workstation.
+     - `connectionTexts.ts`: Realtime and offline network connection messages.
+     - `ewtTexts.ts`: Estimated waiting time text templates.
+     - `queueStatus.ts`: Queue status terminology and descriptions.
+     - `appTexts.ts`: Application branding, pillars, Manila timezone, and locale.
+2. **Backward-Compatible Portals:**
+   - Root re-export portals maintained at `constants/themeTokens.ts`, `constants/colors.ts`, `constants/palette.ts`, `constants/icons.ts`, `constants/kiosk.ts`, `constants/connectionTexts.ts`, `constants/ewtTexts.ts`, `constants/queueStatus.ts`, and `constants/app.ts`.
+   - Feature re-export portals maintained at `app/transfer/constants/transferStyles.ts`, `app/transfer/constants/transferTexts.ts`, and `app/transfer/constants/transfer.ts`.
+3. **Pure Presentation Refactoring:**
+   - Refactored `QuickAssignDropdown.tsx` to consume `quickAssignStyles` and `transferTexts`.
+   - Refactored `DoctorsPanel.tsx` to consume `doctorsPanelStyles` and `transferTexts`.
+   - Refactored `DragGhost.tsx` to consume `dragGhostStyles`.
+   - Refactored `BackButton.tsx` and `DragHandle.tsx` for neutral dark mode compliance.
+   - Updated all component imports in `app/transfer/components/` and `app/transfer/page.tsx` to directly reference global `constants/designs/` and `constants/texts/`.
+4. **Developer Guides:**
+   - Updated `app/transfer/README.md` "Where to Edit" table with exact global constants paths.
+
+---
+
+## Session 21: Universal Status Pill & Badge Dark Mode Refactoring (2026-10-21)
+
+- **Objective:** Fix unreadable status pills, chips, and badges across the entire system in dark mode, strictly following AGENTS.md rules for separation of concerns (`constants/designs/`, `constants/texts/`), solid surfaces with crisp 1px borders, prohibition of pillbox shape, and zero emojis.
+- **Root Cause Analysis:**
+  1. `constants/texts/queueStatus.ts` used 15% opacity dark tints with zero borders (`dark:bg-orange-500/15`, `dark:bg-green-500/15`), rendering as murky, low-contrast smudges on `#1a1a1a` table rows. It also mixed styling tokens into texts.
+  2. `STAGE_CONFIGS` in `app/nurse/constants/nurse.ts` had no `dark:` classes on badges (`bg-blue-100 text-blue-700`), flashing bright light-mode colors on dark clinical boards.
+  3. Superadmin customization table and printer diagnostic cards had `border-purple-200` and `border-emerald-200` without dark overrides, leaking bright pastel borders in dark mode.
+  4. Ad-hoc badge styling across components lacked crisp borders and high-luminance text.
+- **Key Deliverables:**
+  1. **`constants/designs/statusPillStyles.ts` & `constants/statusPillStyles.ts`:**
+     - Created authoritative global design dictionary for all ticket statuses (`STATUS_STYLES`: `waiting`, `serving`, `idle`, `done`, `cancelled`, `unknown`), clinical stages (`STAGE_PILL_STYLES`), and base badge containers (`PILL_BASE_STYLES`).
+     - Added solid 70% opacity dark backgrounds, crisp 1px borders (`dark:border-*-800/80`), and high-luminance text (`dark:text-*-300`).
+     - Re-exported from `constants/statusPillStyles.ts` and decoupled from `constants/texts/queueStatus.ts`.
+  2. **Global Theme Tokens (`constants/designs/themeTokens.ts`):**
+     - Upgraded `themeTokens.badge` (`neutral`, `brand`, `activeEmerald`, `warningAmber`, `infoBlue`) and `themeTokens.brand.pill`.
+  3. **Nurse Station Dark Mode Contrast (`app/nurse/`):**
+     - Updated `STAGE_CONFIGS` in `app/nurse/constants/nurse.ts` with dark mode badge colors, borders, and backgrounds.
+     - Wired `AssignedSection.tsx`, `WithDoctorSection.tsx`, `CarryoutSection.tsx`, and `NurseQuickActionDropdown.tsx` to `STAGE_CONFIGS`.
+     - Refactored `NursePatientCard.tsx` (wrapped `cubicleNum` badge without truncation per Rule 11), `FinishedDrawer.tsx`, `NurseHeader.tsx`, and `NurseDragGhost.tsx`.
+  4. **Transfer Station Dark Mode Contrast (`app/transfer/`):**
+     - Refactored `constants/designs/transferStyles.ts` with solid dark backgrounds and crisp borders across `onProgressStyles`, `idlePanelStyles`, `queuePanelStyles`, `cubicleStyles`, `transferModalStyles`, `quickAssignStyles`, `doctorsPanelStyles`, and `dragGhostStyles`.
+     - Refactored `IdleNumbersSection.tsx` and `ConfirmAssignmentModal.tsx`. Removed text truncation on doctor names and specialties per Rule 11.
+  5. **Superadmin Customization Dark Mode Contrast (`app/superadmin/`):**
+     - Added `patientTypeBoth`, `patientTypeNew`, `patientTypeOld` and printer status badges to `app/superadmin/customization/constants/customizationStyles.ts`.
+     - Refactored `app/superadmin/customization/page.tsx` and `HardwarePrinterConfigCard.tsx`.
+  6. **Dashboard Modules Dark Mode Contrast (`app/dashboard/`):**
+     - Upgraded `headerSearchStyles.ts`, `importStyles.ts`, `FilePreviewModal.tsx`, `patients.ts`, `styles.ts`, and `dashNavStyles.ts`.
+- **Verification:** Development server running cleanly without build or runtime errors. Zero emojis in comments/strings. All files formatted with JSDocs.
+
+---
+
+## Session 22: Counter Card Layout Clipping & Notification Dropdown Scrolling Fixes (2026-10-22)
+
+- **Objective:**
+  1. Fix Registration Counter top patient card layout clipping where `ElapsedTimer` was truncated (`00:`) against the large uppercase `SEND TO QUEUE ->` button.
+  2. Fix system notifications dropdown being unscrollable and overflowing beyond the viewport.
+- **Root Cause Analysis:**
+  1. **Counter 1 Timer Truncation:**
+     - In `RegistrationCounterSection.tsx`, the drag handle, patient ticket number, and `ElapsedTimer` were wrapped in `<div className="flex items-center gap-1 min-w-0 flex-1 overflow-hidden">`.
+     - The `queueBtn` (`transferStyles.ts`) had `uppercase tracking-wider` and copy `'Send to Queue →'`, consuming ~115px.
+     - In multi-column grids (`grid-cols-2 sm:grid-cols-3 xl:grid-cols-4 2xl:grid-cols-5`), card width is ~180px-200px, pushing the timer against the container boundary where `overflow-hidden` truncated `00:00` into `00:`.
+  2. **Notification Dropdown Not Scrollable:**
+     - In `notificationStyles.ts`, `dropdown.panel` lacked `flex flex-col` and a viewport height bound (`max-h-[calc(100vh-80px)]`). On standard desktop and laptop screens, the panel overflowed the bottom edge of `h-screen overflow-hidden` pages (Transfer, Nurse, Dashboard), hiding the footer and preventing scroll reach.
+     - `dropdown.listContainer` lacked `flex-1 min-h-0`, causing scroll conflicts inside the flex hierarchy.
+- **Key Deliverables:**
+  1. **Registration Counter Layout (`app/transfer/components/RegistrationCounterSection.tsx`, `constants/texts/transferTexts.ts`, `constants/designs/transferStyles.ts`):**
+     - Shortened `sendToQueueBtn` from `'Send to Queue →'` to `'Queue →'` in `transferTexts.ts`.
+     - Removed `uppercase tracking-wider` and applied compact font styling to `registrationCounterStyles.queueBtn` in `transferStyles.ts`.
+     - Replaced `min-w-0 flex-1 overflow-hidden` with `flex items-center gap-1.5 shrink-0` and wrapped `ElapsedTimer` in `shrink-0 flex items-center font-mono text-[11px] font-bold`, guaranteeing zero timer truncation per Rule 11.
+  2. **System Notifications Dropdown (`app/dashboard/constants/notificationStyles.ts`, `app/transfer/page.tsx`):**
+     - Updated `NOTIFICATION_STYLES.dropdown.panel` to `absolute right-0 mt-2 w-96 sm:w-[420px] max-h-[calc(100vh-80px)] sm:max-h-[min(560px,calc(100vh-80px))] flex flex-col bg-white dark:bg-[#1a1a1a] rounded-2xl shadow-xl border border-slate-200 dark:border-[#2e2e2e] z-50 overflow-hidden`.
+     - Added `shrink-0` to `header`, `filterBar`, and `footer`.
+     - Updated `listContainer` to `flex-1 min-h-0 max-h-[420px] overflow-y-auto overflow-x-hidden divide-y divide-slate-100 dark:divide-[#2e2e2e] phc-scroll overscroll-contain touch-pan-y`.
+     - Updated `unassignedDropdown` in `transferStyles.ts` and `app/transfer/page.tsx` with viewport bounding and `flex-1 min-h-0`.
+- **Verification:**
+  - Zero text truncation or ellipsis on operational and timer data.
+  - Zero emojis across all updated files and documentation.
+  - Strict separation of concerns maintained (`transferTexts.ts`, `transferStyles.ts`, `notificationStyles.ts`).
+
+---
+
+## Session 23: Universal Badge Background Box Removal for Nurse & Transfer (2026-10-22)
+
+- **Objective:** Remove background boxes and rings from count badges across Nurse and Transfer workstations, strictly adhering to the user's design mandate ("remove the background only the character is colored").
+- **Root Cause Analysis:**
+  - `components/reusables/NotificationBadge.tsx` wrapped `variant="count"` numbers in a solid rounded container with background color (`bg-[#cc3535]`, `bg-amber-500`, `bg-gray-400`), border ring (`ring-1 ring-white dark:ring-[#141414]`), and shadow (`shadow-xs`).
+  - This rendered prominent red/gray/amber box backgrounds on `QueuePanel.tsx` tabs (Queue active count tab), `NurseSidebar.tsx` ("All My Cubicles" and coverage categories), `transfer/Sidebar.tsx`, and `StepPickers.tsx`.
+- **Key Deliverables:**
+  1. **Reusable NotificationBadge (`components/reusables/NotificationBadge.tsx`):**
+     - Completely removed background boxes (`bg`), rings (`ring`), and container shadows from `variant="count"`.
+     - Standardized on high-contrast bare colored typography (`font-mono text-xs font-extrabold leading-none` with `text-[#cc3535] dark:text-[#f87171]`, `text-amber-600 dark:text-amber-400`, `text-blue-600 dark:text-blue-400`, `text-slate-500 dark:text-[#a3a3a3]`, and `text-emerald-600 dark:text-emerald-400`).
+     - Preserved functional status dot indicator (`variant="dot"`) for collapsed sidebar rails.
+  2. **Nurse Station Sidebar (`app/nurse/components/NurseSidebar.tsx`):**
+     - Removed legacy `!bg-white ring-transparent` override from active category and coverage badges, rendering bare high-contrast `!text-white` on active red buttons and `text-slate-500 dark:text-[#a3a3a3]` on inactive items.
+  3. **Transfer Station Sidebar (`app/transfer/components/Sidebar.tsx`):**
+     - Removed `!bg-white ring-transparent` and `!bg-white/20` overrides, rendering bare `!text-white` on active items and colored text on inactive items.
+  4. **Transfer Station Queue Badges (`constants/designs/transferStyles.ts`):**
+     - Removed background boxes, padding, and borders from `patientNumBadgeTop`, `patientNumBadgeNormal`, and `patientNumBadgeSelected` in `OnProgressSection.tsx`, standardizing all queue ticket numbers to bare colored text.
+- **Verification:**
+  - Count badges on `QueuePanel.tsx` tabs and sidebars render cleanly with zero background boxes and zero 1px rings.
+  - Zero emojis across code, comments, and documentation.
+  - Full adherence to dark mode high-contrast standards.
+
+---
+
+## Session 24: Kiosk Strict Light Mode Enforcement & Dark Mode Purge (2026-10-22)
+
+- **Objective:** Strictly ban and eliminate dark mode across all patient check-in kiosk screens per user mandate ("no darkmode on kiosk. pls check it if it has dark mode it must not have it").
+- **Root Cause Analysis:**
+  - `NextThemesProvider` (`app/provider.tsx`) defaulted to system theme or preserved dark theme in `localStorage` from workstation usage (`/dashboard`, `/transfer`, `/nurse`).
+  - When navigating to `/kiosk`, `<html>` retained `class="dark"`.
+  - `InactivityTimeoutModal` (`inactivityModalStyles.ts`) had `dark:bg-slate-900 border-slate-800`, causing the inactivity countdown modal to render as a dark/black modal against the light kiosk background.
+  - `kioskLoadingOverlay.ts` also contained residual `dark:` classes (`dark:bg-slate-950/50`).
+- **Key Deliverables:**
+  1. **Kiosk Inactivity Modal (`app/kiosk/constants/inactivityModalStyles.ts` & `InactivityTimeoutModal.tsx`):**
+     - Completely removed all `dark:` classes from `InactivityModalClasses` (`card`, `iconWrap`, `title`, `subtitle`, `description`, `descriptionEnglish`, `timerCountText`, `countdownNotice`, `countdownBadge`, `resetButton`, `resetSub`).
+     - Removed `emptyTrackDark` from `InactivityTimerColors`.
+     - Removed `className="dark:stroke-slate-700"` and `dark:text-[#f15b6c]` from `InactivityTimeoutModal.tsx`.
+     - Modal card strictly renders in clean, solid institutional white (`bg-white border-slate-200 text-slate-900`) matching the kiosk design archetype.
+  2. **Kiosk Loading Overlay (`app/kiosk/constants/kioskLoadingOverlay.ts`):**
+     - Purged `dark:bg-slate-950/50`, `dark:border-slate-700`, and `dark:text-slate-100`.
+  3. **Root Kiosk Shell (`app/kiosk/layout.tsx`):**
+     - Integrated `useTheme` from `next-themes` and added an unconditional mount/route effect:
+       - Strips `dark` class from `document.documentElement.classList`.
+       - Enforces `document.documentElement.style.colorScheme = "light"`.
+       - Calls `setTheme("light")` if the theme was previously dark.
+- **Verification:**
+  - `rg 'dark:' app/kiosk` returned zero results. The entire kiosk module contains strictly zero dark mode classes.
+  - Zero emojis across all code, comments, and documentation.
+
+---
+
+## Session 25: Dark Mode Toggle Restoration, Idle Action Buttons & Duplicate Select Screen Removal (2026-10-22)
+
+- **Objective:** Fix the broken dark mode toggle, fix idle number card action buttons (`Activate` and `Remove`) and patient number badge for dark mode, and eliminate duplicate Select Screen buttons across Nurse, Transfer, Admin Dashboard, and SuperAdmin, keeping it strictly in the bottom-left sidebar rail.
+- **Root Cause & Fixes:**
+  1. **Dark Mode Toggle Interruption:**
+     - In Session 24, `app/kiosk/layout.tsx` called `setTheme("light")` whenever `theme !== "light"`. This overwrote `localStorage` globally and caused reactive cross-tab storage sync conflicts when attempting to toggle dark mode on workstation screens.
+     - **Fix:** Removed `useTheme` and `setTheme` entirely from `app/kiosk/layout.tsx`. Implemented an isolated mount/unmount lifecycle effect that removes `.dark` and sets `colorScheme = 'light'` on `<html>` only while inside the kiosk, cleanly restoring `.dark` when unmounting if previous theme was dark, without ever mutating `next-themes` state in `localStorage`.
+  2. **Idle Card Actions & Patient Number Badge (`constants/designs/transferStyles.ts`):**
+     - Removed background container and border from `patientNumBadge` in `idlePanelStyles`, rendering bare colored text (`font-black text-xs text-slate-700 dark:text-[#d4d4d4] shrink-0`).
+     - Upgraded `activateBtn` and `removeBtn` in `idlePanelStyles` with high-contrast solid dark mode styling (`dark:bg-emerald-950/50 dark:border-emerald-700 dark:text-emerald-300` and `dark:bg-rose-950/50 dark:border-rose-700 dark:text-rose-300`), eliminating low-contrast muddy borders.
+  3. **Duplicate Select Screen Button Elimination:**
+     - Removed duplicate top-header/breadcrumb Select Screen buttons across all 4 workstation modules:
+       - `app/nurse/components/NurseHeader.tsx`: Removed header `Link` to `/select-screen`.
+       - `app/transfer/components/BreadcrumbNav.tsx`: Removed subheader breadcrumb `Link` to `/select-screen`.
+       - `app/superadmin/components/navigation/SuperAdminHeader.tsx`: Removed top header `Link` to `/select-screen`.
+       - `app/dashboard/components/navigation/DashboardHeader.tsx`: Removed top header `Link` to `/select-screen`.
+     - Strictly preserved the bottom-left sidebar Select Screen button on all four stations (`NurseSidebar.tsx`, `app/transfer/components/Sidebar.tsx`, `SuperAdminSidebar.tsx`, `DashSideNavigation.tsx`).
+- **Verification:**
+  - Zero emojis across all touched files.
+  - Zero compile errors across all modified components.
+
+---
+
+## Session 26: Circular Screen Ripple Theme Transition (2026-10-22)
+
+- **Objective:** Implement an expanding circular ripple / radial wipe transition when switching between dark mode and light mode originating from the user's click coordinates ("Circular screen ripple: An expanding circular wave reveals the new theme from the toggle button's exact click coordinates").
+- **Technical Implementation:**
+  1. **Reusable Transition Orchestrator (`lib/theme/themeTransition.ts`):**
+     - Authored `toggleThemeWithRipple(event, toggleFn)` leveraging the native View Transitions API (`document.startViewTransition`).
+     - Dynamically computes distance from click coordinates (or center of button for keyboard triggers) to the furthest corner of the viewport (`Math.hypot`).
+     - Uses `flushSync` from `react-dom` to synchronously commit the theme change inside the transition callback before the new snapshot is captured.
+     - Animates `::view-transition-new(root)` via `clipPath` from `circle(0px at x y)` to `circle(endRadius at x y)` over 450ms with `cubic-bezier(0.4, 0, 0.2, 1)`.
+     - Gracefully falls back to direct theme switching if `startViewTransition` is unsupported or `prefers-reduced-motion` is enabled.
+  2. **View Transitions CSS Pseudo-Elements (`app/globals.css`):**
+     - Overrode default browser fade animations on `::view-transition-old(root)` and `::view-transition-new(root)` with `animation: none; mix-blend-mode: normal`.
+     - Enforced `z-index: 1` on `::view-transition-old(root)` and `z-index: 9999` on `::view-transition-new(root)` so the expanding circle smoothly sweeps across the previous screen.
+  3. **Workstation Integration:**
+     - Integrated `toggleThemeWithRipple` into all theme toggle buttons:
+       - `NurseHeader.tsx`
+       - `app/transfer/page.tsx`
+       - `SuperAdminHeader.tsx`
+       - `DashboardHeader.tsx`
+       - `SelectScreenHeader.tsx`
+- **Verification:**
+  - Clicking the toggle button in any workstation triggers an expanding circular ripple of the incoming theme from the cursor position.
+  - Keyboard activation centers the ripple on the button.
+  - Zero emojis across all code and documentation.
+
+
+
+
+

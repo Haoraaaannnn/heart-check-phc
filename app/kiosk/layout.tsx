@@ -208,6 +208,22 @@ export default function MainKioskLayout({ children }: MainKioskLayoutProps) {
   const pathname = usePathname();
   const isSlideshow = pathname === KIOSK_ROUTES.SLIDESHOW;
 
+  // The patient check-in kiosk is strictly light-mode only per institutional standards.
+  // Isolated strictly to the kiosk shell lifecycle; does not mutate next-themes or affect other tabs.
+  useEffect(() => {
+    const root = document.documentElement;
+    const wasDark = root.classList.contains("dark");
+    root.classList.remove("dark");
+    root.style.colorScheme = "light";
+
+    return () => {
+      if (wasDark) {
+        root.classList.add("dark");
+        root.style.colorScheme = "dark";
+      }
+    };
+  }, []);
+
   return (
     <KioskLoadingProvider>
       <KioskRouteChangeIndicator pathname={pathname} />

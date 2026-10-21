@@ -620,25 +620,23 @@ export default function CubicleProcessGraph() {
             </span>
           </button>
 
-          {/* Mode Indicator Badge */}
-          <span className="inline-flex items-center gap-1.5 rounded-md border border-line bg-surface px-2.5 py-1 font-mono text-[11px] font-bold text-content shadow-2xs">
-            <span
-              className={`h-1.5 w-1.5 rounded-full ${
-                isDaySimulationActive
-                  ? 'bg-amber-500 animate-pulse'
-                  : transitPatients.length > 0
-                  ? 'bg-rose-500 animate-pulse'
-                  : 'bg-emerald-500'
-              }`}
-            />
-            <span>
-              {isDaySimulationActive
-                ? `${T.simulationModeBadge} (${simPatientIndex + 1})`
-                : transitPatients.length > 0
-                ? `${transitPatients.length} ${T.inTransit}`
-                : T.liveModeBadge}
+          {/* Mode Indicator Badge (Active Simulation or In-Transit Only) */}
+          {(isDaySimulationActive || transitPatients.length > 0) && (
+            <span className="inline-flex items-center gap-1.5 rounded-md border border-line bg-surface px-2.5 py-1 font-mono text-[11px] font-bold text-content shadow-2xs">
+              <span
+                className={`h-1.5 w-1.5 rounded-full ${
+                  isDaySimulationActive
+                    ? 'bg-amber-500 animate-pulse'
+                    : 'bg-rose-500 animate-pulse'
+                }`}
+              />
+              <span>
+                {isDaySimulationActive
+                  ? `${T.simulationModeBadge} (${simPatientIndex + 1})`
+                  : `${transitPatients.length} ${T.inTransit}`}
+              </span>
             </span>
-          </span>
+          )}
 
           {/* Animation Speed Multiplier Toggle */}
           <div className="flex items-center gap-0.5 rounded-lg border border-line bg-surface p-0.5 shadow-2xs">
@@ -879,7 +877,7 @@ export default function CubicleProcessGraph() {
                   <i className="bx bx-devices text-amber-500" />
                   <span>{stages.waiting.title}</span>
                 </span>
-                <span className={`${S.nodeBadge} bg-amber-50 dark:bg-amber-950/40 text-amber-700 dark:text-amber-300 border-amber-200 dark:border-amber-900`}>
+                <span className={`${S.nodeBadge} text-amber-600 dark:text-amber-400 font-extrabold`}>
                   {stages.waiting.count}
                 </span>
               </div>
@@ -917,7 +915,7 @@ export default function CubicleProcessGraph() {
                   <i className="bx bx-user-check text-[#a8071a] dark:text-[#f87171]" />
                   <span>{stages.dispatch.title}</span>
                 </span>
-                <span className={`${S.nodeBadge} bg-[#a8071a]/10 text-[#a8071a] dark:text-[#f87171] border-[#a8071a]/30`}>
+                <span className={`${S.nodeBadge} text-[#a8071a] dark:text-[#f87171] font-extrabold`}>
                   {stages.dispatch.count}
                 </span>
               </div>
@@ -1223,7 +1221,7 @@ export default function CubicleProcessGraph() {
                   <i className="bx bx-file-find text-purple-500" />
                   <span>{stages.carryout.title}</span>
                 </span>
-                <span className={`${S.nodeBadge} bg-purple-50 dark:bg-purple-950/40 text-purple-700 dark:text-purple-300 border-purple-200 dark:border-purple-900`}>
+                <span className={`${S.nodeBadge} text-purple-600 dark:text-purple-400 font-extrabold`}>
                   {stages.carryout.count}
                 </span>
               </div>
@@ -1271,7 +1269,7 @@ export default function CubicleProcessGraph() {
                   <i className="bx bx-check-double text-emerald-500" />
                   <span>{stages.completed.title}</span>
                 </span>
-                <span className={`${S.nodeBadge} bg-emerald-50 dark:bg-emerald-950/40 text-emerald-700 dark:text-emerald-300 border-emerald-200 dark:border-emerald-900`}>
+                <span className={`${S.nodeBadge} text-emerald-600 dark:text-emerald-400 font-extrabold`}>
                   {stages.completed.count}
                 </span>
               </div>

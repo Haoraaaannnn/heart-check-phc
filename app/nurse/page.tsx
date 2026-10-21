@@ -88,6 +88,7 @@ export default function NursePage() {
     setCarryoutPatients,
     fetchData,
     fetchFinished,
+    refreshCubicles,
     pinInFlightMutation,
     unpinMutation,
     applyRealtimeUpdate,
@@ -145,11 +146,11 @@ export default function NursePage() {
   const handleRealtimeUpdate = useCallback(async () => {
     setIsSyncing(true);
     try {
-      await Promise.all([fetchData(), fetchFinished()]);
+      await Promise.all([refreshCubicles(), fetchData(), fetchFinished()]);
     } finally {
       setIsSyncing(false);
     }
-  }, [fetchData, fetchFinished]);
+  }, [refreshCubicles, fetchData, fetchFinished]);
 
   // Connection status tracking for weak-signal / offline resilience.
   const { isOnline, channelStatus, isFullyConnected, setChannelStatus } = useConnectionStatus();

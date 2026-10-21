@@ -1,6 +1,6 @@
 # Heart Check PHC — Second Brain Index
 
-**Last Updated:** 2026-10-21
+**Last Updated:** 2026-10-22
 
 Welcome to the repository-local second brain for **Heart Check PHC**. This directory functions as a token-efficient, portable knowledge repository designed to work seamlessly with AI coding agents (Antigravity), terminal workflows, and local Markdown tools (Obsidian, GitHub).
 
@@ -78,4 +78,6 @@ For extended specifications, QA checklists, simulation methodology notes, and re
   - [Role-Based UAT Questionnaire (`docs/checklists/UAT_ROLE_BASED_QUESTIONNAIRE.md`)](../docs/checklists/UAT_ROLE_BASED_QUESTIONNAIRE.md)
 - [Technical Specifications (`docs/specifications/README.md`)](../docs/specifications/README.md)
 - [Capstone Simulation Guides (`docs/simulation/README.md`)](../docs/simulation/README.md)
-- [Validation Reports (`docs/reports/README.md`)](../docs/reports/README.md)
+- [Validation Reports & System Audits (`docs/reports/README.md`)](../docs/reports/README.md)
+  - [System Synchronization, Database Integrity, & Dark Mode Audit (`docs/reports/system_synchronization_and_dark_mode_audit.md`)](../docs/reports/system_synchronization_and_dark_mode_audit.md)
+  - [Master Analytical & ML Validation Report (`docs/reports/ml_and_data_validation_report.md`)](../docs/reports/ml_and_data_validation_report.md)

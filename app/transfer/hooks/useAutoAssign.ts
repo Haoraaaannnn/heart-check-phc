@@ -39,7 +39,7 @@ export function useAutoAssign(
         const waitingPatients = onProgressPatients.filter(p => {
           if (p.service !== service) return false;
           // If this service requires registration desk intake, do not assign until registration is finished
-          const requiresReg = serviceObj ? serviceObj.requires_registration : (service === 'Consultation' || service === 'OPD Screening');
+          const requiresReg = serviceObj ? (serviceObj.requires_registration ?? false) : (service === 'Consultation' || service === 'OPD Screening');
           if (requiresReg && !p.reg_end) {
             return false;
           }

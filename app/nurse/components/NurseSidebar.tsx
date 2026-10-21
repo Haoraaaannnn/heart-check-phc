@@ -147,7 +147,7 @@ export function NurseSidebar({
                 color={!selectedCategory && !selectedCubicleNum ? 'brand' : 'gray'}
                 className={
                   !selectedCategory && !selectedCubicleNum
-                    ? '!bg-white !text-[#cc3535] ring-transparent'
+                    ? '!text-white'
                     : ''
                 }
               />
@@ -229,7 +229,7 @@ export function NurseSidebar({
                         pulse={count > 3}
                         className={
                           isCategoryActive
-                            ? '!bg-white !text-[#cc3535] ring-transparent'
+                            ? '!text-white'
                             : ''
                         }
                       />

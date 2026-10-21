@@ -76,7 +76,7 @@ export const DASH = {
     pillIdle:
       `bg-surface-muted text-content-muted border ${themeTokens.border.default} hover:bg-surface hover:text-content`,
     badgeLive:
-      'inline-flex items-center gap-1.5 px-2.5 py-1 rounded-lg text-[11px] font-semibold bg-emerald-50 dark:bg-emerald-950/40 border border-emerald-200 dark:border-emerald-900/60 text-emerald-700 dark:text-emerald-400 select-none',
+      'inline-flex items-center gap-1.5 px-2.5 py-1 rounded-lg text-[11px] font-semibold bg-emerald-50 dark:bg-emerald-950/70 border border-emerald-200 dark:border-emerald-800/80 text-emerald-700 dark:text-emerald-300 select-none',
     badgeLiveDot: 'w-2 h-2 rounded-full bg-emerald-500 animate-pulse',
     badgeHistorical:
       `inline-flex items-center gap-1.5 px-2.5 py-1 rounded-lg text-[11px] font-semibold bg-slate-100 dark:bg-[#242424] border ${themeTokens.border.default} ${themeTokens.text.secondary} select-none`,
@@ -160,7 +160,7 @@ export const DASH = {
     navIconActive: themeTokens.text.accent,
     footer: `p-4 border-t ${themeTokens.border.default} space-y-2 bg-slate-50/50 dark:bg-[#141414]/50`,
     statusBadge:
-      'flex items-center gap-2 px-3 py-1.5 rounded-lg bg-emerald-50 dark:bg-emerald-950/40 border border-emerald-200 dark:border-emerald-900/60 text-emerald-700 dark:text-emerald-400 text-[11px] font-semibold',
+      'flex items-center gap-2 px-3 py-1.5 rounded-lg bg-emerald-50 dark:bg-emerald-950/70 border border-emerald-200 dark:border-emerald-800/80 text-emerald-700 dark:text-emerald-300 text-[11px] font-semibold',
     statusDot: 'w-2 h-2 rounded-full bg-emerald-500 animate-pulse',
     footerText: `px-1 text-[10px] ${themeTokens.text.muted}`,
     // Legacy keys kept for safety

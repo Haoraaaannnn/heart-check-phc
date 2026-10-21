@@ -1,9 +1,20 @@
+/**
+ * @fileoverview Portal-based floating drag preview card that follows pointer position across the viewport.
+ *
+ * Implements smooth pointer tracking and visual indication of valid vs invalid drop zones.
+ * Adheres strictly to AGENTS.md separation-of-concerns standards by consuming centralized
+ * styles from dragGhostStyles.
+ *
+ * @module app/transfer/components/DragGhost
+ */
+
 'use client';
 
 import React, { useEffect, useState } from 'react';
 import { createPortal } from 'react-dom';
 import { Patient } from '@/types/Types';
 import { DragPoint } from '@/app/transfer/hooks/dragUtils';
+import { dragGhostStyles } from '@/constants/designs/transferStyles';
 
 /**
  * Props for `DragGhost`.
@@ -43,30 +54,30 @@ export function DragGhost({
 
   const ghostContent = (
     <div
-      className="phc-ghost pointer-events-none fixed z-99999 select-none"
+      className={dragGhostStyles.container}
       style={{
         left: `${point.x}px`,
         top: `${point.y}px`,
       }}
     >
       <div
-        className={`w-64 p-3 rounded-2xl bg-white dark:bg-[#1a1a1a] border-2 shadow-2xl backdrop-blur-md flex items-center justify-between gap-3 ${
+        className={
           isValidDropTarget
-            ? 'border-emerald-500 ring-2 ring-emerald-400/40 bg-emerald-50/90 dark:bg-emerald-950/80'
-            : 'border-[#cc3535] ring-2 ring-red-400/30'
-        }`}
+            ? dragGhostStyles.cardValid
+            : dragGhostStyles.cardInvalid
+        }
       >
         <div className="flex items-center gap-2.5 min-w-0">
-          <div className="w-9 h-9 rounded-xl bg-[#cc3535] text-white flex items-center justify-center font-black text-sm shrink-0 shadow-xs">
+          <div className={dragGhostStyles.patientBadge}>
             {patient.patientNum}
           </div>
           <div className="min-w-0">
-            <p className="text-xs font-bold text-gray-800 dark:text-[#f5f5f5] truncate">
+            <p className={dragGhostStyles.serviceText}>
               {patient.service}
               {patient.subcategory ? ` · ${patient.subcategory}` : ''}
             </p>
             {originDescription && (
-              <p className="text-[10px] text-gray-500 dark:text-[#a3a3a3] font-medium truncate">
+              <p className={dragGhostStyles.originText}>
                 {originDescription}
               </p>
             )}
@@ -75,11 +86,11 @@ export function DragGhost({
 
         <div className="shrink-0 text-right">
           <span
-            className={`text-[10px] font-bold px-2 py-0.5 rounded-md ${
+            className={
               isValidDropTarget
-                ? 'bg-emerald-100 dark:bg-emerald-950/80 text-emerald-700 dark:text-emerald-300'
-                : 'bg-red-100 dark:bg-red-950/80 text-[#cc3535] dark:text-[#f87171]'
-            }`}
+                ? dragGhostStyles.statusBadgeValid
+                : dragGhostStyles.statusBadgeMoving
+            }
           >
             {isValidDropTarget ? 'Ready to drop' : 'Moving'}
           </span>

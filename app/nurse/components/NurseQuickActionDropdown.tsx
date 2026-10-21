@@ -28,6 +28,7 @@ import React, { useEffect, useRef, useState } from 'react';
 import { Patient } from '@/types/Types';
 import { ClinicalStage, SelectedNursePatient } from '@/app/nurse/types/nurse';
 import { nurseTexts } from '@/app/nurse/constants/nurseTexts';
+import { STAGE_CONFIGS } from '@/app/nurse/constants/nurse';
 
 /**
  * Props for the NurseQuickActionDropdown component.
@@ -140,13 +141,13 @@ export function NurseQuickActionDropdown({
 
   // Determine stage pill text and color
   let currentStageBadge: string = nurseTexts.badgeQueue;
-  let currentStageColor = 'bg-blue-100 dark:bg-blue-950/60 text-blue-700 dark:text-blue-300 border-blue-200 dark:border-blue-900/50';
+  let currentStageColor = STAGE_CONFIGS.assigned.badgeColor;
   if (currentStage === 'with_doctor') {
     currentStageBadge = nurseTexts.badgeDoctor;
-    currentStageColor = 'bg-purple-100 dark:bg-purple-950/60 text-purple-700 dark:text-purple-300 border-purple-200 dark:border-purple-900/50';
+    currentStageColor = STAGE_CONFIGS.with_doctor.badgeColor;
   } else if (currentStage === 'carryout') {
     currentStageBadge = nurseTexts.badgeCarryout;
-    currentStageColor = 'bg-orange-100 dark:bg-orange-950/60 text-orange-700 dark:text-orange-300 border-orange-200 dark:border-orange-900/50';
+    currentStageColor = STAGE_CONFIGS.carryout.badgeColor;
   }
 
   return (
@@ -239,12 +240,12 @@ export function NurseQuickActionDropdown({
                     </div>
                   </div>
                   {loadingAction === 'with_doctor' ? (
-                    <span className="text-[11px] font-bold px-2 py-0.5 rounded-md bg-purple-200 dark:bg-purple-900 text-purple-900 dark:text-purple-100 flex items-center gap-1.5 shrink-0 animate-pulse">
+                    <span className="text-[11px] font-bold px-2 py-0.5 rounded-md bg-purple-200 dark:bg-purple-900 text-purple-900 dark:text-purple-100 flex items-center gap-1.5 shrink-0 animate-pulse border border-purple-300 dark:border-purple-700">
                       <span className="w-1.5 h-1.5 rounded-full bg-purple-700 animate-ping" />
                       {nurseTexts.updatingAction}
                     </span>
                   ) : (
-                    <span className="text-[11px] font-bold px-2 py-0.5 rounded-md bg-purple-200/80 dark:bg-purple-950/60 text-purple-800 dark:text-purple-300 shrink-0">
+                    <span className="text-[11px] font-bold px-2 py-0.5 rounded-md bg-purple-100 dark:bg-purple-950/70 text-purple-800 dark:text-purple-300 border border-purple-300 dark:border-purple-800/80 shrink-0">
                       {nurseTexts.badgeNextStep}
                     </span>
                   )}
@@ -286,7 +287,7 @@ export function NurseQuickActionDropdown({
                       </div>
                     </div>
                   </div>
-                  <span className="text-[11px] font-semibold px-2 py-0.5 rounded-md bg-blue-100 dark:bg-blue-950/60 text-blue-700 dark:text-blue-300 shrink-0">
+                  <span className="text-[11px] font-semibold px-2 py-0.5 rounded-md bg-blue-100 dark:bg-blue-950/70 text-blue-800 dark:text-blue-300 border border-blue-300 dark:border-blue-800/80 shrink-0">
                     {nurseTexts.badgeSpeaker}
                   </span>
                 </button>
@@ -333,12 +334,12 @@ export function NurseQuickActionDropdown({
                     </div>
                   </div>
                   {loadingAction === 'carryout' ? (
-                    <span className="text-[11px] font-bold px-2 py-0.5 rounded-md bg-orange-200 dark:bg-orange-900 text-orange-900 dark:text-orange-100 flex items-center gap-1.5 shrink-0 animate-pulse">
+                    <span className="text-[11px] font-bold px-2 py-0.5 rounded-md bg-orange-200 dark:bg-orange-900 text-orange-900 dark:text-orange-100 flex items-center gap-1.5 shrink-0 animate-pulse border border-orange-300 dark:border-orange-700">
                       <span className="w-1.5 h-1.5 rounded-full bg-orange-700 animate-ping" />
                       {nurseTexts.updatingAction}
                     </span>
                   ) : (
-                    <span className="text-[11px] font-bold px-2 py-0.5 rounded-md bg-orange-200/80 dark:bg-orange-950/60 text-orange-800 dark:text-orange-300 shrink-0">
+                    <span className="text-[11px] font-bold px-2 py-0.5 rounded-md bg-orange-100 dark:bg-orange-950/70 text-orange-800 dark:text-orange-300 border border-orange-300 dark:border-orange-800/80 shrink-0">
                       {nurseTexts.badgeNextStep}
                     </span>
                   )}
@@ -380,7 +381,7 @@ export function NurseQuickActionDropdown({
                       </div>
                     </div>
                   </div>
-                  <span className="text-[11px] font-semibold px-2 py-0.5 rounded-md bg-blue-100 dark:bg-blue-950/60 text-blue-700 dark:text-blue-300 shrink-0">
+                  <span className="text-[11px] font-semibold px-2 py-0.5 rounded-md bg-blue-100 dark:bg-blue-950/70 text-blue-800 dark:text-blue-300 border border-blue-300 dark:border-blue-800/80 shrink-0">
                     {nurseTexts.badgeSpeaker}
                   </span>
                 </button>
@@ -422,12 +423,12 @@ export function NurseQuickActionDropdown({
                     </div>
                   </div>
                   {loadingAction === 'back_queue' ? (
-                    <span className="text-[11px] font-bold px-2 py-0.5 rounded-md bg-slate-200 dark:bg-[#2e2e2e] text-slate-800 dark:text-[#f5f5f5] flex items-center gap-1.5 shrink-0 animate-pulse">
+                    <span className="text-[11px] font-bold px-2 py-0.5 rounded-md bg-slate-200 dark:bg-[#2e2e2e] text-slate-800 dark:text-[#f5f5f5] flex items-center gap-1.5 shrink-0 animate-pulse border border-slate-300 dark:border-[#383838]">
                       <span className="w-1.5 h-1.5 rounded-full bg-slate-600 animate-ping" />
                       {nurseTexts.returningAction}
                     </span>
                   ) : (
-                    <span className="text-[11px] font-medium px-2 py-0.5 rounded-md bg-slate-200 dark:bg-[#2e2e2e] text-slate-600 dark:text-[#a3a3a3] shrink-0">
+                    <span className="text-[11px] font-medium px-2 py-0.5 rounded-md bg-slate-100 dark:bg-[#282828] text-slate-700 dark:text-[#d4d4d4] border border-slate-300 dark:border-[#383838] shrink-0">
                       {nurseTexts.badgeReturn}
                     </span>
                   )}
@@ -475,12 +476,12 @@ export function NurseQuickActionDropdown({
                     </div>
                   </div>
                   {loadingAction === 'finish' ? (
-                    <span className="text-[11px] font-bold px-2 py-0.5 rounded-md bg-emerald-200 dark:bg-emerald-900 text-emerald-900 dark:text-emerald-100 flex items-center gap-1.5 shrink-0 animate-pulse">
+                    <span className="text-[11px] font-bold px-2 py-0.5 rounded-md bg-emerald-200 dark:bg-emerald-900 text-emerald-900 dark:text-emerald-100 flex items-center gap-1.5 shrink-0 animate-pulse border border-emerald-300 dark:border-emerald-700">
                       <span className="w-1.5 h-1.5 rounded-full bg-emerald-700 animate-ping" />
                       {nurseTexts.completingAction}
                     </span>
                   ) : (
-                    <span className="text-[11px] font-bold px-2 py-0.5 rounded-md bg-emerald-200/80 dark:bg-emerald-950/60 text-emerald-800 dark:text-emerald-300 shrink-0">
+                    <span className="text-[11px] font-bold px-2 py-0.5 rounded-md bg-emerald-100 dark:bg-emerald-950/70 text-emerald-800 dark:text-emerald-300 border border-emerald-300 dark:border-emerald-800/80 shrink-0">
                       {nurseTexts.badgeFinish}
                     </span>
                   )}
@@ -523,12 +524,12 @@ export function NurseQuickActionDropdown({
                     </div>
                   </div>
                   {loadingAction === 'back_doctor' ? (
-                    <span className="text-[11px] font-bold px-2 py-0.5 rounded-md bg-slate-200 dark:bg-[#2e2e2e] text-slate-800 dark:text-[#f5f5f5] flex items-center gap-1.5 shrink-0 animate-pulse">
+                    <span className="text-[11px] font-bold px-2 py-0.5 rounded-md bg-slate-200 dark:bg-[#2e2e2e] text-slate-800 dark:text-[#f5f5f5] flex items-center gap-1.5 shrink-0 animate-pulse border border-slate-300 dark:border-[#383838]">
                       <span className="w-1.5 h-1.5 rounded-full bg-slate-600 animate-ping" />
                       {nurseTexts.returningAction}
                     </span>
                   ) : (
-                    <span className="text-[11px] font-medium px-2 py-0.5 rounded-md bg-slate-200 dark:bg-[#2e2e2e] text-slate-600 dark:text-[#a3a3a3] shrink-0">
+                    <span className="text-[11px] font-medium px-2 py-0.5 rounded-md bg-slate-100 dark:bg-[#282828] text-slate-700 dark:text-[#d4d4d4] border border-slate-300 dark:border-[#383838] shrink-0">
                       {nurseTexts.badgeReturn}
                     </span>
                   )}
