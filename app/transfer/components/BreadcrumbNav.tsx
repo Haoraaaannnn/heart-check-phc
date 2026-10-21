@@ -1,9 +1,19 @@
+/**
+ * @fileoverview Professional breadcrumb navigation with integrated BackButton and horizontal overflow scroll.
+ *
+ * Adheres strictly to AGENTS.md separation-of-concerns standards by consuming centralized
+ * styles from transferStyles.ts.
+ *
+ * @module app/transfer/components/BreadcrumbNav
+ */
+
 'use client';
 
 import React from 'react';
 import Link from 'next/link';
 import { BackButton } from '@/components/reusables/BackButton';
-import { transferTexts } from '@/app/transfer/constants/transferTexts';
+import { transferTexts } from '@/constants/texts/transferTexts';
+import { breadcrumbStyles } from '@/constants/designs/transferStyles';
 
 /**
  * Props for the `BreadcrumbNav` component.
@@ -62,13 +72,10 @@ export function BreadcrumbNav({
   };
 
   return (
-    <nav
-      className="flex items-center gap-3 w-full select-none min-w-0"
-      aria-label="Breadcrumb navigation"
-    >
+    <nav className={breadcrumbStyles.nav} aria-label="Breadcrumb navigation">
       <Link
         href="/select-screen"
-        className="inline-flex items-center gap-1.5 min-w-[36px] min-h-[36px] px-2.5 py-1.5 rounded-xl text-xs font-semibold text-slate-600 dark:text-[#a3a3a3] bg-white dark:bg-[#1a1a1a] hover:bg-slate-50 dark:hover:bg-[#242424] border border-slate-200 dark:border-[#2e2e2e] hover:border-slate-300 dark:hover:border-[#404040] transition-colors shadow-2xs shrink-0 cursor-pointer"
+        className={breadcrumbStyles.selectScreenBtn}
         title={transferTexts.selectScreenLabel}
         aria-label={transferTexts.selectScreenAria}
       >
@@ -84,16 +91,16 @@ export function BreadcrumbNav({
         />
       )}
 
-      <div className="flex items-center gap-2 overflow-x-auto whitespace-nowrap phc-scroll py-1 text-sm font-medium flex-1 min-w-0">
+      <div className={breadcrumbStyles.scrollContainer}>
         {/* Services Root */}
         <button
           type="button"
           onClick={onReset}
-          className={`transition-colors cursor-pointer ${
+          className={
             !selectedCategory
-              ? 'text-[#cc3535] dark:text-[#f87171] font-bold'
-              : 'text-slate-500 hover:text-slate-900 dark:text-[#a3a3a3] dark:hover:text-[#f5f5f5]'
-          }`}
+              ? breadcrumbStyles.crumbActive
+              : breadcrumbStyles.crumbInactive
+          }
         >
           {transferTexts.servicesCrumb}
         </button>
@@ -101,15 +108,15 @@ export function BreadcrumbNav({
         {/* Selected Category */}
         {selectedCategory && (
           <>
-            <span className="text-slate-300 dark:text-[#404040] font-normal">/</span>
+            <span className={breadcrumbStyles.divider}>/</span>
             <button
               type="button"
               onClick={onResetToCategory}
-              className={`transition-colors cursor-pointer ${
+              className={
                 !selectedSubcategory && !selectedRoom
-                  ? 'text-[#cc3535] dark:text-[#f87171] font-bold'
-                  : 'text-slate-500 hover:text-slate-900 dark:text-[#a3a3a3] dark:hover:text-[#f5f5f5]'
-              }`}
+                  ? breadcrumbStyles.crumbActive
+                  : breadcrumbStyles.crumbInactive
+              }
             >
               {selectedCategory}
             </button>
@@ -119,15 +126,15 @@ export function BreadcrumbNav({
         {/* Subcategory */}
         {selectedSubcategory && (
           <>
-            <span className="text-slate-300 dark:text-[#404040] font-normal">/</span>
+            <span className={breadcrumbStyles.divider}>/</span>
             <button
               type="button"
               onClick={onResetToSubcategory}
-              className={`transition-colors cursor-pointer ${
+              className={
                 !selectedRoom
-                  ? 'text-[#cc3535] dark:text-[#f87171] font-bold'
-                  : 'text-slate-500 hover:text-slate-900 dark:text-[#a3a3a3] dark:hover:text-[#f5f5f5]'
-              }`}
+                  ? breadcrumbStyles.crumbActive
+                  : breadcrumbStyles.crumbInactive
+              }
             >
               {selectedSubcategory}
             </button>
@@ -137,8 +144,8 @@ export function BreadcrumbNav({
         {/* Room */}
         {selectedRoom && (
           <>
-            <span className="text-slate-300 dark:text-[#404040] font-normal">/</span>
-            <span className="text-[#cc3535] dark:text-[#f87171] font-bold">
+            <span className={breadcrumbStyles.divider}>/</span>
+            <span className={breadcrumbStyles.crumbActive}>
               {transferTexts.roomCrumbPrefix} {selectedRoom}
             </span>
           </>

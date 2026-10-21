@@ -57,13 +57,13 @@ export function BackButton({
   const baseClasses = `
     inline-flex items-center justify-center gap-2
     min-w-[44px] min-h-[44px] px-3 py-2 rounded-xl
-    text-gray-600 bg-white hover:bg-gray-50 active:bg-gray-100
-    border border-gray-200 hover:border-gray-300
-    dark:bg-[#1a1a1a] dark:text-[#a3a3a3] dark:hover:text-[#f5f5f5] dark:hover:bg-[#242424]
-    dark:border-[#2e2e2e] dark:hover:border-[#404040]
-    shadow-xs hover:shadow-sm
+    text-slate-700 bg-white hover:bg-slate-50 active:bg-slate-100
+    border border-slate-200 hover:border-slate-300
+    dark:bg-[#1a1a1a] dark:text-[#f5f5f5] dark:hover:text-[#ffffff] dark:hover:bg-[#242424]
+    dark:border-[#383838] dark:hover:border-[#525252]
+    shadow-2xs hover:shadow-xs
     font-medium text-sm transition-all duration-150
-    focus:outline-none focus:ring-2 focus:ring-[#cc3535]/30
+    focus:outline-hidden focus:ring-2 focus:ring-[#cc3535]/30
     cursor-pointer select-none
     ${className}
   `.trim().replace(/\s+/g, ' ');
@@ -71,7 +71,7 @@ export function BackButton({
   if (href && !onClick) {
     return (
       <Link href={href} className={baseClasses} aria-label={ariaLabel}>
-        <i className="bx bx-arrow-back text-lg text-gray-700 dark:text-[#a3a3a3]" aria-hidden="true" />
+        <i className="bx bx-arrow-back text-lg text-slate-700 dark:text-[#f5f5f5]" aria-hidden="true" />
         {label && <span>{label}</span>}
       </Link>
     );
@@ -84,7 +84,7 @@ export function BackButton({
       className={baseClasses}
       aria-label={ariaLabel}
     >
-      <i className="bx bx-arrow-back text-lg text-gray-700 dark:text-[#a3a3a3]" aria-hidden="true" />
+      <i className="bx bx-arrow-back text-lg text-slate-700 dark:text-[#f5f5f5]" aria-hidden="true" />
       {label && <span>{label}</span>}
     </button>
   );

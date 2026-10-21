@@ -5,6 +5,9 @@
  * a cubicle, or a registration counter), providing unambiguous context instructions,
  * origin metadata, and an accessible cancellation action.
  *
+ * Adheres strictly to AGENTS.md separation-of-concerns standards by consuming centralized
+ * styles from transferStyles.ts.
+ *
  * @module app/transfer/components/SelectionBanner
  */
 
@@ -12,8 +15,9 @@
 
 import React from 'react';
 import { SelectedTransferPatient } from '@/app/transfer/types/transfer';
-import { transferTexts } from '@/app/transfer/constants/transferTexts';
+import { transferTexts } from '@/constants/texts/transferTexts';
 import { TransferStyle } from '@/app/transfer/constants/transfer';
+import { selectionBannerStyles } from '@/constants/designs/transferStyles';
 
 /**
  * Props for {@link SelectionBanner}.
@@ -56,7 +60,7 @@ export function SelectionBanner({ selectedPatient, onCancel }: SelectionBannerPr
       role="status"
       aria-live="polite"
       style={TransferStyle.selectionBanner}
-      className="fixed bottom-6 left-1/2 -translate-x-1/2 z-50 max-w-xl w-[calc(100%-2rem)] bg-slate-900 text-white rounded-2xl p-3.5 px-4 shadow-2xl border border-slate-700/80 flex items-center justify-between gap-3 animate-in fade-in slide-in-from-bottom-4 duration-200"
+      className={selectionBannerStyles.banner}
     >
       {/* Patient Information & Instructions */}
       <div className="flex items-center gap-3 min-w-0 flex-1 overflow-hidden">
@@ -66,19 +70,19 @@ export function SelectionBanner({ selectedPatient, onCancel }: SelectionBannerPr
         </span>
 
         <div className="flex items-center gap-1.5 shrink-0">
-          <span className="px-2 py-0.5 rounded-lg bg-[#cc3535] text-white font-black text-xs shadow-xs">
+          <span className={selectionBannerStyles.patientNumBadge}>
             {patient.patientNum}
           </span>
-          <span className="text-[11px] text-slate-300 font-medium hidden sm:inline max-w-[120px] truncate">
+          <span className={selectionBannerStyles.originLabel}>
             ({originLabel})
           </span>
         </div>
 
         <div className="min-w-0 flex-1">
-          <p className="text-xs font-bold text-emerald-400 truncate">
+          <p className={selectionBannerStyles.hintText}>
             {hintText}
           </p>
-          <p className="text-[10px] text-slate-400 truncate">
+          <p className={selectionBannerStyles.serviceText}>
             {patient.service}
             {patient.subcategory && ` · ${patient.subcategory}`}
           </p>
@@ -90,10 +94,10 @@ export function SelectionBanner({ selectedPatient, onCancel }: SelectionBannerPr
         <button
           type="button"
           onClick={onCancel}
-          className="inline-flex items-center gap-1.5 px-3 py-1.5 rounded-xl text-xs font-bold text-slate-300 hover:text-white bg-slate-800 hover:bg-slate-700 active:bg-slate-600 border border-slate-600/60 transition-all cursor-pointer min-h-[40px] whitespace-nowrap"
+          className={selectionBannerStyles.cancelBtn}
         >
           <span>{transferTexts.cancelSelection}</span>
-          <kbd className="hidden md:inline-block ml-1 px-1.5 py-0.5 text-[10px] font-mono bg-slate-900 border border-slate-700 rounded text-slate-400">
+          <kbd className={selectionBannerStyles.kbdKey}>
             Esc
           </kbd>
         </button>

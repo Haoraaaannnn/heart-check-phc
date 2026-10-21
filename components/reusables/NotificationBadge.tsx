@@ -37,27 +37,27 @@ const colorStyles: Record<NotificationBadgeColor, { bg: string; text: string; ri
   brand: {
     bg: 'bg-[#cc3535]',
     text: 'text-white',
-    ring: 'ring-white',
+    ring: 'ring-white dark:ring-[#141414]',
   },
   amber: {
     bg: 'bg-amber-500',
     text: 'text-white',
-    ring: 'ring-white',
+    ring: 'ring-white dark:ring-[#141414]',
   },
   blue: {
     bg: 'bg-blue-600',
     text: 'text-white',
-    ring: 'ring-white',
+    ring: 'ring-white dark:ring-[#141414]',
   },
   gray: {
-    bg: 'bg-gray-400',
-    text: 'text-white',
-    ring: 'ring-white',
+    bg: 'bg-gray-400 dark:bg-[#333333]',
+    text: 'text-white dark:text-[#d4d4d4]',
+    ring: 'ring-white dark:ring-[#141414]',
   },
   emerald: {
     bg: 'bg-emerald-600',
     text: 'text-white',
-    ring: 'ring-white',
+    ring: 'ring-white dark:ring-[#141414]',
   },
 };
 

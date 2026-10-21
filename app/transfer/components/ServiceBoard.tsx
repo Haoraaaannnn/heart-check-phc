@@ -6,6 +6,9 @@
  * - Right column (8 cols): Registration counters in a compact horizontal grid and cubicle stations in a responsive grid.
  * - Zero page-level or station-level scrolling, ensuring all components are directly visible on screen.
  *
+ * Adheres strictly to AGENTS.md separation-of-concerns standards by consuming centralized
+ * styles from transferStyles.ts.
+ *
  * @module app/transfer/components/ServiceBoard
  */
 
@@ -17,7 +20,8 @@ import { QueuePanel } from '@/app/transfer/components/QueuePanel';
 import { RegistrationCounterSection } from '@/app/transfer/components/RegistrationCounterSection';
 import { CubicleCard } from '@/app/transfer/components/CubicleCard';
 import { QuickAssignDropdown } from '@/app/transfer/components/QuickAssignDropdown';
-import { transferTexts } from '@/app/transfer/constants/transferTexts';
+import { transferTexts } from '@/constants/texts/transferTexts';
+import { transferLayoutStyles, cubicleStyles } from '@/constants/designs/transferStyles';
 import { SelectedTransferPatient } from '@/app/transfer/types/transfer';
 
 /**
@@ -146,9 +150,9 @@ export function ServiceBoard({
 
   return (
     <>
-      <div className="h-full flex-1 flex flex-col md:grid md:grid-cols-12 gap-3 min-h-0 overflow-hidden">
+      <div className={transferLayoutStyles.twoColumnGrid}>
         {/* Left Column: Queue & Idle Panel (4 cols on tablet and desktop) */}
-        <div className="md:col-span-4 lg:col-span-4 h-full flex flex-col min-h-0 overflow-hidden">
+        <div className={transferLayoutStyles.leftColumn}>
           <QueuePanel
             onProgressPatients={onProgressPatients}
             idlePatients={idlePatients}
@@ -169,7 +173,7 @@ export function ServiceBoard({
         </div>
 
         {/* Right Column: Counters + Cubicles (8 cols on tablet and desktop) */}
-        <div className="md:col-span-8 lg:col-span-8 h-full flex flex-col min-h-0 gap-2.5 overflow-hidden">
+        <div className={transferLayoutStyles.rightColumn}>
           {/* Registration Counters (if available) - Horizontal compact grid, NO scrollbar */}
           {hasRegistrationCounters && (
             <RegistrationCounterSection
@@ -187,23 +191,23 @@ export function ServiceBoard({
           )}
 
           {/* Consultation & Screening Cubicles - Horizontal row same as counters */}
-          <div className="bg-white dark:bg-[#1a1a1a] border border-slate-200 dark:border-[#2e2e2e] rounded-2xl shadow-xs p-2.5 sm:p-3 select-none shrink-0 overflow-hidden">
-            <div className="flex items-center justify-between gap-2 mb-2 pb-1.5 border-b border-slate-100 dark:border-[#2e2e2e]">
+          <div className={cubicleStyles.sectionCard}>
+            <div className={cubicleStyles.header}>
               <div className="flex items-center gap-2 min-w-0">
-                <span className="w-2 h-2 rounded-full bg-slate-700 dark:bg-slate-300 inline-block shrink-0" />
-                <h2 className="text-slate-700 dark:text-[#f5f5f5] font-bold text-xs tracking-wider uppercase truncate">
+                <span className={cubicleStyles.headerDot} />
+                <h2 className={cubicleStyles.headerTitle}>
                   {transferTexts.cubiclesHeading}
                 </h2>
-                <span className="text-[10px] font-bold px-1.5 py-0.2 rounded-md bg-slate-100 dark:bg-[#242424] text-slate-700 dark:text-[#a3a3a3] shrink-0">
+                <span className={cubicleStyles.headerCountBadge}>
                   {cubicles.length}
                 </span>
               </div>
-              <span className="text-[10px] text-slate-400 dark:text-[#737373] font-medium shrink-0 truncate max-w-[120px] sm:max-w-none">
+              <span className="text-[11px] text-slate-500 dark:text-[#d4d4d4] font-semibold shrink-0 truncate max-w-[140px] sm:max-w-none">
                 {category}
               </span>
             </div>
 
-            {/* Horizontal Cubicles Grid - same as counters! */}
+            {/* Horizontal Cubicles Grid - same as counters */}
             {(() => {
               const safeCubicles = Array.isArray(cubicles) ? cubicles : [];
               const safeAssignedPatients = assignedPatients || {};
@@ -211,14 +215,14 @@ export function ServiceBoard({
 
               if (safeCubicles.length === 0) {
                 return (
-                  <p className="text-slate-400 dark:text-[#737373] text-xs py-2 text-center">
+                  <p className={cubicleStyles.emptyNotice}>
                     {transferTexts.noRoomsConfiguredDesc}
                   </p>
                 );
               }
 
               return (
-                <div className="grid grid-cols-2 sm:grid-cols-3 xl:grid-cols-4 2xl:grid-cols-5 gap-2">
+                <div className={cubicleStyles.cubicleGrid}>
                   {safeCubicles.map(cubicle => {
                     const assigned = safeAssignedPatients[cubicle.cubicleNum] || [];
                     const isOver = dragOverCubicle === cubicle.cubicleNum;

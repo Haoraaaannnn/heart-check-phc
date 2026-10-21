@@ -5,23 +5,24 @@
  * - Icon-only rail (`w-18` / 72px): Hides all text labels and shows icons with tooltips.
  * - Expanded panel (`w-64` / 256px): Displays full text labels, category badges, and title.
  *
- * Adheres strictly to AGENTS.md guidelines:
- * - 100% copy isolated in transferTexts
- * - Full JSDoc and zero emojis
+ * Adheres strictly to AGENTS.md separation-of-concerns standards by consuming centralized
+ * styles from transferStyles.ts.
  *
  * @module app/transfer/components/Sidebar
  */
 
 'use client';
 
-import React, { useState, useEffect } from 'react';
+import React, { useState, useEffect, useMemo } from 'react';
 import { useRouter } from 'next/navigation';
 import { supabase } from '@/lib/supabase';
 import { handleSignOut } from '@/lib/supabase/signOut';
 import { CATEGORIES } from '@/app/transfer/lib/constants';
-import { transferTexts } from '@/app/transfer/constants/transferTexts';
+import { transferTexts } from '@/constants/texts/transferTexts';
+import { sidebarStyles } from '@/constants/designs/transferStyles';
 import { NotificationBadge } from '@/components/reusables/NotificationBadge';
 import { SIDEBAR_ICONS, resolveServiceIcon } from '@/constants/icons';
+import type { Service } from '@/types/Services';
 
 /**
  * Props for the `Sidebar` component.
@@ -37,6 +38,8 @@ export interface SidebarProps {
   onSelectCategory: (category: string) => void;
   /** Optional allowed service categories for restricted roles. */
   allowedServices?: string[];
+  /** Optional full clinical services catalog from parent. */
+  services?: Service[];
   /** Whether the sidebar is expanded with text labels. When false, displays icon-only. Defaults to false. */
   isExpanded?: boolean;
 }
@@ -52,28 +55,61 @@ export function Sidebar({
   queueCounts,
   idleCounts = {},
   allowedServices,
+  services,
   onSelectCategory,
   isExpanded = false,
 }: SidebarProps) {
   const router = useRouter();
-  const [dbServices, setDbServices] = useState<string[]>([]);
+  const [dbServices, setDbServices] = useState<Service[]>([]);
 
   useEffect(() => {
-    supabase
-      .from('services')
-      .select('label_en')
-      .order('display_order', { ascending: true })
-      .then(({ data }) => {
-        if (data && data.length > 0) {
-          setDbServices(data.map(s => s.label_en));
+    const fetchServices = () => {
+      supabase
+        .from('services')
+        .select('*')
+        .order('display_order', { ascending: true })
+        .then(({ data }) => {
+          if (data && data.length > 0) {
+            setDbServices(data as Service[]);
+          }
+        });
+    };
+
+    fetchServices();
+
+    const channel = supabase
+      .channel('transfer-sidebar-services')
+      .on(
+        'postgres_changes',
+        { event: '*', schema: 'public', table: 'services' },
+        () => {
+          fetchServices();
         }
-      });
+      )
+      .subscribe();
+
+    return () => {
+      supabase.removeChannel(channel);
+    };
   }, []);
 
-  const defaultCategories = dbServices.length > 0 ? dbServices : CATEGORIES;
+  const catalogServices = (services && services.length > 0) ? services : dbServices;
+  const defaultCategories = catalogServices.length > 0
+    ? catalogServices.map(s => s.label_en)
+    : CATEGORIES;
   const visibleCategories = (allowedServices && allowedServices.length > 0)
     ? allowedServices
     : defaultCategories;
+
+  const serviceMap = useMemo(() => {
+    const map = new Map<string, Service>();
+    catalogServices.forEach(s => {
+      if (s.label_en) {
+        map.set(s.label_en.trim().toLowerCase(), s);
+      }
+    });
+    return map;
+  }, [catalogServices]);
 
   const handleLogout = async () => {
     await handleSignOut();
@@ -81,9 +117,7 @@ export function Sidebar({
 
   return (
     <aside
-      className={`fixed left-0 top-0 h-full bg-white dark:bg-[#141414] border-r border-slate-200 dark:border-[#2e2e2e] shadow-xs z-30 flex flex-col transition-all duration-300 select-none ${
-        isExpanded ? 'w-64' : 'w-18'
-      }`}
+      className={sidebarStyles.rail(isExpanded)}
       aria-label="Dashboard navigation"
     >
       {/* Brand Header */}
@@ -114,7 +148,10 @@ export function Sidebar({
           const idleCount = idleCounts[category] || 0;
           const totalCount = queueCount + idleCount;
           const isActive = selectedCategory === category;
-          const icon = resolveServiceIcon(category);
+          const serviceObj = serviceMap.get(category.trim().toLowerCase());
+          const icon = resolveServiceIcon(
+            serviceObj ? { label_en: category, icon_src: serviceObj.icon_src } : category
+          );
 
           const tooltip = `${category}${
             queueCount > 0 ? ` — ${queueCount} waiting` : ''
@@ -132,13 +169,13 @@ export function Sidebar({
               } py-2.5 rounded-xl transition-all duration-150 group cursor-pointer ${
                 isActive
                   ? 'bg-[#cc3535] text-white shadow-xs font-semibold'
-                  : 'text-slate-600 hover:bg-slate-100 hover:text-slate-900 dark:text-[#a3a3a3] dark:hover:bg-[#242424] dark:hover:text-[#f5f5f5] font-medium'
+                  : 'text-slate-600 hover:bg-slate-100 hover:text-slate-900 dark:text-[#d4d4d4] dark:hover:bg-[#242424] dark:hover:text-[#ffffff] font-medium'
               }`}
             >
               <div className="flex items-center gap-3 min-w-0">
                 <i
                   className={`bx ${icon} text-xl shrink-0 ${
-                    isActive ? 'text-white' : 'text-slate-400 group-hover:text-[#cc3535] dark:group-hover:text-[#f87171]'
+                    isActive ? 'text-white' : 'text-slate-400 group-hover:text-[#cc3535] dark:text-[#a3a3a3] dark:group-hover:text-[#f87171]'
                   }`}
                   aria-hidden="true"
                 />
@@ -196,9 +233,9 @@ export function Sidebar({
           aria-label={transferTexts.selectScreenAria}
           className={`w-full flex items-center ${
             isExpanded ? 'justify-start px-3' : 'justify-center px-0'
-          } py-2 rounded-xl text-slate-500 hover:text-slate-800 hover:bg-slate-100 dark:text-[#a3a3a3] dark:hover:text-[#f5f5f5] dark:hover:bg-[#242424] transition-colors font-medium text-sm cursor-pointer`}
+          } py-2 rounded-xl text-slate-500 hover:text-slate-800 hover:bg-slate-100 dark:text-[#d4d4d4] dark:hover:text-[#ffffff] dark:hover:bg-[#242424] transition-colors font-medium text-sm cursor-pointer`}
         >
-          <i className={`bx ${SIDEBAR_ICONS.selectScreen} text-xl shrink-0`} aria-hidden="true" />
+          <i className={`bx ${SIDEBAR_ICONS.selectScreen} text-xl shrink-0 text-slate-400 dark:text-[#a3a3a3]`} aria-hidden="true" />
           {isExpanded && (
             <span className="text-xs font-semibold ml-3 truncate animate-in fade-in duration-200">
               {transferTexts.selectScreenLabel}
@@ -213,7 +250,7 @@ export function Sidebar({
           aria-label={transferTexts.logoutLabel}
           className={`w-full flex items-center ${
             isExpanded ? 'justify-start px-3' : 'justify-center px-0'
-          } py-2 rounded-xl text-slate-500 hover:text-[#cc3535] hover:bg-red-50 dark:text-[#a3a3a3] dark:hover:text-[#f87171] dark:hover:bg-red-950/30 transition-colors font-medium text-sm cursor-pointer`}
+          } py-2 rounded-xl text-slate-500 hover:text-[#cc3535] hover:bg-red-50 dark:text-[#d4d4d4] dark:hover:text-[#f87171] dark:hover:bg-red-950/30 transition-colors font-medium text-sm cursor-pointer`}
         >
           <i className={`bx ${SIDEBAR_ICONS.logout} text-xl shrink-0`} aria-hidden="true" />
           {isExpanded && (

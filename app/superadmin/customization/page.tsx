@@ -736,13 +736,13 @@ export default function AdminServicePage() {
                     </td>
                     <td className={S.td}>
                       <span
-                        className={`px-2.5 py-0.5 rounded-md text-xs font-semibold capitalize border ${
+                        className={
                           service.patient_type === 'both'
-                            ? 'bg-purple-50 text-purple-700 border-purple-200 dark:bg-purple-950/60 dark:text-purple-300'
+                            ? S.patientTypeBoth
                             : service.patient_type === 'new'
-                            ? 'bg-emerald-50 text-emerald-700 border-emerald-200 dark:bg-emerald-950/60 dark:text-emerald-300'
-                            : 'bg-slate-100 text-slate-700 border-slate-200 dark:bg-[#242424] dark:text-[#f5f5f5] dark:border-[#2e2e2e]'
-                        }`}
+                            ? S.patientTypeNew
+                            : S.patientTypeOld
+                        }
                       >
                         {service.patient_type}
                       </span>

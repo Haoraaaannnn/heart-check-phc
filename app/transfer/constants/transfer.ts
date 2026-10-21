@@ -8,8 +8,9 @@
 import { CSSProperties } from 'react';
 import { themeColors } from '@/constants/colors';
 
-// Re-export text copy for unified feature-level access
+// Re-export text copy and style dictionaries for unified feature-level access
 export { transferTexts } from '@/app/transfer/constants/transferTexts';
+export * from '@/app/transfer/constants/transferStyles';
 
 /** Dimension and layout tokens for transfer dashboard */
 export const transferLayoutTokens = {

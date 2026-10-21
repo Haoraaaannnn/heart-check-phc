@@ -1,8 +1,18 @@
+/**
+ * @fileoverview Selection pickers for subcategories and rooms in Patient Transfer.
+ *
+ * Adheres strictly to AGENTS.md separation-of-concerns standards by consuming centralized
+ * styles from transferStyles.ts.
+ *
+ * @module app/transfer/components/StepPickers
+ */
+
 'use client';
 
 import React from 'react';
 import { NotificationBadge } from '@/components/reusables/NotificationBadge';
-import { transferTexts } from '@/app/transfer/constants/transferTexts';
+import { transferTexts } from '@/constants/texts/transferTexts';
+import { stepPickerStyles } from '@/constants/designs/transferStyles';
 import { Cubicle, Patient } from '@/types/Types';
 
 /**
@@ -30,6 +40,7 @@ export interface SelectionCardProps {
  */
 export function SelectionCard({
   title,
+  icon,
   totalCount = 0,
   counts,
   onClick,
@@ -38,12 +49,19 @@ export function SelectionCard({
     <button
       type="button"
       onClick={onClick}
-      className="w-full bg-white dark:bg-[#1a1a1a] border-2 border-slate-200 dark:border-[#2e2e2e] hover:border-[#cc3535] dark:hover:border-[#cc3535] rounded-2xl p-6 flex flex-col justify-between gap-3 shadow-xs transition-colors duration-200 text-left group cursor-pointer min-h-[116px]"
+      className={stepPickerStyles.selectionCard}
     >
       <div className="flex items-center justify-between gap-4 w-full">
-        <h3 className="text-slate-800 dark:text-[#f5f5f5] group-hover:text-[#cc3535] dark:group-hover:text-[#f87171] font-bold text-lg transition-colors">
-          {title}
-        </h3>
+        <div className="flex items-center gap-3 min-w-0">
+          {icon && (
+            <div className={stepPickerStyles.cardIconBox}>
+              <i className={`bx ${icon.startsWith('bx') ? icon : `bx-${icon}`}`} aria-hidden="true" />
+            </div>
+          )}
+          <h3 className={stepPickerStyles.cardTitle}>
+            {title}
+          </h3>
+        </div>
         {totalCount > 0 && (
           <NotificationBadge
             count={totalCount}
@@ -54,7 +72,7 @@ export function SelectionCard({
       </div>
 
       {counts && (
-        <p className="text-xs text-slate-500 dark:text-[#a3a3a3] font-medium leading-relaxed">
+        <p className={stepPickerStyles.cardCounts}>
           {counts.queue !== undefined && counts.queue > 0 && `${counts.queue} ${transferTexts.inQueueSuffix}`}
           {counts.queue !== undefined && counts.queue > 0 && (counts.registration || counts.idle) ? ' · ' : ''}
           {counts.registration !== undefined && counts.registration > 0 && `${counts.registration} ${transferTexts.atCounterSuffix}`}
@@ -94,20 +112,20 @@ export function SubcategoryPicker({
 }: SubcategoryPickerProps) {
   if (subcategories.length === 0) {
     return (
-      <div className="bg-amber-50 dark:bg-amber-950/30 border-2 border-amber-200 dark:border-amber-900/50 rounded-2xl p-8 text-center max-w-md mx-auto mt-8 shadow-xs">
-        <h4 className="text-slate-700 dark:text-amber-100 font-bold text-sm">{emptyTitle}</h4>
-        <p className="text-slate-500 dark:text-amber-300 text-xs mt-1">{emptyMessage}</p>
+      <div className={stepPickerStyles.emptyCard}>
+        <h4 className={stepPickerStyles.emptyTitle}>{emptyTitle}</h4>
+        <p className={stepPickerStyles.emptyDesc}>{emptyMessage}</p>
       </div>
     );
   }
 
   return (
-    <div className="w-full max-w-4xl mx-auto mt-8 px-4">
+    <div className={stepPickerStyles.container}>
       <h2 className="text-sm font-bold text-slate-700 dark:text-[#f5f5f5] uppercase tracking-wider mb-5 text-center">
         {transferTexts.selectSubcategoryTitle}
       </h2>
-      <div className="grid grid-cols-1 sm:grid-cols-2 gap-6">
-        {subcategories.map(({ sub }) => {
+      <div className={stepPickerStyles.grid2Col}>
+        {subcategories.map(({ sub, icon }) => {
           const counts = countFor(sub);
           const total = counts.queue + counts.registration + counts.idle;
 
@@ -115,6 +133,7 @@ export function SubcategoryPicker({
             <SelectionCard
               key={sub}
               title={sub}
+              icon={icon || (sub.toLowerCase().includes('pedia') ? 'bx-child' : 'bx-user')}
               totalCount={total}
               counts={counts}
               onClick={() => onSelect(sub)}
@@ -157,11 +176,11 @@ export function RoomPicker({
 }: RoomPickerProps) {
   if (rooms.length === 0) {
     return (
-      <div className="bg-amber-50 dark:bg-amber-950/30 border-2 border-amber-200 dark:border-amber-900/50 rounded-2xl p-8 text-center max-w-md mx-auto mt-8 shadow-xs">
-        <h4 className="text-slate-700 dark:text-amber-100 font-bold text-sm">
+      <div className={stepPickerStyles.emptyCard}>
+        <h4 className={stepPickerStyles.emptyTitle}>
           {transferTexts.noRoomsConfiguredTitle} {serviceContext ? `(${serviceContext})` : ''}
         </h4>
-        <p className="text-slate-500 dark:text-amber-300 text-xs mt-1">
+        <p className={stepPickerStyles.emptyDesc}>
           {transferTexts.noRoomsConfiguredDesc}
         </p>
       </div>
@@ -171,11 +190,11 @@ export function RoomPicker({
   const isTwoRooms = rooms.length === 2;
 
   return (
-    <div className={`w-full ${isTwoRooms ? 'max-w-4xl' : 'max-w-5xl'} mx-auto mt-8 px-4`}>
+    <div className={isTwoRooms ? stepPickerStyles.container : stepPickerStyles.roomPickerContainer}>
       <h2 className="text-sm font-bold text-slate-700 dark:text-[#f5f5f5] uppercase tracking-wider mb-5 text-center">
         {transferTexts.selectRoomTitle}
       </h2>
-      <div className={`grid grid-cols-1 sm:grid-cols-2 ${isTwoRooms ? '' : 'lg:grid-cols-3'} gap-6`}>
+      <div className={isTwoRooms ? stepPickerStyles.grid2Col : stepPickerStyles.gridMultiCol}>
         {rooms.map(room => {
           const safeCubicles = Array.isArray(visibleCubicles) ? visibleCubicles : [];
           const safeAssignedPatients = assignedPatients || {};
@@ -218,12 +237,17 @@ export function RoomPicker({
               key={room}
               type="button"
               onClick={() => onSelectRoom(room)}
-              className="w-full bg-white dark:bg-[#1a1a1a] border-2 border-slate-200 dark:border-[#2e2e2e] hover:border-[#cc3535] dark:hover:border-[#cc3535] rounded-2xl p-6 flex flex-col justify-between gap-3 shadow-xs transition-colors duration-200 text-left group cursor-pointer min-h-[116px]"
+              className={stepPickerStyles.selectionCard}
             >
               <div className="flex items-center justify-between gap-4 w-full">
-                <h3 className="text-slate-800 dark:text-[#f5f5f5] group-hover:text-[#cc3535] dark:group-hover:text-[#f87171] font-bold text-lg transition-colors">
-                  {transferTexts.roomPrefix} {room}
-                </h3>
+                <div className="flex items-center gap-3 min-w-0">
+                  <div className={stepPickerStyles.cardIconBox}>
+                    <i className="bx bx-clinic" aria-hidden="true" />
+                  </div>
+                  <h3 className={stepPickerStyles.cardTitle}>
+                    {transferTexts.roomPrefix} {room}
+                  </h3>
+                </div>
                 {totalCount > 0 && (
                   <NotificationBadge
                     count={totalCount}
@@ -233,7 +257,7 @@ export function RoomPicker({
                 )}
               </div>
 
-              <p className="text-xs text-slate-500 dark:text-[#a3a3a3] font-medium leading-relaxed">
+              <p className={stepPickerStyles.cardCounts}>
                 {roomCubicles.length} {roomCubicles.length === 1 ? 'cubicle' : 'cubicles'}
                 {totalQueued > 0 && ` · ${totalQueued} ${transferTexts.inQueueSuffix}`}
                 {totalAssigned > 0 && ` · ${totalAssigned} ${transferTexts.assignedSuffix}`}

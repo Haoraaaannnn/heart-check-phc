@@ -53,9 +53,10 @@ export const STAGE_CONFIGS: Record<'assigned' | 'with_doctor' | 'carryout', Stag
   assigned: {
     id: 'assigned',
     titleKey: 'stageAssignedHeading',
-    badgeColor: 'bg-blue-100 text-blue-700',
-    borderColor: 'border-blue-200',
-    bgColor: 'bg-blue-50/50',
+    badgeColor:
+      'bg-blue-100 text-blue-800 border border-blue-300 dark:bg-blue-950/70 dark:text-blue-300 dark:border-blue-800/80',
+    borderColor: 'border-blue-200 dark:border-blue-900/60',
+    bgColor: 'bg-blue-50/50 dark:bg-blue-950/20',
     emptyStateTextKey: 'emptyAssigned',
     warnAfterSeconds: 900, // 15 minutes
     nextStageId: 'with_doctor',
@@ -63,9 +64,10 @@ export const STAGE_CONFIGS: Record<'assigned' | 'with_doctor' | 'carryout', Stag
   with_doctor: {
     id: 'with_doctor',
     titleKey: 'stageWithDoctorHeading',
-    badgeColor: 'bg-purple-100 text-purple-700',
-    borderColor: 'border-purple-200',
-    bgColor: 'bg-purple-50/50',
+    badgeColor:
+      'bg-purple-100 text-purple-800 border border-purple-300 dark:bg-purple-950/70 dark:text-purple-300 dark:border-purple-800/80',
+    borderColor: 'border-purple-200 dark:border-purple-900/60',
+    bgColor: 'bg-purple-50/50 dark:bg-purple-950/20',
     emptyStateTextKey: 'emptyWithDoctor',
     warnAfterSeconds: 600, // 10 minutes
     nextStageId: 'carryout',
@@ -74,9 +76,10 @@ export const STAGE_CONFIGS: Record<'assigned' | 'with_doctor' | 'carryout', Stag
   carryout: {
     id: 'carryout',
     titleKey: 'stageCarryoutHeading',
-    badgeColor: 'bg-orange-100 text-orange-700',
-    borderColor: 'border-orange-200',
-    bgColor: 'bg-orange-50/50',
+    badgeColor:
+      'bg-orange-100 text-orange-800 border border-orange-300 dark:bg-orange-950/70 dark:text-orange-300 dark:border-orange-800/80',
+    borderColor: 'border-orange-200 dark:border-orange-900/60',
+    bgColor: 'bg-orange-50/50 dark:bg-orange-950/20',
     emptyStateTextKey: 'emptyCarryout',
     warnAfterSeconds: 600, // 10 minutes
     nextStageId: 'done',

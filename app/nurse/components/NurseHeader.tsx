@@ -257,7 +257,7 @@ export function NurseHeader({
           title={nurseTexts.viewFinishedLedger}
         >
           <span className="hidden sm:inline">{nurseTexts.stageFinishedHeading}</span>
-          <span className="px-1.5 py-0.5 rounded-md bg-emerald-100 dark:bg-emerald-950/50 text-emerald-800 dark:text-emerald-300 text-[11px] font-bold">
+          <span className="px-1.5 py-0.5 rounded-md bg-emerald-100 text-emerald-800 border border-emerald-300 dark:bg-emerald-950/70 dark:text-emerald-300 dark:border-emerald-800/80 text-[11px] font-bold">
             {finishedCount}
           </span>
         </button>

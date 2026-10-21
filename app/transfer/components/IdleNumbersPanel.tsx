@@ -3,6 +3,8 @@
  *
  * Implements smooth internal scrolling for the idle list while preserving
  * rotation timeout counter badge (`×N`) and one-click reactivation or removal actions.
+ * Adheres strictly to AGENTS.md separation-of-concerns standards by consuming centralized
+ * styles from transferStyles.ts.
  *
  * @module app/transfer/components/IdleNumbersPanel
  */
@@ -11,7 +13,8 @@
 
 import React from 'react';
 import { Patient } from '@/types/Types';
-import { transferTexts } from '@/app/transfer/constants/transferTexts';
+import { transferTexts } from '@/constants/texts/transferTexts';
+import { idlePanelStyles } from '@/constants/designs/transferStyles';
 
 /**
  * Props for {@link IdleNumbersPanel}.
@@ -41,55 +44,56 @@ export function IdleNumbersPanel({
   const safePatients = Array.isArray(patients) ? patients : [];
 
   return (
-    <div className="h-full flex flex-col min-h-0 overflow-hidden select-none">
+    <div className={idlePanelStyles.wrapper}>
       {/* Header */}
-      <div className="flex items-center justify-between gap-2 mb-2 pb-1.5 border-b border-slate-100 dark:border-[#2e2e2e] shrink-0">
-        <div className="flex items-center gap-2 min-w-0 flex-1">
-          <span className="w-2.5 h-2.5 rounded-full bg-slate-400 inline-block shrink-0" />
-          <h2 className="text-slate-700 dark:text-[#f5f5f5] font-bold text-xs tracking-wider uppercase truncate">
+      <div className={idlePanelStyles.header}>
+        <div className={idlePanelStyles.headerLeft}>
+          <span className={idlePanelStyles.headerDot} />
+          <h2 className={idlePanelStyles.headerTitle}>
             {transferTexts.idleNumbersHeading}
           </h2>
-          <span className="text-[11px] font-bold px-1.5 py-0.5 rounded-md bg-slate-100 dark:bg-[#242424] text-slate-600 dark:text-[#a3a3a3] shrink-0">
+          <span className={idlePanelStyles.headerCountBadge}>
             {safePatients.length}
           </span>
         </div>
-        <span className="text-[11px] text-slate-400 dark:text-[#737373] font-normal shrink-0 hidden sm:inline">
+        <span className={idlePanelStyles.headerSubtitle}>
           {transferTexts.idleSubtitle}
         </span>
       </div>
 
       {/* Patients List (Scrollable when exceeding height) */}
       {safePatients.length === 0 ? (
-        <div className="py-6 text-center text-slate-400 dark:text-[#737373] text-xs">
+        <div className={idlePanelStyles.emptyNotice}>
           {transferTexts.noIdleNumbers}
         </div>
       ) : (
-        <div className="flex-1 min-h-0 overflow-y-auto phc-scroll pr-1 space-y-1.5">
+        <div className={idlePanelStyles.scrollList}>
           {safePatients.map(p => (
-            <div
-              key={p.id}
-              className="flex items-center justify-between border border-slate-100 dark:border-[#2e2e2e] rounded-xl px-2.5 py-1.5 bg-slate-50/70 dark:bg-[#1f1f1f]/70 hover:bg-slate-100/80 dark:hover:bg-[#242424] transition-colors gap-2"
-            >
-              <div className="flex items-center gap-2 min-w-0 flex-1 overflow-hidden">
-                <span className="text-slate-800 dark:text-[#f5f5f5] font-black text-xs shrink-0">
+            <div key={p.id} className={idlePanelStyles.patientRow}>
+              <div className={idlePanelStyles.patientInfo}>
+                <span className={idlePanelStyles.patientNumBadge}>
                   {p.patientNum}
                 </span>
-                <span className="text-slate-500 dark:text-[#a3a3a3] text-xs truncate min-w-0 flex-1">
+                <span className={idlePanelStyles.serviceLabel}>
                   {p.service}
-                  {p.subcategory && ` · ${p.subcategory}`}
+                  {p.subcategory && (
+                    <span className={idlePanelStyles.subCategoryLabel}>
+                      {` · ${p.subcategory}`}
+                    </span>
+                  )}
                 </span>
-                <span className="text-[10px] font-bold px-1.5 py-0.2 rounded-md bg-amber-100 dark:bg-amber-950/60 text-amber-800 dark:text-amber-300 shrink-0">
+                <span className={idlePanelStyles.rotationBadge}>
                   {transferTexts.rotationCountPrefix}
                   {p.rotation_count ?? 0}
                 </span>
               </div>
 
-              <div className="flex items-center gap-1.5 shrink-0 ml-1">
+              <div className={idlePanelStyles.actionsWrap}>
                 <button
                   type="button"
                   onClick={() => onActivate(p)}
                   title={transferTexts.activateIdleTooltip}
-                  className="px-2 py-0.5 text-[11px] font-bold rounded-md text-emerald-700 dark:text-emerald-300 bg-emerald-50 dark:bg-emerald-950/40 hover:bg-emerald-100 dark:hover:bg-emerald-900/50 transition-colors cursor-pointer whitespace-nowrap shrink-0"
+                  className={idlePanelStyles.activateBtn}
                 >
                   {transferTexts.activateBtn}
                 </button>
@@ -97,7 +101,7 @@ export function IdleNumbersPanel({
                   type="button"
                   onClick={() => onRemove(p)}
                   title={transferTexts.removeIdleTooltip}
-                  className="px-2 py-0.5 text-[11px] font-bold rounded-md text-rose-600 dark:text-rose-300 bg-rose-50 dark:bg-rose-950/40 hover:bg-rose-100 dark:hover:bg-rose-900/50 transition-colors cursor-pointer whitespace-nowrap shrink-0"
+                  className={idlePanelStyles.removeBtn}
                 >
                   {transferTexts.removeBtn}
                 </button>
