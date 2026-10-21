@@ -194,7 +194,7 @@ export const transferTexts = {
       ? 'Tap a cubicle to assign it to them, or tap again to remove it.'
       : 'Select a doctor above to assign their cubicles.',
   doneBtn: 'Done',
-  roomLabel: (room: string) => `Room ${room}`,
+  roomLabel: (room: string | number) => `Room ${room}`,
   assignedDoctorLabel: (name: string) => `Dr. ${name}`,
   unassignedCubicleLabel: 'Unassigned',
   assignedStatus: 'Assigned',

@@ -30,6 +30,7 @@ import { useMaxRotations } from '@/app/transfer/hooks/useMaxRotations';
 import { useMyAccess } from '@/app/transfer/hooks/useMyAccess';
 import { useRegistrationDragAndDrop } from '@/app/transfer/hooks/useRegistrationDragAndDrop';
 import { Patient, Cubicle } from '@/types/Types';
+import { Service } from '@/types/Services';
 import { useAutoRotate } from '@/app/transfer/hooks/useAutoRotate';
 import { useRotateTimeout } from '@/app/transfer/hooks/useRotateTimeout';
 import { useIdleTimeout } from '@/app/transfer/hooks/useIdleTimeout';
