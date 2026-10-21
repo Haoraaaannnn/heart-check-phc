@@ -182,6 +182,6 @@ When contributing new features or addressing items from this checklist, consult 
 | **Security & Schema** | Database schema, policies, role management | [docs/specifications/DATABASE_SCHEMA.md](file:///home/jensen/Github-Repositories/Heart_Check_PHC/docs/specifications/DATABASE_SCHEMA.md), [docs/checklists/OPEN_ISSUES.md](file:///home/jensen/Github-Repositories/Heart_Check_PHC/docs/checklists/OPEN_ISSUES.md) |
 | **Security Checklist** | Vulnerability matrix, verification steps, patch guide | [docs/checklists/SECURITY_CHECKLIST.md](file:///home/jensen/Github-Repositories/Heart_Check_PHC/docs/checklists/SECURITY_CHECKLIST.md), [AGENTS.md](file:///home/jensen/Github-Repositories/Heart_Check_PHC/AGENTS.md) |
 | **API & Injection Audit** | Vulnerability mechanics, exploit proofs, technical patches | [docs/checklists/API_LEAKS_AND_INJECTION_RISKS_AUDIT.md](file:///home/jensen/Github-Repositories/Heart_Check_PHC/docs/checklists/API_LEAKS_AND_INJECTION_RISKS_AUDIT.md) |
-| **UAT Test Cases** | End-to-end verification checklist and remarks | [docs/checklists/UAT_USE_CASE_CHECKLIST.md](file:///home/jensen/Github-Repositories/Heart_Check_PHC/docs/checklists/UAT_USE_CASE_CHECKLIST.md) |
+| **UAT Test Cases** | End-to-end verification checklist and remarks | [docs/checklists/UAT_USE_CASE_CHECKLIST.md](file:///home/jensen/Github-Repositories/heart-check-phc/docs/checklists/UAT_USE_CASE_CHECKLIST.md) |
 
 _Last updated: 2026-10-21 — Standardized priority classifications to Priority, Non-Priority, and Optional across all roadmap items._
