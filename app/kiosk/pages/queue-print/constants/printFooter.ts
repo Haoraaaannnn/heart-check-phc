@@ -1,17 +1,20 @@
 /**
  * @file printFooter.ts
- * @description Centralized visual styles for `PrintFooter`.
+ * @description Centralized visual styles for `PrintFooter` on `/kiosk/pages/queue-print`.
+ *
+ * Rendered during physical ticket printing dispatch. Uses responsive fluid viewport-height
+ * (`vh`) clamps to ensure high clinical readability without inducing vertical overflow.
+ *
+ * @module app/kiosk/pages/queue-print/constants/printFooter
  */
 
 import { CSSProperties } from "react";
-import { kioskTypography } from "@/constants/kiosk";
 
-/** Typography tokens for print footer notice, referencing centralized root typography scale. */
+/** Typography tokens for print footer notice, referencing fluid responsive clamps. */
 export const PrintFooterTypography = {
-    noticeFilSize: "clamp(18px, 2vw, 24px)",
-    noticeEnSize: "clamp(15px, 1.6vw, 19px)",
+    noticeFilSize: "clamp(15px, 2vh, 20px)",
+    noticeEnSize: "clamp(13px, 1.6vh, 16px)",
 } as const;
-
 
 /** Inline styles for `PrintFooter`. */
 export const PrintFooterStyle = {
@@ -24,15 +27,15 @@ export const PrintFooterStyle = {
         flexShrink: 0,
         paddingLeft: 16,
         paddingRight: 16,
-        paddingTop: "clamp(6px, 1vh, 10px)",
-        paddingBottom: "clamp(6px, 1.2vh, 12px)",
+        paddingTop: "clamp(6px, 0.8vh, 10px)",
+        paddingBottom: "clamp(6px, 0.8vh, 10px)",
         textAlign: "center",
     },
     noticeFil: {
         fontWeight: 800,
         fontSize: PrintFooterTypography.noticeFilSize,
         color: "#111827",
-        lineHeight: 1.3,
+        lineHeight: 1.25,
         margin: 0,
     },
     noticeEn: {
@@ -40,8 +43,9 @@ export const PrintFooterStyle = {
         fontSize: PrintFooterTypography.noticeEnSize,
         color: "#4B5563",
         fontWeight: 600,
-        lineHeight: 1.3,
+        lineHeight: 1.25,
         margin: 0,
     },
 } satisfies Record<string, CSSProperties>;
+
 

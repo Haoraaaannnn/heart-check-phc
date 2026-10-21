@@ -152,17 +152,30 @@ The `chmod` command and `/dev/usb/lp*` device nodes are exclusive to Linux. If y
 
 ---
 
-## 6. Kiosk Automatic Failover Flow
+## 6. Kiosk Hardware Telemetry & Automatic Failover Flow
 
-During patient check-in at `/kiosk/pages/queue-print`:
-1. The kiosk client requests ticket registration from `/api/print-ticket`.
-2. The server verifies patient registration in Supabase (`is_historical = false`), computes Estimated Wait Time (EWT), and triggers SMS confirmation.
-3. **Execution Hierarchy:**
-   - If a Network IP printer is configured (`PRINTER_IP`), the server dispatches via raw TCP socket (Port 9100).
-   - If a local `/dev/usb/lp*` device node is present on the server, the server writes directly to the device node.
-   - If neither server-side method is connected, the server returns the base64 ESC/POS payload (`escposBase64`).
-   - The client kiosk checks its browser WebUSB connection. If paired, it immediately streams the ESC/POS ticket over USB.
-   - If no hardware printer is connected or if paper is exhausted, the kiosk smoothly presents the on-screen digital ticket and SMS confirmation without freezing or crashing.
+The system integrates real-time printer hardware status telemetry based on the ESC/POS standard specification:
+
+### Real-Time Status Transmission (`DLE EOT n`)
+1. **DLE EOT 1 (`\x10\x04\x01`):** Evaluates printer online/offline bit.
+2. **DLE EOT 2 (`\x10\x04\x02`):** Detects printer platen cover open state and paper-out print halts.
+3. **DLE EOT 3 (`\x10\x04\x03`):** Detects auto-cutter mechanical errors and paper jams.
+4. **DLE EOT 4 (`\x10\x04\x04`):** Telemetry from continuous paper sensors (paper roll empty and paper near-end low warnings).
+
+### Queueing Resilience (Allowing Intake Without Printer)
+In hospital outpatient departments (OPD), blocking patient intake when a physical printer runs out of paper or disconnects would paralyze triage and registration. Heart Check PHC enforces continuous clinic operations:
+- When the printer hardware condition is `not_detected`, `offline`, `out_of_paper`, or `paper_jam`, patient queue tickets are still generated normally without restriction.
+- On the phone input screen (`app/kiosk/pages/sms-input/`), an advisory banner informs patients that physical printing is unavailable and encourages SMS delivery.
+- Both "Continue" and "Skip" remain fully operational.
+
+### On-Screen Fallback Card (`app/kiosk/pages/queue-print/`)
+If physical printing cannot proceed:
+1. **Diagnostic Reason Banner:** Clearly explains why physical tickets cannot be issued (e.g. Out of Paper, Paper Jam, Printer Offline, No Printer Connected).
+2. **Smartphone Photo Guidance:** Prominently prompts the patient with a camera icon to take a photo of the digital ticket card on screen.
+3. **SMS Ticket Delivery:**
+   - If the patient provided their phone number, confirms SMS delivery with a masked representation (`0917 •••• 567`) and offers a resend action.
+   - If the patient skipped phone entry, provides an on-screen input field to enter their mobile number and trigger instant SMS delivery via `/api/print-ticket/send-sms`.
+4. **Immediate Completion Controls:** Provides an "I've Saved My Ticket / Finish" button alongside an extended 25-second auto-close countdown.
 
 ---
 

@@ -26,6 +26,7 @@ import {
 } from "@/app/kiosk/pages/sms-input/utils/phoneValidation";
 import { SMSValidationTexts } from "@/app/kiosk/pages/sms-input/constants/smsValidationTexts";
 import { encryptPatientPhoneAction } from "@/app/actions/phoneSecurity";
+import { useWebPrinter } from "@/app/kiosk/hooks/useWebPrinter";
 
 /** Props for {@link KioskPhoneEntry}. */
 interface KioskPhoneEntryProps {
@@ -195,6 +196,7 @@ export default function KioskPhoneEntry({
     const router = useRouter();
     const searchParams = useSearchParams();
     const { showLoading, hideLoading } = useKioskLoading();
+    const { hardwareStatus } = useWebPrinter();
 
     const patientType = searchParams.get("type");
     const cancelHref = buildCancelHref(service, patientType, subcategory);
@@ -404,8 +406,8 @@ export default function KioskPhoneEntry({
 
             {/* Entry Grid (Left: Phone & Actions, Right: NumPad) */}
             <div className={SMSLayoutClasses.entryGrid}>
-                {/* Left Column (Landscape): Instructions, Phone Display & Actions */}
-                <div className={SMSLayoutClasses.entryLeftCol}>
+                {/* Left Column: Instructions, Phone Display & Actions */}
+                <div style={SMSLayoutStyle.entryLeftCol} className={SMSLayoutClasses.entryLeftCol}>
                     <div className={SMSLayoutClasses.phoneInputWrapper}>
                         <PhoneInput
                             phone={phone}
@@ -418,7 +420,7 @@ export default function KioskPhoneEntry({
                     </div>
 
                     <div className={SMSLayoutClasses.instructionWrapper}>
-                        <SMSInstruction />
+                        <SMSInstruction isFallbackMode={!hardwareStatus.canPrintPhysical} />
                     </div>
 
                     <div className={SMSLayoutClasses.continueWrapper}>

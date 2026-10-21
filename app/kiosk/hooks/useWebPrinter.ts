@@ -1,8 +1,10 @@
 /**
- * @fileoverview React Hook for Browser-based WebUSB and Web Serial Thermal Printing.
+ * @fileoverview React Hook for Browser-based WebUSB, Web Serial, and Network Thermal Printing.
  *
- * Provides reactive hardware state, auto-detection on mount, hot-plug listener registration,
- * and high-level pairing/print triggers for kiosk touchscreen terminals.
+ * Provides reactive hardware state, real-time hardware status detection (out of paper,
+ * paper jam, cover open, printer offline, not detected), auto-detection on mount,
+ * hot-plug listener registration, and high-level pairing/print triggers for kiosk
+ * touchscreen terminals and superadmin configuration.
  *
  * @module app/kiosk/hooks/useWebPrinter
  */
@@ -10,9 +12,10 @@
 'use client';
 
 import { useEffect, useState, useCallback } from 'react';
-import { PrinterStatus } from '@/lib/printer/types';
+import { PrinterStatus, PrinterHardwareStatus } from '@/lib/printer/types';
 import {
   getClientPrinterStatus,
+  getClientPrinterHardwareStatus,
   pairUsbPrinter,
   pairSerialPrinter,
   printViaConnectedWebPrinter,
@@ -20,14 +23,17 @@ import {
   isWebUsbSupported,
   isWebSerialSupported,
 } from '@/lib/printer/webPrinter';
+import { buildHardwareStatus } from '@/lib/printer/statusParser';
 import { getTimestamp } from '@/lib/logger';
 
 /**
  * Hook return contract for {@link useWebPrinter}.
  */
 export interface UseWebPrinterReturn {
-  /** Current hardware connection and capability status. */
+  /** Current connection summary status. */
   status: PrinterStatus;
+  /** Detailed telemetry state of the thermal printer hardware mechanism. */
+  hardwareStatus: PrinterHardwareStatus;
   /** Whether pairing dialog is currently open or awaiting user gesture. */
   isPairing: boolean;
   /** Error message if pairing or printing failed. */
@@ -38,12 +44,14 @@ export interface UseWebPrinterReturn {
   pairSerial: () => Promise<boolean>;
   /** Dispatches an ESC/POS base64 payload to the active local printer. */
   printEscPos: (base64Payload: string) => Promise<{ success: boolean; message?: string }>;
-  /** Manually re-checks connected hardware peripherals. */
+  /** Manually re-checks connected hardware peripherals and server status. */
   refreshStatus: () => Promise<void>;
+  /** Probes and resolves composite client + server hardware status. */
+  refreshHardwareStatus: () => Promise<PrinterHardwareStatus>;
 }
 
 /**
- * Reactive hook managing thermal printer auto-detection and browser pairing.
+ * Reactive hook managing thermal printer auto-detection, hardware telemetry, and browser pairing.
  *
  * @returns {@link UseWebPrinterReturn} reactive state and action handlers.
  */
@@ -56,11 +64,62 @@ export function useWebPrinter(): UseWebPrinterReturn {
     isSupported: true,
   });
 
+  const [hardwareStatus, setHardwareStatus] = useState<PrinterHardwareStatus>(
+    buildHardwareStatus(
+      'not_detected',
+      'none',
+      'Detecting...',
+      'Probing printer hardware status'
+    )
+  );
+
   const [isPairing, setIsPairing] = useState<boolean>(false);
   const [error, setError] = useState<string | null>(null);
 
   /**
-   * Probes current peripheral connectivity.
+   * Resolves composite hardware status across client-side WebUSB/Serial and server-side network/device.
+   */
+  const refreshHardwareStatus = useCallback(async (): Promise<PrinterHardwareStatus> => {
+    try {
+      // 1. Probe client-side WebUSB / Serial hardware first
+      const clientHw = await getClientPrinterHardwareStatus();
+      if (clientHw.condition !== 'not_detected') {
+        setHardwareStatus(clientHw);
+        return clientHw;
+      }
+
+      // 2. Fallback: Probe server-side printer status (Network IP socket or /dev/usb/lp*)
+      const serverRes = await fetch('/api/print-ticket', {
+        method: 'GET',
+        headers: { 'Content-Type': 'application/json' },
+      }).catch(() => null);
+
+      if (serverRes && serverRes.ok) {
+        const serverData = await serverRes.json().catch(() => null);
+        if (serverData?.status) {
+          const sHw = serverData.status as PrinterHardwareStatus;
+          setHardwareStatus(sHw);
+          return sHw;
+        }
+      }
+
+      setHardwareStatus(clientHw);
+      return clientHw;
+    } catch (err: unknown) {
+      console.warn(`${getTimestamp()} [WEB PRINTER HW REFRESH ERROR]`, err);
+      const fallback = buildHardwareStatus(
+        'not_detected',
+        'none',
+        'Status Probe Failed',
+        err instanceof Error ? err.message : String(err)
+      );
+      setHardwareStatus(fallback);
+      return fallback;
+    }
+  }, []);
+
+  /**
+   * Probes current peripheral connectivity and hardware telemetry.
    */
   const refreshStatus = useCallback(async () => {
     try {
@@ -69,10 +128,11 @@ export function useWebPrinter(): UseWebPrinterReturn {
       if (current.connected) {
         setError(null);
       }
+      await refreshHardwareStatus();
     } catch (err: unknown) {
       console.warn(`${getTimestamp()} [WEB PRINTER REFRESH ERROR]`, err);
     }
-  }, []);
+  }, [refreshHardwareStatus]);
 
   // Auto-detect and register hot-plug listeners on mount
   useEffect(() => {
@@ -85,6 +145,7 @@ export function useWebPrinter(): UseWebPrinterReturn {
         details: 'Use Google Chrome or Microsoft Edge for USB thermal printing.',
         isSupported: false,
       });
+      refreshHardwareStatus();
       return;
     }
 
@@ -105,7 +166,7 @@ export function useWebPrinter(): UseWebPrinterReturn {
     return () => {
       unregister();
     };
-  }, [refreshStatus]);
+  }, [refreshStatus, refreshHardwareStatus]);
 
   /**
    * Prompts the browser's USB device pairing dialogue.
@@ -175,11 +236,13 @@ export function useWebPrinter(): UseWebPrinterReturn {
 
   return {
     status,
+    hardwareStatus,
     isPairing,
     error,
     pairUsb,
     pairSerial,
     printEscPos,
     refreshStatus,
+    refreshHardwareStatus,
   };
 }

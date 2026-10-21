@@ -73,9 +73,10 @@ The Route Handler `app/api/print-ticket/route.ts` generates raw byte streams:
 [Paper Feed & Cut]         GS V 66 0 (0x1D 0x56 0x42 0x00)
 ```
 
-### Fallback & Timeout Handling
-- The print handler sets a strict 5-second socket connection timeout.
-- If the thermal printer is offline or out of paper, the API returns a structured error allowing the kiosk UI to display a polite visual alert: *"Ticket registered. Please proceed to the help desk."*
+### Hardware Status Telemetry & On-Screen Fallback
+- **ESC/POS Status Probing (`DLE EOT 1-4`):** Real-time bitwise polling detects `out_of_paper`, `paper_jam`, `cover_open`, and `offline` conditions.
+- **Unrestricted Queueing Without Printer:** Queue intake at the kiosk is never blocked by missing or faulty printers; patients can queue freely via Continue/Skip.
+- **On-Screen Digital Fallback:** When physical tickets cannot be printed, an on-screen fallback card (`QueuePrintFallbackCard.tsx`) provides smartphone photo guidance, on-demand SMS delivery (`/api/print-ticket/send-sms`), masked phone display, and immediate completion controls with a 25-second countdown.
 
 ---
 

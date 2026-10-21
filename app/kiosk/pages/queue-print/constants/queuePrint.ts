@@ -6,6 +6,7 @@
 export * from "@/app/kiosk/pages/queue-print/constants/printHeader";
 export * from "@/app/kiosk/pages/queue-print/constants/printFooter";
 export * from "@/app/kiosk/pages/queue-print/constants/queuePrintTicket";
+export * from "@/app/kiosk/pages/queue-print/constants/queuePrintFallbackStyles";
 export * from "@/app/kiosk/pages/queue-print/constants/queuePrintLayout";
 export * from "@/app/kiosk/pages/queue-print/constants/queuePrintTexts";
 

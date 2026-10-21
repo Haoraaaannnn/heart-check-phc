@@ -12,54 +12,67 @@ This document serves as an optional, high-signal, token-efficient session handof
 
 ## Active Session Status
 
-- **Active Milestone / Task:** Fix EWT and Printer Module Import Issues (Completed)
+- **Active Milestone / Task:** Inactivity Timeout Countdown Modal ("Are You Still There?") (Completed)
 - **Active Git Branch:** `feat/estimated-time`
-- **Session Focus:** Resolved import and typing errors in `app/api/print-ticket/route.ts`, `lib/printer/webPrinter.ts`, and `lib/printer/types.ts`. Extracted shared EWT formatting utilities into root `constants/ewtTexts.ts` per AGENTS.md separation-of-concerns and scoped-constants standards, removing cross-boundary kiosk imports from backend route handlers.
+- **Session Focus:** Implemented the 45-second inactivity watcher, Web Audio API acoustic hospital warning chime, and 15-second countdown grace modal ("Are You Still There?") across the Kiosk patient check-in flow, fulfilling UAT checklist TC-KIO-012, Role 1 Q27, and Role 6 Q30.
 
 ---
 
 ## Decisions Made
 
-1. **Dual-Tier Hardware Architecture:**
-   - **Tier 1 (Direct USB via WebUSB / Web Serial):** When a USB thermal printer is plugged directly into a touchscreen kiosk, PC, or Android tablet running Chrome/Edge, the browser streams ESC/POS byte buffers directly to bulk OUT endpoints using `navigator.usb` and `navigator.serial`. Runs completely inside the browser sandbox with zero terminal commands, zero server scripts, and auto-detects paired devices upon page load and cable plug-in.
-   - **Tier 2 (Network / Ethernet Socket on Port 9100):** When the printer is connected to the clinic Ethernet router or switch, the Next.js server connects directly via raw TCP socket (`net.Socket`) to Port 9100 with a 4-second timeout. Enables any device (smartphones, tablets, laptops) on the clinic Wi-Fi to print tickets wirelessly without USB cables.
-2. **Linux usblp Driver vs WebUSB claimInterface Resolution:**
-   - **Root Cause:** When an ESC/POS printer (USB Class 7) is connected on Linux, the kernel module `usblp` binds to Interface 0 and exposes `/dev/usb/lp*`. Because `usblp` holds exclusive claim over interface 0 in kernel space, Chrome WebUSB returns `Failed to execute 'claimInterface' on 'USBDevice': Unable to claim interface`.
-   - **Seamless Fallback:** When `claimInterface` returns `Unable to claim interface` or `WEBUSB_INTERFACE_CLAIMED_BY_KERNEL`, the application recognizes that the host OS driver (`usblp`) is actively managing the port and automatically routes the print job to the host device node (`/dev/usb/lp*`), which already possesses `0666` permissions via the udev rule.
-   - **Cross-Platform Compatibility:** On Windows, Android kiosks, and ChromeOS, `usblp` does not exist, allowing WebUSB to claim the interface natively with zero conflicts.
-3. **Server-Side Route Upgrade (`app/api/print-ticket/route.ts`):** Added parameterized network socket dispatch via `sendToNetworkPrinter` and fallback to local device nodes (`/dev/usb/lp*`). Returns base64 ESC/POS payload (`escposBase64`) and `printMethod` in API response to enable client-side WebUSB execution if server hardware is not directly attached.
-4. **Kiosk Auto-Print Integration (`QueuePrintContent.tsx`):** If the server prints via Network or local device node, logs success. If the server cannot reach a printer directly, the client automatically executes local WebUSB printing via `printViaConnectedWebPrinter`. If no hardware printer is connected, it displays the on-screen digital ticket and SMS alert without crashing or hanging.
-5. **SuperAdmin Diagnostics Card (`HardwarePrinterConfigCard.tsx`):** Provides live WebUSB status, one-click USB pairing, local IP storage, and authorized test receipt dispatch guarded by `requireSuperadmin`. Automatically routes to `/dev/usb/lp*` on Linux when `claimInterface` is claimed by the kernel.
-6. **Permanent Linux udev Rule Guide:** Authored `docs/specifications/PRINTER_SETUP_GUIDE.md` detailing the permanent Linux `/etc/udev/rules.d/99-thermal-printer.rules` setup so Linux users never have to run `sudo chmod 666 /dev/usb/lp*` again.
+1. **Inactivity Timing Standards & Route Scoping:**
+   - Standardized `INACTIVITY_WARNING_MS = 45000` (45 seconds) and `COUNTDOWN_GRACE_SECONDS = 15` (15 seconds) in `kioskNavigation.ts`.
+   - Inactivity watcher is scoped strictly to `/kiosk/pages/*` patient-flow routes (`kiosk-new-old-selection`, `kiosk-services`, `category-selection`, `kiosk-cubicle-selection`, `sms-input`, `confirmation`).
+   - Safely excluded `/kiosk/slideshow` (which is already the idle screensaver) and `/kiosk/pages/queue-print` (which has its own 7s/25s ticket viewing auto-close countdown).
+2. **Web Audio API Hospital Acoustic Chime (`kioskChime.ts`):**
+   - Synthesizes a two-tone gentle acoustic hospital chime (D5 587.33 Hz followed by A5 880 Hz with natural exponential gain decay).
+   - Zero external audio media assets or network requests; fully operates offline.
+   - Automatically handles suspended `AudioContext` states and catches all errors gracefully.
+3. **Accessible Countdown Modal (`InactivityTimeoutModal.tsx`):**
+   - Built an enlarged high-contrast clinical dialog card (`w-[94vw] max-w-[560px] sm:max-w-xl`, padding `p-6 sm:p-10`) with clean, uniform borders, solid surfaces (`bg-white dark:bg-slate-900`), and dark backdrop scrim (`z-[250]`).
+   - Integrated the official Heart Check PHC color palette (`themeColors.brandRed` `#a8071a`, `brightRed` `#c9142b`, `deepRed` `#76000d`):
+     - Enlarged 80px icon wrap with PHC red tint and `text-[#a8071a] dark:text-[#f15b6c]`.
+     - Subtitle and countdown badge highlighted with PHC red branding.
+     - Upgraded the countdown ring: empty track is pure white (`#FFFFFF`) framed within a soft background disc, and the progress arc starts at 12 o'clock and drains clockwise strictly synchronized with the remaining seconds (`dashLength = circumference * (remainingSeconds / totalSeconds)`).
+     - Guaranteed equal 50/50 sizing across both buttons via a balanced CSS grid (`grid grid-cols-1 sm:grid-cols-2`), with identical min-heights (`min-h-[66px] sm:min-h-[74px]`), padding, and typography.
+     - Primary "Continue Session" action button styled in solid PHC brand red (`#a8071a`) (text only, zero button icons).
+     - Secondary "Start Over" button with clean text and subtitle.
+   - Standardized Filipino as the priority language across the idle prompt and inactivity modal, with English translations directly below it ("Naririto Pa Ba Kayo?" / "Are You Still There?", "Magpatuloy" / "Continue Session").
+   - Auto-focuses "Continue Session" button on mount; supports `Escape` key to continue.
+4. **Clean Session Reset & State Preservation:**
+   - Tapping "Continue Session" dismisses the modal and restarts the 45-second inactivity timer while preserving all entered form data and URL params.
+   - If the 15-second countdown expires or the patient taps "Start Over", `sessionStorage` is safely purged and the browser is cleanly redirected to `/kiosk/slideshow`.
+5. **Separation of Concerns:**
+   - Isolated copy in `inactivityModalTexts.ts` and `idleRedirectTexts.ts`, styles in `inactivityModalStyles.ts`, chime in `kioskChime.ts`, presentation in `InactivityTimeoutModal.tsx`, and state in `IdleRedirectWrapper.tsx`. Zero inline styles.
 
 ---
 
 ## Files Changed or Created
 
-- `lib/printer/types.ts` (Updated: added WebUsbPrintResult type with claimedByKernel flag)
-- `lib/printer/networkPrinter.ts` (Created: server-side TCP/IP socket driver for Port 9100 with host validation and timeout)
-- `lib/printer/webPrinter.ts` (Updated: added kernel claim detection on claimInterface and structured return in printTestTicketWebUsb)
-- `lib/printer/index.ts` (Created: barrel exports)
-- `app/kiosk/hooks/useWebPrinter.ts` (Created: reactive React hook for kiosk WebUSB auto-detection)
-- `app/api/print-ticket/route.ts` (Updated: added network socket printing and base64 ESC/POS payload return)
-- `app/api/superadmin/test-printer/route.ts` (Created: authorized SuperAdmin test receipt endpoint guarded by `requireSuperadmin`)
-- `app/kiosk/pages/queue-print/components/QueuePrintContent.tsx` (Updated: seamless hybrid network & WebUSB client printing)
-- `app/superadmin/customization/components/HardwarePrinterConfigCard.tsx` (Updated: added seamless Linux kernel driver fallback on Test USB)
-- `app/superadmin/customization/page.tsx` (Updated: integrated HardwarePrinterConfigCard)
-- `app/superadmin/customization/constants/customizationTexts.ts` (Updated: copy dictionary for printer settings and kernel fallback)
-- `docs/specifications/PRINTER_SETUP_GUIDE.md` (Created: authoritative printer architecture & setup guide)
-- `app/superadmin/README.md` & `app/kiosk/README.md` (Updated: "Where to Edit" tables and date stamps)
-- `brain/CURRENT.md`, `brain/INDEX.md`, `brain/knowledge/kiosk-and-printing.md`, `brain/SESSION_LOG.md` (Updated: knowledge base and memory logs)
+- `app/kiosk/constants/idleRedirectTexts.ts` (Updated: set Filipino as the primary priority language with English below)
+- `app/kiosk/constants/inactivityModalTexts.ts` (Created & Updated: set Filipino as the priority language with English below, zero emojis)
+- `app/kiosk/constants/inactivityModalStyles.ts` (Created & Updated: solid clinical surface styles, InactivityTimerColors, equal 50/50 button grid, removed outer blueish wrapper background and inner disc shadow)
+- `app/kiosk/lib/kioskChime.ts` (Created: Web Audio API two-tone acoustic hospital chime synthesizer)
+- `app/kiosk/components/InactivityTimeoutModal.tsx` (Created & Refined: centered accessible dialog with continuous 60fps CountdownProgressRing, grayish empty fill, decoupled from 1-second ticks)
+- `app/kiosk/constants/kioskNavigation.ts` (Updated: added `INACTIVITY_WARNING_MS` and `COUNTDOWN_GRACE_SECONDS` timing constants)
+- `app/kiosk/components/IdleRedirectWrapper.tsx` (Updated: implemented 45s idle watcher, chime playback, 15s countdown modal, Magsimula Muli redirect to kiosk-new-old-selection, and idle slideshow expiry reset)
+- `app/kiosk/constants/kioskLoadingOverlay.ts` (Updated: switched loading spinner from blue to official Heart Check PHC brand red #a8071a)
+- `docs/checklists/IMPROVEMENTS_AND_FEATURE_CHECKLIST.md` (Updated: marked item as completed `[x]`, updated target files)
+- `app/kiosk/README.md` (Updated: "Where to Edit" table, common components breakdown, and idle watcher description)
+- `brain/CURRENT.md` (Updated: Milestone 16 documentation)
+- `brain/SESSION_LOG.md` (Updated: active session handoff log)
 
 ---
 
 ## Checks Performed
 
-1. **Zero Native Browser Dialogs:** Verified via `git grep -nE '\b(confirm|alert|prompt)\s*\('` that 0 occurrences remain in active code across the entire repository.
-2. **Zero Emojis Standard:** Verified zero emojis across all code, comments, JSDocs, and markdown documentation files.
-3. **Explicit ISO Date Stamps:** Verified `2026-10-20` date stamp on all created and updated documentation files (`.md`).
-4. **Separation of Concerns:** Verified all copy resides in `*Texts.ts` and styling in `*Styles.ts`.
-5. **Dark Mode & Enterprise Surfaces:** Verified solid surfaces with 1px borders, zero blurry glassmorphism, and dual-theme compatibility.
+1. **Zero Text Truncation (Rule 11):** Verified all modal copy wraps naturally (`break-words`, `whitespace-normal`).
+2. **Zero Emojis Standard (Rule 6):** Verified zero emojis in all code, comments, JSDocs, and UI strings.
+3. **Strict Separation of Concerns (Rule 2):** Copy in `inactivityModalTexts.ts`, styles in `inactivityModalStyles.ts`, UI in `InactivityTimeoutModal.tsx`.
+4. **Centering Standard (Rule 9):** Modal and countdown ring perfectly centered horizontally and vertically.
+5. **High-Contrast Solid Surfaces (Rule 10):** Solid backgrounds (`bg-white dark:bg-slate-900`) with 1px crisp borders.
+6. **High-Quality Documentation (Rule 1):** Full symbol and module level JSDocs across all created and edited files.
+7. **Explicit Date Stamp Standard (Rule 13):** Verified `2026-10-21` across updated markdown documentation.
 
 ---
 
@@ -71,4 +84,4 @@ This document serves as an optional, high-signal, token-efficient session handof
 
 ## Next Actions
 
-1. Review with user and verify user satisfaction.
+1. Run browser verification on Kiosk routes to test the 45-second inactivity trigger, acoustic chime, 15-second countdown, and "Continue" / "Start Over" interactions.

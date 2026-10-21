@@ -22,8 +22,14 @@ import {
   MinimalSerialManager,
   PrinterConnectionType,
   PrinterStatus,
+  PrinterHardwareStatus,
   WebUsbPrintResult,
 } from './types';
+import {
+  ESC_POS_STATUS_QUERY,
+  parseEscPosStatusBytes,
+  buildHardwareStatus,
+} from './statusParser';
 import { getTimestamp } from '@/lib/logger';
 
 /** Cached reference to the active or paired WebUSB device. */
@@ -164,6 +170,148 @@ export async function pairSerialPrinter(): Promise<MinimalSerialPort | null> {
     }
     throw err;
   }
+}
+
+/**
+ * Queries real-time hardware status and telemetry from client-paired USB/Serial thermal printers.
+ *
+ * @returns Promise resolving to {@link PrinterHardwareStatus} diagnostic state.
+ */
+export async function getClientPrinterHardwareStatus(): Promise<PrinterHardwareStatus> {
+  const isSupported = isWebUsbSupported() || isWebSerialSupported();
+
+  if (!isSupported) {
+    return buildHardwareStatus(
+      'not_detected',
+      'none',
+      'WebUSB Unsupported',
+      'Browser does not support WebUSB or Web Serial API. Use Google Chrome or Microsoft Edge.'
+    );
+  }
+
+  // 1. Probe paired WebUSB printers
+  const usbDevices = await getPairedUsbPrinters();
+  if (usbDevices.length > 0) {
+    const dev = usbDevices[0];
+    const devName = dev.productName || `USB Thermal Printer (0x${dev.vendorId.toString(16)})`;
+
+    try {
+      if (!dev.opened) {
+        await dev.open();
+      }
+
+      if (dev.configuration === null) {
+        await dev.selectConfiguration(1);
+      }
+
+      let targetOutEp: number | null = null;
+      let targetInEp: number | null = null;
+      let targetIface = 0;
+
+      const interfaces = dev.configuration?.interfaces ?? [];
+      for (const iface of interfaces) {
+        for (const alt of iface.alternates) {
+          for (const ep of alt.endpoints) {
+            if (ep.direction === 'out' && ep.type === 'bulk') {
+              targetOutEp = ep.endpointNumber;
+              targetIface = iface.interfaceNumber;
+            } else if (ep.direction === 'in') {
+              targetInEp = ep.endpointNumber;
+            }
+          }
+        }
+      }
+
+      try {
+        await dev.claimInterface(targetIface);
+
+        // If an IN bulk endpoint is available, attempt real-time DLE EOT query
+        if (targetOutEp !== null && targetInEp !== null && typeof dev.transferIn === 'function') {
+          await dev.transferOut(targetOutEp, ESC_POS_STATUS_QUERY);
+
+          const inResult = await Promise.race([
+            dev.transferIn(targetInEp, 16),
+            new Promise<null>((_, reject) =>
+              setTimeout(() => reject(new Error('TIMEOUT')), 800)
+            ),
+          ]).catch(() => null);
+
+          if (inResult && inResult.data) {
+            const u8 = new Uint8Array(
+              inResult.data.buffer,
+              inResult.data.byteOffset,
+              inResult.data.byteLength
+            );
+            const parsed = parseEscPosStatusBytes(u8);
+            await dev.releaseInterface(targetIface);
+            return buildHardwareStatus(
+              parsed.condition,
+              'webusb',
+              devName,
+              `Endpoint IN:${targetInEp} [${parsed.rawHex}]`,
+              parsed.paperLow
+            );
+          }
+        }
+
+        await dev.releaseInterface(targetIface);
+      } catch (claimErr: unknown) {
+        const msg = claimErr instanceof Error ? claimErr.message : String(claimErr);
+        if (msg.includes('claimInterface') || msg.includes('Unable to claim interface')) {
+          // Linux usblp kernel driver has claimed the USB device node
+          return buildHardwareStatus(
+            'ready',
+            'webusb',
+            devName,
+            'Device claimed by Host OS (usblp driver operational)'
+          );
+        }
+      }
+
+      return buildHardwareStatus(
+        'ready',
+        'webusb',
+        devName,
+        dev.manufacturerName || 'Direct USB Interface'
+      );
+    } catch (err: unknown) {
+      const msg = err instanceof Error ? err.message : String(err);
+      console.warn(`${getTimestamp()} [WEBUSB HARDWARE PROBE]`, msg);
+      return buildHardwareStatus(
+        'offline',
+        'webusb',
+        devName,
+        `Device probe error: ${msg}`
+      );
+    } finally {
+      try {
+        if (dev.opened) {
+          await dev.close();
+        }
+      } catch {
+        // Ignore close error during probe
+      }
+    }
+  }
+
+  // 2. Probe paired Web Serial ports
+  const serialPorts = await getPairedSerialPrinters();
+  if (serialPorts.length > 0) {
+    return buildHardwareStatus(
+      'ready',
+      'webserial',
+      'Serial / COM Thermal Printer',
+      'Baud: 9600 / 115200'
+    );
+  }
+
+  // 3. No hardware printer paired in browser
+  return buildHardwareStatus(
+    'not_detected',
+    'none',
+    'No Printer Paired',
+    'Tap to pair USB thermal printer or connect to clinic network'
+  );
 }
 
 /**

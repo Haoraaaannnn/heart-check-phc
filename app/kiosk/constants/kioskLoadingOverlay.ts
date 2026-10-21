@@ -4,6 +4,7 @@
  */
 
 import { CSSProperties } from "react";
+import { themeColors } from "@/constants/colors";
 
 /**
  * Static visual style definitions for the full-screen kiosk loading overlay.
@@ -24,11 +25,12 @@ export const KioskLoadingOverlayStyles = {
     },
 
     /**
-     * Activity spinner dimensions and borders.
+     * Activity spinner dimensions and brand red top border.
      */
     spinner: {
         height: "4rem",
         width: "4rem",
+        borderTopColor: themeColors.brandRed,
     },
 
     /**
@@ -46,15 +48,15 @@ export const KioskLoadingOverlayClasses = {
     /**
      * High-visibility blur backdrop covering the active screen.
      */
-    overlay: "fixed inset-0 z-[200] flex flex-col items-center justify-center gap-6 bg-white/40 backdrop-blur-sm",
+    overlay: "fixed inset-0 z-[200] flex flex-col items-center justify-center gap-6 bg-white/40 dark:bg-slate-950/50 backdrop-blur-sm",
 
     /**
-     * Animated circular loading spinner with dual-tone ring border.
+     * Animated circular loading spinner with PHC brand red active top border.
      */
-    spinner: "h-16 w-16 animate-spin rounded-full border-4 border-gray-200 border-t-blue-600",
+    spinner: "h-16 w-16 animate-spin rounded-full border-4 border-slate-200 border-t-[#a8071a] dark:border-slate-700 dark:border-t-[#c9142b]",
 
     /**
      * Medium-weight status text with subtle drop shadow for readability.
      */
-    message: "text-lg font-medium text-gray-700 drop-shadow-sm",
+    message: "text-lg font-medium text-slate-800 dark:text-slate-100 drop-shadow-sm",
 } as const;
