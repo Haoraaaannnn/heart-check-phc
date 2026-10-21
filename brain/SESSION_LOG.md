@@ -294,7 +294,27 @@ This document serves as an optional, high-signal, token-efficient session handof
   - Keyboard activation centers the ripple on the button.
   - Zero emojis across all code and documentation.
 
+---
 
+## Session 27: Quick Action Popover Dark Mode Contrast & Resilient Dismissal (2026-10-22)
 
-
-
+- **Objective:** Fix dark mode visual contrast and defective dismissal mechanisms (`x` and `Close` buttons not dismissing) on the contextual popover dialogs (`NurseQuickActionDropdown.tsx` and `QuickAssignDropdown.tsx`).
+- **Root Cause & Fixes:**
+  1. **Dark Mode Low-Contrast Defect:**
+     - In `NurseQuickActionDropdown.tsx`, action option cards used `dark:bg-purple-950/20` and `dark:bg-blue-950/20` which appeared as murky grey rectangles. Text classes included `group-hover:text-purple-900` without proper theme gating, causing titles and descriptions to dim to grey.
+     - Action option cards upgraded to high-contrast solid clinical surfaces (`dark:bg-[#222222] border-slate-200 dark:border-[#333333]`) with crisp `#f5f5f5` titles, `#a3a3a3` descriptions, and high-visibility stage badge pills in dark mode.
+     - Patient queue numbers rendered with solid red background boxes (`px-2.5 py-1 rounded-lg bg-[#cc3535] text-white`). Replaced with bare colored text (`font-black text-lg text-[#cc3535] dark:text-[#f87171] tracking-tight shrink-0`), adhering to the universal badge standard.
+     - Top-right `x` button and footer `Close` button had dark `#737373` and `#a3a3a3` text on dark backgrounds; upgraded to crisp `#f5f5f5` and `#ffffff` with distinct 1px borders.
+  2. **Defective Dismissal Mechanism:**
+     - The modal backdrop container lacked direct `onClick` or `onPointerDown` handlers, relying solely on a document-level `pointerdown` listener. Clicking the SVG inside the close button lacked `pointer-events-none`, and `e.stopPropagation()` was missing, causing event bubbling conflicts.
+     - Implemented `handleClose(e)` with `e.stopPropagation()` and in-flight mutation guarding.
+     - Added `onClick` and `onPointerDown` with `e.target === e.currentTarget` on the outer backdrop.
+     - Added `onClick={handleClose}` and `onPointerDown={(e) => e.stopPropagation()}` to header `x` button and footer `Close` button. Added `pointer-events-none` to SVG icons.
+  3. **Transfer Workstation Alignment (`QuickAssignDropdown.tsx` & `transferStyles.ts`):**
+     - Aligned `quickAssignStyles.patientBadge` with bare colored text (`font-black text-lg text-[#cc3535] dark:text-[#f87171]`).
+     - Upgraded `quickAssignStyles.closeBtn`, `quickAssignStyles.footerHint`, and `quickAssignStyles.footerCloseBtn` to high-contrast dark mode solid surfaces.
+     - Added `handleClose` and backdrop tap dismissal to `QuickAssignDropdown.tsx`.
+- **Verification:**
+  - `git diff` verified clean across `NurseQuickActionDropdown.tsx`, `QuickAssignDropdown.tsx`, and `transferStyles.ts`.
+  - Zero emojis across all code, comments, and documentation.
+  - Strict separation of concerns maintained.
