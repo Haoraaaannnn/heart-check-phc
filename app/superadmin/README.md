@@ -1,6 +1,6 @@
 # SuperAdmin Domain Developer Guide: Architecture & Where to Edit
 
-**Last Updated:** 2026-10-20
+**Last Updated:** 2026-10-21
 
 This document serves as the authoritative developer guide for maintaining, extending, and modifying the SuperAdmin module in `app/superadmin/`.
 
@@ -48,6 +48,7 @@ The SuperAdmin subsystem adheres strictly to the architectural standards defined
 | **Change print queue ticket prefix, digit padding, or live ticket preview** | [customization/page.tsx](file:///home/jensen/Github-Repositories/heart-check-phc/app/superadmin/customization/page.tsx) / [customizationTexts.ts](file:///home/jensen/Github-Repositories/heart-check-phc/app/superadmin/customization/constants/customizationTexts.ts) / [customizationStyles.ts](file:///home/jensen/Github-Repositories/heart-check-phc/app/superadmin/customization/constants/customizationStyles.ts) |
 | **Change service workflow checklist (registration, subcategories, cubicles, nurse, monitor, auto-assign, monitor layout)** | [customization/page.tsx](file:///home/jensen/Github-Repositories/heart-check-phc/app/superadmin/customization/page.tsx) / [customizationTexts.ts](file:///home/jensen/Github-Repositories/heart-check-phc/app/superadmin/customization/constants/customizationTexts.ts) / [customizationStyles.ts](file:///home/jensen/Github-Repositories/heart-check-phc/app/superadmin/customization/constants/customizationStyles.ts) |
 | **Change queue prefix and room mapping card (Settings tab)** | [QueuePrefixPanel.tsx](file:///home/jensen/Github-Repositories/heart-check-phc/app/superadmin/components/QueuePrefixPanel.tsx) / [queuePrefixTexts.ts](file:///home/jensen/Github-Repositories/heart-check-phc/app/superadmin/constants/queuePrefixTexts.ts) |
+| **Change hardware thermal receipt printer configuration, WebUSB pairing, or Network IP socket** | [HardwarePrinterConfigCard.tsx](file:///home/jensen/Github-Repositories/heart-check-phc/app/superadmin/customization/components/HardwarePrinterConfigCard.tsx) / [customizationTexts.ts](file:///home/jensen/Github-Repositories/heart-check-phc/app/superadmin/customization/constants/customizationTexts.ts) / [PRINTER_SETUP_GUIDE.md](file:///home/jensen/Github-Repositories/heart-check-phc/docs/specifications/PRINTER_SETUP_GUIDE.md) |
 
 | **Change user data fetching, search logic, role filter, or pagination** | [useSuperadminUsers.ts](file:///home/jensen/Github-Repositories/heart-check-phc/app/superadmin/hooks/useSuperadminUsers.ts) |
 | **Change user creation/edit form state, desk toggles, or save handlers** | [useUserModalState.ts](file:///home/jensen/Github-Repositories/heart-check-phc/app/superadmin/hooks/useUserModalState.ts) |

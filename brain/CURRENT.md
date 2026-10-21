@@ -101,6 +101,16 @@
    - **PostgreSQL Database Performance Indexes (`20261021_add_dashboard_performance_indexes.sql`):** Prepared migration introducing composite B-Tree indexes on `patients` (`(is_historical, created_at DESC)`, `created_at DESC`, `status`, `(cubicleNum, status)`). Eliminates full table Sequential Scans on 26,000+ historical rows for live queue queries, pagination limits, and active cubicle lookups.
    - **Updated Migration Documentation:** Updated `docs/migrations/README.md` with explicit ISO date stamp (`2026-10-21`).
 
+9. **Universal Web-Based Hardware Thermal Printer Architecture (Completed):**
+   - **Architectural Problem Solved:** Eliminated the web sandbox constraint and Linux `/dev/usb/lp*` command requirements (`sudo chmod`) by implementing a dual-mode hybrid architecture supporting both Direct USB and Network Ethernet (LAN Port 9100).
+   - **Client-Side Direct USB Driver (`lib/printer/webPrinter.ts` & `useWebPrinter.ts`):** Enabled browser-native WebUSB (`navigator.usb`) and Web Serial (`navigator.serial`) direct streaming to thermal printer bulk OUT endpoints. Includes auto-detection of paired devices on page load, real-time hot-plug connection listeners, and zero terminal commands.
+   - **Linux usblp vs WebUSB claimInterface Resolution:** When `usblp` is active on Linux, it holds exclusive claim over interface 0, causing `claimInterface` to return `Unable to claim interface`. The system detects this condition and automatically routes the print job through `/dev/usb/lp*` (which has `0666` permissions from udev). On Windows and Android, WebUSB claims the interface directly without host kernel conflicts.
+   - **Server-Side Network Socket Driver (`lib/printer/networkPrinter.ts`):** Implemented direct TCP/IP socket streaming to Port 9100 with host validation, SSRF immunity, and strict 4-second timeout. Allows any device (tablets, smartphones, laptops) across the clinic Wi-Fi to print wirelessly.
+   - **Route Handler Upgrade (`app/api/print-ticket/route.ts`):** Supports network IP dispatch, local device fallback, and returns base64 ESC/POS payload for client-side WebUSB execution.
+   - **Kiosk Print Integration (`QueuePrintContent.tsx`):** Dispatches print job to server; automatically triggers local WebUSB execution if server hardware is not directly attached.
+   - **SuperAdmin Configuration & Diagnostics (`HardwarePrinterConfigCard.tsx`):** Provides live USB status, WebUSB pairing triggers, local IP storage, and test receipt dispatch guarded by `requireSuperadmin`.
+   - **Authoritative Operational Guide (`docs/specifications/PRINTER_SETUP_GUIDE.md`):** Comprehensive documentation covering WebUSB setup, permanent Linux udev rule (eliminating `chmod` commands permanently), network socket setup, and troubleshooting.
+
 ---
 
 ## Current Blockers & Risks

@@ -27,6 +27,7 @@ import { computeEstimatedWaitMinutes } from './ewtComputation';
 import { PRINT_TEXTS } from './constants/printTexts';
 import { formatEwtLabel, formatEwtReceiptLabel } from '@/app/kiosk/constants/ewtTexts';
 import { sendQueueConfirmationSMS } from '@/app/actions/sendQueueConfirmationSMS';
+import { sendToNetworkPrinter, isValidPrinterHost } from '@/lib/printer/networkPrinter';
 
 /**
  * Global mutex flag to prevent overlapping concurrent writes to hardware USB device nodes.
@@ -200,6 +201,12 @@ export async function POST(request: Request) {
     const ESC = '\x1b';
     const GS = '\x1d';
     const RESET = ESC + '@';
+    // High-Density Thermal Parameters: ESC 7 <max_dots=7> <heat_time=20> <heat_interval=2>
+    // Increases dot burn time to eliminate faint/washed-out printing on thermal paper
+    const HIGH_DENSITY = ESC + '7\x07\x14\x02';
+    // Double-strike mode: pulses thermal elements twice per dot for rich, solid black text
+    const DOUBLE_STRIKE_ON = ESC + 'G\x01';
+    const DOUBLE_STRIKE_OFF = ESC + 'G\x00';
     const CENTER = ESC + 'a\x01';
     const LEFT = ESC + 'a\x00';
     const BOLD_ON = ESC + 'E\x01';
@@ -208,9 +215,11 @@ export async function POST(request: Request) {
     const NORMAL_FONT = GS + '!\x00';
     const CUT = GS + 'V\x00';
 
-    // Construct the ticket layout with Estimated Wait Time line
+    // Construct the ticket layout with Estimated Wait Time line and high-density dark burn
     const ticketData =
       RESET +
+      HIGH_DENSITY +
+      DOUBLE_STRIKE_ON +
       CENTER +
       BOLD_ON +
       PRINT_TEXTS.headerTitle +
@@ -220,8 +229,10 @@ export async function POST(request: Request) {
       LEFT +
       `${PRINT_TEXTS.dateLabel} ${dateStr}\n` +
       `${PRINT_TEXTS.timeLabel} ${timeStr} ${PRINT_TEXTS.timeSuffix}\n` +
+      BOLD_ON +
       `${PRINT_TEXTS.serviceLabel} ${displayService}\n` +
       `${PRINT_TEXTS.cubicleLabel} ${displayCubicle}\n` +
+      BOLD_OFF +
       PRINT_TEXTS.separatorSingle +
       CENTER +
       LARGE_FONT +
@@ -232,7 +243,9 @@ export async function POST(request: Request) {
       '\n' +
       PRINT_TEXTS.separatorSingle +
       LEFT +
+      BOLD_ON +
       `${PRINT_TEXTS.ewtLabel} ${ewtReceiptText}\n` +
+      BOLD_OFF +
       PRINT_TEXTS.separatorDouble +
       CENTER +
       PRINT_TEXTS.reminderFil1 +
@@ -242,39 +255,64 @@ export async function POST(request: Request) {
       PRINT_TEXTS.reminderEn2 +
       PRINT_TEXTS.ewtDisclaimer +
       PRINT_TEXTS.separatorDouble +
+      DOUBLE_STRIKE_OFF +
       '\n\n\n\n\n' +
       CUT;
 
     // Convert string to latin1 printer buffer
     const buffer = Buffer.from(ticketData, 'latin1');
 
-    // Candidate thermal printer USB device nodes
-    const printerPaths = ['/dev/usb/lp2', '/dev/usb/lp0', '/dev/usb/lp1'];
     let printedSuccessfully = false;
+    let printMethod: 'network' | 'device' | 'client_webusb_required' | 'none' = 'client_webusb_required';
     let lastError = '';
 
-    for (const path of printerPaths) {
-      if (existsSync(/*turbopackIgnore: true*/ path)) {
-        try {
-          await fs.writeFile(/*turbopackIgnore: true*/ path, buffer);
-          console.log(
-            `${getTimestamp()} [PRINT SUCCESS] Ticket printed to device - Queue: ${queueNumber}, Service: ${displayService}, Device: ${path}, Size: ${buffer.length} bytes`
-          );
-          printedSuccessfully = true;
-          break;
-        } catch (e: unknown) {
-          const message = e instanceof Error ? e.message : String(e);
-          lastError = `Access denied on ${path}: ${message}`;
-          console.warn(
-            `${getTimestamp()} [PRINTER DEVICE ERROR] Failed to write to device - Path: ${path}, Queue: ${queueNumber}, Error: ${message}`
-          );
+    // 1. Attempt Network Ethernet / Wi-Fi Printer if host IP is configured
+    const configuredPrinterIp = (body?.printerIp || process.env.PRINTER_IP || process.env.PRINTER_HOST || '').trim();
+    if (configuredPrinterIp && isValidPrinterHost(configuredPrinterIp)) {
+      console.log(
+        `${getTimestamp()} [PRINT DISPATCH] Attempting network socket dispatch to ${configuredPrinterIp}:9100`
+      );
+      const networkResult = await sendToNetworkPrinter(configuredPrinterIp, buffer, 9100, 3500);
+      if (networkResult.success) {
+        printedSuccessfully = true;
+        printMethod = 'network';
+        console.log(
+          `${getTimestamp()} [PRINT SUCCESS] Ticket printed via Network Socket: ${configuredPrinterIp}:9100`
+        );
+      } else {
+        console.warn(
+          `${getTimestamp()} [NETWORK PRINT RETRY] Network print to ${configuredPrinterIp} failed: ${networkResult.message}`
+        );
+      }
+    }
+
+    // 2. Fallback: Check local Linux USB printer device nodes (/dev/usb/lp*)
+    if (!printedSuccessfully) {
+      const printerPaths = ['/dev/usb/lp2', '/dev/usb/lp0', '/dev/usb/lp1'];
+      for (const path of printerPaths) {
+        if (existsSync(/*turbopackIgnore: true*/ path)) {
+          try {
+            await fs.writeFile(/*turbopackIgnore: true*/ path, buffer);
+            console.log(
+              `${getTimestamp()} [PRINT SUCCESS] Ticket printed to device node - Queue: ${queueNumber}, Service: ${displayService}, Device: ${path}, Size: ${buffer.length} bytes`
+            );
+            printedSuccessfully = true;
+            printMethod = 'device';
+            break;
+          } catch (e: unknown) {
+            const message = e instanceof Error ? e.message : String(e);
+            lastError = `Access denied on ${path}: ${message}`;
+            console.warn(
+              `${getTimestamp()} [PRINTER DEVICE ERROR] Failed to write to device node - Path: ${path}, Queue: ${queueNumber}, Error: ${message}`
+            );
+          }
         }
       }
     }
 
     if (!printedSuccessfully) {
-      console.warn(
-        `${getTimestamp()} [PRINT NOTICE] Hardware printer not attached or offline - Queue: ${queueNumber}. Returning success with EWT for display.`
+      console.log(
+        `${getTimestamp()} [PRINT NOTICE] Server hardware printer not reached - Queue: ${queueNumber}${lastError ? ` (${lastError})` : ''}. Returning ESC/POS base64 payload for client-side WebUSB/Serial dispatch.`
       );
     }
 
@@ -286,6 +324,8 @@ export async function POST(request: Request) {
         cubicle: displayCubicle,
         estimatedWaitMinutes: ewtMinutes,
         estimatedWaitLabel: formatEwtLabel(ewtMinutes),
+        printMethod,
+        escposBase64: buffer.toString('base64'),
         timestamp: new Date().toISOString(),
       },
     });
