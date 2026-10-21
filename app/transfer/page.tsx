@@ -93,8 +93,13 @@ export default function TransferPage() {
 
   // Registration and Pending Update State
   const [registrationPatients, setRegistrationPatients] = useState<Patient[]>([]);
+  const registrationPatientsRef = useRef<Patient[]>([]);
   const pendingUpdatesRef = useRef<Patient[]>([]);
   const dragInProgressRef = useRef<boolean>(false);
+
+  useEffect(() => {
+    registrationPatientsRef.current = registrationPatients;
+  }, [registrationPatients]);
 
   const { myServices, myRooms, myCounters, accessStatus, fetchMyAccess, allServices } = useMyAccess();
 
@@ -227,9 +232,8 @@ export default function TransferPage() {
 
   const savingPendingUpdates = useRef<boolean>(false);
   const regFetchSeqRef = useRef<number>(0);
-  const lastRegWriteAtRef = useRef<number>(0);
 
-  // Fetch registration window patients with sequence guard and throttled write-backs
+  // Fetch registration window patients with sequence guard and derived timestamp persistence
   const fetchRegistrationPatients = useCallback(async () => {
     const requestId = ++regFetchSeqRef.current;
     const today = new Date();
@@ -264,38 +268,65 @@ export default function TransferPage() {
         byCounter.get(p.counter)!.push(p);
       }
 
-      const startUpdates: { id: number; counter_top_started_at: string }[] = [];
-      const clearUpdates: { id: number; counter_top_started_at: null }[] = [];
+      const startIds: number[] = [];
+      const clearIds: number[] = [];
       const now = new Date().toISOString();
 
       for (const [, patients] of byCounter) {
         const sorted = [...patients].sort((a, b) => sortKey(a) - sortKey(b));
         const [top, ...rest] = sorted;
-        if (top && !top.counter_top_started_at) {
-          startUpdates.push({ id: top.id, counter_top_started_at: now });
-          top.counter_top_started_at = now;
+        if (top) {
+          if (!top.counter_top_started_at) {
+            const existing = registrationPatientsRef.current.find(p => p.id === top.id);
+            const wasRotated =
+              existing &&
+              ((top.rotation_count ?? 0) !== (existing.rotation_count ?? 0) ||
+                top.counter_rejoin_at !== existing.counter_rejoin_at);
+            const wasCounterChanged = existing && top.counter !== existing.counter;
+
+            if (existing?.counter_top_started_at && !wasRotated && !wasCounterChanged) {
+              top.counter_top_started_at = existing.counter_top_started_at;
+            } else {
+              top.counter_top_started_at = now;
+              startIds.push(top.id);
+            }
+          }
         }
         for (const p of rest) {
           if (p.counter_top_started_at) {
-            clearUpdates.push({ id: p.id, counter_top_started_at: null });
+            clearIds.push(p.id);
             p.counter_top_started_at = null;
           }
         }
       }
 
-      // Throttle write-backs to avoid WebSocket echo storm
-      const nowMs = Date.now();
-      if (nowMs - lastRegWriteAtRef.current > 4_000) {
-        lastRegWriteAtRef.current = nowMs;
-        if (startUpdates.length > 0) {
-          void supabase.from('patients').upsert(startUpdates, { onConflict: 'id' });
+      if (startIds.length > 0 || clearIds.length > 0) {
+        const jobs: PromiseLike<unknown>[] = [];
+        if (startIds.length > 0) {
+          jobs.push(
+            supabase
+              .from('patients')
+              .update({ counter_top_started_at: now })
+              .in('id', startIds)
+              .eq('is_historical', false)
+              .is('counter_top_started_at', null)
+          );
         }
-        if (clearUpdates.length > 0) {
-          void supabase.from('patients').upsert(clearUpdates, { onConflict: 'id' });
+        if (clearIds.length > 0) {
+          jobs.push(
+            supabase
+              .from('patients')
+              .update({ counter_top_started_at: null })
+              .in('id', clearIds)
+              .eq('is_historical', false)
+              .not('counter_top_started_at', 'is', null)
+          );
         }
+        void Promise.allSettled(jobs);
       }
 
       if (requestId === regFetchSeqRef.current) {
+        registrationPatientsRef.current = data as Patient[];
         setRegistrationPatients(data as Patient[]);
       }
     }
@@ -513,10 +544,11 @@ export default function TransferPage() {
 
   useRegistrationRotate(
     registrationPatients,
-    fetchRegistrationPatients,
+    syncNow,
     registrationRotateBusy,
     rotateTimeoutMs,
-    maxRotations
+    maxRotations,
+    confirmingRef
   );
 
   useEffect(() => {

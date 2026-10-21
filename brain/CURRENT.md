@@ -186,6 +186,12 @@
    - **Superadmin Customization Dark Mode Contrast (`app/superadmin/`):** Added `patientTypeBoth`, `patientTypeNew`, `patientTypeOld` and printer status badges to `app/superadmin/customization/constants/customizationStyles.ts`. Refactored `app/superadmin/customization/page.tsx` and `HardwarePrinterConfigCard.tsx` to eliminate light-mode leaking borders in dark mode.
    - **Dashboard Modules Dark Mode Contrast (`app/dashboard/`):** Upgraded `headerSearchStyles.ts` (`statusBadges`, `serviceBadge`, `categoryBadge`), `importStyles.ts` (`statusBadge`, `previewRowStatus`), `FilePreviewModal.tsx`, `patients.ts` (`ticketBadge`, `phoneProtectedBadge`, `PATIENT_STATUS_COLORS`), `styles.ts`, and `dashNavStyles.ts` (`badgeLive`, `statusBadge`).
 
+20. **Registration Counter Auto-Rotation & Timer Persistence (Completed):**
+   - **Root Cause Identified:** `fetchRegistrationPatients` was calling PostgREST `.upsert()` with partial row objects `{ id, counter_top_started_at }`. Because `patients` enforces NOT NULL on `created_at` and RESTRICTIVE RLS `CHECK (is_historical = false)`, the database rejected the upsert. The timestamp remained permanently null in PostgreSQL. Every 15 seconds, `syncNow()` re-queried null and assigned a fresh `new Date().toISOString()` timestamp, resetting the counter timer to 00:00 every 15 seconds and preventing the timer from ever reaching the 3-minute (`rotateTimeoutMs`) rotation trigger.
+   - **Persistence Fix:** Replaced `.upsert(...)` with parameterized `.update({ counter_top_started_at: now }).in('id', startIds).eq('is_historical', false).is('counter_top_started_at', null)` and `.update({ counter_top_started_at: null }).in('id', clearIds).eq('is_historical', false).not('counter_top_started_at', 'is', null)`.
+   - **In-Memory Timer Preservation:** Maintained `registrationPatientsRef` in `app/transfer/page.tsx`. During background fetches, preserved running timers unless the patient rotated or changed stations, eliminating timer reset flickers.
+   - **Rotation Hook Upgrade (`useRegistrationRotate.ts`):** Stabilized the polling interval using `registrationRef`, added optimistic concurrency locking (`expected: { counter: p.counter }`), protected against rotation during active confirmation dialogs (`confirmingRef`), and triggered `syncNow` upon rotation completion to synchronize both counter queues and idle pools.
+
 
 ---
 

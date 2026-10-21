@@ -12,9 +12,9 @@ This document serves as an optional, high-signal, token-efficient session handof
 
 ## Active Session Status
 
-- **Active Milestone / Task:** Global Constants Architecture & Patient Transfer Dark Mode Refactoring (Completed)
+- **Active Milestone / Task:** Registration Counter Auto-Rotation & 15-Second Timer Reset Resolution (Completed)
 - **Active Git Branch:** `feat/estimated-time`
-- **Session Focus:** Modularized global design and text constants under dedicated directories (`constants/designs/`, `constants/texts/`), authoring `app/transfer/constants/transferStyles.ts` to centralize all styling dictionaries, and completely eliminating inline Tailwind strings from transfer workstation UI components to restore dark mode readability.
+- **Session Focus:** Diagnosed and resolved the counter timer resetting every 15 seconds and failing to auto-rotate after 3 minutes. Discovered that `fetchRegistrationPatients` was calling PostgREST `.upsert()` with partial row objects `{ id, counter_top_started_at }` that failed database validation (due to `created_at` NOT NULL constraint and RLS INSERT policies), leaving `counter_top_started_at` permanently null in the database. Every 15-second `syncNow()` re-queried null and reset the timer back to the current timestamp. Rewrote persistence using parameterized `.update()` conditioned on `is_historical = false` and stabilized React state references in `useRegistrationRotate`.
 
 ---
 
@@ -36,6 +36,11 @@ This document serves as an optional, high-signal, token-efficient session handof
    - Station indicators, unassigned doctor titles, and "Available" labels render high-contrast text (`dark:text-[#f5f5f5]`, `dark:text-[#d4d4d4]`, `dark:text-[#a3a3a3]`, `dark:text-[#b3b3b3]`).
    - Breadcrumb navigation renders high-contrast links (`dark:text-[#d4d4d4]`, active `dark:text-[#f87171]`, dividers `dark:text-[#737373]`).
    - Replaced all hardcoded copy ('Available', 'Queue ->') with centralized keys from `transferTexts.ts`.
+5. **Registration Counter Auto-Rotation & Timer Persistence:**
+   - Replaced failing PostgREST `.upsert(startUpdates)` in `fetchRegistrationPatients` with targeted `.update({ counter_top_started_at: now }).in('id', startIds).eq('is_historical', false).is('counter_top_started_at', null)`.
+   - Maintained `registrationPatientsRef` in `app/transfer/page.tsx` to preserve running timers in memory across 15-second background sync queries, eliminating the 15-second timer reset.
+   - Preserved running timer timestamps unless patient actually rotated (`rotation_count` or `counter_rejoin_at` changed) or switched counter stations.
+   - Refactored `useRegistrationRotate` hook to stabilize polling intervals via `registrationRef`, pass `expected: { counter: p.counter }` optimistic concurrency locks, gate rotation during user confirmation modals (`confirmingRef`), and call `syncNow` upon rotation to update both registration lanes and idle pools.
 
 ---
 
@@ -66,10 +71,10 @@ This document serves as an optional, high-signal, token-efficient session handof
 - `app/transfer/components/SelectionBanner.tsx` (Refactored: pure presentation consuming `selectionBannerStyles`)
 - `app/transfer/components/StepPickers.tsx` (Refactored: pure presentation consuming `stepPickerStyles`)
 - `app/transfer/components/Sidebar.tsx` (Refactored: pure presentation consuming `sidebarStyles`)
-- `app/transfer/components/ServiceBoard.tsx` (Refactored: pure presentation consuming `transferLayoutStyles` and `cubicleStyles`)
-- `app/transfer/page.tsx` (Refactored: pure presentation consuming `transferLayoutStyles`)
+- `app/transfer/hooks/useRegistrationRotate.ts` (Refactored: polling interval stabilization via `registrationRef`, optimistic concurrency locking, `confirmingRef` modal gating, full JSDoc)
+- `app/transfer/page.tsx` (Updated: fixed 15s timer reset, replaced failing upsert with parameterized `.update()` satisfying Rule 12, added `registrationPatientsRef`, connected `syncNow` to counter rotation)
 - `app/transfer/README.md` (Updated: "Where to Edit" lookup table and design architecture)
-- `brain/CURRENT.md` (Updated: Milestone 17 documentation)
+- `brain/CURRENT.md` (Updated: counter rotation and timer reset milestone documentation)
 - `brain/SESSION_LOG.md` (Updated: active session handoff log)
 
 ---

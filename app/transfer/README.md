@@ -86,8 +86,8 @@ Use this table to quickly identify the exact file to modify for any given requir
 | Offline synchronization React hook | `hooks/useOfflineQueue.ts` | Background synchronization engine |
 | Drag-and-drop operations | `app/transfer/hooks/useDragAndDrop.ts` | Pointer event drag-and-drop mechanics with synchronous pending update ref synchronization |
 | Registration window drag & drop | `app/transfer/hooks/useRegistrationDragAndDrop.ts` | Counter allocation interactions |
-| Auto-assignment algorithm | `app/transfer/hooks/useAutoAssign.ts` | Least-occupied cubicle distribution |
-| Queue rotation timers | `app/transfer/hooks/useAutoRotate.ts` | Idle rotation and timeout management |
+| Queue rotation timers (cubicles & main queue) | `app/transfer/hooks/useAutoRotate.ts` | Idle rotation and timeout management for consultation rooms |
+| Registration counter queue rotation | `app/transfer/hooks/useRegistrationRotate.ts` | Automated intake window patient cycler and timeout management |
 | Realtime subscription | `app/transfer/hooks/useRealtimeSubscription.ts` | Supabase Realtime channel handler with 150ms event debounce, direct 0ms onPayload dispatch, 5s polling fallback, 2s hysteresis, and 500ms trailing-edge throttle |
 | Patient types and contracts | `types/Types.ts` | Global patient record interface |
 
