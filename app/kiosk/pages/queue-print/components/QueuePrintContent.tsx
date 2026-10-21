@@ -189,7 +189,6 @@ export default function QueuePrintContent({
 
                 if (response.ok) {
                     const ewtMin = data?.data?.estimatedWaitMinutes;
-                    if (ewtMin) setEwtMinutes(ewtMin);
                     const ewtDisplay = data?.data?.estimatedWaitLabel || (ewtMin ? formatEwtLabel(ewtMin) : null);
                     if (ewtDisplay) {
                         setEstimatedWaitLabel(ewtDisplay);
