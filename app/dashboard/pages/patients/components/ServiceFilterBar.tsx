@@ -42,6 +42,21 @@ export default function ServiceFilterBar({ selected, onSelect }: ServiceFilterBa
       if (data) setServices(data.map((s) => s.label_en));
     };
     load();
+
+    const channel = supabase
+      .channel('service-filter-bar-services')
+      .on(
+        'postgres_changes',
+        { event: '*', schema: 'public', table: 'services' },
+        () => {
+          load();
+        }
+      )
+      .subscribe();
+
+    return () => {
+      supabase.removeChannel(channel);
+    };
   }, []);
 
   return (

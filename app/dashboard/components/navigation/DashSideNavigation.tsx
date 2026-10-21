@@ -49,15 +49,34 @@ export function DashSideNavigation({
   const [dynamicServices, setDynamicServices] = useState<{ id: number; label_en: string; icon_src: string }[]>([]);
 
   useEffect(() => {
-    supabase
-      .from('services')
-      .select('id, label_en, icon_src')
-      .order('display_order', { ascending: true })
-      .then(({ data }) => {
-        if (data && data.length > 0) {
-          setDynamicServices(data);
+    const fetchServices = () => {
+      supabase
+        .from('services')
+        .select('id, label_en, icon_src')
+        .order('display_order', { ascending: true })
+        .then(({ data }) => {
+          if (data && data.length > 0) {
+            setDynamicServices(data);
+          }
+        });
+    };
+
+    fetchServices();
+
+    const channel = supabase
+      .channel('dash-side-nav-services')
+      .on(
+        'postgres_changes',
+        { event: '*', schema: 'public', table: 'services' },
+        () => {
+          fetchServices();
         }
-      });
+      )
+      .subscribe();
+
+    return () => {
+      supabase.removeChannel(channel);
+    };
   }, []);
 
   const S = DASH.sidebar;

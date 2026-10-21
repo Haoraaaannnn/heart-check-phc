@@ -1,6 +1,6 @@
 # Current Project State
 
-**Last Updated:** 2026-10-21
+**Last Updated:** 2026-10-22
 
 ---
 
@@ -15,6 +15,21 @@
 ---
 
 ## Active Milestone & Current Tasks
+
+0. **System Synchronization, Database Integrity, and Dark Mode Remediation:**
+   - **Audit & Master Guide (Completed):** Authored master audit and remediation guide [`docs/reports/system_synchronization_and_dark_mode_audit.md`](../docs/reports/system_synchronization_and_dark_mode_audit.md).
+   - **Phase 2: System-Wide Services Synchronization (Completed):**
+     - Subscribed all major modules to Supabase Realtime channels on `services` table: `useMyAccess` (Transfer), `usePatientData` (Transfer), `useRealtimeSubscription` (Nurse), `app/monitor/page.tsx` (Monitor Hub), `useMonitorData.ts` (Monitor category calling & registration), `DashSideNavigation.tsx` (Dashboard navigation), `ServiceFilterBar.tsx` (Patients), `useCubicleFlowchartData.ts` (Cubicles Flowchart), `RoomsPanel.tsx` (SuperAdmin), `QueuePrefixPanel.tsx` (SuperAdmin), and `customization/page.tsx` (SuperAdmin).
+     - Removed hardcoded registration filters system-wide: dynamically derived from `services.filter(s => s.requires_registration !== false)` in `app/transfer/page.tsx`, `usePatientData.ts`, `useAutoAssign.ts`, and `useMonitorData.ts`.
+     - Removed static service checks in transfer hooks: updated `useAutoRotate.ts` and `useDragAndDrop.ts` to inspect `p.reg_start` rather than hardcoding `p.service === 'Consultation' || p.service === 'OPD Screening'`.
+     - Added cascading synchronization in `app/superadmin/customization/page.tsx`: renaming or creating a service cascades updates across `cubicle.category`, `user_services`, `user_rooms`, active `patients` (`is_historical = false`), and `app_settings.queue_prefix_map`.
+     - Reconciled `QueuePrefixPanel` with dynamic services from database.
+     - Fixed legacy broken `/dashboard/servicesPHC` routes in `navigation.ts`.
+   - **Phase 1: Dark Mode Visual Defect Fixes (Completed):**
+     - Fixed `FinishedDrawer.tsx:66`: Replaced uncompiled `bg-slate-50/80 dark:bg-[#141414]/90 backdrop-blur-xs` with solid `bg-slate-50 dark:bg-[#141414]`, eliminating the bright cream header in the Nurse Finished Today drawer.
+     - Fixed `notificationStyles.ts:38`: Replaced glaring `dark:bg-white dark:text-slate-900` on active filter tab pill with ergonomic `dark:bg-slate-700 dark:text-white`.
+     - Fixed `notificationStyles.ts:51-54`: Fixed arbitrary uncompiled `/30` opacities on info, bottleneck, and warning cards, switching to compiled `/40` with crisp dark border accents.
+     - Fixed `app/monitor/page.tsx` and `app/monitor/[category]/page.tsx`: Added dark mode background surfaces and card styling (`dark:bg-[#0d0d0d]`, `dark:bg-[#1a1a1a]`, `dark:border-[#2e2e2e]`).
 
 1. **Design System & Layout Standardization (Completed):**
    - Eliminated all pillbox designs (`rounded-full` on badges, tags, chips, and buttons) across dashboard, superadmin, transfer, nurse, kiosk, and landing pages; standardized on `rounded-md` (badges) and `rounded-lg`/`rounded-xl` (buttons and cards). Functional circles (spinners, status dots, and donut charts) strictly preserved.

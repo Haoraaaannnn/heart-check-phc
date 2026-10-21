@@ -20,16 +20,33 @@ import { supabase } from '@/lib/supabase';
 import { Patient } from '@/types/Types';
 import { fetchActiveCounters } from '@/lib/counters';
 
-const REGISTERED_SERVICES = ['Consultation', 'OPD Screening'];
+let cachedRegisteredServices: string[] = ['Consultation', 'OPD Screening'];
+
+/**
+ * Loads the active list of service names that require patient registration intake.
+ */
+const fetchRegistrationServices = async (): Promise<string[]> => {
+  const { data } = await supabase
+    .from('services')
+    .select('label_en, requires_registration');
+  if (data && data.length > 0) {
+    cachedRegisteredServices = data
+      .filter((s: any) => s.requires_registration !== false)
+      .map((s: any) => s.label_en);
+  }
+  return cachedRegisteredServices;
+};
+
 const calledAtMs = (p: Patient) => (p.called_at ? new Date(p.called_at).getTime() : 0);
 
 /** Returns the counter number most recently handed out today. */
-const getLastCounter = async (): Promise<number> => {
+const getLastCounter = async (registeredServices: string[] = cachedRegisteredServices): Promise<number> => {
   const start = new Date(); start.setHours(0, 0, 0, 0);
   const end = new Date(start); end.setDate(start.getDate() + 1);
+  const targetServices = registeredServices.length > 0 ? registeredServices : ['Consultation', 'OPD Screening'];
   const { data } = await supabase
     .from('patients').select('counter')
-    .in('service', REGISTERED_SERVICES)
+    .in('service', targetServices)
     .gte('created_at', start.toISOString()).lt('created_at', end.toISOString())
     .not('counter', 'is', null)
     .order('created_at', { ascending: false }).limit(1);
@@ -111,6 +128,26 @@ export function usePatientData(pendingRef?: React.MutableRefObject<Patient[]>) {
     assignedRef.current = assignedPatients;
     onProgressRef.current = onProgressPatients;
   }, [assignedPatients, onProgressPatients]);
+
+  // Ensure services requiring registration stay synchronized in real time
+  useEffect(() => {
+    fetchRegistrationServices();
+
+    const channel = supabase
+      .channel('transfer-patient-data-services')
+      .on(
+        'postgres_changes',
+        { event: '*', schema: 'public', table: 'services' },
+        () => {
+          fetchRegistrationServices();
+        }
+      )
+      .subscribe();
+
+    return () => {
+      supabase.removeChannel(channel);
+    };
+  }, []);
 
   // In-flight confirmed assignment pins protecting recently confirmed moves
   const inFlightConfirmedRef = useRef<Map<number, ConfirmedPin>>(new Map());
@@ -228,10 +265,11 @@ export function usePatientData(pendingRef?: React.MutableRefObject<Patient[]>) {
     const writes: DerivedWrites = { nowIso, progressIds: [], statusIds: [], registration: [], topIds: [], clearTopIds: [] };
 
     // Queue: derive timers and counters locally.
-    const needsReg = queue.filter(p => REGISTERED_SERVICES.includes(p.service ?? '') && !p.reg_start);
+    const activeRegServices = cachedRegisteredServices.length > 0 ? cachedRegisteredServices : ['Consultation', 'OPD Screening'];
+    const needsReg = queue.filter(p => activeRegServices.includes(p.service ?? '') && !p.reg_start);
     let counters: number[] = [];
     let cursor = 0;
-    if (needsReg.length > 0) [counters, cursor] = await Promise.all([fetchActiveCounters(), getLastCounter()]);
+    if (needsReg.length > 0) [counters, cursor] = await Promise.all([fetchActiveCounters(), getLastCounter(activeRegServices)]);
 
     for (const p of queue) {
       if (!p.progress_started_at) { p.progress_started_at = nowIso; writes.progressIds.push(p.id); }

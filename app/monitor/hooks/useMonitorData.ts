@@ -17,16 +17,35 @@ export function useMonitorData(category: string, subcategory: string | null, cat
   const announcedCubiclePatients = useRef<Map<string, Set<number>>>(new Map());
 
   useEffect(() => {
-    supabase
-      .from('services')
-      .select('monitor_layout')
-      .eq('label_en', category)
-      .maybeSingle()
-      .then(({ data }) => {
-        if (data?.monitor_layout) {
-          setMonitorLayout(data.monitor_layout);
+    const fetchLayout = () => {
+      supabase
+        .from('services')
+        .select('monitor_layout')
+        .eq('label_en', category)
+        .maybeSingle()
+        .then(({ data }) => {
+          if (data?.monitor_layout) {
+            setMonitorLayout(data.monitor_layout);
+          }
+        });
+    };
+
+    fetchLayout();
+
+    const channel = supabase
+      .channel(`monitor-layout-sync-${category}`)
+      .on(
+        'postgres_changes',
+        { event: '*', schema: 'public', table: 'services' },
+        () => {
+          fetchLayout();
         }
-      });
+      )
+      .subscribe();
+
+    return () => {
+      supabase.removeChannel(channel);
+    };
   }, [category]);
 
   const isTableLayoutService = monitorLayout
@@ -273,24 +292,32 @@ export function useMonitorData(category: string, subcategory: string | null, cat
     const tomorrow = new Date(today);
     tomorrow.setDate(today.getDate() + 1);
 
+    // Resolve services requiring registration desk intake
+    const { data: svcData } = await supabase
+      .from('services')
+      .select('label_en, requires_registration');
+
+    const regServices = (svcData || [])
+      .filter((s: any) => s.requires_registration !== false)
+      .map((s: any) => s.label_en);
+
+    const serviceFilter = regServices.length > 0 ? regServices : ['Consultation', 'OPD Screening'];
+
     const { data, error } = await supabase
       .from('patients')
       .select('*')
-      .in('service', ['Consultation', 'OPD Screening'])
-      .in('status', ['On Progress', 'Waiting'])   
+      .in('service', serviceFilter)
+      .in('status', ['On Progress', 'Waiting'])
       .not('counter', 'is', null)
+      .is('reg_end', null)
       .gte('created_at', today.toISOString())
       .lt('created_at', tomorrow.toISOString())
       .order('counter', { ascending: true })
-      .in('status', ['On Progress', 'Waiting'])
-      .is('reg_end', null)
-      .not('counter', 'is', null)
-      .order('created_at', { ascending: true });  
+      .order('created_at', { ascending: true });
 
-   if (requestId !== registrationFetchId.current) return;
-   if (!error && data) setRegistrationPatients(data);
-   };
-
+    if (requestId !== registrationFetchId.current) return;
+    if (!error && data) setRegistrationPatients(data);
+  };
 
   const setupRegistrationSubscription = (onUpdate: () => void) => {
     const channel = supabase
@@ -298,8 +325,14 @@ export function useMonitorData(category: string, subcategory: string | null, cat
       .on('postgres_changes', { 
         event: '*', 
         schema: 'public', 
-        table: 'patients',
-        filter: `service=in.("Consultation","OPD Screening")`
+        table: 'patients'
+      }, () => {
+        onUpdate();
+      })
+      .on('postgres_changes', {
+        event: '*',
+        schema: 'public',
+        table: 'services'
       }, () => {
         onUpdate();
       })

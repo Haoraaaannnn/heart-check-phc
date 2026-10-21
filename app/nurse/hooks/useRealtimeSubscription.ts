@@ -221,6 +221,20 @@ export function useRealtimeSubscription(
                     handleUpdate();
                 },
             )
+            .on(
+                "postgres_changes",
+                { event: "*", schema: "public", table: "cubicle" },
+                () => {
+                    handleUpdate();
+                },
+            )
+            .on(
+                "postgres_changes",
+                { event: "*", schema: "public", table: "services" },
+                () => {
+                    handleUpdate();
+                },
+            )
             .subscribe((rawStatus) => {
                 handleStatusChange(rawStatus as ChannelStatus);
             });

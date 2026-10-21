@@ -1,6 +1,6 @@
 # Active Session Handoff Log
 
-**Last Updated:** 2026-10-21
+**Last Updated:** 2026-10-22
 
 This document serves as an optional, high-signal, token-efficient session handoff for multi-step tasks across AI model invocations or developer shifts.
 
@@ -12,9 +12,9 @@ This document serves as an optional, high-signal, token-efficient session handof
 
 ## Active Session Status
 
-- **Active Milestone / Task:** Registration Counter Auto-Rotation & 15-Second Timer Reset Resolution (Completed)
+- **Active Milestone / Task:** Phase 2 (System-Wide Services Synchronization) & Phase 1 (Dark Mode Fixes) Completed
 - **Active Git Branch:** `feat/estimated-time`
-- **Session Focus:** Diagnosed and resolved the counter timer resetting every 15 seconds and failing to auto-rotate after 3 minutes. Discovered that `fetchRegistrationPatients` was calling PostgREST `.upsert()` with partial row objects `{ id, counter_top_started_at }` that failed database validation (due to `created_at` NOT NULL constraint and RLS INSERT policies), leaving `counter_top_started_at` permanently null in the database. Every 15-second `syncNow()` re-queried null and reset the timer back to the current timestamp. Rewrote persistence using parameterized `.update()` conditioned on `is_historical = false` and stabilized React state references in `useRegistrationRotate`.
+- **Session Focus:** Completed full system synchronization and dark mode repair: (1) Added realtime WebSocket subscriptions for `services` table in `useMyAccess` (Transfer), `usePatientData` (Transfer), `NurseSidebar` / `useRealtimeSubscription` (Nurse), `app/monitor/page.tsx` (Monitor Hub), `useMonitorData.ts` (Monitor category calling & registration), `DashSideNavigation.tsx` (Dashboard Navigation), `ServiceFilterBar.tsx` (Patients), `useCubicleFlowchartData.ts` (Cubicles Flowchart), `RoomsPanel.tsx` (SuperAdmin), `QueuePrefixPanel.tsx` (SuperAdmin), and `customization/page.tsx` (SuperAdmin); (2) Removed hardcoded registration filters in `app/transfer/page.tsx:247`, `usePatientData.ts:268`, and `useMonitorData.ts:298`, dynamically querying services where `requires_registration !== false`; (3) Replaced hardcoded service checks in `useAutoRotate.ts` and `useDragAndDrop.ts` with dynamic `p.reg_start` checks; (4) Added cascading updates in `app/superadmin/customization/page.tsx` so renaming or creating a service cascades updates across `cubicle.category`, `user_services`, `user_rooms`, active `patients` (`is_historical = false`), and `queue_prefix_map`; (5) Reconciled `QueuePrefixPanel` with dynamic database services; (6) Fixed broken `/dashboard/servicesPHC` routes in `navigation.ts`; (7) Fixed dark mode defects: FinishedDrawer header solid surface (`bg-slate-50 dark:bg-[#141414]`), NotificationDropdown active filter tab (`dark:bg-slate-700 dark:text-white`), Notification card opacity `/40`, and TV Monitor dark mode classes.
 
 ---
 

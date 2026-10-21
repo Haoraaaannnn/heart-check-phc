@@ -102,6 +102,10 @@ export default function TransferPage() {
   }, [registrationPatients]);
 
   const { myServices, myRooms, myCounters, accessStatus, fetchMyAccess, allServices } = useMyAccess();
+  const allServicesRef = useRef<Service[]>(allServices);
+  useEffect(() => {
+    allServicesRef.current = allServices;
+  }, [allServices]);
 
   const [isLoading, setIsLoading] = useState<boolean>(true);
   const [isSyncing, setIsSyncing] = useState<boolean>(false);
@@ -241,10 +245,19 @@ export default function TransferPage() {
     const tomorrow = new Date(today);
     tomorrow.setDate(today.getDate() + 1);
 
+    const currentServices = allServicesRef.current;
+    const registrationServices = (currentServices ?? [])
+      .filter((s) => s.requires_registration !== false)
+      .map((s) => s.label_en);
+    const serviceFilter =
+      registrationServices.length > 0
+        ? registrationServices
+        : ['Consultation', 'OPD Screening'];
+
     const { data, error } = await supabase
       .from('patients')
       .select('*')
-      .in('service', ['Consultation', 'OPD Screening'])
+      .in('service', serviceFilter)
       .not('counter', 'is', null)
       .is('reg_end', null)
       .neq('status', 'Assigned')
@@ -1017,6 +1030,13 @@ export default function TransferPage() {
 
     return () => clearInterval(interval);
   }, []);
+
+  // Synchronize registration counter list whenever dynamic services catalog updates
+  useEffect(() => {
+    if (allServices && allServices.length > 0) {
+      void fetchRegistrationPatients();
+    }
+  }, [allServices, fetchRegistrationPatients]);
 
   if (checking) {
     return (

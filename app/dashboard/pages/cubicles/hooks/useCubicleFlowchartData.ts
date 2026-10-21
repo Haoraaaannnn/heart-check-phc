@@ -606,12 +606,26 @@ export function useCubicleFlowchartData() {
       fetchFlowchartData();
     }, CUBICLES_REFRESH_INTERVAL_MS);
 
-    // Live Supabase WebSocket channel subscribing to all patient stage transitions
+    // Live Supabase WebSocket channel subscribing to all patient stage transitions, cubicles, and services
     const channel = supabase
       .channel(`flowchart-patients-live-${Date.now()}`)
       .on(
         'postgres_changes',
         { event: '*', schema: 'public', table: 'patients' },
+        () => {
+          fetchFlowchartData();
+        }
+      )
+      .on(
+        'postgres_changes',
+        { event: '*', schema: 'public', table: 'services' },
+        () => {
+          fetchFlowchartData();
+        }
+      )
+      .on(
+        'postgres_changes',
+        { event: '*', schema: 'public', table: 'cubicle' },
         () => {
           fetchFlowchartData();
         }
