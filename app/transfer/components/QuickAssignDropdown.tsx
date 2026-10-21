@@ -194,11 +194,32 @@ export function QuickAssignDropdown({
     }
   };
 
+  /**
+   * Safely dismisses the quick assign dialog unless an assignment is in flight.
+   */
+  const handleClose = (e?: React.SyntheticEvent | Event) => {
+    if (e) {
+      e.stopPropagation();
+    }
+    if (pendingTarget) return;
+    onClose();
+  };
+
   return (
     <div
       role="dialog"
       aria-modal="true"
       aria-labelledby="quick-assign-title"
+      onClick={(e) => {
+        if (e.target === e.currentTarget) {
+          handleClose(e);
+        }
+      }}
+      onPointerDown={(e) => {
+        if (e.target === e.currentTarget) {
+          handleClose(e);
+        }
+      }}
       className={quickAssignStyles.backdrop}
     >
       <div ref={panelRef} className={quickAssignStyles.dialogCard}>
@@ -229,13 +250,14 @@ export function QuickAssignDropdown({
 
           <button
             type="button"
-            onClick={onClose}
+            onClick={handleClose}
+            onPointerDown={handleClose}
             disabled={pendingTarget !== null}
             className={quickAssignStyles.closeBtn}
             aria-label={transferTexts.closeBtn}
           >
             <svg
-              className="w-4 h-4"
+              className="w-4 h-4 pointer-events-none"
               fill="none"
               viewBox="0 0 24 24"
               stroke="currentColor"
@@ -529,7 +551,8 @@ export function QuickAssignDropdown({
           </span>
           <button
             type="button"
-            onClick={onClose}
+            onClick={handleClose}
+            onPointerDown={handleClose}
             disabled={pendingTarget !== null}
             className={quickAssignStyles.footerCloseBtn}
           >

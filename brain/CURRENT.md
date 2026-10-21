@@ -260,6 +260,11 @@
    - **Expanding Radial Clip-Path Animation (`app/globals.css`):** Configured `::view-transition-new(root)` to expand via `clipPath` from the click coordinates to the furthest screen corner over 450ms (`cubic-bezier(0.4, 0, 0.2, 1)`), smoothly sweeping across the previous theme without layout jitter.
    - **Workstation Integration:** Connected circular ripple to all theme toggle buttons in Nurse, Transfer, SuperAdmin, Dashboard, and Select Screen.
 
+28. **Quick Action Popover Dark Mode Contrast & Resilient Dismissal (Completed):**
+   - **High-Contrast Dark Mode Solid Surfaces:** Upgraded `NurseQuickActionDropdown.tsx` with dedicated `nurseQuickActionStyles` consuming semantic surface tokens (`bg-surface-muted`, `border-line`, `text-content`, `text-content-muted`). Standardized action buttons (`with_doctor`, `call`, `carryout`, `finish`, `back_queue`, `back_doctor`) with high-contrast surfaces (`bg-surface-muted dark:bg-[#202020]`), crisp 1px borders, and high-visibility stage badges, eliminating white-on-white button rendering in dark mode.
+   - **Queue Number Bare Text Styling:** Removed background box (`bg-[#cc3535] text-white`) from patient queue numbers in `NurseQuickActionDropdown.tsx` and `QuickAssignDropdown.tsx` (via `quickAssignStyles.patientBadge` in `constants/designs/transferStyles.ts`), rendering bare high-contrast colored text (`font-black text-lg text-[#cc3535] dark:text-[#f87171]`).
+   - **Resilient Dismissal Mechanism:** Implemented `handleClose` helper with `e.stopPropagation()` and loading mutation guard. Connected both `onClick` and `onPointerDown` on the top-right header `x` button, bottom-right footer `Close` button, and backdrop overlay (`e.target === e.currentTarget`). Added `pointer-events-none` on SVG icons to eliminate pointer capture interference.
+
 ---
 
 ## Current Blockers & Risks

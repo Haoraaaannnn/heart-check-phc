@@ -596,14 +596,14 @@ export const quickAssignStyles = {
     'px-5 py-3.5 border-b border-slate-100 dark:border-[#2e2e2e] flex items-start justify-between gap-3 bg-slate-50/90 dark:bg-[#141414]',
 
   patientBadge:
-    'px-2.5 py-1 rounded-lg bg-[#cc3535] text-white font-black text-sm tracking-tight shadow-2xs shrink-0',
+    'font-black text-lg text-[#cc3535] dark:text-[#f87171] tracking-tight shrink-0',
 
   title: 'text-sm font-bold text-slate-900 dark:text-[#f5f5f5] truncate',
 
   subtitle: 'text-[11px] text-slate-500 dark:text-[#a3a3a3] truncate mt-0.5',
 
   closeBtn:
-    'w-8 h-8 rounded-lg text-slate-400 dark:text-[#737373] hover:text-slate-700 dark:hover:text-[#f5f5f5] hover:bg-slate-200/60 dark:hover:bg-[#242424] flex items-center justify-center transition cursor-pointer shrink-0 disabled:opacity-40',
+    'w-8 h-8 rounded-lg text-slate-400 dark:text-[#a3a3a3] hover:text-slate-700 dark:hover:text-[#ffffff] hover:bg-slate-100 dark:hover:bg-[#282828] border border-transparent hover:border-slate-200 dark:hover:border-[#383838] flex items-center justify-center transition cursor-pointer shrink-0 disabled:opacity-40',
 
   bodyList: 'p-3.5 overflow-y-auto space-y-2 phc-scroll flex-1',
 
@@ -688,10 +688,10 @@ export const quickAssignStyles = {
     'text-xs font-bold px-2 py-0.5 rounded-md bg-emerald-600 text-white shrink-0 shadow-2xs group-hover:bg-emerald-700 transition-colors',
 
   footer:
-    'px-4 py-2.5 bg-slate-50/80 dark:bg-[#141414] border-t border-slate-100 dark:border-[#2e2e2e] flex items-center justify-between',
-  footerHint: 'text-[11px] text-slate-400 dark:text-[#737373] font-medium',
+    'px-5 py-3 bg-slate-50/90 dark:bg-[#141414] border-t border-slate-100 dark:border-[#2e2e2e] flex items-center justify-between',
+  footerHint: 'text-[11px] text-slate-400 dark:text-[#a3a3a3] font-medium',
   footerCloseBtn:
-    'px-3 py-1.5 rounded-lg text-xs font-bold text-slate-600 dark:text-[#a3a3a3] hover:text-slate-900 dark:hover:text-[#f5f5f5] bg-white dark:bg-[#242424] hover:bg-slate-100 dark:hover:bg-[#2e2e2e] border border-slate-200 dark:border-[#2e2e2e] shadow-2xs transition cursor-pointer disabled:opacity-40',
+    'px-3.5 py-1.5 rounded-xl text-xs font-bold text-slate-700 dark:text-[#f5f5f5] bg-white dark:bg-[#242424] hover:bg-slate-100 dark:hover:bg-[#2e2e2e] border border-slate-200 dark:border-[#383838] shadow-2xs hover:shadow-xs transition cursor-pointer disabled:opacity-40',
 } as const;
 
 /**
