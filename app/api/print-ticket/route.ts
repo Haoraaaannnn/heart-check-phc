@@ -23,9 +23,12 @@ import { existsSync } from 'fs';
 import { getTimestamp } from '@/lib/logger';
 import { supabase } from '@/lib/supabase';
 import { createAdminClient } from '@/lib/supabase/admin';
-import { computeEstimatedWaitMinutes } from './ewtComputation';
+import {
+  computeEstimatedWaitMinutes,
+  formatEwtLabel,
+  formatEwtReceiptLabel,
+} from './ewtComputation';
 import { PRINT_TEXTS } from './constants/printTexts';
-import { formatEwtLabel, formatEwtReceiptLabel } from '@/app/kiosk/constants/ewtTexts';
 import { sendQueueConfirmationSMS } from '@/app/actions/sendQueueConfirmationSMS';
 import { sendToNetworkPrinter, isValidPrinterHost } from '@/lib/printer/networkPrinter';
 

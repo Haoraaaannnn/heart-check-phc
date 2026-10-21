@@ -119,6 +119,8 @@ export interface MinimalUSBConfiguration {
   interfaces: MinimalUSBInterface[];
 }
 
+export type USBBufferSource = Uint8Array | ArrayBuffer | ArrayBufferView;
+
 export interface MinimalUSBDevice {
   vendorId: number;
   productId: number;
@@ -132,7 +134,7 @@ export interface MinimalUSBDevice {
   selectConfiguration(configurationValue: number): Promise<void>;
   claimInterface(interfaceNumber: number): Promise<void>;
   releaseInterface(interfaceNumber: number): Promise<void>;
-  transferOut(endpointNumber: number, data: BufferSource): Promise<{ status: string; bytesWritten?: number }>;
+  transferOut(endpointNumber: number, data: USBBufferSource): Promise<{ status: string; bytesWritten?: number }>;
 }
 
 export interface MinimalUSBManager {

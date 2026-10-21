@@ -12,9 +12,9 @@ This document serves as an optional, high-signal, token-efficient session handof
 
 ## Active Session Status
 
-- **Active Milestone / Task:** Universal Web-Based Hardware Thermal Printer Architecture (Completed)
-- **Active Git Branch:** `feat/simulation`
-- **Session Focus:** Resolved the web sandbox hardware printing limitation and Linux `/dev/usb/lp*` permission barrier (`chmod`) by engineering a dual-mode hybrid architecture supporting both Direct USB (WebUSB / Web Serial API) and Network Ethernet (LAN Port 9100) with automatic peripheral detection.
+- **Active Milestone / Task:** Fix EWT and Printer Module Import Issues (Completed)
+- **Active Git Branch:** `feat/estimated-time`
+- **Session Focus:** Resolved import and typing errors in `app/api/print-ticket/route.ts`, `lib/printer/webPrinter.ts`, and `lib/printer/types.ts`. Extracted shared EWT formatting utilities into root `constants/ewtTexts.ts` per AGENTS.md separation-of-concerns and scoped-constants standards, removing cross-boundary kiosk imports from backend route handlers.
 
 ---
 

@@ -50,11 +50,17 @@ export default function MonitorIndexPage() {
   const [loading, setLoading] = useState(true);
 
   useEffect(() => {
-    supabase
-      .from('services')
-      .select('label_en, has_subcategories, show_on_monitor')
-      .order('display_order', { ascending: true })
-      .then(({ data }) => {
+    let isMounted = true;
+
+    async function fetchServices() {
+      try {
+        const { data } = await supabase
+          .from('services')
+          .select('label_en, has_subcategories, show_on_monitor')
+          .order('display_order', { ascending: true });
+
+        if (!isMounted) return;
+
         if (data && data.length > 0) {
           const monitorServices: MonitorCategory[] = data
             .filter((s: { show_on_monitor?: boolean | null }) => s.show_on_monitor !== false)
@@ -63,18 +69,27 @@ export default function MonitorIndexPage() {
               hasSubcategories: !!s.has_subcategories,
             }));
 
-          const hasReg = monitorServices.some(s => s.name === 'Registration');
+          const hasReg = monitorServices.some((s) => s.name === 'Registration');
           const finalList = hasReg
             ? monitorServices
             : [{ name: 'Registration', hasSubcategories: false }, ...monitorServices];
 
           setCategories(finalList);
         }
-        setLoading(false);
-      })
-      .catch(() => {
-        setLoading(false);
-      });
+      } catch {
+        // Fallback to DEFAULT_CATEGORIES upon network or database fault
+      } finally {
+        if (isMounted) {
+          setLoading(false);
+        }
+      }
+    }
+
+    fetchServices();
+
+    return () => {
+      isMounted = false;
+    };
   }, []);
 
   const handleCategoryClick = (cat: MonitorCategory) => {

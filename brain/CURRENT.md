@@ -6,8 +6,8 @@
 
 ## Active Environment & Branch Status
 
-- **Active Git Branch:** `feat/simulation`
-- **Latest Commit:** `8da3bd6` ("removed obsolete and unnecessary files")
+- **Active Git Branch:** `feat/estimated-time`
+- **Latest Commit:** `75a1a7c` ("queue printer now work with just connecting it and have proper communication with the browser")
 - **Working Tree:** Second brain standardization active; live Supabase database synchronized.
 - **Primary AI Pairing Tool:** Antigravity IDE (Gemini 3.8 Flash High)
 - **Local Knowledge Vault:** Obsidian-compatible repository root (`.obsidian/` gitignored)

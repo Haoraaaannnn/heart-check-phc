@@ -15,6 +15,19 @@
 
 import { SupabaseClient } from '@supabase/supabase-js';
 import { getTimestamp } from '@/lib/logger';
+import {
+  formatEwtLabel,
+  formatEwtReceiptLabel,
+  formatEwtSmsLabel,
+  EWT_TEXTS,
+} from '@/constants/ewtTexts';
+
+export {
+  formatEwtLabel,
+  formatEwtReceiptLabel,
+  formatEwtSmsLabel,
+  EWT_TEXTS,
+};
 
 /** Default fallback duration in minutes if insufficient historical data exists. */
 const FALLBACK_AVG_DURATION_MINUTES = 15;

@@ -243,7 +243,8 @@ export async function writeEscPosToUsbDevice(
     let targetEndpointNumber: number | null = null;
     let targetInterfaceNumber: number = 0;
 
-    for (const iface of device.configuration.interfaces) {
+    const interfaces = device.configuration?.interfaces ?? [];
+    for (const iface of interfaces) {
       for (const alt of iface.alternates) {
         for (const ep of alt.endpoints) {
           if (ep.direction === 'out' && ep.type === 'bulk') {
@@ -257,19 +258,16 @@ export async function writeEscPosToUsbDevice(
       if (targetEndpointNumber !== null) break;
     }
 
-    // If no bulk OUT found, fallback to endpoint 1 or 2
-    if (targetEndpointNumber === null) {
-      targetEndpointNumber = 1;
-      targetInterfaceNumber = 0;
-    }
+    const endpointNumber: number = targetEndpointNumber ?? 1;
+    const interfaceNumber: number = targetInterfaceNumber ?? 0;
 
     try {
-      await device.claimInterface(targetInterfaceNumber);
+      await device.claimInterface(interfaceNumber);
     } catch (claimErr: unknown) {
       const claimMsg = claimErr instanceof Error ? claimErr.message : String(claimErr);
       if (claimMsg.includes('claimInterface') || claimMsg.includes('Unable to claim interface')) {
         console.warn(
-          `${getTimestamp()} [WEBUSB INTERFACE BUSY] USB Interface ${targetInterfaceNumber} is claimed by host OS (Linux usblp driver).`
+          `${getTimestamp()} [WEBUSB INTERFACE BUSY] USB Interface ${interfaceNumber} is claimed by host OS (Linux usblp driver).`
         );
         const kernelClaimError = new Error('WEBUSB_INTERFACE_CLAIMED_BY_KERNEL');
         kernelClaimError.cause = claimErr;
@@ -278,8 +276,8 @@ export async function writeEscPosToUsbDevice(
       throw claimErr;
     }
 
-    await device.transferOut(targetEndpointNumber, data);
-    await device.releaseInterface(targetInterfaceNumber);
+    await device.transferOut(endpointNumber, data);
+    await device.releaseInterface(interfaceNumber);
 
     console.log(
       `${getTimestamp()} [WEBUSB PRINT SUCCESS] Transferred ${data.byteLength} bytes to USB printer`
