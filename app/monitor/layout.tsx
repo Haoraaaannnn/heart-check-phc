@@ -32,11 +32,19 @@ interface MonitorLayoutProps {
 export default function MonitorLayout({ children }: MonitorLayoutProps) {
   useEffect(() => {
     const root = document.documentElement;
+    const body = document.body;
     const wasDark = root.classList.contains('dark');
+    const prevHtmlOverflow = root.style.overflow;
+    const prevBodyOverflow = body.style.overflow;
+
     root.classList.remove('dark');
     root.style.colorScheme = 'light';
+    root.style.overflow = 'hidden';
+    body.style.overflow = 'hidden';
 
     return () => {
+      root.style.overflow = prevHtmlOverflow;
+      body.style.overflow = prevBodyOverflow;
       if (wasDark) {
         root.classList.add('dark');
         root.style.colorScheme = 'dark';
@@ -44,5 +52,9 @@ export default function MonitorLayout({ children }: MonitorLayoutProps) {
     };
   }, []);
 
-  return <>{children}</>;
+  return (
+    <div className="h-screen h-[100dvh] w-screen w-[100dvw] overflow-hidden flex flex-col bg-white text-slate-800 font-sans select-none">
+      {children}
+    </div>
+  );
 }

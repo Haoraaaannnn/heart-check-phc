@@ -1,66 +1,158 @@
 'use client';
-import { Patient } from '@/types/Types';
 
+/**
+ * @fileoverview Paired cubicle queue monitor layout.
+ *
+ * Renders active patient numbers side-by-side with assigned consultation cubicles
+ * and physician names. Adapts dynamically to screen size and viewport dimensions
+ * without overflowing or triggering scrollbars.
+ *
+ * @module app/monitor/components/PairedLayout
+ */
+
+import React from 'react';
+import { Patient } from '@/types/Types';
+import { MONITOR_STYLES } from '@/app/monitor/constants/monitorStyles';
+import { MONITOR_TEXTS } from '@/app/monitor/constants/monitorTexts';
+
+/** Props for {@link PairedLayout}. */
 type PairedLayoutProps = {
+  /** Service title. */
   title: string;
+  /** Paired queue data containing patient records and cubicle identifiers. */
   pairedData: { patient: Patient | null; cubicle: string }[];
+  /** Cubicle number display formatter. */
   formatCubicleDisplay: (cubicleNum: string) => string;
+  /** Mapping of cubicle IDs to assigned physician names. */
   cubicleDoctorMap?: Record<string, string>;
 };
 
-export function PairedLayout({ title, pairedData, formatCubicleDisplay, cubicleDoctorMap = {} }: PairedLayoutProps) {
-  return (
-    <div className="p-12">
-      {pairedData.length === 0 ? (
-        <div className="flex items-center justify-center h-[70vh]">
-          <p className="text-gray-300 text-5xl font-bold">No patients being served</p>
+/**
+ * Renders the paired cubicle layout for clinical consultations and examinations.
+ *
+ * @param props - Component props containing paired patient and cubicle data.
+ * @returns The rendered paired layout element.
+ */
+export function PairedLayout({
+  pairedData,
+  formatCubicleDisplay,
+  cubicleDoctorMap = {},
+}: PairedLayoutProps) {
+  if (pairedData.length === 0) {
+    return (
+      <div className={MONITOR_STYLES.pairedLayout.container}>
+        <div className={MONITOR_STYLES.pairedLayout.emptyStateWrap}>
+          <p className={MONITOR_STYLES.pairedLayout.emptyStateText}>
+            {MONITOR_TEXTS.pairedLayout.emptyState}
+          </p>
         </div>
-      ) : (
-        <div className="max-w-6xl mx-auto">
-          <div className="grid grid-cols-2 gap-8 mb-8">
-            <h2 className="text-gray-600 text-3xl font-bold text-center">Queue Number</h2>
-            <h2 className="text-gray-600 text-3xl font-bold text-center">Cubicle / Room</h2>
+      </div>
+    );
+  }
+
+  const isMultiColumn = pairedData.length > 4;
+
+  if (isMultiColumn) {
+    const leftPairs = pairedData.slice(0, Math.ceil(pairedData.length / 2));
+    const rightPairs = pairedData.slice(Math.ceil(pairedData.length / 2));
+    const maxRowCount = Math.max(leftPairs.length, rightPairs.length);
+
+    return (
+      <div className={MONITOR_STYLES.pairedLayout.container}>
+        <div className={MONITOR_STYLES.pairedLayout.innerWrapper}>
+          <div className="grid grid-cols-4 gap-3 lg:gap-6 mb-2 sm:mb-3 flex-shrink-0">
+            <h2 className={MONITOR_STYLES.pairedLayout.headerTitle}>
+              {MONITOR_TEXTS.pairedLayout.colQueueNumber}
+            </h2>
+            <h2 className={MONITOR_STYLES.pairedLayout.headerTitle}>
+              {MONITOR_TEXTS.pairedLayout.colCubicleRoom}
+            </h2>
+            <h2 className={MONITOR_STYLES.pairedLayout.headerTitle}>
+              {MONITOR_TEXTS.pairedLayout.colQueueNumber}
+            </h2>
+            <h2 className={MONITOR_STYLES.pairedLayout.headerTitle}>
+              {MONITOR_TEXTS.pairedLayout.colCubicleRoom}
+            </h2>
           </div>
-          <div className="space-y-4">
-            {pairedData.map((pair, index) => {
-              const doctorName = pair.cubicle ? cubicleDoctorMap[pair.cubicle] : undefined;
+
+          <div className={MONITOR_STYLES.pairedLayout.pairsList}>
+            {Array.from({ length: maxRowCount }).map((_, rowIdx) => {
+              const left = leftPairs[rowIdx];
+              const right = rightPairs[rowIdx];
+              const leftDoc = left?.cubicle ? cubicleDoctorMap[left.cubicle] : undefined;
+              const rightDoc = right?.cubicle ? cubicleDoctorMap[right.cubicle] : undefined;
+              const isLeftFirst = rowIdx === 0;
+
               return (
-                <div key={index} className="grid grid-cols-2 gap-8">
-                  <div className={`rounded-3xl flex flex-col items-center justify-center gap-1 transition-all ${
-                    index === 0
-                      ? 'bg-[#cc3535] shadow-2xl shadow-red-300 ring-[6px] ring-red-100 scale-105 min-h-[180px] p-8'
-                      : 'bg-white border-2 border-gray-100 min-h-[120px] p-6 opacity-70'
-                  }`}>
-                    {pair.patient ? (
+                <div key={rowIdx} className="grid grid-cols-4 gap-3 lg:gap-6 flex-1 min-h-0 items-stretch">
+                  {/* Left Column Pair */}
+                  <div className={isLeftFirst ? MONITOR_STYLES.pairedLayout.nowServingCard : MONITOR_STYLES.pairedLayout.standardServingCard}>
+                    {left?.patient ? (
                       <>
-                        {index === 0 && (
-                          <span className="text-white/80 text-base font-black uppercase tracking-widest">
-                            Now Serving
+                        {isLeftFirst && (
+                          <span className={MONITOR_STYLES.pairedLayout.nowServingBadge}>
+                            {MONITOR_TEXTS.pairedLayout.nowServingBadge}
                           </span>
                         )}
-                        <span className={`font-black tabular-nums drop-shadow-md ${
-                          index === 0 ? 'text-white text-8xl' : 'text-gray-400 text-3xl'
-                        }`}>
-                          {pair.patient.patientNum}
+                        <span className={isLeftFirst ? MONITOR_STYLES.pairedLayout.nowServingTicketPrimary : MONITOR_STYLES.pairedLayout.nowServingTicketSecondary}>
+                          {left.patient.patientNum}
                         </span>
                       </>
                     ) : (
-                      <span className="text-gray-300 text-3xl">—</span>
+                      <span className={MONITOR_STYLES.pairedLayout.emptyCardText}>
+                        {MONITOR_TEXTS.pairedLayout.emptyPlaceholder}
+                      </span>
                     )}
                   </div>
 
-                  <div className="bg-gray-50 rounded-2xl p-6 shadow-md border-2 border-gray-100 flex flex-col items-center justify-center min-h-[120px]">
-                    {pair.cubicle ? (
+                  <div className={MONITOR_STYLES.pairedLayout.cubicleCard}>
+                    {left?.cubicle ? (
                       <>
-                        <span className="text-gray-700 font-bold text-3xl">
-                          {formatCubicleDisplay(pair.cubicle)}
+                        <span className={MONITOR_STYLES.pairedLayout.cubicleLabel}>
+                          {formatCubicleDisplay(left.cubicle)}
                         </span>
-                        {doctorName && (
-                          <span className="text-gray-400 text-lg mt-1">Dr. {doctorName}</span>
+                        {leftDoc && (
+                          <span className={MONITOR_STYLES.pairedLayout.doctorLabel}>
+                            {MONITOR_TEXTS.pairedLayout.doctorPrefix}{leftDoc}
+                          </span>
                         )}
                       </>
                     ) : (
-                      <span className="text-gray-300 text-3xl">—</span>
+                      <span className={MONITOR_STYLES.pairedLayout.emptyCardText}>
+                        {MONITOR_TEXTS.pairedLayout.emptyPlaceholder}
+                      </span>
+                    )}
+                  </div>
+
+                  {/* Right Column Pair */}
+                  <div className={MONITOR_STYLES.pairedLayout.standardServingCard}>
+                    {right?.patient ? (
+                      <span className={MONITOR_STYLES.pairedLayout.nowServingTicketSecondary}>
+                        {right.patient.patientNum}
+                      </span>
+                    ) : (
+                      <span className={MONITOR_STYLES.pairedLayout.emptyCardText}>
+                        {MONITOR_TEXTS.pairedLayout.emptyPlaceholder}
+                      </span>
+                    )}
+                  </div>
+
+                  <div className={MONITOR_STYLES.pairedLayout.cubicleCard}>
+                    {right?.cubicle ? (
+                      <>
+                        <span className={MONITOR_STYLES.pairedLayout.cubicleLabel}>
+                          {formatCubicleDisplay(right.cubicle)}
+                        </span>
+                        {rightDoc && (
+                          <span className={MONITOR_STYLES.pairedLayout.doctorLabel}>
+                            {MONITOR_TEXTS.pairedLayout.doctorPrefix}{rightDoc}
+                          </span>
+                        )}
+                      </>
+                    ) : (
+                      <span className={MONITOR_STYLES.pairedLayout.emptyCardText}>
+                        {MONITOR_TEXTS.pairedLayout.emptyPlaceholder}
+                      </span>
                     )}
                   </div>
                 </div>
@@ -68,7 +160,71 @@ export function PairedLayout({ title, pairedData, formatCubicleDisplay, cubicleD
             })}
           </div>
         </div>
-      )}
+      </div>
+    );
+  }
+
+  return (
+    <div className={MONITOR_STYLES.pairedLayout.container}>
+      <div className={MONITOR_STYLES.pairedLayout.innerWrapper}>
+        <div className={MONITOR_STYLES.pairedLayout.headerRow}>
+          <h2 className={MONITOR_STYLES.pairedLayout.headerTitle}>
+            {MONITOR_TEXTS.pairedLayout.colQueueNumber}
+          </h2>
+          <h2 className={MONITOR_STYLES.pairedLayout.headerTitle}>
+            {MONITOR_TEXTS.pairedLayout.colCubicleRoom}
+          </h2>
+        </div>
+
+        <div className={MONITOR_STYLES.pairedLayout.pairsList}>
+          {pairedData.map((pair, index) => {
+            const doctorName = pair.cubicle ? cubicleDoctorMap[pair.cubicle] : undefined;
+            const isFirst = index === 0;
+
+            return (
+              <div key={index} className={MONITOR_STYLES.pairedLayout.pairRow}>
+                <div className={isFirst ? MONITOR_STYLES.pairedLayout.nowServingCard : MONITOR_STYLES.pairedLayout.standardServingCard}>
+                  {pair.patient ? (
+                    <>
+                      {isFirst && (
+                        <span className={MONITOR_STYLES.pairedLayout.nowServingBadge}>
+                          {MONITOR_TEXTS.pairedLayout.nowServingBadge}
+                        </span>
+                      )}
+                      <span className={isFirst ? MONITOR_STYLES.pairedLayout.nowServingTicketPrimary : MONITOR_STYLES.pairedLayout.nowServingTicketSecondary}>
+                        {pair.patient.patientNum}
+                      </span>
+                    </>
+                  ) : (
+                    <span className={MONITOR_STYLES.pairedLayout.emptyCardText}>
+                      {MONITOR_TEXTS.pairedLayout.emptyPlaceholder}
+                    </span>
+                  )}
+                </div>
+
+                <div className={MONITOR_STYLES.pairedLayout.cubicleCard}>
+                  {pair.cubicle ? (
+                    <>
+                      <span className={MONITOR_STYLES.pairedLayout.cubicleLabel}>
+                        {formatCubicleDisplay(pair.cubicle)}
+                      </span>
+                      {doctorName && (
+                        <span className={MONITOR_STYLES.pairedLayout.doctorLabel}>
+                          {MONITOR_TEXTS.pairedLayout.doctorPrefix}{doctorName}
+                        </span>
+                      )}
+                    </>
+                  ) : (
+                    <span className={MONITOR_STYLES.pairedLayout.emptyCardText}>
+                      {MONITOR_TEXTS.pairedLayout.emptyPlaceholder}
+                    </span>
+                  )}
+                </div>
+              </div>
+            );
+          })}
+        </div>
+      </div>
     </div>
   );
 }

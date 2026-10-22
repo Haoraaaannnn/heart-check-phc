@@ -308,6 +308,13 @@
    - **Character-Spaced Speech Formatting:** Updated `formatTicketForSpeech` to strip punctuation/hyphens and return space-separated characters (`clean.toUpperCase().split('').join(' ')`), producing `"5 0 0 1"` ("five zero zero one"), `"8 0 0 2"` ("eight zero zero two"), and `"C 0 0 1"` ("C zero zero one").
    - **Zero Code Duplication:** Utilized existing universal integration across `useMonitorData.ts`, `RegistrationLayout.tsx`, `NursePage.tsx`, and Transfer dashboard components, instantly propagating digit-by-digit announcements across all monitor and clinic call points.
 
+33. **Public TV Monitor Screen Size Adaptability & Zero-Scroll Standard (Completed):**
+   - **Zero-Scroll Viewport Lock (`app/monitor/layout.tsx`):** Locked `overflow: hidden` on both `document.documentElement` and `document.body` within the monitor layout lifecycle, wrapping monitor views in a fixed `h-screen h-[100dvh] w-screen w-[100dvw]` viewport container to completely eliminate vertical and horizontal window scrollbars.
+   - **Three-Tier Fixed Viewport Flex Column:** Structured all monitor layouts (`app/monitor/[category]/page.tsx`) into a strict 3-tier flexbox hierarchy (`Header` with `flex-shrink-0`, `main` with `flex-1 min-h-0`, and `Footer` with `flex-shrink-0`). Removed `fixed bottom-0` floating footer in favor of in-flow flex participation, preventing content overlap.
+   - **Proportional Card & Table Cell Scaling (`PairedLayout.tsx`, `TableLayout.tsx`, `RegistrationLayout.tsx`):** Replaced hardcoded pixel minimum heights (`min-h-[180px]`, `min-h-[120px]`) and `scale-*` transforms with fluid flex-1 proportional height distribution, responsive padding, and fluid typography. Enforced `table-fixed` column widths in `TableLayout` to prevent horizontal table blowout.
+   - **Multi-Station Adaptive Grid Splitting (`PairedLayout.tsx`):** When active consultation cubicles exceed 4 stations, automatically splits rows into a balanced 4-column matrix (`Queue, Cubicle, Queue, Cubicle`) ensuring that 6 or 8 consultation stations fit seamlessly within a single 1080p/720p TV screen without scrolling.
+   - **Centralized Design & Copy Dictionaries:** Created `app/monitor/constants/monitorStyles.ts` and `app/monitor/constants/monitorTexts.ts` per AGENTS.md separation-of-concerns rules; updated `app/monitor/README.md` with explicit "Where to Edit" table mapping and ISO date stamp (`2026-10-22`).
+
 ---
 
 ## Current Blockers & Risks
