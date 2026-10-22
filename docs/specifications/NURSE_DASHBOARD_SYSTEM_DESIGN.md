@@ -1,6 +1,8 @@
 # Heart Check PHC: A Kiosk-Based Queue Management and Analytics System
 # Nurse Dashboard System Design & Refactoring Specification
 
+**Last Updated:** 2026-10-22
+
 ## 1. Executive Summary & Clinical Rationale
 
 The **Nurse Dashboard** (`app/nurse/`) is the point-of-care clinical management interface utilized by triage nurses, staff nurses, and outpatient care coordinators at the Philippine Heart Center (PHC). 
@@ -303,8 +305,8 @@ export const nurseTexts = {
   unassignedDesc: "Your account does not have any cubicles assigned yet. Ask a Super Admin to assign your room before managing patients.",
 
   // TTS Announcements
-  ttsCallPhrase: (letter: string, digits: string, cubicleNum: string) =>
-    `Number ${letter} ${digits}, Number ${letter} ${digits}, please proceed to ${cubicleNum}`,
+  ttsCallPhrase: (ticket: string, cubicleNum: string) =>
+    `Number ${ticket}, Number ${ticket}, please proceed to ${cubicleNum}`,
 
   // Toast & Error Messages
   errorUpdateFailed: "Unable to update patient status. Please check your network connection.",

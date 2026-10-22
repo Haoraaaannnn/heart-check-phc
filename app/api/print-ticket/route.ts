@@ -77,12 +77,17 @@ export async function POST(request: Request) {
     const rawQueueNumber = body?.queueNumber;
     const rawServiceName = body?.serviceName;
     const rawCubicle = body?.cubicle;
+    const rawPatientId = body?.patientId;
 
     const queueNumber = sanitizeText(rawQueueNumber);
     const serviceName = sanitizeText(rawServiceName);
     const cubicle = sanitizeText(rawCubicle);
+    const patientId =
+      typeof rawPatientId === 'number' || (typeof rawPatientId === 'string' && /^\d+$/.test(rawPatientId))
+        ? Number(rawPatientId)
+        : null;
 
-    if (!queueNumber) {
+    if (!queueNumber && !patientId) {
       console.error('%s [PRINT VALIDATION] Missing or invalid queue number', getTimestamp());
       return NextResponse.json({ error: 'Valid queue number is required' }, { status: 400 });
     }
@@ -95,13 +100,24 @@ export async function POST(request: Request) {
       dbClient = supabase;
     }
 
-    // Defensive Verification (SEC-029): Verify ticket exists in active patients table
-    const { data: patientRecord, error: dbError } = await dbClient
+    // Defensive Verification (SEC-029): Verify ticket exists in active patients table.
+    // Use patientId if available, or order by created_at DESC and limit(1) to avoid
+    // PostgREST maybeSingle errors when queue numbers repeat across days or test batches.
+    let query = dbClient
       .from('patients')
       .select('id, created_at, patientNum, phoneNum, service, cubicleNum, preferredCubicleNums, estimated_wait_minutes')
-      .eq('patientNum', queueNumber)
-      .eq('is_historical', false)
-      .maybeSingle();
+      .eq('is_historical', false);
+
+    if (patientId) {
+      query = query.eq('id', patientId);
+    } else {
+      query = query
+        .eq('patientNum', queueNumber)
+        .order('created_at', { ascending: false })
+        .limit(1);
+    }
+
+    const { data: patientRecord, error: dbError } = await query.maybeSingle();
 
     if (dbError) {
       console.error(

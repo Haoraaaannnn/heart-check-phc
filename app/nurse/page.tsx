@@ -45,6 +45,7 @@ import { useRealtimeSubscription } from '@/app/nurse/hooks/useRealtimeSubscripti
 import { useBottleneckNotifications } from '@/app/dashboard/hooks/useBottleneckNotifications';
 import { nurseTexts } from '@/app/nurse/constants/nurseTexts';
 import { NurseStyle, nurseLayoutTokens } from '@/app/nurse/constants/nurse';
+import { formatTicketForSpeech } from '@/utils/formatTicketSpeech';
 import { useConnectionStatus } from '@/hooks/useConnectionStatus';
 import { useOfflineQueue } from '@/hooks/useOfflineQueue';
 import { ConnectionStatusBanner } from '@/components/reusables/ConnectionStatusBanner';
@@ -240,14 +241,12 @@ export default function NursePage() {
    */
   const handleCall = useCallback(
     (patient: Patient) => {
-      const num = patient.patientNum;
-      const letter = num.charAt(0);
-      const digits = parseInt(num.slice(1), 10).toString();
+      const ticket = formatTicketForSpeech(patient.patientNum);
       const destination = patient.cubicleNum
         ? `cubicle ${patient.cubicleNum}`
         : 'the doctor';
 
-      const announcement = nurseTexts.ttsCallPhrase(letter, digits, destination);
+      const announcement = nurseTexts.ttsCallPhrase(ticket, destination);
       void speakAnnouncement(announcement, patient.id);
     },
     [speakAnnouncement]

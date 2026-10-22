@@ -21,6 +21,7 @@ import { ElapsedTimer } from '@/app/transfer/components/ElapsedTimer';
 import { transferTexts } from '@/constants/texts/transferTexts';
 import { TransferStyle } from '@/app/transfer/constants/transfer';
 import { onProgressStyles } from '@/constants/designs/transferStyles';
+import { formatTicketForSpeech } from '@/utils/formatTicketSpeech';
 import { SelectedTransferPatient } from '@/app/transfer/types/transfer';
 import { DragHandle } from '@/app/transfer/components/DragHandle';
 
@@ -233,11 +234,9 @@ export function OnProgressSection({
                     onMouseDown={e => e.stopPropagation()}
                     onClick={e => {
                       e.stopPropagation();
-                      const num = p.patientNum || '';
-                      const letter = num ? num.charAt(0) : '';
-                      const digits = num.length > 1 ? parseInt(num.slice(1), 10).toString() : '';
+                      const ticket = formatTicketForSpeech(p.patientNum);
                       onSpeak(
-                        `Number ${letter} ${digits}, Number ${letter} ${digits}, go to the ${
+                        `Number ${ticket}, Number ${ticket}, go to the ${
                           selectedCategory || 'consultation'
                         } area`,
                         p.id

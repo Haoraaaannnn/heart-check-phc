@@ -4,6 +4,7 @@ import { Patient } from '@/types/Types';
 import { fetchActiveCounters } from '@/lib/counters';
 import { DEFAULT_COUNTERS } from '@/lib/facilities';
 import { useEffect, useRef, useState } from 'react';
+import { formatTicketForSpeech } from '@/utils/formatTicketSpeech';
 
 type RegistrationLayoutProps = {
   patients: Patient[];
@@ -69,10 +70,8 @@ export function RegistrationLayout({ patients }: RegistrationLayoutProps) {
     while (pendingAnnouncements.current.length > 0) {
       const item = pendingAnnouncements.current.shift();
       if (item) {
-        const num = item.patient.patientNum;
-        const letter = num.charAt(0);
-        const digits = parseInt(num.slice(1), 10).toString();
-        const message = `Number ${letter} ${digits}, Number ${letter} ${digits}, please proceed to Counter ${item.counterNum}`;
+        const ticket = formatTicketForSpeech(item.patient.patientNum);
+        const message = `Number ${ticket}, Number ${ticket}, please proceed to Counter ${item.counterNum}`;
         await speak(message, 2);
         await new Promise(resolve => setTimeout(resolve, 200));
       }

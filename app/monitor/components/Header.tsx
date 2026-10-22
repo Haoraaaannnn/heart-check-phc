@@ -1,25 +1,37 @@
 'use client';
 
-import React from 'react';
-import Link from 'next/link';
+/**
+ * @fileoverview Public TV Monitor Top Header Bar.
+ *
+ * Displays high-contrast departmental branding and live Manila clock for outpatient
+ * waiting room displays. Adheres strictly to AGENTS.md standards:
+ * - Comprehensive JSDoc documentation (Rule 1)
+ * - Zero emojis (Rule 6)
+ * - Clean presentation surface with zero unwanted administrative buttons on public displays
+ *
+ * @module app/monitor/components/Header
+ */
 
+import React from 'react';
+
+/** Props for {@link Header}. */
 type HeaderProps = {
+  /** Service or clinical department title (e.g. "Consultation - Adult", "Registration"). */
   title: string;
+  /** Live Manila timestamp updated on 1-second interval. */
   currentTime: Date;
 };
 
+/**
+ * Renders the top brand header for public waiting room queue monitors.
+ *
+ * @param props - Component props containing title and current time.
+ * @returns The rendered monitor header element.
+ */
 export function Header({ title, currentTime }: HeaderProps) {
   return (
     <div className="bg-[#cc3535] px-12 py-8 flex items-center justify-between">
       <div className="flex items-center gap-5">
-        <Link
-          href="/select-screen"
-          className="p-3 bg-white/15 hover:bg-white/25 active:bg-white/35 text-white rounded-2xl transition cursor-pointer flex items-center justify-center shrink-0"
-          title="Return to Select Screen"
-          aria-label="Return to Select Screen"
-        >
-          <i className="bx bx-grid-alt text-3xl" aria-hidden="true" />
-        </Link>
         <div>
           <p className="text-white/70 text-xl uppercase tracking-widest font-medium">OUT-PATIENT DIVISION</p>
           <h1 className="text-white text-7xl font-black">{title}</h1>
