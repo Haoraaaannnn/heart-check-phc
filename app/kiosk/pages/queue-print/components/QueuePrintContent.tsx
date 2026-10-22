@@ -272,22 +272,20 @@ export default function QueuePrintContent({
 
     // Live auto-close countdown ticking to redirect back to kiosk entrance
     useEffect(() => {
+        if (countdownSeconds <= 0) {
+            console.log(
+                `${getTimestamp()} [REDIRECT TIMER] Countdown completed - Redirecting to entrance.`
+            );
+            router.push("/kiosk/pages/kiosk-new-old-selection");
+            return;
+        }
+
         const timer = setInterval(() => {
-            setCountdownSeconds((prev) => {
-                if (prev <= 1) {
-                    clearInterval(timer);
-                    console.log(
-                        `${getTimestamp()} [REDIRECT TIMER] Countdown completed - Redirecting to entrance.`
-                    );
-                    router.push("/kiosk/pages/kiosk-new-old-selection");
-                    return 0;
-                }
-                return prev - 1;
-            });
+            setCountdownSeconds((prev) => (prev > 0 ? prev - 1 : 0));
         }, 1000);
 
         return () => clearInterval(timer);
-    }, [router]);
+    }, [countdownSeconds, router]);
 
     /**
      * Completes queue ticket viewing immediately upon patient action.

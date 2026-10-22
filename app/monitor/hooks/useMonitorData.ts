@@ -3,6 +3,7 @@
 import { useState, useRef, useEffect } from 'react';
 import { supabase } from '@/lib/supabase';
 import { Patient, Cubicle } from '@/types/Types';
+import { formatTicketForSpeech } from '@/utils/formatTicketSpeech';
 
 export function useMonitorData(category: string, subcategory: string | null, categoryParam: string, isRegistration: boolean = false) {
   const [assignedPatients, setAssignedPatients] = useState<Patient[]>([]);
@@ -112,9 +113,7 @@ export function useMonitorData(category: string, subcategory: string | null, cat
       }
       announcedCubiclePatients.current.get(cubicleNum)?.add(patient.id);
       
-      const num = patient.patientNum;
-      const letter = num.charAt(0);
-      const digits = parseInt(num.slice(1), 10).toString();
+      const ticket = formatTicketForSpeech(patient.patientNum);
       const roomMatch = patient.cubicleNum?.match(/R(\d+)/);
       const cubicleMatch = patient.cubicleNum?.match(/C(\d+)$/);
       
@@ -130,7 +129,7 @@ export function useMonitorData(category: string, subcategory: string | null, cat
         }
       }
       
-      const message = `Number ${letter} ${digits}, Number ${letter} ${digits}, proceed to ${announcement}`;
+      const message = `Number ${ticket}, Number ${ticket}, proceed to ${announcement}`;
       announcementQueue.current.push({ patient, message });
       processQueue();
     }
@@ -266,9 +265,7 @@ export function useMonitorData(category: string, subcategory: string | null, cat
             }
             announcedCubiclePatients.current.get(topCubicle)?.add(topPatient.id);
             
-            const num = topPatient.patientNum;
-            const letter = num.charAt(0);
-            const digits = parseInt(num.slice(1), 10).toString();
+            const ticket = formatTicketForSpeech(topPatient.patientNum);
             const roomMatch = topPatient.cubicleNum?.match(/R(\d+)/);
             let announcement = '';
             if (roomMatch) {
@@ -276,7 +273,7 @@ export function useMonitorData(category: string, subcategory: string | null, cat
             } else {
               announcement = topPatient.cubicleNum || '';
             }
-            const message = `Number ${letter} ${digits}, Number ${letter} ${digits}, proceed to ${announcement}`;
+            const message = `Number ${ticket}, Number ${ticket}, proceed to ${announcement}`;
             announcementQueue.current.push({ patient: topPatient, message });
             processQueue();
           }

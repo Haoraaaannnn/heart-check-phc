@@ -373,3 +373,99 @@ This document serves as an optional, high-signal, token-efficient session handof
   - Syntax error in `app/api/superadmin/access/route.ts` resolved.
   - Zero emojis in all code, comments, and documentation.
   - AGENTS.md separation of concerns and high-contrast dual-theme standards strictly maintained.
+
+---
+
+## Session 28: Monitor Select Screen Button Removal & TTS Queue Number Calling Fix (2026-10-22)
+
+- **Objective:**
+  1. Remove the "Return to Select Screen" button from the public TV monitor displays.
+  2. Diagnose and fix the voice announcement issue where ticket 8002 was spoken as "82", and verify all other clinic services (1xxx through 9xxx series).
+- **Root Cause & Diagnosis:**
+  - **Select Screen Button:** `app/monitor/components/Header.tsx` rendered `<Link href="/select-screen">` on the top bar of every public waiting room display (Registration, Paired, and Table layouts).
+  - **Voice Number 82 Issue:** Legacy TTS announcement code assumed all ticket numbers began with an alphabetic character followed by digits (e.g. `C001`). It parsed tickets using `const letter = num.charAt(0)` and `const digits = parseInt(num.slice(1), 10).toString()`, assembling `Number ${letter} ${digits}`. When the kiosk transitioned to the 4-digit integer prefix scheme (e.g. `8002` for OPD Reschedule), `letter` became `'8'`, `num.slice(1)` became `'002'`, and `parseInt('002')` became `'2'`, resulting in `"Number 8 2"` (pronounced "eighty-two").
+  - **Cross-Service Impact:** All other services were similarly broken:
+    - OPD Screening (`1001`) called as "Number 1 1" (11).
+    - Consultation Pedia (`2001`) called as "Number 2 1" (21).
+    - ECG (`3001`) called as "Number 3 1" (31).
+    - OPD Card (`4001`) called as "Number 4 1" (41).
+    - Consultation Adult (`5001`) called as "Number 5 1" (51).
+    - Refill Prescription (`6001`) called as "Number 6 1" (61).
+    - Warfarin (`7001`) called as "Number 7 1" (71).
+    - OPD Reschedule (`8002`) called as "Number 8 2" (82).
+    - Benzathine (`9001`) called as "Number 9 1" (91).
+- **Remediation:**
+  1. **Monitor Header Cleanup (`app/monitor/components/Header.tsx`):**
+     - Removed the Select Screen button and unused Next.js `Link` import. Added full file-level and symbol-level JSDocs.
+  2. **Centralized Speech Formatter (`utils/formatTicketSpeech.ts`):**
+     - Created `formatTicketForSpeech(patientNum)` utility.
+     - Preserves full numeric codes for 4-digit tickets (`/^\d+$/` returns full number, e.g. `"8002"`).
+     - Formats alphanumeric codes with letter separation (`"C001"` -> `"C 1"`, `"C-101"` -> `"C 101"`).
+  3. **Universal Integration across all Queue Calling Surfaces:**
+     - `app/monitor/hooks/useMonitorData.ts`: Updated both cubicle and room queue announcement builders.
+     - `app/monitor/components/RegistrationLayout.tsx`: Updated counter intake queue announcement.
+     - `app/nurse/page.tsx`: Updated `handleCall` to announce full ticket.
+     - `app/nurse/constants/nurseTexts.ts`: Updated `ttsCallPhrase` to take full ticket string.
+     - `app/transfer/components/CubicleCard.tsx`: Updated cubicle call button.
+     - `app/transfer/components/QuickAssignDropdown.tsx`: Updated quick assign audio call.
+     - `app/transfer/components/OnProgressSection.tsx`: Updated on-progress queue call.
+- **Verification:**
+  - Zero emojis across all modified files.
+  - Full JSDoc coverage adhering to AGENTS.md Rule 1.
+  - Zero regex/slice truncation bugs remaining in audio announcement dispatchers.
+
+---
+
+## Session 29: Kiosk Print Ticket Multi-Row Resolution & Hardware Probe Resilience (2026-10-22)
+
+- **Objective:** Fix "printer is not detected in kiosk on other queue" when printing queue tickets from the kiosk.
+- **Root Cause & Diagnosis:**
+  1. **PostgREST Multi-Row Collision:** In `app/api/print-ticket/route.ts`, the database ticket verification query called `.eq('patientNum', queueNumber).eq('is_historical', false).maybeSingle()`. When an "other queue" (such as `5001` for Consultation Adult) had multiple historical or earlier test rows with the same `patientNum`, `.maybeSingle()` threw `JSON object requested, multiple (or no) rows returned`, triggering HTTP 500 (`Database verification failed prior to print`).
+  2. **False Offline Fallback Activation:** When `/api/print-ticket` returned HTTP 500, `QueuePrintContent.tsx` received `!response.ok` and activated `QueuePrintFallbackCard` (`condition: 'offline'`), falsely displaying that the printer was not detected or offline.
+  3. **WebUSB State Collision:** `useWebPrinter` triggered concurrent `getClientPrinterHardwareStatus` probes without serialization, resulting in browser WebUSB error `Failed to execute 'open' on 'USBDevice': An operation that changes the device state is in progress`.
+  4. **React State-in-Render Anti-Pattern:** In `QueuePrintContent.tsx`, `router.push` was called inside `setCountdownSeconds(prev => ...)` triggering `Cannot update a component (Router) while rendering a different component (QueuePrintContent)`.
+- **Remediation:**
+  1. **Multi-Row Query Fix (`app/api/print-ticket/route.ts`):** Ordered lookup by `created_at DESC` and added `.limit(1)` before `.maybeSingle()`. Supported direct `patientId` lookup.
+  2. **Server Device Fallback (`app/kiosk/hooks/useWebPrinter.ts`):** Updated `refreshHardwareStatus` to query `GET /api/print-ticket` whenever client WebUSB is not `'ready'`, successfully detecting local Linux USB printer nodes (`/dev/usb/lp0`).
+  3. **Probe Concurrency Mutex (`lib/printer/webPrinter.ts`):** Wrapped `getClientPrinterHardwareStatus` in a shared promise cache (`activeProbePromise`) to serialize concurrent hardware calls, and handled OS-claimed driver states gracefully.
+  4. **React Countdown Effect Separation (`QueuePrintContent.tsx`):** Moved redirection out of state updater into dedicated `useEffect` observing `countdownSeconds <= 0`.
+- **Verification:**
+  - All modified files conform to AGENTS.md zero-emoji and documentation standards.
+  - Zero unhandled PostgREST multi-row errors.
+
+---
+
+## Session 30: Public Waiting Room Monitor Dark Mode Removal & Light Lock (2026-10-22)
+
+- **Objective:** Completely remove dark mode from public queue monitors (`app/monitor/`), locking monitor displays strictly to high-contrast institutional light mode.
+- **Root Cause & Diagnosis:**
+  - Earlier commits introduced `dark:bg-[#0d0d0d]`, `dark:bg-[#1a1a1a]`, `dark:text-[#f5f5f5]`, and `dark:border-[#2e2e2e]` classes to `app/monitor/page.tsx` and `app/monitor/[category]/page.tsx`.
+  - When hospital staff or administrators turned on dark mode on workstations (Nurse Station, Transfer, Dashboard, or SuperAdmin), the global `<html>` element retained class `.dark`. Navigating to `/monitor` triggered dark container styles with mismatched light interior layout components.
+- **Remediation:**
+  1. **Purged Dark Classes:** Removed all `dark:*` classes from `app/monitor/[category]/page.tsx` and `app/monitor/page.tsx`. All containers, headings, and category buttons strictly use clean hospital white (`bg-white`) and neutral slate (`bg-gray-50`, `text-slate-800`, `text-gray-700`).
+  2. **Dedicated Monitor Layout Shell (`app/monitor/layout.tsx`):** Created a root layout for `/monitor/*` that temporarily strips `.dark` from `document.documentElement` and sets `colorScheme = 'light'` upon mount. Upon unmount (when returning to a workstation), it cleanly restores `.dark` if the user's workstation theme was dark, without mutating `localStorage` or `next-themes` state.
+- **Verification:**
+  - Zero `dark:` classes remain anywhere in `app/monitor/`.
+  - Fully documented with AGENTS.md compliant JSDocs.
+  - Zero emojis in all code and documentation.
+
+---
+
+## Session 31: Digit-by-Digit (Per Character) TTS Voice Announcement (2026-10-22)
+
+- **Objective:** Change Text-to-Speech (TTS) voice announcements on queue monitors and clinic workstations so ticket numbers are spoken digit-by-digit / character-by-character (e.g. "five zero zero one") rather than grouped in thousands (e.g. "five thousand one").
+- **Root Cause & Diagnosis:**
+  - When raw 4-digit numeric ticket strings (e.g. `"5001"`, `"8002"`, `"1001"`) are dispatched to Deepgram Aura or browser Web Speech API, the speech synthesis neural network groups continuous integer sequences into mathematical cardinal values ("five thousand one", "eight thousand two").
+  - In a noisy clinical waiting room, announcing "Number five thousand one" causes patient confusion and contradicts standard hospital queue calling conventions.
+- **Remediation:**
+  1. **Character-Spaced Speech Formatting (`utils/formatTicketSpeech.ts`):**
+     - Updated `formatTicketForSpeech` to strip punctuation and hyphens (`replace(/[^a-zA-Z0-9]/g, '')`) and return space-separated individual characters (`clean.toUpperCase().split('').join(' ')`).
+     - Numeric tickets like `"5001"` become `"5 0 0 1"` (vocalized as "five zero zero one").
+     - Numeric tickets like `"8002"` become `"8 0 0 2"` (vocalized as "eight zero zero two").
+     - Alphanumeric tickets like `"C001"` and `"C-101"` become `"C 0 0 1"` and `"C 1 0 1"`.
+  2. **Universal Propagation:**
+     - Leveraged existing cross-domain integration across `app/monitor/hooks/useMonitorData.ts`, `app/monitor/components/RegistrationLayout.tsx`, `app/nurse/page.tsx`, and `app/transfer/` components (`CubicleCard.tsx`, `QuickAssignDropdown.tsx`, `OnProgressSection.tsx`).
+- **Verification:**
+  - Zero emojis across all code, comments, and documentation.
+  - File-level and symbol-level JSDocs verified with full `@param`, `@returns`, and `@example` tags.
+  - Tested string transformations: `"5001"` -> `"5 0 0 1"`, `"8002"` -> `"8 0 0 2"`, `"C-101"` -> `"C 1 0 1"`.

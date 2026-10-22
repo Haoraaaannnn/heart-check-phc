@@ -96,7 +96,7 @@ export default function CategoryMonitorPage() {
 
   if (isRegistration) {
     return (
-      <div className="min-h-screen bg-white dark:bg-[#0d0d0d] text-slate-800 dark:text-[#f5f5f5] font-sans">
+      <div className="min-h-screen bg-white text-slate-800 font-sans">
         <Header title="Registration" currentTime={currentTime} />
         <RegistrationLayout patients={registrationPatients} />
         <Footer />
@@ -106,7 +106,7 @@ export default function CategoryMonitorPage() {
 
   if (!isTableLayoutService) {
     return (
-      <div className="min-h-screen bg-white dark:bg-[#0d0d0d] text-slate-800 dark:text-[#f5f5f5] font-sans">
+      <div className="min-h-screen bg-white text-slate-800 font-sans">
         <Header title={displayTitle} currentTime={currentTime} />
         <PairedLayout
           title={displayTitle}
@@ -120,7 +120,7 @@ export default function CategoryMonitorPage() {
   }
 
   return (
-    <div className="min-h-screen bg-white dark:bg-[#0d0d0d] text-slate-800 dark:text-[#f5f5f5] font-sans">
+    <div className="min-h-screen bg-white text-slate-800 font-sans">
       <Header title={displayTitle} currentTime={currentTime} />
       <TableLayout
         title={displayTitle}

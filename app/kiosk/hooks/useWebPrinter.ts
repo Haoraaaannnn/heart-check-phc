@@ -83,7 +83,7 @@ export function useWebPrinter(): UseWebPrinterReturn {
     try {
       // 1. Probe client-side WebUSB / Serial hardware first
       const clientHw = await getClientPrinterHardwareStatus();
-      if (clientHw.condition !== 'not_detected') {
+      if (clientHw.condition === 'ready') {
         setHardwareStatus(clientHw);
         return clientHw;
       }
@@ -96,7 +96,7 @@ export function useWebPrinter(): UseWebPrinterReturn {
 
       if (serverRes && serverRes.ok) {
         const serverData = await serverRes.json().catch(() => null);
-        if (serverData?.status) {
+        if (serverData?.status && serverData.status.condition === 'ready') {
           const sHw = serverData.status as PrinterHardwareStatus;
           setHardwareStatus(sHw);
           return sHw;
