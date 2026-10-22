@@ -1,21 +1,25 @@
-/**
- * @fileoverview Next.js Configuration.
- *
- * Configures development origins, asset tracing boundaries, and build behaviors.
- * Excludes backend Python virtual environments and data folders from Node output file tracing.
- *
- * @module next.config
- */
-
 import type { NextConfig } from "next";
+import os from "os";
 
-/**
- * Global Next.js application configuration object.
- */
+const networkInterfaces = os.networkInterfaces();
+const localAddresses: string[] = [];
+
+Object.values(networkInterfaces).forEach((interfaces) => {
+  interfaces?.forEach((iface) => {
+    if (iface.family === "IPv4" && !iface.internal) {
+      localAddresses.push(iface.address); 
+      localAddresses.push(`${iface.address}:3000`); 
+    }
+  });
+});
+
 const nextConfig: NextConfig = {
-  /* config options here */
-  //* insert the ip address from the npm run dev when running the app on a different device in the same network
-  allowedDevOrigins: ['10.34.233.24'],
+ 
+  allowedDevOrigins: [
+    "localhost:3000",
+    ...localAddresses
+  ],
+  
   outputFileTracingExcludes: {
     '*': ['./python_backend/**/*'],
   },
