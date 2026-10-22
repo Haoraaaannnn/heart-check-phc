@@ -2,11 +2,21 @@
 
 This document provides architectural standards and an exhaustive developer mapping for the Public Queue Display Monitor module in `app/monitor/`.
 
+**Last Updated:** 2026-10-22
+
 ---
 
 ## Architectural Overview
 
 The Public Queue Display Monitor provides high-visibility, real-time patient queue visualization for waiting areas and hallways in the Philippine Heart Center Outpatient Department. It informs waiting patients of active ticket callouts, room designations, and registration counter updates.
+
+### Responsive Zero-Scroll Standards
+All public monitor screens enforce a strict zero-scroll architecture:
+1. **Viewport Lock (`layout.tsx`):** Root shell locks `overflow: hidden` on both `document.documentElement` and `document.body` while inside the monitor route, completely preventing window scrollbars.
+2. **Fixed 100vh Flex Container:** Monitor layouts fill `h-screen h-[100dvh] w-screen w-[100dvw]` with a 3-tier flex column (`Header` flex-shrink-0, `main` flex-1 min-h-0, and `Footer` flex-shrink-0).
+3. **Fluid Height Distribution:** Cards and table cells automatically scale their heights and typography proportionally to fit the viewport dimensions across Full HD (1080p), 4K, 720p, laptops, and tablet displays.
+4. **Adaptive Multi-Column Splitting:** In cubicle pairing mode (`PairedLayout.tsx`), when active stations exceed 4, the view automatically splits into a balanced 4-column matrix (Queue, Room, Queue, Room) to eliminate vertical overflow.
+5. **Fixed-Layout Tables:** Service roster displays (`TableLayout.tsx`) enforce `table-fixed` column distribution, preventing horizontal overflow.
 
 ### Routing and Display Modes
 1. **Category Selector Gateway (`app/monitor/page.tsx`):**
@@ -34,6 +44,8 @@ Use this lookup matrix to identify the file to modify for any given requirement:
 
 | What to Change | Primary File Path | Notes |
 | :--- | :--- | :--- |
+| Monitor copy and bilingual texts | `app/monitor/constants/monitorTexts.ts` | Centralized bilingual labels, titles, and notices |
+| Monitor responsive styles and tokens | `app/monitor/constants/monitorStyles.ts` | Centralized zero-scroll styles, cards, and grid tokens |
 | Service categories and subcategory lists | `app/monitor/lib/constants.ts` | `CATEGORIES` and `SUB_CATEGORIES` definitions |
 | Category selector portal and buttons | `app/monitor/page.tsx` | Entry gateway for selecting monitor displays |
 | Dynamic monitor page orchestrator | `app/monitor/[category]/page.tsx` | URL parameter decoding and layout switcher |
@@ -42,7 +54,7 @@ Use this lookup matrix to identify the file to modify for any given requirement:
 | Registration intake window layout | `app/monitor/components/RegistrationLayout.tsx` | Registration counter cards and status callouts |
 | Audio chime activation modal | `app/monitor/components/StartScreen.tsx` | User-interaction gateway for Web Audio playback |
 | Monitor top header and clock | `app/monitor/components/Header.tsx` | Header bar, department title, and Manila time |
-| Monitor footer branding bar | `app/monitor/components/Footer.tsx` | Hospital footer information and live badge |
+| Monitor footer branding bar | `app/monitor/components/Footer.tsx` | Hospital footer information and bilingual notices |
 | Active elapsed timer component | `app/monitor/components/ElapsedTimer.tsx` | Dynamic duration timer for ongoing consultations |
 | Monitor data loading & doctor mapping | `app/monitor/hooks/useMonitorData.ts` | Database queries for cubicles, patients, counters |
 | Real-time subscription & weak-signal polling | `app/monitor/hooks/useRealtimeSubscription.ts` | Supabase Realtime channel with 8s polling fallback |
@@ -59,3 +71,4 @@ The Public Monitor hook (`app/monitor/hooks/useRealtimeSubscription.ts`) incorpo
 3. **2-Second Channel Hysteresis:** A 2-second grace period prevents poll activation thrashing during momentary packet jitter.
 4. **500ms Overlap Throttle:** Prevents concurrent polling and WebSocket triggers from firing simultaneous database queries.
 5. **Immediate Recovery Reconciliation:** Triggers a fresh query as soon as the channel status recovers to `SUBSCRIBED`, immediately refreshing the display.
+

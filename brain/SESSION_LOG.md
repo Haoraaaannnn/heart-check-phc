@@ -469,3 +469,24 @@ This document serves as an optional, high-signal, token-efficient session handof
   - Zero emojis across all code, comments, and documentation.
   - File-level and symbol-level JSDocs verified with full `@param`, `@returns`, and `@example` tags.
   - Tested string transformations: `"5001"` -> `"5 0 0 1"`, `"8002"` -> `"8 0 0 2"`, `"C-101"` -> `"C 1 0 1"`.
+
+---
+
+## Session 32: Public TV Monitor Screen Size Adaptability & Zero-Scroll Standard (2026-10-22)
+
+- **Objective:** Make public queue monitor displays auto-adjustable across all screen sizes (Full HD TV, 4K, 720p, laptops, tablets) and completely non-scrollable.
+- **Root Cause & Diagnosis:**
+  1. **Window-Level Scrolling (`layout.tsx` & page routes):** Pages used `min-h-screen`, allowing vertical growth beyond viewport bounds. `document.documentElement` and `document.body` did not lock overflow, causing browser scrollbars when content heights expanded.
+  2. **Fixed Height Cards & Table Blowout:** `PairedLayout` cards enforced fixed `min-h-[180px]` and `min-h-[120px]`; `TableLayout` and `RegistrationLayout` used `overflow-x-auto` with oversized `scale-110` transforms and large static paddings (`px-6 py-8`), exceeding available viewport space.
+  3. **Floating Overlapping Footer:** `Footer.tsx` was rendered with `fixed bottom-0 left-0 right-0`, floating over content and obscuring the bottom of cards.
+- **Remediation:**
+  1. **Viewport & Document Scroll Lock (`app/monitor/layout.tsx`):** Locked `overflow: hidden` on both `<html>` and `<body>` during the monitor lifecycle, rendering a `h-screen h-[100dvh] w-screen w-[100dvw] overflow-hidden` container.
+  2. **Three-Tier Fixed Viewport Flexbox (`app/monitor/[category]/page.tsx`):** Header (`flex-shrink-0`), Main content (`flex-1 min-h-0`), and Footer (`flex-shrink-0 w-full in-flow`). Eliminates footer overlap and guarantees 100% viewport fit.
+  3. **Proportional Fluid Heights (`PairedLayout.tsx`, `TableLayout.tsx`, `RegistrationLayout.tsx`):** Replaced fixed pixel minimums with fluid `flex-1 min-h-0` item distributions, responsive text scales, and `table-fixed` column widths.
+  4. **Multi-Station Adaptive Grid (`PairedLayout.tsx`):** When active stations exceed 4, automatically transitions into a balanced 4-column matrix (`Queue, Cubicle, Queue, Cubicle`) so up to 8 stations fit on screen without vertical overflow.
+  5. **Centralized Tokens & Separation of Concerns:** Created `app/monitor/constants/monitorStyles.ts` and `app/monitor/constants/monitorTexts.ts`. Updated `app/monitor/README.md` with explicit "Where to Edit" table and ISO date stamp (`2026-10-22`).
+- **Verification:**
+  - Zero emojis in all documentation, comments, and copy.
+  - Zero scrollbars horizontally or vertically across all viewport sizes.
+  - Strict compliance with AGENTS.md rules 1, 2, 6, 8, 11, 13.
+
