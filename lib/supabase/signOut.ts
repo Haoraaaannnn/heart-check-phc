@@ -39,7 +39,7 @@ export async function handleSignOut(redirectUrl: string = '/login'): Promise<voi
 
   try {
     // 2. Clear client Supabase session and document cookies
-    await supabase.auth.signOut();
+    await supabase.auth.signOut({ scope: 'local' })
   } catch (error) {
     console.error('[AUTH] Client signOut error:', error);
   }

@@ -74,11 +74,8 @@ export function useRequireAuth(): boolean {
 
     void verifyAccess();
 
-    const { data: listener } = supabase.auth.onAuthStateChange((_event, session) => {
-      if (!session) {
-        window.location.replace('/login');
-      }
-    });
+    const { data: listener } = supabase.auth.onAuthStateChange((event) => {
+      if (event === 'SIGNED_OUT') window.location.replace('/login')});
 
     return () => {
       active = false;

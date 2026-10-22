@@ -84,7 +84,7 @@ function LoginPageInner() {
       }
 
       try {
-        await supabase.auth.signOut();
+        await supabase.auth.signOut({ scope: 'local' })
       } catch (err) {
         console.error('[AUTH] Failed to sign out client supabase on login mount:', err);
       }
