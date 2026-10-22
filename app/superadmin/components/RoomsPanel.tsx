@@ -77,27 +77,46 @@ export function RoomsPanel() {
 
   useEffect(() => {
     const supabase = createClient();
-    supabase
-      .from('services')
-      .select('label_en, has_subcategories, requires_cubicle')
-      .order('display_order', { ascending: true })
-      .then(({ data }) => {
-        if (data && data.length > 0) {
-          const cubicleServices = data
-            .filter((s: any) => s.requires_cubicle !== false)
-            .map((s: any) => s.label_en);
-          const subServices = data
-            .filter((s: any) => s.has_subcategories)
-            .map((s: any) => s.label_en);
-          if (cubicleServices.length > 0) {
-            setAvailableServices(cubicleServices);
-            setFCategory(cubicleServices[0]);
+    const fetchServices = () => {
+      supabase
+        .from('services')
+        .select('label_en, has_subcategories, requires_cubicle')
+        .order('display_order', { ascending: true })
+        .then(({ data }) => {
+          if (data && data.length > 0) {
+            const cubicleServices = data
+              .filter((s: any) => s.requires_cubicle !== false)
+              .map((s: any) => s.label_en);
+            const subServices = data
+              .filter((s: any) => s.has_subcategories)
+              .map((s: any) => s.label_en);
+            if (cubicleServices.length > 0) {
+              setAvailableServices(cubicleServices);
+              setFCategory((prev) => (cubicleServices.includes(prev) ? prev : cubicleServices[0]));
+            }
+            if (subServices.length > 0) {
+              setSubcatServices(subServices);
+            }
           }
-          if (subServices.length > 0) {
-            setSubcatServices(subServices);
-          }
+        });
+    };
+
+    fetchServices();
+
+    const channel = supabase
+      .channel('rooms-panel-services')
+      .on(
+        'postgres_changes',
+        { event: '*', schema: 'public', table: 'services' },
+        () => {
+          fetchServices();
         }
-      });
+      )
+      .subscribe();
+
+    return () => {
+      supabase.removeChannel(channel);
+    };
   }, []);
 
   /**
@@ -153,8 +172,14 @@ export function RoomsPanel() {
   }, [loadPrefixMap]);
 
   const sections = useMemo(() => {
+    const activeServiceSet = new Set(
+      availableServices.map((s) => s.trim().toLowerCase())
+    );
     const groups = new Map<string, Group>();
     for (const c of cubicles) {
+      if (activeServiceSet.size > 0 && !activeServiceSet.has((c.category || '').trim().toLowerCase())) {
+        continue; // Autodelete/exclude unavailable service rooms from display
+      }
       const key = `${c.category}::${c.subcategory ?? ''}::${c.room}`;
       if (!groups.has(key)) {
         groups.set(key, {

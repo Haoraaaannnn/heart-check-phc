@@ -13,7 +13,10 @@ export async function GET(request: Request) {
   const guard = await requireSuperadmin(request);
   if (!guard.authorized) return guard.response;
 
-  const authId = new URL(request.url).searchParams.get('authId');
+  const { searchParams } = new URL(request.url);
+  const authId = searchParams.get('authId');
+  const userId = searchParams.get('userId');
+  const email = searchParams.get('email');
 
   const { data: cubicles, error: cubicleError } = await supabaseAdmin
     .from('cubicle')
@@ -28,18 +31,48 @@ export async function GET(request: Request) {
 
   let assignedCubicleIds: number[] = [];
 
-  if (authId) {
-    const { data: user } = await supabaseAdmin
-      .from('users').select('id').eq('auth_id', authId).single();
+  let user: { id: number | string; email?: string; auth_id?: string } | null = null;
 
-    if (user) {
-      const { data: assignments } = await supabaseAdmin
-        .from('user_cubicles').select('cubicle_id').eq('user_id', user.id);
-      assignedCubicleIds = (assignments ?? []).map(a => a.cubicle_id);
+  if (userId) {
+    const { data: userById } = await supabaseAdmin
+      .from('users').select('id, email, auth_id').eq('id', userId).maybeSingle();
+    if (userById) user = userById;
+  }
+
+  if (!user && authId) {
+    const { data: userByAuth } = await supabaseAdmin
+      .from('users').select('id, email, auth_id').eq('auth_id', authId).maybeSingle();
+    if (userByAuth) user = userByAuth;
+  }
+
+  if (!user && email) {
+    const { data: userByEmail } = await supabaseAdmin
+      .from('users').select('id, email, auth_id').ilike('email', email).maybeSingle();
+    if (userByEmail) user = userByEmail;
+  }
+
+  if (!user && authId) {
+    const { data: authUser } = await supabaseAdmin.auth.admin.getUserById(authId);
+    if (authUser?.user?.email) {
+      const { data: userByAuthEmail } = await supabaseAdmin
+        .from('users').select('id, email, auth_id').ilike('email', authUser.user.email).maybeSingle();
+      if (userByAuthEmail) {
+        user = userByAuthEmail;
+      }
     }
   }
 
-  return NextResponse.json({ cubicles, assignedCubicleIds });
+  if (user && authId && !user.auth_id) {
+    await supabaseAdmin.from('users').update({ auth_id: authId }).eq('id', user.id);
+  }
+
+  if (user) {
+    const { data: assignments } = await supabaseAdmin
+      .from('user_cubicles').select('cubicle_id').eq('user_id', user.id);
+    assignedCubicleIds = (assignments ?? []).map(a => a.cubicle_id);
+  }
+
+  return NextResponse.json({ cubicles: cubicles || [], assignedCubicleIds });
 }
 
 export async function POST(request: Request) {

@@ -1,6 +1,6 @@
 # Current Project State
 
-**Last Updated:** 2026-10-21
+**Last Updated:** 2026-10-22
 
 ---
 
@@ -15,6 +15,43 @@
 ---
 
 ## Active Milestone & Current Tasks
+
+0. **System Synchronization, Database Integrity, and Dark Mode Remediation:**
+   - **Audit & Master Guide (Completed):** Authored master audit and remediation guide [`docs/reports/system_synchronization_and_dark_mode_audit.md`](../docs/reports/system_synchronization_and_dark_mode_audit.md).
+   - **Phase 2: System-Wide Services Synchronization (Completed):**
+     - Subscribed all major modules to Supabase Realtime channels on `services` table: `useMyAccess` (Transfer), `usePatientData` (Transfer), `useRealtimeSubscription` (Nurse), `app/monitor/page.tsx` (Monitor Hub), `useMonitorData.ts` (Monitor category calling & registration), `DashSideNavigation.tsx` (Dashboard navigation), `ServiceFilterBar.tsx` (Patients), `useCubicleFlowchartData.ts` (Cubicles Flowchart), `RoomsPanel.tsx` (SuperAdmin), `QueuePrefixPanel.tsx` (SuperAdmin), and `customization/page.tsx` (SuperAdmin).
+     - Removed hardcoded registration filters system-wide: dynamically derived from `services.filter(s => s.requires_registration !== false)` in `app/transfer/page.tsx`, `usePatientData.ts`, `useAutoAssign.ts`, and `useMonitorData.ts`.
+     - Removed static service checks in transfer hooks: updated `useAutoRotate.ts` and `useDragAndDrop.ts` to inspect `p.reg_start` rather than hardcoding `p.service === 'Consultation' || p.service === 'OPD Screening'`.
+     - Added cascading synchronization in `app/superadmin/customization/page.tsx`: renaming or creating a service cascades updates across `cubicle.category`, `user_services`, `user_rooms`, active `patients` (`is_historical = false`), and `app_settings.queue_prefix_map`.
+     - Reconciled `QueuePrefixPanel` with dynamic services from database.
+     - Fixed legacy broken `/dashboard/servicesPHC` routes in `navigation.ts`.
+   - **Phase 1: Dark Mode Visual Defect Fixes (Completed):**
+     - Fixed `FinishedDrawer.tsx:66`: Replaced uncompiled `bg-slate-50/80 dark:bg-[#141414]/90 backdrop-blur-xs` with solid `bg-slate-50 dark:bg-[#141414]`, eliminating the bright cream header in the Nurse Finished Today drawer.
+     - Fixed `notificationStyles.ts:38`: Replaced glaring `dark:bg-white dark:text-slate-900` on active filter tab pill with ergonomic `dark:bg-slate-700 dark:text-white`.
+     - Fixed `notificationStyles.ts:51-54`: Fixed arbitrary uncompiled `/30` opacities on info, bottleneck, and warning cards, switching to compiled `/40` with crisp dark border accents.
+     - Fixed `app/monitor/page.tsx` and `app/monitor/[category]/page.tsx`: Added dark mode background surfaces and card styling (`dark:bg-[#0d0d0d]`, `dark:bg-[#1a1a1a]`, `dark:border-[#2e2e2e]`).
+   - **Phase 3: LAN IP HTTP Authentication Cookie & Workstation Role Remediation (Completed 2026-10-22):**
+     - Resolved "User account active but no workstation role assigned" error when accessing workstations over local area network IP (`http://<ip>:3000`) during `npm start`.
+     - Eliminated unconditional `Secure` cookie flag in `lib/supabase.ts`, `proxy.ts`, `app/api/auth/login/route.ts`, `app/api/auth/logout/route.ts`, and `lib/supabase/server.ts`, replacing it with dynamic protocol inspection (`protocol === 'https:'` or `x-forwarded-proto === 'https'`). Non-localhost HTTP origins (like local network IPs) now properly retain cookies without browser drops.
+     - Enhanced `/api/auth/login` to verify role server-side via `supabaseAdmin`, automatically linking `auth_id` if missing, and returning the validated role directly in the login response to eliminate client-side RLS race conditions.
+   - **Phase 4: Clinical Services & SuperAdmin Role Access Synchronization (Completed 2026-10-22):**
+     - Resolved issue where services did not reflect on the Nurse Dashboard (`/nurse`) and could not be managed for clinical roles in SuperAdmin User Management (`/superadmin`).
+     - Overhauled `ClinicalAssignmentsSelector.tsx` and `UserModal.tsx` in SuperAdmin to render clinical services selection checkboxes alongside cubicles for all clinical roles (`nurse`, `staff`, `doctor`, `registration`).
+     - Updated `useUserModalState.ts` to pass `userId` and `email` to `/api/superadmin/cubicles` and `/api/superadmin/access`, transmit `serviceAssignments` for all clinical roles, and submit `userId: editingUser.id` in `/api/superadmin/update-role`.
+     - Updated `SuperadminUser` type and `useSuperadminUsers.ts` to select and retain database `id` for 100% resilient user resolution across all admin modals.
+     - Updated `/api/superadmin/update-role` and `/api/superadmin/create-user` to persist `user_services` records unconditionally for any role, with email fallback and automatic `auth_id` linking.
+     - Updated `/api/superadmin/access` and `/api/superadmin/cubicles` to resolve target users by `userId`, `authId`, or `email` and auto-link `auth_id` if missing.
+     - Removed destructive GET auto-deletion anti-pattern in `/api/superadmin/cubicles`.
+     - Overhauled `useNurseData.ts` to query `services` concurrently with `user_cubicles` and `user_services`, dynamically falling back to active hospital services (`requires_nurse !== false`) when a nurse has no restrictive assignments (Transfer Dashboard standard), tracking `assignedServices`, filtering patients by cubicle and service, and evaluating `belongsToMe` against both cubicles and services in `applyRealtimeUpdate`.
+     - Added Supabase Realtime subscriptions in `useRealtimeSubscription.ts` for `user_services` and `user_cubicles` so access modifications in SuperAdmin immediately sync the Nurse Dashboard in 0ms without a page reload.
+     - Updated `app/nurse/page.tsx` to await `refreshCubicles()` before fetching patients, include `assignedServices` in `categoryCounts`, and propagate `assignedServices` to both sidebar and header.
+   - **Phase 5: Nurse Patient Queue & Real-Time Synchronization Remediation (Completed 2026-10-22):**
+     - Resolved issue where newly created kiosk/transfer patients and status updates did not sync or appear in the Nurse Dashboard queue.
+     - **Continuous Synchronization Heartbeat (`useRealtimeSubscription.ts`):** Supabase Realtime CDC evaluates PostgreSQL RLS (`patients_select_nurse_scoped`), which drops outgoing WebSocket change payloads for patients with `cubicleNum = NULL` (unassigned queue tickets and non-cubicle services). Activated a 4-second continuous polling heartbeat alongside the WebSocket connection to guarantee automatic ingestion of new tickets within 4 seconds even when dropped by RLS.
+     - **Server API Queue Scoping (`app/api/nurse/patients/route.ts`):** Enhanced GET route handler using `supabaseAdmin` service role to query active non-terminal patients matching assigned cubicles, cubicle category services, explicit `user_services`, and tickets whose `preferredCubicleNums` overlaps the nurse's cubicles (`.overlaps('preferredCubicleNums', cubicleNums)`).
+     - **Real-Time Client Ingestion & Discard Prevention (`useNurseData.ts`):** Expanded `belongsToMe` logic in `applyRealtimeUpdate` to check `preferredCubicleNums`, cubicle category service names, and explicit services so newly arrived tickets are never mistakenly dropped from `assignedPatients`. Synchronized authoritative services and cubicles from the server API into client state.
+     - **Case-Insensitive & Cubicle Queue Resilience (`app/nurse/page.tsx`):** Updated `filterPatientList` to allow patients with `cubicleNum = null` whose `preferredCubicleNums` includes `selectedCubicleNum`, or who belong to the selected service category, ensuring that newly created queue tickets are visible under cubicle and category filters. Normalized service comparisons with `.trim().toLowerCase()`.
+     - **Stage Mutation Persistence (`useNurseActions.ts`):** Modified `persistPatientUpdate` to push clinical stage transitions through `PATCH /api/nurse/patients` with the user's Bearer token, executing server-side under `supabaseAdmin` so patients with `cubicleNum = null` progress without triggering RLS `errorUnauthorizedCubicle`.
 
 1. **Design System & Layout Standardization (Completed):**
    - Eliminated all pillbox designs (`rounded-full` on badges, tags, chips, and buttons) across dashboard, superadmin, transfer, nurse, kiosk, and landing pages; standardized on `rounded-md` (badges) and `rounded-lg`/`rounded-xl` (buttons and cards). Functional circles (spinners, status dots, and donut charts) strictly preserved.
@@ -160,6 +197,95 @@
    - **Separation of Concerns:** Copy isolated in `inactivityModalTexts.ts`, styles in `inactivityModalStyles.ts`, state controller in `IdleRedirectWrapper.tsx`.
    - **State Preservation & Privacy Reset:** Tapping "Continue Session" dismisses modal and preserves patient inputs; tapping "Start Over" ("Magsimula Muli") purges session storage and redirects to `/kiosk/pages/kiosk-new-old-selection` to restart check-in; unacknowledged countdown expiration safely resets to `/kiosk/slideshow`.
 
+17. **Transfer Module Design, Superadmin Icon Reflection & Dark Mode Consistency (Completed):**
+   - **Dynamic Superadmin Icon Synchronization:** Updated `resolveServiceIcon` (`constants/icons.ts`) to accept full service objects with database `icon_src`, strip raw `bx ` prefixes, and dynamically resolve custom Boxicons configured in Superadmin Customization. Upgraded `Sidebar.tsx` to query full `services` records and subscribe to Supabase Realtime `postgres_changes` on the `services` table, updating live without page reloads.
+   - **Dual-Theme System Detection Bug Fix:** Replaced naive `theme === 'dark'` checking in `transfer/page.tsx` with `mounted && resolvedTheme === 'dark'` from `next-themes`, ensuring system dark mode is accurately detected and the sun/moon toggle behaves seamlessly.
+   - **Dark Mode Surface & Contrast Polish (High-Contrast Readability):**
+     - Replaced fractional opacity backgrounds (`bg-slate-50/70 dark:bg-[#1f1f1f]/70` which caused bright light-gray bars in dark mode) with solid surfaces (`dark:bg-[#242424]` in `IdleNumbersPanel.tsx`, `OnProgressSection.tsx`, `ConfirmAssignmentModal.tsx`, and `dark:bg-[#1f1f1f]` in `RegistrationCounterSection.tsx`, `CubicleCard.tsx`).
+     - Replaced low-contrast `#737373` and `#404040` text with high-contrast tokens (`#d4d4d4`, `#f5f5f5`, and `#a3a3a3`) across "Available" cards, breadcrumbs, dividers, headers, next queues, and category labels.
+     - Added `dark:ring-[#141414]` to `NotificationBadge.tsx` and removed `shadow-xs` white outline artifacts from `QueuePanel.tsx` tab buttons.
+     - Upgraded `BackButton.tsx` and `BreadcrumbNav.tsx` with high-contrast `#f5f5f5` typography and visible `#525252` dividers.
+   - **Subcategory & Room Icon Enhancements:** Enabled icon rendering in `SelectionCard` (`StepPickers.tsx`), added `bx-user` and `bx-child` icons in `ConsultationFlow.tsx`, and added room icon avatars in `RoomPicker`.
+   - **Enterprise Empty State:** Replaced bare text with a centered solid enterprise card with category icon when no service is selected in `transfer/page.tsx`.
+
+18. **Global Constants Architecture & Universal Dark Mode Refactoring (Completed):**
+   - **Global Independent Folders under `constants/` (`constants/designs/`, `constants/texts/`):** Centralized all designs, surfaces, dark mode tokens, typography, and iconography into `constants/designs/` (`themeTokens.ts`, `colors.ts`, `palette.ts`, `transferStyles.ts`, `kioskTypography.ts`, `icons.ts`). Centralized all copy, labels, and text dictionaries into `constants/texts/` (`transferTexts.ts`, `connectionTexts.ts`, `ewtTexts.ts`, `queueStatus.ts`, `appTexts.ts`).
+   - **Page-Specific to Global Relocation:** Relocated `transferStyles.ts` and `transferTexts.ts` from page-scoped `app/transfer/constants/` into the global `constants/designs/` and `constants/texts/` directories, ensuring dark mode is universally managed at the global layer rather than fragmented across individual screens.
+   - **Backward Compatibility Portals:** Maintained clean re-exports at root `constants/` and `app/transfer/constants/` so no external imports break.
+   - **Full Presentation Refactoring:** Refactored `QuickAssignDropdown.tsx` and `DoctorsPanel.tsx` into pure presentation components consuming typed style dictionaries (`quickAssignStyles`, `doctorsPanelStyles`) and texts (`transferTexts`), eliminating all inline Tailwind strings.
+   - **Neutral Dark Mode Standard:** Strictly enforced pure neutral dark surfaces (`#0d0d0d`, `#141414`, `#1a1a1a`, `#1f1f1f`, `#242424`, `#2e2e2e`), crisp 1px borders, high contrast (`#f5f5f5`, `#d4d4d4`, `#a3a3a3`), and zero emojis.
+
+19. **Universal Status Pill & Badge Dark Mode Refactoring (Completed):**
+   - **Centralized Status Pill Dictionary (`constants/designs/statusPillStyles.ts` & re-export `constants/statusPillStyles.ts`):** Established global single source of truth for queue statuses (`STATUS_STYLES` for `waiting`, `serving`, `idle`, `done`, `cancelled`, `unknown`), clinical stages (`STAGE_PILL_STYLES`), and base badge containers (`PILL_BASE_STYLES`). Eliminated the 15% opacity and borderless pill defect that caused murky, unreadable badges on `#1a1a1a` table rows. Decoupled `STATUS_STYLES` from `constants/texts/queueStatus.ts`.
+   - **Universal Theme Tokens (`constants/designs/themeTokens.ts`):** Upgraded `themeTokens.badge` (`neutral`, `brand`, `activeEmerald`, `warningAmber`, `infoBlue`) and `themeTokens.brand.pill` with high-contrast text and crisp solid borders (`dark:border-*-800/80`).
+   - **Nurse Station Dark Mode Contrast (`app/nurse/`):** Upgraded `STAGE_CONFIGS` in `app/nurse/constants/nurse.ts` with dark mode badge colors, borders, and backgrounds. Wired `AssignedSection.tsx`, `WithDoctorSection.tsx`, `CarryoutSection.tsx`, and `NurseQuickActionDropdown.tsx` directly to `STAGE_CONFIGS`. Upgraded `NursePatientCard.tsx` (wrapped `cubicleNum` badge without truncation per Rule 11), `FinishedDrawer.tsx`, `NurseHeader.tsx`, and `NurseDragGhost.tsx`.
+   - **Transfer Station Dark Mode Contrast (`app/transfer/`):** Refactored `constants/designs/transferStyles.ts` with solid dark backgrounds and crisp borders across `onProgressStyles`, `idlePanelStyles`, `queuePanelStyles`, `cubicleStyles`, `transferModalStyles`, `quickAssignStyles`, `doctorsPanelStyles`, and `dragGhostStyles`. Refactored `IdleNumbersSection.tsx` and `ConfirmAssignmentModal.tsx`. Removed text truncation on doctor names and specialties per Rule 11.
+   - **Superadmin Customization Dark Mode Contrast (`app/superadmin/`):** Added `patientTypeBoth`, `patientTypeNew`, `patientTypeOld` and printer status badges to `app/superadmin/customization/constants/customizationStyles.ts`. Refactored `app/superadmin/customization/page.tsx` and `HardwarePrinterConfigCard.tsx` to eliminate light-mode leaking borders in dark mode.
+   - **Dashboard Modules Dark Mode Contrast (`app/dashboard/`):** Upgraded `headerSearchStyles.ts` (`statusBadges`, `serviceBadge`, `categoryBadge`), `importStyles.ts` (`statusBadge`, `previewRowStatus`), `FilePreviewModal.tsx`, `patients.ts` (`ticketBadge`, `phoneProtectedBadge`, `PATIENT_STATUS_COLORS`), `styles.ts`, and `dashNavStyles.ts` (`badgeLive`, `statusBadge`).
+
+20. **Registration Counter Auto-Rotation & Timer Persistence (Completed):**
+   - **Root Cause Identified:** `fetchRegistrationPatients` was calling PostgREST `.upsert()` with partial row objects `{ id, counter_top_started_at }`. Because `patients` enforces NOT NULL on `created_at` and RESTRICTIVE RLS `CHECK (is_historical = false)`, the database rejected the upsert. The timestamp remained permanently null in PostgreSQL. Every 15 seconds, `syncNow()` re-queried null and assigned a fresh `new Date().toISOString()` timestamp, resetting the counter timer to 00:00 every 15 seconds and preventing the timer from ever reaching the 3-minute (`rotateTimeoutMs`) rotation trigger.
+   - **Persistence Fix:** Replaced `.upsert(...)` with parameterized `.update({ counter_top_started_at: now }).in('id', startIds).eq('is_historical', false).is('counter_top_started_at', null)` and `.update({ counter_top_started_at: null }).in('id', clearIds).eq('is_historical', false).not('counter_top_started_at', 'is', null)`.
+   - **In-Memory Timer Preservation:** Maintained `registrationPatientsRef` in `app/transfer/page.tsx`. During background fetches, preserved running timers unless the patient rotated or changed stations, eliminating timer reset flickers.
+   - **Rotation Hook Upgrade (`useRegistrationRotate.ts`):** Stabilized the polling interval using `registrationRef`, added optimistic concurrency locking (`expected: { counter: p.counter }`), protected against rotation during active confirmation dialogs (`confirmingRef`), and triggered `syncNow` upon rotation completion to synchronize both counter queues and idle pools.
+
+21. **Badge Character-Only Dark Mode Standardization & Unavailable Service Autodeletion (Completed):**
+   - **Badge Background Removal ("remove the background only the character is colored"):**
+     - Removed badge background boxes and borders across count badges and stage badges system-wide.
+     - `app/dashboard/pages/cubicles/constants/cubicles.ts`: Stripped `badgeBg` and borders across `PIPELINE_STAGE_STYLES` (`waiting`, `dispatch`, `examination`, `carryout`, `completed`) and `CUBICLE_STATUS_STYLES` (`available`, `occupied`, `maintenance`, `cleaning`). Made `stageBadge`, `nodeCountBadge`, `nodeBadge`, `groupBadge*`, `stage3Badge`, and `serviceBlockBadge` bare text without backgrounds or borders.
+     - `app/dashboard/pages/cubicles/components/CubicleProcessGraph.tsx`: Stripped background boxes and borders from stage 1, 2, 4, and 5 count badges.
+     - `constants/designs/transferStyles.ts`: Replaced background boxes on `onProgressStyles.headerCountBadge`, `idlePanelStyles.headerCountBadge`, `registrationCounterStyles.headerCountBadge`, `cubicleStyles.headerCountBadge`, and `rotationBadge` with bare colored text (`font-extrabold`).
+     - `app/nurse/components/NurseHeader.tsx`: Replaced background box on `finishedCount` with bare colored text (`text-xs font-bold text-emerald-600 dark:text-emerald-400`).
+     - `constants/designs/themeTokens.ts`: Updated `themeTokens.badge` to bare colored text styles with `font-extrabold`.
+   - **Autodeletion of Unavailable Services in Rooms & Cubicles Dashboard:**
+     - `app/api/superadmin/cubicles/route.ts`: Updated `GET` endpoint to query active services from `services` table. Any cubicles whose `category` is no longer active in `services` are automatically purged from `user_cubicles` and `cubicle` tables in Supabase, returning only valid cubicles.
+     - `app/superadmin/customization/page.tsx`: Added cascading autodeletion in `handleConfirmDelete()` so deleting a service cleans up its associated cubicles from `cubicle`, unlinks `user_cubicles`, and deletes corresponding rows in `user_services` and `user_rooms`, alongside `app_settings.queue_prefix_map`.
+     - `app/dashboard/pages/cubicles/hooks/useCubicleFlowchartData.ts`: Filtered `validCubicles` strictly to categories matching the active `services` table. Removed the legacy `extraServices` generator that was resurrecting deleted/orphaned cubicle categories as active services in the cubicles dashboard.
+     - `app/superadmin/components/RoomsPanel.tsx`: Filtered out any cubicles whose `category` does not match active services in `availableServices`.
+
+22. **Leftover Badge Background Purge & Decorative Live Indicator Removal (Completed):**
+   - **Remaining Badge Background Box Removal:**
+     - `constants/designs/transferStyles.ts`: Removed background boxes from `statusBadgeActive` and `statusBadgeInactive` on doctor cards (`DoctorsPanel.tsx`), `capacityBadgeFull` and `capacityBadgeAvailable` on cubicles (`CubicleCard.tsx`), and `counterTargetPill`, leaving bare high-contrast colored text.
+     - `app/nurse/constants/nurse.ts` & `StageColumn.tsx`: Stripped `badgeColor` box background containers (`bg-blue-100`, `bg-purple-100`, `bg-orange-100`) from stage column headers (`In Queue / Assigned`, `With Doctor`, `Carryout & Post-Care`), rendering bare colored count numbers (`0`).
+     - `app/nurse/components/FinishedDrawer.tsx`: Removed background box and border around patient count in `Finished Today [ 0 ]` drawer header, rendering bare text `0`.
+   - **Removal of Decorative Live Display Badges:**
+     - `app/nurse/components/NurseHeader.tsx`: Removed idle `[ • Live ]` indicator badge.
+     - `constants/designs/transferStyles.ts`: Hid decorative header pulse dots (`headerPulseDot`, `headerDot`) on transfer section headings.
+     - `app/dashboard/components/OverviewDateFilter.tsx`: Removed dummy `[ • Live Streaming ]` and historical indicator boxes.
+     - `app/dashboard/pages/cubicles/components/HeatmapHeaderControls.tsx`: Removed dummy `[ • Live Sync ]` indicator.
+     - `app/dashboard/components/navigation/DashSideNavigation.tsx`: Removed dummy `[ • System Online ]` footer status badge.
+     - `app/dashboard/pages/cubicles/components/CubicleProcessGraph.tsx`: Hid idle `Live Mode` pill when neither simulation nor transit is active.
+     - `app/superadmin/components/navigation/SuperAdminSidebar.tsx`: Removed dummy `[ • System Operational ]` footer status badge.
+
+
+23. **Counter Card Layout & Notification Dropdown Scrolling Remediation (Completed):**
+   - **Registration Counter Top Patient Row:** Fixed timer truncation on `ElapsedTimer` by switching patient container from `min-w-0 flex-1 overflow-hidden` to `flex items-center gap-1.5 shrink-0` and wrapping `ElapsedTimer` in `shrink-0 flex items-center font-mono text-[11px] font-bold`. Shortened `sendToQueueBtn` from `'Send to Queue →'` to `'Queue →'` in `constants/texts/transferTexts.ts` and removed `uppercase tracking-wider` from `registrationCounterStyles.queueBtn` in `constants/designs/transferStyles.ts`, guaranteeing clinical and timer data never clip or truncate per Rule 11.
+   - **System Notifications Dropdown Scrolling:** Bounded `NOTIFICATION_STYLES.dropdown.panel` to `max-h-[calc(100vh-80px)]` and `sm:max-h-[min(560px,calc(100vh-80px))] flex flex-col` in `app/dashboard/constants/notificationStyles.ts`. Assigned `shrink-0` to header, filterBar, and footer, and updated `listContainer` to `flex-1 min-h-0 max-h-[420px] overflow-y-auto overflow-x-hidden phc-scroll overscroll-contain touch-pan-y`, ensuring reliable internal scrolling and complete visibility across all display viewports. Added viewport containment and `flex-1 min-h-0` to the unassigned dropdown in `app/transfer/page.tsx` and `transferStyles.ts`.
+
+24. **Universal Badge Background Box Removal for Nurse & Transfer (Completed):**
+   - **Reusable NotificationBadge:** Removed background containers (`bg`), border rings (`ring-1`), and shadows (`shadow-xs`) from `NotificationBadge` for `variant="count"`. Switched to high-contrast bare colored characters (`font-mono text-xs font-extrabold leading-none` with `text-[#cc3535] dark:text-[#f87171]`, `text-amber-600 dark:text-amber-400`, `text-blue-600 dark:text-blue-400`, `text-slate-500 dark:text-[#a3a3a3]`, and `text-emerald-600 dark:text-emerald-400`).
+   - **Station Sidebar & Tab Cleanup:** Removed legacy `!bg-white ring-transparent` overrides from `NurseSidebar.tsx` and `app/transfer/components/Sidebar.tsx`, rendering crisp `!text-white` on active selection and bare colored text on inactive items. Tabs in `QueuePanel.tsx` now render bare colored count numbers (`1` in red, `0` in slate) with zero background boxes.
+   - **Queue Patient Ticket Badges:** Stripped background containers and borders from `patientNumBadgeTop`, `patientNumBadgeNormal`, and `patientNumBadgeSelected` in `constants/designs/transferStyles.ts`.
+
+25. **Kiosk Strict Light Mode Enforcement & Dark Mode Purge (Completed):**
+   - **Zero Dark Mode Classes:** Completely removed all `dark:` classes from `InactivityModalClasses` (`app/kiosk/constants/inactivityModalStyles.ts`), `InactivityTimeoutModal.tsx`, and `kioskLoadingOverlay.ts`.
+   - **Root Kiosk Shell Light Mode Lock:** Enforced `document.documentElement.classList.remove("dark")` and `style.colorScheme = "light"` in `app/kiosk/layout.tsx`.
+   - **Accessible Clinical Contrast:** Inactivity countdown modal strictly renders in clean hospital white (`bg-white border-slate-200 text-slate-900`) matching the kiosk design archetype.
+
+26. **Dark Mode Toggle Fix, Idle Action Buttons & Single Select Screen Standard (Completed):**
+   - **Dark Mode Toggle Restored:** Removed `useTheme` and `setTheme` from `app/kiosk/layout.tsx`. Replaced with non-destructive lifecycle effect that removes `.dark` while inside `/kiosk` and restores it on unmount without mutating `next-themes` state in `localStorage` or interfering with cross-tab toggling.
+   - **Idle Card Action Buttons & Patient Badge:** Upgraded `activateBtn` and `removeBtn` in `constants/designs/transferStyles.ts` to solid high-contrast dark mode surfaces (`dark:bg-emerald-950/50 dark:border-emerald-700 dark:text-emerald-300` and `dark:bg-rose-950/50 dark:border-rose-700 dark:text-rose-300`). Stripped background container and border from `patientNumBadge` in `idlePanelStyles`, rendering bare colored text.
+   - **Duplicate Select Screen Button Elimination:** Removed duplicate top header and breadcrumb Select Screen buttons from `NurseHeader.tsx`, `BreadcrumbNav.tsx`, `SuperAdminHeader.tsx`, and `DashboardHeader.tsx`. Retained single, dedicated Select Screen link strictly in the bottom-left sidebar rail across all four workstations.
+
+27. **Circular Screen Ripple Theme Transition (Completed):**
+   - **Reusable Orchestrator (`lib/theme/themeTransition.ts`):** Implemented `toggleThemeWithRipple` using native View Transitions API (`document.startViewTransition`) and `react-dom` `flushSync`.
+   - **Expanding Radial Clip-Path Animation (`app/globals.css`):** Configured `::view-transition-new(root)` to expand via `clipPath` from the click coordinates to the furthest screen corner over 450ms (`cubic-bezier(0.4, 0, 0.2, 1)`), smoothly sweeping across the previous theme without layout jitter.
+   - **Workstation Integration:** Connected circular ripple to all theme toggle buttons in Nurse, Transfer, SuperAdmin, Dashboard, and Select Screen.
+
+28. **Quick Action Popover Dark Mode Contrast & Resilient Dismissal (Completed):**
+   - **High-Contrast Dark Mode Solid Surfaces:** Upgraded `NurseQuickActionDropdown.tsx` with dedicated `nurseQuickActionStyles` consuming semantic surface tokens (`bg-surface-muted`, `border-line`, `text-content`, `text-content-muted`). Standardized action buttons (`with_doctor`, `call`, `carryout`, `finish`, `back_queue`, `back_doctor`) with high-contrast surfaces (`bg-surface-muted dark:bg-[#202020]`), crisp 1px borders, and high-visibility stage badges, eliminating white-on-white button rendering in dark mode.
+   - **Queue Number Bare Text Styling:** Removed background box (`bg-[#cc3535] text-white`) from patient queue numbers in `NurseQuickActionDropdown.tsx` and `QuickAssignDropdown.tsx` (via `quickAssignStyles.patientBadge` in `constants/designs/transferStyles.ts`), rendering bare high-contrast colored text (`font-black text-lg text-[#cc3535] dark:text-[#f87171]`).
+   - **Resilient Dismissal Mechanism:** Implemented `handleClose` helper with `e.stopPropagation()` and loading mutation guard. Connected both `onClick` and `onPointerDown` on the top-right header `x` button, bottom-right footer `Close` button, and backdrop overlay (`e.target === e.currentTarget`). Added `pointer-events-none` on SVG icons to eliminate pointer capture interference.
 
 ---
 

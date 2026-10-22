@@ -31,7 +31,7 @@ export const DASHBOARD_NAV_STYLES = {
     navIconActive: themeTokens.text.accent,
     footer: `p-4 border-t ${themeTokens.border.default} space-y-2 bg-slate-50/50 dark:bg-[#141414]/50`,
     statusBadge:
-      'flex items-center gap-2 px-3 py-1.5 rounded-lg bg-emerald-50 dark:bg-emerald-950/40 border border-emerald-200 dark:border-emerald-900/60 text-emerald-700 dark:text-emerald-400 text-[11px] font-semibold',
+      'flex items-center gap-2 px-3 py-1.5 rounded-lg bg-emerald-50 dark:bg-emerald-950/70 border border-emerald-200 dark:border-emerald-800/80 text-emerald-700 dark:text-emerald-300 text-[11px] font-semibold',
     statusDot: 'w-2 h-2 rounded-full bg-emerald-500 animate-pulse',
     footerText: `px-1 text-[10px] ${themeTokens.text.muted}`,
   },

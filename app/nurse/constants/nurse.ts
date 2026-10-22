@@ -53,9 +53,9 @@ export const STAGE_CONFIGS: Record<'assigned' | 'with_doctor' | 'carryout', Stag
   assigned: {
     id: 'assigned',
     titleKey: 'stageAssignedHeading',
-    badgeColor: 'bg-blue-100 text-blue-700',
-    borderColor: 'border-blue-200',
-    bgColor: 'bg-blue-50/50',
+    badgeColor: 'text-blue-600 dark:text-blue-400 font-extrabold',
+    borderColor: 'border-blue-200 dark:border-blue-900/60',
+    bgColor: 'bg-blue-50/50 dark:bg-blue-950/20',
     emptyStateTextKey: 'emptyAssigned',
     warnAfterSeconds: 900, // 15 minutes
     nextStageId: 'with_doctor',
@@ -63,9 +63,9 @@ export const STAGE_CONFIGS: Record<'assigned' | 'with_doctor' | 'carryout', Stag
   with_doctor: {
     id: 'with_doctor',
     titleKey: 'stageWithDoctorHeading',
-    badgeColor: 'bg-purple-100 text-purple-700',
-    borderColor: 'border-purple-200',
-    bgColor: 'bg-purple-50/50',
+    badgeColor: 'text-purple-600 dark:text-purple-400 font-extrabold',
+    borderColor: 'border-purple-200 dark:border-purple-900/60',
+    bgColor: 'bg-purple-50/50 dark:bg-purple-950/20',
     emptyStateTextKey: 'emptyWithDoctor',
     warnAfterSeconds: 600, // 10 minutes
     nextStageId: 'carryout',
@@ -74,9 +74,9 @@ export const STAGE_CONFIGS: Record<'assigned' | 'with_doctor' | 'carryout', Stag
   carryout: {
     id: 'carryout',
     titleKey: 'stageCarryoutHeading',
-    badgeColor: 'bg-orange-100 text-orange-700',
-    borderColor: 'border-orange-200',
-    bgColor: 'bg-orange-50/50',
+    badgeColor: 'text-orange-600 dark:text-orange-400 font-extrabold',
+    borderColor: 'border-orange-200 dark:border-orange-900/60',
+    bgColor: 'bg-orange-50/50 dark:bg-orange-950/20',
     emptyStateTextKey: 'emptyCarryout',
     warnAfterSeconds: 600, // 10 minutes
     nextStageId: 'done',
@@ -201,4 +201,35 @@ export const NurseStyle = {
     boxShadow: '-10px 0 25px -5px rgba(0, 0, 0, 0.1)',
     zIndex: 50,
   } as CSSProperties,
+} as const;
+
+/**
+ * Standard semantic styles for the NurseQuickActionDropdown modal dialog and action cards.
+ * Conforms strictly to AGENTS.md Rule 2 and Rule 10 (high-contrast solid surfaces).
+ */
+export const nurseQuickActionStyles = {
+  backdrop:
+    'fixed inset-0 z-50 flex items-center justify-center p-4 bg-slate-900/60 dark:bg-black/70 backdrop-blur-xs animate-in fade-in duration-150',
+  panel:
+    'w-full max-w-sm sm:max-w-md bg-surface rounded-2xl shadow-2xl border border-line overflow-hidden flex flex-col animate-in zoom-in-95 duration-150',
+  header:
+    'px-5 py-3.5 bg-surface-muted border-b border-line flex items-center justify-between',
+  ticketNumber:
+    'font-black text-lg text-[#cc3535] dark:text-[#f87171] tracking-tight shrink-0',
+  title: 'text-sm font-bold text-content truncate',
+  subtitle: 'text-[11px] text-content-muted truncate mt-0.5',
+  closeHeaderBtn:
+    'w-8 h-8 rounded-lg text-content-muted hover:text-content hover:bg-surface border border-transparent hover:border-line flex items-center justify-center transition cursor-pointer shrink-0 disabled:opacity-40',
+  body: 'p-3.5 space-y-2',
+  actionBtnIdle:
+    'w-full flex items-center justify-between p-3 rounded-xl border border-line bg-surface-muted hover:bg-surface dark:hover:bg-[#202020] transition-all text-left select-none cursor-pointer active:scale-[0.99] group shadow-2xs',
+  actionBtnDisabled:
+    'w-full flex items-center justify-between p-3 rounded-xl border border-line bg-surface-muted/50 opacity-40 cursor-not-allowed text-left select-none',
+  actionTitle: 'text-sm font-bold text-content transition-colors',
+  actionDesc: 'text-xs text-content-muted transition-colors',
+  footer:
+    'px-5 py-3 bg-surface-muted border-t border-line flex items-center justify-between',
+  footerHint: 'text-[11px] text-content-muted font-medium',
+  closeFooterBtn:
+    'px-3.5 py-1.5 rounded-xl text-xs font-bold text-content bg-surface hover:bg-surface-muted border border-line shadow-2xs hover:shadow-xs transition cursor-pointer disabled:opacity-40',
 } as const;

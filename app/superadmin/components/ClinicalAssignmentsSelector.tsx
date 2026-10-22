@@ -13,6 +13,12 @@ import { SUPERADMIN_TEXTS } from '@/app/superadmin/constants/superadminTexts';
 import { SUPERADMIN_STYLES } from '@/app/superadmin/constants/superadminStyles';
 
 interface ClinicalAssignmentsSelectorProps {
+  /** Full list of configured hospital services. */
+  services?: string[];
+  /** Array of service names currently assigned. */
+  selectedServices?: string[];
+  /** Handler to toggle a clinical service selection. */
+  onToggleService?: (service: string) => void;
   /** Full list of cubicles fetched from the hospital database. */
   cubicles: CubicleOption[];
   /** Array of cubicle IDs currently selected. */
@@ -22,12 +28,15 @@ interface ClinicalAssignmentsSelectorProps {
 }
 
 /**
- * Renders categorized clinical cubicle selection list.
+ * Renders categorized clinical cubicle and service selection list.
  *
  * @param props - Component properties.
- * @returns JSX element containing the clinical cubicle selection panel.
+ * @returns JSX element containing the clinical cubicle and service selection panel.
  */
 export const ClinicalAssignmentsSelector: React.FC<ClinicalAssignmentsSelectorProps> = ({
+  services = [],
+  selectedServices = [],
+  onToggleService,
   cubicles,
   selectedCubicleIds,
   onToggleCubicle,
@@ -51,6 +60,52 @@ export const ClinicalAssignmentsSelector: React.FC<ClinicalAssignmentsSelectorPr
 
   return (
     <div className={S.assignmentSection}>
+      {/* 1. Clinical Services Scope */}
+      {services.length > 0 && onToggleService && (
+        <div className="space-y-2">
+          <div className="flex items-center justify-between">
+            <div>
+              <label className="block text-sm font-bold text-slate-900 dark:text-[#f5f5f5]">
+                {T.clinicalServicesTitle}
+              </label>
+              <p className="text-xs text-slate-500 dark:text-[#a3a3a3] mt-0.5">
+                {T.clinicalServicesDesc}
+              </p>
+            </div>
+            <span className="rounded-md bg-rose-100 dark:bg-rose-950 px-2.5 py-0.5 text-xs font-semibold text-rose-800 dark:text-rose-300 border border-rose-200 dark:border-rose-900">
+              {selectedServices.length} {T.clinicalSelectedBadge}
+            </span>
+          </div>
+
+          <div className="grid grid-cols-2 sm:grid-cols-3 gap-2">
+            {services.map((service) => {
+              const isSelected = selectedServices.includes(service);
+              return (
+                <button
+                  key={service}
+                  type="button"
+                  onClick={() => onToggleService(service)}
+                  className={`rounded-xl border p-2.5 text-left text-xs font-semibold transition cursor-pointer flex items-center justify-between ${
+                    isSelected
+                      ? 'border-[#a8071a]/50 bg-[#a8071a]/10 dark:bg-[#a8071a]/20 text-[#a8071a] dark:text-[#f87171] shadow-xs'
+                      : 'border-slate-200 dark:border-[#2e2e2e] bg-white dark:bg-[#1a1a1a] text-slate-700 dark:text-[#a3a3a3] hover:border-[#a8071a]/40 hover:bg-[#a8071a]/5 dark:hover:bg-[#a8071a]/10'
+                  }`}
+                >
+                  <span>{service}</span>
+                  {isSelected && (
+                    <i
+                      className="bx bx-check text-[#a8071a] dark:text-[#f87171] text-base"
+                      aria-hidden="true"
+                    />
+                  )}
+                </button>
+              );
+            })}
+          </div>
+        </div>
+      )}
+
+      {/* 2. Clinical Cubicles Scope */}
       <div className={S.sectionHeader}>
         <div>
           <label className="block text-sm font-bold text-slate-900 dark:text-[#f5f5f5]">

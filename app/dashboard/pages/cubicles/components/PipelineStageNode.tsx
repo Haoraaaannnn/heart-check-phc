@@ -75,7 +75,7 @@ export default function PipelineStageNode({
         )}
         {stage.key !== 'completed' && (
           <div className={S.nodePortOut} title="Outgoing Queue Route Port">
-            <span className={`${S.nodePortDot} ${style.badgeBg}`} />
+            <span className={`${S.nodePortDot} bg-rose-500`} />
           </div>
         )}
 

@@ -8,6 +8,9 @@
  * - Compact queue line of waiting patients
  * - Direct pointer dropzone target (`data-cubicle`) for drag-and-drop transfers
  *
+ * Adheres strictly to AGENTS.md separation-of-concerns standards by consuming centralized
+ * styles from transferStyles.ts.
+ *
  * @module app/transfer/components/CubicleCard
  */
 
@@ -17,8 +20,9 @@ import React, { useState } from 'react';
 import { Patient, Cubicle } from '@/types/Types';
 import { MAX_PATIENTS_PER_CUBICLE } from '@/app/transfer/lib/constants';
 import { ElapsedTimer } from '@/app/transfer/components/ElapsedTimer';
-import { transferTexts } from '@/app/transfer/constants/transferTexts';
+import { transferTexts } from '@/constants/texts/transferTexts';
 import { TransferStyle } from '@/app/transfer/constants/transfer';
+import { cubicleStyles } from '@/constants/designs/transferStyles';
 import { SelectedTransferPatient } from '@/app/transfer/types/transfer';
 import { DragHandle } from '@/app/transfer/components/DragHandle';
 
@@ -106,28 +110,29 @@ export function CubicleCard({
     }
   };
 
+  const cardStateClass =
+    isOver && isDraggable
+      ? cubicleStyles.cubicleCardDropOver
+      : isTargetEligible
+      ? cubicleStyles.cubicleCardTargetEligible
+      : isFull
+      ? cubicleStyles.cubicleCardFull
+      : cubicleStyles.cubicleCardNormal;
+
   return (
     <div
       data-cubicle={cubicle.cubicleNum}
       onClick={handleCardTargetClick}
       style={isTargetEligible ? TransferStyle.assignTargetCard : undefined}
-      className={`rounded-xl border p-2 flex flex-col justify-between transition-all select-none min-h-[76px] ${
-        isOver && isDraggable
-          ? 'border-[#cc3535] bg-red-50/80 dark:bg-red-950/50 shadow-xs phc-dropzone'
-          : isTargetEligible
-          ? 'border-emerald-500 bg-emerald-50/40 dark:bg-emerald-950/30 ring-2 ring-emerald-500/20 hover:border-emerald-600 cursor-pointer'
-          : isFull
-          ? 'border-rose-200 dark:border-rose-900/40 bg-rose-50/20 dark:bg-rose-950/20'
-          : 'border-slate-200 dark:border-[#2e2e2e] bg-slate-50/60 dark:bg-[#1f1f1f]/60 hover:bg-slate-50 dark:hover:bg-[#242424]'
-      }`}
+      className={`${cubicleStyles.cubicleCardBase} ${cardStateClass}`}
     >
       {/* Cubicle Tile Header: Cubicle Num + Doctor + Assign / Capacity */}
       <div className="flex items-center justify-between gap-1 mb-1">
         <div className="min-w-0 flex-1">
-          <span className="text-[11px] font-bold text-slate-800 dark:text-[#f5f5f5] truncate block leading-none">
+          <span className={cubicleStyles.cubicleNum}>
             {cubicle.cubicleNum}
           </span>
-          <span className="text-[9px] text-slate-500 dark:text-[#a3a3a3] font-medium truncate block leading-none mt-0.5">
+          <span className={doctorName ? cubicleStyles.doctorName : cubicleStyles.unassignedDoctor}>
             {doctorName
               ? `${transferTexts.doctorPrefix} ${doctorName}`
               : transferTexts.unassignedDoctor}
@@ -149,7 +154,7 @@ export function CubicleCard({
                 setIsAssignPending(false);
               }
             }}
-            className={`px-1.5 py-0.5 text-[10px] font-bold bg-emerald-600 hover:bg-emerald-700 active:bg-emerald-800 text-white rounded transition-colors shadow-2xs shrink-0 cursor-pointer select-none whitespace-nowrap ${
+            className={`${cubicleStyles.assignHereBtn} ${
               isAssignPending ? 'cursor-wait opacity-80' : ''
             }`}
           >
@@ -161,19 +166,19 @@ export function CubicleCard({
                 </svg>
                 <span>{transferTexts.savingAssignment}</span>
               </span>
+            ) : selectedPatient?.sourceType === 'queue' ? (
+              transferTexts.assignHereBtn
             ) : (
-              selectedPatient?.sourceType === 'queue'
-                ? transferTexts.assignHereBtn
-                : transferTexts.reassignHereBtn
+              transferTexts.reassignHereBtn
             )}
           </button>
         ) : (
           <span
-            className={`text-[9px] font-bold px-1.5 py-0.2 rounded-md shrink-0 ${
+            className={
               isFull
-                ? 'bg-rose-100 dark:bg-rose-950/60 text-rose-700 dark:text-rose-300'
-                : 'bg-emerald-100 dark:bg-emerald-950/60 text-emerald-800 dark:text-emerald-300'
-            }`}
+                ? cubicleStyles.capacityBadgeFull
+                : cubicleStyles.capacityBadgeAvailable
+            }
           >
             {visibleAssigned.length}/{MAX_PATIENTS_PER_CUBICLE}
           </span>
@@ -198,13 +203,13 @@ export function CubicleCard({
               onMouseDown={e => onDragStart?.(e, topPatient, cubicle.cubicleNum)}
               onClick={handleTopPatientClick}
               style={isTopSelected ? TransferStyle.selectedPatientRow : undefined}
-              className={`p-1.5 bg-white dark:bg-[#1a1a1a] rounded-lg border transition-all flex items-center justify-between gap-1 shadow-2xs cursor-pointer ${
+              className={
                 draggedPatientId === topPatient.id
-                  ? 'opacity-40'
+                  ? `${cubicleStyles.topPatientCard} opacity-40`
                   : isTopSelected
-                  ? 'border-[#cc3535] bg-red-50/80 dark:bg-red-950/60 ring-2 ring-[#cc3535]'
-                  : 'border-slate-200 dark:border-[#2e2e2e] hover:border-slate-300 dark:hover:border-[#404040]'
-              }`}
+                  ? cubicleStyles.topPatientCardSelected
+                  : cubicleStyles.topPatientCard
+              }
             >
               <div className="flex items-center gap-1 min-w-0 flex-1 overflow-hidden">
                 {isDraggable && (
@@ -216,7 +221,7 @@ export function CubicleCard({
                     <DragHandle title={transferTexts.tapToSelectHint} />
                   )
                 )}
-                <span className="font-black text-xs text-[#cc3535] shrink-0">
+                <span className={cubicleStyles.patientNum}>
                   {topPatient.patientNum}
                 </span>
                 <span className="shrink-0 flex items-center">
@@ -245,11 +250,11 @@ export function CubicleCard({
                   }}
                   disabled={speakingId === topPatient.id}
                   title={transferTexts.callPatientTooltip}
-                  className={`px-1.5 py-0.5 rounded text-[10px] font-semibold transition-colors cursor-pointer whitespace-nowrap shrink-0 ${
+                  className={
                     speakingId === topPatient.id
-                      ? 'bg-blue-100 dark:bg-blue-950/60 text-blue-300 dark:text-blue-400 cursor-not-allowed'
-                      : 'bg-blue-50 dark:bg-blue-950/40 hover:bg-blue-100 dark:hover:bg-blue-900/50 text-blue-600 dark:text-blue-300'
-                  }`}
+                      ? cubicleStyles.callBtnSpeaking
+                      : cubicleStyles.callBtn
+                  }
                 >
                   {speakingId === topPatient.id ? transferTexts.callingBtn : transferTexts.callBtn}
                 </button>
@@ -271,7 +276,7 @@ export function CubicleCard({
                     }
                   }}
                   title={transferTexts.moveToQueueTooltip}
-                  className={`px-1.5 py-0.5 rounded text-[10px] font-semibold bg-amber-50 dark:bg-amber-950/40 hover:bg-amber-100 dark:hover:bg-amber-900/50 text-amber-700 dark:text-amber-300 transition-colors cursor-pointer select-none whitespace-nowrap shrink-0 ${
+                  className={`${cubicleStyles.backBtn} ${
                     isBackPending ? 'cursor-wait opacity-80' : ''
                   }`}
                 >
@@ -289,15 +294,15 @@ export function CubicleCard({
           );
         })()
       ) : (
-        <div className="py-2 text-center text-slate-400 dark:text-[#737373] text-[11px] italic">
-          {isTargetEligible ? transferTexts.cubicleSelectTargetHint : 'Available'}
+        <div className={cubicleStyles.availableLabel}>
+          {isTargetEligible ? transferTexts.cubicleSelectTargetHint : transferTexts.cubicleAvailable}
         </div>
       )}
 
       {/* Additional Waiting Patients in this Cubicle Lane */}
       {waitingPatients.length > 0 && (
-        <div className="flex items-center gap-1 mt-1 overflow-hidden">
-          <span className="text-[9px] text-slate-400 dark:text-[#737373] font-bold uppercase shrink-0">
+        <div className={cubicleStyles.nextQueueWrap}>
+          <span className={cubicleStyles.nextLabel}>
             Next:
           </span>
           {waitingPatients.slice(0, 2).map(p => {
@@ -311,18 +316,18 @@ export function CubicleCard({
                   e.stopPropagation();
                   onSelectPatient?.(p, cubicle.cubicleNum);
                 }}
-                className={`text-[10px] font-semibold px-1 py-0.5 rounded border shadow-2xs cursor-pointer transition-colors ${
+                className={
                   isWaitingSelected
-                    ? 'bg-red-50 dark:bg-red-950/60 text-[#cc3535] dark:text-[#f87171] border-[#cc3535] ring-1 ring-[#cc3535]'
-                    : 'bg-white dark:bg-[#1a1a1a] border-slate-200 dark:border-[#2e2e2e] text-slate-600 dark:text-[#a3a3a3] hover:border-slate-300 dark:hover:border-[#404040]'
-                }`}
+                    ? cubicleStyles.waitingPatientChipSelected
+                    : cubicleStyles.waitingPatientChip
+                }
               >
                 {p.patientNum}
               </span>
             );
           })}
           {waitingPatients.length > 2 && (
-            <span className="text-[9px] text-slate-400 dark:text-[#737373] font-medium shrink-0">
+            <span className={cubicleStyles.morePatientsText}>
               +{waitingPatients.length - 2}
             </span>
           )}

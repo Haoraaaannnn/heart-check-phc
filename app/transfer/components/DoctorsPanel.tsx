@@ -1,9 +1,36 @@
+/**
+ * @fileoverview Doctor-to-cubicle station assignment and physician management panel.
+ *
+ * Provides administrative controls for registering doctors, setting specialties,
+ * toggling availability, and assigning physicians to consultation and screening cubicles.
+ *
+ * Architectural Features:
+ * - High-contrast solid clinical surfaces adhering strictly to AGENTS.md Rule 10.
+ * - Strict Separation of Concerns: Consumes centralized styles from doctorsPanelStyles and texts from transferTexts.
+ * - Parameterized Supabase queries ensuring security and zero injection vulnerability.
+ * - Zero emojis in code, comments, JSDocs, and user-facing copy.
+ *
+ * @remarks
+ * Conforms to AGENTS.md:
+ * - Centralized style dictionary in constants/designs/transferStyles.ts.
+ * - Centralized text copy in constants/texts/transferTexts.ts.
+ *
+ * @module app/transfer/components/DoctorsPanel
+ */
+
 'use client';
-import { useState, useEffect, useMemo } from 'react';
+
+import React, { useState, useEffect, useMemo } from 'react';
 import { supabase } from '@/lib/supabase';
 import { Doctor, Cubicle } from '@/types/Types';
-import { transferTexts } from '@/app/transfer/constants/transferTexts';
+import { transferTexts } from '@/constants/texts/transferTexts';
+import { doctorsPanelStyles } from '@/constants/designs/transferStyles';
 
+/**
+ * Doctor-to-cubicle management panel rendered inside the DoctorsModal dialog.
+ *
+ * @returns The rendered DoctorsPanel element.
+ */
 export function DoctorsPanel() {
   const [doctors, setDoctors] = useState<Doctor[]>([]);
   const [cubicles, setCubicles] = useState<Cubicle[]>([]);
@@ -24,18 +51,28 @@ export function DoctorsPanel() {
   const [selectedDoctorId, setSelectedDoctorId] = useState<string | null>(null);
   const [savingCubicleId, setSavingCubicleId] = useState<number | null>(null);
 
+  /**
+   * Fetches all registered doctors and cubicle records.
+   */
   const fetchAll = async () => {
     setLoading(true);
     const [{ data: docData }, { data: cubeData }] = await Promise.all([
       supabase.from('doctors').select('*').order('full_name', { ascending: true }),
-      supabase.from('cubicle').select('*').order('category', { ascending: true }).order('room', { ascending: true }).order('cubicleNum', { ascending: true }),
+      supabase
+        .from('cubicle')
+        .select('*')
+        .order('category', { ascending: true })
+        .order('room', { ascending: true })
+        .order('cubicleNum', { ascending: true }),
     ]);
     setDoctors(docData || []);
     setCubicles(cubeData || []);
     setLoading(false);
   };
 
-  useEffect(() => { fetchAll(); }, []);
+  useEffect(() => {
+    fetchAll();
+  }, []);
 
   const selectedDoctor = doctors.find(d => d.id === selectedDoctorId) || null;
 
@@ -95,13 +132,13 @@ export function DoctorsPanel() {
           .update({ full_name: formName, specialty: formSpecialty || null, active: formActive })
           .eq('id', editingDoctor.id);
         if (error) throw error;
-        setFormSuccess('Doctor updated.');
+        setFormSuccess(transferTexts.doctorUpdatedSuccess);
       } else {
         const { error } = await supabase
           .from('doctors')
           .insert({ full_name: formName, specialty: formSpecialty || null, active: formActive });
         if (error) throw error;
-        setFormSuccess('Doctor added.');
+        setFormSuccess(transferTexts.doctorAddedSuccess);
       }
 
       setTimeout(() => {
@@ -111,7 +148,7 @@ export function DoctorsPanel() {
         fetchAll();
       }, 1000);
     } catch (err: any) {
-      setFormError(err.message || 'Something went wrong.');
+      setFormError(err.message || transferTexts.somethingWentWrongError);
     } finally {
       setFormLoading(false);
     }
@@ -127,7 +164,7 @@ export function DoctorsPanel() {
       setShowDeleteConfirm(null);
       fetchAll();
     } catch (err: any) {
-      setFormError(err.message || 'Failed to delete.');
+      setFormError(err.message || transferTexts.failedToDeleteError);
     } finally {
       setFormLoading(false);
     }
@@ -170,40 +207,50 @@ export function DoctorsPanel() {
   };
 
   if (loading) {
-    return <p className="text-gray-400 dark:text-[#a3a3a3] text-sm">Loading...</p>;
+    return <p className="text-slate-400 dark:text-[#a3a3a3] text-sm">{transferTexts.loadingDoctors}</p>;
   }
 
   return (
-    <div className="flex flex-col gap-6">
-      <div className="flex items-start justify-between gap-4">
+    <div className={doctorsPanelStyles.container}>
+      {/* Top Header */}
+      <div className={doctorsPanelStyles.topHeader}>
         <div>
-          <h2 className="text-lg font-bold text-gray-900 dark:text-[#f5f5f5]">Doctors</h2>
-          <p className="text-gray-500 dark:text-[#a3a3a3] text-sm mt-1">
-            Add doctors, then pick one below to choose which cubicles they cover.
+          <h2 className={doctorsPanelStyles.topHeaderTitle}>
+            {transferTexts.doctorsHeading}
+          </h2>
+          <p className={doctorsPanelStyles.topHeaderSubtitle}>
+            {transferTexts.doctorsSubtitle}
           </p>
         </div>
         <button
+          type="button"
           onClick={handleAddClick}
-          className="shrink-0 px-4 py-2 bg-blue-600 hover:bg-blue-700 text-white rounded-lg transition text-sm font-medium cursor-pointer"
+          className={doctorsPanelStyles.addDoctorBtn}
         >
-          + Add Doctor
+          {transferTexts.addDoctorBtn}
         </button>
       </div>
 
       {doctors.length === 0 ? (
-        <div className="bg-white dark:bg-[#1a1a1a] rounded-2xl border-2 border-dashed border-gray-200 dark:border-[#2e2e2e] p-10 text-center">
-          <p className="text-gray-700 dark:text-[#f5f5f5] font-semibold">{transferTexts.noRoomsConfiguredTitle}</p>
-          <p className="text-gray-400 dark:text-[#a3a3a3] text-sm mt-1 mb-4">Add a doctor to start assigning them to cubicles.</p>
+        <div className={doctorsPanelStyles.emptyStateCard}>
+          <p className={doctorsPanelStyles.emptyStateTitle}>
+            {transferTexts.noRoomsConfiguredTitle}
+          </p>
+          <p className={doctorsPanelStyles.emptyStateDesc}>
+            {transferTexts.addDoctorFirstNotice}
+          </p>
           <button
+            type="button"
             onClick={handleAddClick}
-            className="px-4 py-2 bg-blue-600 hover:bg-blue-700 text-white rounded-lg transition text-sm cursor-pointer"
+            className={doctorsPanelStyles.addDoctorBtn}
           >
-            + Add Doctor
+            {transferTexts.addDoctorBtn}
           </button>
         </div>
       ) : (
         <>
-          <div className="grid gap-3 sm:grid-cols-2 lg:grid-cols-3">
+          {/* Doctor Cards Grid */}
+          <div className={doctorsPanelStyles.doctorGrid}>
             {doctors.map(doc => {
               const isActive = doc.active !== false;
               const isSelected = selectedDoctorId === doc.id;
@@ -213,50 +260,62 @@ export function DoctorsPanel() {
                 <div
                   key={doc.id}
                   onClick={() => setSelectedDoctorId(isSelected ? null : doc.id)}
-                  className={`rounded-2xl border-2 p-4 flex flex-col gap-3 transition cursor-pointer ${
+                  className={`${doctorsPanelStyles.doctorCardBase} ${
                     isSelected
-                      ? 'border-blue-500 bg-blue-50/70 dark:bg-blue-950/40 shadow-sm'
-                      : 'border-gray-100 dark:border-[#2e2e2e] bg-white dark:bg-[#1a1a1a] hover:border-blue-200 dark:hover:border-blue-800'
+                      ? doctorsPanelStyles.doctorCardSelected
+                      : doctorsPanelStyles.doctorCardUnselected
                   } ${!isActive ? 'opacity-70' : ''}`}
                 >
                   <div className="flex items-start justify-between gap-2">
                     <div className="min-w-0">
-                      <p className="font-semibold text-gray-900 dark:text-[#f5f5f5] truncate">{doc.full_name}</p>
-                      <p className={`text-xs mt-0.5 truncate ${doc.specialty ? 'text-gray-500 dark:text-[#a3a3a3]' : 'text-gray-300 dark:text-[#737373] italic'}`}>
-                        {doc.specialty || 'No specialty set'}
+                      <p className={doctorsPanelStyles.doctorCardName}>{doc.full_name}</p>
+                      <p
+                        className={
+                          doc.specialty
+                            ? doctorsPanelStyles.doctorCardSpecialty
+                            : doctorsPanelStyles.doctorCardNoSpecialty
+                        }
+                      >
+                        {doc.specialty || transferTexts.noSpecialtySet}
                       </p>
                     </div>
                     <span
-                      className={`shrink-0 text-[10px] font-bold px-2 py-0.5 rounded-md ${
+                      className={
                         isActive
-                          ? 'bg-green-100 dark:bg-emerald-950/60 text-green-700 dark:text-emerald-300'
-                          : 'bg-gray-100 dark:bg-[#242424] text-gray-400 dark:text-[#737373]'
-                      }`}
+                          ? doctorsPanelStyles.statusBadgeActive
+                          : doctorsPanelStyles.statusBadgeInactive
+                      }
                     >
-                      {isActive ? 'Active' : 'Inactive'}
+                      {isActive ? transferTexts.activeStatus : transferTexts.inactiveStatus}
                     </span>
                   </div>
 
-                  <div className="flex items-center justify-between">
-                    <span className="text-xs text-gray-500 dark:text-[#a3a3a3]">
-                      {roomCount} cubicle{roomCount === 1 ? '' : 's'} assigned
+                  <div className={doctorsPanelStyles.cardFooter}>
+                    <span className={doctorsPanelStyles.roomCountText}>
+                      {transferTexts.cubicleAssignedCount(roomCount)}
                     </span>
-                    <div className="flex items-center gap-1.5" onClick={e => e.stopPropagation()}>
+                    <div
+                      className="flex items-center gap-1.5"
+                      onClick={e => e.stopPropagation()}
+                    >
                       <button
+                        type="button"
                         onClick={() => handleToggleActive(doc)}
-                        className="px-2 py-0.5 rounded-lg text-xs font-semibold text-gray-500 dark:text-[#a3a3a3] hover:bg-gray-100 dark:hover:bg-[#242424] hover:text-gray-800 dark:hover:text-[#f5f5f5] transition cursor-pointer"
+                        className={doctorsPanelStyles.actionBtnToggle}
                       >
                         {isActive ? transferTexts.deactivateBtn : transferTexts.activateBtn}
                       </button>
                       <button
+                        type="button"
                         onClick={() => handleEditClick(doc)}
-                        className="px-2 py-0.5 rounded-lg text-xs font-semibold text-blue-600 dark:text-blue-400 hover:bg-blue-50 dark:hover:bg-blue-950/40 transition cursor-pointer"
+                        className={doctorsPanelStyles.actionBtnEdit}
                       >
                         {transferTexts.editBtn}
                       </button>
                       <button
+                        type="button"
                         onClick={() => setShowDeleteConfirm(doc)}
-                        className="px-2 py-0.5 rounded-lg text-xs font-semibold text-red-600 dark:text-red-400 hover:bg-red-50 dark:hover:bg-red-950/40 transition cursor-pointer"
+                        className={doctorsPanelStyles.actionBtnDelete}
                       >
                         {transferTexts.deleteBtn}
                       </button>
@@ -264,7 +323,7 @@ export function DoctorsPanel() {
                   </div>
 
                   {isSelected && (
-                    <p className="text-[11px] font-semibold text-blue-600 dark:text-blue-400 -mb-1">
+                    <p className={doctorsPanelStyles.editingNotice}>
                       {transferTexts.editingDoctorNotice}
                     </p>
                   )}
@@ -273,32 +332,34 @@ export function DoctorsPanel() {
             })}
           </div>
 
-          <div className="bg-white dark:bg-[#1a1a1a] rounded-2xl border border-gray-100 dark:border-[#2e2e2e] shadow-sm overflow-hidden">
-            <div className="px-6 py-4 border-b border-gray-100 dark:border-[#2e2e2e] flex items-center justify-between gap-3 flex-wrap">
+          {/* Cubicles Association Section */}
+          <div className={doctorsPanelStyles.assignmentSection}>
+            <div className={doctorsPanelStyles.assignmentHeader}>
               <div>
-                <h3 className="text-base font-bold text-gray-900 dark:text-[#f5f5f5]">
-                  {selectedDoctor ? `Cubicles for ${selectedDoctor.full_name}` : 'Cubicle assignments'}
-                </h3>
-                <p className="text-gray-500 dark:text-[#a3a3a3] text-xs mt-0.5">
+                <h3 className={doctorsPanelStyles.assignmentTitle}>
                   {selectedDoctor
-                    ? 'Tap a cubicle to assign it to them, or tap again to remove it.'
-                    : 'Select a doctor above to assign their cubicles.'}
+                    ? transferTexts.cubiclesForDoctor(selectedDoctor.full_name)
+                    : transferTexts.cubicleAssignmentsTitle}
+                </h3>
+                <p className={doctorsPanelStyles.assignmentSubtitle}>
+                  {transferTexts.cubicleAssignmentsSubtitle(!!selectedDoctor)}
                 </p>
               </div>
               {selectedDoctor && (
                 <button
+                  type="button"
                   onClick={() => setSelectedDoctorId(null)}
-                  className="text-xs font-semibold text-gray-500 dark:text-[#a3a3a3] hover:text-gray-700 dark:hover:text-[#f5f5f5] px-3 py-1.5 rounded-lg hover:bg-gray-100 dark:hover:bg-[#242424] transition cursor-pointer"
+                  className={doctorsPanelStyles.doneBtn}
                 >
-                  Done
+                  {transferTexts.doneBtn}
                 </button>
               )}
             </div>
 
-            <div className="p-6 flex flex-col gap-5 max-h-[420px] overflow-y-auto">
+            <div className={doctorsPanelStyles.assignmentBody}>
               {Object.entries(groupedCubicles).map(([groupLabel, groupCubicles]) => (
                 <div key={groupLabel}>
-                  <p className="text-xs font-bold uppercase tracking-wide text-gray-400 dark:text-[#737373] mb-2">{groupLabel}</p>
+                  <p className={doctorsPanelStyles.groupTitle}>{groupLabel}</p>
                   <div className="flex flex-wrap gap-2">
                     {groupCubicles.map(cube => {
                       const assignedName = cube.doctorId ? doctorNameById.get(cube.doctorId) : null;
@@ -319,31 +380,43 @@ export function DoctorsPanel() {
                               ? `Currently assigned to Dr. ${assignedName}. Tap to reassign.`
                               : undefined
                           }
-                          className={`relative flex flex-col items-start gap-0.5 rounded-xl border px-3 py-2 text-left transition min-w-[112px] ${
+                          className={`${doctorsPanelStyles.cubicleTileBase} ${
                             isThisDoctor
-                              ? 'border-blue-600 bg-blue-600 text-white shadow-sm'
+                              ? doctorsPanelStyles.cubicleTileThisDoctor
                               : isOtherDoctor
-                              ? 'border-gray-200 dark:border-[#2e2e2e] bg-gray-50 dark:bg-[#1f1f1f] text-gray-600 dark:text-[#a3a3a3]'
-                              : 'border-gray-200 dark:border-[#2e2e2e] bg-white dark:bg-[#1f1f1f] text-gray-700 dark:text-[#f5f5f5]'
-                          } ${
-                            selectedDoctor && !isSaving
-                              ? isThisDoctor
-                                ? 'hover:bg-blue-700'
-                                : 'hover:border-blue-300 dark:hover:border-blue-700 hover:bg-blue-50 dark:hover:bg-blue-950/30 cursor-pointer'
-                              : 'cursor-default'
-                          }`}
+                              ? doctorsPanelStyles.cubicleTileOtherDoctor
+                              : doctorsPanelStyles.cubicleTileUnassigned
+                          } ${!selectedDoctor || isSaving ? doctorsPanelStyles.cubicleTileDisabled : ''}`}
                         >
-                          <span className="text-xs font-semibold">{cube.cubicleNum}</span>
-                          <span className={`text-[11px] ${isThisDoctor ? 'text-blue-100' : 'text-gray-400 dark:text-[#737373]'}`}>
-                            Room {cube.room}
+                          <span className={doctorsPanelStyles.cubicleTileNum}>
+                            {cube.cubicleNum}
+                          </span>
+                          <span
+                            className={
+                              isThisDoctor
+                                ? doctorsPanelStyles.cubicleTileRoomActive
+                                : doctorsPanelStyles.cubicleTileRoom
+                            }
+                          >
+                            {transferTexts.roomLabel(cube.room)}
                           </span>
                           {assignedName && (
-                            <span className={`text-[10px] font-medium mt-0.5 ${isThisDoctor ? 'text-blue-100' : 'text-gray-500 dark:text-[#a3a3a3]'}`}>
-                              {isThisDoctor ? 'Assigned' : `Dr. ${assignedName}`}
+                            <span
+                              className={
+                                isThisDoctor
+                                  ? doctorsPanelStyles.cubicleTileDoctorActive
+                                  : doctorsPanelStyles.cubicleTileDoctor
+                              }
+                            >
+                              {isThisDoctor
+                                ? transferTexts.assignedStatus
+                                : transferTexts.assignedDoctorLabel(assignedName)}
                             </span>
                           )}
                           {!assignedName && (
-                            <span className="text-[10px] font-medium mt-0.5 text-gray-300 dark:text-[#525252]">Unassigned</span>
+                            <span className={doctorsPanelStyles.cubicleTileDoctorUnassigned}>
+                              {transferTexts.unassignedCubicleLabel}
+                            </span>
                           )}
                           {isSaving && (
                             <span className="absolute inset-0 flex items-center justify-center bg-white/70 dark:bg-black/70 rounded-xl">
@@ -361,68 +434,80 @@ export function DoctorsPanel() {
         </>
       )}
 
+      {/* Add / Edit Doctor Modal */}
       {showModal && (
-        <div className="fixed inset-0 bg-black/70 flex items-center justify-center z-50 p-4 backdrop-blur-xs">
-          <div className="bg-white dark:bg-[#1a1a1a] border border-gray-100 dark:border-[#2e2e2e] rounded-lg p-6 w-full max-w-md shadow-2xl">
-            <h2 className="text-xl font-bold text-gray-900 dark:text-[#f5f5f5] mb-4">
-              {editingDoctor ? 'Edit Doctor' : 'Add Doctor'}
+        <div className="fixed inset-0 bg-slate-900/60 dark:bg-black/70 flex items-center justify-center z-50 p-4 backdrop-blur-xs">
+          <div className={doctorsPanelStyles.modalCard}>
+            <h2 className={doctorsPanelStyles.modalTitle}>
+              {editingDoctor
+                ? transferTexts.editDoctorModalTitle
+                : transferTexts.addDoctorModalTitle}
             </h2>
 
             {formError && (
-              <div className="mb-4 p-3 bg-red-100 dark:bg-red-950/50 border border-red-200 dark:border-red-900/60 text-red-700 dark:text-red-300 rounded-lg text-sm">
-                {formError}
-              </div>
+              <div className={doctorsPanelStyles.formErrorBox}>{formError}</div>
             )}
             {formSuccess && (
-              <div className="mb-4 p-3 bg-green-100 dark:bg-emerald-950/50 border border-green-200 dark:border-emerald-900/60 text-green-700 dark:text-emerald-300 rounded-lg text-sm">
-                {formSuccess}
-              </div>
+              <div className={doctorsPanelStyles.formSuccessBox}>{formSuccess}</div>
             )}
 
             <form onSubmit={handleSubmit}>
-              <label className="block text-sm font-medium text-gray-700 dark:text-[#a3a3a3] mb-1">Full name</label>
+              <label className={doctorsPanelStyles.inputLabel}>
+                {transferTexts.fullNameLabel}
+              </label>
               <input
                 type="text"
-                placeholder="e.g. Juan Dela Cruz"
+                placeholder={transferTexts.fullNamePlaceholder}
                 value={formName}
-                onChange={(e) => setFormName(e.target.value)}
-                className="w-full p-2 border border-gray-300 dark:border-[#2e2e2e] bg-white dark:bg-[#1f1f1f] rounded-lg mb-3 text-gray-900 dark:text-[#f5f5f5] placeholder-gray-400 dark:placeholder-[#737373] focus:outline-none focus:ring-2 focus:ring-blue-500"
+                onChange={e => setFormName(e.target.value)}
+                className={doctorsPanelStyles.inputField}
                 required
               />
 
-              <label className="block text-sm font-medium text-gray-700 dark:text-[#a3a3a3] mb-1">Specialty</label>
+              <label className={doctorsPanelStyles.inputLabel}>
+                {transferTexts.specialtyLabel}
+              </label>
               <input
                 type="text"
-                placeholder="Optional, e.g. Cardiology"
+                placeholder={transferTexts.specialtyPlaceholder}
                 value={formSpecialty}
-                onChange={(e) => setFormSpecialty(e.target.value)}
-                className="w-full p-2 border border-gray-300 dark:border-[#2e2e2e] bg-white dark:bg-[#1f1f1f] rounded-lg mb-4 text-gray-900 dark:text-[#f5f5f5] placeholder-gray-400 dark:placeholder-[#737373] focus:outline-none focus:ring-2 focus:ring-blue-500"
+                onChange={e => setFormSpecialty(e.target.value)}
+                className={doctorsPanelStyles.inputField}
               />
 
-              <label className="flex items-center gap-2 mb-5 text-sm text-gray-700 dark:text-[#a3a3a3] cursor-pointer">
+              <label className={doctorsPanelStyles.checkboxLabel}>
                 <input
                   type="checkbox"
                   checked={formActive}
-                  onChange={(e) => setFormActive(e.target.checked)}
-                  className="rounded border-gray-300 dark:border-[#2e2e2e] text-blue-600 focus:ring-blue-500"
+                  onChange={e => setFormActive(e.target.checked)}
+                  className={doctorsPanelStyles.checkboxInput}
                 />
-                Active — available for cubicle assignment
+                {transferTexts.activeCheckboxLabel}
               </label>
 
               <div className="flex justify-end gap-2">
                 <button
                   type="button"
-                  onClick={() => { setShowModal(false); setEditingDoctor(null); setFormError(''); setFormSuccess(''); }}
-                  className="px-4 py-2 bg-gray-200 dark:bg-[#242424] text-gray-700 dark:text-[#a3a3a3] hover:bg-gray-300 dark:hover:bg-[#2e2e2e] hover:text-gray-900 dark:hover:text-[#f5f5f5] rounded-lg transition cursor-pointer"
+                  onClick={() => {
+                    setShowModal(false);
+                    setEditingDoctor(null);
+                    setFormError('');
+                    setFormSuccess('');
+                  }}
+                  className={doctorsPanelStyles.btnCancel}
                 >
-                  Cancel
+                  {transferTexts.cancelBtn}
                 </button>
                 <button
                   type="submit"
                   disabled={formLoading}
-                  className="px-4 py-2 bg-blue-600 hover:bg-blue-700 text-white rounded-lg transition disabled:opacity-50 cursor-pointer"
+                  className={doctorsPanelStyles.btnSubmit}
                 >
-                  {formLoading ? 'Saving...' : (editingDoctor ? 'Update' : 'Create')}
+                  {formLoading
+                    ? transferTexts.savingBtn
+                    : editingDoctor
+                    ? transferTexts.updateBtn
+                    : transferTexts.createBtn}
                 </button>
               </div>
             </form>
@@ -430,62 +515,61 @@ export function DoctorsPanel() {
         </div>
       )}
 
+      {/* Delete Confirmation Modal */}
       {showDeleteConfirm && (
-        <div className="fixed inset-0 bg-black/70 flex items-center justify-center z-50 p-4 backdrop-blur-xs">
-          <div className="bg-white dark:bg-[#1a1a1a] border border-gray-100 dark:border-[#2e2e2e] rounded-lg p-6 w-full max-w-md shadow-2xl">
-            <h2 className="text-xl font-bold text-red-600 dark:text-red-400 mb-4">Confirm Delete</h2>
+        <div className="fixed inset-0 bg-slate-900/60 dark:bg-black/70 flex items-center justify-center z-50 p-4 backdrop-blur-xs">
+          <div className={doctorsPanelStyles.modalCard}>
+            <h2 className={doctorsPanelStyles.modalTitleDanger}>
+              {transferTexts.confirmDeleteTitle}
+            </h2>
             {formError && (
-              <div className="mb-4 p-3 bg-red-100 dark:bg-red-950/50 border border-red-200 dark:border-red-900/60 text-red-700 dark:text-red-300 rounded-lg text-sm">
-                {formError}
-              </div>
+              <div className={doctorsPanelStyles.formErrorBox}>{formError}</div>
             )}
-            <p className="text-gray-700 dark:text-[#a3a3a3]">
-              Are you sure you want to delete <span className="font-semibold text-gray-900 dark:text-[#f5f5f5]">{showDeleteConfirm.full_name}</span>?
-              <br />
-              <span className="text-sm text-red-500 dark:text-red-400">
-                They&apos;ll be unassigned from {cubicleCountByDoctor[showDeleteConfirm.id] || 0} cubicle
-                {(cubicleCountByDoctor[showDeleteConfirm.id] || 0) === 1 ? '' : 's'}. This cannot be undone.
-              </span>
+            <p className={doctorsPanelStyles.deleteWarningText}>
+              {transferTexts.deleteDoctorConfirmMessage(
+                showDeleteConfirm.full_name,
+                cubicleCountByDoctor[showDeleteConfirm.id] || 0
+              )}
             </p>
             <div className="flex justify-end gap-2 mt-6">
               <button
-                onClick={() => { setShowDeleteConfirm(null); setFormError(''); }}
-                className="px-4 py-2 bg-gray-200 dark:bg-[#242424] text-gray-700 dark:text-[#a3a3a3] hover:bg-gray-300 dark:hover:bg-[#2e2e2e] hover:text-gray-900 dark:hover:text-[#f5f5f5] rounded-lg transition cursor-pointer"
+                type="button"
+                onClick={() => {
+                  setShowDeleteConfirm(null);
+                  setFormError('');
+                }}
+                className={doctorsPanelStyles.btnCancel}
               >
-                Cancel
+                {transferTexts.cancelBtn}
               </button>
               <button
-                onClick={() => handleDelete(showDeleteConfirm)}
+                type="button"
                 disabled={formLoading}
-                className="px-4 py-2 bg-red-600 hover:bg-red-700 text-white rounded-lg transition cursor-pointer disabled:opacity-50"
+                onClick={() => handleDelete(showDeleteConfirm)}
+                className={doctorsPanelStyles.btnDeleteConfirm}
               >
-                {formLoading ? 'Deleting...' : 'Delete'}
+                {formLoading ? transferTexts.savingBtn : transferTexts.deleteBtn}
               </button>
             </div>
           </div>
         </div>
       )}
 
-      {/* Action Error Alert Modal */}
+      {/* Action Error Modal */}
       {actionErrorModal && (
-        <div className="fixed inset-0 bg-black/70 flex items-center justify-center z-50 p-4 backdrop-blur-xs" role="dialog" aria-modal="true" aria-labelledby="doctor-action-error-title">
-          <div className="bg-white dark:bg-[#1a1a1a] border border-gray-100 dark:border-[#2e2e2e] rounded-xl p-6 w-full max-w-md shadow-2xl space-y-4">
-            <div className="flex items-center gap-3">
-              <div className="w-10 h-10 rounded-xl bg-red-100 dark:bg-red-950/60 text-red-600 dark:text-red-400 flex items-center justify-center text-xl shrink-0">
-                <i className="bx bx-error text-2xl" aria-hidden="true" />
-              </div>
-              <h3 id="doctor-action-error-title" className="text-base font-bold text-gray-900 dark:text-[#f5f5f5]">
-                {actionErrorModal.title}
-              </h3>
-            </div>
-            <p className="text-sm text-gray-700 dark:text-[#a3a3a3] break-words">
+        <div className="fixed inset-0 bg-slate-900/60 dark:bg-black/70 flex items-center justify-center z-50 p-4 backdrop-blur-xs">
+          <div className={doctorsPanelStyles.modalCard}>
+            <h2 className={doctorsPanelStyles.modalTitleDanger}>
+              {actionErrorModal.title}
+            </h2>
+            <p className={doctorsPanelStyles.deleteWarningText}>
               {actionErrorModal.message}
             </p>
-            <div className="flex justify-end pt-2">
+            <div className="flex justify-end gap-2 mt-6">
               <button
                 type="button"
                 onClick={() => setActionErrorModal(null)}
-                className="px-4 py-2 bg-gray-200 dark:bg-[#242424] text-gray-700 dark:text-[#a3a3a3] hover:bg-gray-300 dark:hover:bg-[#2e2e2e] hover:text-gray-900 dark:hover:text-[#f5f5f5] rounded-lg transition cursor-pointer text-sm font-semibold"
+                className={doctorsPanelStyles.btnCancel}
               >
                 {transferTexts.errorModalDismiss}
               </button>
@@ -496,3 +580,5 @@ export function DoctorsPanel() {
     </div>
   );
 }
+
+export default DoctorsPanel;

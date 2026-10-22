@@ -85,6 +85,9 @@ const ROLE_ROUTES: Record<string, string[]> = {
  */
 export async function proxy(request: NextRequest) {
     let response = NextResponse.next({ request });
+    const isSecure =
+        request.nextUrl.protocol === 'https:' ||
+        request.headers.get('x-forwarded-proto') === 'https';
 
     /**
      * Create a Supabase SSR server client that reads from and writes to
@@ -121,7 +124,7 @@ export async function proxy(request: NextRequest) {
                                 maxAge: 0,
                                 expires: new Date(0),
                                 sameSite: 'lax',
-                                secure: process.env.NODE_ENV === 'production',
+                                secure: isSecure,
                             });
                         } else {
                             const sessionOptions = { ...options };
@@ -131,7 +134,7 @@ export async function proxy(request: NextRequest) {
                                 ...sessionOptions,
                                 path: '/',
                                 sameSite: 'lax',
-                                secure: process.env.NODE_ENV === 'production',
+                                secure: isSecure,
                             });
                         }
                     });
@@ -166,7 +169,7 @@ export async function proxy(request: NextRequest) {
                     maxAge: 0,
                     expires: new Date(0),
                     sameSite: 'lax',
-                    secure: process.env.NODE_ENV === 'production',
+                    secure: isSecure,
                 });
             }
         });

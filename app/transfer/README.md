@@ -1,6 +1,6 @@
 # Patient Transfer Module Developer Guide
 
-**Last Updated:** 2026-10-20
+**Last Updated:** 2026-10-21
 
 This document provides architectural standards and an exhaustive developer mapping for the Patient Transfer module in the Heart Check PHC application.
 
@@ -13,17 +13,20 @@ The Patient Transfer dashboard manages patient queues, cubicle room assignments,
 The module incorporates offline-resilient Write-Ahead Logging (WAL) via an IndexedDB outbox. When assignments are confirmed or counter releases occur, actions are recorded on disk before/concurrently with network transmission to Supabase. This guarantees that pending transfers are never lost due to sudden power outages or network dropouts.
 
 ### Dual-Theme (Light / Dark) Standard (AGENTS.md Rule 10 Parity)
-- **Zero Inline Background Overrides:** The workstation enforces pure Tailwind CSS dual-theme classes across all surfaces. Hardcoded inline `backgroundColor` properties in `TransferStyle` have been removed to prevent theme inversion conflicts.
+- **Centralized Global Design Tokens:** All surface, text contrast, badge, and border tokens reside in `constants/designs/themeTokens.ts` (re-exported by `constants/themeTokens.ts`). No ad-hoc inline styles or raw color overrides exist inside transfer components.
 - **Surface Contrast Hierarchy:**
   - Viewport Canvas: `bg-slate-50 dark:bg-[#0d0d0d]`
   - Sidebar & Sticky Header: `bg-white dark:bg-[#141414]` with `border-slate-200 dark:border-[#2e2e2e]`
   - Boards, Cards & Modals: `bg-white dark:bg-[#1a1a1a]` with `border-slate-200 dark:border-[#2e2e2e]`
-  - Recessed Cards & Wells: `bg-slate-50/70 dark:bg-[#1f1f1f]/70`
+  - Recessed Cards & Wells: `bg-white dark:bg-[#1f1f1f]` with `border-slate-200 dark:border-[#2e2e2e]`
+  - Station Tiles & Nested Cards: `bg-slate-50 dark:bg-[#1f1f1f]` with `hover:bg-slate-100 dark:hover:bg-[#262626]`
   - Active Button / Surface Wells: `dark:bg-[#242424]`
-- **Header Theme Toggle:** `transfer/page.tsx` provides an interactive sun/moon toggle connected to `next-themes` with `mounted` hydration-flicker protection.
+- **Header Theme Toggle:** `transfer/page.tsx` provides an interactive sun/moon toggle connected to `next-themes` using `resolvedTheme` and `mounted` state protection, ensuring zero hydration flicker and proper dark mode detection even when theme is set to `system`.
+- **High-Contrast Dark Mode Badges & Scrollbars:** Notification badges enforce `dark:ring-[#141414]` to eliminate bright white border halos on dark surfaces. Internal scrollbars (`.phc-scroll`) render muted slate thumbs in dark mode.
 
-### Navigation Sidebar & Board Display Standard
-- **Navigation Sidebar:** Uses centralized Boxicons defined in the root `constants/icons.ts` (`SIDEBAR_ICONS`, `CATEGORY_ICONS`, and `resolveServiceIcon`). Supports two view modes: an icon-only rail (`w-18` / 72px) to maximize workstation screen space, and an expanded panel (`w-64` / 256px) displaying full service category text labels and patient count badges. Can be toggled between icon-only and expanded-with-text modes via the dedicated single toggle button in the top header bar next to the title. To maintain a clean UI and avoid duplicate controls, no toggle buttons are placed inside the sidebar itself. The main transfer board smoothly offsets between `ml-18` and `ml-64`.
+### Navigation Sidebar & Dynamic Superadmin Icon Synchronization
+- **Navigation Sidebar:** Uses dynamic icon resolution via `resolveServiceIcon` in `constants/icons.ts`. The sidebar subscribes to Supabase Realtime `postgres_changes` on the `services` table, ensuring that any service icon configured or updated in Superadmin (`/superadmin/customization`) immediately reflects on the workstation sidebar without page refresh.
+- **Sidebar Display Modes:** Supports two view modes: an icon-only rail (`w-18` / 72px) to maximize workstation screen space, and an expanded panel (`w-64` / 256px) displaying full service category text labels and patient count badges. Can be toggled via the single toggle button in the top header bar next to the title. To maintain a clean UI and avoid duplicate controls, no toggle buttons are placed inside the sidebar itself. The main transfer board smoothly offsets between `ml-18` and `ml-64`.
 - **Board Actions & Patient Cards:** Action buttons and table cards use explicit, semantic text labels (`SEL`, `WAIT`, `Call`, `Calling...`, `Back`, `Assign`, `Activate`, `Remove`, `Close`, `Doctors`) rather than ambiguous icon buttons.
 - **Manual Assignment Confirmation:** Pending patient assignments are reviewed and confirmed via a dedicated dialog (`ConfirmAssignmentModal.tsx`) rather than a header button, giving operators clear visibility into patient numbers, target cubicles, subcategories, and SMS notifications before committing changes.
 - **Registration Counters & Station Tiles:** Zero placeholder icon boxes in tile headers; titles and doctor names are rendered cleanly as typography.
@@ -51,11 +54,16 @@ Use this table to quickly identify the exact file to modify for any given requir
 
 | What to Change | Primary File Path | Notes |
 | :--- | :--- | :--- |
-| Text copy, button labels, modal headers, badges | `app/transfer/constants/transferTexts.ts` | All UI text strings and button labels |
-| Centralized navigation & sidebar icons | `constants/icons.ts` | Centralized `SIDEBAR_ICONS` and `CATEGORY_ICONS` |
-| Selection button standard tokens & dimensions | `app/transfer/constants/transfer.ts` | `selectionCardTokens`, `transferLayoutTokens` |
+| Global design tokens & surfaces | `constants/designs/themeTokens.ts` | Centralized dark mode surface, text contrast, border, and badge tokens |
+| Global theme colors | `constants/designs/colors.ts` | Brand red palette, utility colors |
+| Global text dictionaries | `constants/texts/` | Centralized text dictionaries (transfer, connection, EWT, queue status, app) |
+| Transfer design dictionary & dark mode styles | `constants/designs/transferStyles.ts` | Centralized styles for layouts, panels, counters, cubicles, popovers, and modals |
+| Transfer text copy & button labels | `constants/texts/transferTexts.ts` | All UI text strings, tooltips, dialog copy, and button labels |
+| Feature-scoped re-export portals | `app/transfer/constants/` | Re-exports `transferStyles` and `transferTexts` for backward compatibility |
+| Selection button tokens & dimensions | `app/transfer/constants/transfer.ts` | Re-exports transferStyles and transferTexts, dimension tokens |
+| Centralized navigation & sidebar icons | `constants/designs/icons.ts` | Centralized `SIDEBAR_ICONS` and `CATEGORY_ICONS` (re-exported at `constants/icons.ts`) |
 | Transfer UI thresholds & categories | `app/transfer/lib/constants.ts` | Queue capacities, service names, cooldowns |
-| Connection banner messages | `constants/connectionTexts.ts` | Centralized network and offline sync copy |
+| Connection banner messages | `constants/texts/connectionTexts.ts` | Centralized network and offline sync copy |
 | Main transfer orchestrator & theme toggle | `app/transfer/page.tsx` | Flow routing, confirm persistence, 0ms direct realtime payload patching, system notifications dropdown, and dual-theme toggle |
 | Confirm assignment modal | `app/transfer/components/ConfirmAssignmentModal.tsx` | Dialog for reviewing pending patient assignments and SMS alerts |
 | Navigation sidebar | `app/transfer/components/Sidebar.tsx` | Service category navigation and centralized icons |
@@ -78,8 +86,8 @@ Use this table to quickly identify the exact file to modify for any given requir
 | Offline synchronization React hook | `hooks/useOfflineQueue.ts` | Background synchronization engine |
 | Drag-and-drop operations | `app/transfer/hooks/useDragAndDrop.ts` | Pointer event drag-and-drop mechanics with synchronous pending update ref synchronization |
 | Registration window drag & drop | `app/transfer/hooks/useRegistrationDragAndDrop.ts` | Counter allocation interactions |
-| Auto-assignment algorithm | `app/transfer/hooks/useAutoAssign.ts` | Least-occupied cubicle distribution |
-| Queue rotation timers | `app/transfer/hooks/useAutoRotate.ts` | Idle rotation and timeout management |
+| Queue rotation timers (cubicles & main queue) | `app/transfer/hooks/useAutoRotate.ts` | Idle rotation and timeout management for consultation rooms |
+| Registration counter queue rotation | `app/transfer/hooks/useRegistrationRotate.ts` | Automated intake window patient cycler and timeout management |
 | Realtime subscription | `app/transfer/hooks/useRealtimeSubscription.ts` | Supabase Realtime channel handler with 150ms event debounce, direct 0ms onPayload dispatch, 5s polling fallback, 2s hysteresis, and 500ms trailing-edge throttle |
 | Patient types and contracts | `types/Types.ts` | Global patient record interface |
 

@@ -83,11 +83,13 @@ export default function NursePage() {
     finishedPatients,
     assignmentStatus,
     assignedCubicles,
+    assignedServices,
     setAssignedPatients,
     setWithDoctorPatients,
     setCarryoutPatients,
     fetchData,
     fetchFinished,
+    refreshCubicles,
     pinInFlightMutation,
     unpinMutation,
     applyRealtimeUpdate,
@@ -145,11 +147,11 @@ export default function NursePage() {
   const handleRealtimeUpdate = useCallback(async () => {
     setIsSyncing(true);
     try {
-      await Promise.all([fetchData(), fetchFinished()]);
+      await Promise.all([refreshCubicles(), fetchData(), fetchFinished()]);
     } finally {
       setIsSyncing(false);
     }
-  }, [fetchData, fetchFinished]);
+  }, [refreshCubicles, fetchData, fetchFinished]);
 
   // Connection status tracking for weak-signal / offline resilience.
   const { isOnline, channelStatus, isFullyConnected, setChannelStatus } = useConnectionStatus();
@@ -173,6 +175,7 @@ export default function NursePage() {
           return;
         }
 
+        await refreshCubicles();
         await Promise.all([fetchData(), fetchFinished()]);
       } catch (error) {
         console.error('Nurse dashboard initialization error:', error);
@@ -182,7 +185,7 @@ export default function NursePage() {
     };
 
     void initializeDashboard();
-  }, [fetchData, fetchFinished, router]);
+  }, [refreshCubicles, fetchData, fetchFinished, router]);
 
   // Deepgram TTS Audio Announcement
   const speakAnnouncement = useCallback(
@@ -255,9 +258,25 @@ export default function NursePage() {
     (list: Patient[]) => {
       return list.filter((patient) => {
         const matchesCategory =
-          !selectedCategory || patient.service === selectedCategory;
+          !selectedCategory ||
+          (patient.service &&
+            patient.service.trim().toLowerCase() === selectedCategory.trim().toLowerCase());
+
         const matchesCubicle =
-          !selectedCubicleNum || patient.cubicleNum === selectedCubicleNum;
+          !selectedCubicleNum ||
+          (patient.cubicleNum &&
+            patient.cubicleNum.trim().toLowerCase() === selectedCubicleNum.trim().toLowerCase()) ||
+          (!patient.cubicleNum &&
+            Array.isArray(patient.preferredCubicleNums) &&
+            patient.preferredCubicleNums.some(
+              (p) => p.trim().toLowerCase() === selectedCubicleNum.trim().toLowerCase()
+            )) ||
+          (!patient.cubicleNum &&
+            (!patient.preferredCubicleNums || patient.preferredCubicleNums.length === 0) &&
+            selectedCategory &&
+            patient.service &&
+            patient.service.trim().toLowerCase() === selectedCategory.trim().toLowerCase());
+
         return matchesCategory && matchesCubicle;
       });
     },
@@ -288,18 +307,22 @@ export default function NursePage() {
   const categoryCounts = useMemo(() => {
     const counts: Record<string, number> = {};
     const categories = [
-      ...new Set(assignedCubicles.map((cubicle) => cubicle.category)),
+      ...new Set([
+        ...assignedServices,
+        ...assignedCubicles.map((cubicle) => cubicle.category),
+      ].filter(Boolean)),
     ];
 
     categories.forEach((category) => {
+      const catNorm = category.trim().toLowerCase();
       counts[category] =
-        assignedPatients.filter((p) => p.service === category).length +
-        withDoctorPatients.filter((p) => p.service === category).length +
-        carryoutPatients.filter((p) => p.service === category).length;
+        assignedPatients.filter((p) => p.service && p.service.trim().toLowerCase() === catNorm).length +
+        withDoctorPatients.filter((p) => p.service && p.service.trim().toLowerCase() === catNorm).length +
+        carryoutPatients.filter((p) => p.service && p.service.trim().toLowerCase() === catNorm).length;
     });
 
     return counts;
-  }, [assignedCubicles, assignedPatients, withDoctorPatients, carryoutPatients]);
+  }, [assignedServices, assignedCubicles, assignedPatients, withDoctorPatients, carryoutPatients]);
 
   // Clear category and cubicle filters
   const handleClearFilter = useCallback(() => {
@@ -346,6 +369,7 @@ export default function NursePage() {
         selectedCubicleNum={selectedCubicleNum}
         categoryCounts={categoryCounts}
         assignedCubicles={assignedCubicles}
+        assignedServices={assignedServices}
         onSelectCategory={(category) => {
           setSelectedCategory(category);
           setSelectedCubicleNum(null);
@@ -371,6 +395,7 @@ export default function NursePage() {
           selectedCategory={selectedCategory}
           selectedCubicleNum={selectedCubicleNum}
           assignedCubicles={assignedCubicles}
+          assignedServices={assignedServices}
           finishedCount={visibleFinished.length}
           onOpenFinishedLedger={() => setFinishedDrawerOpen(true)}
           onClearFilter={handleClearFilter}
@@ -383,7 +408,7 @@ export default function NursePage() {
             setSelectedCategory(cubicle?.category ?? null);
             setSelectedCubicleNum(cubicleNum);
           }}
-          showCubicleDropdown={assignedCubicles.length > 0}
+          showCubicleDropdown={assignedCubicles.length > 0 || assignedServices.length > 0}
           notifications={notifications}
           unreadCount={unreadCount}
           onMarkAsRead={markAsRead}

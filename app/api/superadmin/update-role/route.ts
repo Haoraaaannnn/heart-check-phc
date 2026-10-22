@@ -12,35 +12,69 @@ export async function PUT(request: Request) {
     const guard = await requireSuperadmin(request)
     if (!guard.authorized) return guard.response
 
-    const { authId, email, username, role, cubicleIds, serviceAssignments, roomAssignments, counterAssignments } = await request.json()
+    const { authId, userId, email, username, role, cubicleIds, serviceAssignments, roomAssignments, counterAssignments } = await request.json()
 
-    if (!authId) {
+    if (!authId && !userId) {
       return NextResponse.json(
-        { error: 'Auth ID is required' },
+        { error: 'User identifier (Auth ID or User ID) is required' },
         { status: 400 }
       )
     }
 
-    if (authId === guard.user.id && role && role !== 'superadmin') {
+    if (authId && authId === guard.user.id && role && role !== 'superadmin') {
       return NextResponse.json(
         { error: 'You cannot change your own role away from superadmin' },
         { status: 400 }
       )
     }
 
-    const { data: userRow, error: dbError } = await supabaseAdmin
+    let userRow: { id: number | string; email?: string; auth_id?: string } | null = null;
+
+    if (userId) {
+      const { data: u } = await supabaseAdmin.from('users').select('id, email, auth_id').eq('id', userId).maybeSingle();
+      if (u) userRow = u;
+    }
+
+    if (!userRow && authId) {
+      const { data: u } = await supabaseAdmin.from('users').select('id, email, auth_id').eq('auth_id', authId).maybeSingle();
+      if (u) userRow = u;
+    }
+
+    if (!userRow && email) {
+      const { data: u } = await supabaseAdmin.from('users').select('id, email, auth_id').ilike('email', email).maybeSingle();
+      if (u) userRow = u;
+    }
+
+    if (!userRow && authId) {
+      const { data: authUser } = await supabaseAdmin.auth.admin.getUserById(authId);
+      if (authUser?.user?.email) {
+        const { data: userByEmail } = await supabaseAdmin
+          .from('users')
+          .select('id, email, auth_id')
+          .ilike('email', authUser.user.email)
+          .maybeSingle();
+        if (userByEmail) {
+          userRow = userByEmail;
+        }
+      }
+    }
+
+    if (!userRow) {
+      return NextResponse.json({ error: 'User account not found in directory.' }, { status: 400 });
+    }
+
+    const { error: updateError } = await supabaseAdmin
       .from('users')
       .update({
         email: email,
         username: username,
-        role: role
+        role: role,
+        ...(authId ? { auth_id: authId } : {}),
       })
-      .eq('auth_id', authId)
-      .select('id')
-      .single()
+      .eq('id', userRow.id);
 
-    if (dbError) {
-      return NextResponse.json({ error: dbError.message }, { status: 400 })
+    if (updateError) {
+      return NextResponse.json({ error: updateError.message }, { status: 400 });
     }
 
     if (email) {
@@ -119,23 +153,23 @@ export async function PUT(request: Request) {
       throw new Error(counterDeleteError.message);
     }
 
-    if (role === 'registration') {
-      if (Array.isArray(serviceAssignments) && serviceAssignments.length > 0) {
-        const { error } = await supabaseAdmin
-          .from('user_services')
-          .insert(
-            serviceAssignments.map((service: string) => ({
-              user_id: userRow.id,
-              service,
-            }))
-          );
+    if (Array.isArray(serviceAssignments) && serviceAssignments.length > 0) {
+      const { error } = await supabaseAdmin
+        .from('user_services')
+        .insert(
+          serviceAssignments.map((service: string) => ({
+            user_id: userRow.id,
+            service,
+          }))
+        );
 
-        if (error) {
-          console.error('user_services insert error:', error);
-          throw new Error(error.message);
-        }
+      if (error) {
+        console.error('user_services insert error:', error);
+        throw new Error(error.message);
       }
+    }
 
+    if (role === 'registration') {
       if (Array.isArray(roomAssignments) && roomAssignments.length > 0) {
         const { error } = await supabaseAdmin
           .from('user_rooms')

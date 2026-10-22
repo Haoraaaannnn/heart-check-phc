@@ -12,6 +12,7 @@
 
 import React, { useState, useEffect } from 'react';
 import { useTheme } from 'next-themes';
+import { toggleThemeWithRipple } from '@/lib/theme/themeTransition';
 import { formatManilaDate, formatManilaTime } from '@/utils/formatDateTime';
 import { CurrentStaffProfile } from '@/app/select-screen/types/selectScreen';
 import { SELECT_SCREEN_STYLES } from '@/app/select-screen/constants/selectScreen';
@@ -48,7 +49,11 @@ export default function SelectScreenHeader({ staff, onSignOut }: SelectScreenHea
   }, []);
 
   const isDark = mounted && resolvedTheme === 'dark';
-  const toggleTheme = () => setTheme(isDark ? 'light' : 'dark');
+  const toggleTheme = (e: React.MouseEvent<HTMLButtonElement>) => {
+    toggleThemeWithRipple(e, () => {
+      setTheme(isDark ? 'light' : 'dark');
+    });
+  };
 
   const staffInitial = staff?.username ? staff.username.charAt(0).toUpperCase() : 'U';
 
