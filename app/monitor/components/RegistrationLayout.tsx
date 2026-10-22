@@ -103,69 +103,58 @@ export function RegistrationLayout({ patients }: RegistrationLayoutProps) {
     }
   }, [patients, counters]);
 
-  return (
-    <div className="p-12 overflow-x-auto">
-      <table className="w-full border-collapse">
-        <thead>
-          <tr className="bg-gray-100 border-b-2 border-gray-200">
-            <th className="px-6 py-5 text-left text-gray-600 text-xl font-semibold uppercase tracking-wider sticky left-0 bg-gray-100">
-              Registration Counters
+const colCount = Math.max(counters.length, 1);
+const numFont = `min(${Math.max(2.2, 20 / (colCount + 1))}vw, 12vh)`;
+const smallFont = `min(${Math.max(1.2, 8 / (colCount + 1))}vw, 2.6vh)`;
+
+return (
+  <div className="h-full p-[clamp(10px,2vh,36px)]">
+    <table className="w-full h-full table-fixed border-collapse">
+      <thead>
+        <tr className="bg-gray-100 dark:bg-[#1f1f1f] border-b-2 border-gray-200 dark:border-[#2e2e2e]">
+          <th className="w-[14%] px-2 py-[1.2vh] text-left text-gray-600 dark:text-[#d4d4d4] text-[clamp(10px,2vh,22px)] font-semibold uppercase tracking-wider">
+            Registration Counters
+          </th>
+          {counters.map(n => (
+            <th key={n} className="px-2 py-[1.2vh] text-center border-l border-gray-200 dark:border-[#2e2e2e] text-gray-600 dark:text-[#d4d4d4] text-[clamp(10px,2vh,22px)] font-semibold uppercase tracking-wider">
+              Counter {n}
             </th>
-            {counters.map(n => (
-              <th
-                key={n}
-                className="px-6 py-5 text-center text-gray-600 text-xl font-semibold uppercase tracking-wider border-l border-gray-200"
-              >
-                Counter {n}
-              </th>
-            ))}
-          </tr>
-        </thead>
-        <tbody>
-          <tr className="border-b border-gray-100">
-            <td className="px-6 py-8 font-bold text-gray-700 text-2xl bg-gray-50 sticky left-0 align-top">
-              Queue Numbers
-            </td>
-            {counters.map(n => {
-              const list = patients.filter(p => p.counter === n);
-              return (
-                <td key={n} className="px-6 py-8 text-center border-l border-gray-100 align-top">
-                  <div className="space-y-3">
-                    {list.map((patient, i) =>
-                      i === 0 ? (
-                        <div
-                          key={patient.id}
-                          className="relative bg-[#cc3535] rounded-3xl p-6 shadow-2xl shadow-red-300 ring-[6px] ring-red-100 scale-110 flex flex-col items-center justify-center gap-1 z-10"
-                        >
-                          <span className="text-white/80 text-sm font-black uppercase tracking-widest">
-                            Now Serving
-                          </span>
-                          <span className="text-white font-black text-7xl tabular-nums leading-none drop-shadow-md">
-                            {patient.patientNum}
-                          </span>
-                          <div className="absolute top-3 right-3 w-4 h-4 rounded-full bg-green-300 ring-2 ring-white animate-pulse" />
-                        </div>
-                      ) : (
-                        <div
-                          key={patient.id}
-                          className="bg-white rounded-2xl p-4 shadow-sm border border-gray-100 flex items-center justify-center opacity-70"
-                        >
-                          <span className="text-gray-400 font-black text-2xl tabular-nums">
-                            {patient.patientNum}
-                          </span>
-                        </div>
-                      )
-                    )}
-                    {list.length === 0 && (
-                      <div className="text-gray-300 text-xl">—</div>
+          ))}
+        </tr>
+      </thead>
+      <tbody>
+        <tr>
+          <td className="px-2 font-bold text-gray-700 dark:text-[#f5f5f5] text-[clamp(14px,3vh,30px)] bg-gray-50 dark:bg-[#1a1a1a] align-middle">
+            Queue Numbers
+          </td>
+          {counters.map(n => {
+            const list = patients.filter(p => p.counter === n);
+            const [top, ...rest] = list;
+            return (
+              <td key={n} className="border-l border-gray-100 dark:border-[#2e2e2e] align-middle text-center overflow-hidden p-[0.8vh]">
+                {!top ? (
+                  <span className="text-gray-300" style={{ fontSize: smallFont }}>—</span>
+                ) : (
+                  <div className="flex flex-col items-center justify-center gap-[0.8vh] overflow-hidden">
+                    <div className="relative w-full bg-[#cc3535] rounded-3xl ring-4 ring-red-100 shadow-lg py-[1.5vh] flex flex-col items-center">
+                      <span className="text-white/80 font-black uppercase tracking-widest" style={{ fontSize: smallFont }}>Now Serving</span>
+                      <span className="text-white font-black tabular-nums leading-none" style={{ fontSize: numFont }}>{top.patientNum}</span>
+                      <div className="absolute top-2 right-2 w-3 h-3 rounded-full bg-green-300 ring-2 ring-white animate-pulse" />
+                    </div>
+                    {rest.length > 0 && (
+                      <div className="flex flex-wrap justify-center gap-x-2 text-gray-400 font-black tabular-nums" style={{ fontSize: smallFont }}>
+                        {rest.slice(0, 3).map(p => <span key={p.id}>{p.patientNum}</span>)}
+                        {rest.length > 3 && <span>+{rest.length - 3}</span>}
+                      </div>
                     )}
                   </div>
-                </td>
-              );
-            })}
-          </tr>
-        </tbody>
-      </table>
-    </div>
-  );
+                )}
+              </td>
+            );
+          })}
+        </tr>
+      </tbody>
+    </table>
+  </div>
+);
 }

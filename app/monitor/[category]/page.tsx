@@ -8,6 +8,7 @@ import { PairedLayout } from '@/app/monitor/components/PairedLayout';
 import { TableLayout } from '@/app/monitor/components/TableLayout';
 import { StartScreen } from '@/app/monitor/components/StartScreen';
 import { RegistrationLayout } from '@/app/monitor/components/RegistrationLayout';
+import { MonitorShell } from '@/app/monitor/components/MonitorShell';
 import { useMonitorData } from '@/app/monitor/hooks/useMonitorData';
 import { useRealtimeSubscription } from '@/app/monitor/hooks/useRealtimeSubscription';
 
@@ -94,42 +95,45 @@ export default function CategoryMonitorPage() {
     return <StartScreen category={category} subcategory={subcategory} onStart={() => setStarted(true)} />;
   }
 
-  if (isRegistration) {
-    return (
-      <div className="min-h-screen bg-white text-slate-800 dark:text-[#f5f5f5] font-sans">
-        <Header title="Registration" currentTime={currentTime} />
-        <RegistrationLayout patients={registrationPatients} />
-        <Footer />
-      </div>
-    );
-  }
-
-  if (!isTableLayoutService) {
-    return (
-      <div className="min-h-screen bg-white text-slate-800 dark:text-[#f5f5f5] font-sans">
-        <Header title={displayTitle} currentTime={currentTime} />
-        <PairedLayout
-          title={displayTitle}
-          pairedData={getPairedData()}
-          formatCubicleDisplay={formatCubicleDisplay}
-          cubicleDoctorMap={cubicleDoctorMap}
-        />
-        <Footer />
-      </div>
-    );
-  }
-
+if (isRegistration) {
   return (
-    <div className="min-h-screen bg-white text-slate-800 dark:text-[#f5f5f5] font-sans">
-      <Header title={displayTitle} currentTime={currentTime} />
-      <TableLayout
+    <MonitorShell
+      header={<Header title="Registration" currentTime={currentTime} />}
+      footer={<Footer />}
+    >
+      <RegistrationLayout patients={registrationPatients} />
+    </MonitorShell>
+  );
+}
+
+if (!isTableLayoutService) {
+  return (
+    <MonitorShell
+      header={<Header title={displayTitle} currentTime={currentTime} />}
+      footer={<Footer />}
+    >
+      <PairedLayout
         title={displayTitle}
-        cubicles={cubicles}
-        assignedPatients={assignedPatients}
+        pairedData={getPairedData()}
         formatCubicleDisplay={formatCubicleDisplay}
         cubicleDoctorMap={cubicleDoctorMap}
       />
-      <Footer />
-    </div>
+    </MonitorShell>
   );
+}
+
+return (
+  <MonitorShell
+    header={<Header title={displayTitle} currentTime={currentTime} />}
+    footer={<Footer />}
+  >
+    <TableLayout
+      title={displayTitle}
+      cubicles={cubicles}
+      assignedPatients={assignedPatients}
+      formatCubicleDisplay={formatCubicleDisplay}
+      cubicleDoctorMap={cubicleDoctorMap}
+    />
+  </MonitorShell>
+);
 }
