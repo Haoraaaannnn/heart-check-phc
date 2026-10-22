@@ -23,6 +23,7 @@ import { ElapsedTimer } from '@/app/transfer/components/ElapsedTimer';
 import { transferTexts } from '@/constants/texts/transferTexts';
 import { TransferStyle } from '@/app/transfer/constants/transfer';
 import { cubicleStyles } from '@/constants/designs/transferStyles';
+import { formatTicketForSpeech } from '@/utils/formatTicketSpeech';
 import { SelectedTransferPatient } from '@/app/transfer/types/transfer';
 import { DragHandle } from '@/app/transfer/components/DragHandle';
 
@@ -240,11 +241,9 @@ export function CubicleCard({
                   onMouseDown={e => e.stopPropagation()}
                   onClick={e => {
                     e.stopPropagation();
-                    const num = topPatient.patientNum || '';
-                    const letter = num ? num.charAt(0) : '';
-                    const digits = num.length > 1 ? parseInt(num.slice(1), 10).toString() : '';
+                    const ticket = formatTicketForSpeech(topPatient.patientNum);
                     onSpeak(
-                      `Number ${letter} ${digits}, Number ${letter} ${digits}, go to ${cubicle.cubicleNum}`,
+                      `Number ${ticket}, Number ${ticket}, go to ${cubicle.cubicleNum}`,
                       topPatient.id
                     );
                   }}

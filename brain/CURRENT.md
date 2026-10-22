@@ -287,6 +287,27 @@
    - **Queue Number Bare Text Styling:** Removed background box (`bg-[#cc3535] text-white`) from patient queue numbers in `NurseQuickActionDropdown.tsx` and `QuickAssignDropdown.tsx` (via `quickAssignStyles.patientBadge` in `constants/designs/transferStyles.ts`), rendering bare high-contrast colored text (`font-black text-lg text-[#cc3535] dark:text-[#f87171]`).
    - **Resilient Dismissal Mechanism:** Implemented `handleClose` helper with `e.stopPropagation()` and loading mutation guard. Connected both `onClick` and `onPointerDown` on the top-right header `x` button, bottom-right footer `Close` button, and backdrop overlay (`e.target === e.currentTarget`). Added `pointer-events-none` on SVG icons to eliminate pointer capture interference.
 
+29. **Monitor Select Screen Button Removal & TTS Full-Ticket Calling Fix (Completed):**
+   - **Select Screen Button Removal in Monitors:** Removed the "Return to Select Screen" `<Link>` from `app/monitor/components/Header.tsx`, ensuring public waiting room TV monitors have a clean display with zero unwanted navigation controls.
+   - **TTS Number Truncation Fix:** Identified root cause of ticket `8002` being announced as `82` (legacy code parsed tickets with `letter = num.charAt(0)` and `digits = parseInt(num.slice(1), 10)`, turning `8002` into `8` and `2`, and all 1xxx-9xxx series tickets into their prefix + sequence increment).
+   - **Universal Ticket Speech Formatter (`utils/formatTicketSpeech.ts`):** Created `formatTicketForSpeech` which preserves full numeric queue codes for all 9 clinic services (1001, 2001, 3001, 4001, 5001, 6001, 7001, 8002, 9001) while maintaining legacy alphanumeric formatting.
+   - **Universal Cross-Service Propagation:** Integrated `formatTicketForSpeech` across `useMonitorData.ts`, `RegistrationLayout.tsx`, `NursePage.tsx`, `nurseTexts.ts`, `CubicleCard.tsx`, `QuickAssignDropdown.tsx`, and `OnProgressSection.tsx`.
+
+30. **Kiosk Print Ticket Multi-Row Resolution & Printer Hardware Probe Resilience (Completed):**
+   - **Print Verification Multi-Row Fix (`app/api/print-ticket/route.ts`):** Replaced unconstrained `.maybeSingle()` with `.order('created_at', { ascending: false }).limit(1).maybeSingle()`, resolving `500 Database verification failed prior to print (JSON object requested, multiple rows returned)` when tickets like `5001` were repeated across days or test batches. Added optional `patientId` query condition.
+   - **Hardware Telemetry Fallback (`app/kiosk/hooks/useWebPrinter.ts`):** Updated `refreshHardwareStatus` to fall back to server printer status probe (`GET /api/print-ticket`) whenever client WebUSB is not `'ready'`, successfully recognizing Linux host OS `/dev/usb/lp0` device node availability.
+   - **WebUSB Concurrency Mutex (`lib/printer/webPrinter.ts`):** Wrapped hardware probe with a single-flight promise cache to eliminate `Failed to execute 'open' on 'USBDevice': An operation that changes the device state is in progress`.
+   - **React State-in-Render Warning Resolution (`QueuePrintContent.tsx`):** Separated `router.push` navigation from `setCountdownSeconds` updater into dedicated effect observing `countdownSeconds <= 0`.
+
+31. **Public Monitor Strict Light-Mode Lock & Dark Mode Purge (Completed):**
+   - **Zero Dark Mode Classes in Monitors:** Completely purged all `dark:` classes from `app/monitor/[category]/page.tsx` and `app/monitor/page.tsx`, standardizing monitor containers, category buttons, and table backgrounds to clean institutional hospital white (`bg-white` and `bg-gray-50`).
+   - **Root Monitor Shell Light-Mode Lock (`app/monitor/layout.tsx`):** Implemented dedicated layout root wrapper with an isolated mount/unmount lifecycle effect that strips the `.dark` class and sets `colorScheme = 'light'` on `<html>` while viewing any monitor page, cleanly restoring the user's workstation theme upon exit without mutating `next-themes` or `localStorage`.
+
+32. **Digit-by-Digit (Per Character) TTS Voice Announcement (Completed):**
+   - **TTS Grouped Number Vocalization Remediation (`utils/formatTicketSpeech.ts`):** Resolved issue where Deepgram Aura and Web Speech API vocalized 4-digit queue codes in thousands (e.g. synthesizing "5001" as "five thousand one").
+   - **Character-Spaced Speech Formatting:** Updated `formatTicketForSpeech` to strip punctuation/hyphens and return space-separated characters (`clean.toUpperCase().split('').join(' ')`), producing `"5 0 0 1"` ("five zero zero one"), `"8 0 0 2"` ("eight zero zero two"), and `"C 0 0 1"` ("C zero zero one").
+   - **Zero Code Duplication:** Utilized existing universal integration across `useMonitorData.ts`, `RegistrationLayout.tsx`, `NursePage.tsx`, and Transfer dashboard components, instantly propagating digit-by-digit announcements across all monitor and clinic call points.
+
 ---
 
 ## Current Blockers & Risks

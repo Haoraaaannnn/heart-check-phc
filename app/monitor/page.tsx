@@ -120,21 +120,21 @@ export default function MonitorIndexPage() {
 
   if (selectedCategory) {
     return (
-      <div className="min-h-screen bg-gray-50 dark:bg-[#0d0d0d] flex flex-col items-center justify-center gap-8 p-12 text-slate-800 dark:text-[#f5f5f5]">
+      <div className="min-h-screen bg-gray-50 flex flex-col items-center justify-center gap-8 p-12 text-slate-800">
         <button
           onClick={() => setSelectedCategory(null)}
-          className="fixed top-8 left-8 flex items-center gap-2 text-gray-500 hover:text-[#cc3535] dark:text-[#a3a3a3] dark:hover:text-[#cc3535] transition group cursor-pointer"
+          className="fixed top-8 left-8 flex items-center gap-2 text-gray-500 hover:text-[#cc3535] transition group cursor-pointer"
         >
           <i className="bx bx-arrow-back text-xl group-hover:-translate-x-1 transition-transform" aria-hidden="true" />
           <span className="text-sm font-medium">Back to Categories</span>
         </button>
-        <h1 className="text-3xl font-bold text-gray-700 dark:text-[#f5f5f5]">Select {selectedCategory} Type</h1>
+        <h1 className="text-3xl font-bold text-gray-700">Select {selectedCategory} Type</h1>
         <div className="grid grid-cols-2 gap-4 w-full max-w-md">
           {SUB_CATEGORIES.map(sub => (
             <button
               key={sub}
               onClick={() => handleSubCategoryClick(sub)}
-              className="bg-white dark:bg-[#1a1a1a] border-2 border-gray-100 dark:border-[#2e2e2e] hover:border-[#cc3535] dark:hover:border-[#cc3535] hover:text-[#cc3535] dark:hover:text-[#cc3535] rounded-3xl p-6 text-gray-700 dark:text-[#f5f5f5] font-semibold text-sm shadow-sm transition text-left cursor-pointer"
+              className="bg-white border-2 border-gray-100 hover:border-[#cc3535] hover:text-[#cc3535] rounded-3xl p-6 text-gray-700 font-semibold text-sm shadow-sm transition text-left cursor-pointer"
             >
               {sub}
             </button>
@@ -145,17 +145,17 @@ export default function MonitorIndexPage() {
   }
 
   return (
-    <div className="min-h-screen bg-gray-50 dark:bg-[#0d0d0d] flex flex-col items-center justify-center gap-8 p-12 text-slate-800 dark:text-[#f5f5f5]">
+    <div className="min-h-screen bg-gray-50 flex flex-col items-center justify-center gap-8 p-12 text-slate-800">
       <button
         onClick={() => router.push('/select-screen')}
-        className="fixed top-8 left-8 flex items-center gap-2 text-gray-500 hover:text-[#cc3535] dark:text-[#a3a3a3] dark:hover:text-[#cc3535] transition group cursor-pointer"
+        className="fixed top-8 left-8 flex items-center gap-2 text-gray-500 hover:text-[#cc3535] transition group cursor-pointer"
         title="Return to Select Screen"
         aria-label="Return to Select Screen"
       >
         <i className="bx bx-arrow-back text-xl group-hover:-translate-x-1 transition-transform" aria-hidden="true" />
         <span className="text-sm font-medium">Back to Select Screen</span>
       </button>
-      <h1 className="text-3xl font-bold text-gray-700 dark:text-[#f5f5f5]">Select Monitor</h1>
+      <h1 className="text-3xl font-bold text-gray-700">Select Monitor</h1>
       {loading ? (
         <div className="flex items-center justify-center py-12">
           <div className="w-8 h-8 border-4 border-slate-200 border-t-[#cc3535] rounded-full animate-spin" />
@@ -166,7 +166,7 @@ export default function MonitorIndexPage() {
             <button
               key={cat.name}
               onClick={() => handleCategoryClick(cat)}
-              className="bg-white dark:bg-[#1a1a1a] border-2 border-gray-100 dark:border-[#2e2e2e] hover:border-[#cc3535] dark:hover:border-[#cc3535] hover:text-[#cc3535] dark:hover:text-[#cc3535] rounded-3xl p-6 text-gray-700 dark:text-[#f5f5f5] font-semibold text-sm shadow-sm transition text-left cursor-pointer"
+              className="bg-white border-2 border-gray-100 hover:border-[#cc3535] hover:text-[#cc3535] rounded-3xl p-6 text-gray-700 font-semibold text-sm shadow-sm transition text-left cursor-pointer"
             >
               {cat.name}
             </button>

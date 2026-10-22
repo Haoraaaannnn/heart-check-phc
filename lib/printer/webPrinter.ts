@@ -172,12 +172,34 @@ export async function pairSerialPrinter(): Promise<MinimalSerialPort | null> {
   }
 }
 
+let activeProbePromise: Promise<PrinterHardwareStatus> | null = null;
+
 /**
  * Queries real-time hardware status and telemetry from client-paired USB/Serial thermal printers.
+ * Serializes concurrent probe requests to avoid WebUSB device state change collisions.
  *
  * @returns Promise resolving to {@link PrinterHardwareStatus} diagnostic state.
  */
 export async function getClientPrinterHardwareStatus(): Promise<PrinterHardwareStatus> {
+  if (activeProbePromise) {
+    return activeProbePromise;
+  }
+
+  activeProbePromise = (async () => {
+    try {
+      return await executeHardwareProbe();
+    } finally {
+      activeProbePromise = null;
+    }
+  })();
+
+  return activeProbePromise;
+}
+
+/**
+ * Executes direct device query on paired USB and Serial devices.
+ */
+async function executeHardwareProbe(): Promise<PrinterHardwareStatus> {
   const isSupported = isWebUsbSupported() || isWebSerialSupported();
 
   if (!isSupported) {
@@ -257,7 +279,11 @@ export async function getClientPrinterHardwareStatus(): Promise<PrinterHardwareS
         await dev.releaseInterface(targetIface);
       } catch (claimErr: unknown) {
         const msg = claimErr instanceof Error ? claimErr.message : String(claimErr);
-        if (msg.includes('claimInterface') || msg.includes('Unable to claim interface')) {
+        if (
+          msg.includes('claimInterface') ||
+          msg.includes('Unable to claim interface') ||
+          msg.includes('operation that changes the device state is in progress')
+        ) {
           // Linux usblp kernel driver has claimed the USB device node
           return buildHardwareStatus(
             'ready',
@@ -277,6 +303,18 @@ export async function getClientPrinterHardwareStatus(): Promise<PrinterHardwareS
     } catch (err: unknown) {
       const msg = err instanceof Error ? err.message : String(err);
       console.warn(`${getTimestamp()} [WEBUSB HARDWARE PROBE]`, msg);
+      if (
+        msg.includes('operation that changes the device state is in progress') ||
+        msg.includes('claimInterface') ||
+        msg.includes('Unable to claim interface')
+      ) {
+        return buildHardwareStatus(
+          'ready',
+          'webusb',
+          devName,
+          'Device claimed by Host OS (usblp driver operational)'
+        );
+      }
       return buildHardwareStatus(
         'offline',
         'webusb',

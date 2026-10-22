@@ -30,6 +30,7 @@ import { Cubicle, Patient } from '@/types/Types';
 import { MAX_PATIENTS_PER_CUBICLE } from '@/app/transfer/lib/constants';
 import { transferTexts } from '@/constants/texts/transferTexts';
 import { quickAssignStyles } from '@/constants/designs/transferStyles';
+import { formatTicketForSpeech } from '@/utils/formatTicketSpeech';
 
 /**
  * Props for {@link QuickAssignDropdown}.
@@ -180,11 +181,9 @@ export function QuickAssignDropdown({
     if (!onSpeak || pendingTarget) return;
     setPendingTarget('call');
     try {
-      const num = patient.patientNum || '';
-      const letter = num ? num.charAt(0) : '';
-      const digits = num.length > 1 ? parseInt(num.slice(1), 10).toString() : '';
+      const ticket = formatTicketForSpeech(patient.patientNum);
       onSpeak(
-        `Number ${letter} ${digits}, Number ${letter} ${digits}, please proceed to ${currentCubicleNum}`,
+        `Number ${ticket}, Number ${ticket}, please proceed to ${currentCubicleNum}`,
         patient.id
       );
       onClose();

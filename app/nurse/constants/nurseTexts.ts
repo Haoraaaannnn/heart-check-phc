@@ -116,8 +116,12 @@ export const nurseTexts = {
   pleaseWait: "Please wait",
 
   // TTS Announcements
-  ttsCallPhrase: (letter: string, digits: string, cubicleNum: string) =>
-    `Number ${letter} ${digits}, Number ${letter} ${digits}, please proceed to ${cubicleNum}`,
+  ttsCallPhrase: (ticketOrLetter: string, destinationOrDigits: string, maybeDestination?: string) => {
+    if (maybeDestination !== undefined) {
+      return `Number ${ticketOrLetter} ${destinationOrDigits}, Number ${ticketOrLetter} ${destinationOrDigits}, please proceed to ${maybeDestination}`;
+    }
+    return `Number ${ticketOrLetter}, Number ${ticketOrLetter}, please proceed to ${destinationOrDigits}`;
+  },
 
   // Toast & Error Messages
   errorUpdateFailed: "Unable to update patient status. Please check your network connection.",
