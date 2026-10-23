@@ -1,83 +1,51 @@
-# Heart Check PHC — Second Brain Index
+# Heart Check PHC — Master Index
 
-**Last Updated:** 2026-10-22
+**Last Updated:** 2026-10-24
 
-Welcome to the repository-local second brain for **Heart Check PHC**. This directory functions as a token-efficient, portable knowledge repository designed to work seamlessly with AI coding agents (Antigravity), terminal workflows, and local Markdown tools (Obsidian, GitHub).
-
-All files use standard relative Markdown links for universal portability.
+This index provides direct navigation to the authoritative technical specifications, architecture decision records, and active state tracking for **Heart Check PHC**.
 
 ---
 
-## Selective Context Retrieval Protocol
+## 1. Active State & Operational Rules
 
-To minimize context window saturation and token consumption:
-1. **Classify the task:** Simple, nontrivial, or architecture/debugging-sensitive.
-2. **Simple tasks:** Avoid loading the second brain unless specifically needed.
-3. **Nontrivial tasks:** Read this file (`INDEX.md`) first, then load **only** the specific linked note relevant to the task.
-4. **Targeted search:** Use `rg` or targeted search if this index does not directly point to the needed detail.
-5. **Verify against code:** Always verify brain notes against active source code before making changes; brain notes provide context, not ground truth.
-6. **Update discipline:** Before finishing, update only knowledge that is new, verified, reusable, and likely to matter again. Do not update notes merely because a task was completed.
-7. **Index maintenance:** Update this `INDEX.md` whenever a knowledge file is added, renamed, or removed.
-8. **Output discipline:** Summarize only important outcomes; avoid dumping large command outputs or entire files.
-
----
-
-## Core System Status & Workflows
-
-| Document | When to Consult |
+| Document | Purpose |
 | :--- | :--- |
-| [Current State & Active Tasks](./CURRENT.md) | Consult before starting work to check active branch, current milestones, blockers, and next steps. |
-| [Active Session Log](./SESSION_LOG.md) | Consult or update during ongoing multi-step sessions to record decisions, checks, and handoff state. |
-| [Project Profile & Constraints](./PROJECT.md) | Consult for verified tech stack versions, major architectural constraints, and verified CLI commands. |
-| [Memory Workflows & Protocol](./WORKFLOWS.md) | Consult for detailed before-task ingestion and after-task persistence workflows. |
+| [Current State & Active Tasks](./CURRENT.md) | Active git branch, current milestones, blockers, and next steps. |
+| [Operational Guidelines & Rules](../AGENTS.md) | Mandatory architectural rules, security boundaries, and coding standards. |
 
 ---
 
-## Knowledge Map of Content
+## 2. Authoritative Technical Specifications (`docs/specifications/`)
 
-### 1. System Architecture ([`architecture/README.md`](./architecture/README.md))
-- [System Architecture Overview](./architecture/overview.md) — Consult for full-stack topology, Next.js route mapping, and inter-service contracts.
-- [Database & RLS Policies](./architecture/database-and-rls.md) — Consult for PostgreSQL schemas, active RLS policies, phone number encryption, and historical data immutability.
-- [Security Model & Route Guarding](./architecture/security-model.md) — Consult for server-side route guards (`requireSuperadmin`, `requireUser`), service-role isolation, and rate-limiting.
-- [Queue & State Transitions](./architecture/queue-and-state.md) — Consult for strict FIFO lock discipline, queue transitions, and room counter synchronization.
-- [Network & Real-Time Resilience](./architecture/network-resilience.md) — Consult for WebSocket reconnects, offline outbox, debounce, and hysteresis safeguards.
+The single source of truth for system implementation:
 
-### 2. Architecture Decision Records ([`decisions/README.md`](./decisions/README.md))
+| Domain | Specification Document |
+| :--- | :--- |
+| **Visual Design & UI Standards** | [docs/specifications/DESIGN.md](../docs/specifications/DESIGN.md) — Master design system, colors, surfaces, typography, separation of concerns. |
+| **Product Requirements (PRD)** | [docs/specifications/PRD.md](../docs/specifications/PRD.md) — Core problem statement, OPD objectives, roles, and scope boundaries. |
+| **System Architecture** | [docs/specifications/ARCHITECTURE.md](../docs/specifications/ARCHITECTURE.md) — Full-stack topology, Next.js route mapping, inter-service contracts. |
+| **Database & RLS Policies** | [docs/specifications/DATABASE_SCHEMA.md](../docs/specifications/DATABASE_SCHEMA.md) — PostgreSQL schemas, active RLS policies, phone encryption. |
+| **Security Architecture** | [docs/specifications/SECURITY.md](../docs/specifications/SECURITY.md) — Server-side route guards, service-role isolation, rate-limiting. |
+| **Network & Resilience** | [docs/specifications/CONNECTIVITY_RESILIENCE.md](../docs/specifications/CONNECTIVITY_RESILIENCE.md) — WebSocket reconnects, offline outbox, retry logic. |
+| **Hardware Thermal Printing** | [docs/specifications/PRINTER_SETUP_GUIDE.md](../docs/specifications/PRINTER_SETUP_GUIDE.md) — WebUSB, ESC/POS parsing, Linux udev rules, network printer. |
+| **Estimated Wait Time (EWT)** | [docs/specifications/ESTIMATED_WAIT_TIME.md](../docs/specifications/ESTIMATED_WAIT_TIME.md) — Hybrid calculation engine, ticket printing, SMS dispatch. |
+| **Nurse & Kanban Station** | [docs/specifications/NURSE_DASHBOARD_SYSTEM_DESIGN.md](../docs/specifications/NURSE_DASHBOARD_SYSTEM_DESIGN.md) — Cubicle progression, Kanban state, TTS callouts. |
+| **Transfer Triage Hub** | [docs/specifications/TRANSFER_DASHBOARD.md](../docs/specifications/TRANSFER_DASHBOARD.md) — Pointer drag-and-drop, strict FIFO lock, room assignment. |
+
+---
+
+## 3. Architecture Decision Records (`brain/decisions/`)
+
+Foundational architectural rationale:
+
 - [ADR 001: Next.js and FastAPI Service Split](./decisions/adr-001-nextjs-fastapi-split.md) — Decoupled UI from scientific/analytical processing.
 - [ADR 002: Strict FIFO Queue Lock Discipline](./decisions/adr-002-fifo-queue-lock.md) — Mandatory chronological queueing at triage desk.
 - [ADR 003: Supabase Realtime with Row-Level Security](./decisions/adr-003-supabase-realtime-rls.md) — Live WebSocket updates secured by database RLS.
-- [ADR 004: Prohibition of Text Ellipsis on Clinical Data](./decisions/adr-004-no-text-truncation.md) — Strict ban on text truncation for medical safety.
-- [ADR 005: High-Contrast Solid Clinical Surfaces](./decisions/adr-005-solid-clinical-surfaces.md) — High-contrast clinical UI without blurred glassmorphism.
-
-### 3. Domain Knowledge & Conventions ([`knowledge/README.md`](./knowledge/README.md))
-- [PHC OPD Operational Workflow](./knowledge/phc-opd-workflow.md) — Consult for OPD five-stage patient journey, triage routing, and clinical caps.
-- [Self-Service Kiosk & Thermal Printing](./knowledge/kiosk-and-printing.md) — Consult for touchscreen check-in flow, thermal receipt format, and ESC/POS commands.
-- [Nurse Station & Consultation Kanban](./knowledge/nurse-and-kanban.md) — Consult for 3-column Kanban, optimistic state updates, and Web Speech TTS.
-- [Analytics Engine & ML Models](./knowledge/analytics-and-ml.md) — Consult for queue forecasting algorithms, MAE model selection, M/M/1 queuing models, and Little's Law.
-- [Data Pipelines & Excel Ingestion](./knowledge/data-pipelines.md) — Consult for historical PHC Excel workbook parsing, AM/PM heuristics, and timezone normalization.
-
-### 4. Debugging & Troubleshooting ([`debugging/README.md`](./debugging/README.md))
-- [Common System Issues](./debugging/common-issues.md) — Consult for thermal printer timeouts, Supabase RLS recursion, CORS errors, and WebSocket drops.
-- [Database Troubleshooting](./debugging/database-troubleshooting.md) — Consult for PostgreSQL RLS verification, phone encryption debugging, and migration rollouts.
-- [Simulation Execution Guide](./debugging/simulation-guide.md) — Consult for Chapter 4 SimPy simulation debugging, baseline reproduction, and parameter adjustment.
-
-### 5. Historical Handoffs Archive ([`handoffs/`](./handoffs/))
-- [Handoff Template](./handoffs/template.md) — Standard structure for recording major multi-session milestones.
-- Consult directory for archived session notes (`2026-10-15` through `2026-10-17`).
 
 ---
 
-## Master Documentation Portal
+## 4. Quality Assurance, Simulation & Reports
 
-For extended specifications, QA checklists, simulation methodology notes, and reports:
-- [Master Documentation Portal (`docs/README.md`)](../docs/README.md)
-- [Master Design & Layout Standards (`docs/specifications/DESIGN.md`)](../docs/specifications/DESIGN.md)
-- [Quality Assurance & Security Checklists (`docs/checklists/README.md`)](../docs/checklists/README.md)
-  - [UAT Use Case Verification Matrix (`docs/checklists/UAT_USE_CASE_CHECKLIST.md`)](../docs/checklists/UAT_USE_CASE_CHECKLIST.md)
-  - [ISO/IEC 25010:2023 UAT Questionnaire Guide (`docs/checklists/UAT_QUESTIONNAIRE_GUIDE.md`)](../docs/checklists/UAT_QUESTIONNAIRE_GUIDE.md)
-  - [Role-Based UAT Questionnaire (`docs/checklists/UAT_ROLE_BASED_QUESTIONNAIRE.md`)](../docs/checklists/UAT_ROLE_BASED_QUESTIONNAIRE.md)
-- [Technical Specifications (`docs/specifications/README.md`)](../docs/specifications/README.md)
-- [Capstone Simulation Guides (`docs/simulation/README.md`)](../docs/simulation/README.md)
-- [Validation Reports & System Audits (`docs/reports/README.md`)](../docs/reports/README.md)
-  - [System Synchronization, Database Integrity, & Dark Mode Audit (`docs/reports/system_synchronization_and_dark_mode_audit.md`)](../docs/reports/system_synchronization_and_dark_mode_audit.md)
-  - [Master Analytical & ML Validation Report (`docs/reports/ml_and_data_validation_report.md`)](../docs/reports/ml_and_data_validation_report.md)
+- **Checklists & Audits:** [docs/checklists/](../docs/checklists/README.md) — UAT matrices, security checklists, and role-based questionnaires.
+- **Simulation Guides:** [docs/simulation/](../docs/simulation/README.md) — Chapter 4 SimPy simulation notebooks and reproduction guides.
+- **Validation Reports:** [docs/reports/](../docs/reports/README.md) — Machine learning model evaluations and data validation summaries.
