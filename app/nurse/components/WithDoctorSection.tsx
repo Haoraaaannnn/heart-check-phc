@@ -13,6 +13,7 @@ import React from 'react';
 import { Patient } from '@/types/Types';
 import { ClinicalStage } from '@/app/nurse/types/nurse';
 import { nurseTexts } from '@/app/nurse/constants/nurseTexts';
+import { STAGE_CONFIGS } from '@/app/nurse/constants/nurse';
 import { StageColumn } from '@/app/nurse/components/StageColumn';
 import { NursePatientCard } from '@/app/nurse/components/NursePatientCard';
 
@@ -61,7 +62,7 @@ export function WithDoctorSection({
     <StageColumn
       stage="with_doctor"
       title={nurseTexts.stageWithDoctorHeading}
-      badgeColorClass="bg-purple-100 text-purple-700 dark:bg-purple-950/50 dark:text-purple-300"
+      badgeColorClass={STAGE_CONFIGS.with_doctor.badgeColor}
       count={patients.length}
       emptyText={nurseTexts.emptyWithDoctor}
       isDragOver={isDragOver}

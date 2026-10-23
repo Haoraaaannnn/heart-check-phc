@@ -155,22 +155,20 @@ export function useRealtimeSubscription(
         };
 
         /**
-         * Activates the polling fallback if not already running.
-         * Called after the hysteresis grace period when the WebSocket channel
-         * remains degraded.
+         * Activates the polling interval.
+         * Runs as a continuous background synchronization heartbeat so patients with
+         * NULL cubicle numbers (which PostgreSQL RLS filters out of Supabase Realtime CDC)
+         * are reliably synchronized within a few seconds.
          */
         const startPolling = () => {
             if (pollRef.current) return;
-            // Trigger an immediate fetch so data is refreshed right when fallback activates.
-            guardedFetch('poll-start');
             pollRef.current = setInterval(() => {
                 guardedFetch('poll-tick');
             }, NURSE_POLL_INTERVAL_MS);
         };
 
         /**
-         * Deactivates the polling fallback. Called when the WebSocket recovers.
-         * Also cancels any pending degradation grace timer.
+         * Deactivates the polling interval upon unmount or disposal.
          */
         const stopPolling = () => {
             if (degradeTimerRef.current) {
@@ -184,9 +182,8 @@ export function useRealtimeSubscription(
         };
 
         /**
-         * Handles channel status transitions with hysteresis. Immediately stops
-         * polling on SUBSCRIBED, but delays polling activation by a grace period
-         * to filter out brief channel flickers on weak signal.
+         * Handles channel status transitions. Triggers an immediate fetch on SUBSCRIBED
+         * to reconcile any missed events, and maintains the background polling heartbeat.
          *
          * @param status - The Supabase channel status string.
          */
@@ -195,21 +192,15 @@ export function useRealtimeSubscription(
             onStatusChangeRef.current?.(status);
 
             if (status === "SUBSCRIBED") {
-                stopPolling();
                 // Fetch immediately on resubscription to reconcile any missed events
                 guardedFetch('resubscribed');
-            } else {
-                // Channel degraded: apply hysteresis grace period before activating polling
-                if (!pollRef.current && !degradeTimerRef.current) {
-                    degradeTimerRef.current = setTimeout(() => {
-                        degradeTimerRef.current = null;
-                        if (!disposed) {
-                            startPolling();
-                        }
-                    }, CHANNEL_DEGRADED_GRACE_MS);
-                }
             }
+            // Always ensure polling heartbeat is running
+            startPolling();
         };
+
+        // Start background synchronization heartbeat immediately on mount
+        startPolling();
 
         const channel = supabase
             .channel("patients-nurse-realtime")
@@ -218,6 +209,34 @@ export function useRealtimeSubscription(
                 { event: "*", schema: "public", table: "patients" },
                 (payload) => {
                     onPayloadRef.current?.(payload);
+                    handleUpdate();
+                },
+            )
+            .on(
+                "postgres_changes",
+                { event: "*", schema: "public", table: "cubicle" },
+                () => {
+                    handleUpdate();
+                },
+            )
+            .on(
+                "postgres_changes",
+                { event: "*", schema: "public", table: "services" },
+                () => {
+                    handleUpdate();
+                },
+            )
+            .on(
+                "postgres_changes",
+                { event: "*", schema: "public", table: "user_services" },
+                () => {
+                    handleUpdate();
+                },
+            )
+            .on(
+                "postgres_changes",
+                { event: "*", schema: "public", table: "user_cubicles" },
+                () => {
                     handleUpdate();
                 },
             )

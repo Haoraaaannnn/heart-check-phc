@@ -96,22 +96,49 @@ export function useNurseActions(
       return true;
     }
 
-    // 3. Attempt immediate network persistence to Supabase
+    // 3. Attempt immediate network persistence via Server API (service role bypasses RLS null-cubicle drops)
     try {
-      const { error } = await supabase
-        .from('patients')
-        .update(updates)
-        .eq('id', patientId)
-        .eq('is_historical', false);
+      let networkSucceeded = false;
+      const { data: { session } } = await supabase.auth.getSession();
 
-      if (error) {
-        // If server rules or RLS rejected it, discard queued mutation and rollback
-        console.error('NURSE MUTATION ERROR:', error.message);
-        if (queuedMutationId) {
-          await removeMutation(queuedMutationId);
+      if (session?.access_token) {
+        try {
+          const apiRes = await fetch('/api/nurse/patients', {
+            method: 'PATCH',
+            headers: {
+              'Content-Type': 'application/json',
+              Authorization: `Bearer ${session.access_token}`,
+            },
+            body: JSON.stringify({ patientId, updates }),
+          });
+
+          if (apiRes.ok) {
+            networkSucceeded = true;
+          } else {
+            const errJson = await apiRes.json().catch(() => ({}));
+            console.warn('Nurse API PATCH returned non-200:', errJson);
+          }
+        } catch (apiErr) {
+          console.warn('Nurse API PATCH fetch exception, falling back to client Supabase:', apiErr);
         }
-        setActionError(nurseTexts.errorUnauthorizedCubicle);
-        return false;
+      }
+
+      // Fallback: direct client update if Server API was unreachable or unauthenticated
+      if (!networkSucceeded) {
+        const { error } = await supabase
+          .from('patients')
+          .update(updates)
+          .eq('id', patientId)
+          .eq('is_historical', false);
+
+        if (error) {
+          console.error('NURSE MUTATION ERROR:', error.message);
+          if (queuedMutationId) {
+            await removeMutation(queuedMutationId);
+          }
+          setActionError(nurseTexts.errorUnauthorizedCubicle);
+          return false;
+        }
       }
 
       // Successfully pushed to Supabase! Dequeue from local storage

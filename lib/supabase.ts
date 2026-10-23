@@ -54,15 +54,16 @@ export const supabase = createBrowserClient(
       },
       setAll(cookiesToSet) {
         if (typeof document === 'undefined') return;
+        const isSecure = typeof window !== 'undefined' ? window.location.protocol === 'https:' : false;
         cookiesToSet.forEach(({ name, value, options }) => {
           const restOptions = { ...options };
           delete restOptions.maxAge;
           delete restOptions.expires;
           if (!value || options?.maxAge === 0) {
-            document.cookie = `${name}=; path=${restOptions.path || '/'}; Max-Age=0; expires=Thu, 01 Jan 1970 00:00:00 GMT; SameSite=Lax${process.env.NODE_ENV === 'production' ? '; Secure' : ''}`;
+            document.cookie = `${name}=; path=${restOptions.path || '/'}; Max-Age=0; expires=Thu, 01 Jan 1970 00:00:00 GMT; SameSite=Lax${isSecure ? '; Secure' : ''}`;
           } else {
             let cookieStr = `${name}=${encodeURIComponent(value)}; path=${restOptions.path || '/'}; SameSite=${restOptions.sameSite || 'Lax'}`;
-            if (process.env.NODE_ENV === 'production' || restOptions.secure) {
+            if (isSecure) {
               cookieStr += '; Secure';
             }
             document.cookie = cookieStr;

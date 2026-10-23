@@ -94,6 +94,8 @@ export const SUPERADMIN_TEXTS = {
     roleDoctor: 'Doctor (Consultation Cubicle)',
     roleAdmin: 'Administrator (Operations & Reports)',
     roleSuperadmin: 'Super Administrator (Full System Access)',
+    clinicalServicesTitle: 'Assigned Clinical Services',
+    clinicalServicesDesc: 'Select the clinical services this nurse or medical staff member oversees.',
     clinicalSectionTitle: 'Assigned Clinical Cubicles',
     clinicalSectionDesc: 'Select the cubicles this clinical user is authorized to manage and call patients into.',
     clinicalSelectedBadge: 'selected',

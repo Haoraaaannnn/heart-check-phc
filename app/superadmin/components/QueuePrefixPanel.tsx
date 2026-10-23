@@ -25,6 +25,7 @@
 'use client';
 
 import React, { useCallback, useEffect, useState } from 'react';
+import { supabase } from '@/lib/supabase';
 import { adminApi } from '@/app/superadmin/lib/adminApi';
 import { QUEUE_PREFIX_TEXTS } from '@/app/superadmin/constants/queuePrefixTexts';
 import { SETTINGS_STYLES } from '@/app/superadmin/constants/settingsStyles';
@@ -140,16 +141,73 @@ export function QueuePrefixPanel() {
    */
   const loadMapping = useCallback(async () => {
     try {
-      const data = await adminApi('/api/superadmin/settings');
+      const [data, { data: dbServices }] = await Promise.all([
+        adminApi('/api/superadmin/settings'),
+        supabase
+          .from('services')
+          .select('label_en, has_subcategories, queue_prefix')
+          .order('display_order', { ascending: true }),
+      ]);
+
       const raw: string | undefined = data?.settings?.queue_prefix_map;
+      let existingRows: QueuePrefixRow[] = [];
 
       if (raw) {
-        const parsed: QueuePrefixRow[] = JSON.parse(raw);
-        if (Array.isArray(parsed) && parsed.length > 0) {
-          setRows(parsed.map((r) => ({ ...r })));
-          return;
+        try {
+          const parsed: QueuePrefixRow[] = JSON.parse(raw);
+          if (Array.isArray(parsed) && parsed.length > 0) {
+            existingRows = parsed.map((r) => ({ ...r }));
+          }
+        } catch {
+          // Non-critical: defaults remain applied.
         }
       }
+
+      if (existingRows.length === 0) {
+        existingRows = DEFAULT_ROWS.map((r) => ({ ...r }));
+      }
+
+      // Reconcile with dynamic services from database
+      if (dbServices && dbServices.length > 0) {
+        const mergedRows: QueuePrefixRow[] = [...existingRows];
+        for (const svc of dbServices) {
+          if (svc.has_subcategories) {
+            for (const sub of ['Adult', 'Pedia']) {
+              const found = mergedRows.find(
+                (r) =>
+                  r.service.trim().toLowerCase() === svc.label_en.trim().toLowerCase() &&
+                  r.subcategory?.trim().toLowerCase() === sub.toLowerCase()
+              );
+              if (!found) {
+                mergedRows.push({
+                  service: svc.label_en,
+                  subcategory: sub,
+                  prefix: svc.queue_prefix || String(mergedRows.length + 1),
+                  room: mergedRows.length + 1,
+                });
+              }
+            }
+          } else {
+            const found = mergedRows.find(
+              (r) =>
+                r.service.trim().toLowerCase() === svc.label_en.trim().toLowerCase() &&
+                !r.subcategory
+            );
+            if (!found) {
+              mergedRows.push({
+                service: svc.label_en,
+                subcategory: null,
+                prefix: svc.queue_prefix || String(mergedRows.length + 1),
+                room: mergedRows.length + 1,
+              });
+            }
+          }
+        }
+        setRows(mergedRows);
+        return;
+      }
+
+      setRows(existingRows);
     } catch {
       // Non-critical: defaults remain applied.
     } finally {
@@ -159,6 +217,21 @@ export function QueuePrefixPanel() {
 
   useEffect(() => {
     loadMapping();
+
+    const channel = supabase
+      .channel('superadmin-prefix-services')
+      .on(
+        'postgres_changes',
+        { event: '*', schema: 'public', table: 'services' },
+        () => {
+          loadMapping();
+        }
+      )
+      .subscribe();
+
+    return () => {
+      supabase.removeChannel(channel);
+    };
   }, [loadMapping]);
 
   // ---------------------------------------------------------------------------

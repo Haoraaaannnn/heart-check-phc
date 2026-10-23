@@ -94,8 +94,8 @@ export function NurseDragGhost({
           <span
             className={`text-[10px] font-bold px-2 py-0.5 rounded-md ${
               isValidDropTarget
-                ? 'bg-emerald-100 dark:bg-emerald-950/70 text-emerald-700 dark:text-emerald-300'
-                : 'bg-red-100 dark:bg-red-950/70 text-[#cc3535] dark:text-red-400'
+                ? 'bg-emerald-100 text-emerald-800 border border-emerald-300 dark:bg-emerald-950/80 dark:text-emerald-300 dark:border-emerald-800/80'
+                : 'bg-red-100 text-[#cc3535] border border-red-200 dark:bg-red-950/80 dark:text-[#f87171] dark:border-red-900/80'
             }`}
           >
             {isValidDropTarget ? 'Ready to drop' : 'Moving'}

@@ -136,7 +136,7 @@ export function NursePatientCard({
             {patient.patientNum}
           </span>
           {patient.cubicleNum && (
-            <span className="px-2 py-0.5 rounded-md bg-slate-100 dark:bg-[#242424] text-slate-600 dark:text-[#a3a3a3] text-[11px] font-semibold truncate max-w-[110px] shrink">
+            <span className="px-2 py-0.5 rounded-md bg-slate-100 dark:bg-[#242424] text-slate-700 dark:text-[#d4d4d4] border border-slate-200 dark:border-[#383838] text-[11px] font-semibold whitespace-normal break-words shrink">
               {patient.cubicleNum}
             </span>
           )}

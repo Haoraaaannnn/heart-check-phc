@@ -3,6 +3,8 @@
  *
  * Sized to fill the left dashboard column, providing a space-efficient tabbed interface
  * whose patient lists scroll internally while the outer container remains non-scrollable.
+ * Adheres strictly to AGENTS.md separation-of-concerns standards by consuming centralized
+ * styles from transferStyles.ts.
  *
  * @module app/transfer/components/QueuePanel
  */
@@ -14,7 +16,8 @@ import { Patient } from '@/types/Types';
 import { OnProgressSection } from '@/app/transfer/components/OnProgressSection';
 import { IdleNumbersPanel } from '@/app/transfer/components/IdleNumbersPanel';
 import { NotificationBadge } from '@/components/reusables/NotificationBadge';
-import { transferTexts } from '@/app/transfer/constants/transferTexts';
+import { transferTexts } from '@/constants/texts/transferTexts';
+import { queuePanelStyles } from '@/constants/designs/transferStyles';
 import { SelectedTransferPatient } from '@/app/transfer/types/transfer';
 
 /**
@@ -81,17 +84,17 @@ export function QueuePanel({
   const safeIdle = Array.isArray(idlePatients) ? idlePatients : [];
 
   return (
-    <div className="h-full flex flex-col min-h-0 bg-white dark:bg-[#1a1a1a] border border-slate-200 dark:border-[#2e2e2e] rounded-2xl shadow-xs overflow-hidden">
+    <div className={queuePanelStyles.container}>
       {/* Tab Switcher Header */}
-      <div className="shrink-0 flex border-b border-slate-200 dark:border-[#2e2e2e] bg-slate-50/80 dark:bg-[#141414] p-1.5 gap-1.5 select-none">
+      <div className={queuePanelStyles.tabHeader}>
         <button
           type="button"
           onClick={() => setActiveTab('queue')}
-          className={`flex-1 flex items-center justify-center gap-2 py-1.5 px-3 rounded-xl font-bold text-xs transition-all cursor-pointer min-w-0 ${
+          className={
             activeTab === 'queue'
-              ? 'bg-white dark:bg-[#242424] text-slate-800 dark:text-[#f5f5f5] shadow-xs'
-              : 'text-slate-500 hover:text-slate-700 dark:text-[#a3a3a3] dark:hover:text-[#f5f5f5] hover:bg-white/50 dark:hover:bg-[#242424]'
-          }`}
+              ? queuePanelStyles.tabActive
+              : queuePanelStyles.tabInactive
+          }
         >
           <span className="w-2 h-2 rounded-full bg-emerald-500 shrink-0" />
           <span className="truncate">{transferTexts.queueTabTitle}</span>
@@ -105,11 +108,11 @@ export function QueuePanel({
         <button
           type="button"
           onClick={() => setActiveTab('idle')}
-          className={`flex-1 flex items-center justify-center gap-2 py-1.5 px-3 rounded-xl font-bold text-xs transition-all cursor-pointer min-w-0 ${
+          className={
             activeTab === 'idle'
-              ? 'bg-white dark:bg-[#242424] text-slate-800 dark:text-[#f5f5f5] shadow-xs'
-              : 'text-slate-500 hover:text-slate-700 dark:text-[#a3a3a3] dark:hover:text-[#f5f5f5] hover:bg-white/50 dark:hover:bg-[#242424]'
-          }`}
+              ? queuePanelStyles.tabActive
+              : queuePanelStyles.tabInactive
+          }
         >
           <span className="w-2 h-2 rounded-full bg-slate-400 shrink-0" />
           <span className="truncate">{transferTexts.idleTabTitle}</span>
@@ -122,7 +125,7 @@ export function QueuePanel({
       </div>
 
       {/* Tab Content (Fills remaining height) */}
-      <div className="flex-1 min-h-0 p-2.5 flex flex-col overflow-hidden">
+      <div className={queuePanelStyles.tabBody}>
         {activeTab === 'queue' ? (
           <OnProgressSection
             patients={safeQueue}

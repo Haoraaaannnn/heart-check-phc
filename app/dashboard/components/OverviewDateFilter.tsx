@@ -52,8 +52,6 @@ export default function OverviewDateFilter({
   const T = OVERVIEW_DATE_FILTER_TEXTS;
   const I = OVERVIEW_DATE_FILTER_ICONS;
 
-  const isToday = selectedRange === 'today';
-
   return (
     <div className={S.root}>
       {/* Timeframe Presets */}
@@ -108,23 +106,6 @@ export default function OverviewDateFilter({
           );
         })}
       </div>
-
-      {/* Real-time Streaming vs Historical Snapshot Indicator */}
-      {isMounted && (
-        <div>
-          {isToday ? (
-            <span className={S.badgeLive}>
-              <span className={S.badgeLiveDot} />
-              <span>{T.liveBadge}</span>
-            </span>
-          ) : (
-            <span className={S.badgeHistorical}>
-              <i className={`bx ${I.history} ${S.badgeHistoricalIcon}`} />
-              <span>{T.historicalBadge}</span>
-            </span>
-          )}
-        </div>
-      )}
     </div>
   );
 }

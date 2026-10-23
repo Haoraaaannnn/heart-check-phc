@@ -10,8 +10,8 @@
 'use client';
 
 import React, { useState, useEffect, useMemo } from 'react';
-import Link from 'next/link';
 import { useTheme } from 'next-themes';
+import { toggleThemeWithRipple } from '@/lib/theme/themeTransition';
 import NotificationDropdown from '@/app/dashboard/components/NotificationDropdown';
 import { AssignedNurseCubicle } from '@/app/nurse/types/nurse';
 import { nurseTexts } from '@/app/nurse/constants/nurseTexts';
@@ -29,6 +29,8 @@ export interface NurseHeaderProps {
   selectedCubicleNum: string | null;
   /** List of cubicles assigned to the user or hospital. */
   assignedCubicles: AssignedNurseCubicle[];
+  /** List of service categories assigned to the user or hospital. */
+  assignedServices?: string[];
   /** Total count of completed patients in today's ledger. */
   finishedCount: number;
   /** Callback to open the finished patient ledger drawer. */
@@ -67,6 +69,7 @@ export function NurseHeader({
   selectedCategory,
   selectedCubicleNum,
   assignedCubicles,
+  assignedServices = [],
   finishedCount,
   onOpenFinishedLedger,
   onClearFilter,
@@ -91,7 +94,11 @@ export function NurseHeader({
   }, []);
 
   const isDark = mounted && resolvedTheme === 'dark';
-  const toggleTheme = () => setTheme(isDark ? 'light' : 'dark');
+  const toggleTheme = (e: React.MouseEvent<HTMLButtonElement>) => {
+    toggleThemeWithRipple(e, () => {
+      setTheme(isDark ? 'light' : 'dark');
+    });
+  };
 
   // Find attending physician if a single cubicle is selected
   const activeCubicle = selectedCubicleNum
@@ -100,19 +107,22 @@ export function NurseHeader({
 
   const doctorName = activeCubicle?.doctorName;
 
-  // Group cubicles by service category for desktop dropdown
-  const services = useMemo(
-    () =>
-      assignedCubicles.reduce<Record<string, AssignedNurseCubicle[]>>(
-        (groups, cubicle) => {
-          groups[cubicle.category] ??= [];
-          groups[cubicle.category].push(cubicle);
-          return groups;
-        },
-        {}
-      ),
-    [assignedCubicles]
-  );
+  // Group cubicles by service category for desktop dropdown, including assigned services
+  const services = useMemo(() => {
+    const groups: Record<string, AssignedNurseCubicle[]> = {};
+    (assignedServices || []).forEach((service) => {
+      if (service) {
+        groups[service] = [];
+      }
+    });
+    assignedCubicles.forEach((cubicle) => {
+      if (cubicle.category) {
+        groups[cubicle.category] ??= [];
+        groups[cubicle.category].push(cubicle);
+      }
+    });
+    return groups;
+  }, [assignedServices, assignedCubicles]);
 
   return (
     <header
@@ -137,16 +147,6 @@ export function NurseHeader({
           </button>
         )}
 
-        {/* Return to Select Screen Button */}
-        <Link
-          href="/select-screen"
-          className="p-1.5 sm:p-2 rounded-xl text-slate-500 hover:text-slate-800 hover:bg-slate-100 active:bg-slate-200 dark:text-[#a3a3a3] dark:hover:text-[#f5f5f5] dark:hover:bg-[#242424] transition-colors cursor-pointer shrink-0"
-          title={nurseTexts.selectScreenLabel}
-          aria-label={nurseTexts.selectScreenAria}
-        >
-          <i className="bx bx-grid-alt text-xl block" aria-hidden="true" />
-        </Link>
-
         <div className="flex items-center gap-2 shrink-0">
           <span className="text-slate-600 dark:text-[#a3a3a3] text-sm font-semibold tracking-tight hidden md:inline truncate max-w-[170px] xl:max-w-none">
             {nurseTexts.patientManagement}
@@ -154,7 +154,7 @@ export function NurseHeader({
         </div>
 
         {/* Desktop Station / Cubicle Selector Dropdown */}
-        {showCubicleDropdown && onSelectCategory && onSelectCubicle && assignedCubicles.length > 0 && (
+        {showCubicleDropdown && onSelectCategory && onSelectCubicle && (assignedCubicles.length > 0 || Object.keys(services).length > 0) && (
           <div className="flex items-center gap-1.5 bg-slate-100/90 hover:bg-slate-200/80 dark:bg-[#1f1f1f] dark:hover:bg-[#242424] border border-slate-200 dark:border-[#2e2e2e] rounded-xl px-2.5 py-1 transition-colors min-w-0 shrink">
             <span className="text-[11px] font-bold text-slate-500 dark:text-[#a3a3a3] uppercase tracking-wider shrink-0">
               {nurseTexts.cubicleSelectLabel}
@@ -164,8 +164,8 @@ export function NurseHeader({
                 selectedCubicleNum
                   ? selectedCubicleNum
                   : selectedCategory
-                  ? `CAT:${selectedCategory}`
-                  : 'ALL'
+                    ? `CAT:${selectedCategory}`
+                    : 'ALL'
               }
               onChange={(e) => {
                 const val = e.target.value;
@@ -233,18 +233,11 @@ export function NurseHeader({
       {/* Right: Sync Status, Finished Ledger Button, Theme Toggle & Notifications */}
       <div className="flex items-center gap-2 sm:gap-3 shrink-0 ml-2">
         {/* Sync Indicator */}
-        {isSyncing ? (
+        {isSyncing && (
           <div className="flex items-center gap-2 px-3 py-1.5 bg-blue-50 dark:bg-blue-950/40 border border-blue-200 dark:border-blue-800/50 rounded-lg">
             <div className="w-3.5 h-3.5 border-2 border-blue-500 border-t-transparent rounded-full animate-spin" />
             <span className="text-xs text-blue-600 dark:text-blue-400 font-semibold">
               {nurseTexts.syncingBadge}
-            </span>
-          </div>
-        ) : (
-          <div className="hidden sm:flex items-center gap-1.5 px-2.5 py-1 bg-emerald-50 dark:bg-emerald-950/40 border border-emerald-200/80 dark:border-emerald-800/50 rounded-lg">
-            <span className="w-2 h-2 rounded-full bg-emerald-500 inline-block animate-pulse" />
-            <span className="text-xs text-emerald-700 dark:text-emerald-400 font-semibold">
-              {nurseTexts.liveStatus}
             </span>
           </div>
         )}
@@ -257,7 +250,7 @@ export function NurseHeader({
           title={nurseTexts.viewFinishedLedger}
         >
           <span className="hidden sm:inline">{nurseTexts.stageFinishedHeading}</span>
-          <span className="px-1.5 py-0.5 rounded-md bg-emerald-100 dark:bg-emerald-950/50 text-emerald-800 dark:text-emerald-300 text-[11px] font-bold">
+          <span className="text-xs font-bold text-emerald-600 dark:text-emerald-400">
             {finishedCount}
           </span>
         </button>
@@ -272,11 +265,10 @@ export function NurseHeader({
         >
           {mounted ? (
             <i
-              className={`bx ${
-                isDark
+              className={`bx ${isDark
                   ? 'bx-sun text-amber-400'
                   : 'bx-moon text-slate-600 dark:text-[#a3a3a3]'
-              } text-xl block`}
+                } text-xl block`}
               aria-hidden="true"
             />
           ) : (

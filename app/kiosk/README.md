@@ -4,13 +4,13 @@ This document is the definitive guide for developers maintaining, modifying, or 
 
 It explains the system architecture, separation-of-concerns conventions, and provides an exhaustive directory mapping showing exactly which files to edit for any visual, textual, layout, or behavioral changes.
 
-_Last updated: 2026-10-21_
+_Last updated: 2026-10-22_
 
 ---
 
 ## 1. Architectural Principles
 
-The kiosk interface strictly enforces a four-layer separation of concerns:
+The kiosk interface strictly enforces a five-layer separation of concerns:
 
 1. **Presentation Components (`components/`):**
    - Pure UI rendering and structure.
@@ -30,6 +30,11 @@ The kiosk interface strictly enforces a four-layer separation of concerns:
 
 4. **Layout Shells (`layout.tsx` & `<feature>Layout.ts`):**
    - Define responsive full-viewport wrappers, hydration fade-in transitions, and orientation adjustments (landscape vs portrait).
+
+5. **Strict Light-Mode Mandate (`layout.tsx` & kiosk constants):**
+   - The patient check-in kiosk is strictly light-mode only per institutional standards.
+   - Zero `dark:` utility classes are permitted anywhere within `app/kiosk/`.
+   - `app/kiosk/layout.tsx` actively strips the `dark` class from `document.documentElement` and synchronizes `next-themes` to `'light'`.
 
 ---
 

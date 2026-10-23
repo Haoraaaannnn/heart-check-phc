@@ -17,7 +17,7 @@
  */
 
 import { fetchActiveCounters } from '@/lib/counters';
-import { useState, useCallback } from 'react';
+import { useState, useCallback, useEffect } from 'react';
 import { supabase } from '@/lib/supabase';
 import { CATEGORIES } from '@/app/transfer/lib/constants';
 import { Service } from '@/types/Services';
@@ -167,6 +167,25 @@ export function useMyAccess(): UseMyAccessReturn {
       setAccessStatus('error');
     }
   }, []);
+
+  useEffect(() => {
+    fetchMyAccess();
+
+    const channel = supabase
+      .channel('transfer-my-access-services')
+      .on(
+        'postgres_changes',
+        { event: '*', schema: 'public', table: 'services' },
+        () => {
+          fetchMyAccess();
+        }
+      )
+      .subscribe();
+
+    return () => {
+      supabase.removeChannel(channel);
+    };
+  }, [fetchMyAccess]);
 
   return { myServices, myRooms, myCounters, accessStatus, fetchMyAccess, allServices };
 }

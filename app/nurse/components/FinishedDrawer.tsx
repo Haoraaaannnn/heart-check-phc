@@ -63,7 +63,7 @@ export function FinishedDrawer({ isOpen, onClose, patients }: FinishedDrawerProp
         className="animate-in slide-in-from-right duration-250 border-l border-slate-200 dark:border-[#2e2e2e] bg-white dark:bg-[#1a1a1a]"
       >
         {/* Drawer Header */}
-        <div className="flex items-center justify-between p-5 border-b border-slate-200 dark:border-[#2e2e2e] bg-slate-50/80 dark:bg-[#141414]/90 backdrop-blur-xs shrink-0">
+        <div className="flex items-center justify-between p-5 border-b border-slate-200 dark:border-[#2e2e2e] bg-slate-50 dark:bg-[#141414] shrink-0">
           <div className="flex items-center gap-3">
             <div>
               <div className="flex items-center gap-2">
@@ -73,7 +73,7 @@ export function FinishedDrawer({ isOpen, onClose, patients }: FinishedDrawerProp
                 >
                   {nurseTexts.stageFinishedHeading}
                 </h2>
-                <span className="px-2 py-0.5 rounded-md text-xs font-bold bg-emerald-100 dark:bg-emerald-950/60 text-emerald-800 dark:text-emerald-300">
+                <span className="font-mono text-xs font-extrabold text-emerald-600 dark:text-emerald-400 shrink-0">
                   {patients.length}
                 </span>
               </div>

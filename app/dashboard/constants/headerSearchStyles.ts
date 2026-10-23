@@ -124,22 +124,22 @@ export const HEADER_SEARCH_STYLES = {
 
   /** Service pill badge */
   serviceBadge:
-    'inline-flex items-center px-1.5 py-0.5 rounded text-[10px] font-medium bg-slate-100 dark:bg-[#242424] text-slate-700 dark:text-[#d4d4d4] border border-slate-200 dark:border-[#2e2e2e]',
+    'inline-flex items-center px-1.5 py-0.5 rounded-md text-[10px] font-medium bg-slate-100 dark:bg-[#242424] text-slate-700 dark:text-[#d4d4d4] border border-slate-200 dark:border-[#2e2e2e]',
 
   /** Category tag badge */
   categoryBadge:
-    'inline-flex items-center px-1.5 py-0.5 rounded text-[10px] font-medium bg-slate-100 dark:bg-[#242424] text-slate-500 dark:text-[#a3a3a3]',
+    'inline-flex items-center px-1.5 py-0.5 rounded-md text-[10px] font-medium bg-slate-100 dark:bg-[#242424] text-slate-600 dark:text-[#a3a3a3] border border-slate-200 dark:border-[#2e2e2e]',
 
   /** Status badge dictionaries */
   statusBadges: {
     waiting:
-      'inline-flex items-center px-1.5 py-0.5 rounded text-[10px] font-semibold bg-amber-50 text-amber-700 dark:bg-amber-950/40 dark:text-amber-400 border border-amber-200 dark:border-amber-900/50',
+      'inline-flex items-center px-1.5 py-0.5 rounded-md text-[10px] font-semibold bg-amber-50 text-amber-700 dark:bg-amber-950/70 dark:text-amber-300 border border-amber-200 dark:border-amber-800/80',
     serving:
-      'inline-flex items-center px-1.5 py-0.5 rounded text-[10px] font-semibold bg-blue-50 text-blue-700 dark:bg-blue-950/40 dark:text-blue-400 border border-blue-200 dark:border-blue-900/50',
+      'inline-flex items-center px-1.5 py-0.5 rounded-md text-[10px] font-semibold bg-blue-50 text-blue-700 dark:bg-blue-950/70 dark:text-blue-300 border border-blue-200 dark:border-blue-800/80',
     done:
-      'inline-flex items-center px-1.5 py-0.5 rounded text-[10px] font-semibold bg-emerald-50 text-emerald-700 dark:bg-emerald-950/40 dark:text-emerald-400 border border-emerald-200 dark:border-emerald-900/50',
+      'inline-flex items-center px-1.5 py-0.5 rounded-md text-[10px] font-semibold bg-emerald-50 text-emerald-700 dark:bg-emerald-950/70 dark:text-emerald-300 border border-emerald-200 dark:border-emerald-800/80',
     idle:
-      'inline-flex items-center px-1.5 py-0.5 rounded text-[10px] font-semibold bg-slate-100 text-slate-700 dark:bg-[#242424] dark:text-[#a3a3a3] border border-slate-200 dark:border-[#2e2e2e]',
+      'inline-flex items-center px-1.5 py-0.5 rounded-md text-[10px] font-semibold bg-slate-100 text-slate-700 dark:bg-[#242424] dark:text-[#d4d4d4] border border-slate-200 dark:border-[#383838]',
   },
 
   /** Empty state wrapper */

@@ -68,6 +68,24 @@ body {
   font-family: Arial, Helvetica, sans-serif;
 }
 
+/* -------------------------------------------------------------------------- */
+/* Circular Screen Ripple Theme Transition (View Transitions API)             */
+/* Enables expanding circular wave revealing target theme from click origin   */
+/* -------------------------------------------------------------------------- */
+::view-transition-old(root),
+::view-transition-new(root) {
+  animation: none;
+  mix-blend-mode: normal;
+}
+
+::view-transition-old(root) {
+  z-index: 1;
+}
+
+::view-transition-new(root) {
+  z-index: 9999;
+}
+
 /* We keep your cool glow effect! */
 .glow-red {
   text-shadow: 0 0 10px rgba(204, 53, 53, 0.7),
@@ -102,6 +120,18 @@ body {
   background-color: rgba(148, 163, 184, 1);
 }
 
+.dark .phc-scroll {
+  scrollbar-color: rgba(75, 85, 99, 0.8) transparent;
+}
+
+.dark .phc-scroll::-webkit-scrollbar-thumb {
+  background-color: rgba(75, 85, 99, 0.8);
+}
+
+.dark .phc-scroll::-webkit-scrollbar-thumb:hover {
+  background-color: rgba(107, 114, 128, 1);
+}
+
 /* Drag ghost card */
 .phc-ghost {
   pointer-events: none;
@@ -125,9 +155,11 @@ body {
     transform: scale(0.95);
     opacity: 0.8;
   }
+
   50% {
     transform: scale(1.03);
   }
+
   100% {
     transform: scale(1);
     opacity: 1;
@@ -140,9 +172,21 @@ body {
 
 /* Shake animation on invalid drop */
 @keyframes phc-shake {
-  0%, 100% { transform: translateX(0); }
-  20%, 60% { transform: translateX(-4px); }
-  40%, 80% { transform: translateX(4px); }
+
+  0%,
+  100% {
+    transform: translateX(0);
+  }
+
+  20%,
+  60% {
+    transform: translateX(-4px);
+  }
+
+  40%,
+  80% {
+    transform: translateX(4px);
+  }
 }
 
 .phc-shake {
@@ -154,9 +198,11 @@ body {
   0% {
     box-shadow: 0 0 0 0 rgba(225, 29, 72, 0.6);
   }
+
   70% {
     box-shadow: 0 0 0 6px rgba(225, 29, 72, 0);
   }
+
   100% {
     box-shadow: 0 0 0 0 rgba(225, 29, 72, 0);
   }
@@ -173,14 +219,17 @@ body {
     opacity: 0;
     transform: translateY(-50%) scale(0.75);
   }
+
   10% {
     opacity: 1;
     transform: translateY(-50%) scale(1);
   }
+
   90% {
     opacity: 1;
     transform: translateY(-50%) scale(1);
   }
+
   100% {
     left: 92%;
     opacity: 0;

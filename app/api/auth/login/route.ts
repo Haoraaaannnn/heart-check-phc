@@ -61,6 +61,10 @@ export async function POST(request: Request) {
       }
     }
 
+    const isSecure =
+      request.headers.get('x-forwarded-proto') === 'https' ||
+      new URL(request.url).protocol === 'https:'
+
     const cookieStore = await cookies()
 
     const supabaseAnon = createServerClient(
@@ -79,7 +83,7 @@ export async function POST(request: Request) {
                   maxAge: 0,
                   expires: new Date(0),
                   sameSite: 'lax',
-                  secure: process.env.NODE_ENV === 'production',
+                  secure: isSecure,
                 })
               } else {
                 const sessionOptions = { ...options }
@@ -89,7 +93,7 @@ export async function POST(request: Request) {
                   ...sessionOptions,
                   path: '/',
                   sameSite: 'lax',
-                  secure: process.env.NODE_ENV === 'production',
+                  secure: isSecure,
                 })
               }
             })
@@ -136,9 +140,40 @@ export async function POST(request: Request) {
       updated_at: new Date().toISOString(),
     }, { onConflict: 'email' })
 
+    // Verify user role in users table and link auth_id if needed
+    const { data: userProfile } = await supabaseAdmin
+      .from('users')
+      .select('role')
+      .eq('auth_id', signInData.user.id)
+      .maybeSingle()
+
+    let resolvedRole = userProfile?.role
+    if (!resolvedRole) {
+      const { data: emailProfile } = await supabaseAdmin
+        .from('users')
+        .select('role')
+        .ilike('email', normalizedEmail)
+        .maybeSingle()
+      resolvedRole = emailProfile?.role
+      if (emailProfile) {
+        await supabaseAdmin
+          .from('users')
+          .update({ auth_id: signInData.user.id })
+          .ilike('email', normalizedEmail)
+      }
+    }
+
+    if (!resolvedRole) {
+      return NextResponse.json(
+        { error: 'User account active but no workstation role assigned.' },
+        { status: 403 }
+      )
+    }
+
     const response = NextResponse.json({
       session: signInData.session,
       user: signInData.user,
+      role: resolvedRole,
     })
     response.headers.set('Cache-Control', 'no-store, no-cache, must-revalidate, proxy-revalidate')
     response.headers.set('Pragma', 'no-cache')

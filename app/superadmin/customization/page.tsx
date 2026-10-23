@@ -101,6 +101,21 @@ export default function AdminServicePage() {
 
   useEffect(() => {
     loadServices();
+
+    const channel = supabase
+      .channel('customization-page-services')
+      .on(
+        'postgres_changes',
+        { event: '*', schema: 'public', table: 'services' },
+        () => {
+          loadServices();
+        }
+      )
+      .subscribe();
+
+    return () => {
+      supabase.removeChannel(channel);
+    };
   }, []);
 
   function startCreate() {
@@ -180,14 +195,141 @@ export default function AdminServicePage() {
     };
 
     if (editingId === 'new') {
-      const { error: insertErr } = await supabase.from('services').insert([payload]);
-      if (insertErr) setError(insertErr.message);
+      const { data: insertedData, error: insertErr } = await supabase
+        .from('services')
+        .insert([payload])
+        .select('label_en, has_subcategories, queue_prefix')
+        .single();
+
+      if (insertErr) {
+        setError(insertErr.message);
+      } else if (insertedData) {
+        // Automatically sync new service to queue_prefix_map in app_settings
+        try {
+          const { data: settingData } = await supabase
+            .from('app_settings')
+            .select('value')
+            .eq('key', 'queue_prefix_map')
+            .maybeSingle();
+
+          if (settingData?.value) {
+            const parsed = JSON.parse(settingData.value);
+            if (Array.isArray(parsed)) {
+              const newRows = [...parsed];
+              const svcName = insertedData.label_en;
+              if (insertedData.has_subcategories) {
+                for (const sub of ['Adult', 'Pedia']) {
+                  const exists = newRows.some(
+                    (r: any) => r.service === svcName && r.subcategory === sub
+                  );
+                  if (!exists) {
+                    newRows.push({
+                      service: svcName,
+                      subcategory: sub,
+                      prefix: insertedData.queue_prefix || String(newRows.length + 1),
+                      room: newRows.length + 1,
+                    });
+                  }
+                }
+              } else {
+                const exists = newRows.some(
+                  (r: any) => r.service === svcName && !r.subcategory
+                );
+                if (!exists) {
+                  newRows.push({
+                    service: svcName,
+                    subcategory: null,
+                    prefix: insertedData.queue_prefix || String(newRows.length + 1),
+                    room: newRows.length + 1,
+                  });
+                }
+              }
+              await supabase
+                .from('app_settings')
+                .update({ value: JSON.stringify(newRows) })
+                .eq('key', 'queue_prefix_map');
+            }
+          }
+        } catch {
+          // Non-critical fallback
+        }
+      }
     } else if (editingId !== null) {
+      const oldService = services.find((s) => s.id === editingId);
       const { error: updateErr } = await supabase
         .from('services')
         .update(payload)
         .eq('id', editingId);
-      if (updateErr) setError(updateErr.message);
+
+      if (updateErr) {
+        setError(updateErr.message);
+      } else if (oldService && oldService.label_en !== payload.label_en) {
+        // Cascade service renaming to dependent operational tables and settings
+        const oldName = oldService.label_en;
+        const newName = payload.label_en;
+
+        try {
+          await Promise.all([
+            // 1. Update cubicle categories
+            supabase
+              .from('cubicle')
+              .update({ category: newName })
+              .eq('category', oldName),
+
+            // 2. Update user service assignments
+            supabase
+              .from('user_services')
+              .update({ service: newName })
+              .eq('service', oldName),
+
+            // 3. Update user room allocations
+            supabase
+              .from('user_rooms')
+              .update({ service: newName })
+              .eq('service', oldName),
+
+            // 4. Update active (non-historical) patients strictly satisfying Rule 12
+            supabase
+              .from('patients')
+              .update({ service: newName })
+              .eq('service', oldName)
+              .eq('is_historical', false),
+          ]);
+
+          // 5. Update queue_prefix_map in app_settings
+          const { data: settingData } = await supabase
+            .from('app_settings')
+            .select('value')
+            .eq('key', 'queue_prefix_map')
+            .maybeSingle();
+
+          if (settingData?.value) {
+            try {
+              const parsed = JSON.parse(settingData.value);
+              if (Array.isArray(parsed)) {
+                let changed = false;
+                const updated = parsed.map((item: any) => {
+                  if (item.service === oldName) {
+                    changed = true;
+                    return { ...item, service: newName };
+                  }
+                  return item;
+                });
+                if (changed) {
+                  await supabase
+                    .from('app_settings')
+                    .update({ value: JSON.stringify(updated) })
+                    .eq('key', 'queue_prefix_map');
+                }
+              }
+            } catch {
+              // Ignore JSON parse fault
+            }
+          }
+        } catch (cascadeErr) {
+          console.warn('Non-fatal warning cascading service rename:', cascadeErr);
+        }
+      }
     }
 
     setSaving(false);
@@ -211,6 +353,49 @@ export default function AdminServicePage() {
       setDeleteError(delErr.message);
       setDeleteLoading(false);
     } else {
+      // Cascading cleanup: autodelete rooms, cubicles, and staff associations for this service
+      try {
+        const { data: cubiclesToDelete } = await supabase
+          .from('cubicle')
+          .select('id')
+          .eq('category', deletingService.label_en);
+
+        if (cubiclesToDelete && cubiclesToDelete.length > 0) {
+          const cubicleIds = cubiclesToDelete.map((c: any) => c.id);
+          await supabase.from('user_cubicles').delete().in('cubicle_id', cubicleIds);
+          await supabase.from('cubicle').delete().eq('category', deletingService.label_en);
+        }
+
+        await supabase.from('user_services').delete().eq('service', deletingService.label_en);
+        await supabase.from('user_rooms').delete().eq('service', deletingService.label_en);
+      } catch (cascadeErr) {
+        console.error('Cascading cleanup of cubicles failed:', cascadeErr);
+      }
+
+      // Clean up deleted service from queue_prefix_map in app_settings
+      try {
+        const { data: settingData } = await supabase
+          .from('app_settings')
+          .select('value')
+          .eq('key', 'queue_prefix_map')
+          .maybeSingle();
+
+        if (settingData?.value) {
+          const parsed = JSON.parse(settingData.value);
+          if (Array.isArray(parsed)) {
+            const filtered = parsed.filter(
+              (r: any) => r.service !== deletingService.label_en
+            );
+            await supabase
+              .from('app_settings')
+              .update({ value: JSON.stringify(filtered) })
+              .eq('key', 'queue_prefix_map');
+          }
+        }
+      } catch {
+        // Non-critical fallback
+      }
+
       setDeleteLoading(false);
       setDeletingService(null);
       loadServices();
@@ -736,13 +921,13 @@ export default function AdminServicePage() {
                     </td>
                     <td className={S.td}>
                       <span
-                        className={`px-2.5 py-0.5 rounded-md text-xs font-semibold capitalize border ${
+                        className={
                           service.patient_type === 'both'
-                            ? 'bg-purple-50 text-purple-700 border-purple-200 dark:bg-purple-950/60 dark:text-purple-300'
+                            ? S.patientTypeBoth
                             : service.patient_type === 'new'
-                            ? 'bg-emerald-50 text-emerald-700 border-emerald-200 dark:bg-emerald-950/60 dark:text-emerald-300'
-                            : 'bg-slate-100 text-slate-700 border-slate-200 dark:bg-[#242424] dark:text-[#f5f5f5] dark:border-[#2e2e2e]'
-                        }`}
+                            ? S.patientTypeNew
+                            : S.patientTypeOld
+                        }
                       >
                         {service.patient_type}
                       </span>

@@ -25,32 +25,32 @@ export const NOTIFICATION_STYLES = {
   /** Dropdown floating card container */
   dropdown: {
     panel:
-      'absolute right-0 mt-2 w-96 sm:w-[420px] bg-white dark:bg-[#1a1a1a] rounded-2xl shadow-xl border border-slate-200 dark:border-[#2e2e2e] z-50 overflow-hidden',
+      'absolute right-0 mt-2 w-96 sm:w-[420px] max-h-[calc(100vh-80px)] sm:max-h-[min(560px,calc(100vh-80px))] flex flex-col bg-white dark:bg-[#1a1a1a] rounded-2xl shadow-xl border border-slate-200 dark:border-[#2e2e2e] z-50 overflow-hidden',
     header:
-      'bg-slate-50 dark:bg-[#242424] px-4 py-3 border-b border-slate-200 dark:border-[#2e2e2e] flex justify-between items-center',
+      'bg-slate-50 dark:bg-[#242424] px-4 py-3 border-b border-slate-200 dark:border-[#2e2e2e] flex justify-between items-center shrink-0',
     headerTitle:
       'font-bold text-xs uppercase tracking-wider text-slate-800 dark:text-[#f5f5f5] flex items-center gap-2',
     filterBar:
-      'px-3 py-2 bg-slate-100/70 dark:bg-[#1f1f1f] border-b border-slate-200 dark:border-[#2e2e2e] flex items-center gap-1.5 overflow-x-auto phc-scroll',
+      'px-3 py-2 bg-slate-100/70 dark:bg-[#1f1f1f] border-b border-slate-200 dark:border-[#2e2e2e] flex items-center gap-1.5 overflow-x-auto phc-scroll shrink-0',
     filterPill:
       'px-2.5 py-1 rounded-md text-[11px] font-bold transition-all cursor-pointer shrink-0 inline-flex items-center gap-1',
     filterPillActive:
-      'bg-slate-900 text-white dark:bg-white dark:text-slate-900 shadow-2xs',
+      'bg-slate-900 text-white dark:bg-slate-700 dark:text-white shadow-2xs',
     filterPillInactive:
       'text-slate-600 dark:text-[#a3a3a3] hover:bg-slate-200 dark:hover:bg-[#2b2b2b]',
     listContainer:
-      'max-h-[380px] overflow-y-auto divide-y divide-slate-100 dark:divide-[#2e2e2e] phc-scroll',
+      'flex-1 min-h-0 max-h-[420px] overflow-y-auto overflow-x-hidden divide-y divide-slate-100 dark:divide-[#2e2e2e] phc-scroll overscroll-contain touch-pan-y',
     emptyState:
       'px-6 py-10 text-center text-xs font-medium text-slate-400 dark:text-[#737373]',
     footer:
-      'bg-slate-50/70 dark:bg-[#141414] px-4 py-2.5 border-t border-slate-200 dark:border-[#2e2e2e] flex justify-between items-center',
+      'bg-slate-50/70 dark:bg-[#141414] px-4 py-2.5 border-t border-slate-200 dark:border-[#2e2e2e] flex justify-between items-center shrink-0',
   },
 
   /** Card surface borders and backgrounds per notification severity */
   card: {
-    bottleneck: 'bg-rose-50/80 dark:bg-rose-950/30 border-l-4 border-rose-600',
-    warning: 'bg-amber-50/80 dark:bg-amber-950/30 border-l-4 border-amber-500',
-    info: 'bg-blue-50/80 dark:bg-blue-950/30 border-l-4 border-blue-600',
+    bottleneck: 'bg-rose-50/80 dark:bg-rose-950/40 border-l-4 border-rose-600 dark:border-rose-500',
+    warning: 'bg-amber-50/80 dark:bg-amber-950/40 border-l-4 border-amber-500 dark:border-amber-400',
+    info: 'bg-blue-50/80 dark:bg-blue-950/40 border-l-4 border-blue-600 dark:border-blue-500',
     notice: 'bg-slate-100/80 dark:bg-[#242424] border-l-4 border-slate-500 dark:border-[#737373]',
   },
 

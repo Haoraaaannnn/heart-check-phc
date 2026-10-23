@@ -68,7 +68,7 @@ export function useSuperadminUsers(): UseSuperadminUsersReturn {
     try {
       const { data, error: fetchErr } = await supabase
         .from('users')
-        .select('auth_id, email, username, role, created_at')
+        .select('id, auth_id, email, username, role, created_at')
         .order('created_at', { ascending: false });
 
       if (fetchErr) throw fetchErr;

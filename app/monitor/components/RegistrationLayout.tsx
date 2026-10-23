@@ -4,11 +4,24 @@ import { Patient } from '@/types/Types';
 import { fetchActiveCounters } from '@/lib/counters';
 import { DEFAULT_COUNTERS } from '@/lib/facilities';
 import { useEffect, useRef, useState } from 'react';
+import { formatTicketForSpeech } from '@/utils/formatTicketSpeech';
 
+import { MONITOR_STYLES } from '@/app/monitor/constants/monitorStyles';
+import { MONITOR_TEXTS } from '@/app/monitor/constants/monitorTexts';
+
+/** Props for {@link RegistrationLayout}. */
 type RegistrationLayoutProps = {
+  /** Patient queue roster for active registration desk intake. */
   patients: Patient[];
 };
 
+/**
+ * Renders the public queue monitor display for registration intake windows.
+ * Dynamically scales across window columns and viewport heights without scrollbars.
+ *
+ * @param props - Component props containing active patient records.
+ * @returns The rendered registration monitor layout element.
+ */
 export function RegistrationLayout({ patients }: RegistrationLayoutProps) {
   const [counters, setCounters] = useState<number[]>(DEFAULT_COUNTERS);
   const announcedPatientsRef = useRef<Set<number>>(new Set());
@@ -69,10 +82,8 @@ export function RegistrationLayout({ patients }: RegistrationLayoutProps) {
     while (pendingAnnouncements.current.length > 0) {
       const item = pendingAnnouncements.current.shift();
       if (item) {
-        const num = item.patient.patientNum;
-        const letter = num.charAt(0);
-        const digits = parseInt(num.slice(1), 10).toString();
-        const message = `Number ${letter} ${digits}, Number ${letter} ${digits}, please proceed to Counter ${item.counterNum}`;
+        const ticket = formatTicketForSpeech(item.patient.patientNum);
+        const message = `Number ${ticket}, Number ${ticket}, please proceed to Counter ${item.counterNum}`;
         await speak(message, 2);
         await new Promise(resolve => setTimeout(resolve, 200));
       }
@@ -104,68 +115,61 @@ export function RegistrationLayout({ patients }: RegistrationLayoutProps) {
   }, [patients, counters]);
 
   return (
-    <div className="p-12 overflow-x-auto">
-      <table className="w-full border-collapse">
-        <thead>
-          <tr className="bg-gray-100 border-b-2 border-gray-200">
-            <th className="px-6 py-5 text-left text-gray-600 text-xl font-semibold uppercase tracking-wider sticky left-0 bg-gray-100">
-              Registration Counters
-            </th>
-            {counters.map(n => (
-              <th
-                key={n}
-                className="px-6 py-5 text-center text-gray-600 text-xl font-semibold uppercase tracking-wider border-l border-gray-200"
-              >
-                Counter {n}
-              </th>
-            ))}
-          </tr>
-        </thead>
-        <tbody>
-          <tr className="border-b border-gray-100">
-            <td className="px-6 py-8 font-bold text-gray-700 text-2xl bg-gray-50 sticky left-0 align-top">
-              Queue Numbers
-            </td>
-            {counters.map(n => {
-              const list = patients.filter(p => p.counter === n);
-              return (
-                <td key={n} className="px-6 py-8 text-center border-l border-gray-100 align-top">
-                  <div className="space-y-3">
-                    {list.map((patient, i) =>
-                      i === 0 ? (
-                        <div
-                          key={patient.id}
-                          className="relative bg-[#cc3535] rounded-3xl p-6 shadow-2xl shadow-red-300 ring-[6px] ring-red-100 scale-110 flex flex-col items-center justify-center gap-1 z-10"
+    <div className={MONITOR_STYLES.registrationLayout.container}>
+      <div className={MONITOR_STYLES.registrationLayout.gridWrapper}>
+        <div
+          className={MONITOR_STYLES.registrationLayout.columnsContainer}
+          style={{ gridTemplateColumns: `repeat(${counters.length}, minmax(0, 1fr))` }}
+        >
+          {counters.map(counterNum => {
+            const counterPatients = patients.filter(p => p.counter === counterNum);
+            const activePatient = counterPatients[0];
+            const waitingPatients = counterPatients.slice(1);
+
+            return (
+              <div key={counterNum} className={MONITOR_STYLES.registrationLayout.counterColumn}>
+                <div className={MONITOR_STYLES.registrationLayout.counterHeader}>
+                  {MONITOR_TEXTS.registrationLayout.counterLabelPrefix}{counterNum}
+                </div>
+
+                <div className={MONITOR_STYLES.registrationLayout.cardBody}>
+                  {activePatient ? (
+                    <div className={MONITOR_STYLES.registrationLayout.nowServingCard}>
+                      <span className={MONITOR_STYLES.registrationLayout.nowServingBadge}>
+                        {MONITOR_TEXTS.registrationLayout.nowServingBadge}
+                      </span>
+                      <span className={MONITOR_STYLES.registrationLayout.nowServingTicket}>
+                        {activePatient.patientNum}
+                      </span>
+                      <div
+                        className={MONITOR_STYLES.registrationLayout.activePulseDot}
+                        aria-hidden="true"
+                      />
+                    </div>
+                  ) : (
+                    <div className={MONITOR_STYLES.registrationLayout.emptyCounterCard}>
+                      {MONITOR_TEXTS.registrationLayout.emptyPlaceholder}
+                    </div>
+                  )}
+
+                  {waitingPatients.length > 0 && (
+                    <div className={MONITOR_STYLES.registrationLayout.waitingRow}>
+                      {waitingPatients.map(wp => (
+                        <span
+                          key={wp.id}
+                          className={MONITOR_STYLES.registrationLayout.waitingBadge}
                         >
-                          <span className="text-white/80 text-sm font-black uppercase tracking-widest">
-                            Now Serving
-                          </span>
-                          <span className="text-white font-black text-7xl tabular-nums leading-none drop-shadow-md">
-                            {patient.patientNum}
-                          </span>
-                          <div className="absolute top-3 right-3 w-4 h-4 rounded-full bg-green-300 ring-2 ring-white animate-pulse" />
-                        </div>
-                      ) : (
-                        <div
-                          key={patient.id}
-                          className="bg-white rounded-2xl p-4 shadow-sm border border-gray-100 flex items-center justify-center opacity-70"
-                        >
-                          <span className="text-gray-400 font-black text-2xl tabular-nums">
-                            {patient.patientNum}
-                          </span>
-                        </div>
-                      )
-                    )}
-                    {list.length === 0 && (
-                      <div className="text-gray-300 text-xl">—</div>
-                    )}
-                  </div>
-                </td>
-              );
-            })}
-          </tr>
-        </tbody>
-      </table>
+                          {wp.patientNum}
+                        </span>
+                      ))}
+                    </div>
+                  )}
+                </div>
+              </div>
+            );
+          })}
+        </div>
+      </div>
     </div>
   );
 }

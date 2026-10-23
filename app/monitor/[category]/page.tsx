@@ -1,4 +1,15 @@
 'use client';
+
+/**
+ * @fileoverview Dynamic department and service queue monitor page (/monitor/[category]).
+ *
+ * Renders real-time patient queue visualization for waiting areas and clinic hallways.
+ * Enforces zero scrolling and fluid viewport height adaptability across all monitor
+ * screen sizes (Full HD, 4K, 720p, laptops, and tablets).
+ *
+ * @module app/monitor/[category]/page
+ */
+
 import { useState, useEffect } from 'react';
 import { useParams, useRouter } from 'next/navigation';
 import { supabase } from '@/lib/supabase';
@@ -10,6 +21,7 @@ import { StartScreen } from '@/app/monitor/components/StartScreen';
 import { RegistrationLayout } from '@/app/monitor/components/RegistrationLayout';
 import { useMonitorData } from '@/app/monitor/hooks/useMonitorData';
 import { useRealtimeSubscription } from '@/app/monitor/hooks/useRealtimeSubscription';
+import { MONITOR_STYLES } from '@/app/monitor/constants/monitorStyles';
 
 
 export default function CategoryMonitorPage() {
@@ -96,9 +108,11 @@ export default function CategoryMonitorPage() {
 
   if (isRegistration) {
     return (
-      <div className="min-h-screen bg-white font-sans">
+      <div className={MONITOR_STYLES.viewport.container}>
         <Header title="Registration" currentTime={currentTime} />
-        <RegistrationLayout patients={registrationPatients} />
+        <main className={MONITOR_STYLES.viewport.main}>
+          <RegistrationLayout patients={registrationPatients} />
+        </main>
         <Footer />
       </div>
     );
@@ -106,29 +120,33 @@ export default function CategoryMonitorPage() {
 
   if (!isTableLayoutService) {
     return (
-      <div className="min-h-screen bg-white font-sans">
+      <div className={MONITOR_STYLES.viewport.container}>
         <Header title={displayTitle} currentTime={currentTime} />
-        <PairedLayout
-          title={displayTitle}
-          pairedData={getPairedData()}
-          formatCubicleDisplay={formatCubicleDisplay}
-          cubicleDoctorMap={cubicleDoctorMap}
-        />
+        <main className={MONITOR_STYLES.viewport.main}>
+          <PairedLayout
+            title={displayTitle}
+            pairedData={getPairedData()}
+            formatCubicleDisplay={formatCubicleDisplay}
+            cubicleDoctorMap={cubicleDoctorMap}
+          />
+        </main>
         <Footer />
       </div>
     );
   }
 
   return (
-    <div className="min-h-screen bg-white font-sans">
+    <div className={MONITOR_STYLES.viewport.container}>
       <Header title={displayTitle} currentTime={currentTime} />
-      <TableLayout
-        title={displayTitle}
-        cubicles={cubicles}
-        assignedPatients={assignedPatients}
-        formatCubicleDisplay={formatCubicleDisplay}
-        cubicleDoctorMap={cubicleDoctorMap}
-      />
+      <main className={MONITOR_STYLES.viewport.main}>
+        <TableLayout
+          title={displayTitle}
+          cubicles={cubicles}
+          assignedPatients={assignedPatients}
+          formatCubicleDisplay={formatCubicleDisplay}
+          cubicleDoctorMap={cubicleDoctorMap}
+        />
+      </main>
       <Footer />
     </div>
   );

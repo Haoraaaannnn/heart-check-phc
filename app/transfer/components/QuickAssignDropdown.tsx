@@ -10,11 +10,15 @@
  * - Weak signal resilience: Explicit button-level feedback eliminates user confusion during network latency without blocking modals.
  * - Direct station selection: Lists all active cubicles with doctor assignment and live capacity.
  * - Single-tap confirmation: Tapping an available cubicle commits the assignment and dismisses immediately.
- * - Clean popover aesthetics: Subtle light backdrop so the Kanban board remains visible behind it.
  * - Auto-dismiss mechanics: Closes on outside pointer down, backdrop tap, or Escape key.
- * - Zero lingering UI: Guarantees no floating context banners remain stuck on the workstation viewport.
+ * - Strict Separation of Concerns: Consumes centralized styles from quickAssignStyles and texts from transferTexts.
  *
- * Adheres strictly to AGENTS.md rules with centralized texts, full JSDoc, and zero emojis.
+ * @remarks
+ * Conforms to AGENTS.md:
+ * - High-contrast solid clinical surfaces (#1a1a1a, #141414, #242424, #2e2e2e).
+ * - Centralized style dictionary in constants/designs/transferStyles.ts.
+ * - Centralized text copy in constants/texts/transferTexts.ts.
+ * - Strictly zero emojis in code, comments, and strings.
  *
  * @module app/transfer/components/QuickAssignDropdown
  */
@@ -24,7 +28,9 @@
 import React, { useEffect, useRef, useState } from 'react';
 import { Cubicle, Patient } from '@/types/Types';
 import { MAX_PATIENTS_PER_CUBICLE } from '@/app/transfer/lib/constants';
-import { transferTexts } from '@/app/transfer/constants/transferTexts';
+import { transferTexts } from '@/constants/texts/transferTexts';
+import { quickAssignStyles } from '@/constants/designs/transferStyles';
+import { formatTicketForSpeech } from '@/utils/formatTicketSpeech';
 
 /**
  * Props for {@link QuickAssignDropdown}.
@@ -104,7 +110,6 @@ export function QuickAssignDropdown({
   currentCubicleNum,
   onMoveBackToQueue,
   onSpeak,
-  categoryName,
 }: QuickAssignDropdownProps) {
   const panelRef = useRef<HTMLDivElement>(null);
   const [pendingTarget, setPendingTarget] = useState<string | null>(null);
@@ -135,7 +140,9 @@ export function QuickAssignDropdown({
   }, [pendingTarget, onClose]);
 
   const isFromCubicle = sourceType === 'cubicle';
-  const availableCubicles = cubicles.filter(c => !currentCubicleNum || c.cubicleNum !== currentCubicleNum);
+  const availableCubicles = cubicles.filter(
+    c => !currentCubicleNum || c.cubicleNum !== currentCubicleNum
+  );
 
   /**
    * Dispatches assignment with in-button spinner and closes the modal.
@@ -174,11 +181,9 @@ export function QuickAssignDropdown({
     if (!onSpeak || pendingTarget) return;
     setPendingTarget('call');
     try {
-      const num = patient.patientNum || '';
-      const letter = num ? num.charAt(0) : '';
-      const digits = num.length > 1 ? parseInt(num.slice(1), 10).toString() : '';
+      const ticket = formatTicketForSpeech(patient.patientNum);
       onSpeak(
-        `Number ${letter} ${digits}, Number ${letter} ${digits}, please proceed to ${currentCubicleNum}`,
+        `Number ${ticket}, Number ${ticket}, please proceed to ${currentCubicleNum}`,
         patient.id
       );
       onClose();
@@ -188,32 +193,52 @@ export function QuickAssignDropdown({
     }
   };
 
+  /**
+   * Safely dismisses the quick assign dialog unless an assignment is in flight.
+   */
+  const handleClose = (e?: React.SyntheticEvent | Event) => {
+    if (e) {
+      e.stopPropagation();
+    }
+    if (pendingTarget) return;
+    onClose();
+  };
+
   return (
     <div
       role="dialog"
       aria-modal="true"
       aria-labelledby="quick-assign-title"
-      className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-slate-900/20 dark:bg-black/60 backdrop-blur-[2px] animate-in fade-in duration-150"
+      onClick={(e) => {
+        if (e.target === e.currentTarget) {
+          handleClose(e);
+        }
+      }}
+      onPointerDown={(e) => {
+        if (e.target === e.currentTarget) {
+          handleClose(e);
+        }
+      }}
+      className={quickAssignStyles.backdrop}
     >
-      <div
-        ref={panelRef}
-        className="w-full max-w-sm sm:max-w-md bg-white dark:bg-[#1a1a1a] rounded-2xl shadow-2xl border border-slate-200 dark:border-[#2e2e2e] overflow-hidden flex flex-col max-h-[85vh] animate-in zoom-in-95 duration-150"
-      >
+      <div ref={panelRef} className={quickAssignStyles.dialogCard}>
         {/* Dropdown Header */}
-        <div className="px-5 py-3.5 border-b border-slate-100 dark:border-[#2e2e2e] flex items-start justify-between gap-3 bg-slate-50/90 dark:bg-[#141414]">
+        <div className={quickAssignStyles.header}>
           <div className="min-w-0">
             <div className="flex items-center gap-2">
-              <span className="px-2.5 py-1 rounded-lg bg-[#cc3535] text-white font-black text-sm tracking-tight shadow-2xs">
+              <span className={quickAssignStyles.patientBadge}>
                 {patient.patientNum}
               </span>
               <div className="min-w-0">
                 <h3
                   id="quick-assign-title"
-                  className="text-sm font-bold text-slate-900 dark:text-[#f5f5f5] truncate"
+                  className={quickAssignStyles.title}
                 >
-                  {isFromCubicle ? transferTexts.managePatientTitle : transferTexts.quickAssignTitle}
+                  {isFromCubicle
+                    ? transferTexts.managePatientTitle
+                    : transferTexts.quickAssignTitle}
                 </h3>
-                <p className="text-[11px] text-slate-500 dark:text-[#a3a3a3] truncate mt-0.5">
+                <p className={quickAssignStyles.subtitle}>
                   {isFromCubicle
                     ? transferTexts.managePatientSubtitle
                     : transferTexts.quickAssignSubtitle}
@@ -224,64 +249,100 @@ export function QuickAssignDropdown({
 
           <button
             type="button"
-            onClick={onClose}
+            onClick={handleClose}
+            onPointerDown={handleClose}
             disabled={pendingTarget !== null}
-            className="w-8 h-8 rounded-lg text-slate-400 dark:text-[#737373] hover:text-slate-700 dark:hover:text-[#f5f5f5] hover:bg-slate-200/60 dark:hover:bg-[#242424] flex items-center justify-center transition cursor-pointer shrink-0 disabled:opacity-40"
+            className={quickAssignStyles.closeBtn}
             aria-label={transferTexts.closeBtn}
           >
-            <svg className="w-4 h-4" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-              <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2.2} d="M6 18L18 6M6 6l12 12" />
+            <svg
+              className="w-4 h-4 pointer-events-none"
+              fill="none"
+              viewBox="0 0 24 24"
+              stroke="currentColor"
+            >
+              <path
+                strokeLinecap="round"
+                strokeLinejoin="round"
+                strokeWidth={2.2}
+                d="M6 18L18 6M6 6l12 12"
+              />
             </svg>
           </button>
         </div>
 
         {/* Dropdown Body: Available Stations */}
-        <div className="p-3.5 overflow-y-auto space-y-2 phc-scroll flex-1">
+        <div className={quickAssignStyles.bodyList}>
           {/* Station Management Actions (if tapped from inside a cubicle) */}
           {isFromCubicle && currentCubicleNum && (
-            <div className="mb-3 pb-3 border-b border-slate-200 dark:border-[#2e2e2e] space-y-2">
+            <div className={quickAssignStyles.stationManagementSection}>
               {onMoveBackToQueue && (
                 <button
                   type="button"
                   disabled={pendingTarget !== null}
                   onClick={handleMoveBackQueue}
-                  className={`w-full flex items-center justify-between p-3 rounded-xl border transition-all text-left shadow-2xs select-none ${
+                  className={`${quickAssignStyles.actionBtnBase} ${
                     pendingTarget === 'queue'
-                      ? 'border-amber-400 bg-amber-100/90 dark:bg-amber-900/80 cursor-wait'
+                      ? quickAssignStyles.queueBtnActive
                       : pendingTarget !== null
-                      ? 'border-amber-100 dark:border-amber-950 bg-amber-50/30 dark:bg-amber-950/20 opacity-40 cursor-not-allowed'
-                      : 'border-amber-200 dark:border-amber-900/60 bg-amber-50/60 dark:bg-amber-950/40 hover:bg-amber-100/70 dark:hover:bg-amber-900/60 text-amber-950 dark:text-amber-100 cursor-pointer active:scale-[0.99] group'
+                      ? quickAssignStyles.queueBtnDisabled
+                      : quickAssignStyles.queueBtnNormal
                   }`}
                 >
                   <div className="flex items-center gap-3 min-w-0 flex-1 overflow-hidden">
-                    <div className="w-9 h-9 rounded-xl bg-amber-600 text-white flex items-center justify-center font-bold text-sm shrink-0 shadow-2xs">
+                    <div className={quickAssignStyles.actionIconBoxAmber}>
                       {pendingTarget === 'queue' ? (
-                        <svg className="w-5 h-5 animate-spin" fill="none" viewBox="0 0 24 24">
-                          <circle className="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" strokeWidth="4" />
-                          <path className="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4zm2 5.291A7.962 7.962 0 014 12H0c0 3.042 1.135 5.824 3 7.938l3-2.647z" />
+                        <svg
+                          className="w-5 h-5 animate-spin"
+                          fill="none"
+                          viewBox="0 0 24 24"
+                        >
+                          <circle
+                            className="opacity-25"
+                            cx="12"
+                            cy="12"
+                            r="10"
+                            stroke="currentColor"
+                            strokeWidth="4"
+                          />
+                          <path
+                            className="opacity-75"
+                            fill="currentColor"
+                            d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4zm2 5.291A7.962 7.962 0 014 12H0c0 3.042 1.135 5.824 3 7.938l3-2.647z"
+                          />
                         </svg>
                       ) : (
-                        <svg className="w-5 h-5" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-                          <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2.2} d="M11 17l-5-5m0 0l5-5m-5 5h12" />
+                        <svg
+                          className="w-5 h-5"
+                          fill="none"
+                          viewBox="0 0 24 24"
+                          stroke="currentColor"
+                        >
+                          <path
+                            strokeLinecap="round"
+                            strokeLinejoin="round"
+                            strokeWidth={2.2}
+                            d="M11 17l-5-5m0 0l5-5m-5 5h12"
+                          />
                         </svg>
                       )}
                     </div>
                     <div className="min-w-0">
-                      <p className="text-sm font-bold text-slate-900 dark:text-[#f5f5f5] group-hover:text-amber-950 dark:group-hover:text-amber-100 transition-colors">
+                      <p className={quickAssignStyles.actionTitle}>
                         {transferTexts.moveToQueueBtn}
                       </p>
-                      <p className="text-xs text-amber-700 dark:text-amber-300">
+                      <p className={quickAssignStyles.actionSubtitleAmber}>
                         {transferTexts.moveToQueueSubtitle}
                       </p>
                     </div>
                   </div>
                   {pendingTarget === 'queue' ? (
-                    <span className="text-[11px] font-bold px-2 py-0.5 rounded-md bg-amber-200 dark:bg-amber-900 text-amber-900 dark:text-amber-100 flex items-center gap-1.5 shrink-0 animate-pulse">
+                    <span className={quickAssignStyles.statusBadgeAmberPending}>
                       <span className="w-1.5 h-1.5 rounded-full bg-amber-700 animate-ping" />
                       {transferTexts.movingToQueue}
                     </span>
                   ) : (
-                    <span className="text-[11px] font-semibold px-2 py-0.5 rounded-md bg-amber-200 dark:bg-amber-950/70 text-amber-800 dark:text-amber-300 shrink-0">
+                    <span className={quickAssignStyles.statusBadgeAmberNormal}>
                       {transferTexts.badgeReturn}
                     </span>
                   )}
@@ -293,50 +354,75 @@ export function QuickAssignDropdown({
                   type="button"
                   disabled={pendingTarget !== null}
                   onClick={handleSpeakAction}
-                  className={`w-full flex items-center justify-between p-3 rounded-xl border transition-all text-left shadow-2xs select-none ${
+                  className={`${quickAssignStyles.actionBtnBase} ${
                     pendingTarget === 'call'
-                      ? 'border-blue-400 bg-blue-100/90 dark:bg-blue-900/80 cursor-wait'
+                      ? quickAssignStyles.callBtnActive
                       : pendingTarget !== null
-                      ? 'border-blue-100 dark:border-blue-950 bg-blue-50/30 dark:bg-blue-950/20 opacity-40 cursor-not-allowed'
-                      : 'border-blue-200 dark:border-blue-900/60 bg-blue-50/60 dark:bg-blue-950/40 hover:bg-blue-100/70 dark:hover:bg-blue-900/60 text-blue-950 dark:text-blue-100 cursor-pointer active:scale-[0.99] group'
+                      ? quickAssignStyles.callBtnDisabled
+                      : quickAssignStyles.callBtnNormal
                   }`}
                 >
                   <div className="flex items-center gap-3 min-w-0 flex-1 overflow-hidden">
-                    <div className="w-9 h-9 rounded-xl bg-blue-600 text-white flex items-center justify-center font-bold text-sm shrink-0 shadow-2xs">
+                    <div className={quickAssignStyles.actionIconBoxBlue}>
                       {pendingTarget === 'call' ? (
-                        <svg className="w-5 h-5 animate-spin" fill="none" viewBox="0 0 24 24">
-                          <circle className="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" strokeWidth="4" />
-                          <path className="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4zm2 5.291A7.962 7.962 0 014 12H0c0 3.042 1.135 5.824 3 7.938l3-2.647z" />
+                        <svg
+                          className="w-5 h-5 animate-spin"
+                          fill="none"
+                          viewBox="0 0 24 24"
+                        >
+                          <circle
+                            className="opacity-25"
+                            cx="12"
+                            cy="12"
+                            r="10"
+                            stroke="currentColor"
+                            strokeWidth="4"
+                          />
+                          <path
+                            className="opacity-75"
+                            fill="currentColor"
+                            d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4zm2 5.291A7.962 7.962 0 014 12H0c0 3.042 1.135 5.824 3 7.938l3-2.647z"
+                          />
                         </svg>
                       ) : (
-                        <svg className="w-5 h-5" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-                          <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M15.536 8.464a5 5 0 010 7.072m2.828-9.9a9 9 0 010 12.728M5.586 15H4a1 1 0 01-1-1v-4a1 1 0 011-1h1.586l4.707-4.707C10.923 3.663 12 4.109 12 5v14c0 .891-1.077 1.337-1.707.707L5.586 15z" />
+                        <svg
+                          className="w-5 h-5"
+                          fill="none"
+                          viewBox="0 0 24 24"
+                          stroke="currentColor"
+                        >
+                          <path
+                            strokeLinecap="round"
+                            strokeLinejoin="round"
+                            strokeWidth={2}
+                            d="M15.536 8.464a5 5 0 010 7.072m2.828-9.9a9 9 0 010 12.728M5.586 15H4a1 1 0 01-1-1v-4a1 1 0 011-1h1.586l4.707-4.707C10.923 3.663 12 4.109 12 5v14c0 .891-1.077 1.337-1.707.707L5.586 15z"
+                          />
                         </svg>
                       )}
                     </div>
                     <div className="min-w-0">
-                      <p className="text-sm font-bold text-slate-900 dark:text-[#f5f5f5] group-hover:text-blue-950 dark:group-hover:text-blue-100 transition-colors">
+                      <p className={quickAssignStyles.actionTitle}>
                         {transferTexts.callPatientAudioBtn}
                       </p>
-                      <p className="text-xs text-blue-700 dark:text-blue-300">
+                      <p className={quickAssignStyles.actionSubtitleBlue}>
                         {transferTexts.callPatientAudioSubtitle}
                       </p>
                     </div>
                   </div>
                   {pendingTarget === 'call' ? (
-                    <span className="text-[11px] font-bold px-2 py-0.5 rounded-md bg-blue-200 dark:bg-blue-900 text-blue-900 dark:text-blue-100 flex items-center gap-1.5 shrink-0 animate-pulse">
+                    <span className={quickAssignStyles.statusBadgeBluePending}>
                       <span className="w-1.5 h-1.5 rounded-full bg-blue-700 animate-ping" />
                       {transferTexts.callingBtn}
                     </span>
                   ) : (
-                    <span className="text-[11px] font-semibold px-2 py-0.5 rounded-md bg-blue-200 dark:bg-blue-950/70 text-blue-800 dark:text-blue-300 shrink-0">
+                    <span className={quickAssignStyles.statusBadgeBlueNormal}>
                       {transferTexts.badgeSpeaker}
                     </span>
                   )}
                 </button>
               )}
 
-              <p className="text-[11px] font-bold text-slate-500 dark:text-[#a3a3a3] uppercase tracking-wider pt-1.5 px-1">
+              <p className={quickAssignStyles.transferHeading}>
                 {transferTexts.moveToOtherCubicleHeading}
               </p>
             </div>
@@ -344,12 +430,13 @@ export function QuickAssignDropdown({
 
           {/* List of Destination Stations */}
           {availableCubicles.length === 0 ? (
-            <p className="text-xs text-slate-500 dark:text-[#a3a3a3] text-center py-6">
+            <p className={quickAssignStyles.emptyStationsNotice}>
               {transferTexts.noCubiclesConfigured}
             </p>
           ) : (
             availableCubicles.map(cubicle => {
-              const occupants = (assignedPatients && assignedPatients[cubicle.cubicleNum]?.length) || 0;
+              const occupants =
+                (assignedPatients && assignedPatients[cubicle.cubicleNum]?.length) || 0;
               const isFull = occupants >= MAX_PATIENTS_PER_CUBICLE;
               const doctorName = cubicleDoctorMap[cubicle.cubicleNum];
               const isAssigningThis = pendingTarget === cubicle.cubicleNum;
@@ -360,31 +447,46 @@ export function QuickAssignDropdown({
                   type="button"
                   disabled={isFull || pendingTarget !== null}
                   onClick={() => handleAssignStation(cubicle.cubicleNum)}
-                  className={`w-full flex items-center justify-between p-3 rounded-xl border transition-all text-left min-h-[54px] select-none ${
+                  className={`${quickAssignStyles.stationRowBase} ${
                     isAssigningThis
-                      ? 'border-emerald-500 bg-emerald-100/90 dark:bg-emerald-950/70 shadow-2xs cursor-wait'
+                      ? quickAssignStyles.stationRowAssigning
                       : isFull
-                      ? 'border-slate-200 dark:border-[#2e2e2e] bg-slate-50/70 dark:bg-[#1a1a1a]/50 opacity-60 cursor-not-allowed'
+                      ? quickAssignStyles.stationRowFull
                       : pendingTarget !== null
-                      ? 'border-slate-100 dark:border-[#242424] bg-slate-50/40 dark:bg-[#1a1a1a]/30 opacity-40 cursor-not-allowed'
-                      : 'border-slate-200/90 dark:border-[#2e2e2e] bg-white dark:bg-[#1f1f1f] hover:border-emerald-500 dark:hover:border-emerald-500 hover:bg-emerald-50/40 dark:hover:bg-emerald-950/30 cursor-pointer group'
+                      ? quickAssignStyles.stationRowDisabled
+                      : quickAssignStyles.stationRowNormal
                   }`}
                 >
                   <div className="flex items-center gap-3 min-w-0 flex-1 overflow-hidden">
                     <span
-                      className={`w-9 h-9 rounded-xl flex items-center justify-center font-black text-xs shrink-0 shadow-2xs overflow-hidden select-none ${
+                      className={
                         isFull
-                          ? 'bg-slate-200 dark:bg-[#2e2e2e] text-slate-500 dark:text-[#737373]'
+                          ? quickAssignStyles.badgeFull
                           : isAssigningThis
-                          ? 'bg-emerald-600 text-white'
-                          : 'bg-emerald-100 dark:bg-emerald-950/60 text-emerald-800 dark:text-emerald-300 border border-emerald-300 dark:border-emerald-900'
-                      }`}
+                          ? quickAssignStyles.badgeAssigning
+                          : quickAssignStyles.badgeAvailable
+                      }
                       title={cubicle.cubicleNum}
                     >
                       {isAssigningThis ? (
-                        <svg className="w-5 h-5 animate-spin" fill="none" viewBox="0 0 24 24">
-                          <circle className="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" strokeWidth="4" />
-                          <path className="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4zm2 5.291A7.962 7.962 0 014 12H0c0 3.042 1.135 5.824 3 7.938l3-2.647z" />
+                        <svg
+                          className="w-5 h-5 animate-spin"
+                          fill="none"
+                          viewBox="0 0 24 24"
+                        >
+                          <circle
+                            className="opacity-25"
+                            cx="12"
+                            cy="12"
+                            r="10"
+                            stroke="currentColor"
+                            strokeWidth="4"
+                          />
+                          <path
+                            className="opacity-75"
+                            fill="currentColor"
+                            d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4zm2 5.291A7.962 7.962 0 014 12H0c0 3.042 1.135 5.824 3 7.938l3-2.647z"
+                          />
                         </svg>
                       ) : (
                         formatCubicleBadge(cubicle.cubicleNum)
@@ -392,13 +494,14 @@ export function QuickAssignDropdown({
                     </span>
 
                     <div className="min-w-0 flex-1">
-                      <p className="text-xs font-bold text-slate-900 dark:text-[#f5f5f5] truncate group-hover:text-emerald-950 dark:group-hover:text-emerald-200 transition-colors">
-                        {cubicle.room && !cubicle.cubicleNum.toLowerCase().startsWith('room')
+                      <p className={quickAssignStyles.stationTitle}>
+                        {cubicle.room &&
+                        !cubicle.cubicleNum.toLowerCase().startsWith('room')
                           ? `${transferTexts.roomPrefix} ${cubicle.room} · `
                           : ''}
                         {cubicle.cubicleNum}
                       </p>
-                      <p className="text-[11px] text-slate-500 dark:text-[#a3a3a3] truncate mt-0.5">
+                      <p className={quickAssignStyles.stationDoctor}>
                         {doctorName
                           ? `${transferTexts.doctorPrefix} ${doctorName}`
                           : transferTexts.unassignedDoctor}
@@ -409,31 +512,30 @@ export function QuickAssignDropdown({
                   {/* Occupancy Badge & Assign Action */}
                   <div className="shrink-0 flex items-center gap-2 ml-2">
                     <span
-                      className={`px-2 py-0.5 rounded-md text-[10px] font-bold tracking-tight ${
+                      className={
                         isFull
-                          ? 'bg-rose-100 dark:bg-rose-950/60 text-rose-700 dark:text-rose-300 border border-rose-200 dark:border-rose-900'
+                          ? quickAssignStyles.occupancyBadgeFull
                           : occupants === 0
-                          ? 'bg-emerald-100 dark:bg-emerald-950/60 text-emerald-800 dark:text-emerald-300 border border-emerald-200 dark:border-emerald-900'
-                          : 'bg-amber-100 dark:bg-amber-950/60 text-amber-800 dark:text-amber-300 border border-amber-200 dark:border-amber-900'
-                      }`}
+                          ? quickAssignStyles.occupancyBadgeZero
+                          : quickAssignStyles.occupancyBadgePartial
+                      }
                     >
                       {isFull
                         ? transferTexts.occupancyFull
                         : transferTexts.occupancyLabel(occupants, MAX_PATIENTS_PER_CUBICLE)}
                     </span>
 
-                    {!isFull && (
-                      isAssigningThis ? (
-                        <span className="text-xs font-bold px-2.5 py-0.5 rounded-md bg-emerald-600 text-white shrink-0 shadow-2xs flex items-center gap-1.5 animate-pulse">
+                    {!isFull &&
+                      (isAssigningThis ? (
+                        <span className={quickAssignStyles.assignPillInFlight}>
                           <span className="w-1.5 h-1.5 rounded-full bg-white animate-ping" />
                           {transferTexts.assigningStation}
                         </span>
                       ) : (
-                        <span className="text-xs font-bold px-2 py-0.5 rounded-md bg-emerald-600 text-white shrink-0 shadow-2xs group-hover:bg-emerald-700 transition-colors">
+                        <span className={quickAssignStyles.assignPillNormal}>
                           {transferTexts.badgeAssign}
                         </span>
-                      )
-                    )}
+                      ))}
                   </div>
                 </button>
               );
@@ -442,15 +544,16 @@ export function QuickAssignDropdown({
         </div>
 
         {/* Footer */}
-        <div className="px-4 py-2.5 bg-slate-50/80 dark:bg-[#141414] border-t border-slate-100 dark:border-[#2e2e2e] flex items-center justify-between">
-          <span className="text-[11px] text-slate-400 dark:text-[#737373] font-medium">
+        <div className={quickAssignStyles.footer}>
+          <span className={quickAssignStyles.footerHint}>
             {transferTexts.dismissHint}
           </span>
           <button
             type="button"
-            onClick={onClose}
+            onClick={handleClose}
+            onPointerDown={handleClose}
             disabled={pendingTarget !== null}
-            className="px-3 py-1.5 rounded-lg text-xs font-bold text-slate-600 dark:text-[#a3a3a3] hover:text-slate-900 dark:hover:text-[#f5f5f5] bg-white dark:bg-[#242424] hover:bg-slate-100 dark:hover:bg-[#2e2e2e] border border-slate-200 dark:border-[#2e2e2e] shadow-2xs transition cursor-pointer disabled:opacity-40"
+            className={quickAssignStyles.footerCloseBtn}
           >
             {transferTexts.closeBtn}
           </button>

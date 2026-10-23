@@ -126,10 +126,6 @@ export function SuperAdminSidebar({
           <i className={`bx bx-grid-alt ${S.navIcon}`} aria-hidden="true" />
           <span>{T.selectScreen}</span>
         </Link>
-        <div className={S.statusBadge}>
-          <span className={S.statusDot} />
-          <span>{T.systemStatus}</span>
-        </div>
         <div className={S.footerText}>{T.systemFooter}</div>
       </div>
     </>

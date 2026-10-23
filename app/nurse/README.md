@@ -1,6 +1,6 @@
 # Nurse Station Module Developer Guide
 
-**Last Updated:** 2026-10-19
+**Last Updated:** 2026-10-22
 
 This document provides architectural standards and an exhaustive developer mapping for the Nurse Station module in the Heart Check PHC application.
 
@@ -55,12 +55,12 @@ Use this table to quickly identify the exact file to modify for any given requir
 | Banner messages & offline sync alerts | `constants/connectionTexts.ts` | Shared across nurse and transfer dashboards |
 | Layout dimension tokens (no hardcoded bg colors) | `app/nurse/constants/nurse.ts` | Layout width and column dimension tokens |
 | Clinical stage progression actions | `app/nurse/hooks/useNurseActions.ts` | Optimistic mutations with in-flight stage pinning and outbox persistence |
-| Patient data loading & cubicle scoping | `app/nurse/hooks/useNurseData.ts` | Cached cubicle discovery, request sequencing, in-flight mutation overlay, and 0ms realtime patching |
+| Patient data loading & cubicle scoping | `app/nurse/hooks/useNurseData.ts` | Reconciles active hospital services with assigned cubicles/services, caches cubicle discovery, sequences requests, pins in-flight mutations, and applies 0ms realtime patching |
 | Offline queue outbox engine | `lib/offlineQueue.ts` | IndexedDB persistent outbox queue and flush worker |
 | Offline synchronization React hook | `hooks/useOfflineQueue.ts` | Handles re-sync triggers on reconnect and boot |
 | Drag-and-drop pointer interactions | `app/nurse/hooks/useNurseDragAndDrop.ts` | Pointer events and stage validation rules |
 | Tablet tap-to-select interactions | `app/nurse/hooks/useNurseSelection.ts` | Mobile/tablet selection workflow |
-| Realtime subscription and polling | `app/nurse/hooks/useRealtimeSubscription.ts` | Supabase Realtime channel coordination with 0ms payload dispatch, 50ms debounce, 5s polling fallback, 2s hysteresis, and 500ms trailing-edge throttle |
+| Realtime subscription and polling | `app/nurse/hooks/useRealtimeSubscription.ts` | Supabase Realtime channel coordination for patients, cubicle, services, user_services, and user_cubicles with 0ms payload dispatch, 50ms debounce, 5s polling fallback, 2s hysteresis, and 500ms trailing-edge throttle |
 | Main page coordination | `app/nurse/page.tsx` | Main orchestrator assembling subcomponents |
 | Board columns and cards | `app/nurse/components/NurseBoard.tsx` | 3-column clinical pipeline Kanban |
 | Patient card & quick actions | `app/nurse/components/NursePatientCard.tsx` | Clinical card with in-button loading spinners for weak signal feedback |
@@ -70,6 +70,7 @@ Use this table to quickly identify the exact file to modify for any given requir
 | Audio announcements (TTS) | `app/nurse/page.tsx` | Deepgram Text-to-Speech integration |
 | Patient types and schemas | `types/Types.ts` | Core domain model for patient records |
 | Clinical stages and DB status mapping | `app/nurse/types/nurse.ts` | `ClinicalStage` definitions and `stageToDbStatus` / `dbStatusToStage` bidirectional normalization |
+| Server API patient queue & stage mutations | `app/api/nurse/patients/route.ts` | Server-side authenticated patient queue retrieval (GET) and stage mutations (PATCH) bypassing client RLS null-cubicle drops |
 
 ---
 
