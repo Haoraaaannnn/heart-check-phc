@@ -23,6 +23,8 @@ import { TransferStyle } from '@/app/transfer/constants/transfer';
 import { registrationCounterStyles } from '@/constants/designs/transferStyles';
 import { SelectedTransferPatient } from '@/app/transfer/types/transfer';
 import { DragHandle } from '@/app/transfer/components/DragHandle';
+import { useStationBreaks } from '@/hooks/useStationBreaks';
+import { StationBreakButton } from '@/components/reusables/StationBreakButton';
 
 /**
  * Props for {@link RegistrationCounterSection}.
@@ -72,6 +74,7 @@ export function RegistrationCounterSection({
 }: RegistrationCounterSectionProps) {
   const counters = allowedCounters && allowedCounters.length > 0 ? allowedCounters : DEFAULT_COUNTERS;
   const safePatients = Array.isArray(patients) ? patients : [];
+  const breaks = useStationBreaks();
 
   return (
     <div className={registrationCounterStyles.sectionCard}>
@@ -91,6 +94,7 @@ export function RegistrationCounterSection({
         </span>
       </div>
 
+      {breaks.error && <p role="alert" className="text-sm text-red-700 dark:text-red-300 mb-2">{breaks.error}</p>}
       {/* Non-scrollable Horizontal Counters Grid */}
       {counters.length === 0 ? (
         <p className={registrationCounterStyles.emptyNotice}>
@@ -109,10 +113,12 @@ export function RegistrationCounterSection({
 
             const isOver = dragOverCounter === counterNum;
             const topPatient = counterPatients[0];
+            const station = breaks.stations.find(item => item.kind === 'counter' && item.id === counterNum);
             const waitingPatients = counterPatients.slice(1);
 
             // Check if this counter is an eligible target to receive selected counter patient
             const isTargetEligible =
+              !station?.onBreak &&
               Boolean(selectedPatient) &&
               selectedPatient?.sourceType === 'counter' &&
               selectedPatient.sourceId !== counterNum;
@@ -132,7 +138,7 @@ export function RegistrationCounterSection({
             return (
               <div
                 key={counterNum}
-                data-counter={counterNum}
+                data-counter={station?.onBreak ? undefined : counterNum}
                 onClick={handleCounterClick}
                 style={isTargetEligible ? TransferStyle.assignTargetCard : undefined}
                 className={`${registrationCounterStyles.counterCardBase} ${cardStateClass}`}
@@ -152,6 +158,7 @@ export function RegistrationCounterSection({
                       {counterPatients.length} {counterPatients.length === 1 ? 'pt' : 'pts'}
                     </span>
                   )}
+                  {station && <StationBreakButton station={station} busy={breaks.busy !== null} onToggle={() => void breaks.toggle(station)} />}
                 </div>
 
                 {/* Primary Patient at Counter Window */}
@@ -215,7 +222,7 @@ export function RegistrationCounterSection({
                   <div className={registrationCounterStyles.availableLabel}>
                     {isTargetEligible
                       ? transferTexts.counterSelectTargetHint
-                      : transferTexts.cubicleAvailable}
+                      : station?.onBreak ? 'On break' : transferTexts.cubicleAvailable}
                   </div>
                 )}
 

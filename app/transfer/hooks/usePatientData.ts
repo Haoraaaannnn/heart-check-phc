@@ -277,8 +277,9 @@ export function usePatientData(pendingRef?: React.MutableRefObject<Patient[]>) {
     }
     for (const p of needsReg) {
       let counter = p.counter;
-      if (counter == null) {
-        counter = counters.find(c => c > cursor) ?? counters[0] ?? 1;
+      if (counter == null || !counters.includes(counter)) {
+        if (counters.length === 0) continue;
+        counter = counters.find(c => c > cursor) ?? counters[0];
         cursor = counter;
       }
       p.reg_start = nowIso;

@@ -1,8 +1,9 @@
+/** @fileoverview Public registration counters excluding administrative closures and staff breaks. */
 'use client';
 
 import { Patient } from '@/types/Types';
 import { fetchActiveCounters } from '@/lib/counters';
-import { DEFAULT_COUNTERS } from '@/lib/facilities';
+import { supabase } from '@/lib/supabase';
 import { useEffect, useRef, useState } from 'react';
 import { formatTicketForSpeech } from '@/utils/formatTicketSpeech';
 
@@ -23,7 +24,7 @@ type RegistrationLayoutProps = {
  * @returns The rendered registration monitor layout element.
  */
 export function RegistrationLayout({ patients }: RegistrationLayoutProps) {
-  const [counters, setCounters] = useState<number[]>(DEFAULT_COUNTERS);
+  const [counters, setCounters] = useState<number[]>([]);
   const announcedPatientsRef = useRef<Set<number>>(new Set());
   const [isProcessing, setIsProcessing] = useState(false);
   const pendingAnnouncements = useRef<{ patient: Patient; counterNum: number }[]>([]);
@@ -31,8 +32,10 @@ export function RegistrationLayout({ patients }: RegistrationLayoutProps) {
   useEffect(() => {
     const load = () => fetchActiveCounters().then(setCounters);
     load();
-    const interval = setInterval(load, 30000);
-    return () => clearInterval(interval);
+    const interval = setInterval(load, 5000);
+    const channel = supabase.channel('registration-counter-breaks')
+      .on('postgres_changes', { event: '*', schema: 'public', table: 'counters' }, load).subscribe();
+    return () => { clearInterval(interval); void supabase.removeChannel(channel); };
   }, []);
 
   const speak = async (text: string, times: number = 2) => {
@@ -82,6 +85,8 @@ export function RegistrationLayout({ patients }: RegistrationLayoutProps) {
     while (pendingAnnouncements.current.length > 0) {
       const item = pendingAnnouncements.current.shift();
       if (item) {
+        const available = await fetchActiveCounters();
+        if (!available.includes(item.counterNum)) continue;
         const ticket = formatTicketForSpeech(item.patient.patientNum);
         const message = `Number ${ticket}, Number ${ticket}, please proceed to Counter ${item.counterNum}`;
         await speak(message, 2);

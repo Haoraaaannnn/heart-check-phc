@@ -1,3 +1,4 @@
+/** @fileoverview Public queue monitor data and announcements excluding unavailable stations. */
 'use client';
 
 import { useState, useRef, useEffect } from 'react';
@@ -98,7 +99,11 @@ export function useMonitorData(category: string, subcategory: string | null, cat
     isPlayingRef.current = true;
     const item = announcementQueue.current.shift();
     if (item) {
+      const { data: station } = await supabase.from('cubicle').select('id')
+        .eq('cubicleNum', item.patient.cubicleNum).eq('on_break', false).maybeSingle();
+      if (station) {
       await speak(item.message, item.patient.id, 3);
+      }
     }
     isPlayingRef.current = false;
     processQueue();
@@ -157,6 +162,8 @@ export function useMonitorData(category: string, subcategory: string | null, cat
       .select('*')
       .eq('category', category);
 
+    query = query.eq('on_break', false);
+
     if (subcategory) {
       query = query.eq('subcategory', subcategory);
     }
@@ -214,7 +221,11 @@ export function useMonitorData(category: string, subcategory: string | null, cat
       query = query.eq('subcategory', subcategory);
     }
 
-    const { data, error } = await query.order('called_at', { ascending: true });
+    const { data: rawData, error } = await query.order('called_at', { ascending: true });
+    const { data: available, error: availabilityError } = await supabase.from('cubicle')
+      .select('cubicleNum').eq('category', category).eq('on_break', false);
+    const availableNames = new Set((available ?? []).map(station => station.cubicleNum));
+    const data = availabilityError ? [] : rawData?.filter(patient => availableNames.has(patient.cubicleNum));
 
     if (requestId !== patientsFetchId.current) return;
 
@@ -339,6 +350,17 @@ export function useMonitorData(category: string, subcategory: string | null, cat
       supabase.removeChannel(channel);
     };
   };
+
+  const availabilityRefresh = useRef<() => void>(() => {});
+  useEffect(() => {
+    availabilityRefresh.current = () => { void fetchCubicles(); void fetchPatients(); };
+  });
+  useEffect(() => {
+    const timer = setInterval(() => availabilityRefresh.current(), 5000);
+    const channel = supabase.channel(`monitor-station-breaks-${category}`)
+      .on('postgres_changes', { event: '*', schema: 'public', table: 'cubicle' }, () => availabilityRefresh.current()).subscribe();
+    return () => { clearInterval(timer); void supabase.removeChannel(channel); };
+  }, [category]);
 
   return {
     assignedPatients,

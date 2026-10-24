@@ -27,6 +27,7 @@ import { supabase } from '@/lib/supabase';
 import { Patient } from '@/types/Types';
 import { NurseSidebar } from '@/app/nurse/components/NurseSidebar';
 import { NurseHeader } from '@/app/nurse/components/NurseHeader';
+import { NurseBreakControls } from '@/app/nurse/components/NurseBreakControls';
 import { NurseBoard } from '@/app/nurse/components/NurseBoard';
 import { NurseQuickActionDropdown } from '@/app/nurse/components/NurseQuickActionDropdown';
 import { NurseDragGhost } from '@/app/nurse/components/NurseDragGhost';
@@ -415,6 +416,8 @@ export default function NursePage() {
           onDismissNotification={dismissNotification}
           onClearAllNotifications={clearAll}
         />
+
+        <NurseBreakControls selectedCubicleNum={selectedCubicleNum} />
 
         {/* Action Error Notification Toast */}
         {actionError && (

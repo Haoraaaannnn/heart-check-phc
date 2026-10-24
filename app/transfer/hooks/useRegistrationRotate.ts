@@ -19,6 +19,7 @@
 import { useEffect, useRef } from 'react';
 import { Patient } from '@/types/Types';
 import { callRotateApi } from '@/app/transfer/lib/rotateApi';
+import { fetchActiveCounters } from '@/lib/counters';
 
 /**
  * Periodically detects timed-out top patients at registration counters and dispatches rotation mutations.
@@ -50,13 +51,15 @@ export function useRegistrationRotate(
       if (busyRef.current) return;
       if (confirmingRef?.current) return;
 
+      const availableCounters = new Set(await fetchActiveCounters());
+
       const now = Date.now();
       const sortKey = (p: Patient) =>
         new Date(p.counter_rejoin_at || p.created_at || 0).getTime();
 
       const byCounter = new Map<number, Patient[]>();
       for (const p of registrationRef.current) {
-        if (!p.counter) continue;
+        if (!p.counter || !availableCounters.has(p.counter)) continue;
         if (!byCounter.has(p.counter)) byCounter.set(p.counter, []);
         byCounter.get(p.counter)!.push(p);
       }
