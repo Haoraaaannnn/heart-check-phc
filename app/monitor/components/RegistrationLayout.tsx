@@ -1,10 +1,13 @@
+/** @fileoverview Public registration counters excluding administrative closures and staff breaks. */
 'use client';
 
 import { Patient } from '@/types/Types';
 import { fetchActiveCounters } from '@/lib/counters';
-import { DEFAULT_COUNTERS } from '@/lib/facilities';
+import { supabase } from '@/lib/supabase';
 import { useEffect, useRef, useState } from 'react';
 import { formatTicketForSpeech } from '@/utils/formatTicketSpeech';
+import { useMonitorCalls } from '@/app/monitor/hooks/useMonitorCalls';
+import { playMonitorSpeech } from '@/app/monitor/lib/playMonitorSpeech';
 
 import { MONITOR_STYLES } from '@/app/monitor/constants/monitorStyles';
 import { MONITOR_TEXTS } from '@/app/monitor/constants/monitorTexts';
@@ -23,77 +26,53 @@ type RegistrationLayoutProps = {
  * @returns The rendered registration monitor layout element.
  */
 export function RegistrationLayout({ patients }: RegistrationLayoutProps) {
-  const [counters, setCounters] = useState<number[]>(DEFAULT_COUNTERS);
+  const [counters, setCounters] = useState<number[]>([]);
   const announcedPatientsRef = useRef<Set<number>>(new Set());
-  const [isProcessing, setIsProcessing] = useState(false);
-  const pendingAnnouncements = useRef<{ patient: Patient; counterNum: number }[]>([]);
+  const isProcessing = useRef(false);
+  const pendingAnnouncements = useRef<{ ticket: string; counterNum: number; message?: string; expiresAt?: string }[]>([]);
+  const audioController = useRef<AbortController | null>(null);
+  useEffect(() => {
+    const controller = new AbortController();
+    audioController.current = controller;
+    return () => { controller.abort(); pendingAnnouncements.current = []; };
+  }, []);
 
   useEffect(() => {
     const load = () => fetchActiveCounters().then(setCounters);
     load();
-    const interval = setInterval(load, 30000);
-    return () => clearInterval(interval);
+    const interval = setInterval(load, 5000);
+    const channel = supabase.channel('registration-counter-breaks')
+      .on('postgres_changes', { event: '*', schema: 'public', table: 'counters' }, load).subscribe();
+    return () => { clearInterval(interval); void supabase.removeChannel(channel); };
   }, []);
 
-  const speak = async (text: string, times: number = 2) => {
-    return new Promise<void>((resolve) => {
-      let count = 0;
-      const audio = new Audio();
-
-      const playNext = async () => {
-        try {
-          const response = await fetch('/api/tts', {
-            method: 'POST',
-            headers: {
-              'Content-Type': 'application/json',
-            },
-            body: JSON.stringify({ text }),
-          });
-          if (!response.ok) { resolve(); return; }
-          const arrayBuffer = await response.arrayBuffer();
-          const audioBlob = new Blob([arrayBuffer], { type: 'audio/mp3' });
-          const audioUrl = URL.createObjectURL(audioBlob);
-          audio.src = audioUrl;
-          audio.play();
-          audio.onended = () => {
-            count++;
-            if (count < times) {
-              setTimeout(playNext, 400);
-            } else {
-              URL.revokeObjectURL(audioUrl);
-              resolve();
-            }
-          };
-        } catch {
-          resolve();
-        }
-      };
-
-      playNext();
-    });
-  };
-
+  /** Serializes automatic intake announcements and manual registration recalls. */
   const processAnnouncements = async () => {
-    if (isProcessing) return;
-    if (pendingAnnouncements.current.length === 0) return;
-
-    setIsProcessing(true);
-
-    while (pendingAnnouncements.current.length > 0) {
-      const item = pendingAnnouncements.current.shift();
-      if (item) {
-        const ticket = formatTicketForSpeech(item.patient.patientNum);
-        const message = `Number ${ticket}, Number ${ticket}, please proceed to Counter ${item.counterNum}`;
-        await speak(message, 2);
-        await new Promise(resolve => setTimeout(resolve, 200));
+    if (isProcessing.current || !audioController.current || audioController.current.signal.aborted) return;
+    const controller = audioController.current;
+    isProcessing.current = true;
+    try {
+      while (pendingAnnouncements.current.length && !controller.signal.aborted) {
+        const item = pendingAnnouncements.current.shift()!;
+        if (item.expiresAt && Date.parse(item.expiresAt) <= Date.now()) continue;
+        const available = await fetchActiveCounters();
+        if (!available.includes(item.counterNum)) continue;
+        const ticket = formatTicketForSpeech(item.ticket);
+        const message = item.message ?? `Number ${ticket}, Number ${ticket}, please proceed to Counter ${item.counterNum}`;
+        try { await playMonitorSpeech(message, 2, controller.signal); }
+        catch (error) { if (!controller.signal.aborted) console.warn('Registration monitor call failed:', error); }
       }
-    }
-
-    setIsProcessing(false);
+    } finally { isProcessing.current = false; }
   };
+
+  useMonitorCalls('Registration', null, true, call => {
+    if (call.counter === null) return;
+    pendingAnnouncements.current.push({ ticket: call.ticket, counterNum: call.counter, message: call.message, expiresAt: call.expiresAt });
+    void processAnnouncements();
+  });
 
   useEffect(() => {
-    const newAnnouncements: { patient: Patient; counterNum: number }[] = [];
+    const newAnnouncements: { ticket: string; counterNum: number }[] = [];
 
     for (const counterNum of counters) {
       const counterPatients = patients.filter(p => p.counter === counterNum);
@@ -103,7 +82,7 @@ export function RegistrationLayout({ patients }: RegistrationLayoutProps) {
 
         if (!announcedPatientsRef.current.has(topPatient.id)) {
           announcedPatientsRef.current.add(topPatient.id);
-          newAnnouncements.push({ patient: topPatient, counterNum });
+          newAnnouncements.push({ ticket: topPatient.patientNum, counterNum });
         }
       }
     }

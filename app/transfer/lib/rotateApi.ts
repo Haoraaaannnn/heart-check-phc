@@ -1,5 +1,11 @@
+/** @fileoverview Authenticated patient rotation transport with mutation-result validation. */
 import { supabase } from '@/lib/supabase';
 
+/**
+ * Submits patient changes and rejects failed optimistic concurrency checks.
+ * @param updates - Patient changes with optional expected values.
+ * @returns Resolves only when all requested mutations were applied.
+ */
 export async function callRotateApi(updates: any[]) {
   const { data: { session } } = await supabase.auth.getSession();
 
@@ -18,5 +24,9 @@ export async function callRotateApi(updates: any[]) {
     try { body = JSON.parse(text); } catch {}
     console.error('[rotate] API failed:', res.status, res.statusText, body);
     throw new Error(`Rotate API failed (${res.status})`);
+  }
+  const result = await res.json();
+  if (!Array.isArray(result.results) || result.results.some((item: { applied: boolean }) => !item.applied)) {
+    throw new Error('Patient changed or update was rejected. Refresh and try again.');
   }
 }

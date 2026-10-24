@@ -27,6 +27,7 @@ import { supabase } from '@/lib/supabase';
 import { Patient } from '@/types/Types';
 import { NurseSidebar } from '@/app/nurse/components/NurseSidebar';
 import { NurseHeader } from '@/app/nurse/components/NurseHeader';
+import { NurseBreakControls } from '@/app/nurse/components/NurseBreakControls';
 import { NurseBoard } from '@/app/nurse/components/NurseBoard';
 import { NurseQuickActionDropdown } from '@/app/nurse/components/NurseQuickActionDropdown';
 import { NurseDragGhost } from '@/app/nurse/components/NurseDragGhost';
@@ -45,7 +46,7 @@ import { useRealtimeSubscription } from '@/app/nurse/hooks/useRealtimeSubscripti
 import { useBottleneckNotifications } from '@/app/dashboard/hooks/useBottleneckNotifications';
 import { nurseTexts } from '@/app/nurse/constants/nurseTexts';
 import { NurseStyle, nurseLayoutTokens } from '@/app/nurse/constants/nurse';
-import { formatTicketForSpeech } from '@/utils/formatTicketSpeech';
+import { requestMonitorCall } from '@/lib/requestMonitorCall';
 import { useConnectionStatus } from '@/hooks/useConnectionStatus';
 import { useOfflineQueue } from '@/hooks/useOfflineQueue';
 import { ConnectionStatusBanner } from '@/components/reusables/ConnectionStatusBanner';
@@ -71,6 +72,7 @@ export default function NursePage() {
 
   // Audio Announcement State
   const [speakingId, setSpeakingId] = useState<number | null>(null);
+  const [callError, setCallError] = useState('');
 
   // Loading & Sync States
   const [isLoading, setIsLoading] = useState(true);
@@ -188,69 +190,18 @@ export default function NursePage() {
     void initializeDashboard();
   }, [refreshCubicles, fetchData, fetchFinished, router]);
 
-  // Deepgram TTS Audio Announcement
-  const speakAnnouncement = useCallback(
-    async (text: string, patientId: number, repeatTimes: number = 3) => {
-      setSpeakingId(patientId);
-      try {
-        const response = await fetch('/api/tts', {
-          method: 'POST',
-          headers: {
-            'Content-Type': 'application/json',
-          },
-          body: JSON.stringify({ text }),
-        });
-
-        if (!response.ok) {
-          setSpeakingId(null);
-          return;
-        }
-
-        const arrayBuffer = await response.arrayBuffer();
-        const audioBlob = new Blob([arrayBuffer], { type: 'audio/mp3' });
-        const audioUrl = URL.createObjectURL(audioBlob);
-        let playCount = 0;
-        const audio = new Audio(audioUrl);
-
-        const playOnce = async () => {
-          audio.currentTime = 0;
-          await audio.play();
-          playCount++;
-        };
-
-        audio.onended = () => {
-          if (playCount < repeatTimes) {
-            setTimeout(playOnce, 800);
-          } else {
-            URL.revokeObjectURL(audioUrl);
-            setSpeakingId(null);
-          }
-        };
-
-        await playOnce();
-      } catch (err) {
-        console.error('Audio announcement exception:', err);
-        setSpeakingId(null);
-      }
-    },
-    []
-  );
-
   /**
-   * Triggers formatted outpatient cubicle audio call.
+   * Sends a patient call to the matching public monitor while keeping this workstation silent.
+   * @param patient - The active patient selected by nursing staff.
+   * @returns Nothing; reports delivery failures through the page alert.
    */
-  const handleCall = useCallback(
-    (patient: Patient) => {
-      const ticket = formatTicketForSpeech(patient.patientNum);
-      const destination = patient.cubicleNum
-        ? `cubicle ${patient.cubicleNum}`
-        : 'the doctor';
-
-      const announcement = nurseTexts.ttsCallPhrase(ticket, destination);
-      void speakAnnouncement(announcement, patient.id);
-    },
-    [speakAnnouncement]
-  );
+  const handleCall = useCallback((patient: Patient) => {
+    setSpeakingId(patient.id);
+    setCallError('');
+    void requestMonitorCall(patient.id)
+      .catch(error => setCallError(error instanceof Error ? error.message : 'Unable to send the call to the monitor.'))
+      .finally(() => setSpeakingId(null));
+  }, []);
 
   // Filtered Patient Rosters based on Category and Cubicle
   const filterPatientList = useCallback(
@@ -416,7 +367,10 @@ export default function NursePage() {
           onClearAllNotifications={clearAll}
         />
 
+        <NurseBreakControls selectedCubicleNum={selectedCubicleNum} />
+
         {/* Action Error Notification Toast */}
+        {callError && <p role="alert" className="shrink-0 mx-4 mt-2 p-3 rounded-lg border border-red-200 bg-red-50 text-red-800 dark:border-red-900 dark:bg-red-950 dark:text-red-200">{callError}</p>}
         {actionError && (
           <div
             role="alert"

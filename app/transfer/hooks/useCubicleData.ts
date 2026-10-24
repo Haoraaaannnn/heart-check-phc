@@ -1,6 +1,7 @@
+/** @fileoverview Available transfer cubicles and doctor names with break-state synchronization. */
 'use client';
 
-import { useState, useCallback } from 'react';
+import { useState, useCallback, useEffect } from 'react';
 import { supabase } from '@/lib/supabase';
 import { Cubicle } from '@/types/Types';
 
@@ -25,6 +26,7 @@ export function useCubicleData() {
     const { data, error } = await supabase
       .from('cubicle')
       .select('*')
+      .eq('on_break', false)
       .order('id', { ascending: true });
 
     if (!error && data) {
@@ -57,6 +59,13 @@ export function useCubicleData() {
       setCubicleDoctorMap(map);
     }
   }, []);
+
+  useEffect(() => {
+    const timer = setInterval(() => void fetchCubicles(), 5000);
+    const channel = supabase.channel('transfer-cubicle-availability')
+      .on('postgres_changes', { event: '*', schema: 'public', table: 'cubicle' }, () => void fetchCubicles()).subscribe();
+    return () => { clearInterval(timer); void supabase.removeChannel(channel); };
+  }, [fetchCubicles]);
 
   return { cubicles, setCubicles, fetchCubicles, cubicleDoctorMap };
 }

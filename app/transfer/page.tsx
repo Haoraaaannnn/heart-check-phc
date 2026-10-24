@@ -38,6 +38,8 @@ import { useRequireAuth } from '@/app/transfer/hooks/useRequireAuth';
 import { MAX_PATIENTS_PER_CUBICLE } from '@/app/transfer/lib/constants';
 import { useIdlePatients } from '@/app/transfer/hooks/useIdlePatients';
 import { useRegistrationRotate } from '@/app/transfer/hooks/useRegistrationRotate';
+import { requestMonitorCall } from '@/lib/requestMonitorCall';
+import './transfer.css';
 import { useConnectionStatus } from '@/hooks/useConnectionStatus';
 import { useOfflineQueue } from '@/hooks/useOfflineQueue';
 import { enqueueMutation, removeMutation } from '@/lib/offlineQueue';
@@ -92,6 +94,7 @@ export default function TransferPage() {
   // Audio, Sidebar, and Modal State
   const [isSidebarExpanded, setIsSidebarExpanded] = useState<boolean>(false);
   const [speaking, setSpeaking] = useState<number | null>(null);
+  const [callError, setCallError] = useState('');
   const [showDoctorsModal, setShowDoctorsModal] = useState<boolean>(false);
   const [showUnassignedMenu, setShowUnassignedMenu] = useState<boolean>(false);
 
@@ -310,9 +313,10 @@ export default function TransferPage() {
           }
         }
         for (const p of rest) {
-          if (p.counter_top_started_at) {
+          if (p.counter_top_started_at || p.counter_paused_at) {
             clearIds.push(p.id);
             p.counter_top_started_at = null;
+            p.counter_paused_at = null;
           }
         }
       }
@@ -323,7 +327,7 @@ export default function TransferPage() {
           jobs.push(
             supabase
               .from('patients')
-              .update({ counter_top_started_at: now })
+              .update({ counter_top_started_at: now, counter_paused_at: null })
               .in('id', startIds)
               .eq('is_historical', false)
               .is('counter_top_started_at', null)
@@ -333,10 +337,9 @@ export default function TransferPage() {
           jobs.push(
             supabase
               .from('patients')
-              .update({ counter_top_started_at: null })
+              .update({ counter_top_started_at: null, counter_paused_at: null })
               .in('id', clearIds)
               .eq('is_historical', false)
-              .not('counter_top_started_at', 'is', null)
           );
         }
         void Promise.allSettled(jobs);
@@ -588,42 +591,13 @@ export default function TransferPage() {
     return cleanup;
   }, [draggedPatient, dragOverCubicle, assignedPatients, isDragEnabled, setupGlobalDragHandlers]);
 
-  // Audio speech announcements via Deepgram
-  const speak = async (text: string, patientId: number, times: number = 3) => {
+  /** Sends this patient's call to its server-selected monitor without local audio. */
+  const speak = async (_text: string, patientId: number) => {
     setSpeaking(patientId);
-    try {
-      const response = await fetch('/api/tts', {
-        method: 'POST',
-        headers: {
-          'Content-Type': 'application/json',
-        },
-        body: JSON.stringify({ text }),
-      });
-      if (!response.ok) {
-        setSpeaking(null);
-        return;
-      }
-      const arrayBuffer = await response.arrayBuffer();
-      const audioBlob = new Blob([arrayBuffer], { type: 'audio/mp3' });
-      const audioUrl = URL.createObjectURL(audioBlob);
-      let count = 0;
-      const audio = new Audio(audioUrl);
-      const playOnce = async () => {
-        audio.currentTime = 0;
-        await audio.play();
-        count++;
-      };
-      audio.onended = () => {
-        if (count < times) setTimeout(playOnce, 800);
-        else {
-          URL.revokeObjectURL(audioUrl);
-          setSpeaking(null);
-        }
-      };
-      await playOnce();
-    } catch {
-      setSpeaking(null);
-    }
+    setCallError('');
+    try { await requestMonitorCall(patientId); }
+    catch (error) { setCallError(error instanceof Error ? error.message : 'Unable to send the call to the monitor.'); }
+    finally { setSpeaking(null); }
   };
 
   /**
@@ -1358,6 +1332,7 @@ export default function TransferPage() {
 
         {/* Main Dashboard Content (Non-scrollable, fit-to-screen) */}
         <main className={transferLayoutStyles.mainContent}>
+          {callError && <p role="alert" className="shrink-0 mb-2 p-3 rounded-lg border border-red-200 bg-red-50 text-red-800 dark:border-red-900 dark:bg-red-950 dark:text-red-200">{callError}</p>}
 
           {accessStatus === 'loading' ? (
             <div className="flex items-center justify-center py-20">

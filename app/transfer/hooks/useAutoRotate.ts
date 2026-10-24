@@ -1,3 +1,4 @@
+/** @fileoverview Queue timeout rotation respecting staff breaks and historical data guards. */
 'use client';
 import { useEffect, useRef } from 'react';
 import { Patient } from '@/types/Types';
@@ -6,6 +7,18 @@ import { callRotateApi } from '@/app/transfer/lib/rotateApi';
 
 const MANUAL_SERVICES: string[] = [];
 
+/**
+ * Rotates timed-out patients only at available stations.
+ * @param onProgressPatients - Waiting queue patients.
+ * @param assignedPatients - Patients grouped by cubicle.
+ * @param fetchData - Refresh callback after applied rotations.
+ * @param busyRef - In-flight mutation guard.
+ * @param rotateTimeoutMs - Allowed response interval.
+ * @param maxRotations - Timeout count before idle status.
+ * @param pendingIdsRef - Patients awaiting assignment confirmation.
+ * @param confirmingRef - Active confirmation guard.
+ * @returns Nothing; installs the rotation interval.
+ */
 export function useAutoRotate(
   onProgressPatients: Patient[],
   assignedPatients: Record<string, Patient[]>,
@@ -27,6 +40,13 @@ export function useAutoRotate(
       if (busyRef.current) return;
 
       if (confirmingRef?.current) return;
+      const [cubicles, counters] = await Promise.all([
+        supabase.from('cubicle').select('cubicleNum').eq('on_break', true),
+        supabase.from('counters').select('counter_number').eq('on_break', true),
+      ]);
+      if (cubicles.error || counters.error) return;
+      const heldCubicles = new Set((cubicles.data ?? []).map(c => c.cubicleNum));
+      const heldCounters = new Set((counters.data ?? []).map(c => c.counter_number));
       const now = Date.now();
       const pendingIds = pendingIdsRef.current;
 
@@ -39,14 +59,14 @@ export function useAutoRotate(
       };
 
       const timedOutOnProgress = onProgressRef.current.filter(p =>
-        isTimedOut(p, p.progress_started_at)
+        !(p.counter && !p.reg_end && heldCounters.has(p.counter)) && isTimedOut(p, p.progress_started_at)
       );
 
       const topPatientsPerCubicle = Object.values(assignedRef.current)
         .map(patients => patients.filter(p => !pendingIds.has(p.id))[0])
         .filter((p): p is Patient => !!p);
       const timedOutAssigned = topPatientsPerCubicle.filter(p =>
-        isTimedOut(p, p.cubicle_top_started_at)
+        !heldCubicles.has(p.cubicleNum) && isTimedOut(p, p.cubicle_top_started_at)
       );
 
       console.log('[rotate] check result', {

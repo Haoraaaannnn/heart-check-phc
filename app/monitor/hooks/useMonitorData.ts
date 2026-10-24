@@ -1,11 +1,15 @@
+/** @fileoverview Public queue monitor data and announcements excluding unavailable stations. */
 'use client';
 
 import { useState, useRef, useEffect } from 'react';
 import { supabase } from '@/lib/supabase';
 import { Patient, Cubicle } from '@/types/Types';
 import { formatTicketForSpeech } from '@/utils/formatTicketSpeech';
+import { useMonitorCalls } from './useMonitorCalls';
+import { playMonitorSpeech } from '../lib/playMonitorSpeech';
 
-export function useMonitorData(category: string, subcategory: string | null, categoryParam: string, isRegistration: boolean = false) {
+/** Loads monitor data and serializes automatic and manual calls after monitor activation. */
+export function useMonitorData(category: string, subcategory: string | null, categoryParam: string, isRegistration: boolean = false, started = false) {
   const [assignedPatients, setAssignedPatients] = useState<Patient[]>([]);
   const [cubicles, setCubicles] = useState<Cubicle[]>([]);
   const [registrationPatients, setRegistrationPatients] = useState<Patient[]>([]);
@@ -13,9 +17,17 @@ export function useMonitorData(category: string, subcategory: string | null, cat
   const [cubicleDoctorMap, setCubicleDoctorMap] = useState<Record<string, string>>({});
   const [monitorLayout, setMonitorLayout] = useState<string | null>(null);
 
-  const announcementQueue = useRef<{ patient: Patient; message: string }[]>([]);
+  const announcementQueue = useRef<{ patient?: Patient; message: string; cubicle?: string | null; expiresAt?: string }[]>([]);
   const isPlayingRef = useRef(false);
   const announcedCubiclePatients = useRef<Map<string, Set<number>>>(new Map());
+  const audioController = useRef<AbortController | null>(null);
+  useEffect(() => {
+    if (!started) return;
+    const controller = new AbortController();
+    const announced = announcedCubiclePatients.current;
+    audioController.current = controller;
+    return () => { controller.abort(); announcementQueue.current = []; announced.clear(); };
+  }, [started, category, subcategory]);
 
   useEffect(() => {
     const fetchLayout = () => {
@@ -53,56 +65,34 @@ export function useMonitorData(category: string, subcategory: string | null, cat
     ? monitorLayout === 'table'
     : (category === 'Consultation' && subcategory) || category === 'OPD Screening';
 
-  const speak = async (text: string, patientId: number, times: number = 3) => {
-    return new Promise<void>((resolve) => {
-      let count = 0;
-      const audio = new Audio();
-      
-      const playNext = async () => {
-        try {
-          const response = await fetch('/api/tts', {
-            method: 'POST',
-            headers: {
-              'Content-Type': 'application/json',
-            },
-            body: JSON.stringify({ text }),
-          });
-          if (!response.ok) { resolve(); return; }
-          const arrayBuffer = await response.arrayBuffer();
-          const audioBlob = new Blob([arrayBuffer], { type: 'audio/mp3' });
-          const audioUrl = URL.createObjectURL(audioBlob);
-          audio.src = audioUrl;
-          audio.play();
-          audio.onended = () => {
-            count++;
-            if (count < times) {
-              setTimeout(playNext, 1);
-            } else {
-              URL.revokeObjectURL(audioUrl);
-              resolve();
-            }
-          };
-        } catch {
-          resolve();
+  /** Plays automatic and staff-triggered messages through one monitor audio queue. */
+  const processQueue = async () => {
+    if (isPlayingRef.current || !audioController.current || audioController.current.signal.aborted) return;
+    const controller = audioController.current;
+    isPlayingRef.current = true;
+    try {
+      while (announcementQueue.current.length && !controller.signal.aborted) {
+        const item = announcementQueue.current.shift()!;
+        if (item.expiresAt && Date.parse(item.expiresAt) <= Date.now()) continue;
+        const destination = item.patient?.cubicleNum ?? item.cubicle;
+        if (destination) {
+          const { data: station } = await supabase.from('cubicle').select('id')
+            .eq('cubicleNum', destination).eq('on_break', false).maybeSingle();
+          if (!station) continue;
         }
-      };
-      
-      playNext();
-    });
+        try { await playMonitorSpeech(item.message, 3, controller.signal); }
+        catch (error) { if (!controller.signal.aborted) console.warn('Monitor call playback failed:', error); }
+      }
+    } finally {
+      isPlayingRef.current = false;
+      if (announcementQueue.current.length && audioController.current !== controller) void processQueue();
+    }
   };
 
-  const processQueue = async () => {
-    if (isPlayingRef.current) return;
-    if (announcementQueue.current.length === 0) return;
-    
-    isPlayingRef.current = true;
-    const item = announcementQueue.current.shift();
-    if (item) {
-      await speak(item.message, item.patient.id, 3);
-    }
-    isPlayingRef.current = false;
-    processQueue();
-  };
+  useMonitorCalls(category, subcategory, started && !isRegistration, call => {
+    announcementQueue.current.push({ message: call.message, cubicle: call.cubicle, expiresAt: call.expiresAt });
+    void processQueue();
+  });
 
   const queueAnnouncement = (patient: Patient, cubicleNum: string) => {
     const cubicleAnnounced = announcedCubiclePatients.current.get(cubicleNum);
@@ -156,6 +146,8 @@ export function useMonitorData(category: string, subcategory: string | null, cat
       .from('cubicle')
       .select('*')
       .eq('category', category);
+
+    query = query.eq('on_break', false);
 
     if (subcategory) {
       query = query.eq('subcategory', subcategory);
@@ -214,14 +206,18 @@ export function useMonitorData(category: string, subcategory: string | null, cat
       query = query.eq('subcategory', subcategory);
     }
 
-    const { data, error } = await query.order('called_at', { ascending: true });
+    const { data: rawData, error } = await query.order('called_at', { ascending: true });
+    const { data: available, error: availabilityError } = await supabase.from('cubicle')
+      .select('cubicleNum').eq('category', category).eq('on_break', false);
+    const availableNames = new Set((available ?? []).map(station => station.cubicleNum));
+    const data = availabilityError ? [] : rawData?.filter(patient => availableNames.has(patient.cubicleNum));
 
     if (requestId !== patientsFetchId.current) return;
 
     if (!error && data) {
       setAssignedPatients(data);
       
-      if (isTableLayoutService) {
+      if (isTableLayoutService && started) {
         const patientsByCubicle = new Map<string, Patient[]>();
         for (const patient of data) {
           if (patient.cubicleNum) {
@@ -254,7 +250,7 @@ export function useMonitorData(category: string, subcategory: string | null, cat
             announcedCubiclePatients.current.delete(cubicleNum);
           }
         }
-      } else {
+      } else if (started) {
         if (data.length > 0) {
           const topPatient = data[0];
           const topCubicle = topPatient.cubicleNum || 'default';
@@ -339,6 +335,17 @@ export function useMonitorData(category: string, subcategory: string | null, cat
       supabase.removeChannel(channel);
     };
   };
+
+  const availabilityRefresh = useRef<() => void>(() => {});
+  useEffect(() => {
+    availabilityRefresh.current = () => { void fetchCubicles(); void fetchPatients(); };
+  });
+  useEffect(() => {
+    const timer = setInterval(() => availabilityRefresh.current(), 5000);
+    const channel = supabase.channel(`monitor-station-breaks-${category}`)
+      .on('postgres_changes', { event: '*', schema: 'public', table: 'cubicle' }, () => availabilityRefresh.current()).subscribe();
+    return () => { clearInterval(timer); void supabase.removeChannel(channel); };
+  }, [category]);
 
   return {
     assignedPatients,

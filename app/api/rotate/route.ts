@@ -35,6 +35,7 @@ const ALLOWED_UPDATE_FIELDS = new Set<string>([
   'counter',
   'counter_top_started_at',
   'counter_rejoin_at',
+  'counter_paused_at',
   'cubicleNum',
   'called_at',
   'cubicle_top_started_at',
@@ -47,6 +48,9 @@ const ALLOWED_UPDATE_FIELDS = new Set<string>([
  * Permitted concurrency check column whitelist for optimistic locking.
  */
 const ALLOWED_EXPECTED_FIELDS = new Set<string>([
+  'counter_paused_at',
+  'counter_top_started_at',
+  'counter_rejoin_at',
   'status',
   'cubicleNum',
   'counter',
@@ -167,6 +171,11 @@ export async function POST(request: Request) {
 
         for (const [column, value] of Object.entries(expected)) {
           query = value === null ? query.is(column, null) : query.eq(column, value);
+        }
+
+        // A stale workstation must never rotate a patient paused by another registrar.
+        if ('rotation_count' in changes && 'counter' in expected) {
+          query = query.is('counter_paused_at', null);
         }
 
         const { data, error } = await query.select('id');

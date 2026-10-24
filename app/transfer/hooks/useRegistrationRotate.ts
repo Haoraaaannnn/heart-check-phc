@@ -19,6 +19,7 @@
 import { useEffect, useRef } from 'react';
 import { Patient } from '@/types/Types';
 import { callRotateApi } from '@/app/transfer/lib/rotateApi';
+import { fetchActiveCounters } from '@/lib/counters';
 
 /**
  * Periodically detects timed-out top patients at registration counters and dispatches rotation mutations.
@@ -50,13 +51,15 @@ export function useRegistrationRotate(
       if (busyRef.current) return;
       if (confirmingRef?.current) return;
 
+      const availableCounters = new Set(await fetchActiveCounters());
+
       const now = Date.now();
       const sortKey = (p: Patient) =>
         new Date(p.counter_rejoin_at || p.created_at || 0).getTime();
 
       const byCounter = new Map<number, Patient[]>();
       for (const p of registrationRef.current) {
-        if (!p.counter) continue;
+        if (!p.counter || !availableCounters.has(p.counter)) continue;
         if (!byCounter.has(p.counter)) byCounter.set(p.counter, []);
         byCounter.get(p.counter)!.push(p);
       }
@@ -66,6 +69,7 @@ export function useRegistrationRotate(
         const top = [...patients].sort((a, b) => sortKey(a) - sortKey(b))[0];
         if (
           top?.counter_top_started_at &&
+          !top.counter_paused_at &&
           now - new Date(top.counter_top_started_at).getTime() >= rotateTimeoutMs
         ) {
           timedOutTops.push(top);
@@ -95,7 +99,7 @@ export function useRegistrationRotate(
           if (nextCount >= maxRotations) {
             return {
               id: p.id,
-              expected: { counter: p.counter },
+              expected: { counter: p.counter, counter_paused_at: null, counter_top_started_at: p.counter_top_started_at },
               status: 'Idle',
               rotation_count: nextCount,
               idle_at: nowIso,
@@ -106,7 +110,7 @@ export function useRegistrationRotate(
           }
           return {
             id: p.id,
-            expected: { counter: p.counter },
+            expected: { counter: p.counter, counter_paused_at: null, counter_top_started_at: p.counter_top_started_at },
             rotation_count: nextCount,
             counter_rejoin_at: nowIso,
             counter_top_started_at: null,

@@ -74,7 +74,7 @@ export function useMyAccess(): UseMyAccessReturn {
   const fetchMyAccess = useCallback(async () => {
     setAccessStatus('loading');
 
-    const activeCounters = await fetchActiveCounters();
+    const activeCounters = await fetchActiveCounters(true);
 
     try {
       const {
@@ -153,7 +153,7 @@ export function useMyAccess(): UseMyAccessReturn {
           : (serviceList.length > 0 ? serviceList : CATEGORIES);
         setMyServices(adminServices);
         setMyRooms([]);
-        setMyCounters(activeCounters.length > 0 ? activeCounters : [1, 2, 3, 4, 5]);
+        setMyCounters(activeCounters);
         setAccessStatus('assigned');
         return;
       }

@@ -50,7 +50,7 @@ export default function CategoryMonitorPage() {
     isTableLayoutService,
     setupRegistrationSubscription,
     cubicleDoctorMap,
-  } = useMonitorData(category, subcategory, categoryParam, isRegistration);
+  } = useMonitorData(category, subcategory, categoryParam, isRegistration, started);
 
   useRealtimeSubscription(`monitor-${categoryParam}`, category, () => {
     if (isRegistration) {
