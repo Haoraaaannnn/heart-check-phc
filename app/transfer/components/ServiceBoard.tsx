@@ -202,7 +202,7 @@ export function ServiceBoard({
                   {cubicles.length}
                 </span>
               </div>
-              <span className="text-[11px] text-slate-500 dark:text-[#d4d4d4] font-semibold shrink-0 truncate max-w-[140px] sm:max-w-none">
+              <span className="text-sm text-slate-500 dark:text-[#d4d4d4] font-semibold whitespace-normal break-words min-w-0">
                 {category}
               </span>
             </div>

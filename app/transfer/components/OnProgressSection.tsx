@@ -157,7 +157,7 @@ export function OnProgressSection({
                 className={`${onProgressStyles.cardBase} ${cardStateClass}`}
               >
                 {/* Left Patient Details */}
-                <div className="flex items-center gap-2 min-w-0 flex-1 overflow-hidden">
+                <div className="flex items-center gap-2 min-w-0 flex-1 basis-44">
                   {/* Grip, Status Label, or Selection Indicator */}
                   {isDraggable && (
                     isTop ? (
@@ -185,19 +185,21 @@ export function OnProgressSection({
 
                   {/* Service info & Position */}
                   <div className="min-w-0 flex-1 flex flex-col justify-center">
-                    <div className="flex items-center gap-1 min-w-0">
+                    <div className="min-w-0">
                       <span className={onProgressStyles.serviceText}>
                         {p.service}
+                      </span>
+                      <div className="flex flex-wrap items-baseline gap-x-2">
                         {p.subcategory && (
                           <span className={onProgressStyles.subCategoryText}>
-                            {` · ${p.subcategory}`}
+                            {p.subcategory}
                           </span>
                         )}
-                      </span>
-                      <span className={onProgressStyles.positionPrefix}>
-                        {transferTexts.queuePositionPrefix}
-                        {index + 1}
-                      </span>
+                        <span className={`${onProgressStyles.positionPrefix} whitespace-nowrap`}>
+                          {transferTexts.queuePositionPrefix}
+                          {index + 1}
+                        </span>
+                      </div>
                     </div>
 
                     <div className="min-w-0">
@@ -217,16 +219,14 @@ export function OnProgressSection({
                     </div>
                   </div>
 
-                  <div className="shrink-0 flex items-center">
-                    <ElapsedTimer
-                      startedAt={p.progress_started_at}
-                      warnAfterSeconds={warnAfterSeconds}
-                    />
-                  </div>
                 </div>
 
                 {/* Right Action Buttons */}
-                <div className="flex items-center gap-1 shrink-0 ml-1.5">
+                <div className="flex items-center gap-1.5 shrink-0">
+                  <ElapsedTimer
+                    startedAt={p.progress_started_at}
+                    warnAfterSeconds={warnAfterSeconds}
+                  />
                   {/* Call Button */}
                   <button
                     type="button"

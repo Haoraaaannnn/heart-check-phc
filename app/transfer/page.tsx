@@ -38,6 +38,7 @@ import { useRequireAuth } from '@/app/transfer/hooks/useRequireAuth';
 import { MAX_PATIENTS_PER_CUBICLE } from '@/app/transfer/lib/constants';
 import { useIdlePatients } from '@/app/transfer/hooks/useIdlePatients';
 import { useRegistrationRotate } from '@/app/transfer/hooks/useRegistrationRotate';
+import './transfer.css';
 import { useConnectionStatus } from '@/hooks/useConnectionStatus';
 import { useOfflineQueue } from '@/hooks/useOfflineQueue';
 import { enqueueMutation, removeMutation } from '@/lib/offlineQueue';
@@ -310,9 +311,10 @@ export default function TransferPage() {
           }
         }
         for (const p of rest) {
-          if (p.counter_top_started_at) {
+          if (p.counter_top_started_at || p.counter_paused_at) {
             clearIds.push(p.id);
             p.counter_top_started_at = null;
+            p.counter_paused_at = null;
           }
         }
       }
@@ -323,7 +325,7 @@ export default function TransferPage() {
           jobs.push(
             supabase
               .from('patients')
-              .update({ counter_top_started_at: now })
+              .update({ counter_top_started_at: now, counter_paused_at: null })
               .in('id', startIds)
               .eq('is_historical', false)
               .is('counter_top_started_at', null)
@@ -333,10 +335,9 @@ export default function TransferPage() {
           jobs.push(
             supabase
               .from('patients')
-              .update({ counter_top_started_at: null })
+              .update({ counter_top_started_at: null, counter_paused_at: null })
               .in('id', clearIds)
               .eq('is_historical', false)
-              .not('counter_top_started_at', 'is', null)
           );
         }
         void Promise.allSettled(jobs);

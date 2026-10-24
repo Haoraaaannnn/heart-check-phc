@@ -17,7 +17,7 @@
 
 import React from 'react';
 import { Patient } from '@/types/Types';
-import { ElapsedTimer } from '@/app/transfer/components/ElapsedTimer';
+import { CounterTimerControl } from './CounterTimerControl';
 import { transferTexts } from '@/constants/texts/transferTexts';
 import { TransferStyle } from '@/app/transfer/constants/transfer';
 import { registrationCounterStyles } from '@/constants/designs/transferStyles';
@@ -189,24 +189,25 @@ export function RegistrationCounterSection({
                           <span className={registrationCounterStyles.patientNum}>
                             {topPatient.patientNum}
                           </span>
-                          <span className="shrink-0 flex items-center font-mono text-[11px] font-bold">
-                            <ElapsedTimer startedAt={topPatient.counter_top_started_at ?? undefined} />
-                          </span>
                         </div>
 
-                        <button
-                          type="button"
-                          onPointerDown={e => e.stopPropagation()}
-                          onMouseDown={e => e.stopPropagation()}
-                          onClick={e => {
-                            e.stopPropagation();
-                            onRelease(topPatient);
-                          }}
-                          title={transferTexts.moveToQueueTooltip}
-                          className={registrationCounterStyles.queueBtn}
-                        >
-                          {transferTexts.sendToQueueBtn}
-                        </button>
+                        <div className="flex flex-wrap items-center gap-2">
+                          <CounterTimerControl key={`${topPatient.id}:${topPatient.counter_top_started_at}:${topPatient.counter_paused_at}`} patient={topPatient} />
+
+                          <button
+                            type="button"
+                            onPointerDown={e => e.stopPropagation()}
+                            onMouseDown={e => e.stopPropagation()}
+                            onClick={e => {
+                              e.stopPropagation();
+                              onRelease(topPatient);
+                            }}
+                            title={transferTexts.moveToQueueTooltip}
+                            className={registrationCounterStyles.queueBtn}
+                          >
+                            {transferTexts.sendToQueueBtn}
+                          </button>
+                        </div>
                       </div>
                     );
                   })()

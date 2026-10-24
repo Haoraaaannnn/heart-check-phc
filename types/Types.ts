@@ -1,3 +1,5 @@
+/** @fileoverview Shared patient, station, doctor, and analytics data contracts. */
+
 /**
  * Summary metrics of patient traffic for the current day.
  */
@@ -107,6 +109,8 @@ export type Patient = {
   rotation_count?: number;
   counter_rejoin_at?: string | null;
   counter_top_started_at?: string | null;
+  /** Timestamp freezing counter rotation while registration staff assists this patient. */
+  counter_paused_at?: string | null;
   idle_at?: string | null;
   removed_at?: string | null;
 };

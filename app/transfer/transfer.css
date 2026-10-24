@@ -1,0 +1,36 @@
+/**
+ * Transfer workstation typography overrides for shared components and inline labels.
+ * Keeps supporting labels compact and normal controls at a readable 14px.
+ * Larger ticket numbers and headings retain their existing visual hierarchy.
+ */
+.transfer-workstation :is(
+  [class~="text-base"],
+  [class~="text-sm"]
+) {
+  font-size: 0.875rem;
+  line-height: 1.4;
+}
+
+.transfer-workstation :is(
+  [class~="text-xs"],
+  [class~="text-[9px]"],
+  [class~="text-[10px]"],
+  [class~="text-[11px]"],
+  [class~="text-[12px]"],
+  [class~="text-[13px]"]
+) {
+  font-size: 0.8125rem;
+  line-height: 1.4;
+}
+
+/* Clinical and service labels must remain readable when larger text wraps. */
+.transfer-workstation .truncate {
+  overflow: visible;
+  text-overflow: clip;
+  white-space: normal;
+  overflow-wrap: anywhere;
+}
+
+.transfer-workstation button {
+  min-height: 2.75rem;
+}
