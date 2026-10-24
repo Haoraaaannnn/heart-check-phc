@@ -33,10 +33,8 @@ import { QueuePrintTicketTexts } from "@/app/kiosk/pages/queue-print/constants/q
 import { formatEwtLabel, EWT_TEXTS } from "@/app/kiosk/constants/ewtTexts";
 import { useWebPrinter } from "@/app/kiosk/hooks/useWebPrinter";
 import { PrinterHardwareCondition } from "@/lib/printer/types";
-import QueuePrintFallbackCard from "@/app/kiosk/pages/queue-print/components/QueuePrintFallbackCard";
+import QueuePrintNoticeModal from "@/app/kiosk/pages/queue-print/components/QueuePrintNoticeModal";
 import PrintFooter from "@/app/kiosk/pages/queue-print/components/PrintFooter";
-import { useIsLandscape } from "@/hooks/useIsLandscape";
-import { useIsMounted } from "@/hooks/useIsMounted";
 
 /** Props for {@link QueuePrintContent}. */
 interface QueuePrintContentProps {
@@ -62,8 +60,6 @@ export default function QueuePrintContent({
 }: QueuePrintContentProps) {
     const router = useRouter();
     const { hardwareStatus, printEscPos } = useWebPrinter();
-    const isLandscape = useIsLandscape();
-    const mounted = useIsMounted();
 
     // Guard against React StrictMode initiating double print API requests
     const hasFired = useRef(false);
@@ -76,6 +72,7 @@ export default function QueuePrintContent({
     // Fallback state when physical tickets cannot be issued
     const [isFallbackActive, setIsFallbackActive] = useState<boolean>(false);
     const [fallbackCondition, setFallbackCondition] = useState<PrinterHardwareCondition>('not_detected');
+    const [showNoticeModal, setShowNoticeModal] = useState<boolean>(false);
     const [countdownSeconds, setCountdownSeconds] = useState<number>(7);
 
     useEffect(() => {
@@ -216,7 +213,7 @@ export default function QueuePrintContent({
                                 setCountdownSeconds(7);
                             } else {
                                 console.log(
-                                    `${getTimestamp()} [PRINT FALLBACK] Client printer not ready (${clientPrint.message}) - Queue: ${patientNum}. Activating on-screen photo/SMS fallback.`
+                                    `${getTimestamp()} [PRINT FALLBACK] Client printer not ready (${clientPrint.message}) - Queue: ${patientNum}. Activating modal notice fallback.`
                                 );
                                 setIsFallbackActive(true);
                                 setFallbackCondition(
@@ -224,6 +221,7 @@ export default function QueuePrintContent({
                                         ? hardwareStatus.condition
                                         : 'not_detected'
                                 );
+                                setShowNoticeModal(true);
                                 setCountdownSeconds(25);
                             }
                         } catch (clientErr) {
@@ -233,6 +231,7 @@ export default function QueuePrintContent({
                             );
                             setIsFallbackActive(true);
                             setFallbackCondition('offline');
+                            setShowNoticeModal(true);
                             setCountdownSeconds(25);
                         }
                     } else {
@@ -243,6 +242,7 @@ export default function QueuePrintContent({
                                 ? hardwareStatus.condition
                                 : 'not_detected'
                         );
+                        setShowNoticeModal(true);
                         setCountdownSeconds(25);
                     }
                 } else {
@@ -253,6 +253,7 @@ export default function QueuePrintContent({
                     );
                     setIsFallbackActive(true);
                     setFallbackCondition('offline');
+                    setShowNoticeModal(true);
                     setCountdownSeconds(25);
                 }
             } catch (error) {
@@ -263,6 +264,7 @@ export default function QueuePrintContent({
                 );
                 setIsFallbackActive(true);
                 setFallbackCondition('offline');
+                setShowNoticeModal(true);
                 setCountdownSeconds(25);
             }
         };
@@ -370,33 +372,64 @@ export default function QueuePrintContent({
         </div>
     );
 
-    const isEffectiveLandscape = mounted ? isLandscape : false;
-
     return (
-        <div className="m-auto flex flex-col items-center justify-center w-full max-h-full overflow-hidden px-3 sm:px-6 py-2">
-            {isFallbackActive ? (
-                /* Fallback Mode: 2-column side-by-side in Landscape, compact vertical stack in Portrait */
-                <div
-                    className={
-                        isEffectiveLandscape
-                            ? "grid grid-cols-2 gap-4 sm:gap-6 lg:gap-8 items-center justify-center w-full max-w-[1040px] max-h-full m-auto"
-                            : "flex flex-col gap-3 items-center justify-center w-full max-w-[480px] max-h-full m-auto"
-                    }
-                >
-                    {ticketCardElement}
-                    <QueuePrintFallbackCard
-                        condition={fallbackCondition}
-                        onFinish={handleFinish}
-                        countdownSeconds={countdownSeconds}
-                    />
-                </div>
-            ) : (
-                /* Normal Mode: Ticket Card centered with PrintFooter below */
-                <div className="flex flex-col items-center justify-center w-full max-w-lg max-h-full overflow-hidden gap-3 sm:gap-4">
-                    {ticketCardElement}
+        <div className="my-auto flex flex-col items-center justify-center w-full px-3 sm:px-6 py-2">
+            {/* Modal notice alerting patient if physical printer is unavailable */}
+            <QueuePrintNoticeModal
+                isOpen={showNoticeModal}
+                condition={fallbackCondition}
+                onDismiss={() => setShowNoticeModal(false)}
+            />
+
+            {/* Main Stage: Only display necessary information without visual clutter */}
+            <div className="flex flex-col items-center justify-center w-full max-w-[480px] my-auto gap-3 sm:gap-4">
+                {ticketCardElement}
+
+                {/* Primary patient controls */}
+                {isFallbackActive ? (
+                    <div className="flex flex-col items-center justify-center gap-2 w-full max-w-[380px] mt-1">
+                        <button
+                            type="button"
+                            onClick={handleFinish}
+                            style={{
+                                backgroundColor: "#0F172A",
+                                color: "#FFFFFF",
+                                border: "none",
+                                width: "100%",
+                                height: 48,
+                                borderRadius: 12,
+                                fontWeight: 800,
+                                fontSize: 16,
+                                cursor: "pointer",
+                                display: "flex",
+                                alignItems: "center",
+                                justifyContent: "center",
+                                gap: 8,
+                                boxShadow: "0 4px 6px -1px rgba(0, 0, 0, 0.15)",
+                            }}
+                            aria-label="Finish and return to entrance"
+                        >
+                            <i className="bx bx-check-circle text-xl" aria-hidden="true" />
+                            <span>{QueuePrintTicketTexts.finishButtonFil}</span>
+                        </button>
+
+                        <p className="text-xs sm:text-sm font-semibold text-slate-500 text-center m-0">
+                            {QueuePrintTicketTexts.autoClosePrefixFil} {countdownSeconds} {QueuePrintTicketTexts.autoCloseSuffixFil} ({QueuePrintTicketTexts.autoClosePrefix} {countdownSeconds}s)
+                        </p>
+
+                        <button
+                            type="button"
+                            onClick={() => setShowNoticeModal(true)}
+                            className="text-xs font-semibold text-slate-500 hover:text-slate-800 underline cursor-pointer mt-0.5 flex items-center gap-1"
+                        >
+                            <i className="bx bx-info-circle text-sm" />
+                            <span>{QueuePrintTicketTexts.noticeModalViewLink}</span>
+                        </button>
+                    </div>
+                ) : (
                     <PrintFooter />
-                </div>
-            )}
+                )}
+            </div>
         </div>
     );
 }

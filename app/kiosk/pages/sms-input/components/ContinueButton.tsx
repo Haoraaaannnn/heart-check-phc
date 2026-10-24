@@ -66,6 +66,16 @@ export default function ContinueButton({
 }: ContinueButtonProps) {
     return (
         <div style={SMSContinueButtonStyle.container}>
+            {/* Secondary Skip Action */}
+            <button
+                type="button"
+                onClick={onSkip}
+                style={SMSContinueButtonStyle.skipBtn}
+                className={SMSContinueButtonClasses.secondaryBtn}
+            >
+                {SMSContinueButtonTexts.skipBtn}
+            </button>
+
             {/* Primary Continue Button */}
             <button
                 type="button"
@@ -75,16 +85,6 @@ export default function ContinueButton({
                 className={SMSContinueButtonClasses.continueBtn}
             >
                 {SMSContinueButtonTexts.continueBtn}
-            </button>
-
-            {/* Secondary Skip Action */}
-            <button
-                type="button"
-                onClick={onSkip}
-                style={SMSContinueButtonStyle.skipBtn}
-                className={SMSContinueButtonClasses.secondaryBtn}
-            >
-                {SMSContinueButtonTexts.skipBtn}
             </button>
 
             {/* Phone Number Verification Modal */}

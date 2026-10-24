@@ -10,6 +10,7 @@ import { kioskTypography } from "@/constants/kiosk";
 /** Typography tokens for kiosk title, referencing centralized root typography scale. */
 export const kioskTitleTypography = {
     titleSize: kioskTypography.heroTitle,
+    eyebrowSize: "clamp(10px, 1.1vw, 13px)",
 } as const;
 
 /** Inline styles for `KioskTitle`. */
@@ -20,16 +21,35 @@ export const KioskTitleStyle = {
         flexDirection: "column",
         alignItems: "center",
         justifyContent: "center",
-        gap: "clamp(6px, 1.2vh, 16px)",
+        gap: "clamp(4px, 0.8vh, 8px)",
+    },
+    eyebrowWrapper: {
+        display: "flex",
+        alignItems: "center",
+        justifyContent: "center",
+        textAlign: "center",
+    },
+    eyebrow: {
+        fontSize: kioskTitleTypography.eyebrowSize,
+        fontWeight: 800,
+        color: "#64748B",
+        lineHeight: 1.2,
+        letterSpacing: "0.15em",
+        whiteSpace: "nowrap",
     },
     titleWrapper: {
+        display: "flex",
+        alignItems: "center",
+        justifyContent: "center",
         textAlign: "center",
+        whiteSpace: "nowrap",
     },
     title: {
         fontWeight: 900,
         fontSize: kioskTitleTypography.titleSize,
-        color: "#1F2937",
-        lineHeight: 1.2,
+        color: "#0F172A",
+        lineHeight: 1.15,
+        whiteSpace: "nowrap",
     },
     titleAccent: {
         color: themeColors.brandRed,
@@ -38,10 +58,7 @@ export const KioskTitleStyle = {
 
 /** Tailwind utility classes for `KioskTitle`. */
 export const KioskTitleClasses = {
-    titleStroke: "[-webkit-text-stroke:1px_currentColor]",
-    titleImageWrapper: (isLandscape: boolean): string =>
-        `relative mx-auto aspect-[16/9] w-full overflow-hidden rounded-2xl shadow-sm ${
-            isLandscape ? "max-w-[760px]" : "max-w-[480px] max-h-[18vh] sm:max-h-[22vh]"
-        }`,
-    titleImage: "object-cover",
+    eyebrow: "select-none uppercase",
+    titleStroke: "[-webkit-text-stroke:0.5px_currentColor] select-none",
 } as const;
+

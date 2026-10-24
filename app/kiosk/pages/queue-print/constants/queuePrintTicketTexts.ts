@@ -87,6 +87,15 @@ export const QueuePrintTicketTexts = {
     autoClosePrefixFil: "Kusang babalik sa simula sa loob ng",
     /** Auto-close countdown notice suffix (Filipino). */
     autoCloseSuffixFil: "segundo",
+
+    /** Modal notice main header text. */
+    noticeModalTitle: "Paunawa / Notice",
+    /** Modal notice dismiss and proceed to ticket button text (Filipino). */
+    noticeModalDismissFil: "Naintindihan Ko / Tingnan ang Ticket",
+    /** Modal notice dismiss and proceed to ticket button text (English). */
+    noticeModalDismissEn: "I Understand / View Ticket",
+    /** Secondary action button to reopen the notice modal if needed. */
+    noticeModalViewLink: "Tingnan ang Paunawa / View Notice",
 } as const;
 
 

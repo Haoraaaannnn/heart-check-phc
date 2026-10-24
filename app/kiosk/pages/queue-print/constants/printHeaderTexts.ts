@@ -3,7 +3,6 @@
  * @description Centralized text constants for `PrintHeader`.
  */
 
-export const PrintHeaderTexts = {
-    headerFil: "Maraming Salamat po!",
-    headerEn: "Thank you!",
-} as const;
+import { sharedKioskBannerTexts } from "@/app/kiosk/constants/kioskBannerTexts";
+
+export const PrintHeaderTexts = sharedKioskBannerTexts.queuePrint;

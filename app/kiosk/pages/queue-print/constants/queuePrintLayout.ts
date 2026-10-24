@@ -18,7 +18,7 @@ export const QueuePrintLayoutClasses = {
      * @returns Full Tailwind utility class string.
      */
     layoutContainer: (mounted: boolean, isLandscape: boolean): string =>
-        `h-full w-full flex flex-col items-center justify-start overflow-hidden bg-white transition-opacity duration-300 ${
+        `h-full w-full flex flex-col items-center justify-start overflow-hidden bg-transparent transition-opacity duration-300 ${
             mounted ? "opacity-100" : "opacity-0"
         } ${isLandscape ? "pb-1" : "pb-2"}`,
 

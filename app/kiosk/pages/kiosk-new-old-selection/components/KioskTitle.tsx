@@ -1,6 +1,5 @@
 "use client";
 
-import Image from "next/image";
 import { KioskTitleTexts } from "@/app/kiosk/pages/kiosk-new-old-selection/constants/kioskTitleTexts";
 import {
     KioskTitleStyle,
@@ -9,23 +8,35 @@ import {
 
 /** Props for {@link KioskTitle}. */
 interface KioskTitleProps {
-    /** Whether the screen is currently in landscape orientation. */
-    isLandscape: boolean;
+    /** Optional landscape indicator for backward compatibility. */
+    isLandscape?: boolean;
 }
 
 /**
- * Brand title header and PHC hospital illustration for the kiosk entrance screen.
+ * Brand title and institutional PHC hospital identity header for the kiosk entrance screen.
  *
  * @remarks
- * In landscape orientation, this component occupies the left 45% column.
- * In portrait orientation, it stacks vertically above the welcome banner and cards.
+ * Renders an institutional medical emblem, hospital eyebrow text,
+ * the primary "Heart Check PHC" brand mark, and an OPD self-service badge.
+ * Designed without photo images to guarantee fast rendering, high readability,
+ * and zero layout shifts across any display resolution.
  *
  * @param props - Component props.
- * @returns The brand title header with hospital hero image.
+ * @returns The brand title header with institutional emblem.
  */
 export default function KioskTitle({ isLandscape }: KioskTitleProps) {
     return (
         <div style={KioskTitleStyle.container}>
+            {/* Hospital Identity Eyebrow */}
+            <div style={KioskTitleStyle.eyebrowWrapper}>
+                <span
+                    className={KioskTitleClasses.eyebrow}
+                    style={KioskTitleStyle.eyebrow}
+                >
+                    {KioskTitleTexts.hospitalFullHeader}
+                </span>
+            </div>
+
             {/* Main Brand Title */}
             <div style={KioskTitleStyle.titleWrapper}>
                 <span
@@ -37,17 +48,6 @@ export default function KioskTitle({ isLandscape }: KioskTitleProps) {
                         {KioskTitleTexts.titleAccent}
                     </span>
                 </span>
-            </div>
-
-            {/* Hospital Building Illustration */}
-            <div className={KioskTitleClasses.titleImageWrapper(isLandscape)}>
-                <Image
-                    src="/images/PHC.jpg"
-                    alt={KioskTitleTexts.imageAlt}
-                    fill
-                    className={KioskTitleClasses.titleImage}
-                    priority
-                />
             </div>
         </div>
     );

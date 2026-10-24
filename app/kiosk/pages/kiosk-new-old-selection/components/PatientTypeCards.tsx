@@ -21,9 +21,10 @@ interface PatientTypeCardProps {
  * @remarks
  * On tap, immediately triggers the kiosk loading overlay and navigates
  * to `/kiosk/pages/kiosk-services?type=<type>` via {@link useKioskNavigate}.
+ * Designed for maximum accessibility, high contrast, and zero text wrapping.
  *
  * @param props - Component props.
- * @returns An interactive card with icon, Filipino title, English pill, and directional arrow.
+ * @returns An interactive card with icon, Filipino title, English subtitle, helper pill, and directional chevron.
  */
 export default function PatientTypeCard({ patientCategory }: PatientTypeCardProps) {
     const navigate = useKioskNavigate();
@@ -40,8 +41,9 @@ export default function PatientTypeCard({ patientCategory }: PatientTypeCardProp
             onClick={handleSelect}
             style={PatientTypeCardStyle.card}
             className={PatientTypeCardsClasses.card}
+            aria-label={`${pc.label_fil} - ${pc.label_en}`}
         >
-            {/* Brand-colored icon container */}
+            {/* Category Icon Container (No background) */}
             <div
                 style={PatientTypeCardStyle.iconWrapper}
                 className={PatientTypeCardsClasses.cardIconWrapper}
@@ -66,7 +68,7 @@ export default function PatientTypeCard({ patientCategory }: PatientTypeCardProp
                 </span>
             </div>
 
-            {/* Directional navigation indicator */}
+            {/* Directional Navigation Indicator (No background wrapper) */}
             <i
                 className={`bx ${PatientTypeCardIcons.arrow} ${PatientTypeCardsClasses.cardArrow}`}
                 style={PatientTypeCardStyle.arrowIcon}
