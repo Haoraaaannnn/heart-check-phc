@@ -30,29 +30,30 @@ export const KioskLayoutStyle = {
         width: "100dvw",
         flexDirection: "column",
         overflow: "hidden",
-        backgroundColor: themeColors.white,
+        backgroundColor: "#FFFFFF",
     },
 
     /**
-     * Dedicated in-flow top navigation row for the back button.
+     * Dedicated in-flow top navigation row for the back button and step progress journey bar.
      * Prevents the back button from overflowing or sitting alongside page header texts.
      */
     topNavWrapper: {
         width: "100%",
+        minHeight: "clamp(52px, 6vh, 64px)",
         display: "flex",
         alignItems: "center",
-        justifyContent: "flex-start",
+        justifyContent: "space-between",
         flexShrink: 0,
-        paddingTop: "clamp(12px, 1.8vh, 24px)",
-        paddingBottom: "clamp(4px, 0.8vh, 12px)",
-        paddingLeft: "clamp(16px, 2.5vw, 32px)",
-        paddingRight: "clamp(16px, 2.5vw, 32px)",
+        paddingTop: "clamp(8px, 1.2vh, 14px)",
+        paddingBottom: "clamp(4px, 0.6vh, 8px)",
+        paddingLeft: "clamp(14px, 2vw, 28px)",
+        paddingRight: "clamp(14px, 2vw, 28px)",
         zIndex: 20,
     },
 
     /**
      * Flexible content area taking up all available room between top nav and footer,
-     * centering page contents both vertically and horizontally.
+     * centering page contents while gracefully allowing vertical scroll on compact viewports.
      */
     main: {
         display: "flex",
@@ -62,7 +63,8 @@ export const KioskLayoutStyle = {
         flexDirection: "column",
         alignItems: "center",
         justifyContent: "center",
-        overflow: "hidden",
+        overflowY: "auto",
+        overflowX: "hidden",
     },
 
     /**
@@ -92,12 +94,12 @@ export const KioskLayoutClasses = {
     /**
      * Dedicated top navigation wrapper utility classes.
      */
-    topNavWrapper: "w-full flex-shrink-0 flex items-center justify-start px-4 sm:px-8 pt-3 sm:pt-6 pb-1 sm:pb-2 z-20",
+    topNavWrapper: "w-full flex-shrink-0 flex items-center justify-between min-h-[52px] sm:min-h-[64px] px-3 sm:px-6 pt-2 sm:pt-3 pb-1 sm:pb-2 z-20",
 
     /**
-     * Main scroll and flex container utility classes, centering page content.
+     * Main scroll and flex container utility classes, centering page content while allowing scroll on compact screens.
      */
-    main: "flex min-h-0 w-full flex-1 flex-col items-center justify-center overflow-hidden",
+    main: "flex min-h-0 w-full flex-1 flex-col items-center justify-center overflow-y-auto overflow-x-hidden [scrollbar-width:thin]",
 
     /**
      * Footer structural wrapper utility classes.

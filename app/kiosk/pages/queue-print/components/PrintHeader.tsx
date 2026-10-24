@@ -1,3 +1,5 @@
+"use client";
+
 import { PrintHeaderTexts } from "@/app/kiosk/pages/queue-print/constants/printHeaderTexts";
 import { PrintHeaderStyle } from "@/app/kiosk/pages/queue-print/constants/printHeader";
 

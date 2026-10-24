@@ -4,36 +4,17 @@
  */
 
 import { CSSProperties } from "react";
-import { themeColors } from "@/constants/colors";
+import {
+    sharedKioskBannerStyle,
+    sharedKioskBannerTypography,
+} from "@/constants/kiosk";
 
-/** Typography tokens for patient type banner. */
+/** Typography tokens for patient type banner, referencing centralized shared banner scale. */
 export const patientTypeBannerTypography = {
-    bannerTitleSize: "clamp(28px, 3.2vmin, 44px)",
-    bannerSubtitleSize: "clamp(20px, 2.2vmin, 30px)",
+    bannerTitleSize: sharedKioskBannerTypography.titleSize,
+    bannerSubtitleSize: sharedKioskBannerTypography.subtitleSize,
 } as const;
 
-/** Inline styles for `PatientTypeBanner`. */
-export const PatientTypeBannerStyle = {
-    container: {
-        width: "100%",
-        paddingLeft: 24,
-        paddingRight: 24,
-        paddingBottom: 0,
-        textAlign: "center",
-    },
-    title: {
-        fontSize: patientTypeBannerTypography.bannerTitleSize,
-        fontWeight: 900,
-        lineHeight: 1.25,
-        color: themeColors.black,
-        margin: 0,
-    },
-    subtitle: {
-        marginTop: 4,
-        fontSize: patientTypeBannerTypography.bannerSubtitleSize,
-        fontWeight: 400,
-        lineHeight: 1.25,
-        color: "#1F2937",
-        margin: 0,
-    },
-} satisfies Record<string, CSSProperties>;
+/** Inline styles for `PatientTypeBanner`, referencing centralized shared banner style. */
+export const PatientTypeBannerStyle = sharedKioskBannerStyle satisfies Record<string, CSSProperties>;
+

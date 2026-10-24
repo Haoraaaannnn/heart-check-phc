@@ -7,3 +7,4 @@
  */
 
 export * from '@/constants/designs/kioskTypography';
+export * from '@/app/kiosk/constants/kioskBannerTexts';

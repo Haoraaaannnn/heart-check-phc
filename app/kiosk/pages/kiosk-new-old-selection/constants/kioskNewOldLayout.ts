@@ -96,21 +96,22 @@ export const KioskNewOldLayoutStyle = {
 /** Tailwind CSS class name dictionary for new/old patient selection layout. */
 export const KioskNewOldLayoutClasses = {
     layoutOverlay: (mounted: boolean): string =>
-        `flex h-full w-full items-center justify-center overflow-hidden bg-transparent transition-opacity duration-300 ${
+        `flex min-h-full w-full items-center justify-center bg-transparent transition-opacity duration-300 my-auto ${
             mounted ? "opacity-100" : "opacity-0"
         }`,
-    layoutContainer: "relative flex h-full w-full flex-col overflow-hidden bg-transparent items-center justify-center",
-    layoutLandscapeMain: "flex h-full w-full min-h-0 flex-1 overflow-hidden py-2 sm:py-4 items-center justify-center",
-    layoutLandscapeRow: "flex w-[92%] max-w-[1750px] h-full items-center justify-center gap-[4vw]",
-    layoutLandscapeLeftCol: "flex w-[45%] h-full shrink-0 flex-col items-center justify-center",
-    layoutLandscapeRightCol: "flex w-[55%] h-full min-h-0 flex-col items-center justify-center gap-0 overflow-hidden",
-    bannerWrapper: "w-full shrink-0 flex flex-col items-center justify-center pb-0",
-    layoutPortraitMain: "flex h-full w-full min-h-0 flex-1 flex-col overflow-hidden items-center justify-center gap-2 sm:gap-3 py-2 sm:py-4 px-2 sm:px-4 m-auto",
-    portraitHeaderWrapper: "w-full shrink-0 flex flex-col items-center justify-center pt-1 sm:pt-3 px-4",
+    layoutContainer: "relative flex min-h-full w-full flex-col bg-transparent items-center justify-center my-auto px-4 py-2",
+    unifiedWrapper: "flex flex-col items-center justify-center w-full max-w-4xl mx-auto gap-4 sm:gap-6 my-auto text-center",
+    portraitHeaderWrapper: "w-full shrink-0 flex flex-col items-center justify-center pt-0 px-2",
+    bannerWrapper: "w-full shrink-0 flex flex-col items-center justify-center pb-0 px-2",
+    cardsArea: "w-full flex items-center justify-center",
+    layoutChildrenWrapper: "w-full flex items-center justify-center",
+    layoutLandscapeMain: "flex min-h-full w-full min-h-0 flex-1 py-2 sm:py-4 items-center justify-center my-auto",
+    layoutLandscapeRow: "grid grid-cols-1 lg:grid-cols-2 w-full max-w-6xl mx-auto gap-6 lg:gap-10 items-center justify-center my-auto",
+    layoutLandscapeLeftCol: "flex w-full min-w-0 flex-col items-center justify-center",
+    layoutLandscapeRightCol: "flex w-full min-w-0 flex-col items-center justify-center gap-2",
+    layoutPortraitMain: "flex min-h-full w-full min-h-0 flex-1 flex-col items-center justify-center gap-2 sm:gap-3 py-2 sm:py-4 px-2 sm:px-4 my-auto",
     portraitSelectionGroup: "w-full flex flex-col items-center justify-center gap-0",
-    cardsArea: "w-full overflow-hidden flex items-center justify-center",
-    layoutChildrenWrapper: "w-full max-w-[1100px] mx-auto flex items-center justify-center",
-    scrollWrapper: "relative flex max-h-full w-full min-h-0 flex-initial flex-col items-center overflow-hidden",
+    scrollWrapper: "relative flex max-h-full w-full min-h-0 flex-initial flex-col items-center",
     cardsScrollArea: "max-h-full w-full min-h-0 overflow-y-auto overflow-x-hidden scrollbar-thin [scrollbar-color:#D1D5DB_transparent] [&::-webkit-scrollbar]:w-2 [&::-webkit-scrollbar-track]:bg-transparent [&::-webkit-scrollbar-thumb]:bg-gray-300 [&::-webkit-scrollbar-thumb]:rounded-full hover:[&::-webkit-scrollbar-thumb]:bg-gray-400 flex flex-col items-center pt-0 pb-1 px-2",
     scrollTopShadow: "pointer-events-none absolute top-0 inset-x-0 h-6 bg-gradient-to-b from-white/90 to-transparent z-15",
     scrollBottomShadow: "pointer-events-none absolute bottom-0 inset-x-0 h-12 bg-gradient-to-t from-white/95 to-transparent z-15",

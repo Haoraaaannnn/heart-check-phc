@@ -48,6 +48,7 @@ Security is non-negotiable across all code writes and edits:
 ### 6. Enterprise Solid Surfaces Standard
 - Workstations (`/superadmin`, `/dashboard`, `/nurse`, `/transfer`) must use solid surfaces (`bg-slate-50 dark:bg-slate-950`, `bg-white dark:bg-slate-900`) with 1px crisp borders. Blurry glassmorphism is prohibited.
 - Kiosk interactive contents, cards, and keypads must be centered vertically and horizontally.
+- Neon or glowing saturated pill/background accents are prohibited across the entire system. Badges, chips, and pills must use subdued, enterprise solid fills or subtle tonal borders.
 
 ### 7. Zero Emojis Standard
 - Emojis are strictly banned from all documentation (`.md`), code comments, JSDocs, commit messages, and UI strings. Use clean, plain-text formatting.
