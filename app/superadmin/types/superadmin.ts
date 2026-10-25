@@ -23,6 +23,8 @@ export interface SuperadminUser {
   role: string;
   /** ISO timestamp when the user was created. */
   created_at: string;
+  /** Permitted operational workstations ('transfer', 'nurse', 'dashboard', 'superadmin'). */
+  allowed_workstations?: string[];
 }
 
 /**
@@ -86,6 +88,8 @@ export interface AccessOptions {
   assignedRooms?: AssignedRoom[];
   /** Currently assigned counter numbers for the queried user. */
   assignedCounters?: number[];
+  /** Allowed operational workstations for the queried user. */
+  allowedWorkstations?: string[];
 }
 
 /**
@@ -108,6 +112,8 @@ export interface UserFormData {
   roomAssignments: AssignedRoom[];
   /** Counter numbers assigned to registration roles. */
   counterAssignments: number[];
+  /** Allowed operational workstation IDs. */
+  workstationAccess: string[];
 }
 
 /**

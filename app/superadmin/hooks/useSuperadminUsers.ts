@@ -11,6 +11,8 @@ import { useState, useEffect, useCallback, useMemo } from 'react';
 import { supabase } from '@/lib/supabase';
 import { SuperadminUser, UserStats } from '@/app/superadmin/types/superadmin';
 
+import { getDefaultWorkstationsForRole } from '@/constants/workstations';
+
 export interface UseSuperadminUsersReturn {
   /** Array of users currently displayed. */
   users: SuperadminUser[];
@@ -72,10 +74,15 @@ export function useSuperadminUsers(): UseSuperadminUsersReturn {
         .order('created_at', { ascending: false });
 
       if (fetchErr) throw fetchErr;
-      setAllUsers((data as SuperadminUser[]) || []);
-    } catch (err: any) {
+      const typedUsers: SuperadminUser[] = ((data as SuperadminUser[]) || []).map((u) => ({
+        ...u,
+        allowed_workstations: u.allowed_workstations || getDefaultWorkstationsForRole(u.role),
+      }));
+      setAllUsers(typedUsers);
+    } catch (err: unknown) {
+      const msg = err instanceof Error ? err.message : 'Unable to retrieve user list.';
       console.error('Error fetching users:', err);
-      setError(err.message || 'Unable to retrieve user list.');
+      setError(msg);
     } finally {
       setLoading(false);
     }

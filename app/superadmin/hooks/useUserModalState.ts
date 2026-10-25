@@ -16,6 +16,10 @@ import {
   AccessOptions,
   AssignedRoom,
 } from '@/app/superadmin/types/superadmin';
+import {
+  getDefaultWorkstationsForRole,
+  WorkstationId,
+} from '@/constants/workstations';
 
 export const CLINICAL_ROLES: string[] = ['nurse', 'staff', 'doctor'];
 export const REGISTRATION_ROLES: string[] = ['registration'];
@@ -37,6 +41,7 @@ export interface UseUserModalStateReturn {
   selectedServices: string[];
   selectedRooms: AssignedRoom[];
   selectedCounters: number[];
+  selectedWorkstations: string[];
   setFormEmail: (email: string) => void;
   setFormUsername: (username: string) => void;
   setFormPassword: (password: string) => void;
@@ -48,6 +53,7 @@ export interface UseUserModalStateReturn {
   toggleService: (service: string) => void;
   toggleRoom: (room: AssignedRoom) => void;
   toggleCounter: (counter: number) => void;
+  toggleWorkstation: (id: WorkstationId) => void;
   handleSubmit: (e: React.FormEvent, onSuccess: () => void) => Promise<void>;
 }
 
@@ -87,6 +93,7 @@ export function useUserModalState(): UseUserModalStateReturn {
   const [selectedServices, setSelectedServices] = useState<string[]>([]);
   const [selectedRooms, setSelectedRooms] = useState<AssignedRoom[]>([]);
   const [selectedCounters, setSelectedCounters] = useState<number[]>([]);
+  const [selectedWorkstations, setSelectedWorkstations] = useState<string[]>([]);
 
   /**
    * Loads cubicles list and assigned cubicles for a user from API.
@@ -108,7 +115,7 @@ export function useUserModalState(): UseUserModalStateReturn {
   }, []);
 
   /**
-   * Loads registration access options (services, rooms, counters) from API.
+   * Loads registration access options (services, rooms, counters, workstations) from API.
    */
   const loadAccess = useCallback(async (authId?: string, userId?: number | string, email?: string) => {
     const { data: { session } } = await supabase.auth.getSession();
@@ -128,10 +135,14 @@ export function useUserModalState(): UseUserModalStateReturn {
       consultationSubcategories: data.consultationSubcategories ?? [],
       counters: data.counters ?? [],
       availableRooms: data.availableRooms ?? [],
+      allowedWorkstations: data.allowedWorkstations ?? [],
     });
     setSelectedServices(data.assignedServices ?? []);
     setSelectedRooms(data.assignedRooms ?? []);
     setSelectedCounters(data.assignedCounters ?? []);
+    if (Array.isArray(data.allowedWorkstations)) {
+      setSelectedWorkstations(data.allowedWorkstations);
+    }
   }, []);
 
   /**
@@ -143,6 +154,7 @@ export function useUserModalState(): UseUserModalStateReturn {
     setFormUsername('');
     setFormPassword('');
     setFormRole('registration');
+    setSelectedWorkstations(getDefaultWorkstationsForRole('registration'));
     setSelectedCubicleIds([]);
     setSelectedServices([]);
     setSelectedRooms([]);
@@ -153,8 +165,9 @@ export function useUserModalState(): UseUserModalStateReturn {
 
     try {
       await Promise.all([loadCubicles(), loadAccess()]);
-    } catch (err: any) {
-      setFormError(err.message || 'Failed to load options.');
+    } catch (err: unknown) {
+      const msg = err instanceof Error ? err.message : 'Failed to load options.';
+      setFormError(msg);
     }
   };
 
@@ -167,6 +180,11 @@ export function useUserModalState(): UseUserModalStateReturn {
     setFormUsername(user.username);
     setFormPassword('');
     setFormRole(user.role as SuperadminRole);
+    setSelectedWorkstations(
+      user.allowed_workstations && user.allowed_workstations.length > 0
+        ? user.allowed_workstations
+        : getDefaultWorkstationsForRole(user.role)
+    );
     setFormError('');
     setFormSuccess('');
     setIsOpen(true);
@@ -176,8 +194,9 @@ export function useUserModalState(): UseUserModalStateReturn {
         loadCubicles(user.auth_id, user.id, user.email),
         loadAccess(user.auth_id, user.id, user.email),
       ]);
-    } catch (err: any) {
-      setFormError(err.message || 'Failed to load user access assignments.');
+    } catch (err: unknown) {
+      const msg = err instanceof Error ? err.message : 'Failed to load user access assignments.';
+      setFormError(msg);
     }
   };
 
@@ -189,6 +208,23 @@ export function useUserModalState(): UseUserModalStateReturn {
     setEditingUser(null);
     setFormError('');
     setFormSuccess('');
+  };
+
+  /**
+   * Handles role change and re-defaults workstation access.
+   */
+  const handleRoleChange = (role: SuperadminRole) => {
+    setFormRole(role);
+    setSelectedWorkstations(getDefaultWorkstationsForRole(role));
+  };
+
+  /**
+   * Toggles an operational workstation permission.
+   */
+  const toggleWorkstation = (id: WorkstationId) => {
+    setSelectedWorkstations((prev) =>
+      prev.includes(id) ? prev.filter((item) => item !== id) : [...prev, id]
+    );
   };
 
   /**
@@ -265,6 +301,7 @@ export function useUserModalState(): UseUserModalStateReturn {
             serviceAssignments: selectedServices,
             roomAssignments: isRegistration ? selectedRooms : [],
             counterAssignments: isRegistration ? selectedCounters : [],
+            workstationAccess: selectedWorkstations,
           }),
         });
 
@@ -291,6 +328,7 @@ export function useUserModalState(): UseUserModalStateReturn {
             serviceAssignments: selectedServices,
             roomAssignments: isRegistration ? selectedRooms : [],
             counterAssignments: isRegistration ? selectedCounters : [],
+            workstationAccess: selectedWorkstations,
           }),
         });
 
@@ -303,8 +341,9 @@ export function useUserModalState(): UseUserModalStateReturn {
         closeModal();
         onSuccess();
       }, 1200);
-    } catch (err: any) {
-      setFormError(err.message || 'Operation failed.');
+    } catch (err: unknown) {
+      const msg = err instanceof Error ? err.message : 'Operation failed.';
+      setFormError(msg);
     } finally {
       setFormLoading(false);
     }
@@ -327,10 +366,11 @@ export function useUserModalState(): UseUserModalStateReturn {
     selectedServices,
     selectedRooms,
     selectedCounters,
+    selectedWorkstations,
     setFormEmail,
     setFormUsername,
     setFormPassword,
-    setFormRole,
+    setFormRole: handleRoleChange,
     openCreateModal,
     openEditModal,
     closeModal,
@@ -338,6 +378,7 @@ export function useUserModalState(): UseUserModalStateReturn {
     toggleService,
     toggleRoom,
     toggleCounter,
+    toggleWorkstation,
     handleSubmit,
   };
 }

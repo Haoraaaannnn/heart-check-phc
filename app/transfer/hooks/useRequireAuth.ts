@@ -76,6 +76,13 @@ export function useRequireAuth(): boolean {
         return;
       }
 
+      // Granular workstation permission check
+      const userWorkstations = session.user.user_metadata?.allowed_workstations;
+      if (Array.isArray(userWorkstations) && !userWorkstations.includes('transfer')) {
+        window.location.replace('/unauthorized');
+        return;
+      }
+
       setChecking(false);
     };
 

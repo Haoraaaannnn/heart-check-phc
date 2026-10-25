@@ -52,4 +52,6 @@ export interface CurrentStaffProfile {
   username: string;
   /** Assigned system role (e.g., 'superadmin', 'admin', 'nurse', 'registration', 'doctor', 'staff'). */
   role: string;
+  /** Granular workstation access list if customized ('transfer', 'nurse', 'dashboard', 'superadmin'). */
+  allowedWorkstations?: string[] | null;
 }

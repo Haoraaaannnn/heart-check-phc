@@ -240,6 +240,13 @@ export function useRealtimeSubscription(
                     handleUpdate();
                 },
             )
+            .on(
+                "postgres_changes",
+                { event: "*", schema: "public", table: "doctors" },
+                () => {
+                    handleUpdate();
+                },
+            )
             .subscribe((rawStatus) => {
                 handleStatusChange(rawStatus as ChannelStatus);
             });

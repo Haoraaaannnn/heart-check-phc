@@ -50,6 +50,8 @@ import NotificationDropdown from '@/app/dashboard/components/NotificationDropdow
 import { transferTexts } from '@/constants/texts/transferTexts';
 import { transferLayoutStyles } from '@/constants/designs/transferStyles';
 import { resolveServiceIcon } from '@/constants/icons';
+import { StationSetupModal } from '@/components/reusables/StationSetupModal';
+import { useStationClaim } from '@/hooks/useStationClaim';
 
 
 /**
@@ -113,6 +115,17 @@ export default function TransferPage() {
   useEffect(() => {
     allServicesRef.current = allServices;
   }, [allServices]);
+
+  const {
+    assignment: stationAssignment,
+    counters: availableCounters,
+    cubicles: availableCubicles,
+    services: availableStationServices,
+    claimStation,
+    removeStationClaim,
+    refresh: refreshStationClaim,
+  } = useStationClaim();
+  const [showStationModal, setShowStationModal] = useState<boolean>(false);
 
   const [isLoading, setIsLoading] = useState<boolean>(true);
   const [isSyncing, setIsSyncing] = useState<boolean>(false);
@@ -919,6 +932,9 @@ export default function TransferPage() {
   const rooms = getAvailableRooms();
 
   const matchesSelectedService = (p: Patient, requireSubcategory: boolean) => {
+    if (myServices.length > 0 && p.service && !myServices.includes(p.service)) {
+      return false;
+    }
     if (!selectedCategory) return true;
     if (p.service !== selectedCategory) return false;
     if (serviceHasSubcategories && requireSubcategory && selectedSubcategory)
@@ -940,9 +956,16 @@ export default function TransferPage() {
     return myCounters.includes(p.counter);
   };
 
-  const visibleOnProgress = onProgressPatients.filter(
-    p => matchesSelectedService(p, true) && matchesMyCounters(p)
-  );
+  const visibleOnProgress = onProgressPatients.filter(p => {
+    const regServiceNames = allServices
+      .filter(s => s.requires_registration !== false)
+      .map(s => s.label_en);
+    const requiresReg = p.service ? regServiceNames.includes(p.service) : true;
+    const isDoneInRegistration = !requiresReg || p.reg_end != null;
+    if (!isDoneInRegistration) return false;
+
+    return matchesSelectedService(p, true) && matchesMyCounters(p);
+  });
   const visibleIdlePatients = idlePatients.filter(p => matchesSelectedService(p, true));
 
   const visibleRegistrationPatients = registrationPatients.filter(p => {
@@ -1192,6 +1215,53 @@ export default function TransferPage() {
             <span className={transferLayoutStyles.topHeaderTitle}>
               PHC Transfer
             </span>
+
+            {/* Current Active Desk Badge & Switch Trigger */}
+            {stationAssignment.counter ? (
+              <div className="flex items-center gap-2 px-2.5 py-1 rounded-lg bg-slate-100 dark:bg-[#1f1f1f] border border-slate-200 dark:border-[#2e2e2e]">
+                <span className="text-[11px] font-bold text-[#a8071a] dark:text-[#f87171] uppercase tracking-wider">
+                  Counter {stationAssignment.counter}
+                </span>
+                {myServices.length > 0 && (
+                  <span className="text-[10px] text-slate-400 dark:text-[#737373]">
+                    ({myServices.length} svc)
+                  </span>
+                )}
+                <button
+                  type="button"
+                  onClick={() => setShowStationModal(true)}
+                  className="text-[11px] font-semibold text-slate-500 hover:text-slate-800 dark:text-[#a3a3a3] dark:hover:text-[#f5f5f5] transition underline cursor-pointer"
+                >
+                  Switch
+                </button>
+              </div>
+            ) : myCounters.length > 1 ? (
+              <div className="flex items-center gap-2 px-2.5 py-1 rounded-lg bg-slate-100 dark:bg-[#1f1f1f] border border-slate-200 dark:border-[#2e2e2e]">
+                <span className="text-[11px] font-bold text-slate-700 dark:text-[#d4d4d4] uppercase tracking-wider">
+                  All Counters ({myCounters.length})
+                </span>
+                <button
+                  type="button"
+                  onClick={() => setShowStationModal(true)}
+                  className="text-[11px] font-semibold text-[#a8071a] dark:text-[#f87171] hover:underline cursor-pointer"
+                >
+                  Configure Desk
+                </button>
+              </div>
+            ) : myCounters.length === 1 ? (
+              <div className="flex items-center gap-2 px-2.5 py-1 rounded-lg bg-slate-100 dark:bg-[#1f1f1f] border border-slate-200 dark:border-[#2e2e2e]">
+                <span className="text-[11px] font-bold text-[#a8071a] dark:text-[#f87171] uppercase tracking-wider">
+                  Counter {myCounters[0]}
+                </span>
+                <button
+                  type="button"
+                  onClick={() => setShowStationModal(true)}
+                  className="text-[11px] font-semibold text-slate-500 hover:text-slate-800 dark:text-[#a3a3a3] dark:hover:text-[#f5f5f5] transition underline cursor-pointer"
+                >
+                  Switch
+                </button>
+              </div>
+            ) : null}
           </div>
 
           <div className="flex items-center gap-2 sm:gap-2.5 shrink-0">
@@ -1387,6 +1457,25 @@ export default function TransferPage() {
       {/* Doctors Assignment Modal */}
       {showDoctorsModal && (
         <DoctorsModal onClose={() => setShowDoctorsModal(false)} />
+      )}
+
+      {/* Station Configuration Modal */}
+      {showStationModal && (
+        <StationSetupModal
+          isOpen={showStationModal}
+          onClose={() => setShowStationModal(false)}
+          workstation="registration"
+          currentAssignment={stationAssignment}
+          counters={availableCounters}
+          cubicles={availableCubicles}
+          services={availableStationServices}
+          onSave={claimStation}
+          onRemove={() => removeStationClaim('registration')}
+          onSuccess={() => {
+            void refreshStationClaim();
+            void fetchMyAccess();
+          }}
+        />
       )}
     </div>
   );

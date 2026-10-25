@@ -95,10 +95,14 @@ export async function GET(request: Request) {
       .map((s) => s.label_en.trim().toLowerCase())
   );
 
-  // Filter cubicles applicable to this nurse
-  const cubicles = (allCubicles ?? []).filter(
-    (c) => isSupervisor || cubicleIds.includes(c.id) || assignedServiceNames.includes(c.category)
-  );
+  // Filter cubicles applicable to this nurse (strictly enforce 1-to-1 cubicle claim)
+  const hasClaimedCubicle = cubicleIds.length > 0;
+  const cubicles = (allCubicles ?? []).filter((c) => {
+    if (hasClaimedCubicle) {
+      return cubicleIds.includes(c.id);
+    }
+    return isSupervisor || assignedServiceNames.includes(c.category);
+  });
   const cubicleNums = cubicles.map((c) => c.cubicleNum).filter(Boolean);
   const cubicleCategories = Array.from(new Set(cubicles.map((c) => c.category).filter(Boolean)));
 
@@ -110,7 +114,7 @@ export async function GET(request: Request) {
       ...(assignedServiceNames.length === 0 && cubicleIds.length === 0 ? activeNurseServices : []),
     ])
   );
-  const effectiveServices = isSupervisor ? activeNurseServices : combinedServices;
+  const effectiveServices = (isSupervisor && !hasClaimedCubicle) ? activeNurseServices : combinedServices;
 
   // Today in Manila time
   const today = new Date();

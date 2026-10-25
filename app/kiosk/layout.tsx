@@ -18,6 +18,7 @@ import {
   KioskLayoutStyle,
 } from "@/app/kiosk/constants/kioskLayout";
 import { KIOSK_ROUTES } from "@/app/kiosk/constants/kioskNavigation";
+import { useKioskPresence } from "@/app/kiosk/hooks/useKioskPresence";
 
 /** Props for {@link MainKioskLayout}. */
 interface MainKioskLayoutProps {
@@ -212,6 +213,9 @@ export default function MainKioskLayout({ children }: MainKioskLayoutProps) {
 
   const pathname = usePathname();
   const isSlideshow = pathname === KIOSK_ROUTES.SLIDESHOW;
+
+  // Broadcast real-time kiosk terminal telemetry and printer hardware state to SuperAdmin
+  useKioskPresence();
 
   // The patient check-in kiosk is strictly light-mode only per institutional standards.
   // Isolated strictly to the kiosk shell lifecycle; does not mutate next-themes or affect other tabs.
