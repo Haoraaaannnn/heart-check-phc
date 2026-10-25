@@ -14,6 +14,7 @@ import React from 'react';
 import { Patient, Cubicle } from '@/types/Types';
 import { MONITOR_STYLES } from '@/app/monitor/constants/monitorStyles';
 import { MONITOR_TEXTS } from '@/app/monitor/constants/monitorTexts';
+import { sortCubiclePatients } from '@/app/monitor/lib/sortCubiclePatients';
 
 /** Props for {@link TableLayout}. */
 type TableLayoutProps = {
@@ -27,6 +28,8 @@ type TableLayoutProps = {
   formatCubicleDisplay: (cubicleNum: string) => string;
   /** Mapping of cubicle IDs to assigned physician names. */
   cubicleDoctorMap?: Record<string, string>;
+  /** Actively called station or ticket details. */
+  activeCall?: { ticket?: string; cubicle?: string | null; expiry: number } | null;
 };
 
 /**
@@ -52,10 +55,11 @@ export function TableLayout({
   cubicles,
   assignedPatients,
   cubicleDoctorMap = {},
+  activeCall = null,
 }: TableLayoutProps) {
   const uniqueRooms = [...new Set(cubicles.map(c => c.room))].sort((a, b) => a - b);
 
-  if (assignedPatients.length === 0) {
+  if (cubicles.length === 0 && assignedPatients.length === 0) {
     return (
       <div className={MONITOR_STYLES.tableLayout.container}>
         <div className={MONITOR_STYLES.tableLayout.emptyStateWrap}>
@@ -104,45 +108,56 @@ export function TableLayout({
                     const patientsInCubicle = assignedPatients.filter(
                       p => p.cubicleNum === cubicle.cubicleNum
                     );
-                    const sortedPatients = [...patientsInCubicle].sort(
-                      (a, b) => new Date(a.called_at || 0).getTime() - new Date(b.called_at || 0).getTime()
-                    );
+                    const sortedPatients = sortCubiclePatients(patientsInCubicle);
+                    const activePatient = sortedPatients[0];
+                    const nextPatient = sortedPatients[1];
+                    const remainingCount = sortedPatients.length > 2 ? sortedPatients.length - 2 : 0;
+                    const isCalling = activePatient && activeCall !== null &&
+                      Date.now() < activeCall.expiry &&
+                      (activeCall.cubicle === cubicle.cubicleNum || activeCall.ticket === activePatient.patientNum);
+
                     return (
                       <td key={cubicle.id} className={MONITOR_STYLES.tableLayout.cubicleCell}>
                         <div className={MONITOR_STYLES.tableLayout.cellContentWrap}>
-                          {sortedPatients.length === 0 ? (
+                          {!activePatient ? (
                             <div className={MONITOR_STYLES.tableLayout.emptyCellText}>
                               {MONITOR_TEXTS.tableLayout.emptyPlaceholder}
                             </div>
                           ) : (
-                            sortedPatients.map((patient, idx) =>
-                              idx === 0 ? (
+                            <>
+                              <div
+                                style={isCalling ? undefined : { backgroundColor: '#cc3535' }}
+                                className={isCalling ? MONITOR_STYLES.tableLayout.callingCard : MONITOR_STYLES.tableLayout.nowServingCard}
+                              >
+                                <span className={isCalling ? MONITOR_STYLES.tableLayout.nowCallingBadge : MONITOR_STYLES.tableLayout.nowServingBadge}>
+                                  {isCalling && <i className="bx bxs-megaphone animate-bounce text-xs" aria-hidden="true" />}
+                                  {isCalling ? MONITOR_TEXTS.tableLayout.nowCallingBadge : MONITOR_TEXTS.tableLayout.nowServingBadge}
+                                </span>
+                                <span className={MONITOR_STYLES.tableLayout.nowServingTicket}>
+                                  {activePatient.patientNum}
+                                </span>
                                 <div
-                                  key={patient.id}
-                                  className={MONITOR_STYLES.tableLayout.nowServingCard}
-                                >
-                                  <span className={MONITOR_STYLES.tableLayout.nowServingBadge}>
-                                    {MONITOR_TEXTS.tableLayout.nowServingBadge}
+                                  className={MONITOR_STYLES.tableLayout.activePulseDot}
+                                  aria-hidden="true"
+                                />
+                              </div>
+
+                              {nextPatient && (
+                                <div className={MONITOR_STYLES.tableLayout.waitingCard}>
+                                  <span className={MONITOR_STYLES.tableLayout.nextBadge}>
+                                    {MONITOR_TEXTS.tableLayout.nextBadge}
                                   </span>
-                                  <span className={MONITOR_STYLES.tableLayout.nowServingTicket}>
-                                    {patient.patientNum}
-                                  </span>
-                                  <div
-                                    className={MONITOR_STYLES.tableLayout.activePulseDot}
-                                    aria-hidden="true"
-                                  />
-                                </div>
-                              ) : (
-                                <div
-                                  key={patient.id}
-                                  className={MONITOR_STYLES.tableLayout.waitingCard}
-                                >
                                   <span className={MONITOR_STYLES.tableLayout.waitingTicket}>
-                                    {patient.patientNum}
+                                    {nextPatient.patientNum}
                                   </span>
+                                  {remainingCount > 0 && (
+                                    <span className="text-[11px] font-bold text-slate-500">
+                                      (+{remainingCount})
+                                    </span>
+                                  )}
                                 </div>
-                              )
-                            )
+                              )}
+                            </>
                           )}
                         </div>
                       </td>

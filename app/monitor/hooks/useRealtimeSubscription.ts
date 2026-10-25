@@ -210,13 +210,24 @@ export function useRealtimeSubscription(
             }
         };
 
+        const normalizedCategory = category.trim().toLowerCase();
+
         const channel = supabase
             .channel(channelName)
             .on("postgres_changes", {
                 event: "*",
                 schema: "public",
                 table: "patients",
-                filter: `service=eq.${category}`,
+            }, (payload: any) => {
+                const rec = payload.new || payload.old;
+                if (!rec || !rec.service || rec.service.trim().toLowerCase() === normalizedCategory) {
+                    scheduleFetch();
+                }
+            })
+            .on("postgres_changes", {
+                event: "*",
+                schema: "public",
+                table: "cubicle",
             }, () => {
                 scheduleFetch();
             })

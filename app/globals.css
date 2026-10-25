@@ -240,3 +240,26 @@ body {
 .phc-queue-dot-motion {
   animation: phc-queue-travel 3.2s cubic-bezier(0.4, 0, 0.6, 1) infinite;
 }
+
+/* -------------------------------------------------------------------------- */
+/* Public TV Monitor Active Calling Animations                                */
+/* Blinks calling station card with high visibility while maintaining        */
+/* 100% text opacity and WCAG AAA contrast ratio (never fades text to white)  */
+/* -------------------------------------------------------------------------- */
+@keyframes monitor-calling-blink {
+
+  0%,
+  100% {
+    background-color: #cc3535;
+    box-shadow: 0 0 0 0 rgba(245, 158, 11, 0), 0 10px 25px -5px rgba(204, 53, 53, 0.5);
+  }
+
+  50% {
+    background-color: #3b0709;
+    box-shadow: 0 0 0 8px #fbbf24, 0 0 35px 8px rgba(251, 191, 36, 0.85);
+  }
+}
+
+.animate-monitor-calling {
+  animation: monitor-calling-blink 0.9s cubic-bezier(0.4, 0, 0.6, 1) infinite !important;
+}

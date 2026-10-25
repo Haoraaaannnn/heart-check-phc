@@ -33,16 +33,32 @@ export default function MonitorLayout({ children }: MonitorLayoutProps) {
   useEffect(() => {
     const root = document.documentElement;
     const body = document.body;
-    const wasDark = root.classList.contains('dark');
+    const wasDark = root.classList.contains('dark') || body.classList.contains('dark');
     const prevHtmlOverflow = root.style.overflow;
     const prevBodyOverflow = body.style.overflow;
 
-    root.classList.remove('dark');
-    root.style.colorScheme = 'light';
-    root.style.overflow = 'hidden';
-    body.style.overflow = 'hidden';
+    const enforceLightAndNoScroll = () => {
+      root.classList.remove('dark');
+      body.classList.remove('dark');
+      root.style.colorScheme = 'light';
+      root.style.overflow = 'hidden';
+      body.style.overflow = 'hidden';
+    };
+
+    enforceLightAndNoScroll();
+
+    // Guard against next-themes re-injecting 'dark' class during background route checks
+    const observer = new MutationObserver(() => {
+      if (root.classList.contains('dark') || body.classList.contains('dark')) {
+        enforceLightAndNoScroll();
+      }
+    });
+
+    observer.observe(root, { attributes: true, attributeFilter: ['class', 'style'] });
+    observer.observe(body, { attributes: true, attributeFilter: ['class', 'style'] });
 
     return () => {
+      observer.disconnect();
       root.style.overflow = prevHtmlOverflow;
       body.style.overflow = prevBodyOverflow;
       if (wasDark) {
@@ -53,7 +69,7 @@ export default function MonitorLayout({ children }: MonitorLayoutProps) {
   }, []);
 
   return (
-    <div className="h-screen h-[100dvh] w-screen w-[100dvw] overflow-hidden flex flex-col bg-white text-slate-800 font-sans select-none">
+    <div className="h-screen h-[100dvh] w-screen w-[100dvw] overflow-hidden flex flex-col bg-slate-50 text-slate-800 font-sans select-none">
       {children}
     </div>
   );

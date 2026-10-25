@@ -78,7 +78,7 @@ export async function GET(request: Request) {
   ] = await Promise.all([
     supabaseAdmin.from('user_cubicles').select('cubicle_id').eq('user_id', user.id),
     supabaseAdmin.from('user_services').select('service').eq('user_id', user.id),
-    supabaseAdmin.from('services').select('label_en, requires_nurse, display_order').order('display_order', { ascending: true }),
+    supabaseAdmin.from('services').select('label_en, requires_nurse, requires_registration, display_order').order('display_order', { ascending: true }),
     supabaseAdmin.from('cubicle').select('id, cubicleNum, category, room, subcategory, doctorId').order('room').order('cubicleNum'),
   ]);
 
@@ -88,6 +88,12 @@ export async function GET(request: Request) {
     .filter((s) => s.requires_nurse !== false)
     .map((s) => s.label_en)
     .filter(Boolean);
+
+  const regRequiredServices = new Set(
+    (allServices ?? [])
+      .filter((s) => s.requires_registration !== false)
+      .map((s) => s.label_en.trim().toLowerCase())
+  );
 
   // Filter cubicles applicable to this nurse
   const cubicles = (allCubicles ?? []).filter(
@@ -112,16 +118,15 @@ export async function GET(request: Request) {
   const tomorrow = new Date(today);
   tomorrow.setDate(today.getDate() + 1);
 
-  // Query active non-terminal patients
+  // Query active non-terminal patients that have been assigned to a cubicle
   const activeQueries = [];
   if (isSupervisor) {
     activeQueries.push(
       supabaseAdmin
         .from('patients')
         .select('*')
-        .neq('status', 'Done')
-        .neq('status', 'Idle')
-        .neq('status', 'Removed')
+        .in('status', ['Assigned', 'With Doctor', 'Carryout'])
+        .not('cubicleNum', 'is', null)
         .eq('is_historical', false)
         .gte('created_at', today.toISOString())
         .lt('created_at', tomorrow.toISOString())
@@ -133,22 +138,10 @@ export async function GET(request: Request) {
         supabaseAdmin
           .from('patients')
           .select('*')
-          .neq('status', 'Done')
-          .neq('status', 'Idle')
-          .neq('status', 'Removed')
+          .in('status', ['Assigned', 'With Doctor', 'Carryout'])
+          .not('cubicleNum', 'is', null)
           .eq('is_historical', false)
           .in('cubicleNum', cubicleNums)
-          .gte('created_at', today.toISOString())
-          .lt('created_at', tomorrow.toISOString())
-          .order('created_at', { ascending: true }),
-        supabaseAdmin
-          .from('patients')
-          .select('*')
-          .neq('status', 'Done')
-          .neq('status', 'Idle')
-          .neq('status', 'Removed')
-          .eq('is_historical', false)
-          .overlaps('preferredCubicleNums', cubicleNums)
           .gte('created_at', today.toISOString())
           .lt('created_at', tomorrow.toISOString())
           .order('created_at', { ascending: true })
@@ -159,9 +152,8 @@ export async function GET(request: Request) {
         supabaseAdmin
           .from('patients')
           .select('*')
-          .neq('status', 'Done')
-          .neq('status', 'Idle')
-          .neq('status', 'Removed')
+          .in('status', ['Assigned', 'With Doctor', 'Carryout'])
+          .not('cubicleNum', 'is', null)
           .eq('is_historical', false)
           .in('service', effectiveServices)
           .gte('created_at', today.toISOString())
@@ -176,6 +168,10 @@ export async function GET(request: Request) {
   for (const res of activeResults) {
     if (res.data) {
       for (const p of res.data) {
+        if (!p.cubicleNum) continue;
+        const svc = p.service?.trim().toLowerCase() || '';
+        // If this service requires registration, do not show until registration is completed
+        if (regRequiredServices.has(svc) && !p.reg_end) continue;
         activeMap.set(p.id, p as Patient);
       }
     }

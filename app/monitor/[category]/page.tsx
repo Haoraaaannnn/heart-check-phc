@@ -22,6 +22,7 @@ import { RegistrationLayout } from '@/app/monitor/components/RegistrationLayout'
 import { useMonitorData } from '@/app/monitor/hooks/useMonitorData';
 import { useRealtimeSubscription } from '@/app/monitor/hooks/useRealtimeSubscription';
 import { MONITOR_STYLES } from '@/app/monitor/constants/monitorStyles';
+import { sortCubiclePatients } from '@/app/monitor/lib/sortCubiclePatients';
 
 
 export default function CategoryMonitorPage() {
@@ -50,12 +51,14 @@ export default function CategoryMonitorPage() {
     isTableLayoutService,
     setupRegistrationSubscription,
     cubicleDoctorMap,
+    activeCall,
   } = useMonitorData(category, subcategory, categoryParam, isRegistration, started);
 
   useRealtimeSubscription(`monitor-${categoryParam}`, category, () => {
     if (isRegistration) {
       fetchRegistrationPatients();
     } else {
+      fetchCubicles();
       fetchPatients();
     }
   });
@@ -80,23 +83,56 @@ export default function CategoryMonitorPage() {
     } else {
       fetchCubicles();
       fetchPatients();
+
+      const interval = setInterval(() => {
+        fetchCubicles();
+        fetchPatients();
+      }, 3000);
+      return () => clearInterval(interval);
     }
-    
+  }, [category, subcategory, isRegistration]);
+
+  useEffect(() => {
     const clockInterval = setInterval(() => setCurrentTime(new Date()), 1000);
     return () => clearInterval(clockInterval);
-  }, []);
+  }, [setCurrentTime]);
 
   const getPairedData = () => {
     const cubicleList = [...new Set(cubicles.map(c => c.cubicleNum))];
-    const maxLength = Math.max(assignedPatients.length, cubicleList.length);
-    const pairs: { patient: any; cubicle: string }[] = [];
+    const pairs: {
+      patient: any;
+      cubicle: string;
+      nextPatient?: any;
+      waitingCount?: number;
+    }[] = [];
     
-    for (let i = 0; i < maxLength; i++) {
+    for (const cubicleNum of cubicleList) {
+      const cubiclePatients = sortCubiclePatients(
+        assignedPatients.filter(p => p.cubicleNum === cubicleNum)
+      );
       pairs.push({
-        patient: assignedPatients[i] || null,
-        cubicle: cubicleList[i] || (cubicleList.length > 0 ? cubicleList[i % cubicleList.length] : '')
+        cubicle: cubicleNum,
+        patient: cubiclePatients[0] || null,
+        nextPatient: cubiclePatients[1] || null,
+        waitingCount: Math.max(0, cubiclePatients.length - 1),
       });
     }
+
+    const knownCubicles = new Set(cubicleList);
+    const orphanPatients = assignedPatients.filter(p => p.cubicleNum && !knownCubicles.has(p.cubicleNum));
+    const orphanCubicles = [...new Set(orphanPatients.map(p => p.cubicleNum!))];
+    for (const cubicleNum of orphanCubicles) {
+      const cubiclePatients = sortCubiclePatients(
+        orphanPatients.filter(p => p.cubicleNum === cubicleNum)
+      );
+      pairs.push({
+        cubicle: cubicleNum,
+        patient: cubiclePatients[0] || null,
+        nextPatient: cubiclePatients[1] || null,
+        waitingCount: Math.max(0, cubiclePatients.length - 1),
+      });
+    }
+
     return pairs;
   };
 
@@ -128,6 +164,7 @@ export default function CategoryMonitorPage() {
             pairedData={getPairedData()}
             formatCubicleDisplay={formatCubicleDisplay}
             cubicleDoctorMap={cubicleDoctorMap}
+            activeCall={activeCall}
           />
         </main>
         <Footer />
@@ -145,6 +182,7 @@ export default function CategoryMonitorPage() {
           assignedPatients={assignedPatients}
           formatCubicleDisplay={formatCubicleDisplay}
           cubicleDoctorMap={cubicleDoctorMap}
+          activeCall={activeCall}
         />
       </main>
       <Footer />
