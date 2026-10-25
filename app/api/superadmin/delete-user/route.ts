@@ -28,6 +28,21 @@ export async function DELETE(request: Request) {
       )
     }
 
+    const { data: userRow } = await supabaseAdmin
+      .from('users')
+      .select('id')
+      .eq('auth_id', authId)
+      .maybeSingle();
+
+    if (userRow) {
+      await Promise.all([
+        supabaseAdmin.from('user_cubicles').delete().eq('user_id', userRow.id),
+        supabaseAdmin.from('user_services').delete().eq('user_id', userRow.id),
+        supabaseAdmin.from('user_rooms').delete().eq('user_id', userRow.id),
+        supabaseAdmin.from('user_counters').delete().eq('user_id', userRow.id),
+      ]);
+    }
+
     const { error: dbError } = await supabaseAdmin
       .from('users')
       .delete()
@@ -47,7 +62,8 @@ export async function DELETE(request: Request) {
       { success: true, message: 'User deleted successfully' },
       { status: 200 }
     )
-  } catch (error: any) {
-    return NextResponse.json({ error: error.message }, { status: 500 })
+  } catch (error: unknown) {
+    const message = error instanceof Error ? error.message : 'Unknown server error';
+    return NextResponse.json({ error: message }, { status: 500 })
   }
 }

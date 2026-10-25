@@ -16,6 +16,7 @@ import {
 } from '@/app/superadmin/hooks/useUserModalState';
 import { ClinicalAssignmentsSelector } from '@/app/superadmin/components/ClinicalAssignmentsSelector';
 import { RegistrationAssignmentsSelector } from '@/app/superadmin/components/RegistrationAssignmentsSelector';
+import { WorkstationAccessSelector } from '@/app/superadmin/components/WorkstationAccessSelector';
 import { SUPERADMIN_TEXTS } from '@/app/superadmin/constants/superadminTexts';
 import { SUPERADMIN_STYLES } from '@/app/superadmin/constants/superadminStyles';
 
@@ -160,6 +161,13 @@ export const UserModal: React.FC<UserModalProps> = ({ modalState, onSuccess }) =
                 </select>
               </div>
             </div>
+
+            {/* Workstation & Role Access Permissions */}
+            <WorkstationAccessSelector
+              selectedWorkstations={modalState.selectedWorkstations}
+              onToggleWorkstation={modalState.toggleWorkstation}
+              currentRole={modalState.formRole}
+            />
 
             {/* Role-Specific Assignment Grids */}
             {isClinical && (

@@ -147,7 +147,10 @@ export function useMyAccess(): UseMyAccessReturn {
 
       const serviceList = (services ?? []).map(s => s.service);
 
-      if (user.role === 'superadmin' || user.role === 'admin') {
+      const userCounterNums = (counters ?? []).map(c => c.counter).filter(n => activeCounters.includes(n));
+      const hasExplicitDesk = userCounterNums.length > 0 || serviceList.length > 0;
+
+      if ((user.role === 'superadmin' || user.role === 'admin') && !hasExplicitDesk) {
         const adminServices = availableServices.length > 0
           ? availableServices.map(s => s.label_en)
           : (serviceList.length > 0 ? serviceList : CATEGORIES);
@@ -160,8 +163,8 @@ export function useMyAccess(): UseMyAccessReturn {
 
       setMyServices(serviceList);
       setMyRooms((rooms ?? []) as RoomAccess[]);
-      setAccessStatus(serviceList.length > 0 ? 'assigned' : 'unassigned');
-      setMyCounters((counters ?? []).map(c => c.counter).filter(n => activeCounters.includes(n)));
+      setAccessStatus(serviceList.length > 0 || userCounterNums.length > 0 ? 'assigned' : 'unassigned');
+      setMyCounters(userCounterNums);
     } catch (err) {
       console.error('useMyAccess: Unexpected exception while verifying access', err);
       setAccessStatus('error');
@@ -172,13 +175,36 @@ export function useMyAccess(): UseMyAccessReturn {
     fetchMyAccess();
 
     const channel = supabase
-      .channel('transfer-my-access-services')
+      .channel('transfer-my-access-sync')
       .on(
         'postgres_changes',
         { event: '*', schema: 'public', table: 'services' },
-        () => {
-          fetchMyAccess();
-        }
+        () => void fetchMyAccess()
+      )
+      .on(
+        'postgres_changes',
+        { event: '*', schema: 'public', table: 'counters' },
+        () => void fetchMyAccess()
+      )
+      .on(
+        'postgres_changes',
+        { event: '*', schema: 'public', table: 'cubicle' },
+        () => void fetchMyAccess()
+      )
+      .on(
+        'postgres_changes',
+        { event: '*', schema: 'public', table: 'user_counters' },
+        () => void fetchMyAccess()
+      )
+      .on(
+        'postgres_changes',
+        { event: '*', schema: 'public', table: 'user_rooms' },
+        () => void fetchMyAccess()
+      )
+      .on(
+        'postgres_changes',
+        { event: '*', schema: 'public', table: 'user_services' },
+        () => void fetchMyAccess()
       )
       .subscribe();
 

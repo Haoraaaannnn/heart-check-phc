@@ -50,6 +50,8 @@ import { requestMonitorCall } from '@/lib/requestMonitorCall';
 import { useConnectionStatus } from '@/hooks/useConnectionStatus';
 import { useOfflineQueue } from '@/hooks/useOfflineQueue';
 import { ConnectionStatusBanner } from '@/components/reusables/ConnectionStatusBanner';
+import { StationSetupModal } from '@/components/reusables/StationSetupModal';
+import { useStationClaim } from '@/hooks/useStationClaim';
 
 
 /**
@@ -73,6 +75,18 @@ export default function NursePage() {
   // Audio Announcement State
   const [speakingId, setSpeakingId] = useState<number | null>(null);
   const [callError, setCallError] = useState('');
+
+  // Station Configuration State
+  const {
+    assignment: stationAssignment,
+    counters: availableCounters,
+    cubicles: availableCubicles,
+    services: availableStationServices,
+    claimStation,
+    removeStationClaim,
+    refresh: refreshStationClaim,
+  } = useStationClaim();
+  const [showStationModal, setShowStationModal] = useState<boolean>(false);
 
   // Loading & Sync States
   const [isLoading, setIsLoading] = useState(true);
@@ -378,6 +392,8 @@ export default function NursePage() {
           onMarkAllAsRead={markAllAsRead}
           onDismissNotification={dismissNotification}
           onClearAllNotifications={clearAll}
+          claimedCubicleId={stationAssignment.cubicleId}
+          onOpenStationModal={() => setShowStationModal(true)}
         />
 
         <NurseBreakControls selectedCubicleNum={selectedCubicleNum} />
@@ -463,6 +479,26 @@ export default function NursePage() {
         onClose={() => setFinishedDrawerOpen(false)}
         patients={visibleFinished}
       />
+
+      {/* Station Configuration Modal */}
+      {showStationModal && (
+        <StationSetupModal
+          isOpen={showStationModal}
+          onClose={() => setShowStationModal(false)}
+          workstation="nurse"
+          currentAssignment={stationAssignment}
+          counters={availableCounters}
+          cubicles={availableCubicles}
+          services={availableStationServices}
+          onSave={claimStation}
+          onRemove={() => removeStationClaim('nurse')}
+          onSuccess={() => {
+            void refreshStationClaim();
+            void refreshCubicles();
+            void fetchData();
+          }}
+        />
+      )}
     </div>
   );
 }

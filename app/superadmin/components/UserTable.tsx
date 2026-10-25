@@ -225,9 +225,23 @@ export const UserTable: React.FC<UserTableProps> = ({
                       </span>
                     </td>
                     <td className={S.td}>
-                      <span className={`${R.basePill} ${getRoleBadgeClass(user.role)}`}>
-                        {user.role}
-                      </span>
+                      <div className="flex flex-col gap-1 items-start">
+                        <span className={`${R.basePill} ${getRoleBadgeClass(user.role)}`}>
+                          {user.role}
+                        </span>
+                        {user.allowed_workstations && user.allowed_workstations.length > 0 && (
+                          <div className="flex flex-wrap gap-1">
+                            {user.allowed_workstations.map((ws) => (
+                              <span
+                                key={ws}
+                                className="px-1.5 py-0.5 rounded text-[9px] font-mono font-medium bg-slate-100 dark:bg-[#252525] text-slate-600 dark:text-[#a3a3a3] border border-slate-200 dark:border-[#333]"
+                              >
+                                {ws}
+                              </span>
+                            ))}
+                          </div>
+                        )}
+                      </div>
                     </td>
                     <td className={S.td}>
                       <span className="text-xs text-slate-500 dark:text-[#a3a3a3]">

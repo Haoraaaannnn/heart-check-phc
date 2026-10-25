@@ -40,7 +40,7 @@ export async function POST(request: Request) {
   }
 
   const { error } = await supabaseAdmin
-    .from('counters').insert({ counter_number: number, label: label?.trim() || null });
+    .from('counters').insert({ counter_number: number, label: label?.trim() || null, active: true });
   if (error) return NextResponse.json({ error: error.message }, { status: 400 });
   return NextResponse.json({ success: true }, { status: 201 });
 }

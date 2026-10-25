@@ -64,6 +64,15 @@ export function SuperAdminSidebar({
       return true;
     }
 
+    if (item.matchPrefix === '/superadmin/customization') {
+      if (!pathname.startsWith('/superadmin/customization')) return false;
+      if (item.matchTab) {
+        const kioskTab = searchParams.get('tab') || 'services';
+        return kioskTab === item.matchTab;
+      }
+      return true;
+    }
+
     if (item.matchPrefix) {
       return pathname.startsWith(item.matchPrefix);
     }

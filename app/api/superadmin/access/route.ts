@@ -1,6 +1,7 @@
 import { NextResponse } from 'next/server';
 import { createClient } from '@supabase/supabase-js';
 import { requireSuperadmin } from '@/lib/supabase/superadminGuard';
+import { getDefaultWorkstationsForRole } from '@/constants/workstations';
 
 const supabaseAdmin = createClient(
   process.env.NEXT_PUBLIC_SUPABASE_URL!,
@@ -61,24 +62,25 @@ export async function GET(request: Request) {
   let assignedServices: string[] = [];
   let assignedRooms: { service: string; subcategory: string | null; room: number }[] = [];
   let assignedCounters: number[] = [];
+  let allowedWorkstations: string[] = [];
 
-  let user: { id: number | string; email?: string } | null = null;
+  let user: { id: number | string; email?: string; auth_id?: string; role?: string } | null = null;
 
   if (userId) {
     const { data: userById } = await supabaseAdmin
-      .from('users').select('id, email, auth_id').eq('id', userId).maybeSingle();
+      .from('users').select('id, email, auth_id, role').eq('id', userId).maybeSingle();
     if (userById) user = userById;
   }
 
   if (!user && authId) {
     const { data: userByAuth } = await supabaseAdmin
-      .from('users').select('id, email, auth_id').eq('auth_id', authId).maybeSingle();
+      .from('users').select('id, email, auth_id, role').eq('auth_id', authId).maybeSingle();
     if (userByAuth) user = userByAuth;
   }
 
   if (!user && email) {
     const { data: userByEmail } = await supabaseAdmin
-      .from('users').select('id, email, auth_id').ilike('email', email).maybeSingle();
+      .from('users').select('id, email, auth_id, role').ilike('email', email).maybeSingle();
     if (userByEmail) user = userByEmail;
   }
 
@@ -142,6 +144,18 @@ export async function GET(request: Request) {
         assignedCounters = (counters ?? []).map(c => c.counter);
     }
 
+  const targetAuthId = authId || user?.auth_id;
+  if (targetAuthId) {
+    const { data: authUser } = await supabaseAdmin.auth.admin.getUserById(targetAuthId);
+    if (authUser?.user?.user_metadata?.allowed_workstations && Array.isArray(authUser.user.user_metadata.allowed_workstations)) {
+      allowedWorkstations = authUser.user.user_metadata.allowed_workstations;
+    } else if (user?.role) {
+      allowedWorkstations = getDefaultWorkstationsForRole(user.role);
+    }
+  } else if (user?.role) {
+    allowedWorkstations = getDefaultWorkstationsForRole(user.role);
+  }
+
   return NextResponse.json({
     services: dynamicServices,
     consultationSubcategories: CONSULTATION_SUBCATEGORIES,
@@ -150,5 +164,6 @@ export async function GET(request: Request) {
     assignedServices,
     assignedRooms,
     assignedCounters,
+    allowedWorkstations,
   });
 }

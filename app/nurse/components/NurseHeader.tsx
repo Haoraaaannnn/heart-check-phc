@@ -13,6 +13,7 @@ import React, { useState, useEffect, useMemo } from 'react';
 import { useTheme } from 'next-themes';
 import { toggleThemeWithRipple } from '@/lib/theme/themeTransition';
 import NotificationDropdown from '@/app/dashboard/components/NotificationDropdown';
+import { Notification } from '@/app/dashboard/hooks/useBottleneckNotifications';
 import { AssignedNurseCubicle } from '@/app/nurse/types/nurse';
 import { nurseTexts } from '@/app/nurse/constants/nurseTexts';
 import { NurseStyle } from '@/app/nurse/constants/nurse';
@@ -48,14 +49,19 @@ export interface NurseHeaderProps {
   /** Callback fired to toggle or close the sidebar. */
   onToggleSidebar?: () => void;
   /** Notifications dataset for the workstation. */
-  notifications: any[];
+  notifications: Notification[];
   /** Unread notification count. */
   unreadCount: number;
   /** Notification handlers. */
   onMarkAsRead: (id: string) => void;
   onMarkAllAsRead: () => void;
   onDismissNotification: (id: string) => void;
-  onClearAllNotifications: () => void;
+  /** Callback to clear all active notifications. */
+  onClearAllNotifications?: () => void;
+  /** Optional explicitly claimed cubicle ID. */
+  claimedCubicleId?: number | null;
+  /** Callback fired to launch station configuration modal. */
+  onOpenStationModal?: () => void;
 }
 
 /**
@@ -84,6 +90,8 @@ export function NurseHeader({
   onMarkAllAsRead,
   onDismissNotification,
   onClearAllNotifications,
+  claimedCubicleId,
+  onOpenStationModal,
 }: NurseHeaderProps) {
   // Theme switching hook
   const { resolvedTheme, setTheme } = useTheme();
@@ -124,6 +132,10 @@ export function NurseHeader({
     return groups;
   }, [assignedServices, assignedCubicles]);
 
+  const claimedCubicle = claimedCubicleId
+    ? assignedCubicles.find((c) => c.id === claimedCubicleId)
+    : null;
+
   return (
     <header
       style={NurseStyle.headerBar}
@@ -152,6 +164,64 @@ export function NurseHeader({
             {nurseTexts.patientManagement}
           </span>
         </div>
+
+        {/* Active Station Badge & Switch Trigger */}
+        {claimedCubicle ? (
+          <div className="flex items-center gap-2 px-2.5 py-1 rounded-lg bg-slate-100 dark:bg-[#1f1f1f] border border-slate-200 dark:border-[#2e2e2e] shrink-0">
+            <span className="text-[11px] font-bold text-[#a8071a] dark:text-[#f87171] uppercase tracking-wider">
+              Cubicle {claimedCubicle.cubicleNum}
+            </span>
+            {claimedCubicle.room && (
+              <span className="text-[10px] text-slate-400 dark:text-[#737373] hidden sm:inline">
+                (Room {claimedCubicle.room})
+              </span>
+            )}
+            {assignedServices.length > 0 && (
+              <span className="text-[10px] text-slate-400 dark:text-[#737373] hidden sm:inline">
+                · {assignedServices.length} svc
+              </span>
+            )}
+            {onOpenStationModal && (
+              <button
+                type="button"
+                onClick={onOpenStationModal}
+                className="text-[11px] font-semibold text-slate-500 hover:text-slate-800 dark:text-[#a3a3a3] dark:hover:text-[#f5f5f5] transition underline cursor-pointer"
+              >
+                Switch
+              </button>
+            )}
+          </div>
+        ) : assignedCubicles.length > 1 ? (
+          <div className="flex items-center gap-2 px-2.5 py-1 rounded-lg bg-slate-100 dark:bg-[#1f1f1f] border border-slate-200 dark:border-[#2e2e2e] shrink-0">
+            <span className="text-[11px] font-bold text-slate-700 dark:text-[#d4d4d4] uppercase tracking-wider">
+              All Rooms ({assignedCubicles.length} Cubicles)
+            </span>
+            {onOpenStationModal && (
+              <button
+                type="button"
+                onClick={onOpenStationModal}
+                className="text-[11px] font-semibold text-[#a8071a] dark:text-[#f87171] hover:underline cursor-pointer"
+              >
+                Configure Desk
+              </button>
+            )}
+          </div>
+        ) : assignedCubicles.length === 1 ? (
+          <div className="flex items-center gap-2 px-2.5 py-1 rounded-lg bg-slate-100 dark:bg-[#1f1f1f] border border-slate-200 dark:border-[#2e2e2e] shrink-0">
+            <span className="text-[11px] font-bold text-[#a8071a] dark:text-[#f87171] uppercase tracking-wider">
+              Cubicle {assignedCubicles[0].cubicleNum}
+            </span>
+            {onOpenStationModal && (
+              <button
+                type="button"
+                onClick={onOpenStationModal}
+                className="text-[11px] font-semibold text-slate-500 hover:text-slate-800 dark:text-[#a3a3a3] dark:hover:text-[#f5f5f5] transition underline cursor-pointer"
+              >
+                Switch
+              </button>
+            )}
+          </div>
+        ) : null}
 
         {/* Desktop Station / Cubicle Selector Dropdown */}
         {showCubicleDropdown && onSelectCategory && onSelectCubicle && (assignedCubicles.length > 0 || Object.keys(services).length > 0) && (
@@ -284,7 +354,7 @@ export function NurseHeader({
           onMarkAsRead={onMarkAsRead}
           onMarkAllAsRead={onMarkAllAsRead}
           onDismiss={onDismissNotification}
-          onClearAll={onClearAllNotifications}
+          onClearAll={onClearAllNotifications ?? (() => {})}
         />
       </div>
     </header>

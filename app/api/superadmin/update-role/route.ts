@@ -12,7 +12,18 @@ export async function PUT(request: Request) {
     const guard = await requireSuperadmin(request)
     if (!guard.authorized) return guard.response
 
-    const { authId, userId, email, username, role, cubicleIds, serviceAssignments, roomAssignments, counterAssignments } = await request.json()
+    const {
+      authId,
+      userId,
+      email,
+      username,
+      role,
+      cubicleIds,
+      serviceAssignments,
+      roomAssignments,
+      counterAssignments,
+      workstationAccess,
+    } = await request.json()
 
     if (!authId && !userId) {
       return NextResponse.json(
@@ -77,13 +88,23 @@ export async function PUT(request: Request) {
       return NextResponse.json({ error: updateError.message }, { status: 400 });
     }
 
-    if (email) {
-      const { error: authError } = await supabaseAdmin.auth.admin.updateUserById(
-        authId,
-        { email: email }
-      )
+    const targetAuthId = authId || userRow.auth_id;
+    if (targetAuthId) {
+      const { data: existingAuth } = await supabaseAdmin.auth.admin.getUserById(targetAuthId);
+      const existingMeta = existingAuth?.user?.user_metadata || {};
+      const updatePayload: Record<string, unknown> = {
+        user_metadata: {
+          ...existingMeta,
+          role: role || existingMeta.role,
+          ...(workstationAccess !== undefined ? { allowed_workstations: workstationAccess } : {}),
+        },
+      };
+      if (email) {
+        updatePayload.email = email;
+      }
+      const { error: authError } = await supabaseAdmin.auth.admin.updateUserById(targetAuthId, updatePayload);
       if (authError) {
-        console.error('Error updating auth email:', authError)
+        console.error('Error updating auth user metadata:', authError);
       }
     }
 
@@ -216,7 +237,8 @@ export async function PUT(request: Request) {
       { success: true, message: 'User updated successfully' },
       { status: 200 }
     )
-  } catch (error: any) {
-    return NextResponse.json({ error: error.message }, { status: 500 })
+  } catch (error: unknown) {
+    const message = error instanceof Error ? error.message : 'Unknown server error';
+    return NextResponse.json({ error: message }, { status: 500 })
   }
 }
