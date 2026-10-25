@@ -7,6 +7,7 @@ import { Patient, Cubicle } from '@/types/Types';
 import { formatTicketForSpeech } from '@/utils/formatTicketSpeech';
 import { useMonitorCalls } from './useMonitorCalls';
 import { playMonitorSpeech } from '../lib/playMonitorSpeech';
+import { sortCubiclePatients } from '../lib/sortCubiclePatients';
 
 /** Loads monitor data and serializes automatic and manual calls after monitor activation. */
 export function useMonitorData(category: string, subcategory: string | null, categoryParam: string, isRegistration: boolean = false, started = false) {
@@ -16,6 +17,7 @@ export function useMonitorData(category: string, subcategory: string | null, cat
   const [currentTime, setCurrentTime] = useState(new Date());
   const [cubicleDoctorMap, setCubicleDoctorMap] = useState<Record<string, string>>({});
   const [monitorLayout, setMonitorLayout] = useState<string | null>(null);
+  const [activeCall, setActiveCall] = useState<{ ticket?: string; cubicle?: string | null; expiry: number } | null>(null);
 
   const announcementQueue = useRef<{ patient?: Patient; message: string; cubicle?: string | null; expiresAt?: string }[]>([]);
   const isPlayingRef = useRef(false);
@@ -28,6 +30,16 @@ export function useMonitorData(category: string, subcategory: string | null, cat
     audioController.current = controller;
     return () => { controller.abort(); announcementQueue.current = []; announced.clear(); };
   }, [started, category, subcategory]);
+
+  useEffect(() => {
+    const timer = setInterval(() => {
+      setActiveCall(prev => {
+        if (!prev) return null;
+        return Date.now() < prev.expiry ? prev : null;
+      });
+    }, 1000);
+    return () => clearInterval(timer);
+  }, []);
 
   useEffect(() => {
     const fetchLayout = () => {
@@ -80,6 +92,7 @@ export function useMonitorData(category: string, subcategory: string | null, cat
             .eq('cubicleNum', destination).eq('on_break', false).maybeSingle();
           if (!station) continue;
         }
+        setActiveCall({ ticket: item.patient?.patientNum, cubicle: destination, expiry: Date.now() + 15000 });
         try { await playMonitorSpeech(item.message, 3, controller.signal); }
         catch (error) { if (!controller.signal.aborted) console.warn('Monitor call playback failed:', error); }
       }
@@ -90,6 +103,7 @@ export function useMonitorData(category: string, subcategory: string | null, cat
   };
 
   useMonitorCalls(category, subcategory, started && !isRegistration, call => {
+    setActiveCall({ ticket: call.ticket, cubicle: call.cubicle, expiry: Date.now() + 15000 });
     announcementQueue.current.push({ message: call.message, cubicle: call.cubicle, expiresAt: call.expiresAt });
     void processQueue();
   });
@@ -153,9 +167,23 @@ export function useMonitorData(category: string, subcategory: string | null, cat
       query = query.eq('subcategory', subcategory);
     }
 
-    const { data, error } = await query
+    let { data, error } = await query
       .order('room', { ascending: true })
       .order('cubicleNum', { ascending: true });
+
+    // Fallback: If subcategory was specified but no cubicles matched, query by category alone
+    if (!error && subcategory && (!data || data.length === 0)) {
+      const { data: fallbackData } = await supabase
+        .from('cubicle')
+        .select('*')
+        .eq('category', category)
+        .eq('on_break', false)
+        .order('room', { ascending: true })
+        .order('cubicleNum', { ascending: true });
+      if (fallbackData && fallbackData.length > 0) {
+        data = fallbackData;
+      }
+    }
 
     if (!error && data) {
       setCubicles(data);
@@ -197,7 +225,7 @@ export function useMonitorData(category: string, subcategory: string | null, cat
       .from('patients')
       .select('*')
       .eq('service', category)
-      .eq('status', 'Assigned')
+      .in('status', ['Assigned', 'With Doctor', 'Carryout'])
       .not('cubicleNum', 'is', null)
       .gte('created_at', today.toISOString())
       .lt('created_at', tomorrow.toISOString());
@@ -206,11 +234,30 @@ export function useMonitorData(category: string, subcategory: string | null, cat
       query = query.eq('subcategory', subcategory);
     }
 
-    const { data: rawData, error } = await query.order('called_at', { ascending: true });
+    let { data: rawData, error } = await query.order('called_at', { ascending: true });
+
+    // Fallback: If subcategory was requested but 0 patients returned, query without subcategory filter
+    if (!error && subcategory && (!rawData || rawData.length === 0)) {
+      const { data: fallbackPatients } = await supabase
+        .from('patients')
+        .select('*')
+        .eq('service', category)
+        .in('status', ['Assigned', 'With Doctor', 'Carryout'])
+        .not('cubicleNum', 'is', null)
+        .gte('created_at', today.toISOString())
+        .lt('created_at', tomorrow.toISOString())
+        .order('called_at', { ascending: true });
+      if (fallbackPatients && fallbackPatients.length > 0) {
+        rawData = fallbackPatients;
+      }
+    }
+
     const { data: available, error: availabilityError } = await supabase.from('cubicle')
       .select('cubicleNum').eq('category', category).eq('on_break', false);
     const availableNames = new Set((available ?? []).map(station => station.cubicleNum));
-    const data = availabilityError ? [] : rawData?.filter(patient => availableNames.has(patient.cubicleNum));
+    const data = (!availabilityError && availableNames.size > 0)
+      ? rawData?.filter(patient => availableNames.has(patient.cubicleNum))
+      : rawData;
 
     if (requestId !== patientsFetchId.current) return;
 
@@ -229,9 +276,7 @@ export function useMonitorData(category: string, subcategory: string | null, cat
         }
         
         for (const [cubicleNum, patients] of patientsByCubicle) {
-          const sortedPatients = [...patients].sort((a, b) =>
-          new Date(a.called_at || 0).getTime() - new Date(b.called_at || 0).getTime()
-        );
+          const sortedPatients = sortCubiclePatients(patients);
           const topPatient = sortedPatients[0];
           if (topPatient) {
             queueAnnouncement(topPatient, cubicleNum);
@@ -252,7 +297,8 @@ export function useMonitorData(category: string, subcategory: string | null, cat
         }
       } else if (started) {
         if (data.length > 0) {
-          const topPatient = data[0];
+          const sortedAll = sortCubiclePatients(data);
+          const topPatient = sortedAll[0];
           const topCubicle = topPatient.cubicleNum || 'default';
           if (!announcedCubiclePatients.current.has(topCubicle) || 
               announcedCubiclePatients.current.get(topCubicle)?.size === 0) {
@@ -360,5 +406,6 @@ export function useMonitorData(category: string, subcategory: string | null, cat
     isTableLayoutService,
     setupRegistrationSubscription,
     cubicleDoctorMap,
+    activeCall,
   };
 }

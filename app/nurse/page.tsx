@@ -21,7 +21,7 @@
 
 'use client';
 
-import React, { useState, useEffect, useMemo, useCallback } from 'react';
+import React, { useState, useEffect, useMemo, useCallback, useRef } from 'react';
 import { useRouter } from 'next/navigation';
 import { supabase } from '@/lib/supabase';
 import { Patient } from '@/types/Types';
@@ -190,6 +190,26 @@ export default function NursePage() {
     void initializeDashboard();
   }, [refreshCubicles, fetchData, fetchFinished, router]);
 
+  // Auto-select initial category or cubicle when nurse assignments load
+  const hasInitializedFilterRef = useRef(false);
+  useEffect(() => {
+    if (!hasInitializedFilterRef.current) {
+      if (assignedCubicles.length > 0) {
+        hasInitializedFilterRef.current = true;
+        const first = assignedCubicles[0];
+        if (first.cubicleNum) {
+          setSelectedCubicleNum(first.cubicleNum);
+          if (first.category) {
+            setSelectedCategory(first.category);
+          }
+        }
+      } else if (assignedServices.length > 0) {
+        hasInitializedFilterRef.current = true;
+        setSelectedCategory(assignedServices[0]);
+      }
+    }
+  }, [assignedCubicles, assignedServices]);
+
   /**
    * Sends a patient call to the matching public monitor while keeping this workstation silent.
    * @param patient - The active patient selected by nursing staff.
@@ -207,6 +227,9 @@ export default function NursePage() {
   const filterPatientList = useCallback(
     (list: Patient[]) => {
       return list.filter((patient) => {
+        // Patients must be assigned to an active cubicle to appear in clinical workstations
+        if (!patient.cubicleNum) return false;
+
         const matchesCategory =
           !selectedCategory ||
           (patient.service &&
@@ -215,17 +238,7 @@ export default function NursePage() {
         const matchesCubicle =
           !selectedCubicleNum ||
           (patient.cubicleNum &&
-            patient.cubicleNum.trim().toLowerCase() === selectedCubicleNum.trim().toLowerCase()) ||
-          (!patient.cubicleNum &&
-            Array.isArray(patient.preferredCubicleNums) &&
-            patient.preferredCubicleNums.some(
-              (p) => p.trim().toLowerCase() === selectedCubicleNum.trim().toLowerCase()
-            )) ||
-          (!patient.cubicleNum &&
-            (!patient.preferredCubicleNums || patient.preferredCubicleNums.length === 0) &&
-            selectedCategory &&
-            patient.service &&
-            patient.service.trim().toLowerCase() === selectedCategory.trim().toLowerCase());
+            patient.cubicleNum.trim().toLowerCase() === selectedCubicleNum.trim().toLowerCase());
 
         return matchesCategory && matchesCubicle;
       });
