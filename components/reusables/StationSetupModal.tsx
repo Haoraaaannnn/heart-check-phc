@@ -112,6 +112,13 @@ export function StationSetupModal({
     }
   }, [isOpen, currentAssignment, eligibleServices, cubicles]);
 
+  // Hooks must run even while the modal is closed so opening it preserves hook order.
+  const displayedCubicles = useMemo(() => {
+    if (selectedRoomTab === 'all') return cubicles;
+    const roomNum = parseInt(selectedRoomTab, 10);
+    return cubicles.filter((c) => c.room === roomNum);
+  }, [cubicles, selectedRoomTab]);
+
   if (!isOpen) return null;
 
   const toggleService = (label: string) => {
@@ -172,29 +179,23 @@ export function StationSetupModal({
     setSaving(true);
     setErrorMsg(null);
 
-    const res = await onSave({
-      workstation,
-      counter: isRegistration ? selectedCounter! : undefined,
-      cubicleId: !isRegistration ? selectedCubicleId! : undefined,
-      services: selectedServices,
-    });
-
-    setSaving(false);
-
-    if (res.ok) {
-      onClose();
-      if (onSuccess) onSuccess();
-    } else {
-      setErrorMsg(res.error || 'Failed to update desk settings.');
+    try {
+      const res = await onSave({
+        workstation,
+        counter: isRegistration && selectedCounter !== null ? selectedCounter : undefined,
+        cubicleId: !isRegistration && selectedCubicleId !== null ? selectedCubicleId : undefined,
+        services: selectedServices,
+      });
+      if (res.ok) {
+        onClose();
+        if (onSuccess) onSuccess();
+      } else setErrorMsg(res.error || 'Failed to update desk settings.');
+    } catch {
+      setErrorMsg('Unable to save station settings. Please try again.');
+    } finally {
+      setSaving(false);
     }
   };
-
-  // Filter cubicles by active room tab
-  const displayedCubicles = useMemo(() => {
-    if (selectedRoomTab === 'all') return cubicles;
-    const roomNum = parseInt(selectedRoomTab, 10);
-    return cubicles.filter((c) => c.room === roomNum);
-  }, [cubicles, selectedRoomTab]);
 
   return (
     <div

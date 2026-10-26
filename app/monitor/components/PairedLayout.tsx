@@ -11,6 +11,7 @@
  */
 
 import React from 'react';
+import { useCurrentTimeMs } from '@/hooks/useCurrentTimeMs';
 import { Patient } from '@/types/Types';
 import { MONITOR_STYLES } from '@/app/monitor/constants/monitorStyles';
 import { MONITOR_TEXTS } from '@/app/monitor/constants/monitorTexts';
@@ -46,6 +47,7 @@ export function PairedLayout({
   cubicleDoctorMap = {},
   activeCall = null,
 }: PairedLayoutProps) {
+  const currentMs = useCurrentTimeMs(activeCall !== null);
   if (pairedData.length === 0) {
     return (
       <div className={MONITOR_STYLES.pairedLayout.container}>
@@ -91,11 +93,11 @@ export function PairedLayout({
               const rightDoc = right?.cubicle ? cubicleDoctorMap[right.cubicle] : undefined;
 
               const isLeftCalling = left?.patient && activeCall !== null &&
-                Date.now() < activeCall.expiry &&
+                currentMs < activeCall.expiry &&
                 (activeCall.cubicle === left.cubicle || activeCall.ticket === left.patient.patientNum);
 
               const isRightCalling = right?.patient && activeCall !== null &&
-                Date.now() < activeCall.expiry &&
+                currentMs < activeCall.expiry &&
                 (activeCall.cubicle === right.cubicle || activeCall.ticket === right.patient.patientNum);
 
               return (
@@ -228,7 +230,7 @@ export function PairedLayout({
           {pairedData.map((pair, index) => {
             const doctorName = pair.cubicle ? cubicleDoctorMap[pair.cubicle] : undefined;
             const isCalling = pair.patient && activeCall !== null &&
-              Date.now() < activeCall.expiry &&
+              currentMs < activeCall.expiry &&
               (activeCall.cubicle === pair.cubicle || activeCall.ticket === pair.patient.patientNum);
 
             return (

@@ -118,25 +118,6 @@ export default function IdleRedirectWrapper() {
   }, [router]);
 
   /**
-   * Dismisses the warning modal, clears the countdown interval, and restarts the 45-second timer.
-   */
-  const handleContinueSession = useCallback(() => {
-    if (countdownIntervalRef.current) {
-      clearInterval(countdownIntervalRef.current);
-      countdownIntervalRef.current = null;
-    }
-
-    setIsWarningOpen(false);
-    setRemainingSeconds(KIOSK_TIMING.COUNTDOWN_GRACE_SECONDS);
-
-    // Schedule next 45-second inactivity warning
-    if (warningTimerRef.current) clearTimeout(warningTimerRef.current);
-    warningTimerRef.current = setTimeout(() => {
-      triggerInactivityWarning();
-    }, KIOSK_TIMING.INACTIVITY_WARNING_MS);
-  }, []);
-
-  /**
    * Activates the warning modal, plays the acoustic chime, and initiates the 15-second countdown.
    */
   const triggerInactivityWarning = useCallback(() => {
@@ -162,6 +143,26 @@ export default function IdleRedirectWrapper() {
       });
     }, 1000);
   }, [handleInactivityTimeout]);
+
+  /**
+   * Dismisses the warning modal, clears the countdown interval, and restarts the 45-second timer.
+   */
+  const handleContinueSession = useCallback(() => {
+    if (countdownIntervalRef.current) {
+      clearInterval(countdownIntervalRef.current);
+      countdownIntervalRef.current = null;
+    }
+
+    setIsWarningOpen(false);
+    setRemainingSeconds(KIOSK_TIMING.COUNTDOWN_GRACE_SECONDS);
+
+    // Schedule next 45-second inactivity warning
+    if (warningTimerRef.current) clearTimeout(warningTimerRef.current);
+    warningTimerRef.current = setTimeout(() => {
+      triggerInactivityWarning();
+    }, KIOSK_TIMING.INACTIVITY_WARNING_MS);
+  }, [triggerInactivityWarning]);
+
 
   useEffect(() => {
     // Non-patient-flow routes and ticket viewing: skip idle watching

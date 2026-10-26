@@ -19,11 +19,18 @@
  */
 
 import { supabase } from '@/lib/supabase';
+import { fetchWithDeadline } from '@/lib/requestFetch';
 
 /**
  * Representation of an individual mutation record stored in the local outbox.
  */
 export interface PendingMutation {
+  /** Clinical updates must be revalidated through the same scoped API when replayed. */
+  endpoint?: '/api/nurse/patients';
+  /** The owning account must sign back in before another account can replay its work. */
+  ownerAuthId?: string;
+  /** Original clinical stage prevents replay over a newer doctor's action. */
+  expectedStatus?: string;
   /** Unique UUID or timestamp-keyed identifier for the queued action. */
   id: string;
   /** Name of the target Supabase database table (e.g. 'patients'). */
@@ -290,6 +297,15 @@ export async function clearQueue(): Promise<void> {
  */
 async function syncMutationToSupabase(item: PendingMutation): Promise<boolean> {
   try {
+    if (item.endpoint === '/api/nurse/patients') {
+      const { data: { session } } = await supabase.auth.getSession();
+      if (!session || session.user.id !== item.ownerAuthId) return false;
+      const response = await fetchWithDeadline(item.endpoint, {
+        method: 'PATCH', headers: { 'Content-Type': 'application/json', Authorization: `Bearer ${session.access_token}` },
+        body: JSON.stringify({ patientId: item.matchValue, updates: item.payload, expectedStatus: item.expectedStatus }),
+      });
+      return response.ok;
+    }
     if (item.type === 'update') {
       if (!item.matchKey || item.matchValue === undefined) {
         console.error('Outbox update mutation lacks matchKey or matchValue:', item);

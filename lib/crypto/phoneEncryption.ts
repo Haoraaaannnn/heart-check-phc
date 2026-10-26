@@ -28,7 +28,7 @@ const KDF_SALT = 'phc_phone_salt_v1_2026';
 
 /**
  * Resolves the 256-bit AES encryption key from system environment variables.
- * Falls back to an internal development seed if not configured in dev environments.
+ * Requires a configured server secret so ciphertext never relies on a public fallback key.
  *
  * @returns 32-byte Buffer containing the symmetric encryption key.
  */
@@ -36,8 +36,9 @@ function getEncryptionKey(): Buffer {
   const secret =
     process.env.PHONE_ENCRYPTION_SECRET ||
     process.env.ENCRYPTION_SECRET ||
-    process.env.NEXTAUTH_SECRET ||
-    'heart-check-phc-default-encryption-secret-key-32b';
+    process.env.NEXTAUTH_SECRET;
+
+  if (!secret) throw new Error('Secure phone storage is not configured. Contact the system administrator.');
 
   return crypto.scryptSync(secret, KDF_SALT, 32);
 }

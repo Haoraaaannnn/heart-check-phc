@@ -67,7 +67,8 @@ export async function POST(request: Request) {
       '%s [PRINTER BUSY] Duplicate print request received - rejecting to prevent hardware conflict.',
       getTimestamp()
     );
-    return NextResponse.json({ success: true, message: 'Printer busy, skipped.' });
+    return NextResponse.json({ success: false, error: 'Printer busy. Please retry this ticket.' },
+      { status: 409, headers: { 'Retry-After': '1' } });
   }
 
   isPrinterBusy = true; // Acquire hardware lock

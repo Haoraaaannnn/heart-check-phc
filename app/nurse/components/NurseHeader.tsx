@@ -138,11 +138,11 @@ export function NurseHeader({
 
   return (
     <header
-      style={NurseStyle.headerBar}
-      className="bg-white/95 dark:bg-[#141414]/95 border-b border-slate-200 dark:border-[#2e2e2e] transition-colors"
+      style={{ ...NurseStyle.headerBar, height: 'auto', minHeight: NurseStyle.headerBar.height, flexWrap: 'wrap', gap: '0.75rem', padding: '0.75rem 1.5rem' }}
+      className="bg-white dark:bg-[#141414] border-b border-slate-200 dark:border-[#2e2e2e] transition-colors"
     >
       {/* Left: Sidebar Toggle, Station Title & Active Filters / Desktop Dropdown */}
-      <div className="flex items-center gap-2 sm:gap-3 min-w-0 flex-1 overflow-hidden">
+      <div className="flex flex-wrap items-center gap-2 sm:gap-3 min-w-0 flex-1 basis-[40rem]">
         {/* Sidebar Hide/Open Toggle Button */}
         {onToggleSidebar && (
           <button
@@ -160,7 +160,7 @@ export function NurseHeader({
         )}
 
         <div className="flex items-center gap-2 shrink-0">
-          <span className="text-slate-600 dark:text-[#a3a3a3] text-sm font-semibold tracking-tight hidden md:inline truncate max-w-[170px] xl:max-w-none">
+          <span className="text-slate-600 dark:text-[#a3a3a3] text-sm font-semibold tracking-tight hidden md:inline whitespace-normal break-words">
             {nurseTexts.patientManagement}
           </span>
         </div>
@@ -225,7 +225,7 @@ export function NurseHeader({
 
         {/* Desktop Station / Cubicle Selector Dropdown */}
         {showCubicleDropdown && onSelectCategory && onSelectCubicle && (assignedCubicles.length > 0 || Object.keys(services).length > 0) && (
-          <div className="flex items-center gap-1.5 bg-slate-100/90 hover:bg-slate-200/80 dark:bg-[#1f1f1f] dark:hover:bg-[#242424] border border-slate-200 dark:border-[#2e2e2e] rounded-xl px-2.5 py-1 transition-colors min-w-0 shrink">
+          <div className="flex flex-wrap items-center gap-1.5 bg-slate-100 hover:bg-slate-200 dark:bg-[#1f1f1f] dark:hover:bg-[#242424] border border-slate-200 dark:border-[#2e2e2e] rounded-xl px-2.5 py-1 transition-colors min-w-0 max-w-full">
             <span className="text-[11px] font-bold text-slate-500 dark:text-[#a3a3a3] uppercase tracking-wider shrink-0">
               {nurseTexts.cubicleSelectLabel}
             </span>
@@ -248,7 +248,7 @@ export function NurseHeader({
                 }
               }}
               aria-label={nurseTexts.selectCubicleDropdown}
-              className="bg-transparent text-xs font-bold text-slate-800 dark:text-[#f5f5f5] outline-none cursor-pointer py-0.5 pr-1 max-w-[160px] lg:max-w-[200px] truncate"
+              className="bg-transparent text-xs font-bold text-slate-800 dark:text-[#f5f5f5] outline-none cursor-pointer py-0.5 pr-1 max-w-full whitespace-normal"
             >
               <option value="ALL" className="bg-white dark:bg-[#1a1a1a] text-slate-900 dark:text-[#f5f5f5]">{nurseTexts.allMyCubicles}</option>
               {Object.entries(services).map(([service, cubicles]) => (
@@ -274,7 +274,7 @@ export function NurseHeader({
             <span className="font-medium text-slate-400 dark:text-[#737373] shrink-0">
               {nurseTexts.filteredByPrefix}
             </span>
-            <span className="font-bold text-slate-800 dark:text-[#f5f5f5] truncate max-w-[120px]">
+            <span className="font-bold text-slate-800 dark:text-[#f5f5f5] whitespace-normal break-words">
               {selectedCubicleNum
                 ? `${nurseTexts.cubiclePrefix} ${selectedCubicleNum}`
                 : selectedCategory}
@@ -293,9 +293,9 @@ export function NurseHeader({
 
         {/* Attending Physician Indicator */}
         {selectedCubicleNum && (
-          <div className="hidden xl:flex items-center gap-1.5 px-2.5 py-1 rounded-lg bg-purple-50 dark:bg-purple-950/40 text-purple-700 dark:text-purple-300 text-xs border border-purple-100 dark:border-purple-800/50 min-w-0 shrink max-w-[220px]">
+          <div className="flex flex-wrap items-center gap-1.5 px-2.5 py-1 rounded-lg bg-purple-50 dark:bg-purple-950/40 text-purple-700 dark:text-purple-300 text-xs border border-purple-100 dark:border-purple-800/50 min-w-0 max-w-full">
             <span className="font-medium text-purple-600 dark:text-purple-400 shrink-0">{nurseTexts.doctorOnDuty}</span>
-            <span className="font-bold truncate">{doctorName || nurseTexts.noDoctorAssigned}</span>
+            <span className="font-bold whitespace-normal break-words">{doctorName || nurseTexts.noDoctorAssigned}</span>
           </div>
         )}
       </div>

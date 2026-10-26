@@ -1,7 +1,7 @@
 /**
  * @fileoverview Next.js Server Actions for secure patient phone operations.
  *
- * Exposes server-side encryption, decryption, and privacy masking utilities
+ * Exposes server-side encryption and privacy masking utilities
  * to frontend components while keeping encryption keys strictly isolated on the server.
  *
  * Security Considerations:
@@ -15,9 +15,7 @@
 
 import {
   encryptPhoneNumber,
-  decryptPhoneNumber,
   maskPhoneNumber,
-  isEncryptedPhone,
 } from '@/lib/crypto/phoneEncryption';
 
 /**
@@ -27,22 +25,8 @@ import {
  * @returns The encrypted ciphertext payload.
  */
 export async function encryptPatientPhoneAction(plainPhone: string): Promise<string> {
-  if (!plainPhone || typeof plainPhone !== 'string') {
-    return '';
-  }
+  if (typeof plainPhone !== 'string' || !/^09\d{9}$/.test(plainPhone.trim())) throw new Error('A valid Philippine mobile number is required.');
   return encryptPhoneNumber(plainPhone);
-}
-
-/**
- * Server action to decrypt an encrypted phone payload for authorized operations.
- *
- * @param encryptedOrPlain - Ciphertext or legacy number.
- * @returns Cleartext phone number or null.
- */
-export async function decryptPatientPhoneAction(
-  encryptedOrPlain: string | number | null | undefined
-): Promise<string | null> {
-  return decryptPhoneNumber(encryptedOrPlain);
 }
 
 /**
@@ -58,5 +42,3 @@ export async function maskPatientPhoneAction(
 ): Promise<string> {
   return maskPhoneNumber(phoneOrEncrypted, fallback);
 }
-
-export { isEncryptedPhone };

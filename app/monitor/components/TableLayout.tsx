@@ -11,6 +11,7 @@
  */
 
 import React from 'react';
+import { useCurrentTimeMs } from '@/hooks/useCurrentTimeMs';
 import { Patient, Cubicle } from '@/types/Types';
 import { MONITOR_STYLES } from '@/app/monitor/constants/monitorStyles';
 import { MONITOR_TEXTS } from '@/app/monitor/constants/monitorTexts';
@@ -57,6 +58,7 @@ export function TableLayout({
   cubicleDoctorMap = {},
   activeCall = null,
 }: TableLayoutProps) {
+  const currentMs = useCurrentTimeMs(activeCall !== null);
   const uniqueRooms = [...new Set(cubicles.map(c => c.room))].sort((a, b) => a - b);
 
   if (cubicles.length === 0 && assignedPatients.length === 0) {
@@ -113,7 +115,7 @@ export function TableLayout({
                     const nextPatient = sortedPatients[1];
                     const remainingCount = sortedPatients.length > 2 ? sortedPatients.length - 2 : 0;
                     const isCalling = activePatient && activeCall !== null &&
-                      Date.now() < activeCall.expiry &&
+                      currentMs < activeCall.expiry &&
                       (activeCall.cubicle === cubicle.cubicleNum || activeCall.ticket === activePatient.patientNum);
 
                     return (

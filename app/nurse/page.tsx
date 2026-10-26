@@ -22,8 +22,8 @@
 'use client';
 
 import React, { useState, useEffect, useMemo, useCallback, useRef } from 'react';
-import { useRouter } from 'next/navigation';
-import { supabase } from '@/lib/supabase';
+import { withRequestDeadline } from '@/lib/requestFetch';
+import { WorkstationLoading } from '@/components/auth/WorkstationLoading';
 import { Patient } from '@/types/Types';
 import { NurseSidebar } from '@/app/nurse/components/NurseSidebar';
 import { NurseHeader } from '@/app/nurse/components/NurseHeader';
@@ -60,7 +60,6 @@ import { useStationClaim } from '@/hooks/useStationClaim';
  * @returns The rendered non-scrollable Nurse Dashboard.
  */
 export default function NursePage() {
-  const router = useRouter();
   const checking = useRequireAuth();
   useIdleTimeout();
 
@@ -90,6 +89,8 @@ export default function NursePage() {
 
   // Loading & Sync States
   const [isLoading, setIsLoading] = useState(true);
+  const [startupError, setStartupError] = useState('');
+  const startupRequestId = useRef(0);
   const [isSyncing, setIsSyncing] = useState(false);
 
   // Core Data Hook
@@ -178,31 +179,27 @@ export default function NursePage() {
 
   useRealtimeSubscription(handleRealtimeUpdate, 150, setChannelStatus, applyRealtimeUpdate);
 
-  // Initial Data Load
-  useEffect(() => {
-    const initializeDashboard = async () => {
+  /** Bounds initial data loading after the shared role guard has verified this session. */
+  const initializeDashboard = useCallback(async () => {
+      const requestId = ++startupRequestId.current;
       setIsLoading(true);
+      setStartupError('');
       try {
-        const {
-          data: { session },
-        } = await supabase.auth.getSession();
-
-        if (!session) {
-          router.replace('/login');
-          return;
-        }
-
-        await refreshCubicles();
-        await Promise.all([fetchData(), fetchFinished()]);
-      } catch (error) {
-        console.error('Nurse dashboard initialization error:', error);
+        await withRequestDeadline((async () => {
+          await refreshCubicles();
+          await Promise.all([fetchData(), fetchFinished()]);
+        })());
+      } catch {
+        if (requestId === startupRequestId.current) setStartupError('Unable to finish loading the nurse station. Please retry.');
       } finally {
-        setIsLoading(false);
+        if (requestId === startupRequestId.current) setIsLoading(false);
       }
-    };
+  }, [refreshCubicles, fetchData, fetchFinished]);
 
-    void initializeDashboard();
-  }, [refreshCubicles, fetchData, fetchFinished, router]);
+  useEffect(() => {
+    if (!checking) void initializeDashboard();
+    return () => { ++startupRequestId.current; };
+  }, [checking, initializeDashboard]);
 
   // Auto-select initial category or cubicle when nurse assignments load
   const hasInitializedFilterRef = useRef(false);
@@ -308,18 +305,9 @@ export default function NursePage() {
   }, []);
 
   // Loading State Render
-  if (checking || isLoading) {
-    return (
-      <div className="flex h-screen items-center justify-center bg-slate-50 dark:bg-[#0d0d0d]">
-        <div className="text-center">
-          <div className="w-12 h-12 border-4 border-red-200 dark:border-red-950/60 border-t-[#cc3535] rounded-full animate-spin mx-auto mb-4" />
-          <p className="text-sm font-bold text-slate-700 dark:text-[#f5f5f5]">
-            {nurseTexts.loadingDashboard}
-          </p>
-          <p className="text-xs text-slate-400 dark:text-[#737373] mt-1">{nurseTexts.pleaseWait}</p>
-        </div>
-      </div>
-    );
+  if (checking || isLoading || startupError) {
+    return <WorkstationLoading title={nurseTexts.loadingDashboard} error={checking ? undefined : startupError}
+      onRetry={checking ? undefined : () => void initializeDashboard()} />;
   }
 
   const isDraggingGhostValid =
