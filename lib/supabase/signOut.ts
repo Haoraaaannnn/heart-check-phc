@@ -8,7 +8,7 @@
  * @remarks
  * Security guarantees:
  * 1. Server-side cookie destruction via `/api/auth/logout`.
- * 2. Client-side token revocation via `supabase.auth.signOut()`.
+ * 2. Current-browser session revocation without signing out other physical devices.
  * 3. Cache and history replacement via `window.location.replace()`, preventing
  *    unauthorized back/forward navigation into previously visited screens.
  * 4. Zero emojis in code and documentation.
@@ -39,7 +39,7 @@ export async function handleSignOut(redirectUrl: string = '/login'): Promise<voi
 
   try {
     // 2. Clear client Supabase session and document cookies
-    await supabase.auth.signOut();
+    await supabase.auth.signOut({ scope: 'local' });
   } catch (error) {
     console.error('[AUTH] Client signOut error:', error);
   }

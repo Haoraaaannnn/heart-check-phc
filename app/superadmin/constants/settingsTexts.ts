@@ -55,6 +55,22 @@ export const SETTINGS_TEXTS = {
     errorInvalid: 'Enter a valid whole number greater than 0.',
   },
 
+  sessionTimeout: {
+    title: 'Staff Session Timeout',
+    description: 'Sign staff out after inactivity across all their open workstation tabs. Working in any staff tab keeps the shared session active.',
+    label: 'Inactivity timeout',
+    unitLabel: 'minutes',
+    hint: 'Whole minutes from 5 to 720. Applies to all staff accounts; the default is 20 minutes.',
+    saveButton: 'Save Session Timeout',
+    savingButton: 'Saving...',
+    success: 'Session timeout saved. Open staff tabs will use the updated duration.',
+    errorInvalid: 'Enter a whole number from 5 to 720 minutes.',
+    errorLoad: 'Unable to load the session timeout. Please try again.',
+    countdownLabel: 'Inactivity logout in',
+    countdownHint: 'Activity in any staff tab resets this countdown.',
+    loading: 'Checking session...',
+  },
+
   changePassword: {
     title: 'Change Administrator Password',
     description: 'Update your superadmin account credentials. For security, active sessions on other browser devices will be invalidated.',

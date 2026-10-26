@@ -14,6 +14,7 @@
 
 import { useState, useEffect, useCallback, useRef } from 'react';
 import { supabase } from '@/lib/supabase';
+import { fetchWithDeadline } from '@/lib/requestFetch';
 
 /** Available counter descriptor with live occupancy. */
 export interface AvailableCounter {
@@ -101,7 +102,7 @@ export function useStationClaim(): UseStationClaimReturn {
         return;
       }
 
-      const res = await fetch('/api/workstation/station-claim', {
+      const res = await fetchWithDeadline('/api/workstation/station-claim', {
         headers: {
           Authorization: `Bearer ${session.access_token}`,
         },

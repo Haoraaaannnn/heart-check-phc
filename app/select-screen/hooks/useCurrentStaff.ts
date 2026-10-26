@@ -27,7 +27,7 @@ export function useCurrentStaff() {
 
     const handlePageShow = (event: PageTransitionEvent) => {
       if (event.persisted) {
-        window.location.reload();
+        void loadStaffProfile();
       }
     };
     window.addEventListener('pageshow', handlePageShow);
@@ -39,7 +39,8 @@ export function useCurrentStaff() {
           error: authError,
         } = await supabase.auth.getUser();
 
-        if (authError || !user) {
+        if (authError) throw authError;
+        if (!user) {
           window.location.replace('/login');
           return;
         }
@@ -59,13 +60,16 @@ export function useCurrentStaff() {
         }
 
         if (isMounted) {
-          const userMetaWorkstations = user.user_metadata?.allowed_workstations;
+          setError(null);
+          const userMetaWorkstations: unknown = user.user_metadata?.allowed_workstations;
           setStaff({
             authId: userRow.auth_id,
             email: userRow.email || user.email || '',
             username: userRow.username || user.email?.split('@')[0] || 'Staff',
             role: (userRow.role || '').toLowerCase().trim(),
-            allowedWorkstations: Array.isArray(userMetaWorkstations) ? userMetaWorkstations : null,
+            allowedWorkstations: Array.isArray(userMetaWorkstations)
+              ? userMetaWorkstations.filter((value: unknown): value is string => typeof value === 'string')
+              : null,
           });
           setLoading(false);
         }

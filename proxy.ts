@@ -37,6 +37,7 @@
 
 import { createServerClient } from "@supabase/ssr";
 import { NextResponse, type NextRequest } from "next/server";
+import { fetchWithDeadline } from '@/lib/requestFetch';
 
 /**
  * Maps protected route prefixes to the set of roles permitted to access them.
@@ -85,6 +86,13 @@ const ROLE_ROUTES: Record<string, string[]> = {
  */
 export async function proxy(request: NextRequest) {
     let response = NextResponse.next({ request });
+    /** Preserves refreshed cookies when a verified session changes destination. */
+    const redirectWithSession = (destination: string) => {
+        const redirect = NextResponse.redirect(new URL(destination, request.url));
+        response.cookies.getAll().forEach(cookie => redirect.cookies.set(cookie));
+        redirect.headers.set('Cache-Control', 'no-store, no-cache, must-revalidate, proxy-revalidate');
+        return redirect;
+    };
     const isSecure =
         request.nextUrl.protocol === 'https:' ||
         request.headers.get('x-forwarded-proto') === 'https';
@@ -97,6 +105,7 @@ export async function proxy(request: NextRequest) {
         process.env.NEXT_PUBLIC_SUPABASE_URL!,
         process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY!,
         {
+            global: { fetch: fetchWithDeadline },
             cookies: {
                 /**
                  * Reads all cookies from the incoming request.
@@ -149,33 +158,25 @@ export async function proxy(request: NextRequest) {
      * manipulating client-side state.
      */
     const {
-        data: { user },
+        data: { user }, error: authError,
     } = await supabase.auth.getUser();
 
     const path = request.nextUrl.pathname;
 
+    // A temporary auth-service outage must not send a valid session into a logout flow.
+    if (authError && (authError.name === 'AuthRetryableFetchError' || (authError.status ?? 0) >= 500)) {
+        return new NextResponse('Session verification is temporarily unavailable. Please retry this page.', {
+            status: 503, headers: { 'Cache-Control': 'no-store', 'Retry-After': '3' },
+        });
+    }
+
     /**
-     * If navigating to the login page (including via browser Back navigation),
-     * expire and clear all active Supabase session cookies so credentials
-     * never persist on shared workstations. Visiting /login must never redirect
-     * back to /select-screen.
+     * Login navigation and prefetch must never mutate a session shared by sibling tabs.
+     * Explicit logout remains a POST action in /api/auth/logout.
      */
     if (path === '/login') {
-        const allCookies = request.cookies.getAll();
-        allCookies.forEach((cookie) => {
-            if (cookie.name.startsWith('sb-')) {
-                response.cookies.set(cookie.name, '', {
-                    path: '/',
-                    maxAge: 0,
-                    expires: new Date(0),
-                    sameSite: 'lax',
-                    secure: isSecure,
-                });
-            }
-        });
+        if (user) return redirectWithSession('/select-screen');
         response.headers.set('Cache-Control', 'no-store, no-cache, must-revalidate, proxy-revalidate');
-        response.headers.set('Pragma', 'no-cache');
-        response.headers.set('Expires', '0');
         return response;
     }
 
@@ -190,7 +191,7 @@ export async function proxy(request: NextRequest) {
         path.startsWith('/landing');
 
     if (isPublicAuthOrLandingPath && user) {
-        const redirectRes = NextResponse.redirect(new URL('/select-screen', request.url));
+        const redirectRes = redirectWithSession('/select-screen');
         redirectRes.headers.set('Cache-Control', 'no-store, no-cache, must-revalidate, proxy-revalidate');
         redirectRes.headers.set('Pragma', 'no-cache');
         redirectRes.headers.set('Expires', '0');
@@ -210,7 +211,7 @@ export async function proxy(request: NextRequest) {
          * Route is protected. If there is no authenticated user, redirect to login.
          */
         if (!user) {
-            const redirectRes = NextResponse.redirect(new URL("/login", request.url));
+            const redirectRes = redirectWithSession('/login');
             redirectRes.headers.set('Cache-Control', 'no-store, no-cache, must-revalidate, proxy-revalidate');
             redirectRes.headers.set('Pragma', 'no-cache');
             redirectRes.headers.set('Expires', '0');
@@ -222,17 +223,22 @@ export async function proxy(request: NextRequest) {
          * Join must use `auth_id` (matches `auth.uid()`), NOT the table's `id`
          * primary key. See docs/specifications/DATABASE_SCHEMA.md.
          */
-        const { data: userRow } = await supabase
+        const { data: userRow, error: roleError } = await supabase
             .from("users")
             .select("role")
             .eq("auth_id", user.id)
             .single();
 
         const userRole = (userRow?.role || '').toLowerCase().trim();
+        if (roleError && roleError.code !== 'PGRST116') {
+            return new NextResponse('Staff permissions are temporarily unavailable. Please retry this page.', {
+                status: 503, headers: { 'Cache-Control': 'no-store', 'Retry-After': '3' },
+            });
+        }
         const allowedRoles = (ROLE_ROUTES[matchedPrefix] || []).map((r) => r.toLowerCase().trim());
 
         if (!userRow || !allowedRoles.includes(userRole)) {
-            const unauthorizedRes = NextResponse.redirect(new URL("/unauthorized", request.url));
+            const unauthorizedRes = redirectWithSession('/unauthorized');
             unauthorizedRes.headers.set('Cache-Control', 'no-store, no-cache, must-revalidate, proxy-revalidate');
             unauthorizedRes.headers.set('Pragma', 'no-cache');
             unauthorizedRes.headers.set('Expires', '0');
@@ -259,7 +265,7 @@ export async function proxy(request: NextRequest) {
             Array.isArray(userAllowedWorkstations) &&
             !userAllowedWorkstations.includes(targetStationKey)
         ) {
-            const unauthorizedRes = NextResponse.redirect(new URL("/unauthorized", request.url));
+            const unauthorizedRes = redirectWithSession('/unauthorized');
             unauthorizedRes.headers.set('Cache-Control', 'no-store, no-cache, must-revalidate, proxy-revalidate');
             unauthorizedRes.headers.set('Pragma', 'no-cache');
             unauthorizedRes.headers.set('Expires', '0');

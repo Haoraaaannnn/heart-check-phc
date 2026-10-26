@@ -22,13 +22,14 @@ export function useCubicleData() {
   const [cubicles, setCubicles] = useState<Cubicle[]>([]);
   const [cubicleDoctorMap, setCubicleDoctorMap] = useState<Record<string, string>>({});
 
-  const fetchCubicles = useCallback(async () => {
+  const fetchCubicles = useCallback(async (failOnError = false) => {
     const { data, error } = await supabase
       .from('cubicle')
       .select('*')
       .eq('on_break', false)
       .order('id', { ascending: true });
 
+    if (failOnError && (error || !data)) throw new Error('Unable to load stations. Please retry.');
     if (!error && data) {
       setCubicles(data as Cubicle[]);
 
@@ -61,12 +62,17 @@ export function useCubicleData() {
   }, []);
 
   useEffect(() => {
-    const timer = setInterval(() => void fetchCubicles(), 5000);
+    let subscribed = false;
+    const timer = setInterval(() => {
+      if (!subscribed && document.visibilityState === 'visible') void fetchCubicles();
+    }, 5000);
+    const onVisible = () => { if (document.visibilityState === 'visible') void fetchCubicles(); };
+    document.addEventListener('visibilitychange', onVisible);
     const channel = supabase.channel('transfer-cubicle-availability')
       .on('postgres_changes', { event: '*', schema: 'public', table: 'cubicle' }, () => void fetchCubicles())
       .on('postgres_changes', { event: '*', schema: 'public', table: 'doctors' }, () => void fetchCubicles())
-      .subscribe();
-    return () => { clearInterval(timer); void supabase.removeChannel(channel); };
+      .subscribe(status => { subscribed = status === 'SUBSCRIBED'; });
+    return () => { clearInterval(timer); document.removeEventListener('visibilitychange', onVisible); void supabase.removeChannel(channel); };
   }, [fetchCubicles]);
 
   return { cubicles, setCubicles, fetchCubicles, cubicleDoctorMap };

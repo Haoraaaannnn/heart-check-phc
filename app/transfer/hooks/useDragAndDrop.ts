@@ -1,12 +1,11 @@
 'use client';
 
 import { useState, useRef, useEffect, useCallback } from 'react';
-import { supabase } from '@/lib/supabase';
+import { returnToQueueFields, updateLiveTransferPatient } from '@/app/transfer/lib/transferMutations';
 import { Patient } from '@/types/Types';
 import { MAX_PATIENTS_PER_CUBICLE } from '@/app/transfer/lib/constants';
 import { DragPoint, pointOf, findDropTarget, canStartDrag } from '@/app/transfer/hooks/dragUtils';
 
-const MANUAL_SERVICES = ['Consultation', 'OPD Screening'];
 
 /**
  * Drop feedback descriptor for UI animations.
@@ -119,72 +118,21 @@ export function useDragAndDrop(
   const handleMoveBackToProgress = async (patient: Patient, oldCubicleNum: string) => {
     if (movingBackIds.current.has(patient.id)) return;
     movingBackIds.current.add(patient.id);
-
     try {
-      // Registered patients or manual consultation patients return to queue with cooldown
-      const isManual = Boolean(patient.reg_start) || (!!patient.service && MANUAL_SERVICES.includes(patient.service));
-
+      const fields = returnToQueueFields(patient, Date.now());
+      await updateLiveTransferPatient({ id: patient.id, fields, sourceCubicle: oldCubicleNum });
       unpinConfirmedPatient?.(patient.id);
-      if (isManual) {
-        const cooldownUntil = new Date(Date.now() + 60 * 1000).toISOString();
-
-        setAssignedPatients(prev => ({
-          ...prev,
-          [oldCubicleNum]: (prev[oldCubicleNum] || []).filter(p => p.id !== patient.id),
-        }));
-
-        setOnProgressPatients(prev => [
-          ...prev,
-          { ...patient, cubicleNum: null, status: 'On Progress', progress_started_at: null, cooldown_until: cooldownUntil },
-        ]);
-
-        const nextPending = [
-          ...(pendingUpdatesRef?.current || []).filter(p => p.id !== patient.id),
-          { ...patient, cubicleNum: null, status: 'On Progress', progress_started_at: null, cooldown_until: cooldownUntil },
-        ];
-        if (pendingUpdatesRef) {
-          pendingUpdatesRef.current = nextPending;
-        }
-        setPendingUpdates(nextPending);
-        return;
-      }
-
-      const { data: minRow } = await supabase
-        .from('patients')
-        .select('queue_position')
-        .order('queue_position', { ascending: true })
-        .limit(1)
-        .single();
-
-      const frontPosition = (minRow?.queue_position ?? 1) - 1;
-
-      setAssignedPatients(prev => ({
-        ...prev,
-        [oldCubicleNum]: (prev[oldCubicleNum] || []).filter(p => p.id !== patient.id),
+      const remainingPending = (pendingUpdatesRef?.current ?? []).filter(p => p.id !== patient.id);
+      if (pendingUpdatesRef) pendingUpdatesRef.current = remainingPending;
+      setPendingUpdates(remainingPending);
+      setAssignedPatients(previous => ({
+        ...previous,
+        [oldCubicleNum]: (previous[oldCubicleNum] ?? []).filter(p => p.id !== patient.id),
       }));
-
-      setOnProgressPatients(prev => [
-        ...prev,
-        { ...patient, cubicleNum: null, status: 'Waiting', queue_position: frontPosition },
+      setOnProgressPatients(previous => [
+        ...previous.filter(p => p.id !== patient.id), { ...patient, ...fields },
       ]);
-
-      await supabase
-        .from('patients')
-        .update({
-          cubicleNum: null,
-          status: 'Waiting',
-          called_at: null,
-          progress_started_at: null,
-          cubicle_top_started_at: null,
-          queue_position: frontPosition,
-        })
-        .eq('id', patient.id)
-        .eq('is_historical', false);
-
       await fetchData();
-    } catch (err) {
-      console.error('Failed to move patient back to progress:', err);
-      fetchData();
     } finally {
       movingBackIds.current.delete(patient.id);
     }
@@ -302,13 +250,13 @@ export function useDragAndDrop(
     };
 
     if (draggedPatient && isDragEnabled) {
-      window.addEventListener('pointermove', handleGlobalGlobalPointerMove as any);
+      window.addEventListener('pointermove', handleGlobalGlobalPointerMove);
       window.addEventListener('pointerup', handleGlobalPointerUp);
       window.addEventListener('pointercancel', handleGlobalPointerCancel);
     }
 
     return () => {
-      window.removeEventListener('pointermove', handleGlobalGlobalPointerMove as any);
+      window.removeEventListener('pointermove', handleGlobalGlobalPointerMove);
       window.removeEventListener('pointerup', handleGlobalPointerUp);
       window.removeEventListener('pointercancel', handleGlobalPointerCancel);
     };

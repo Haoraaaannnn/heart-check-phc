@@ -13,7 +13,7 @@
 
 'use client';
 
-import React, { useState } from 'react';
+import React, { useEffect, useState } from 'react';
 import { useRouter } from 'next/navigation';
 import { handleSignOut } from '@/lib/supabase/signOut';
 import { ScreenOption } from '@/app/select-screen/types/selectScreen';
@@ -48,6 +48,15 @@ export default function ScreenOptionCard({
 }: ScreenOptionCardProps) {
   const router = useRouter();
   const [navigating, setNavigating] = useState(false);
+  const [navigationError, setNavigationError] = useState('');
+  useEffect(() => {
+    if (!navigating) return;
+    const timer = setTimeout(() => {
+      setNavigating(false);
+      setNavigationError('This page is taking longer than expected. Please try opening it again.');
+    }, 30_000);
+    return () => clearTimeout(timer);
+  }, [navigating]);
   const S = SELECT_SCREEN_STYLES.card;
 
   const isRegistration = option.id === 'transfer';
@@ -72,6 +81,7 @@ export default function ScreenOptionCard({
     }
 
     setNavigating(true);
+    setNavigationError('');
 
     try {
       if (option.requiresSignOut) {
@@ -145,6 +155,7 @@ export default function ScreenOptionCard({
 
       {/* Action Buttons Section */}
       <div className="mt-6 flex flex-col gap-2">
+        {navigationError && <p role="alert" className="text-sm text-red-700 dark:text-red-300">{navigationError}</p>}
         <button
           type="button"
           onClick={handlePrimaryAction}

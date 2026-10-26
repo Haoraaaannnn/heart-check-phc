@@ -1,14 +1,14 @@
 /**
- * @fileoverview Browser Supabase client, session-scoped per tab.
+ * @fileoverview Shared browser-cookie Supabase client for staff workstation tabs.
  *
- * Uses sessionStorage instead of cookies so each browser tab keeps an
- * independent session — logging in/out on one tab no longer affects
- * other tabs signed in as a different account.
+ * Same-origin tabs share a staff session and coordinated token refresh. Normal
+ * navigation never signs out that session; explicit sign-out affects this browser session.
  *
  * @module lib/supabase
  */
 
 import { createBrowserClient } from '@supabase/ssr';
+import { requestFetch } from '@/lib/requestFetch';
 
 /**
  * Supabase browser client instance configured for session-scoped cookies and weak-signal resilience.
@@ -40,7 +40,8 @@ export const supabase = createBrowserClient(
   process.env.NEXT_PUBLIC_SUPABASE_URL!,
   process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY!,
   {
-    isSingleton: true,
+    isSingleton: typeof window !== 'undefined',
+    global: { fetch: requestFetch },
     cookies: {
       getAll() {
         if (typeof document === 'undefined') return [];

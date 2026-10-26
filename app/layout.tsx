@@ -1,9 +1,11 @@
+/** @fileoverview Application shell, theme, and shared staff-session lifecycle. */
 import type { Metadata } from "next";
 import { Geist, Geist_Mono } from "next/font/google";
 import { tiltWarp, Baloo } from "@/fonts/fonts";
 import "@/app/globals.css";
 import "boxicons/css/boxicons.min.css";
 import { ThemeProvider } from "@/app/provider";
+import { StaffSessionProvider } from '@/components/auth/StaffSessionProvider';
 
 
 const geistSans = Geist({
@@ -21,6 +23,7 @@ export const metadata: Metadata = {
   description: "Queueing Management System for the Out-Patient Department of Philippine Heart Center",
 };
 
+/** @returns The application shell with one session coordinator per browser document. */
 export default function RootLayout({
   children,
 }: Readonly<{
@@ -33,7 +36,7 @@ export default function RootLayout({
       </head>
       <body className={`${geistSans.variable} ${geistMono.variable} antialiased bg-gray-50 dark:bg-[#0d0d0d] dark:text-[#f5f5f5] transition-colors duration-300`}>
         <ThemeProvider>          
-          {children}
+          <StaffSessionProvider>{children}</StaffSessionProvider>
         </ThemeProvider>
       </body>
     </html>

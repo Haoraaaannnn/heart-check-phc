@@ -3,11 +3,11 @@
  * @module app/transfer/hooks/useAutoAssign
  */
 'use client';
-import { useEffect, useRef } from 'react';
+import { useCallback, useEffect, useRef } from 'react';
 import { Patient, Cubicle } from '@/types/Types';
 import { Service } from '@/types/Services';
 import { AUTO_ASSIGN_SERVICES, MAX_PATIENTS_PER_CUBICLE } from '@/app/transfer/lib/constants';
-import { supabase } from "@/lib/supabase";
+import { assignmentCandidates, updateLiveTransferPatient } from '@/app/transfer/lib/transferMutations';
 
 /**
  * Watches queue and cubicle occupancy changes and fills every available auto-assign slot.
@@ -35,8 +35,9 @@ export function useAutoAssign(
 ) {
   const rerunRequested = useRef(false);
   const latestAutoAssign = useRef<() => Promise<void>>(async () => {});
+  const retryAfterMs = useRef<Map<number, number>>(new Map());
 
-  const autoAssignPatients = async () => {
+  const autoAssignPatients = useCallback(async () => {
     if (busyRef.current) {
       rerunRequested.current = true;
       return;
@@ -46,11 +47,10 @@ export function useAutoAssign(
     const isOnCooldown = (p: Patient) =>
       !!p.cooldown_until && new Date(p.cooldown_until).getTime() > Date.now();
 
+    const dbUpdates: { id: number; cubicleNum: string; status: string; reg_end: string; called_at: string; queue_position: number }[] = [];
     try {
-      const dbUpdates: { id: number; cubicleNum: string; status: string; reg_end: string; called_at: string; queue_position: number }[] = [];
       const allAssignedIds: number[] = [];
       const scheduledCounts: Record<string, number> = {};
-      let anyAutoAssigned = false;
 
       // Resolve eligible auto-assign services from live database catalog or fallback
       const targetServices = allServices && allServices.length > 0
@@ -62,6 +62,7 @@ export function useAutoAssign(
         const availableCubicles = cubicles.filter(c => c.category === service);
         const waitingPatients = onProgressPatients.filter(p => {
           if (p.service !== service) return false;
+          if ((retryAfterMs.current.get(p.id) ?? 0) > Date.now()) return false;
           // If this service requires registration desk intake, do not assign until registration is finished
           const requiresReg = serviceObj ? (serviceObj.requires_registration ?? false) : (service === 'Consultation' || service === 'OPD Screening');
           if (requiresReg && !p.reg_end) {
@@ -84,12 +85,13 @@ export function useAutoAssign(
 
         availableSpots.sort((a, b) => a.currentCount - b.currentCount);
         const now = new Date().toISOString();
-        let patientIndex = 0;
 
         for (const spot of availableSpots) {
           const remainingCapacity = MAX_PATIENTS_PER_CUBICLE - spot.currentCount;
-          for (let slot = 0; slot < remainingCapacity && patientIndex < waitingPatients.length; slot += 1) {
-            const patient = waitingPatients[patientIndex++];
+          for (let slot = 0; slot < remainingCapacity; slot += 1) {
+            const patient = waitingPatients.find(candidate => !allAssignedIds.includes(candidate.id)
+              && assignmentCandidates({ patient: candidate, cubicles: [spot.cubicle], assigned: assignedPatients }).length > 0);
+            if (!patient) break;
             allAssignedIds.push(patient.id);
 
             const updatedPatient = {
@@ -115,7 +117,6 @@ export function useAutoAssign(
                 called_at: now,
                 queue_position: 9999,
               });
-              anyAutoAssigned = true;
             }
 
             setAssignedPatients(prev => ({
@@ -145,6 +146,8 @@ export function useAutoAssign(
           const requiresReg = sObj ? sObj.requires_registration : true;
           if (requiresReg && !patient.reg_end) return false;
           if (isOnCooldown(patient)) return false;
+          if (allAssignedIds.includes(patient.id)) return false;
+          if ((retryAfterMs.current.get(patient.id) ?? 0) > Date.now()) return false;
           return Boolean(patient.preferredCubicleNums && patient.preferredCubicleNums.length > 0);
         }
       );
@@ -184,7 +187,6 @@ export function useAutoAssign(
           called_at: now2,
           queue_position: 9999,
         });
-        anyAutoAssigned = true;
 
         allAssignedIds.push(patient.id);
         cubicleCounts[freeCubicle.cubicleNum] = (cubicleCounts[freeCubicle.cubicleNum] || 0) + 1;
@@ -199,7 +201,9 @@ export function useAutoAssign(
       }
 
       if (dbUpdates.length > 0) {
-        await supabase.from("patients").upsert(dbUpdates, { onConflict: "id" });
+        for (const { id, ...fields } of dbUpdates) {
+          await updateLiveTransferPatient({ id, fields });
+        }
       }
 
       if (allAssignedIds.length > 0) {
@@ -208,20 +212,12 @@ export function useAutoAssign(
         );
       }
 
-      if (anyAutoAssigned) {
-        const { data: queue } = await supabase
-          .from("patients")
-          .select("id")
-          .neq("status", "Assigned")
-          .order("queue_position");
-
-        if (queue && queue.length > 0) {
-          const reorder = queue.map((row, i) => ({ id: row.id, queue_position: i + 1 }));
-          await supabase.from("patients").upsert(reorder, { onConflict: "id" });
-        }
-      }
-       } catch (error) {
-      console.error('Auto-assign error:', error);
+       } catch {
+      const failedIds = new Set(dbUpdates.map(update => update.id));
+      for (const id of failedIds) retryAfterMs.current.set(id, Date.now() + 60_000);
+      setAssignedPatients(previous => Object.fromEntries(Object.entries(previous)
+        .map(([cubicleNum, patients]) => [cubicleNum, patients.filter(patient => !failedIds.has(patient.id))])));
+      console.warn('Automatic assignment was not acknowledged; patients remain in the queue.');
     } finally {
       busyRef.current = false;
       if (rerunRequested.current) {
@@ -229,13 +225,12 @@ export function useAutoAssign(
         latestAutoAssign.current();
       }
     }
-  };
-
-  latestAutoAssign.current = autoAssignPatients;
+  }, [allServices, assignedPatients, busyRef, cubicles, onProgressPatients, setAssignedPatients, setOnProgressPatients, setPendingUpdates]);
 
   useEffect(() => {
-    autoAssignPatients();
-  }, [onProgressPatients, assignedPatients, cubicles, allServices]);
+    latestAutoAssign.current = autoAssignPatients;
+    void autoAssignPatients();
+  }, [autoAssignPatients]);
 
   useEffect(() => {
     const nextCooldownExpiry = onProgressPatients

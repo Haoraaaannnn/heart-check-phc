@@ -28,6 +28,8 @@ export interface ConfirmAssignmentModalProps {
   pendingPatients: Patient[];
   /** Whether confirmation save mutation is currently executing. */
   isConfirming: boolean;
+  /** A failed save keeps the dialog open and explains what the operator can retry. */
+  error?: string;
   /** Callback to commit pending assignments to the backend. */
   onConfirm: () => void | Promise<void>;
   /** Callback to cancel and revert pending assignments. */
@@ -44,6 +46,7 @@ export function ConfirmAssignmentModal({
   isOpen,
   pendingPatients,
   isConfirming,
+  error,
   onConfirm,
   onCancel,
 }: ConfirmAssignmentModalProps) {
@@ -94,6 +97,7 @@ export function ConfirmAssignmentModal({
 
         {/* Modal Body: List of Pending Patient Assignments */}
         <div className={transferModalStyles.bodyList}>
+          {error && <p role="alert" className="p-3 border border-red-200 rounded-lg bg-red-50 text-red-800 dark:bg-red-950 dark:border-red-900 dark:text-red-200">{error}</p>}
           {pendingPatients.map(patient => (
             <div
               key={patient.id}

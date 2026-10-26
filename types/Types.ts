@@ -92,11 +92,11 @@ export type Patient = {
   updated_at?: string;
   phoneNum?: number | string | null;
   reg_start?: string;
-  reg_end?: string;
+  reg_end?: string | null;
   consult_start?: string;
   consult_end?: string;
   counter?: number;
-  called_at?: string;
+  called_at?: string | null;
   timeout_seconds?: number;
   queue_position?: number;
   progress_started_at?: string | null;
