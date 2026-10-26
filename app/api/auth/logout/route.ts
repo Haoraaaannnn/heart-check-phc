@@ -48,7 +48,7 @@ export async function POST(request: Request): Promise<NextResponse> {
     );
 
     // Revoke Supabase auth session
-    await supabase.auth.signOut();
+    await supabase.auth.signOut({ scope: 'local' });
 
     // Explicitly destroy all session cookies matching Supabase prefix
     const allCookies = cookieStore.getAll();

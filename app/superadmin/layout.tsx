@@ -14,9 +14,8 @@
 
 'use client';
 
-import React, { useEffect, useState, Suspense } from 'react';
-import { useRouter } from 'next/navigation';
-import { supabase } from '@/lib/supabase';
+import React, { useState, Suspense } from 'react';
+import { useStaffAuthorization } from '@/hooks/useStaffAuthorization';
 import DashboardBG from '@/components/backgrounds/DashboardBg';
 import { SuperAdminSidebar } from '@/app/superadmin/components/navigation/SuperAdminSidebar';
 import { SuperAdminHeader } from '@/app/superadmin/components/navigation/SuperAdminHeader';
@@ -34,69 +33,13 @@ interface SuperAdminLayoutProps {
  * @returns JSX element wrapping the superadmin dashboard.
  */
 export default function SuperAdminLayout({ children }: SuperAdminLayoutProps) {
-  const router = useRouter();
-  const [isLoading, setIsLoading] = useState(true);
-  const [isAuthorized, setIsAuthorized] = useState(false);
+  const isLoading = useStaffAuthorization(['superadmin']);
+  const isAuthorized = !isLoading;
   const [mobileDrawerOpen, setMobileDrawerOpen] = useState(false);
 
   const D = SUPERADMIN_NAV_STYLES.drawer;
   const L = SUPERADMIN_NAV_STYLES.layout;
 
-  useEffect(() => {
-    let active = true;
-
-    const handlePageShow = (event: PageTransitionEvent) => {
-      if (event.persisted) {
-        window.location.reload();
-      }
-    };
-    window.addEventListener('pageshow', handlePageShow);
-
-    const checkAuth = async () => {
-      const {
-        data: { session },
-      } = await supabase.auth.getSession();
-
-      if (!active) return;
-
-      if (!session) {
-        window.location.replace('/login');
-        return;
-      }
-
-      const { data: userData, error: roleError } = await supabase
-        .from('users')
-        .select('role')
-        .eq('auth_id', session.user.id)
-        .maybeSingle();
-
-      if (!active) return;
-
-      const userRole = (userData?.role || '').toLowerCase().trim();
-
-      if (roleError || !userData || userRole !== 'superadmin') {
-        window.location.replace('/unauthorized');
-        return;
-      }
-
-      setIsAuthorized(true);
-      setIsLoading(false);
-    };
-
-    void checkAuth();
-
-    const { data: listener } = supabase.auth.onAuthStateChange((_event, session) => {
-      if (!session) {
-        window.location.replace('/login');
-      }
-    });
-
-    return () => {
-      active = false;
-      window.removeEventListener('pageshow', handlePageShow);
-      listener.subscription.unsubscribe();
-    };
-  }, []);
 
   if (isLoading) {
     return (

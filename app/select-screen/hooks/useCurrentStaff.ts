@@ -27,7 +27,7 @@ export function useCurrentStaff() {
 
     const handlePageShow = (event: PageTransitionEvent) => {
       if (event.persisted) {
-        window.location.reload();
+        void loadStaffProfile();
       }
     };
     window.addEventListener('pageshow', handlePageShow);
@@ -39,7 +39,8 @@ export function useCurrentStaff() {
           error: authError,
         } = await supabase.auth.getUser();
 
-        if (authError || !user) {
+        if (authError) throw authError;
+        if (!user) {
           window.location.replace('/login');
           return;
         }
@@ -59,6 +60,7 @@ export function useCurrentStaff() {
         }
 
         if (isMounted) {
+          setError(null);
           setStaff({
             authId: userRow.auth_id,
             email: userRow.email || user.email || '',

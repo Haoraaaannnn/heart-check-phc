@@ -13,6 +13,7 @@
 import React, { useState, useEffect, useCallback } from 'react';
 import { supabase } from '@/lib/supabase';
 import { ChangePasswordCard } from '@/app/superadmin/components/ChangePasswordCard';
+import { SessionSecurityCard } from '@/app/superadmin/components/SessionSecurityCard';
 import { QueuePrefixPanel } from '@/app/superadmin/components/QueuePrefixPanel';
 import { SETTINGS_TEXTS } from '@/app/superadmin/constants/settingsTexts';
 import { SETTINGS_STYLES } from '@/app/superadmin/constants/settingsStyles';
@@ -438,6 +439,7 @@ export function SettingsPanel({ focusSecurity = false }: SettingsPanelProps = {}
         </div>
 
         {/* 5. Change Password Card (Integrated Security Form) */}
+        <SessionSecurityCard />
         <ChangePasswordCard />
 
         {/* 6. Queue Prefix and Room Mapping (full-width) */}

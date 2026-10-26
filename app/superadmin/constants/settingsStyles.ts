@@ -40,4 +40,7 @@ export const SETTINGS_STYLES = {
   inputLabel: `block text-xs font-semibold ${themeTokens.text.secondary} uppercase tracking-wider`,
   submitButton: `px-4 py-2.5 ${sizeTokens.radius.sm} ${themeTokens.brand.buttonPrimary} text-xs flex items-center gap-2 cursor-pointer disabled:opacity-50 disabled:cursor-not-allowed`,
   buttonSpinner: 'w-3.5 h-3.5 border-2 border-white border-t-transparent rounded-full animate-spin',
+  sessionCountdown: `inline-flex flex-wrap items-center gap-1.5 rounded-lg border ${themeTokens.border.default} ${themeTokens.surface.card} px-2.5 py-1.5 text-xs ${themeTokens.text.secondary}`,
+  sessionCountdownTime: `font-mono font-bold tabular-nums ${themeTokens.text.primary}`,
+  sessionInputRow: 'flex flex-wrap items-center gap-3 pt-2',
 } as const;

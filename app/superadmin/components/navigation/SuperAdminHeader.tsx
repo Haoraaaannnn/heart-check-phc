@@ -20,6 +20,7 @@ import { toggleThemeWithRipple } from '@/lib/theme/themeTransition';
 import { supabase } from '@/lib/supabase';
 import { handleSignOut as executeSignOut } from '@/lib/supabase/signOut';
 import { LiveClock } from '@/components/reusables/LiveClock';
+import { SessionCountdown } from '@/components/auth/SessionCountdown';
 import { useBottleneckNotifications } from '@/app/dashboard/hooks/useBottleneckNotifications';
 import NotificationDropdown from '@/app/dashboard/components/NotificationDropdown';
 import { SUPERADMIN_TEXTS } from '@/app/superadmin/constants/superadminTexts';
@@ -155,6 +156,7 @@ export function SuperAdminHeader({ onOpenMobileDrawer }: SuperAdminHeaderProps) 
       <div className={S.rightGroup}>
         {/* Live Manila Clock */}
         <LiveClock />
+        <SessionCountdown />
 
         {/* System Notifications Dropdown */}
         {mounted && (

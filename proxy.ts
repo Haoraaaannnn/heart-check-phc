@@ -149,33 +149,24 @@ export async function proxy(request: NextRequest) {
      * manipulating client-side state.
      */
     const {
-        data: { user },
+        data: { user }, error: authError,
     } = await supabase.auth.getUser();
 
     const path = request.nextUrl.pathname;
 
+    // A temporary auth-service outage must not send a valid session into a logout flow.
+    if (authError && (authError.name === 'AuthRetryableFetchError' || (authError.status ?? 0) >= 500)) {
+        return new NextResponse('Session verification is temporarily unavailable. Please retry this page.', {
+            status: 503, headers: { 'Cache-Control': 'no-store', 'Retry-After': '3' },
+        });
+    }
+
     /**
-     * If navigating to the login page (including via browser Back navigation),
-     * expire and clear all active Supabase session cookies so credentials
-     * never persist on shared workstations. Visiting /login must never redirect
-     * back to /select-screen.
+     * Login navigation and prefetch must never mutate a session shared by sibling tabs.
+     * Explicit logout remains a POST action in /api/auth/logout.
      */
     if (path === '/login') {
-        const allCookies = request.cookies.getAll();
-        allCookies.forEach((cookie) => {
-            if (cookie.name.startsWith('sb-')) {
-                response.cookies.set(cookie.name, '', {
-                    path: '/',
-                    maxAge: 0,
-                    expires: new Date(0),
-                    sameSite: 'lax',
-                    secure: isSecure,
-                });
-            }
-        });
         response.headers.set('Cache-Control', 'no-store, no-cache, must-revalidate, proxy-revalidate');
-        response.headers.set('Pragma', 'no-cache');
-        response.headers.set('Expires', '0');
         return response;
     }
 
@@ -222,13 +213,18 @@ export async function proxy(request: NextRequest) {
          * Join must use `auth_id` (matches `auth.uid()`), NOT the table's `id`
          * primary key. See docs/specifications/DATABASE_SCHEMA.md.
          */
-        const { data: userRow } = await supabase
+        const { data: userRow, error: roleError } = await supabase
             .from("users")
             .select("role")
             .eq("auth_id", user.id)
             .single();
 
         const userRole = (userRow?.role || '').toLowerCase().trim();
+        if (roleError && roleError.code !== 'PGRST116') {
+            return new NextResponse('Staff permissions are temporarily unavailable. Please retry this page.', {
+                status: 503, headers: { 'Cache-Control': 'no-store', 'Retry-After': '3' },
+            });
+        }
         const allowedRoles = (ROLE_ROUTES[matchedPrefix] || []).map((r) => r.toLowerCase().trim());
 
         if (!userRow || !allowedRoles.includes(userRole)) {

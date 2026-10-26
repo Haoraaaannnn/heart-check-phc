@@ -65,61 +65,18 @@ function LoginPageInner() {
   const T = LOGIN_TEXTS;
 
   /**
-   * Cleanses residual session state and cookies upon arriving at the login screen.
-   *
-   * Ensures that navigating back to login from clinical workstations terminates the
-   * session immediately so credentials do not persist on shared physical hardware.
+   * Clears restored password fields without revoking the shared staff session.
+   * Visiting or prefetching Login is read-only; only an explicit logout ends a session.
    */
   useEffect(() => {
-    let active = true;
-
-    const purgeActiveSession = async () => {
-      try {
-        await fetch('/api/auth/logout', {
-          method: 'POST',
-          headers: { 'Content-Type': 'application/json' },
-        });
-      } catch (err) {
-        console.error('[AUTH] Failed to purge server cookies on login mount:', err);
-      }
-
-      try {
-        await supabase.auth.signOut();
-      } catch (err) {
-        console.error('[AUTH] Failed to sign out client supabase on login mount:', err);
-      }
-
-      if (!active) return;
-
-      setEmail('');
-      setPassword('');
-      if (emailInputRef.current) {
-        emailInputRef.current.value = '';
-      }
-      if (passwordInputRef.current) {
-        passwordInputRef.current.value = '';
-      }
-
-      try {
-        sessionStorage.clear();
-      } catch {
-        // Ignore sandboxed storage clearance failures
-      }
-    };
-
-    void purgeActiveSession();
-
     const handlePageShow = (event: PageTransitionEvent) => {
       if (event.persisted) {
-        void purgeActiveSession();
+        setPassword('');
+        if (passwordInputRef.current) passwordInputRef.current.value = '';
       }
     };
-
     window.addEventListener('pageshow', handlePageShow);
-    return () => {
-      active = false;
-      window.removeEventListener('pageshow', handlePageShow);
-    };
+    return () => window.removeEventListener('pageshow', handlePageShow);
   }, []);
 
   /**
