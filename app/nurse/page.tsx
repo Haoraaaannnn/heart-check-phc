@@ -21,7 +21,7 @@
 
 'use client';
 
-import React, { useState, useEffect, useMemo, useCallback } from 'react';
+import React, { useState, useEffect, useMemo, useCallback, useRef } from 'react';
 import { useRouter } from 'next/navigation';
 import { supabase } from '@/lib/supabase';
 import { Patient } from '@/types/Types';
@@ -50,6 +50,8 @@ import { requestMonitorCall } from '@/lib/requestMonitorCall';
 import { useConnectionStatus } from '@/hooks/useConnectionStatus';
 import { useOfflineQueue } from '@/hooks/useOfflineQueue';
 import { ConnectionStatusBanner } from '@/components/reusables/ConnectionStatusBanner';
+import { StationSetupModal } from '@/components/reusables/StationSetupModal';
+import { useStationClaim } from '@/hooks/useStationClaim';
 
 
 /**
@@ -73,6 +75,18 @@ export default function NursePage() {
   // Audio Announcement State
   const [speakingId, setSpeakingId] = useState<number | null>(null);
   const [callError, setCallError] = useState('');
+
+  // Station Configuration State
+  const {
+    assignment: stationAssignment,
+    counters: availableCounters,
+    cubicles: availableCubicles,
+    services: availableStationServices,
+    claimStation,
+    removeStationClaim,
+    refresh: refreshStationClaim,
+  } = useStationClaim();
+  const [showStationModal, setShowStationModal] = useState<boolean>(false);
 
   // Loading & Sync States
   const [isLoading, setIsLoading] = useState(true);
@@ -190,6 +204,26 @@ export default function NursePage() {
     void initializeDashboard();
   }, [refreshCubicles, fetchData, fetchFinished, router]);
 
+  // Auto-select initial category or cubicle when nurse assignments load
+  const hasInitializedFilterRef = useRef(false);
+  useEffect(() => {
+    if (!hasInitializedFilterRef.current) {
+      if (assignedCubicles.length > 0) {
+        hasInitializedFilterRef.current = true;
+        const first = assignedCubicles[0];
+        if (first.cubicleNum) {
+          setSelectedCubicleNum(first.cubicleNum);
+          if (first.category) {
+            setSelectedCategory(first.category);
+          }
+        }
+      } else if (assignedServices.length > 0) {
+        hasInitializedFilterRef.current = true;
+        setSelectedCategory(assignedServices[0]);
+      }
+    }
+  }, [assignedCubicles, assignedServices]);
+
   /**
    * Sends a patient call to the matching public monitor while keeping this workstation silent.
    * @param patient - The active patient selected by nursing staff.
@@ -207,6 +241,9 @@ export default function NursePage() {
   const filterPatientList = useCallback(
     (list: Patient[]) => {
       return list.filter((patient) => {
+        // Patients must be assigned to an active cubicle to appear in clinical workstations
+        if (!patient.cubicleNum) return false;
+
         const matchesCategory =
           !selectedCategory ||
           (patient.service &&
@@ -215,17 +252,7 @@ export default function NursePage() {
         const matchesCubicle =
           !selectedCubicleNum ||
           (patient.cubicleNum &&
-            patient.cubicleNum.trim().toLowerCase() === selectedCubicleNum.trim().toLowerCase()) ||
-          (!patient.cubicleNum &&
-            Array.isArray(patient.preferredCubicleNums) &&
-            patient.preferredCubicleNums.some(
-              (p) => p.trim().toLowerCase() === selectedCubicleNum.trim().toLowerCase()
-            )) ||
-          (!patient.cubicleNum &&
-            (!patient.preferredCubicleNums || patient.preferredCubicleNums.length === 0) &&
-            selectedCategory &&
-            patient.service &&
-            patient.service.trim().toLowerCase() === selectedCategory.trim().toLowerCase());
+            patient.cubicleNum.trim().toLowerCase() === selectedCubicleNum.trim().toLowerCase());
 
         return matchesCategory && matchesCubicle;
       });
@@ -365,6 +392,8 @@ export default function NursePage() {
           onMarkAllAsRead={markAllAsRead}
           onDismissNotification={dismissNotification}
           onClearAllNotifications={clearAll}
+          claimedCubicleId={stationAssignment.cubicleId}
+          onOpenStationModal={() => setShowStationModal(true)}
         />
 
         <NurseBreakControls selectedCubicleNum={selectedCubicleNum} />
@@ -450,6 +479,26 @@ export default function NursePage() {
         onClose={() => setFinishedDrawerOpen(false)}
         patients={visibleFinished}
       />
+
+      {/* Station Configuration Modal */}
+      {showStationModal && (
+        <StationSetupModal
+          isOpen={showStationModal}
+          onClose={() => setShowStationModal(false)}
+          workstation="nurse"
+          currentAssignment={stationAssignment}
+          counters={availableCounters}
+          cubicles={availableCubicles}
+          services={availableStationServices}
+          onSave={claimStation}
+          onRemove={() => removeStationClaim('nurse')}
+          onSuccess={() => {
+            void refreshStationClaim();
+            void refreshCubicles();
+            void fetchData();
+          }}
+        />
+      )}
     </div>
   );
 }

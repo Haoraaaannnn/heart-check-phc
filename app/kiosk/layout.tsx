@@ -5,6 +5,7 @@ import { usePathname, useSearchParams } from "next/navigation";
 import { Suspense, useEffect, useRef } from "react";
 import KioskHeader from "@/app/kiosk/pages/kiosk-services/components/KioskHeader";
 import KioskBackButton from "@/components/reusables/KioskBackButton";
+import KioskStepProgress from "@/app/kiosk/components/KioskStepProgress";
 import { useIsMounted } from "@/hooks/useIsMounted";
 import {
   KioskLoadingProvider,
@@ -17,6 +18,7 @@ import {
   KioskLayoutStyle,
 } from "@/app/kiosk/constants/kioskLayout";
 import { KIOSK_ROUTES } from "@/app/kiosk/constants/kioskNavigation";
+import { useKioskPresence } from "@/app/kiosk/hooks/useKioskPresence";
 
 /** Props for {@link MainKioskLayout}. */
 interface MainKioskLayoutProps {
@@ -25,10 +27,13 @@ interface MainKioskLayoutProps {
 }
 
 /**
- * Isolated back navigation component consuming search parameters inside Suspense.
+ * Isolated top navigation component consuming search parameters inside Suspense.
+ *
+ * @remarks
+ * Renders the top navigation header containing the contextual back button.
  *
  * @param props - Component props containing current pathname.
- * @returns Header element with back button or null.
+ * @returns Header element with contextual back button.
  */
 function KioskBackNavigation({ pathname }: { pathname: string }) {
   const searchParams = useSearchParams();
@@ -94,16 +99,17 @@ function KioskBackNavigation({ pathname }: { pathname: string }) {
     }
   }
 
-  if (!shouldShowBackButton || !backHref) {
-    return null;
-  }
-
   return (
     <header
       className={KioskLayoutClasses.topNavWrapper}
       style={KioskLayoutStyle.topNavWrapper}
     >
-      <KioskBackButton href={backHref} />
+      {/* Left Slot: Contextual Back Button */}
+      <div className="flex items-center justify-start shrink-0">
+        {shouldShowBackButton && backHref ? (
+          <KioskBackButton href={backHref} />
+        ) : null}
+      </div>
     </header>
   );
 }
@@ -208,6 +214,9 @@ export default function MainKioskLayout({ children }: MainKioskLayoutProps) {
   const pathname = usePathname();
   const isSlideshow = pathname === KIOSK_ROUTES.SLIDESHOW;
 
+  // Broadcast real-time kiosk terminal telemetry and printer hardware state to SuperAdmin
+  useKioskPresence();
+
   // The patient check-in kiosk is strictly light-mode only per institutional standards.
   // Isolated strictly to the kiosk shell lifecycle; does not mutate next-themes or affect other tabs.
   useEffect(() => {
@@ -239,6 +248,11 @@ export default function MainKioskLayout({ children }: MainKioskLayoutProps) {
           <Suspense fallback={null}>
             <KioskBackNavigation pathname={pathname} />
           </Suspense>
+
+          {/* Dedicated Persistent Step Process Strip directly below the Back button row */}
+          <div className="w-full flex-shrink-0 flex justify-center items-center py-1 sm:py-1.5 px-3 sm:px-4 z-10 bg-transparent">
+            <KioskStepProgress />
+          </div>
 
           {/* Main content: fills all remaining space, no fixed dimensions. */}
           <main

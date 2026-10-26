@@ -128,12 +128,12 @@ export const CategoryLayoutStyle = {
 
 /** Tailwind CSS class name dictionary for category selection page layout. */
 export const CategoryLayoutClasses = {
-    container: "relative flex h-full w-full flex-col overflow-hidden bg-transparent justify-center items-center py-1 sm:py-2",
+    container: "relative flex min-h-full w-full flex-col bg-transparent justify-center items-center py-1 sm:py-2 my-auto",
     headerWrapper: "w-full shrink-0 pt-0 pb-0 px-4 flex flex-col items-center justify-center sticky top-0 z-10 bg-transparent",
-    cardsArea: "w-full flex items-center justify-center overflow-hidden",
+    cardsArea: "w-full flex items-center justify-center",
     cardsInnerWrapper: "m-auto flex w-full max-w-[960px] flex-col items-center justify-center px-4",
-    contentWrapper: "m-auto flex max-h-full w-[95%] max-w-[1150px] flex-col items-center justify-center overflow-hidden px-2 sm:px-4",
-    scrollWrapper: "relative flex max-h-full w-full min-h-0 flex-initial flex-col items-center overflow-hidden",
+    contentWrapper: "my-auto flex max-h-full w-[95%] max-w-[1150px] flex-col items-center justify-center px-2 sm:px-4",
+    scrollWrapper: "relative flex max-h-full w-full min-h-0 flex-initial flex-col items-center",
     cardsScrollArea: "max-h-full w-full min-h-0 overflow-y-auto overflow-x-hidden scrollbar-thin [scrollbar-color:#D1D5DB_transparent] [&::-webkit-scrollbar]:w-2 [&::-webkit-scrollbar-track]:bg-transparent [&::-webkit-scrollbar-thumb]:bg-gray-300 [&::-webkit-scrollbar-thumb]:rounded-full hover:[&::-webkit-scrollbar-thumb]:bg-gray-400 flex flex-col items-center pt-0 pb-1 px-2",
     scrollTopShadow: "pointer-events-none absolute top-0 inset-x-0 h-6 bg-gradient-to-b from-white/90 to-transparent z-15",
     scrollBottomShadow: "pointer-events-none absolute bottom-0 inset-x-0 h-12 bg-gradient-to-t from-white/95 to-transparent z-15",

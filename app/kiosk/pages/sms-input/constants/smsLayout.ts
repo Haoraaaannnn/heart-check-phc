@@ -8,7 +8,7 @@ import { CSSProperties } from "react";
 /** Spacing tokens for SMS page layout. */
 export const smsLayoutSpacing = {
     containerPaddingX: 16,
-    contentGap: "clamp(4px, 1.2vh, 14px)",
+    contentGap: "clamp(8px, 1.4vh, 18px)",
 } as const;
 
 /** Layout style definitions for SMS phone entry container. */
@@ -28,7 +28,6 @@ export const SMSLayoutStyle = {
         margin: "auto",
         display: "flex",
         width: "100%",
-        maxHeight: "100%",
         flexDirection: "column",
         alignItems: "center",
         justifyContent: "center",
@@ -37,7 +36,7 @@ export const SMSLayoutStyle = {
     entryLeftCol: {
         display: "flex",
         flexDirection: "column",
-        gap: "clamp(10px, 1.4vh, 16px)",
+        gap: "clamp(8px, 1.2vh, 14px)",
         width: "100%",
         maxWidth: 540,
         margin: "0 auto",
@@ -46,14 +45,14 @@ export const SMSLayoutStyle = {
 
 /** Tailwind CSS class name dictionary for SMS input layouts. */
 export const SMSLayoutClasses = {
-    container: "h-full w-full flex flex-col items-center justify-center overflow-hidden bg-transparent px-4 py-2 sm:py-4 [scrollbar-width:none] [&::-webkit-scrollbar]:hidden",
-    layoutContainer: "h-full w-full flex flex-col items-center justify-center overflow-hidden bg-transparent px-4 py-2 sm:py-4 [scrollbar-width:none] [&::-webkit-scrollbar]:hidden",
-    contentWrapper: "w-full max-w-[540px] landscape:max-w-[1050px] m-auto flex flex-col items-center justify-center max-h-full",
-    entryGrid: "w-full grid grid-cols-1 landscape:grid-cols-2 gap-4 lg:gap-8 items-center justify-center portrait:max-w-[540px] landscape:max-w-[1050px] mx-auto",
-    entryLeftCol: "flex flex-col gap-3.5 sm:gap-4 w-full max-w-[540px] mx-auto",
-    entryRightCol: "portrait:order-2 landscape:order-none flex flex-col items-center justify-center w-full max-w-[540px] mx-auto",
-    phoneInputWrapper: "w-full max-w-[540px] mx-auto mb-1",
-    instructionWrapper: "w-full max-w-[540px] mx-auto my-1",
-    continueWrapper: "w-full max-w-[540px] mx-auto mt-1",
+    container: "h-full w-full flex flex-col items-center justify-center bg-transparent px-3 sm:px-4 py-1 my-auto overflow-hidden",
+    layoutContainer: "h-full w-full flex flex-col items-center justify-center bg-transparent px-3 sm:px-4 py-1 my-auto overflow-hidden",
+    contentWrapper: "w-full max-w-[420px] landscape:max-w-[960px] my-auto flex flex-col items-center justify-center px-2 sm:px-4 py-1 sm:py-2",
+    entryGrid: "w-full grid grid-cols-1 landscape:grid-cols-2 gap-4 sm:gap-6 lg:gap-8 items-start justify-center max-w-[420px] landscape:max-w-[960px] mx-auto",
+    leftCol: "flex flex-col gap-3 sm:gap-4 w-full max-w-[420px] landscape:max-w-[460px] mx-auto justify-start",
+    rightCol: "flex flex-col gap-3 sm:gap-4 w-full max-w-[420px] mx-auto items-center justify-start",
+    phoneInputWrapper: "w-full max-w-[420px] landscape:max-w-[460px] mx-auto",
+    instructionWrapper: "w-full max-w-[420px] landscape:max-w-[460px] mx-auto",
+    continueWrapper: "w-full max-w-[420px] mx-auto",
 } as const;
 

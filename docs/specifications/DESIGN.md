@@ -112,9 +112,13 @@ To ensure consistent ergonomics across portrait touch kiosks and landscape evalu
 
 ### 2.3 Archetype C: Public Waiting Area Monitor Layout
 - Designed for high-definition 1080p and 4K wall-mounted TV monitors.
-- High-contrast dark background with bright, bold ticket numbers visible across waiting halls.
-- Multi-column layout pairing ticket codes with target room / counter numbers.
-- Privacy compliance: Zero patient full names displayed; only ticket identifier strings (e.g. `P-042`, `LAB-015`) are broadcast.
+- Strictly Light-Mode Only (`bg-slate-50`, `bg-white`, `#cc3535`); dark mode is strictly prohibited on TV displays for institutional clarity across outpatient waiting halls.
+- Strict Zero-Scroll Lock: All layouts enforce `overflow: hidden` on viewport, body, and all content cards; zero scrollbars permitted.
+- Maximum Queue Number Scale: Ticket numbers are scaled as big as possible (`font-black tabular-nums tracking-tight leading-none`, scaling up to `text-9xl` through `text-[11rem]`) to maximize card surface and visibility from 30+ feet away.
+- Active Calling Highlight: Actively called tickets and stations feature a high-visibility calling alert state (amber-400 ring pulse, "CALLING NOW" badge, and animated indicator).
+- Next in Queue Clarity: Waiting queues display dedicated "NEXT IN QUEUE" cards and enlarged numbers so waiting patients immediately understand who is next in line.
+- Multi-column layout pairing ticket codes with target room, cubicle, and doctor designations or registration counters.
+- Privacy compliance (RA 10173): Zero patient full names displayed; only ticket identifier strings (e.g. `P-042`, `LAB-015`) are broadcast.
 
 ### 2.4 Archetype D: Patient Transfer Engine Layout
 - Dual-panel or split-lane interactive board organizing registration intake, waiting queues, consultation cubicles, and idle tickets.
@@ -255,6 +259,7 @@ The following utilities are defined in `app/globals.css` to provide consistent v
 | `.phc-drop-pop` | Successful drop feedback | Subtle scale pop (1.04x) on patient assignment |
 | `.phc-shake` | Invalid drop feedback | Brief horizontal oscillation when dropping on full/invalid station |
 | `.phc-badge-pulse` | Live queue alert | Pulsing outer ring radiating from badge |
+| `.animate-monitor-calling` | TV monitor calling alert | 100% opaque red card blinking with 8px amber beacon ring and glow; zero text fading |
 
 ---
 

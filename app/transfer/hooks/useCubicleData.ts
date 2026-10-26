@@ -63,7 +63,9 @@ export function useCubicleData() {
   useEffect(() => {
     const timer = setInterval(() => void fetchCubicles(), 5000);
     const channel = supabase.channel('transfer-cubicle-availability')
-      .on('postgres_changes', { event: '*', schema: 'public', table: 'cubicle' }, () => void fetchCubicles()).subscribe();
+      .on('postgres_changes', { event: '*', schema: 'public', table: 'cubicle' }, () => void fetchCubicles())
+      .on('postgres_changes', { event: '*', schema: 'public', table: 'doctors' }, () => void fetchCubicles())
+      .subscribe();
     return () => { clearInterval(timer); void supabase.removeChannel(channel); };
   }, [fetchCubicles]);
 

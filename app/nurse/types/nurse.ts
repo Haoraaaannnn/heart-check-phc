@@ -45,13 +45,7 @@ export function dbStatusToStage(status?: string | null): ClinicalStage | null {
   const normalized = status.trim().toLowerCase();
   if (
     normalized === 'assigned' ||
-    normalized === 'waiting' ||
-    normalized === 'on progress' ||
-    normalized === 'in progress' ||
-    normalized === 'in-progress' ||
-    normalized === 'called' ||
-    normalized === 'queue' ||
-    normalized === 'pending'
+    normalized === 'called'
   ) {
     return 'assigned';
   }

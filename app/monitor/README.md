@@ -2,7 +2,7 @@
 
 This document provides architectural standards and an exhaustive developer mapping for the Public Queue Display Monitor module in `app/monitor/`.
 
-**Last Updated:** 2026-10-22
+**Last Updated:** 2026-10-25
 
 ---
 
@@ -10,13 +10,15 @@ This document provides architectural standards and an exhaustive developer mappi
 
 The Public Queue Display Monitor provides high-visibility, real-time patient queue visualization for waiting areas and hallways in the Philippine Heart Center Outpatient Department. It informs waiting patients of active ticket callouts, room designations, and registration counter updates.
 
-### Responsive Zero-Scroll Standards
-All public monitor screens enforce a strict zero-scroll architecture:
-1. **Viewport Lock (`layout.tsx`):** Root shell locks `overflow: hidden` on both `document.documentElement` and `document.body` while inside the monitor route, completely preventing window scrollbars.
-2. **Fixed 100vh Flex Container:** Monitor layouts fill `h-screen h-[100dvh] w-screen w-[100dvw]` with a 3-tier flex column (`Header` flex-shrink-0, `main` flex-1 min-h-0, and `Footer` flex-shrink-0).
-3. **Fluid Height Distribution:** Cards and table cells automatically scale their heights and typography proportionally to fit the viewport dimensions across Full HD (1080p), 4K, 720p, laptops, and tablet displays.
-4. **Adaptive Multi-Column Splitting:** In cubicle pairing mode (`PairedLayout.tsx`), when active stations exceed 4, the view automatically splits into a balanced 4-column matrix (Queue, Room, Queue, Room) to eliminate vertical overflow.
-5. **Fixed-Layout Tables:** Service roster displays (`TableLayout.tsx`) enforce `table-fixed` column distribution, preventing horizontal overflow.
+### Public TV Monitor Core Display Standards
+All public monitor screens enforce strict wall-mounted TV display standards:
+1. **Zero Dark Mode Lock (`layout.tsx`):** Root shell strictly enforces institutional light mode (`bg-slate-50`, `bg-white`, `#cc3535`). Dark mode is strictly banned from TV monitors for maximum readability across bright waiting halls. A `MutationObserver` permanently prevents any background theme provider from re-injecting the `dark` class.
+2. **Strict Zero-Scroll TV Viewport Lock:** All screens fill `h-screen h-[100dvh] w-screen w-[100dvw]` with `overflow: hidden` on root, body, and all content wrappers. Because wall-mounted TV monitors have neither mouse nor touch interaction, no scrollbars or clipped overflow are permitted across Full HD (1080p), 4K, 720p, and tablet displays.
+3. **Maximum Queue Number Scale:** The patient queue number is the primary operational data point. Ticket numbers scale up to `text-9xl` through `text-[11rem]` (`font-black tabular-nums tracking-tight leading-none`), maximizing card surface without wrapping or overflowing.
+4. **Active Calling Highlight:** Stations actively calling patients (via staff recalls or automatic announcements) display a prominent "CALLING NOW" high-contrast amber badge and a 100% opaque red card with an animated amber beacon ring (`.animate-monitor-calling`). The card flashes and blinks without fading opacity or washing out the ticket number to white.
+5. **Next in Queue Clarity:** Upcoming tickets in waiting queues are clearly labeled with dedicated "NEXT IN QUEUE" badges and enlarged typography so patients immediately understand who is calling and who is next in line.
+6. **Adaptive Multi-Column Splitting:** In cubicle pairing mode (`PairedLayout.tsx`), when active stations exceed 4, the view automatically splits into a balanced 4-column matrix (Queue, Room, Queue, Room) to eliminate vertical overflow.
+7. **Fixed-Layout Tables:** Service roster displays (`TableLayout.tsx`) enforce `table-fixed` column distribution, preventing horizontal overflow.
 
 ### Routing and Display Modes
 1. **Category Selector Gateway (`app/monitor/page.tsx`):**
@@ -33,6 +35,8 @@ All public monitor screens enforce a strict zero-scroll architecture:
    - Renders queue rosters with clear serving and waiting columns.
 5. **Registration Counter Layout (`RegistrationLayout.tsx`):**
    - Specialized layout for intake windows showing active calling counters and serving tickets.
+   - **4-Counter 2x2 Matrix Mode:** When 4 counters are active, automatically switches to a 2-top, 2-bottom widescreen quadrant grid. Each counter card splits horizontally with an enlarged 60% Now Serving card (scaling up to `11.5rem` typography) on the left and a 40% Upcoming Queue Roster on the right (Hero Next Ticket + #2, #3, #4 in-line sequence rows — accepting up to 4 on queue, 5 total per counter).
+   - **5+ Column Default Mode:** When 5 or more counters are open, renders vertical side-by-side columns with an enlarged upper 52-54% Now Serving card (scaling up to `9.5rem` typography) and a lower upcoming queue box displaying 4 waiting queue spots (#1 Hero Next in Queue + #2, #3, #4 in-line sequence rows) for a total of 5 queue numbers visible per counter including the one calling.
 6. **Audio Chime and Speech Gateway (`StartScreen.tsx`):**
    - Modern browsers block unprompted audio autoplay. The monitor presents an initial user-interaction gate ("Click to Start Audio Chime") to establish the Web Audio API context for ticket callout chimes.
 

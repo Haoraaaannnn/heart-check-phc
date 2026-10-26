@@ -91,6 +91,7 @@ export const QueuePrintTicketStyle = {
         color: "#111827",
         lineHeight: 1.15,
         margin: 0,
+        whiteSpace: "nowrap",
     },
     /** English service name subtitle (clean text, no pillbox). */
     serviceSubtitle: {
@@ -101,6 +102,7 @@ export const QueuePrintTicketStyle = {
         margin: 0,
         textTransform: "uppercase",
         letterSpacing: "0.04em",
+        whiteSpace: "nowrap",
     },
     /** Full-width subtle horizontal divider. */
     divider: {

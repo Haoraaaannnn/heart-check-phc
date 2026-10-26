@@ -21,7 +21,7 @@ export const PatientTypeCardIcons = {
 export const patientTypeCardTypography = {
     cardTitleSize: kioskTypography.cardTitle,
     cardSubtitleSize: kioskTypography.cardSubtitle,
-    cardBadgeSize: kioskTypography.cardBadge,
+    cardBadgeSize: "clamp(11px, 1.1vw, 13px)",
 } as const;
 
 /** Color tokens for patient type cards. */
@@ -34,30 +34,19 @@ export const patientTypeCardColors = {
 /** Spacing values for patient type cards matching unified kiosk card dimensions. */
 export const patientTypeCardSpacing = {
     cardGap: kioskCardDimensions.cardGap,
-    cardPaddingX: kioskCardDimensions.cardPaddingX,
-    cardPaddingY: kioskCardDimensions.cardPaddingY,
-    cardMinHeight: kioskCardDimensions.cardMinHeight,
-    gridGap: kioskCardDimensions.gridGap,
+    cardPaddingX: "clamp(18px, 2.5vmin, 28px)",
+    cardPaddingY: "clamp(18px, 2.2vh, 26px)",
+    cardMinHeight: "clamp(120px, 14vh, 160px)",
+    gridGap: "clamp(16px, 2vmin, 24px)",
     gridPaddingX: kioskCardDimensions.gridPaddingX,
 } as const;
 
 /** Inline styles for `PatientTypeCard`. */
 export const PatientTypeCardStyle = {
-    cardIcon: {
-        fontSize: kioskCardDimensions.iconFontSize,
-        color: themeColors.brandRed,
-        lineHeight: 1,
-    },
-    arrowIcon: {
-        fontSize: kioskCardDimensions.arrowFontSize,
-        color: "#D7D6D6",
-        lineHeight: 1,
-    },
     card: {
         position: "relative",
         display: "flex",
-        width: "100%",
-        height: "100%",
+        width: "fit-content",
         minHeight: patientTypeCardSpacing.cardMinHeight,
         alignItems: "center",
         gap: patientTypeCardSpacing.cardGap,
@@ -82,24 +71,26 @@ export const PatientTypeCardStyle = {
         flexShrink: 0,
         width: kioskCardDimensions.iconWrapperWidth,
     },
+    cardIcon: {
+        fontSize: kioskCardDimensions.iconFontSize,
+        color: themeColors.brandRed,
+        lineHeight: 1,
+    },
     labelsWrapper: {
         position: "relative",
         zIndex: 10,
         display: "flex",
-        flex: 1,
         flexDirection: "column",
         minWidth: 0,
-        paddingLeft: "clamp(6px, 1vmin, 12px)",
-        overflowWrap: "anywhere",
-        wordBreak: "break-word",
+        paddingLeft: "clamp(4px, 0.8vmin, 8px)",
+        paddingRight: "clamp(8px, 1.2vmin, 16px)",
     },
     cardTitle: {
         fontWeight: 900,
         fontSize: patientTypeCardTypography.cardTitleSize,
         lineHeight: 1.2,
-        color: "#111827",
-        overflowWrap: "anywhere",
-        wordBreak: "break-word",
+        color: themeColors.black,
+        whiteSpace: "nowrap",
     },
     divider: {
         height: 2,
@@ -114,29 +105,18 @@ export const PatientTypeCardStyle = {
         fontWeight: 600,
         color: patientTypeCardColors.subtitleColor,
         lineHeight: 1.25,
-        overflowWrap: "anywhere",
-        wordBreak: "break-word",
+        whiteSpace: "nowrap",
     },
-    cardBadge: {
-        marginTop: 6,
-        width: "fit-content",
-        display: "inline-block",
-        backgroundColor: "rgba(254, 226, 226, 0.7)",
-        border: "1px solid rgba(252, 165, 165, 0.6)",
-        color: "#450a0a",
-        fontWeight: 700,
-        fontSize: patientTypeCardTypography.cardBadgeSize,
-        paddingLeft: 12,
-        paddingRight: 12,
-        paddingTop: 4,
-        paddingBottom: 4,
-        borderRadius: 6,
+    arrowIcon: {
+        fontSize: kioskCardDimensions.arrowFontSize,
+        color: patientTypeCardColors.arrowColor,
         lineHeight: 1,
+        flexShrink: 0,
+        marginLeft: "auto",
     },
     cardsGrid: {
-        display: "grid",
-        width: "100%",
-        gridAutoRows: kioskCardDimensions.gridAutoRows,
+        display: "flex",
+        width: "fit-content",
         gap: patientTypeCardSpacing.gridGap,
         paddingLeft: patientTypeCardSpacing.gridPaddingX,
         paddingRight: patientTypeCardSpacing.gridPaddingX,
@@ -148,10 +128,13 @@ export const PatientTypeCardStyle = {
 
 /** Tailwind utility classes for `PatientTypeCards`. */
 export const PatientTypeCardsClasses = {
-    grid: "grid w-full grid-cols-1 sm:grid-cols-2 gap-4 sm:gap-6 px-3 sm:px-6 py-2 mx-auto auto-rows-fr",
-    card: "group transition-all duration-100 active:scale-[0.98] active:!border-[#ED1C24] active:shadow-sm",
+    grid: "flex flex-col sm:flex-row items-center justify-center gap-4 sm:gap-6 px-2 sm:px-4 py-2 mx-auto w-fit max-w-full",
+    card: "group transition-all duration-100 active:scale-[0.98] active:!border-[#ED1C24] active:shadow-sm select-none w-fit",
     cardIconWrapper: "shrink-0",
     cardIcon: "shrink-0",
-    cardArrow: "shrink-0 transition-all duration-100 text-[#D7D6D6] group-active:!text-[#ED1C24] group-active:translate-x-1",
+    cardArrow: "shrink-0 ml-auto transition-all duration-100 text-[#D7D6D6] group-active:!text-[#ED1C24] group-active:translate-x-1 group-hover:text-[#ED1C24]",
 } as const;
+
+
+
 

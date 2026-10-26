@@ -60,18 +60,24 @@ export function useCurrentStaff() {
         }
 
         if (isMounted) {
+<<<<<<< HEAD
           setError(null);
+=======
+          const userMetaWorkstations = user.user_metadata?.allowed_workstations;
+>>>>>>> 364f5eeb9c087f26bbdd271d6b0b72b1de88411c
           setStaff({
             authId: userRow.auth_id,
             email: userRow.email || user.email || '',
             username: userRow.username || user.email?.split('@')[0] || 'Staff',
             role: (userRow.role || '').toLowerCase().trim(),
+            allowedWorkstations: Array.isArray(userMetaWorkstations) ? userMetaWorkstations : null,
           });
           setLoading(false);
         }
-      } catch (err: any) {
+      } catch (err: unknown) {
         if (isMounted) {
-          setError(err?.message || 'Error resolving staff session.');
+          const message = err instanceof Error ? err.message : 'Error resolving staff session.';
+          setError(message);
           setLoading(false);
         }
       }

@@ -86,6 +86,7 @@ export function useNurseData(): UseNurseDataReturn {
   const cachedCubicleNumsRef = useRef<string[]>([]);
   const cachedCubiclesRef = useRef<AssignedNurseCubicle[]>([]);
   const cachedAssignedServicesRef = useRef<string[]>([]);
+  const cachedRegServicesRef = useRef<Set<string>>(new Set());
   const userRoleRef = useRef<string>('');
 
   // Monotonic sequence guards to discard stale out-of-order network responses
@@ -179,20 +180,38 @@ export function useNurseData(): UseNurseDataReturn {
     let cubiclesToFetch: AssignedNurseCubicle[] = [];
     let finalServices: string[] = [];
 
-    // Superadmin and Admin bypass: full visibility to all hospital cubicles and active services
-    if (user.role === 'superadmin' || user.role === 'admin') {
-      const [{ data: allCubicles, error: cubicleError }, { data: allServices, error: serviceError }] =
-        await Promise.all([
-          supabase
-            .from('cubicle')
-            .select('id, cubicleNum, category, room, subcategory, doctorId')
-            .order('room', { ascending: true })
-            .order('cubicleNum', { ascending: true }),
-          supabase
-            .from('services')
-            .select('label_en, requires_nurse, display_order')
-            .order('display_order', { ascending: true }),
-        ]);
+    // Query assigned user_cubicles, user_services, and active hospital services concurrently
+    const [
+      { data: links, error: linkError },
+      { data: userServices, error: serviceError },
+      { data: allServices, error: allServicesError },
+    ] = await Promise.all([
+      supabase.from('user_cubicles').select('cubicle_id').eq('user_id', user.id),
+      supabase.from('user_services').select('service').eq('user_id', user.id),
+      supabase.from('services').select('label_en, requires_nurse, requires_registration, display_order').order('display_order', { ascending: true }),
+    ]);
+
+    const regServices = (allServices || [])
+      .filter((s) => s.requires_registration !== false)
+      .map((s) => s.label_en.trim().toLowerCase());
+    cachedRegServicesRef.current = new Set(regServices);
+
+    const cubicleIds = (links ?? []).map((link) => link.cubicle_id).filter(Boolean);
+    const assignedServiceNames = (userServices ?? []).map((s) => s.service).filter(Boolean);
+    const hasExplicitCubicle = cubicleIds.length > 0;
+
+    const activeNurseServices = (allServices || [])
+      .filter((s) => s.requires_nurse !== false)
+      .map((s) => s.label_en)
+      .filter(Boolean);
+
+    // Superadmin / Admin fallback: full visibility only if supervisor has NOT claimed a specific desk
+    if ((user.role === 'superadmin' || user.role === 'admin') && !hasExplicitCubicle) {
+      const { data: allCubicles, error: cubicleError } = await supabase
+        .from('cubicle')
+        .select('id, cubicleNum, category, room, subcategory, doctorId')
+        .order('room', { ascending: true })
+        .order('cubicleNum', { ascending: true });
 
       if (cubicleError) {
         console.error('Failed to load cubicles for admin:', cubicleError);
@@ -203,39 +222,13 @@ export function useNurseData(): UseNurseDataReturn {
       }
 
       cubiclesToFetch = (allCubicles || []) as AssignedNurseCubicle[];
-
-      const nurseServices = (allServices || [])
-        .filter((s) => s.requires_nurse !== false)
-        .map((s) => s.label_en)
-        .filter(Boolean);
-
       finalServices = Array.from(
         new Set([
-          ...nurseServices,
+          ...activeNurseServices,
           ...cubiclesToFetch.map((c) => c.category).filter(Boolean),
         ])
       );
     } else {
-      // Standard clinical nurse: query assigned user_cubicles, user_services, and active hospital services concurrently
-      const [
-        { data: links, error: linkError },
-        { data: userServices, error: serviceError },
-        { data: allServices, error: allServicesError },
-      ] = await Promise.all([
-        supabase
-          .from('user_cubicles')
-          .select('cubicle_id')
-          .eq('user_id', user.id),
-        supabase
-          .from('user_services')
-          .select('service')
-          .eq('user_id', user.id),
-        supabase
-          .from('services')
-          .select('label_en, requires_nurse, display_order')
-          .order('display_order', { ascending: true }),
-      ]);
-
       if (linkError || serviceError) {
         console.error('Failed to load user assignments:', { linkError, serviceError, allServicesError });
         if (cachedCubicleNumsRef.current.length === 0 && cachedAssignedServicesRef.current.length === 0) {
@@ -244,49 +237,25 @@ export function useNurseData(): UseNurseDataReturn {
         return cachedCubicleNumsRef.current;
       }
 
-      const cubicleIds = (links ?? []).map((link) => link.cubicle_id).filter(Boolean);
-      const assignedServiceNames = (userServices ?? []).map((s) => s.service).filter(Boolean);
-
-      const activeNurseServices = (allServices || [])
-        .filter((s) => s.requires_nurse !== false)
-        .map((s) => s.label_en)
-        .filter(Boolean);
-
-      // If user has explicit user_services assigned, scope to them;
-      // otherwise fallback to active hospital services (parity with Transfer Dashboard)
       const effectiveServices =
         assignedServiceNames.length > 0 ? assignedServiceNames : activeNurseServices;
 
-      // Fetch cubicles by explicit IDs and by effective service categories
-      const cubiclePromises = [];
-      if (cubicleIds.length > 0) {
-        cubiclePromises.push(
-          supabase
-            .from('cubicle')
-            .select('id, cubicleNum, category, room, subcategory, doctorId')
-            .in('id', cubicleIds)
-        );
-      }
-      if (effectiveServices.length > 0) {
-        cubiclePromises.push(
-          supabase
-            .from('cubicle')
-            .select('id, cubicleNum, category, room, subcategory, doctorId')
-            .in('category', effectiveServices)
-        );
+      // Strict 1-to-1 cubicle enforcement: If nurse has claimed a cubicle, fetch ONLY that cubicle
+      if (hasExplicitCubicle) {
+        const { data: explicitCubicles } = await supabase
+          .from('cubicle')
+          .select('id, cubicleNum, category, room, subcategory, doctorId')
+          .in('id', cubicleIds);
+        cubiclesToFetch = (explicitCubicles || []) as AssignedNurseCubicle[];
+      } else if (effectiveServices.length > 0) {
+        // Fallback to category cubicles only if no explicit cubicle is claimed
+        const { data: categoryCubicles } = await supabase
+          .from('cubicle')
+          .select('id, cubicleNum, category, room, subcategory, doctorId')
+          .in('category', effectiveServices);
+        cubiclesToFetch = (categoryCubicles || []) as AssignedNurseCubicle[];
       }
 
-      const results = await Promise.all(cubiclePromises);
-      const cubicleMap = new Map<number | string, AssignedNurseCubicle>();
-      for (const res of results) {
-        if (res.data) {
-          for (const c of res.data) {
-            cubicleMap.set(c.id, c as AssignedNurseCubicle);
-          }
-        }
-      }
-
-      cubiclesToFetch = Array.from(cubicleMap.values());
       cubiclesToFetch.sort(
         (a, b) =>
           (a.room ?? 0) - (b.room ?? 0) ||
@@ -404,7 +373,8 @@ export function useNurseData(): UseNurseDataReturn {
         const { data, error } = await supabase
           .from('patients')
           .select('*')
-          .neq('status', 'Done')
+          .in('status', ['Assigned', 'With Doctor', 'Carryout'])
+          .not('cubicleNum', 'is', null)
           .gte('created_at', today.toISOString())
           .lt('created_at', tomorrow.toISOString())
           .order('created_at', { ascending: true });
@@ -413,7 +383,12 @@ export function useNurseData(): UseNurseDataReturn {
           console.warn('Nurse background fetch dropped:', error.message);
           return;
         }
-        rawPatients = (data || []) as Patient[];
+        rawPatients = ((data || []) as Patient[]).filter((p) => {
+          if (!p.cubicleNum) return false;
+          const svc = p.service?.trim().toLowerCase() || '';
+          if (cachedRegServicesRef.current.has(svc) && !p.reg_end) return false;
+          return true;
+        });
       } else {
         const queries = [];
         if (cubicleNums.length > 0) {
@@ -421,7 +396,8 @@ export function useNurseData(): UseNurseDataReturn {
             supabase
               .from('patients')
               .select('*')
-              .neq('status', 'Done')
+              .in('status', ['Assigned', 'With Doctor', 'Carryout'])
+              .not('cubicleNum', 'is', null)
               .in('cubicleNum', cubicleNums)
               .gte('created_at', today.toISOString())
               .lt('created_at', tomorrow.toISOString())
@@ -433,7 +409,8 @@ export function useNurseData(): UseNurseDataReturn {
             supabase
               .from('patients')
               .select('*')
-              .neq('status', 'Done')
+              .in('status', ['Assigned', 'With Doctor', 'Carryout'])
+              .not('cubicleNum', 'is', null)
               .in('service', myServices)
               .gte('created_at', today.toISOString())
               .lt('created_at', tomorrow.toISOString())
@@ -446,6 +423,9 @@ export function useNurseData(): UseNurseDataReturn {
         for (const res of results) {
           if (!res.error && res.data) {
             for (const p of res.data) {
+              if (!p.cubicleNum) continue;
+              const svc = p.service?.trim().toLowerCase() || '';
+              if (cachedRegServicesRef.current.has(svc) && !p.reg_end) continue;
               patientMap.set(p.id, p as Patient);
             }
           } else if (res.error) {
@@ -631,22 +611,26 @@ export function useNurseData(): UseNurseDataReturn {
     const myServices = cachedAssignedServicesRef.current;
     const isSupervisor = userRoleRef.current === 'superadmin' || userRoleRef.current === 'admin';
 
+    // Clinical workstation constraint: patient must have an assigned cubicle
+    if (!patient.cubicleNum) {
+      setAssignedPatients((prev) => prev.filter((p) => p.id !== patient.id));
+      setWithDoctorPatients((prev) => prev.filter((p) => p.id !== patient.id));
+      setCarryoutPatients((prev) => prev.filter((p) => p.id !== patient.id));
+      return;
+    }
+
+    // If service requires registration, intake must be completed before appearing on nurse board
+    const serviceName = patient.service?.trim().toLowerCase() || '';
+    if (cachedRegServicesRef.current.has(serviceName) && !patient.reg_end) {
+      setAssignedPatients((prev) => prev.filter((p) => p.id !== patient.id));
+      setWithDoctorPatients((prev) => prev.filter((p) => p.id !== patient.id));
+      setCarryoutPatients((prev) => prev.filter((p) => p.id !== patient.id));
+      return;
+    }
+
     const matchesCubicle =
-      patient.cubicleNum &&
-      (myCubicles.length === 0 ||
-        myCubicles.some((c) => String(c).trim().toLowerCase() === String(patient.cubicleNum).trim().toLowerCase()));
-
-    const matchesPreferred =
-      Array.isArray(patient.preferredCubicleNums) &&
-      patient.preferredCubicleNums.some((pref) =>
-        myCubicles.some((c) => String(c).trim().toLowerCase() === String(pref).trim().toLowerCase())
-      );
-
-    const matchesService =
-      patient.service &&
-      myServices.some(
-        (s) => String(s).trim().toLowerCase() === String(patient.service).trim().toLowerCase()
-      );
+      myCubicles.length === 0 ||
+      myCubicles.some((c) => String(c).trim().toLowerCase() === String(patient.cubicleNum).trim().toLowerCase());
 
     const matchesCubicleCategory =
       patient.service &&
@@ -657,7 +641,7 @@ export function useNurseData(): UseNurseDataReturn {
     const belongsToMe =
       isSupervisor ||
       (myCubicles.length === 0 && myServices.length === 0) ||
-      Boolean(matchesCubicle || matchesPreferred || matchesService || matchesCubicleCategory);
+      Boolean(matchesCubicle || matchesCubicleCategory);
 
     // If active pin exists and server status caught up, unpin
     const pin = inFlightMutationsRef.current.get(patient.id);

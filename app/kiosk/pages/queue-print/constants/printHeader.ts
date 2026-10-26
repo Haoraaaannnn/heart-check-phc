@@ -11,42 +11,24 @@
 
 import { CSSProperties } from "react";
 
-/** Typography tokens for print header, referencing responsive fluid clamps. */
+import {
+    sharedKioskBannerStyle,
+    sharedKioskBannerTypography,
+} from "@/constants/kiosk";
+
+/** Typography tokens for print header, referencing centralized shared banner scale. */
 export const PrintHeaderTypography = {
-    titleSize: "clamp(24px, 3.2vh, 36px)",
-    subtitleSize: "clamp(14px, 1.8vh, 20px)",
+    titleSize: sharedKioskBannerTypography.titleSize,
+    subtitleSize: sharedKioskBannerTypography.subtitleSize,
+    titleWeight: sharedKioskBannerTypography.titleWeight,
+    subtitleWeight: sharedKioskBannerTypography.subtitleWeight,
 } as const;
 
-/** Inline styles for `PrintHeader`. */
+/** Inline styles for `PrintHeader`, bound to centralized shared banner style. */
 export const PrintHeaderStyle = {
-    container: {
-        display: "flex",
-        flexDirection: "column",
-        alignItems: "center",
-        justifyContent: "center",
-        width: "100%",
-        flexShrink: 0,
-        paddingLeft: 16,
-        paddingRight: 16,
-        paddingTop: "clamp(6px, 1vh, 12px)",
-        paddingBottom: "clamp(3px, 0.5vh, 8px)",
-        textAlign: "center",
-    },
-    title: {
-        fontWeight: 900,
-        fontSize: PrintHeaderTypography.titleSize,
-        color: "#111827",
-        lineHeight: 1.2,
-        margin: 0,
-    },
-    subtitle: {
-        marginTop: 2,
-        fontSize: PrintHeaderTypography.subtitleSize,
-        color: "#4B5563",
-        fontWeight: 600,
-        lineHeight: 1.25,
-        margin: 0,
-    },
+    container: sharedKioskBannerStyle.container,
+    title: sharedKioskBannerStyle.title,
+    subtitle: sharedKioskBannerStyle.subtitle,
 } satisfies Record<string, CSSProperties>;
 
 

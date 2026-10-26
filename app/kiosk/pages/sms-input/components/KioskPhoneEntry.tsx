@@ -404,10 +404,14 @@ export default function KioskPhoneEntry({
         <div style={SMSLayoutStyle.contentWrapper} className={SMSLayoutClasses.contentWrapper}>
             <SMSHeader service={service} subcategory={subcategory} />
 
-            {/* Entry Grid (Left: Phone & Actions, Right: NumPad) */}
+            {/* Two-Column Entry Layout: Notice & Phone on Left, NumPad & Buttons on Right (stacked in portrait) */}
             <div className={SMSLayoutClasses.entryGrid}>
-                {/* Left Column: Instructions, Phone Display & Actions */}
-                <div style={SMSLayoutStyle.entryLeftCol} className={SMSLayoutClasses.entryLeftCol}>
+                {/* Left Column: Notice card + Phone input field */}
+                <div className={SMSLayoutClasses.leftCol}>
+                    <div className={SMSLayoutClasses.instructionWrapper}>
+                        <SMSInstruction isFallbackMode={!hardwareStatus.canPrintPhysical} />
+                    </div>
+
                     <div className={SMSLayoutClasses.phoneInputWrapper}>
                         <PhoneInput
                             phone={phone}
@@ -418,10 +422,11 @@ export default function KioskPhoneEntry({
                             errorMessageEn={errorMessageEn}
                         />
                     </div>
+                </div>
 
-                    <div className={SMSLayoutClasses.instructionWrapper}>
-                        <SMSInstruction isFallbackMode={!hardwareStatus.canPrintPhysical} />
-                    </div>
+                {/* Right Column: NumPad + Action Buttons */}
+                <div className={SMSLayoutClasses.rightCol}>
+                    <NumPad onDigit={addDigit} />
 
                     <div className={SMSLayoutClasses.continueWrapper}>
                         <ContinueButton
@@ -439,11 +444,6 @@ export default function KioskPhoneEntry({
                             href={cancelHref}
                         />
                     </div>
-                </div>
-
-                {/* Right Column: Keypad */}
-                <div className={SMSLayoutClasses.entryRightCol}>
-                    <NumPad onDigit={addDigit} />
                 </div>
             </div>
         </div>

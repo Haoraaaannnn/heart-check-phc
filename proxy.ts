@@ -236,6 +236,33 @@ export async function proxy(request: NextRequest) {
         }
 
         /**
+         * Granular Workstation Access Check:
+         * If the administrator customized allowed_workstations for this account (even for superadmin/admin),
+         * block access if the target workstation is explicitly disabled.
+         */
+        const workstationPrefixMap: Record<string, string> = {
+            '/transfer': 'transfer',
+            '/nurse': 'nurse',
+            '/dashboard': 'dashboard',
+            '/superadmin': 'superadmin',
+        };
+
+        const targetStationKey = workstationPrefixMap[matchedPrefix];
+        const userAllowedWorkstations = user.user_metadata?.allowed_workstations;
+
+        if (
+            targetStationKey &&
+            Array.isArray(userAllowedWorkstations) &&
+            !userAllowedWorkstations.includes(targetStationKey)
+        ) {
+            const unauthorizedRes = NextResponse.redirect(new URL("/unauthorized", request.url));
+            unauthorizedRes.headers.set('Cache-Control', 'no-store, no-cache, must-revalidate, proxy-revalidate');
+            unauthorizedRes.headers.set('Pragma', 'no-cache');
+            unauthorizedRes.headers.set('Expires', '0');
+            return unauthorizedRes;
+        }
+
+        /**
          * Ensure downstream client response disallows bfcache and browser caching
          * so back/forward navigation is always validated against server session state.
          */

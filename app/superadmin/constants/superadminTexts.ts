@@ -35,6 +35,7 @@ export const SUPERADMIN_TEXTS = {
     navCounters: 'Counter Stations',
     groupKiosk: 'Patient Touchscreen',
     navKioskServices: 'Kiosk Services',
+    navKioskHardware: 'Hardware & Terminals',
     groupGovernance: 'System & Governance',
     navAutomation: 'Queue Automation',
     navSecurity: 'Administrator Security',

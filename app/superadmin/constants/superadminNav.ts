@@ -15,7 +15,8 @@ export const SUPERADMIN_ROUTES = {
   SECURITY: '/superadmin?tab=security',
   FACILITIES_ROOMS: '/superadmin/facilities?tab=rooms',
   FACILITIES_COUNTERS: '/superadmin/facilities?tab=counters',
-  KIOSK_SERVICES: '/superadmin/customization',
+  KIOSK_SERVICES: '/superadmin/customization?tab=services',
+  KIOSK_HARDWARE: '/superadmin/customization?tab=hardware',
 } as const;
 
 export interface SuperadminNavLink {
@@ -82,6 +83,15 @@ export const SUPERADMIN_NAV_GROUPS: SuperadminNavGroup[] = [
         href: SUPERADMIN_ROUTES.KIOSK_SERVICES,
         icon: 'bx-slider-alt',
         matchPrefix: '/superadmin/customization',
+        matchTab: 'services',
+      },
+      {
+        key: 'kiosk_hardware',
+        label: T.navKioskHardware,
+        href: SUPERADMIN_ROUTES.KIOSK_HARDWARE,
+        icon: 'bx-printer',
+        matchPrefix: '/superadmin/customization',
+        matchTab: 'hardware',
       },
     ],
   },

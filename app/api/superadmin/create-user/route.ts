@@ -2,6 +2,8 @@ import { NextResponse } from 'next/server'
 import { createClient } from '@supabase/supabase-js'
 import { requireSuperadmin } from '@/lib/supabase/superadminGuard'
 
+import { getDefaultWorkstationsForRole } from '@/constants/workstations'
+
 const supabaseAdmin = createClient(
   process.env.NEXT_PUBLIC_SUPABASE_URL!,
   process.env.SUPABASE_SERVICE_ROLE_KEY!
@@ -13,7 +15,17 @@ export async function POST(request: Request) {
     const guard = await requireSuperadmin(request)
     if (!guard.authorized) return guard.response
 
-    const { email, password, username, role, cubicleIds, serviceAssignments, roomAssignments, counterAssignments } = await request.json()
+    const {
+      email,
+      password,
+      username,
+      role,
+      cubicleIds,
+      serviceAssignments,
+      roomAssignments,
+      counterAssignments,
+      workstationAccess,
+    } = await request.json()
 
     if (!email || !password) {
       return NextResponse.json(
@@ -22,10 +34,20 @@ export async function POST(request: Request) {
       )
     }
 
+    const effectiveRole = role || 'registration'
+    const effectiveWorkstations = Array.isArray(workstationAccess)
+      ? workstationAccess
+      : getDefaultWorkstationsForRole(effectiveRole)
+
     const { data: authData, error: authError } = await supabaseAdmin.auth.admin.createUser({
       email,
       password,
       email_confirm: true,
+      user_metadata: {
+        username: username || email.split('@')[0],
+        role: effectiveRole,
+        allowed_workstations: effectiveWorkstations,
+      },
     })
 
     if (authError) {
@@ -38,7 +60,7 @@ export async function POST(request: Request) {
         auth_id: authData.user.id,
         email: email,
         username: username || email.split('@')[0],
-        role: role || 'registration'
+        role: effectiveRole,
       })
       .select('id')
       .single()
@@ -136,7 +158,8 @@ export async function POST(request: Request) {
       { success: true, user: authData.user },
       { status: 201 }
     )
-  } catch (error: any) {
-    return NextResponse.json({ error: error.message }, { status: 500 })
+  } catch (error: unknown) {
+    const message = error instanceof Error ? error.message : 'Unknown server error';
+    return NextResponse.json({ error: message }, { status: 500 })
   }
 }
