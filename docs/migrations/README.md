@@ -10,8 +10,9 @@ This directory stores manual and schema migration scripts for the PostgreSQL dat
 
 | Migration Script | Target Database | Description | Applied Status |
 | :--- | :--- | :--- | :---: |
-| [`docs/migrations/encrypt_phone_number.sql`](file:///home/jensen/Github-Repositories/Heart_Check_PHC/docs/migrations/encrypt_phone_number.sql) | Supabase PostgreSQL | Converts `patients.phoneNum` from `bigint` (`int8`) to `text` and updates the `create_patient` stored procedure signature to accept encrypted AES-256-GCM ciphertext strings (`enc:v1:...`). | Production Ready |
-| [`docs/migrations/20261021_add_dashboard_performance_indexes.sql`](file:///home/jensen/Github-Repositories/Heart_Check_PHC/docs/migrations/20261021_add_dashboard_performance_indexes.sql) | Supabase PostgreSQL | Adds production performance indexes verified against live PostgreSQL schema with double-quoted camelCase columns (`"cubicleNum"`, `"patientNum"`, `"doctorId"`), eliminating sequential scans on 26,000+ historical rows. | Production Ready |
+| [`docs/migrations/encrypt_phone_number.sql`](file:///home/jensen/Github-Repositories/heart-check-phc/docs/migrations/encrypt_phone_number.sql) | Supabase PostgreSQL | Converts `patients.phoneNum` from `bigint` (`int8`) to `text` and updates the `create_patient` stored procedure signature to accept encrypted AES-256-GCM ciphertext strings (`enc:v1:...`). | Production Ready |
+| [`docs/migrations/20261021_add_dashboard_performance_indexes.sql`](file:///home/jensen/Github-Repositories/heart-check-phc/docs/migrations/20261021_add_dashboard_performance_indexes.sql) | Supabase PostgreSQL | Adds production performance indexes verified against live PostgreSQL schema with double-quoted camelCase columns (`"cubicleNum"`, `"patientNum"`, `"doctorId"`), eliminating sequential scans on 26,000+ historical rows. | Applied |
+| [`docs/migrations/fix_queue_prefix_generation.sql`](file:///home/jensen/Github-Repositories/heart-check-phc/docs/migrations/fix_queue_prefix_generation.sql) | Supabase PostgreSQL | Fixes `create_patient` stored procedure to dynamically handle multi-character queue prefixes (e.g. `67`, `10`, `LAB`), prevent integer overflow, respect `services.queue_pad_length`, and eliminate numeric shift truncation. | Applied |
 
 ---
 
