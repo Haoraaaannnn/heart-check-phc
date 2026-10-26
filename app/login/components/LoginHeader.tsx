@@ -15,6 +15,8 @@ import { useTheme } from 'next-themes';
 import { formatManilaDate, formatManilaTime } from '@/utils/formatDateTime';
 import { LOGIN_TEXTS } from '@/app/login/constants/loginTexts';
 import { LOGIN_STYLES } from '@/app/login/constants/loginStyles';
+import { BrandLogo } from '@/components/reusables/BrandLogo';
+import { toggleThemeWithRipple } from '@/lib/theme/themeTransition';
 
 /**
  * Top navigation row component for the login view.
@@ -39,7 +41,11 @@ export function LoginHeader() {
   }, []);
 
   const isDark = mounted && resolvedTheme === 'dark';
-  const toggleTheme = () => setTheme(isDark ? 'light' : 'dark');
+  const toggleTheme = (e: React.MouseEvent<HTMLButtonElement>) => {
+    toggleThemeWithRipple(e, () => {
+      setTheme(isDark ? 'light' : 'dark');
+    });
+  };
 
   return (
     <nav className={S.root}>
@@ -56,10 +62,7 @@ export function LoginHeader() {
 
       {/* Center Brand Identity */}
       <div className={S.brandCenter}>
-        <div className={S.brandBadge}>PHC</div>
-        <span className={S.brandTitle}>
-          {T.brandName} <span className={S.brandTag}>{T.brandTag}</span>
-        </span>
+        <BrandLogo variant="full" className="h-12 w-auto" />
       </div>
 
       {/* Right Controls: Manila Clock & Theme Toggle */}

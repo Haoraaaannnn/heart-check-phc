@@ -51,7 +51,11 @@ export function StartScreen({ category, subcategory, onStart }: StartScreenProps
       </button>
 
       <div className={MONITOR_STYLES.startScreen.iconBadge}>
-        <i className={MONITOR_STYLES.startScreen.icon} aria-hidden="true" />
+        <img
+          src="/icons/logo-icon-white.png"
+          alt="Philippine Heart Center"
+          className="h-12 sm:h-16 w-auto object-contain"
+        />
       </div>
 
       <h1 className={MONITOR_STYLES.startScreen.title}>

@@ -18,6 +18,7 @@ import {
 } from '@/app/superadmin/constants/superadminNav';
 import { SUPERADMIN_TEXTS } from '@/app/superadmin/constants/superadminTexts';
 import { SUPERADMIN_NAV_STYLES } from '@/app/superadmin/constants/superadminNavStyles';
+import { BrandLogo } from '@/components/reusables/BrandLogo';
 
 interface SuperAdminSidebarProps {
   /** Optional callback when a navigation link is clicked (used to close mobile drawer). */
@@ -84,11 +85,7 @@ export function SuperAdminSidebar({
     <>
       {/* Brand Header */}
       <div className={S.brandHeader}>
-        <div className={S.brandBadge}>PHC</div>
-        <div>
-          <div className={S.brandTitle}>{T.portalBrand}</div>
-          <div className={S.brandSubtitle}>{T.portalSub}</div>
-        </div>
+        <BrandLogo variant="full" className="h-11 w-auto max-w-[200px]" />
       </div>
 
       {/* Nav Groups Scroll Area */}

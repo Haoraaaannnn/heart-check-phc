@@ -21,6 +21,7 @@ import { handleSignOut } from '@/lib/supabase/signOut';
 import { AssignedNurseCubicle } from '@/app/nurse/types/nurse';
 import { nurseTexts } from '@/app/nurse/constants/nurseTexts';
 import { NotificationBadge } from '@/components/reusables/NotificationBadge';
+import { BrandLogo } from '@/components/reusables/BrandLogo';
 import { SIDEBAR_ICONS, resolveServiceIcon } from '@/constants/icons';
 
 /**
@@ -152,19 +153,13 @@ export function NurseSidebar({
           isExpanded ? 'px-4' : 'justify-center px-2'
         }`}
       >
-        <div className="flex items-center gap-3 min-w-0">
-          <div className="w-10 h-10 rounded-xl bg-[#cc3535] text-white flex items-center justify-center text-lg shadow-xs shrink-0">
-            <i className={`bx ${SIDEBAR_ICONS.brandSolid}`} aria-hidden="true" />
+        {isExpanded ? (
+          <div className="min-w-0 animate-in fade-in duration-200">
+            <BrandLogo variant="full" className="h-11 w-auto max-w-[190px]" />
           </div>
-          {isExpanded && (
-            <div className="min-w-0 animate-in fade-in duration-200">
-              <h1 className="text-sm font-bold text-slate-800 dark:text-[#f5f5f5] tracking-tight truncate">
-                {nurseTexts.dashboardTitle}
-              </h1>
-              <p className="text-[11px] font-medium text-slate-400 dark:text-[#737373]">PHC Clinical</p>
-            </div>
-          )}
-        </div>
+        ) : (
+          <BrandLogo variant="icon" className="h-10 w-auto" />
+        )}
       </div>
 
       {/* Navigation Links */}

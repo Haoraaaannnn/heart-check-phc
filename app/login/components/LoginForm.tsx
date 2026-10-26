@@ -13,6 +13,7 @@ import React from 'react';
 import Link from 'next/link';
 import { LOGIN_TEXTS } from '@/app/login/constants/loginTexts';
 import { LOGIN_STYLES } from '@/app/login/constants/loginStyles';
+import { BrandLogo } from '@/components/reusables/BrandLogo';
 
 interface LoginFormProps {
   /** Current email state. */
@@ -70,7 +71,9 @@ export function LoginForm({
     <div className={S.card.root}>
       {/* Header and Brand Badge */}
       <div className={S.card.headerWrap}>
-        <div className={S.card.badge}>{T.card.badge}</div>
+        <div className="flex justify-center mb-3">
+          <BrandLogo variant="icon" className="h-16 w-auto" />
+        </div>
         <h1 className={S.card.title}>{T.card.title}</h1>
         <p className={S.card.subtitle}>{T.card.subtitle}</p>
       </div>

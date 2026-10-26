@@ -36,6 +36,11 @@ export function Header({ title, currentTime }: HeaderProps) {
   return (
     <header className={MONITOR_STYLES.header.container}>
       <div className={MONITOR_STYLES.header.brandWrap}>
+        <img
+          src="/icons/logo-icon-white.png"
+          alt="Philippine Heart Center"
+          className="h-14 sm:h-16 lg:h-20 w-auto object-contain shrink-0"
+        />
         <div>
           <p className={MONITOR_STYLES.header.subTitle}>
             {MONITOR_TEXTS.header.divisionSubTitle}
