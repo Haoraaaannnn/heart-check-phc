@@ -72,7 +72,7 @@ test('storage failures retain local inactivity protection', () => {
 });
 
 /** Runs the actual auth hook with controlled effects, timers, and SDK events. */
-function authorizationHarness({ role = 'superadmin', sessionError = null } = {}) {
+function authorizationHarness({ role = 'superadmin', sessionError = null, allowedWorkstations } = {}) {
   const effects = []; const timers = new Map(); const states = []; const navigations = []; const events = new Map();
   const callbacks = []; let timerId = 0; let sessionReads = 0; let roleReads = 0; let inAuthCallback = false;
   const supabase = {
@@ -80,7 +80,7 @@ function authorizationHarness({ role = 'superadmin', sessionError = null } = {})
       getSession: async () => {
         assert.equal(inAuthCallback, false, 'SDK calls must not execute inside the auth notification lock');
         sessionReads++;
-        return { data: { session: { user: { id: 'staff' } } }, error: sessionError };
+        return { data: { session: { user: { id: 'staff', user_metadata: { allowed_workstations: allowedWorkstations } } } }, error: sessionError };
       },
       onAuthStateChange: callback => { callbacks.push(callback); return { data: { listener: null, subscription: { unsubscribe() {} } } }; },
     },
@@ -97,7 +97,7 @@ function authorizationHarness({ role = 'superadmin', sessionError = null } = {})
   // Match the SDK's real listener response shape.
   supabase.auth.onAuthStateChange = callback => { callbacks.push(callback); return { data: { subscription: { unsubscribe() {} } } }; };
   return {
-    mount: roles => { api.useStaffAuthorization(roles); effects.shift()(); },
+    mount: (roles, workstation) => { api.useStaffAuthorization(roles, workstation); effects.shift()(); },
     async run(ms = 0) { const list = [...timers.entries()].filter(([, item]) => item.ms === ms); for (const [id, item] of list) { timers.delete(id); item.fn(); } await flush(); },
     fire(event) { inAuthCallback = true; callbacks.forEach(callback => callback(event, null)); inAuthCallback = false; },
     states, navigations, events, timers,
@@ -140,6 +140,19 @@ test('restoring a page revalidates without reloading; real logout still redirect
 test('wrong roles remain blocked by the shared guard', async () => {
   const harness = authorizationHarness({ role: 'nurse' }); harness.mount(['superadmin']); await harness.run();
   assert.deepEqual(harness.navigations, ['/unauthorized']);
+});
+
+test('workstation restrictions survive session-guard conflict resolution, including for superadmins', async () => {
+  for (const workstation of ['transfer', 'nurse']) {
+    for (const allowedWorkstations of [undefined, [workstation], [], ['dashboard']]) {
+      const harness = authorizationHarness({ allowedWorkstations });
+      harness.mount(['superadmin'], workstation);
+      await harness.run();
+      const permitted = allowedWorkstations === undefined || allowedWorkstations.includes(workstation);
+      assert.deepEqual(harness.navigations, permitted ? [] : ['/unauthorized']);
+      assert.equal(harness.states.includes(false), permitted);
+    }
+  }
 });
 
 /** Runs the actual server proxy and records any attempted cookie mutation. */

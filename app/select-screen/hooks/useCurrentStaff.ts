@@ -60,17 +60,16 @@ export function useCurrentStaff() {
         }
 
         if (isMounted) {
-<<<<<<< HEAD
           setError(null);
-=======
-          const userMetaWorkstations = user.user_metadata?.allowed_workstations;
->>>>>>> 364f5eeb9c087f26bbdd271d6b0b72b1de88411c
+          const userMetaWorkstations: unknown = user.user_metadata?.allowed_workstations;
           setStaff({
             authId: userRow.auth_id,
             email: userRow.email || user.email || '',
             username: userRow.username || user.email?.split('@')[0] || 'Staff',
             role: (userRow.role || '').toLowerCase().trim(),
-            allowedWorkstations: Array.isArray(userMetaWorkstations) ? userMetaWorkstations : null,
+            allowedWorkstations: Array.isArray(userMetaWorkstations)
+              ? userMetaWorkstations.filter((value: unknown): value is string => typeof value === 'string')
+              : null,
           });
           setLoading(false);
         }

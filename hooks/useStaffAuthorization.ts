@@ -4,7 +4,7 @@ import { useEffect, useState } from 'react';
 import { supabase } from '@/lib/supabase';
 
 /** Verified browser session identity paired with its current database role. */
-interface VerifiedStaff { userId: string; role: string; }
+interface VerifiedStaff { userId: string; role: string; allowedWorkstations: readonly unknown[] | null; }
 let pendingCheck: Promise<VerifiedStaff | null> | null = null;
 
 /**
@@ -19,7 +19,9 @@ async function verifyCurrentStaff(): Promise<VerifiedStaff | null> {
     if (!session) return null;
     const { data, error: roleError } = await supabase.from('users').select('role').eq('auth_id', session.user.id).maybeSingle();
     if (roleError) throw roleError;
-    return { userId: session.user.id, role: String(data?.role ?? '').toLowerCase().trim() };
+    const workstations: unknown = session.user.user_metadata?.allowed_workstations;
+    return { userId: session.user.id, role: String(data?.role ?? '').toLowerCase().trim(),
+      allowedWorkstations: Array.isArray(workstations) ? workstations : null };
   })();
   pendingCheck = check;
   try { return await check; }
@@ -29,9 +31,10 @@ async function verifyCurrentStaff(): Promise<VerifiedStaff | null> {
 /**
  * Checks staff access without treating token refresh or transient network failures as logout.
  * @param roles - Roles allowed by the page, in addition to server guards and RLS.
+ * @param workstation - Optional workstation checked against the account's configured access list.
  * @returns True until the caller's role is verified.
  */
-export function useStaffAuthorization(roles: readonly string[]): boolean {
+export function useStaffAuthorization(roles: readonly string[], workstation?: string): boolean {
   const [checking, setChecking] = useState(true);
   const roleKey = roles.join(',');
   useEffect(() => {
@@ -47,6 +50,9 @@ export function useStaffAuthorization(roles: readonly string[]): boolean {
         if (disposed || id !== requestId) return;
         if (!staff) { window.location.replace('/login'); return; }
         if (!allowed.has(staff.role)) { window.location.replace('/unauthorized'); return; }
+        if (workstation && staff.allowedWorkstations && !staff.allowedWorkstations.includes(workstation)) {
+          window.location.replace('/unauthorized'); return;
+        }
         setChecking(false);
       } catch {
         if (!disposed && id === requestId) timer = setTimeout(() => void check(), 2000);
@@ -71,6 +77,6 @@ export function useStaffAuthorization(roles: readonly string[]): boolean {
       window.removeEventListener('pageshow', onPageShow);
       listener.subscription.unsubscribe();
     };
-  }, [roleKey]);
+  }, [roleKey, workstation]);
   return checking;
 }
