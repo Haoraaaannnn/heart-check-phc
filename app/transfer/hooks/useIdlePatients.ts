@@ -1,12 +1,14 @@
+/** @fileoverview Today's idle patient ledger and live-patient recovery actions. */
 'use client';
 import { useCallback, useState } from 'react';
 import { supabase } from '@/lib/supabase';
 import { Patient } from '@/types/Types';
 
+/** @returns Idle tickets and guarded actions; startup reads may explicitly reject on failure. */
 export function useIdlePatients() {
   const [idlePatients, setIdlePatients] = useState<Patient[]>([]);
 
-  const fetchIdlePatients = useCallback(async () => {
+  const fetchIdlePatients = useCallback(async (failOnError = false) => {
     const today = new Date();
     today.setHours(0, 0, 0, 0);
     const tomorrow = new Date(today);
@@ -20,6 +22,7 @@ export function useIdlePatients() {
       .lt('created_at', tomorrow.toISOString())
       .order('idle_at', { ascending: false });
 
+    if (failOnError && (error || !data)) throw new Error('Unable to load idle tickets. Please retry.');
     if (!error && data) setIdlePatients(data);
   }, []);
 

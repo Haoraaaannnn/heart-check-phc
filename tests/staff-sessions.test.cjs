@@ -87,6 +87,7 @@ function authorizationHarness({ role = 'superadmin', sessionError = null, allowe
     from: () => ({ select() { return this; }, eq() { return this; }, maybeSingle: async () => { roleReads++; return { data: { role }, error: null }; } }),
   };
   const api = load('hooks/useStaffAuthorization.ts', {
+    '@/lib/requestFetch': { withRequestDeadline: promise => promise },
     react: { useState: value => [value, next => states.push(next)], useEffect: fn => effects.push(fn) },
     '@/lib/supabase': { supabase },
   }, {
@@ -156,16 +157,28 @@ test('workstation restrictions survive session-guard conflict resolution, includ
 });
 
 /** Runs the actual server proxy and records any attempted cookie mutation. */
-function proxyHarness({ authError = null, user = { id: 'staff' } } = {}) {
+function proxyHarness({ authError = null, user = { id: 'staff' }, refresh = false } = {}) {
   const writes = [];
+  let cookieMethods;
   class NextResponse extends Response {
-    constructor(body, init) { super(body, init); this.cookies = { set: (...args) => writes.push(args) }; }
+    constructor(body, init) {
+      super(body, init);
+      const jar = [];
+      this.cookies = { getAll: () => jar, set: (...args) => {
+        writes.push(args); jar.push(typeof args[0] === 'object' ? args[0] : { name: args[0], value: args[1], ...args[2] });
+      } };
+    }
     static next() { return new NextResponse(null); }
     static redirect(url) { return new NextResponse(null, { status: 307, headers: { Location: String(url) } }); }
   }
-  const supabase = { auth: { getUser: async () => ({ data: { user }, error: authError }) },
+  const supabase = { auth: { getUser: async () => {
+    if (refresh) cookieMethods.setAll([{ name: 'sb-test-auth-token', value: 'refreshed-session', options: {} }]);
+    return { data: { user }, error: authError };
+  } },
     from: () => ({ select() { return this; }, eq() { return this; }, single: async () => ({ data: { role: 'superadmin' }, error: null }) }) };
-  const api = load('proxy.ts', { 'next/server': { NextResponse }, '@supabase/ssr': { createServerClient: () => supabase } }, { process: { env: {} } });
+  const api = load('proxy.ts', { '@/lib/requestFetch': { fetchWithDeadline() {} }, 'next/server': { NextResponse }, '@supabase/ssr': { createServerClient: (_url, _key, options) => {
+    cookieMethods = options.cookies; return supabase;
+  } } }, { process: { env: {} } });
   return { writes, run: pathname => api.proxy({ url: `http://localhost${pathname}`, nextUrl: new URL(`http://localhost${pathname}`), headers: new Headers(),
     cookies: { getAll: () => [{ name: 'sb-test-auth-token', value: 'keep-session' }], set() {} } }) };
 }
@@ -173,7 +186,18 @@ function proxyHarness({ authError = null, user = { id: 'staff' } } = {}) {
 test('opening or prefetching Login does not clear cookies in any tab', async () => {
   const harness = proxyHarness();
   const response = await harness.run('/login');
-  assert.equal(response.status, 200); assert.deepEqual(harness.writes, []);
+  assert.equal(response.status, 307);
+  assert.equal(response.headers.get('location'), 'http://localhost/select-screen');
+  assert.deepEqual(harness.writes, []);
+});
+
+test('Login remains available without a session and refreshed cookies survive signed-in redirects', async () => {
+  assert.equal((await proxyHarness({ user: null }).run('/login')).status, 200);
+  for (const pathname of ['/login', '/', '/forgot-password']) {
+    const response = await proxyHarness({ refresh: true }).run(pathname);
+    assert.equal(response.status, 307);
+    assert.equal(response.cookies.getAll()[0].value, 'refreshed-session');
+  }
 });
 
 test('temporary server auth outages return retryable errors without forcing logout', async () => {
@@ -224,4 +248,40 @@ test('session policy writes are authorized and strictly validated on the server'
   assert.equal((await allowed.POST(request(720))).status, 200);
   assert.equal(allowed.writes[0].key, 'staff_session_idle_minutes');
   assert.equal(allowed.writes[0].value, '720');
+});
+
+test('An expired background tab cannot sign out a newer login, while the same expired session still logs out', async () => {
+  for (const replaced of [true, false]) {
+    const nowMs = 100000 + 21 * 60000;
+    const shared = storage();
+    const token = sessionId => `header.${Buffer.from(JSON.stringify({ session_id: sessionId })).toString('base64url')}.signature`;
+    shared.setItem(policy.sessionActivityKey(token('old-session'), 'staff'), '100000');
+    const effects = []; const timeouts = []; const intervals = []; const states = []; const signouts = [];
+    let reads = 0;
+    const api = load('components/auth/StaffSessionProvider.tsx', {
+      react: { createContext: () => ({ Provider: 'provider' }), useContext() {},
+        useState: initial => [initial, state => states.push(state)], useEffect: fn => effects.push(fn) },
+      'react/jsx-runtime': { jsx: (_type, props) => props },
+      'next/navigation': { usePathname: () => '/nurse' },
+      '@/lib/sessionPolicy': policy,
+      '@/lib/supabase/signOut': { handleSignOut: async url => signouts.push(url) },
+      '@/lib/supabase': { supabase: { auth: {
+        getSession: async () => ({ data: { session: { access_token: token(++reads > 1 && replaced ? 'new-session' : 'old-session'), user: { id: 'staff' } } }, error: null }),
+        onAuthStateChange: () => ({ data: { subscription: { unsubscribe() {} } } }),
+      } } },
+    }, { Date: class extends Date { static now() { return nowMs; } },
+      fetch: async () => Response.json({ minutes: 20 }),
+      window: { localStorage: shared, addEventListener() {}, removeEventListener() {}, location: { replace() {} } },
+      document: { addEventListener() {}, removeEventListener() {} },
+      setTimeout: fn => { timeouts.push(fn); return 1; }, clearTimeout() {},
+      setInterval: fn => { intervals.push(fn); return intervals.length; }, clearInterval() {},
+    });
+    api.StaffSessionProvider({ children: null }); effects[0](); timeouts[0]();
+    await flush(); await flush();
+    if (replaced) {
+      assert.deepEqual(signouts, []);
+      intervals[0]();
+      assert.equal(states.at(-1).remainingSeconds, 1200);
+    } else assert.deepEqual(signouts, ['/login?reason=idle']);
+  }
 });

@@ -193,7 +193,7 @@ export function usePatientData(pendingRef?: React.MutableRefObject<Patient[]>) {
     return pin;
   }, []);
 
-  const fetchData = useCallback(async () => {
+  const fetchData = useCallback(async (failOnError = false) => {
     const requestId = ++fetchIdRef.current;
     const start = new Date(); start.setHours(0, 0, 0, 0);
     const end = new Date(start); end.setDate(start.getDate() + 1);
@@ -204,7 +204,10 @@ export function usePatientData(pendingRef?: React.MutableRefObject<Patient[]>) {
       .gte('created_at', start.toISOString()).lt('created_at', end.toISOString())
       .order('queue_position', { ascending: true, nullsFirst: false })
       .order('created_at', { ascending: true });
-    if (error || !data) return;
+    if (error || !data) {
+      if (failOnError) throw new Error('Unable to load the patient queue. Please retry.');
+      return;
+    }
 
     // Discard stale out-of-order response
     if (requestId !== fetchIdRef.current) return;

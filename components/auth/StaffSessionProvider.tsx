@@ -38,7 +38,29 @@ export function StaffSessionProvider({ children }: { children: React.ReactNode }
       if (disposed || !clock || signingOut || !policyReady) return;
       const remaining = clock.remaining(minutes, Date.now());
       setState({ timeoutMinutes: minutes, remainingSeconds: Math.ceil(remaining / 1000) });
-      if (remaining === 0) { signingOut = true; void handleSignOut('/login?reason=idle'); }
+      if (remaining === 0) {
+        signingOut = true;
+        void expireCurrentSession();
+      }
+    };
+
+    /** An old background tab must never revoke a newer login that replaced its session cookie. */
+    const expireCurrentSession = async () => {
+      const expectedKey = clock?.key;
+      try {
+        const { data: { session }, error } = await supabase.auth.getSession();
+        if (disposed || error) return;
+        if (!session) { window.location.replace('/login'); return; }
+        const currentKey = sessionActivityKey(session.access_token, session.user.id);
+        if (expectedKey !== currentKey) {
+          clock = new SessionActivityClock(storage, currentKey, Date.now());
+          if (userId !== session.user.id) window.location.replace('/select-screen');
+          userId = session.user.id;
+          return;
+        }
+        if (clock && clock.remaining(minutes, Date.now()) === 0) await handleSignOut('/login?reason=idle');
+      } catch { /* A failed verification is retried by the next timer tick. */ }
+      finally { signingOut = false; }
     };
 
     /** Applies validated policy changes from the current tab or another staff tab. */

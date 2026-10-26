@@ -17,10 +17,11 @@
  */
 
 import { fetchActiveCounters } from '@/lib/counters';
-import { useState, useCallback, useEffect } from 'react';
+import { useState, useCallback, useEffect, useRef } from 'react';
 import { supabase } from '@/lib/supabase';
 import { CATEGORIES } from '@/app/transfer/lib/constants';
 import { Service } from '@/types/Services';
+import { withRequestDeadline } from '@/lib/requestFetch';
 
 /**
  * Represents authorized physical room allocation mapped to a specific service.
@@ -65,22 +66,23 @@ export interface UseMyAccessReturn {
  * `user_rooms`, `user_counters`, and `services` catalog records concurrently.
  */
 export function useMyAccess(): UseMyAccessReturn {
+  const pendingAccess = useRef<Promise<void> | null>(null);
+  const accessRequestId = useRef(0);
   const [myServices, setMyServices] = useState<string[]>([]);
   const [myRooms, setMyRooms] = useState<RoomAccess[]>([]);
   const [myCounters, setMyCounters] = useState<number[]>([]);
   const [accessStatus, setAccessStatus] = useState<AccessStatus>('loading');
   const [allServices, setAllServices] = useState<Service[]>([]);
 
-  const fetchMyAccess = useCallback(async () => {
+  const loadMyAccess = useCallback(async (requestId: number) => {
     setAccessStatus('loading');
 
-    const activeCounters = await fetchActiveCounters(true);
-
     try {
-      const {
+      const [activeCounters, {
         data: { session },
         error: sessionError,
-      } = await supabase.auth.getSession();
+      }] = await Promise.all([fetchActiveCounters(true), supabase.auth.getSession()]);
+      if (requestId !== accessRequestId.current) return;
 
       if (sessionError || !session) {
         console.error('useMyAccess: No active session found', sessionError);
@@ -115,6 +117,7 @@ export function useMyAccess(): UseMyAccessReturn {
         }
       }
 
+      if (requestId !== accessRequestId.current) return;
       if (!user) {
         setAccessStatus('error');
         return;
@@ -131,6 +134,7 @@ export function useMyAccess(): UseMyAccessReturn {
         supabase.from('user_counters').select('counter').eq('user_id', user.id),
         supabase.from('services').select('*').order('display_order', { ascending: true }),
       ]);
+      if (requestId !== accessRequestId.current) return;
 
       if (e1 || e2 || e3) {
         console.error('useMyAccess: Error fetching user permissions', { e1, e2, e3, e4 });
@@ -166,10 +170,27 @@ export function useMyAccess(): UseMyAccessReturn {
       setAccessStatus(serviceList.length > 0 || userCounterNums.length > 0 ? 'assigned' : 'unassigned');
       setMyCounters(userCounterNums);
     } catch (err) {
+      if (requestId !== accessRequestId.current) return;
       console.error('useMyAccess: Unexpected exception while verifying access', err);
       setAccessStatus('error');
     }
   }, []);
+
+  /** Coalesces the page initializer and access subscription's simultaneous startup reads. */
+  const fetchMyAccess = useCallback((): Promise<void> => {
+    if (pendingAccess.current) return pendingAccess.current;
+    const requestId = ++accessRequestId.current;
+    const pending = withRequestDeadline(loadMyAccess(requestId)).catch(() => {
+      if (requestId === accessRequestId.current) {
+        ++accessRequestId.current;
+        setAccessStatus('error');
+      }
+    }).finally(() => {
+      if (pendingAccess.current === pending) pendingAccess.current = null;
+    });
+    pendingAccess.current = pending;
+    return pending;
+  }, [loadMyAccess]);
 
   useEffect(() => {
     fetchMyAccess();
@@ -184,11 +205,6 @@ export function useMyAccess(): UseMyAccessReturn {
       .on(
         'postgres_changes',
         { event: '*', schema: 'public', table: 'counters' },
-        () => void fetchMyAccess()
-      )
-      .on(
-        'postgres_changes',
-        { event: '*', schema: 'public', table: 'cubicle' },
         () => void fetchMyAccess()
       )
       .on(

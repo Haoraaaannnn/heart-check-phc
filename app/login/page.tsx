@@ -20,7 +20,7 @@
 'use client';
 
 import React, { useState, useEffect, useRef, Suspense } from 'react';
-import { useRouter, useSearchParams } from 'next/navigation';
+import { useSearchParams } from 'next/navigation';
 import { supabase } from '@/lib/supabase';
 import { LOGIN_STYLES } from '@/app/login/constants/loginStyles';
 import { LOGIN_TEXTS } from '@/app/login/constants/loginTexts';
@@ -48,7 +48,6 @@ export default function LoginPage() {
  * @returns JSX element.
  */
 function LoginPageInner() {
-  const router = useRouter();
   const searchParams = useSearchParams();
 
   const [email, setEmail] = useState('');
@@ -138,6 +137,8 @@ function LoginPageInner() {
     const passwordValue = password;
 
     try {
+      // Complete recovery of any old browser session before the server installs a new one.
+      await supabase.auth.initialize();
       const response = await fetch('/api/auth/login', {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
@@ -161,52 +162,24 @@ function LoginPageInner() {
         return;
       }
 
-      const { error: setSessionError } = await supabase.auth.setSession({
-        access_token: data.session.access_token,
-        refresh_token: data.session.refresh_token,
-      });
-
-      if (setSessionError) {
-        setError(T.alerts.sessionEstablishmentFailed);
-        setLoading(false);
-        return;
-      }
-
-      if (data.role) {
-        setLoading(false);
-        setEmail('');
-        setPassword('');
-        window.location.replace('/select-screen');
-        return;
-      }
-
-      const { data: roleData, error: dbError } = await supabase
-        .from('users')
-        .select('role')
-        .or(`auth_id.eq.${data.user?.id},email.ilike.${emailValue}`)
-        .maybeSingle();
-
-      setLoading(false);
-
-      if (dbError || !roleData?.role) {
-        if (dbError) {
-          console.error('[LOGIN ROLE ERROR]:', dbError);
-        }
+      // The response has already installed the server session cookies. A second
+      // browser setSession races initialization and refresh in other open tabs.
+      if (typeof data.role !== 'string' || !data.role) {
         setError(T.alerts.userRoleNotFound);
+        setLoading(false);
         return;
       }
 
       setEmail('');
       setPassword('');
       window.location.replace('/select-screen');
-    } catch (err) {
+    } catch {
       setPassword('');
       if (passwordInputRef.current) {
         passwordInputRef.current.value = '';
       }
       setLoading(false);
       setError(T.alerts.genericError);
-      console.error('Login error:', err);
     }
   };
 

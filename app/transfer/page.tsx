@@ -35,7 +35,6 @@ import { useAutoRotate } from '@/app/transfer/hooks/useAutoRotate';
 import { useRotateTimeout } from '@/app/transfer/hooks/useRotateTimeout';
 import { useIdleTimeout } from '@/app/transfer/hooks/useIdleTimeout';
 import { useRequireAuth } from '@/app/transfer/hooks/useRequireAuth';
-import { MAX_PATIENTS_PER_CUBICLE } from '@/app/transfer/lib/constants';
 import { useIdlePatients } from '@/app/transfer/hooks/useIdlePatients';
 import { useRegistrationRotate } from '@/app/transfer/hooks/useRegistrationRotate';
 import { requestMonitorCall } from '@/lib/requestMonitorCall';
@@ -52,6 +51,9 @@ import { transferLayoutStyles } from '@/constants/designs/transferStyles';
 import { resolveServiceIcon } from '@/constants/icons';
 import { StationSetupModal } from '@/components/reusables/StationSetupModal';
 import { useStationClaim } from '@/hooks/useStationClaim';
+import { assignmentCandidates, saveTransferAssignments } from '@/app/transfer/lib/transferMutations';
+import { withRequestDeadline } from '@/lib/requestFetch';
+import { WorkstationLoading } from '@/components/auth/WorkstationLoading';
 
 
 /**
@@ -97,6 +99,7 @@ export default function TransferPage() {
   const [isSidebarExpanded, setIsSidebarExpanded] = useState<boolean>(false);
   const [speaking, setSpeaking] = useState<number | null>(null);
   const [callError, setCallError] = useState('');
+  const [assignmentError, setAssignmentError] = useState('');
   const [showDoctorsModal, setShowDoctorsModal] = useState<boolean>(false);
   const [showUnassignedMenu, setShowUnassignedMenu] = useState<boolean>(false);
 
@@ -128,6 +131,8 @@ export default function TransferPage() {
   const [showStationModal, setShowStationModal] = useState<boolean>(false);
 
   const [isLoading, setIsLoading] = useState<boolean>(true);
+  const [startupError, setStartupError] = useState('');
+  const startupRequestId = useRef(0);
   const [isSyncing, setIsSyncing] = useState<boolean>(false);
   const [isConfirming, setIsConfirming] = useState<boolean>(false);
   const confirmingRef = useRef<boolean>(false);
@@ -172,7 +177,7 @@ export default function TransferPage() {
     handlePointerDownFromCubicle,
     handleDragStartFromQueue,
     handleDragStartFromCubicle,
-    handleMoveBackToProgress,
+    handleMoveBackToProgress: moveBackToProgress,
     setupGlobalDragHandlers,
     resetDrag,
     pendingUpdates,
@@ -192,6 +197,7 @@ export default function TransferPage() {
     selectPatient,
     clearSelection,
     assignSelectedToCubicle,
+    assignPatientToCubicle,
     moveSelectedToCounter,
   } = useTransferSelection({
     assignedPatients,
@@ -258,7 +264,7 @@ export default function TransferPage() {
   const regFetchSeqRef = useRef<number>(0);
 
   // Fetch registration window patients with sequence guard and derived timestamp persistence
-  const fetchRegistrationPatients = useCallback(async () => {
+  const fetchRegistrationPatients = useCallback(async (failOnError = false) => {
     const requestId = ++regFetchSeqRef.current;
     const today = new Date();
     today.setHours(0, 0, 0, 0);
@@ -289,6 +295,8 @@ export default function TransferPage() {
       .order('created_at', { ascending: true });
 
     if (requestId !== regFetchSeqRef.current) return;
+
+    if (failOnError && (error || !data)) throw new Error('Unable to load registration counters. Please retry.');
 
     if (!error && data) {
       const sortKey = (p: Patient) =>
@@ -596,7 +604,6 @@ export default function TransferPage() {
   const serviceHasSubcategories = currentService?.has_subcategories ?? (selectedCategory === 'Consultation' || selectedCategory === 'OPD Screening');
   const serviceRequiresCubicle = currentService?.requires_cubicle ?? (selectedCategory === 'Consultation' || selectedCategory === 'OPD Screening');
   const isConsultation = serviceHasSubcategories;
-  const isOPScreening = false;
   const isDragEnabled = serviceRequiresCubicle;
 
   useEffect(() => {
@@ -617,68 +624,27 @@ export default function TransferPage() {
    * Instantly assigns a patient to the least occupied available cubicle.
    */
   const handleAssignNow = (patient: Patient) => {
-    if (!patient.service) return;
-
-    const serviceCubicles = cubicles.filter(c => c.category === patient.service);
-
-    const preferred = (patient.preferredCubicleNums ?? [])
-      .map(num => serviceCubicles.find(c => c.cubicleNum === num))
-      .filter((c): c is Cubicle => !!c)
-      .filter(c => (assignedPatients[c.cubicleNum]?.length ?? 0) < MAX_PATIENTS_PER_CUBICLE);
-
-    const candidates =
-      preferred.length > 0
-        ? preferred
-        : serviceCubicles.filter(
-          c => (assignedPatients[c.cubicleNum]?.length ?? 0) < MAX_PATIENTS_PER_CUBICLE
-        );
-
-    if (candidates.length === 0) {
-      console.warn('No available cubicle to assign this patient right now.');
+    setAssignmentError('');
+    const candidates = assignmentCandidates({ patient, cubicles: getVisibleCubicles(), assigned: assignedPatients });
+    const best = candidates.reduce<Cubicle | null>((current, cubicle) =>
+      !current || (assignedPatients[cubicle.cubicleNum]?.length ?? 0) <
+        (assignedPatients[current.cubicleNum]?.length ?? 0) ? cubicle : current, null);
+    if (!best || !assignPatientToCubicle(patient, best.cubicleNum)) {
+      setCallError('No matching cubicle has space. The patient remains in the queue.');
       return;
     }
+    setCallError('');
+  };
 
-    const bestCubicle = candidates.reduce((best, c) =>
-      (assignedPatients[c.cubicleNum]?.length ?? 0) <
-        (assignedPatients[best.cubicleNum]?.length ?? 0)
-        ? c
-        : best
-    );
-
-    const now = new Date().toISOString();
-
-    setOnProgressPatients(prev => prev.filter(p => p.id !== patient.id));
-
-    setAssignedPatients(prev => {
-      const bucket = prev[bestCubicle.cubicleNum] || [];
-      if (bucket.length >= MAX_PATIENTS_PER_CUBICLE) return prev;
-      return {
-        ...prev,
-        [bestCubicle.cubicleNum]: [
-          ...bucket,
-          {
-            ...patient,
-            cubicleNum: bestCubicle.cubicleNum,
-            status: 'Assigned',
-            called_at: now,
-            reg_end: patient.reg_end ?? now,
-          },
-        ],
-      };
-    });
-
-    const nextPending = [
-      ...pendingUpdatesRef.current.filter(p => p.id !== patient.id),
-      {
-        ...patient,
-        cubicleNum: bestCubicle.cubicleNum,
-        status: 'Assigned',
-        called_at: now,
-        reg_end: patient.reg_end ?? now,
-      },
-    ];
-    pendingUpdatesRef.current = nextPending;
-    setPendingUpdates(nextPending);
+  /** Returns the ticket to its counter and refreshes both station lists after acknowledgement. */
+  const handleMoveBackToProgress = async (patient: Patient, cubicleNum: string) => {
+    try {
+      await moveBackToProgress(patient, cubicleNum);
+      await syncNow();
+      setCallError('');
+    } catch (error: unknown) {
+      setCallError(error instanceof Error ? error.message : 'Unable to return the patient. Please try again.');
+    }
   };
 
   /**
@@ -745,6 +711,7 @@ export default function TransferPage() {
     if (pendingUpdates.length === 0 || savingPendingUpdates.current) return;
 
     const snapshot = [...pendingUpdates];
+    setAssignmentError('');
     savingPendingUpdates.current = true;
     confirmingRef.current = true;
     setIsConfirming(true);
@@ -770,52 +737,15 @@ export default function TransferPage() {
         progress_started_at: patient.progress_started_at ?? null,
       }));
 
-      // 1. Immediately log to non-volatile IndexedDB outbox
-      let queuedId: string | null = null;
-      try {
-        const queued = await enqueueMutation({
-          table: 'patients',
-          type: 'upsert',
-          payload: patientUpdates,
-          matchKey: 'id',
-          clientTimestamp: now,
-          description: `Transfer confirm assignments for ${patientUpdates.length} patients`,
-        });
-        queuedId = queued.id;
-      } catch (e) {
-        console.warn('Offline outbox enqueue warning:', e);
-      }
-
-      // 2. If online, push directly to Supabase
-      if (typeof navigator !== 'undefined' && navigator.onLine) {
-        const { error: upsertErr } = await supabase.from('patients').upsert(patientUpdates, { onConflict: 'id' });
-        if (!upsertErr && queuedId) {
-          await removeMutation(queuedId);
-        }
-
-        // Execute outbound SMS alerts and queue renumbering as non-blocking background tasks
-        void (async () => {
-          try {
-            await Promise.all(
-              snapshot
-                .filter(p => p.phoneNum && p.status === 'Assigned' && p.cubicleNum)
-                .map(p => sendSMS(String(p.phoneNum), p.patientNum, p.cubicleNum!))
-            );
-
-            const { data: queue } = await supabase
-              .from('patients')
-              .select('id')
-              .neq('status', 'Assigned')
-              .order('queue_position');
-
-            if (queue && queue.length > 0) {
-              const reorder = queue.map((row, i) => ({ id: row.id, queue_position: i + 1 }));
-              await supabase.from('patients').upsert(reorder, { onConflict: 'id' });
-            }
-          } catch (bgErr) {
-            console.warn('Background SMS or queue reorder warning:', bgErr);
-          }
-        })();
+      const online = await saveTransferAssignments(patientUpdates);
+      setCallError(online ? '' : 'Assignments saved on this device and will sync when the connection returns.');
+      if (online) {
+        // Send announcements only after the database acknowledges the destination.
+        void Promise.all(snapshot.filter(patient => patient.phoneNum &&
+          patient.status === 'Assigned' && patient.cubicleNum).map(patient => {
+            if (!patient.cubicleNum) return Promise.resolve();
+            return sendSMS(String(patient.phoneNum), patient.patientNum, patient.cubicleNum);
+          })).catch(() => console.warn('Assignment notification delivery was deferred.'));
       }
 
       setPendingUpdates([]);
@@ -824,7 +754,7 @@ export default function TransferPage() {
 
       await syncNow();
     } catch (err) {
-      console.warn('Offline outbox saved transfer assignments; network sync deferred:', err);
+      setAssignmentError(err instanceof Error ? err.message : 'Unable to save assignments. The pending patients have been kept; please retry.');
       for (const p of snapshot) {
         unpinConfirmedPatient(p.id);
       }
@@ -839,6 +769,7 @@ export default function TransferPage() {
    * Reverts all pending manual cubicle assignments and restores server queue state.
    */
   const handleCancelPending = useCallback(() => {
+    setAssignmentError('');
     for (const p of pendingUpdatesRef.current) {
       unpinConfirmedPatient(p.id);
     }
@@ -1008,29 +939,35 @@ export default function TransferPage() {
     setShowUnassignedMenu(false);
   };
 
-  useEffect(() => {
-    const initialize = async () => {
+  /** Bounds initial synchronization and exposes a retry instead of an indefinite spinner. */
+  const initialize = useCallback(async () => {
+      const requestId = ++startupRequestId.current;
+      setIsLoading(true);
+      setStartupError('');
       try {
-        await Promise.all([
-          fetchData(),
-          fetchCubicles(),
-          fetchRegistrationPatients(),
-          fetchIdlePatients(),
+        await withRequestDeadline(Promise.all([
+          fetchData(true),
+          fetchCubicles(true),
+          fetchRegistrationPatients(true),
+          fetchIdlePatients(true),
           fetchMyAccess(),
-        ]);
+        ]));
+      } catch {
+        if (requestId === startupRequestId.current) setStartupError('Unable to finish loading the workstation. Please retry.');
       } finally {
-        setIsLoading(false);
+        if (requestId === startupRequestId.current) setIsLoading(false);
       }
-    };
+  }, [fetchData, fetchCubicles, fetchRegistrationPatients, fetchIdlePatients, fetchMyAccess]);
 
-    initialize();
+  useEffect(() => {
+    void initialize();
 
     const interval = setInterval(() => {
       void syncNow();
     }, 15000);
 
     return () => clearInterval(interval);
-  }, []);
+  }, [initialize, syncNow]);
 
   // Synchronize registration counter list whenever dynamic services catalog updates
   useEffect(() => {
@@ -1040,23 +977,11 @@ export default function TransferPage() {
   }, [allServices, fetchRegistrationPatients]);
 
   if (checking) {
-    return (
-      <div className="flex min-h-screen items-center justify-center bg-slate-50 dark:bg-[#0d0d0d]">
-        <div className="w-10 h-10 border-4 border-slate-200 dark:border-[#2e2e2e] border-t-[#cc3535] rounded-full animate-spin" />
-      </div>
-    );
+    return <WorkstationLoading title="Verifying workstation access..." />;
   }
 
-  if (isLoading) {
-    return (
-      <div className="flex min-h-screen items-center justify-center bg-slate-50 dark:bg-[#0d0d0d]">
-        <div className="text-center">
-          <div className="w-12 h-12 border-4 border-slate-200 dark:border-[#2e2e2e] border-t-[#cc3535] rounded-full animate-spin mx-auto mb-4" />
-          <p className="text-slate-700 dark:text-[#f5f5f5] font-bold text-sm">Loading dashboard...</p>
-          <p className="text-slate-400 dark:text-[#737373] text-xs mt-1">Synchronizing patients and cubicles</p>
-        </div>
-      </div>
-    );
+  if (isLoading || startupError) {
+    return <WorkstationLoading title="Loading patients and stations..." error={startupError} onRetry={() => void initialize()} />;
   }
 
   const renderContent = () => {
@@ -1163,7 +1088,7 @@ export default function TransferPage() {
     );
   };
 
-  const showConfirmModal = (isConsultation || isOPScreening) && pendingUpdates.length > 0;
+  const showConfirmModal = pendingUpdates.length > 0;
 
   return (
     <div className={transferLayoutStyles.page}>
@@ -1417,6 +1342,7 @@ export default function TransferPage() {
               <p className="mt-1 text-xs text-red-600 dark:text-red-400">
                 Please refresh the page or contact a Super Admin.
               </p>
+              <button type="button" onClick={() => void initialize()} className="mt-4 rounded-lg border border-red-300 px-4 py-2 font-semibold text-red-800 dark:text-red-200">Retry loading</button>
             </div>
           ) : accessStatus === 'unassigned' ? (
             <div className="rounded-2xl border border-amber-200 dark:border-amber-900/50 bg-amber-50 dark:bg-amber-950/30 p-6 text-center max-w-md mx-auto my-12 shadow-xs">
@@ -1450,6 +1376,7 @@ export default function TransferPage() {
         isOpen={Boolean(showConfirmModal)}
         pendingPatients={pendingUpdates}
         isConfirming={isConfirming}
+        error={assignmentError}
         onConfirm={handleConfirm}
         onCancel={handleCancelPending}
       />

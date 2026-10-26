@@ -123,8 +123,11 @@ export function useTransferSelection({
       sourceType: TransferSourceType = 'queue',
       sourceId?: string | number
     ): boolean => {
-      const currentOccupants = (assignedPatients && assignedPatients[targetCubicle]?.length) || 0;
-      if (currentOccupants >= MAX_PATIENTS_PER_CUBICLE) {
+      const occupants = new Set((assignedPatients[targetCubicle] ?? []).map(p => p.id));
+      for (const pending of pendingUpdatesRef?.current ?? []) {
+        if (pending.status === 'Assigned' && pending.cubicleNum === targetCubicle) occupants.add(pending.id);
+      }
+      if (occupants.has(patient.id) || occupants.size >= MAX_PATIENTS_PER_CUBICLE) {
         return false;
       }
 

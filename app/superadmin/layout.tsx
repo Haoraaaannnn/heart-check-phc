@@ -16,6 +16,7 @@
 
 import React, { useState, Suspense } from 'react';
 import { useStaffAuthorization } from '@/hooks/useStaffAuthorization';
+import { WorkstationLoading } from '@/components/auth/WorkstationLoading';
 import DashboardBG from '@/components/backgrounds/DashboardBg';
 import { SuperAdminSidebar } from '@/app/superadmin/components/navigation/SuperAdminSidebar';
 import { SuperAdminHeader } from '@/app/superadmin/components/navigation/SuperAdminHeader';
@@ -42,21 +43,7 @@ export default function SuperAdminLayout({ children }: SuperAdminLayoutProps) {
 
 
   if (isLoading) {
-    return (
-      <div className="min-h-screen bg-slate-50 dark:bg-[#0d0d0d] flex items-center justify-center font-sans">
-        <div className="text-center space-y-3">
-          <div className="w-12 h-12 border-3 border-rose-200 border-t-rose-600 rounded-full animate-spin mx-auto" />
-          <div>
-            <p className="text-sm font-bold text-slate-800 dark:text-[#f5f5f5]">
-              Verifying SuperAdmin Credentials
-            </p>
-            <p className="text-xs text-slate-500 dark:text-[#a3a3a3]">
-              Philippine Heart Center Queue System
-            </p>
-          </div>
-        </div>
-      </div>
-    );
+    return <WorkstationLoading title="Verifying SuperAdmin credentials..." />;
   }
 
   if (!isAuthorized) {

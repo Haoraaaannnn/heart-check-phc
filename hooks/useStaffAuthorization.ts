@@ -2,6 +2,7 @@
 'use client';
 import { useEffect, useState } from 'react';
 import { supabase } from '@/lib/supabase';
+import { withRequestDeadline } from '@/lib/requestFetch';
 
 /** Verified browser session identity paired with its current database role. */
 interface VerifiedStaff { userId: string; role: string; allowedWorkstations: readonly unknown[] | null; }
@@ -13,7 +14,7 @@ let pendingCheck: Promise<VerifiedStaff | null> | null = null;
  */
 async function verifyCurrentStaff(): Promise<VerifiedStaff | null> {
   if (pendingCheck) return pendingCheck;
-  const check = (async () => {
+  const check = withRequestDeadline((async () => {
     const { data: { session }, error } = await supabase.auth.getSession();
     if (error) throw error;
     if (!session) return null;
@@ -22,7 +23,7 @@ async function verifyCurrentStaff(): Promise<VerifiedStaff | null> {
     const workstations: unknown = session.user.user_metadata?.allowed_workstations;
     return { userId: session.user.id, role: String(data?.role ?? '').toLowerCase().trim(),
       allowedWorkstations: Array.isArray(workstations) ? workstations : null };
-  })();
+  })());
   pendingCheck = check;
   try { return await check; }
   finally { if (pendingCheck === check) pendingCheck = null; }

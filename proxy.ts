@@ -37,6 +37,7 @@
 
 import { createServerClient } from "@supabase/ssr";
 import { NextResponse, type NextRequest } from "next/server";
+import { fetchWithDeadline } from '@/lib/requestFetch';
 
 /**
  * Maps protected route prefixes to the set of roles permitted to access them.
@@ -85,6 +86,13 @@ const ROLE_ROUTES: Record<string, string[]> = {
  */
 export async function proxy(request: NextRequest) {
     let response = NextResponse.next({ request });
+    /** Preserves refreshed cookies when a verified session changes destination. */
+    const redirectWithSession = (destination: string) => {
+        const redirect = NextResponse.redirect(new URL(destination, request.url));
+        response.cookies.getAll().forEach(cookie => redirect.cookies.set(cookie));
+        redirect.headers.set('Cache-Control', 'no-store, no-cache, must-revalidate, proxy-revalidate');
+        return redirect;
+    };
     const isSecure =
         request.nextUrl.protocol === 'https:' ||
         request.headers.get('x-forwarded-proto') === 'https';
@@ -97,6 +105,7 @@ export async function proxy(request: NextRequest) {
         process.env.NEXT_PUBLIC_SUPABASE_URL!,
         process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY!,
         {
+            global: { fetch: fetchWithDeadline },
             cookies: {
                 /**
                  * Reads all cookies from the incoming request.
@@ -166,6 +175,7 @@ export async function proxy(request: NextRequest) {
      * Explicit logout remains a POST action in /api/auth/logout.
      */
     if (path === '/login') {
+        if (user) return redirectWithSession('/select-screen');
         response.headers.set('Cache-Control', 'no-store, no-cache, must-revalidate, proxy-revalidate');
         return response;
     }
@@ -181,7 +191,7 @@ export async function proxy(request: NextRequest) {
         path.startsWith('/landing');
 
     if (isPublicAuthOrLandingPath && user) {
-        const redirectRes = NextResponse.redirect(new URL('/select-screen', request.url));
+        const redirectRes = redirectWithSession('/select-screen');
         redirectRes.headers.set('Cache-Control', 'no-store, no-cache, must-revalidate, proxy-revalidate');
         redirectRes.headers.set('Pragma', 'no-cache');
         redirectRes.headers.set('Expires', '0');
@@ -201,7 +211,7 @@ export async function proxy(request: NextRequest) {
          * Route is protected. If there is no authenticated user, redirect to login.
          */
         if (!user) {
-            const redirectRes = NextResponse.redirect(new URL("/login", request.url));
+            const redirectRes = redirectWithSession('/login');
             redirectRes.headers.set('Cache-Control', 'no-store, no-cache, must-revalidate, proxy-revalidate');
             redirectRes.headers.set('Pragma', 'no-cache');
             redirectRes.headers.set('Expires', '0');
@@ -228,7 +238,7 @@ export async function proxy(request: NextRequest) {
         const allowedRoles = (ROLE_ROUTES[matchedPrefix] || []).map((r) => r.toLowerCase().trim());
 
         if (!userRow || !allowedRoles.includes(userRole)) {
-            const unauthorizedRes = NextResponse.redirect(new URL("/unauthorized", request.url));
+            const unauthorizedRes = redirectWithSession('/unauthorized');
             unauthorizedRes.headers.set('Cache-Control', 'no-store, no-cache, must-revalidate, proxy-revalidate');
             unauthorizedRes.headers.set('Pragma', 'no-cache');
             unauthorizedRes.headers.set('Expires', '0');
@@ -255,7 +265,7 @@ export async function proxy(request: NextRequest) {
             Array.isArray(userAllowedWorkstations) &&
             !userAllowedWorkstations.includes(targetStationKey)
         ) {
-            const unauthorizedRes = NextResponse.redirect(new URL("/unauthorized", request.url));
+            const unauthorizedRes = redirectWithSession('/unauthorized');
             unauthorizedRes.headers.set('Cache-Control', 'no-store, no-cache, must-revalidate, proxy-revalidate');
             unauthorizedRes.headers.set('Pragma', 'no-cache');
             unauthorizedRes.headers.set('Expires', '0');

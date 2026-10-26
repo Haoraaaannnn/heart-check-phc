@@ -1,3 +1,4 @@
+/** @fileoverview Rate-limited staff login with one server-owned session cookie handoff. */
 import { NextResponse } from 'next/server'
 import { createClient } from '@supabase/supabase-js'
 import { createServerClient } from '@supabase/ssr'
@@ -11,11 +12,13 @@ const supabaseAdmin = createClient(
 const DEFAULT_MAX_ATTEMPTS = 3
 const DEFAULT_LOCKOUT_MS = 30 * 1000
 
+/** @returns Role confirmation with session cookies, or a bounded authentication error. */
 export async function POST(request: Request) {
   try {
-    const { email, password } = await request.json()
-
-    if (!email || !password) {
+    const body: unknown = await request.json().catch(() => null)
+    const email: unknown = typeof body === 'object' && body !== null && 'email' in body ? body.email : null
+    const password: unknown = typeof body === 'object' && body !== null && 'password' in body ? body.password : null
+    if (typeof email !== 'string' || !email.trim() || typeof password !== 'string' || !password) {
       return NextResponse.json({ error: 'Email and password are required' }, { status: 400 })
     }
 
@@ -171,17 +174,14 @@ export async function POST(request: Request) {
     }
 
     const response = NextResponse.json({
-      session: signInData.session,
-      user: signInData.user,
       role: resolvedRole,
     })
     response.headers.set('Cache-Control', 'no-store, no-cache, must-revalidate, proxy-revalidate')
     response.headers.set('Pragma', 'no-cache')
     response.headers.set('Expires', '0')
     return response
-  } catch (error: unknown) {
-    const message = error instanceof Error ? error.message : 'Unknown login error';
-    console.error('[LOGIN SERVER ERROR]:', message);
+  } catch {
+    console.error('[LOGIN SERVER ERROR]: Authentication service unavailable.');
     return NextResponse.json({ error: 'Authentication service temporarily unavailable.' }, { status: 500 });
   }
 }

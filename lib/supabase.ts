@@ -8,6 +8,7 @@
  */
 
 import { createBrowserClient } from '@supabase/ssr';
+import { requestFetch } from '@/lib/requestFetch';
 
 /**
  * Supabase browser client instance configured for session-scoped cookies and weak-signal resilience.
@@ -40,6 +41,7 @@ export const supabase = createBrowserClient(
   process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY!,
   {
     isSingleton: typeof window !== 'undefined',
+    global: { fetch: requestFetch },
     cookies: {
       getAll() {
         if (typeof document === 'undefined') return [];
