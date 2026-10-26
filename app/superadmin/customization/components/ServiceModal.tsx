@@ -206,6 +206,44 @@ export function ServiceModal({
     [supabase]
   );
 
+  /**
+   * Syncs updated service prefix into app_settings queue_prefix_map.
+   */
+  const syncServicePrefixUpdate = useCallback(
+    async (serviceName: string, newPrefix: string | null) => {
+      try {
+        const { data: settingData } = await supabase
+          .from('app_settings')
+          .select('value')
+          .eq('key', 'queue_prefix_map')
+          .maybeSingle();
+
+        if (!settingData?.value) return;
+        const parsed = JSON.parse(settingData.value);
+        if (!Array.isArray(parsed)) return;
+
+        let changed = false;
+        const updated = parsed.map((item: Record<string, unknown>) => {
+          if (item.service === serviceName && newPrefix) {
+            changed = true;
+            return { ...item, prefix: newPrefix };
+          }
+          return item;
+        });
+
+        if (changed) {
+          await supabase
+            .from('app_settings')
+            .update({ value: JSON.stringify(updated) })
+            .eq('key', 'queue_prefix_map');
+        }
+      } catch (err) {
+        console.warn('[PREFIX MAP UPDATE ERROR]', err);
+      }
+    },
+    [supabase]
+  );
+
   const handleSave = async () => {
     if (!form.label_en.trim() || !form.label_fil.trim()) {
       setError(T.validation.labelsRequired);
@@ -267,6 +305,9 @@ export function ServiceModal({
 
       if (service.label_en !== payload.label_en) {
         await cascadeServiceRename(service.label_en, payload.label_en);
+      }
+      if (service.queue_prefix !== payload.queue_prefix) {
+        await syncServicePrefixUpdate(payload.label_en, payload.queue_prefix);
       }
     }
 
