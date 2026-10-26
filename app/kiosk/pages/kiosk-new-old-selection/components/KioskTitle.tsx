@@ -5,6 +5,7 @@ import {
     KioskTitleStyle,
     KioskTitleClasses,
 } from "@/app/kiosk/pages/kiosk-new-old-selection/constants/kioskTitle";
+import { BrandLogo } from "@/components/reusables/BrandLogo";
 
 /** Props for {@link KioskTitle}. */
 interface KioskTitleProps {
@@ -27,6 +28,11 @@ interface KioskTitleProps {
 export default function KioskTitle({ isLandscape }: KioskTitleProps) {
     return (
         <div style={KioskTitleStyle.container}>
+            {/* Official Hospital Emblem */}
+            <div className="flex items-center justify-center mb-1">
+                <BrandLogo variant="icon" className="h-16 sm:h-20 w-auto object-contain" />
+            </div>
+
             {/* Hospital Identity Eyebrow */}
             <div style={KioskTitleStyle.eyebrowWrapper}>
                 <span

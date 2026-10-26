@@ -23,6 +23,7 @@ import {
 } from '@/app/dashboard/constants/navigation';
 import { DASHBOARD_NAV_TEXTS } from '@/app/dashboard/constants/dashNavTexts';
 import { DASH } from '@/app/dashboard/constants/styles';
+import { BrandLogo } from '@/components/reusables/BrandLogo';
 
 /**
  * Properties for the DashSideNavigation component.
@@ -154,11 +155,7 @@ export function DashSideNavigation({
     <>
       {/* Brand Header */}
       <div className={S.brandHeader}>
-        <div className={S.brandBadge}>{T.brand.badge}</div>
-        <div>
-          <div className={S.brandTitle}>{T.brand.title}</div>
-          <div className={S.brandSubtitle}>{T.brand.subtitle}</div>
-        </div>
+        <BrandLogo variant="full" className="h-11 w-auto max-w-[200px]" />
       </div>
 
       {/* Nav Groups Scroll Area */}

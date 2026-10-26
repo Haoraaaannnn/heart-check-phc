@@ -34,7 +34,7 @@ export const MONITOR_STYLES = {
     backButton: 'fixed top-6 left-6 flex items-center gap-2 text-slate-500 hover:text-[#cc3535] transition group cursor-pointer z-10',
     backIcon: 'bx bx-arrow-back text-xl group-hover:-translate-x-1 transition-transform',
     backLabel: 'text-sm font-medium',
-    iconBadge: 'w-14 h-14 sm:w-16 sm:h-16 bg-[#cc3535] rounded-2xl flex items-center justify-center shadow-lg shadow-red-200',
+    iconBadge: 'w-20 h-20 sm:w-24 sm:h-24 bg-[#cc3535] rounded-3xl flex items-center justify-center shadow-lg shadow-red-200',
     icon: 'bx bx-plus-medical text-3xl text-white',
     title: 'text-2xl sm:text-3xl lg:text-4xl font-bold text-slate-800 text-center',
     startButton: 'px-8 py-3.5 sm:px-12 sm:py-4.5 bg-[#cc3535] text-white text-lg sm:text-2xl font-bold rounded-2xl sm:rounded-3xl hover:bg-[#b02c2c] active:scale-95 transition shadow-lg shadow-red-200 cursor-pointer',

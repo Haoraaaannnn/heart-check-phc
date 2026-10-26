@@ -17,6 +17,7 @@ import { formatManilaDate, formatManilaTime } from '@/utils/formatDateTime';
 import { CurrentStaffProfile } from '@/app/select-screen/types/selectScreen';
 import { SELECT_SCREEN_STYLES } from '@/app/select-screen/constants/selectScreen';
 import { SELECT_SCREEN_TEXTS } from '@/app/select-screen/constants/selectScreenTexts';
+import { BrandLogo } from '@/components/reusables/BrandLogo';
 
 interface SelectScreenHeaderProps {
   /** Authenticated staff profile information. */
@@ -63,13 +64,7 @@ export default function SelectScreenHeader({ staff, onSignOut }: SelectScreenHea
       <header className={S.root}>
         {/* Brand Group */}
         <div className={S.brandGroup}>
-          <div className={S.brandBadge}>PHC</div>
-          <div className={S.brandTitlesWrap}>
-            <span className={S.brandTitle}>
-              {T.brandName} <span className={S.brandTag}>{T.brandTag}</span>
-            </span>
-            <span className={S.brandSubtitle}>{T.subBrand}</span>
-          </div>
+          <BrandLogo variant="full" className="h-12 w-auto" />
         </div>
 
         {/* Right Group: Manila Clock, Theme Toggle, Staff Identity Chip, Sign Out */}
