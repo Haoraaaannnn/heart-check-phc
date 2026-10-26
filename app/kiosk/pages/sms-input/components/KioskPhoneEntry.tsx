@@ -261,7 +261,7 @@ export default function KioskPhoneEntry({
             : null;
 
         const t0 = performance.now();
-        let { data, error } = await supabase.rpc("create_patient", {
+        const { data, error } = await supabase.rpc("create_patient", {
             p_service: service.label_en,
             p_subcategory: subcategory ?? null,
             p_preferred_cubicles: preferredList,
@@ -270,21 +270,9 @@ export default function KioskPhoneEntry({
             p_phone: encryptedPhone,
         });
 
-        // Graceful fallback if database column or RPC is still defined as bigint
+        // Never downgrade to plaintext when the database cannot accept encryption.
         if (error && (error.code === "22P02" || error.message?.includes("bigint"))) {
-            console.warn(
-                `${getTimestamp()} [PHONE SECURITY] Database p_phone parameter expects bigint. Fallback to standard digits. Run docs/migrations/encrypt_phone_number.sql in Supabase to enable encrypted phone storage.`
-            );
-            const fallbackRes = await supabase.rpc("create_patient", {
-                p_service: service.label_en,
-                p_subcategory: subcategory ?? null,
-                p_preferred_cubicles: preferredList,
-                p_prefix: prefix,
-                p_group_by_subcategory: groupBySubcategory,
-                p_phone: phoneToSave,
-            });
-            data = fallbackRes.data;
-            error = fallbackRes.error;
+            throw new Error('Secure phone storage is unavailable. Please skip SMS or contact staff to finish check-in.');
         }
         const elapsed = Math.round(performance.now() - t0);
 

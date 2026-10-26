@@ -10,12 +10,12 @@ const ts = require('typescript');
 function load(file, mocks, globals = {}) {
   const source = fs.readFileSync(path.join(__dirname, '..', file), 'utf8');
   const output = ts.transpileModule(source, { compilerOptions: { module: ts.ModuleKind.CommonJS, target: ts.ScriptTarget.ES2022 } }).outputText;
-  const module = { exports: {} };
-  vm.runInNewContext(output, { module, exports: module.exports, require: name => {
+  const compiledModule = { exports: {} };
+  vm.runInNewContext(output, { module: compiledModule, exports: compiledModule.exports, require: name => {
     if (!(name in mocks)) throw new Error(`Unexpected dependency ${name}`);
     return mocks[name];
   }, Response, URL, console, ...globals }, { filename: file });
-  return module.exports;
+  return compiledModule.exports;
 }
 
 /** Builds a filtered database double so the route's real query scopes are exercised. */

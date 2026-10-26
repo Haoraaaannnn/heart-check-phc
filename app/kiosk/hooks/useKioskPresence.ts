@@ -64,10 +64,16 @@ export function useKioskPresence(): void {
   const supabase = useMemo(() => createClient(), []);
   const { status: printerStatus, hardwareStatus } = useWebPrinter();
 
-  const kioskIdRef = useRef<string>(getOrCreateKioskId());
-  const openedAtRef = useRef<string>(new Date().toISOString());
-  const lastActivityTimeRef = useRef<number>(Date.now());
+  const kioskIdRef = useRef<string>('');
+  const openedAtRef = useRef<string>('');
+  const lastActivityTimeRef = useRef<number>(0);
   const channelRef = useRef<ReturnType<typeof supabase.channel> | null>(null);
+
+  useEffect(() => {
+    kioskIdRef.current = getOrCreateKioskId();
+    openedAtRef.current = new Date().toISOString();
+    lastActivityTimeRef.current = Date.now();
+  }, []);
 
   /**
    * Resolves current hardware status composite across WebUSB and Network settings.

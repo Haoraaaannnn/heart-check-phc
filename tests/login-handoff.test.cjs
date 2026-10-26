@@ -10,10 +10,10 @@ const ts = require('typescript');
 function load(file, mocks, globals = {}) {
   const source = fs.readFileSync(path.join(__dirname, '..', file), 'utf8');
   const code = ts.transpileModule(source, { compilerOptions: { module: ts.ModuleKind.CommonJS, target: ts.ScriptTarget.ES2022, jsx: ts.JsxEmit.ReactJSX } }).outputText;
-  const module = { exports: {} };
-  vm.runInNewContext(code, { module, exports: module.exports, console, URL, Response,
+  const compiledModule = { exports: {} };
+  vm.runInNewContext(code, { module: compiledModule, exports: compiledModule.exports, console, URL, Response,
     require: name => { assert.ok(name in mocks, `Unexpected dependency: ${name}`); return mocks[name]; }, ...globals });
-  return module.exports;
+  return compiledModule.exports;
 }
 
 test('First login writes server cookies before confirming success and does not return tokens for a second writer', async () => {

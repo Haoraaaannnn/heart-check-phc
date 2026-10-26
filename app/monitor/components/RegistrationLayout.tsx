@@ -65,7 +65,7 @@ type RegistrationLayoutProps = {
 export function RegistrationLayout({ patients }: RegistrationLayoutProps) {
   const [counters, setCounters] = useState<number[]>([]);
   const [activeCall, setActiveCall] = useState<{ ticket: string; counterNum: number; expiry: number } | null>(null);
-  const [currentMs, setCurrentMs] = useState(Date.now());
+  const [currentMs, setCurrentMs] = useState(Date.now);
   const announcedPatientsRef = useRef<Set<number>>(new Set());
   const isProcessing = useRef(false);
   const pendingAnnouncements = useRef<{ ticket: string; counterNum: number; message?: string; expiresAt?: string }[]>([]);
@@ -161,7 +161,7 @@ export function RegistrationLayout({ patients }: RegistrationLayoutProps) {
               const activePatient = counterPatients[0];
               const waitingPatients = counterPatients.slice(1);
               const isCalling = activeCall !== null &&
-                Date.now() < activeCall.expiry &&
+                currentMs < activeCall.expiry &&
                 (activeCall.counterNum === counterNum || (activePatient && activeCall.ticket === activePatient.patientNum));
               const isExtended = isExtendedIntake(activePatient, currentMs);
 
@@ -295,7 +295,7 @@ export function RegistrationLayout({ patients }: RegistrationLayoutProps) {
             const activePatient = counterPatients[0];
             const waitingPatients = counterPatients.slice(1);
             const isCalling = activeCall !== null &&
-              Date.now() < activeCall.expiry &&
+              currentMs < activeCall.expiry &&
               (activeCall.counterNum === counterNum || (activePatient && activeCall.ticket === activePatient.patientNum));
             const isExtended = isExtendedIntake(activePatient, currentMs);
 

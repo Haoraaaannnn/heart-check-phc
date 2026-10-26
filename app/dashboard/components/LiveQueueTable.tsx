@@ -50,15 +50,14 @@ export default function LiveQueueTable({
   isMounted,
   isLoading = false,
 }: LiveQueueTableProps) {
-  if (isLoading) {
-    return <LiveQueueTableSkeleton />;
-  }
   const [serviceFilter, setServiceFilter] = useState<string>('all');
 
   const services = useMemo(
     () => Array.from(new Set(patients.map((p) => p.service).filter(Boolean))).sort(),
     [patients],
   );
+
+  if (isLoading) return <LiveQueueTableSkeleton />;
 
   const filtered =
     serviceFilter === 'all' ? patients : patients.filter((p) => p.service === serviceFilter);

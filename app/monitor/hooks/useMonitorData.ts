@@ -167,23 +167,9 @@ export function useMonitorData(category: string, subcategory: string | null, cat
       query = query.eq('subcategory', subcategory);
     }
 
-    let { data, error } = await query
+    const { data, error } = await query
       .order('room', { ascending: true })
       .order('cubicleNum', { ascending: true });
-
-    // Fallback: If subcategory was specified but no cubicles matched, query by category alone
-    if (!error && subcategory && (!data || data.length === 0)) {
-      const { data: fallbackData } = await supabase
-        .from('cubicle')
-        .select('*')
-        .eq('category', category)
-        .eq('on_break', false)
-        .order('room', { ascending: true })
-        .order('cubicleNum', { ascending: true });
-      if (fallbackData && fallbackData.length > 0) {
-        data = fallbackData;
-      }
-    }
 
     if (!error && data) {
       setCubicles(data);
@@ -234,30 +220,12 @@ export function useMonitorData(category: string, subcategory: string | null, cat
       query = query.eq('subcategory', subcategory);
     }
 
-    let { data: rawData, error } = await query.order('called_at', { ascending: true });
-
-    // Fallback: If subcategory was requested but 0 patients returned, query without subcategory filter
-    if (!error && subcategory && (!rawData || rawData.length === 0)) {
-      const { data: fallbackPatients } = await supabase
-        .from('patients')
-        .select('*')
-        .eq('service', category)
-        .in('status', ['Assigned', 'With Doctor', 'Carryout'])
-        .not('cubicleNum', 'is', null)
-        .gte('created_at', today.toISOString())
-        .lt('created_at', tomorrow.toISOString())
-        .order('called_at', { ascending: true });
-      if (fallbackPatients && fallbackPatients.length > 0) {
-        rawData = fallbackPatients;
-      }
-    }
+    const { data: rawData, error } = await query.order('called_at', { ascending: true });
 
     const { data: available, error: availabilityError } = await supabase.from('cubicle')
       .select('cubicleNum').eq('category', category).eq('on_break', false);
     const availableNames = new Set((available ?? []).map(station => station.cubicleNum));
-    const data = (!availabilityError && availableNames.size > 0)
-      ? rawData?.filter(patient => availableNames.has(patient.cubicleNum))
-      : rawData;
+    const data = availabilityError ? [] : rawData?.filter(patient => availableNames.has(patient.cubicleNum));
 
     if (requestId !== patientsFetchId.current) return;
 

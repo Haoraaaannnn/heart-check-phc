@@ -1,3 +1,4 @@
+/** @fileoverview Local development origins and valid route-glob production tracing exclusions. */
 import type { NextConfig } from "next";
 import os from "os";
 
@@ -21,7 +22,7 @@ const nextConfig: NextConfig = {
   ],
 
   outputFileTracingExcludes: {
-    '': ['./python_backend/**/'],
+    '/*': ['./python_backend/**/*'],
   },
 };
 

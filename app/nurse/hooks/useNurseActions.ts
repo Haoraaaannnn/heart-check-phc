@@ -8,11 +8,9 @@
  */
 
 import { useState, useCallback } from 'react';
-import { supabase } from '@/lib/supabase';
-import { enqueueMutation, removeMutation } from '@/lib/offlineQueue';
+import { persistNurseTransition } from '@/app/nurse/lib/persistNurseTransition';
 import { Patient } from '@/types/Types';
 import { ClinicalStage, dbStatusToStage } from '@/app/nurse/types/nurse';
-import { nurseTexts } from '@/app/nurse/constants/nurseTexts';
 
 /**
  * Return model for the useNurseActions hook.
@@ -69,90 +67,13 @@ export function useNurseActions(
    * If the network is offline or drops, retains the mutation in local storage without
    * rolling back optimistic state. Only rolls back on genuine database authorization errors.
    */
-  const persistPatientUpdate = async (
-    patientId: number,
-    updates: Record<string, string | null>
+  const persistPatientUpdate = useCallback(async (
+    patientId: number, updates: Record<string, string | null>, expectedStatus: string
   ): Promise<boolean> => {
-    let queuedMutationId: string | null = null;
-
-    try {
-      // 1. Immediately log mutation to non-volatile IndexedDB disk storage
-      const queued = await enqueueMutation({
-        table: 'patients',
-        type: 'update',
-        payload: updates,
-        matchKey: 'id',
-        matchValue: patientId,
-        clientTimestamp: new Date().toISOString(),
-        description: `Nurse update patient #${patientId}`,
-      });
-      queuedMutationId = queued.id;
-    } catch (storageErr) {
-      console.warn('IndexedDB unavailable, falling back to direct network call:', storageErr);
-    }
-
-    // 2. If browser is currently offline, keep optimistic state and leave item in outbox
-    if (typeof navigator !== 'undefined' && !navigator.onLine) {
-      return true;
-    }
-
-    // 3. Attempt immediate network persistence via Server API (service role bypasses RLS null-cubicle drops)
-    try {
-      let networkSucceeded = false;
-      const { data: { session } } = await supabase.auth.getSession();
-
-      if (session?.access_token) {
-        try {
-          const apiRes = await fetch('/api/nurse/patients', {
-            method: 'PATCH',
-            headers: {
-              'Content-Type': 'application/json',
-              Authorization: `Bearer ${session.access_token}`,
-            },
-            body: JSON.stringify({ patientId, updates }),
-          });
-
-          if (apiRes.ok) {
-            networkSucceeded = true;
-          } else {
-            const errJson = await apiRes.json().catch(() => ({}));
-            console.warn('Nurse API PATCH returned non-200:', errJson);
-          }
-        } catch (apiErr) {
-          console.warn('Nurse API PATCH fetch exception, falling back to client Supabase:', apiErr);
-        }
-      }
-
-      // Fallback: direct client update if Server API was unreachable or unauthenticated
-      if (!networkSucceeded) {
-        const { error } = await supabase
-          .from('patients')
-          .update(updates)
-          .eq('id', patientId)
-          .eq('is_historical', false);
-
-        if (error) {
-          console.error('NURSE MUTATION ERROR:', error.message);
-          if (queuedMutationId) {
-            await removeMutation(queuedMutationId);
-          }
-          setActionError(nurseTexts.errorUnauthorizedCubicle);
-          return false;
-        }
-      }
-
-      // Successfully pushed to Supabase! Dequeue from local storage
-      if (queuedMutationId) {
-        await removeMutation(queuedMutationId);
-      }
-
-      return true;
-    } catch (err) {
-      // Network drop or timeout: keep item in outbox queue, DO NOT rollback optimistic state
-      console.warn('Nurse mutation network drop - saved to offline outbox for automatic sync:', err);
-      return true;
-    }
-  };
+    const result = await persistNurseTransition({ patientId, updates, expectedStatus });
+    if (!result.ok) setActionError(result.error);
+    return result.ok;
+  }, []);
 
   /**
    * Transition: Assigned -> With Doctor
@@ -177,7 +98,7 @@ export function useNurseActions(
       const success = await persistPatientUpdate(patient.id, {
         status: 'With Doctor',
         consult_start: now,
-      });
+      }, patient.status ?? '');
 
       // Rollback on failure
       if (!success) {
@@ -192,7 +113,7 @@ export function useNurseActions(
 
       return true;
     },
-    [setAssignedPatients, setWithDoctorPatients, pinInFlightMutation, unpinMutation]
+    [setAssignedPatients, setWithDoctorPatients, pinInFlightMutation, unpinMutation, persistPatientUpdate]
   );
 
   /**
@@ -215,7 +136,7 @@ export function useNurseActions(
       const success = await persistPatientUpdate(patient.id, {
         status: 'Assigned',
         consult_start: null,
-      });
+      }, patient.status ?? '');
 
       // Rollback on failure
       if (!success) {
@@ -230,7 +151,7 @@ export function useNurseActions(
 
       return true;
     },
-    [setAssignedPatients, setWithDoctorPatients, pinInFlightMutation, unpinMutation]
+    [setAssignedPatients, setWithDoctorPatients, pinInFlightMutation, unpinMutation, persistPatientUpdate]
   );
 
   /**
@@ -263,7 +184,7 @@ export function useNurseActions(
         consult_end: now,
         carryout_start: now,
         carryout_end: null,
-      });
+      }, patient.status ?? '');
 
       // Rollback on failure
       if (!success) {
@@ -278,7 +199,7 @@ export function useNurseActions(
 
       return true;
     },
-    [setWithDoctorPatients, setCarryoutPatients, pinInFlightMutation, unpinMutation]
+    [setWithDoctorPatients, setCarryoutPatients, pinInFlightMutation, unpinMutation, persistPatientUpdate]
   );
 
   /**
@@ -309,7 +230,7 @@ export function useNurseActions(
         consult_end: null,
         carryout_start: null,
         carryout_end: null,
-      });
+      }, patient.status ?? '');
 
       // Rollback on failure
       if (!success) {
@@ -324,7 +245,7 @@ export function useNurseActions(
 
       return true;
     },
-    [setCarryoutPatients, setWithDoctorPatients, pinInFlightMutation, unpinMutation]
+    [setCarryoutPatients, setWithDoctorPatients, pinInFlightMutation, unpinMutation, persistPatientUpdate]
   );
 
   /**
@@ -342,7 +263,7 @@ export function useNurseActions(
       const success = await persistPatientUpdate(patient.id, {
         status: 'Done',
         carryout_end: now,
-      });
+      }, patient.status ?? '');
 
       // Rollback on failure
       if (!success) {
@@ -357,7 +278,7 @@ export function useNurseActions(
       await fetchFinished();
       return true;
     },
-    [setCarryoutPatients, fetchFinished, pinInFlightMutation, unpinMutation]
+    [setCarryoutPatients, fetchFinished, pinInFlightMutation, unpinMutation, persistPatientUpdate]
   );
 
   /**

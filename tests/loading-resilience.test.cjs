@@ -10,10 +10,10 @@ const ts = require('typescript');
 function load(file, mocks = {}, globals = {}) {
   const source = fs.readFileSync(path.join(__dirname, '..', file), 'utf8');
   const code = ts.transpileModule(source, { compilerOptions: { module: ts.ModuleKind.CommonJS, target: ts.ScriptTarget.ES2022, jsx: ts.JsxEmit.ReactJSX } }).outputText;
-  const module = { exports: {} };
-  vm.runInNewContext(code, { module, exports: module.exports, Request, Response, Headers, URL, AbortController, DOMException,
+  const compiledModule = { exports: {} };
+  vm.runInNewContext(code, { module: compiledModule, exports: compiledModule.exports, Request, Response, Headers, URL, AbortController, DOMException,
     require: name => { assert.ok(name in mocks, name); return mocks[name]; }, ...globals });
-  return module.exports;
+  return compiledModule.exports;
 }
 
 /** Controls deadlines without making tests wait thirty real seconds. */
