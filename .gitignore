@@ -48,3 +48,7 @@ python_backend/data_entries
 
 # Obsidian && 2nd Brain
 .obsidian
+
+# Local Supabase Docker Demo Stack
+supabase/
+docs/specifications/LOCAL_DEMO_DOCKER_SUPABASE_GUIDE.md

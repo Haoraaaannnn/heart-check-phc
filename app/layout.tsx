@@ -31,9 +31,6 @@ export default function RootLayout({
 }>) {
   return (
     <html lang="en" className={`${tiltWarp.variable} ${Baloo.variable}`} suppressHydrationWarning>
-      <head>
-        <link href='https://unpkg.com/boxicons@2.1.4/css/boxicons.min.css' rel='stylesheet' />
-      </head>
       <body className={`${geistSans.variable} ${geistMono.variable} antialiased bg-gray-50 dark:bg-[#0d0d0d] dark:text-[#f5f5f5] transition-colors duration-300`}>
         <ThemeProvider>          
           <StaffSessionProvider>{children}</StaffSessionProvider>
