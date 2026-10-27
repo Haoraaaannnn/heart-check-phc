@@ -112,8 +112,8 @@ export function TableLayout({
                     );
                     const sortedPatients = sortCubiclePatients(patientsInCubicle);
                     const activePatient = sortedPatients[0];
-                    const nextPatient = sortedPatients[1];
-                    const remainingCount = sortedPatients.length > 2 ? sortedPatients.length - 2 : 0;
+                    const waitingPatients = sortedPatients.slice(1);
+                    const remainingWaiting = waitingPatients.length > 4 ? waitingPatients.length - 4 : 0;
                     const isCalling = activePatient && activeCall !== null &&
                       currentMs < activeCall.expiry &&
                       (activeCall.cubicle === cubicle.cubicleNum || activeCall.ticket === activePatient.patientNum);
@@ -127,10 +127,15 @@ export function TableLayout({
                             </div>
                           ) : (
                             <>
+                              {/* Large & Highlighted Serving Card */}
                               <div
                                 style={isCalling ? undefined : { backgroundColor: '#cc3535' }}
                                 className={isCalling ? MONITOR_STYLES.tableLayout.callingCard : MONITOR_STYLES.tableLayout.nowServingCard}
                               >
+                                <div
+                                  className={MONITOR_STYLES.tableLayout.activePulseDot}
+                                  aria-hidden="true"
+                                />
                                 <span className={isCalling ? MONITOR_STYLES.tableLayout.nowCallingBadge : MONITOR_STYLES.tableLayout.nowServingBadge}>
                                   {isCalling && <i className="bx bxs-megaphone animate-bounce text-xs" aria-hidden="true" />}
                                   {isCalling ? MONITOR_TEXTS.tableLayout.nowCallingBadge : MONITOR_TEXTS.tableLayout.nowServingBadge}
@@ -138,27 +143,44 @@ export function TableLayout({
                                 <span className={MONITOR_STYLES.tableLayout.nowServingTicket}>
                                   {activePatient.patientNum}
                                 </span>
-                                <div
-                                  className={MONITOR_STYLES.tableLayout.activePulseDot}
-                                  aria-hidden="true"
-                                />
                               </div>
 
-                              {nextPatient && (
-                                <div className={MONITOR_STYLES.tableLayout.waitingCard}>
+                              {/* Minimum 4 upcoming queue roster excluding serving number */}
+                              <div className={MONITOR_STYLES.tableLayout.upcomingRosterCard}>
+                                <div className={MONITOR_STYLES.tableLayout.upcomingRosterHeader}>
                                   <span className={MONITOR_STYLES.tableLayout.nextBadge}>
                                     {MONITOR_TEXTS.tableLayout.nextBadge}
                                   </span>
-                                  <span className={MONITOR_STYLES.tableLayout.waitingTicket}>
-                                    {nextPatient.patientNum}
+                                  <span className="text-[10px] sm:text-xs font-bold text-slate-500 uppercase tracking-wider">
+                                    {waitingPatients.length > 0 ? `${waitingPatients.length} in line` : 'No queue'}
                                   </span>
-                                  {remainingCount > 0 && (
-                                    <span className="text-[11px] font-bold text-slate-500">
-                                      (+{remainingCount})
-                                    </span>
-                                  )}
                                 </div>
-                              )}
+
+                                <div className="flex flex-col gap-1 w-full min-h-0 flex-1 justify-around">
+                                  {[1, 2, 3, 4].map(pos => {
+                                    const wp = waitingPatients[pos - 1];
+                                    const isHero = pos === 1;
+                                    return (
+                                      <div
+                                        key={pos}
+                                        className={wp ? (isHero ? "flex items-center justify-between bg-blue-50/60 border border-blue-200 rounded px-2 py-0.5 text-xs font-bold shadow-2xs" : MONITOR_STYLES.tableLayout.upcomingRow) : MONITOR_STYLES.tableLayout.upcomingRowEmpty}
+                                      >
+                                        <span className={isHero ? "text-[10px] sm:text-xs font-black text-blue-700" : "text-[10px] sm:text-xs font-bold text-slate-500"}>
+                                          #{pos}{isHero ? ' Next' : ''}
+                                        </span>
+                                        <span className={wp ? (isHero ? "font-black text-blue-900 text-base sm:text-lg lg:text-xl tabular-nums tracking-tight" : "font-black text-slate-900 text-sm sm:text-base lg:text-lg tabular-nums tracking-tight") : "font-bold text-slate-300 text-xs sm:text-sm tabular-nums"}>
+                                          {wp?.patientNum || MONITOR_TEXTS.tableLayout.emptyPlaceholder}
+                                        </span>
+                                      </div>
+                                    );
+                                  })}
+                                </div>
+                                {remainingWaiting > 0 && (
+                                  <div className="text-center text-[10px] font-bold text-slate-500 py-0.5 leading-none">
+                                    +{remainingWaiting} more in queue
+                                  </div>
+                                )}
+                              </div>
                             </>
                           )}
                         </div>

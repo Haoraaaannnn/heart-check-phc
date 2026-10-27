@@ -199,3 +199,125 @@ test('closing a monitor stops playback instead of leaving the announcement queue
   await assert.rejects(api.playMonitorSpeech('Number 2011', 3, controller.signal), /Monitor stopped/);
   assert.equal(revoked, true);
 });
+
+test('multi-service monitors receive calls across all requested services with station filtering', async () => {
+  const seed = fixtures();
+  seed.monitor_calls = [
+    { id: 4, patient_id: 1, service: 'Consultation', subcategory: 'Pedia', counter: null, cubicle: 'Consultation R2 C1', ticket: '2011', message: 'Number 2011', expires_at: new Date(Date.now() + 90000).toISOString() },
+    { id: 5, patient_id: 2, service: 'ECG', subcategory: null, counter: null, cubicle: 'ECG R1 C1', ticket: '3001', message: 'Number 3001', expires_at: new Date(Date.now() + 90000).toISOString() },
+    { id: 6, patient_id: 3, service: 'Registration', subcategory: null, counter: 1, cubicle: null, ticket: '1001', message: 'Number 1001', expires_at: new Date(Date.now() + 90000).toISOString() },
+    { id: 7, patient_id: 4, service: 'Warfarin', subcategory: null, counter: null, cubicle: 'Warfarin R1 C1', ticket: '4001', message: 'Number 4001', expires_at: new Date(Date.now() + 90000).toISOString() },
+  ];
+  seed.patients.push(
+    { id: 2, patientNum: '3001', service: 'ECG', subcategory: null, cubicleNum: 'ECG R1 C1', counter: null, reg_end: new Date().toISOString(), status: 'Assigned', is_historical: false, created_at: new Date().toISOString() },
+    { id: 3, patientNum: '1001', service: 'Registration', subcategory: null, cubicleNum: null, counter: 1, reg_end: null, status: 'On Progress', is_historical: false, created_at: new Date().toISOString() },
+    { id: 4, patientNum: '4001', service: 'Warfarin', subcategory: null, cubicleNum: 'Warfarin R1 C1', counter: null, reg_end: new Date().toISOString(), status: 'Assigned', is_historical: false, created_at: new Date().toISOString() },
+  );
+  seed.cubicle.push(
+    { id: 8, cubicleNum: 'ECG R1 C1', category: 'ECG', subcategory: null, room: 1, doctorId: null, on_break: false },
+    { id: 9, cubicleNum: 'Warfarin R1 C1', category: 'Warfarin', subcategory: null, room: 1, doctorId: null, on_break: false },
+  );
+
+  const response = await route(seed).GET(new Request('http://localhost/api/monitor-calls?service=Consultation,ECG,Registration&after=0'));
+  const json = await response.json();
+  assert.equal(json.calls.length, 3);
+  const tickets = json.calls.map(c => c.ticket).sort();
+  assert.deepEqual(tickets, ['1001', '2011', '3001']);
+});
+
+test('multi-service monitors exclude registration counter calls if registration is not selected', async () => {
+  const seed = fixtures();
+  seed.monitor_calls = [
+    { id: 4, patient_id: 1, service: 'Consultation', subcategory: 'Pedia', counter: null, cubicle: 'Consultation R2 C1', ticket: '2011', message: 'Number 2011', expires_at: new Date(Date.now() + 90000).toISOString() },
+    { id: 6, patient_id: 3, service: 'Registration', subcategory: null, counter: 1, cubicle: null, ticket: '1001', message: 'Number 1001', expires_at: new Date(Date.now() + 90000).toISOString() },
+  ];
+  seed.patients.push(
+    { id: 3, patientNum: '1001', service: 'Registration', subcategory: null, cubicleNum: null, counter: 1, reg_end: null, status: 'On Progress', is_historical: false, created_at: new Date().toISOString() },
+  );
+
+  const response = await route(seed).GET(new Request('http://localhost/api/monitor-calls?service=Consultation,ECG&after=0'));
+  const json = await response.json();
+  assert.equal(json.calls.length, 1);
+  assert.equal(json.calls[0].ticket, '2011');
+});
+
+test('breaks in one service station do not suppress calls in other active services on the same monitor', async () => {
+  const seed = fixtures();
+  seed.monitor_calls = [
+    { id: 4, patient_id: 1, service: 'Consultation', subcategory: 'Pedia', counter: null, cubicle: 'Consultation R2 C1', ticket: '2011', message: 'Number 2011', expires_at: new Date(Date.now() + 90000).toISOString() },
+    { id: 5, patient_id: 2, service: 'ECG', subcategory: null, counter: null, cubicle: 'ECG R1 C1', ticket: '3001', message: 'Number 3001', expires_at: new Date(Date.now() + 90000).toISOString() },
+  ];
+  seed.patients.push(
+    { id: 2, patientNum: '3001', service: 'ECG', subcategory: null, cubicleNum: 'ECG R1 C1', counter: null, reg_end: new Date().toISOString(), status: 'Assigned', is_historical: false, created_at: new Date().toISOString() },
+  );
+  seed.cubicle.push(
+    { id: 8, cubicleNum: 'ECG R1 C1', category: 'ECG', subcategory: null, room: 1, doctorId: null, on_break: true }, // ECG cubicle is on break!
+  );
+
+  const response = await route(seed).GET(new Request('http://localhost/api/monitor-calls?service=Consultation,ECG&after=0'));
+  const json = await response.json();
+  assert.equal(json.calls.length, 1);
+  assert.equal(json.calls[0].ticket, '2011');
+});
+
+test('multi-service monitors isolate Pedia and Adult subcategories without cross-talk', async () => {
+  const seed = fixtures();
+  seed.monitor_calls = [
+    { id: 10, patient_id: 1, service: 'Consultation', subcategory: 'Pedia', counter: null, cubicle: 'Consultation R2 C1', ticket: '2011', message: 'Number 2011', expires_at: new Date(Date.now() + 90000).toISOString() },
+    { id: 11, patient_id: 20, service: 'Consultation', subcategory: 'Adult', counter: null, cubicle: 'Consultation R3 C1', ticket: '2099', message: 'Number 2099', expires_at: new Date(Date.now() + 90000).toISOString() },
+  ];
+  seed.patients.push(
+    { id: 20, patientNum: '2099', service: 'Consultation', subcategory: 'Adult', cubicleNum: 'Consultation R3 C1', counter: null, reg_end: new Date().toISOString(), status: 'Assigned', is_historical: false, created_at: new Date().toISOString() },
+  );
+  seed.cubicle.push(
+    { id: 30, cubicleNum: 'Consultation R3 C1', category: 'Consultation', subcategory: 'Adult', room: 3, doctorId: null, on_break: false },
+  );
+
+  // Poll specifying Consultation-Pedia only: must strictly exclude Consultation-Adult
+  const pediaOnly = await (await route(seed).GET(new Request('http://localhost/api/monitor-calls?service=Consultation-Pedia&after=0'))).json();
+  assert.equal(pediaOnly.calls.length, 1);
+  assert.equal(pediaOnly.calls[0].ticket, '2011', 'Consultation-Pedia must only receive Pedia ticket');
+
+  // Poll specifying Consultation-Adult only: must strictly exclude Consultation-Pedia
+  const adultOnly = await (await route(seed).GET(new Request('http://localhost/api/monitor-calls?service=Consultation-Adult&after=0'))).json();
+  assert.equal(adultOnly.calls.length, 1);
+  assert.equal(adultOnly.calls[0].ticket, '2099', 'Consultation-Adult must only receive Adult ticket');
+
+  // Poll specifying both Consultation-Pedia and Consultation-Adult
+  const bothSubs = await (await route(seed).GET(new Request('http://localhost/api/monitor-calls?service=Consultation-Pedia,Consultation-Adult&after=0'))).json();
+  assert.equal(bothSubs.calls.length, 2);
+  const tickets = bothSubs.calls.map(c => c.ticket).sort();
+  assert.deepEqual(tickets, ['2011', '2099']);
+});
+
+test('normalizeMonitorTargets splits services with subcategories into discrete Pedia and Adult targets', () => {
+  const hookModule = load('app/monitor/hooks/useCustomMonitorData.ts', {
+    'react': { useState: () => [], useRef: () => ({ current: null }), useEffect: () => {}, useCallback: fn => fn, useMemo: fn => fn() },
+    '@/lib/supabase': { supabase: {} },
+    '@/types/Types': {},
+    '@/utils/formatTicketSpeech': { formatTicketForSpeech: t => t },
+    './useMonitorCalls': { useMonitorCalls: () => {} },
+    '../lib/playMonitorSpeech': { playMonitorSpeech: async () => {} },
+    '../lib/sortCubiclePatients': { sortCubiclePatients: arr => arr },
+    '@/lib/counters': { fetchActiveCounters: async () => [] },
+  });
+
+  // Coarse service name with subcategories splits automatically into Pedia and Adult
+  const normalized1 = hookModule.normalizeMonitorTargets(['Consultation', 'Registration']);
+  assert.equal(normalized1.length, 3);
+  assert.equal(normalized1[0].key, 'Consultation-Pedia');
+  assert.equal(normalized1[0].subcategory, 'Pedia');
+  assert.equal(normalized1[1].key, 'Consultation-Adult');
+  assert.equal(normalized1[1].subcategory, 'Adult');
+  assert.equal(normalized1[2].key, 'Registration');
+  assert.equal(normalized1[2].subcategory, null);
+
+  // Explicit subcategory is preserved
+  const normalized2 = hookModule.normalizeMonitorTargets(['Consultation - Pedia', 'ECG']);
+  assert.equal(normalized2.length, 2);
+  assert.equal(normalized2[0].key, 'Consultation-Pedia');
+  assert.equal(normalized2[0].subcategory, 'Pedia');
+  assert.equal(normalized2[1].key, 'ECG');
+  assert.equal(normalized2[1].subcategory, null);
+});
+

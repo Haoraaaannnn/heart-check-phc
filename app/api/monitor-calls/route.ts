@@ -93,14 +93,37 @@ export async function GET(request: Request) {
   const service = params.get('service');
   const subcategory = params.get('subcategory');
   const after = params.get('after');
-  if (!service || service.length > 128 || (subcategory?.length ?? 0) > 128 ||
+  if (!service || service.length > 1024 || (subcategory?.length ?? 0) > 128 ||
     (after !== null && (!/^\d+$/.test(after) || !Number.isSafeInteger(Number(after))))) {
     return NextResponse.json({ error: 'Invalid monitor destination.' }, { status: 400 });
   }
+  const rawServices = service.split(',').map(s => s.trim()).filter(Boolean);
+  if (rawServices.length === 0) {
+    return NextResponse.json({ error: 'Invalid monitor destination.' }, { status: 400 });
+  }
+
+  const targetDestinations = rawServices.map(s => {
+    const [base, sub] = s.includes('-') ? s.split('-') : [s, null];
+    return {
+      service: base.trim(),
+      subcategory: sub ? sub.trim() : (subcategory || null)
+    };
+  });
+  const baseServices = [...new Set(targetDestinations.map(t => t.service))];
+
   let query = supabaseAdmin.from('monitor_calls')
     .select('id, patient_id, service, subcategory, counter, cubicle, ticket, message, expires_at')
-    .eq('service', service).gt('expires_at', new Date().toISOString());
-  if (subcategory) query = query.eq('subcategory', subcategory);
+    .gt('expires_at', new Date().toISOString());
+
+  if (baseServices.length === 1 && targetDestinations.length === 1) {
+    query = query.eq('service', baseServices[0]);
+    if (targetDestinations[0].subcategory) {
+      query = query.eq('subcategory', targetDestinations[0].subcategory);
+    }
+  } else {
+    query = query.in('service', baseServices);
+  }
+
   if (after === null) {
     const { data, error } = await query.order('id', { ascending: false }).limit(1);
     if (error) return NextResponse.json({ error: 'Monitor calls unavailable.' }, { status: 503 });
@@ -123,8 +146,25 @@ export async function GET(request: Request) {
   const calls = events.filter(event => {
     const patient = patients.data?.find(patient => patient.id === event.patient_id);
     if (!patient || ['Done', 'Idle', 'Removed'].includes(patient.status)) return false;
-    if (event.counter != null) return openCounters.has(event.counter) && patient.counter === event.counter && !patient.reg_end && !patient.cubicleNum;
+
+    // Match destination service and subcategory (e.g. Consultation-Pedia vs Consultation-Adult)
+    const targetMatch = targetDestinations.find(dest =>
+      dest.service === event.service &&
+      (!dest.subcategory || dest.subcategory === event.subcategory)
+    );
+    if (!targetMatch) return false;
+
+    if (event.counter != null) {
+      return targetMatch.service === 'Registration' &&
+        openCounters.has(event.counter) &&
+        patient.counter === event.counter &&
+        !patient.reg_end &&
+        !patient.cubicleNum;
+    }
+
     if (patient.service !== event.service) return false;
+    if (targetMatch.subcategory && (patient.subcategory ?? null) !== targetMatch.subcategory) return false;
+
     if (event.cubicle) return openCubicles.has(event.cubicle) && patient.cubicleNum === event.cubicle;
     return !patient.cubicleNum && (patient.subcategory ?? null) === event.subcategory &&
       (patient.counter == null || Boolean(patient.reg_end));
