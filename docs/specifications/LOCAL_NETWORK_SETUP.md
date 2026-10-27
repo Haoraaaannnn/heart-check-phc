@@ -402,7 +402,9 @@ When modifying configuration scripts, network bindings, or endpoint paths, refer
 
 | Configuration Item | File Path | Architectural Responsibility |
 | :--- | :--- | :--- |
-| **NPM Scripts & Server Flags** | [`package.json`](file:///home/jensen/Github-Repositories/heart-check-phc/package.json) | Modifies `start` (`-H 0.0.0.0 -p 3000`) and `dev` scripts. |
+| **NPM Scripts & Server Flags** | [`package.json`](file:///home/jensen/Github-Repositories/heart-check-phc/package.json) | Modifies `start` (`-H 0.0.0.0 -p 3000`), `proxy`, and `dev` scripts. |
+| **Edge Reverse Proxy & TLS Gateway** | [`Caddyfile`](file:///home/jensen/Github-Repositories/heart-check-phc/Caddyfile) | TLS 1.3 reverse proxy configuration (port 443) for RA 10173 and SEC-022. |
+| **HTTPS Setup & Architecture Guide** | [`docs/specifications/HTTPS_AND_REVERSE_PROXY_SETUP.md`](file:///home/jensen/Github-Repositories/heart-check-phc/docs/specifications/HTTPS_AND_REVERSE_PROXY_SETUP.md) | Exhaustive documentation on dual-mode HTTP/HTTPS, certificates, and multi-device LAN. |
 | **Client Environment Variables** | [`.env.local`](file:///home/jensen/Github-Repositories/heart-check-phc/.env.local) | Configures `NEXT_PUBLIC_API_URL`, `ALLOWED_ORIGINS`, and Supabase keys. |
 | **FastAPI Backend Entry Point** | [`python_backend/main.py`](file:///home/jensen/Github-Repositories/heart-check-phc/python_backend/main.py) | CORS origins setup, FastAPI routes, and server configuration. |
 | **Uvicorn Programmatic Runner** | [`python_backend/run.py`](file:///home/jensen/Github-Repositories/heart-check-phc/python_backend/run.py) | Configures host (`0.0.0.0`) and port (`8000`) for Python launcher. |
