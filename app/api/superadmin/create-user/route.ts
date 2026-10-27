@@ -1,23 +1,28 @@
+/** @fileoverview Superadmin account provisioning with server-generated thesis credentials. */
+import { randomBytes } from 'node:crypto'
+import { accountEmail, isAccountRole } from '@/lib/accountCredentials'
 import { NextResponse } from 'next/server'
 import { createClient } from '@supabase/supabase-js'
 import { requireSuperadmin } from '@/lib/supabase/superadminGuard'
+import { hasValidAssignments, isRecord } from './input'
 
 import { getDefaultWorkstationsForRole } from '@/constants/workstations'
 
-const supabaseAdmin = createClient(
-  process.env.NEXT_PUBLIC_SUPABASE_URL!,
-  process.env.SUPABASE_SERVICE_ROLE_KEY!
-)
+const supabaseUrl = process.env.NEXT_PUBLIC_SUPABASE_URL
+const serviceKey = process.env.SUPABASE_SERVICE_ROLE_KEY
+if (!supabaseUrl || !serviceKey) throw new Error('Account service configuration is missing')
+const supabaseAdmin = createClient(supabaseUrl, serviceKey)
 
+/** @param request - Authorized account details. @returns Creation result and credentials for the superadmin. */
 export async function POST(request: Request) {
   try {
 
     const guard = await requireSuperadmin(request)
     if (!guard.authorized) return guard.response
 
+    const body: unknown = await request.json()
+    if (!isRecord(body) || !hasValidAssignments(body)) return NextResponse.json({ error: 'Invalid account assignments' }, { status: 400 })
     const {
-      email,
-      password,
       username,
       role,
       cubicleIds,
@@ -25,16 +30,19 @@ export async function POST(request: Request) {
       roomAssignments,
       counterAssignments,
       workstationAccess,
-    } = await request.json()
+    } = body
 
-    if (!email || !password) {
+    if (typeof username !== 'string' || !isAccountRole(role)) {
       return NextResponse.json(
-        { error: 'Email and password are required' },
+        { error: 'Username and a valid role are required' },
         { status: 400 }
       )
     }
 
-    const effectiveRole = role || 'registration'
+    const email = accountEmail({ username, role })
+    if (!email) return NextResponse.json({ error: 'Use 1–32 letters, numbers, underscores or hyphens; start with a letter or number.' }, { status: 400 })
+    const password = `Hc!${randomBytes(24).toString('base64url')}9a`
+    const effectiveRole = role
     const effectiveWorkstations = Array.isArray(workstationAccess)
       ? workstationAccess
       : getDefaultWorkstationsForRole(effectiveRole)
@@ -44,14 +52,14 @@ export async function POST(request: Request) {
       password,
       email_confirm: true,
       user_metadata: {
-        username: username || email.split('@')[0],
+        username: username.trim().toLowerCase(),
         role: effectiveRole,
         allowed_workstations: effectiveWorkstations,
       },
     })
 
-    if (authError) {
-      return NextResponse.json({ error: authError.message }, { status: 400 })
+    if (authError || !authData.user) {
+      return NextResponse.json({ error: 'Account could not be created. This username and role may already exist.' }, { status: 400 })
     }
 
     const { data: userRow, error: dbError } = await supabaseAdmin
@@ -59,20 +67,21 @@ export async function POST(request: Request) {
       .insert({
         auth_id: authData.user.id,
         email: email,
-        username: username || email.split('@')[0],
+        username: username.trim().toLowerCase(),
         role: effectiveRole,
       })
       .select('id')
       .single()
 
-    if (dbError) {
-      await supabaseAdmin.auth.admin.deleteUser(authData.user.id)
-      return NextResponse.json({ error: dbError.message }, { status: 400 })
+    const userId: unknown = userRow?.id
+    if (dbError || (typeof userId !== 'number' && typeof userId !== 'string')) {
+      const { error: cleanupError } = await supabaseAdmin.auth.admin.deleteUser(authData.user.id)
+      return NextResponse.json({ error: cleanupError ? 'Profile creation failed and cleanup was incomplete. Review the user list before retrying.' : 'Profile creation failed. Please retry.' }, { status: 400 })
     }
 
-    if (Array.isArray(cubicleIds) && cubicleIds.length > 0 && (role === 'nurse' || role === 'staff' || role === 'doctor')) {
+    if (Array.isArray(cubicleIds) && cubicleIds.length > 0 && (role === 'nurse' || role === 'doctor')) {
       const rows = cubicleIds.map((cubicle_id: number) => ({
-        user_id: userRow.id,
+        user_id: userId,
         cubicle_id,
       }))
       const { error: cubicleError } = await supabaseAdmin
@@ -81,8 +90,8 @@ export async function POST(request: Request) {
 
       if (cubicleError) {
         return NextResponse.json(
-          { success: true, user: authData.user, warning: `User created, but cubicle assignment failed: ${cubicleError.message}` },
-          { status: 201 }
+          { success: true, credentials: { email, password }, warning: 'Account created, but cubicle assignment failed. Edit the account to retry assignments.' },
+          { status: 201, headers: { 'Cache-Control': 'no-store' } }
         )
       }
     }
@@ -92,16 +101,15 @@ export async function POST(request: Request) {
       .from('user_services')
       .insert(
         serviceAssignments.map((service: string) => ({
-          user_id: userRow.id,
+          user_id: userId,
           service,
         }))
       );
 
     if (error) {
-      console.error('user_services insert error:', error);
       return NextResponse.json(
-        { error: `Service assignment failed: ${error.message}` },
-        { status: 400 }
+        { success: true, credentials: { email, password }, warning: 'Account created, but service assignment failed. Edit the account to retry assignments.' },
+        { status: 201, headers: { 'Cache-Control': 'no-store' } }
       );
     }
   }
@@ -117,7 +125,7 @@ export async function POST(request: Request) {
               subcategory: string | null;
               room: number;
             }) => ({
-              user_id: userRow.id,
+              user_id: userId,
               service: r.service,
               subcategory: r.subcategory,
               room: r.room,
@@ -126,10 +134,9 @@ export async function POST(request: Request) {
         );
 
       if (error) {
-        console.error('user_rooms insert error:', error);
         return NextResponse.json(
-          { error: `Room assignment failed: ${error.message}` },
-          { status: 400 }
+          { success: true, credentials: { email, password }, warning: 'Account created, but room assignment failed. Edit the account to retry assignments.' },
+          { status: 201, headers: { 'Cache-Control': 'no-store' } }
         );
       }
     }
@@ -139,27 +146,25 @@ export async function POST(request: Request) {
         .from('user_counters')
         .insert(
           counterAssignments.map((counter: number) => ({
-            user_id: userRow.id,
+            user_id: userId,
             counter,
           }))
         );
 
       if (error) {
-        console.error('user_counters insert error:', error);
         return NextResponse.json(
-          { error: `Counter assignment failed: ${error.message}` },
-          { status: 400 }
+          { success: true, credentials: { email, password }, warning: 'Account created, but counter assignment failed. Edit the account to retry assignments.' },
+          { status: 201, headers: { 'Cache-Control': 'no-store' } }
         );
       }
     }
   }
 
     return NextResponse.json(
-      { success: true, user: authData.user },
-      { status: 201 }
+      { success: true, credentials: { email, password } },
+      { status: 201, headers: { 'Cache-Control': 'no-store' } }
     )
   } catch (error: unknown) {
-    const message = error instanceof Error ? error.message : 'Unknown server error';
-    return NextResponse.json({ error: message }, { status: 500 })
+    return NextResponse.json({ error: error instanceof SyntaxError ? 'Invalid request body.' : 'Account creation failed. Review the user list before retrying.' }, { status: error instanceof SyntaxError ? 400 : 500 })
   }
 }

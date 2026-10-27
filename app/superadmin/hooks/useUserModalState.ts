@@ -8,6 +8,7 @@
  */
 
 import { useState, useCallback } from 'react';
+import { AccountCredentials, parseCredentials } from '@/lib/accountCredentials';
 import { supabase } from '@/lib/supabase';
 import {
   SuperadminUser,
@@ -35,6 +36,7 @@ export interface UseUserModalStateReturn {
   formLoading: boolean;
   formError: string;
   formSuccess: string;
+  createdCredentials: AccountCredentials | null;
   cubicles: CubicleOption[];
   selectedCubicleIds: number[];
   accessOptions: AccessOptions;
@@ -79,6 +81,7 @@ export function useUserModalState(): UseUserModalStateReturn {
   const [formLoading, setFormLoading] = useState(false);
   const [formError, setFormError] = useState('');
   const [formSuccess, setFormSuccess] = useState('');
+  const [createdCredentials, setCreatedCredentials] = useState<AccountCredentials | null>(null);
 
   const [cubicles, setCubicles] = useState<CubicleOption[]>([]);
   const [selectedCubicleIds, setSelectedCubicleIds] = useState<number[]>([]);
@@ -149,6 +152,7 @@ export function useUserModalState(): UseUserModalStateReturn {
    * Opens the modal in creation mode.
    */
   const openCreateModal = async () => {
+    setCreatedCredentials(null);
     setEditingUser(null);
     setFormEmail('');
     setFormUsername('');
@@ -175,6 +179,7 @@ export function useUserModalState(): UseUserModalStateReturn {
    * Opens the modal in edit mode for a given user.
    */
   const openEditModal = async (user: SuperadminUser) => {
+    setCreatedCredentials(null);
     setEditingUser(user);
     setFormEmail(user.email);
     setFormUsername(user.username);
@@ -204,6 +209,8 @@ export function useUserModalState(): UseUserModalStateReturn {
    * Closes the modal and resets state.
    */
   const closeModal = () => {
+    setCreatedCredentials(null);
+    setFormPassword('');
     setIsOpen(false);
     setEditingUser(null);
     setFormError('');
@@ -275,6 +282,7 @@ export function useUserModalState(): UseUserModalStateReturn {
    */
   const handleSubmit = async (e: React.FormEvent, onSuccess: () => void) => {
     e.preventDefault();
+    if (formLoading || createdCredentials) return;
     setFormLoading(true);
     setFormError('');
     setFormSuccess('');
@@ -309,10 +317,6 @@ export function useUserModalState(): UseUserModalStateReturn {
         if (!response.ok) throw new Error(data.error || 'Failed to update user.');
         setFormSuccess(`User ${formEmail} updated successfully.`);
       } else {
-        if (!formPassword || formPassword.length < 8) {
-          throw new Error('Password must be at least 8 characters long.');
-        }
-
         const response = await fetch('/api/superadmin/create-user', {
           method: 'POST',
           headers: {
@@ -320,8 +324,6 @@ export function useUserModalState(): UseUserModalStateReturn {
             Authorization: `Bearer ${session?.access_token}`,
           },
           body: JSON.stringify({
-            email: formEmail,
-            password: formPassword,
             username: formUsername,
             role: formRole,
             cubicleIds: isClinical ? selectedCubicleIds : [],
@@ -332,9 +334,16 @@ export function useUserModalState(): UseUserModalStateReturn {
           }),
         });
 
-        const data = await response.json();
-        if (!response.ok) throw new Error(data.error || 'Failed to create user.');
-        setFormSuccess(`User ${formEmail} created successfully.`);
+        const data: unknown = await response.json();
+        if (typeof data !== 'object' || data === null) throw new Error('Invalid account creation response.');
+        if (!response.ok) throw new Error('error' in data && typeof data.error === 'string' ? data.error : 'Failed to create user.');
+        const credentials = parseCredentials('credentials' in data ? data.credentials : null);
+        if (!credentials) throw new Error('Account created but credentials were unavailable. Review the user list before retrying.');
+        setCreatedCredentials(credentials);
+        setFormSuccess('Account created. Save the credentials before closing this window.');
+        if ('warning' in data && typeof data.warning === 'string') setFormError(data.warning);
+        onSuccess();
+        return;
       }
 
       setTimeout(() => {
@@ -360,6 +369,7 @@ export function useUserModalState(): UseUserModalStateReturn {
     formLoading,
     formError,
     formSuccess,
+    createdCredentials,
     cubicles,
     selectedCubicleIds,
     accessOptions,

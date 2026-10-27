@@ -8,7 +8,8 @@
  */
 
 import React from 'react';
-import { SuperadminRole } from '@/app/superadmin/types/superadmin';
+import { accountEmail, isAccountRole } from '@/lib/accountCredentials';
+import { CreatedAccountCredentials } from './CreatedAccountCredentials';
 import {
   UseUserModalStateReturn,
   CLINICAL_ROLES,
@@ -67,6 +68,7 @@ export const UserModal: React.FC<UserModalProps> = ({ modalState, onSuccess }) =
             onClick={modalState.closeModal}
             className={B.ghost}
             aria-label="Close modal"
+            disabled={modalState.formLoading}
           >
             <i className="bx bx-x text-2xl" aria-hidden="true" />
           </button>
@@ -90,18 +92,22 @@ export const UserModal: React.FC<UserModalProps> = ({ modalState, onSuccess }) =
               </div>
             )}
 
+            {modalState.createdCredentials && <CreatedAccountCredentials credentials={modalState.createdCredentials} />}
+            <fieldset disabled={modalState.formLoading || !!modalState.createdCredentials} className="contents">
             <div className={S.formGrid}>
               {/* Email */}
               <div className={S.formGroup}>
                 <label className={S.label}>{T.emailLabel}</label>
                 <input
                   type="email"
-                  value={modalState.formEmail}
+                  value={modalState.isEditing ? modalState.formEmail : accountEmail({ username: modalState.formUsername, role: modalState.formRole })}
+                  readOnly={!modalState.isEditing}
                   onChange={(e) => modalState.setFormEmail(e.target.value)}
-                  placeholder={T.emailPlaceholder}
+                  placeholder={modalState.isEditing ? T.emailPlaceholder : 'Generated from username and role'}
                   className={S.input}
-                  required
+                  required={modalState.isEditing}
                 />
+                {!modalState.isEditing && <p className="text-xs text-slate-500">Login address only. No email inbox; contact the superadmin for password help.</p>}
               </div>
 
               {/* Username */}
@@ -109,6 +115,9 @@ export const UserModal: React.FC<UserModalProps> = ({ modalState, onSuccess }) =
                 <label className={S.label}>{T.usernameLabel}</label>
                 <input
                   type="text"
+                  pattern={modalState.isEditing ? undefined : '[A-Za-z0-9][A-Za-z0-9_\\-]{0,31}'}
+                  maxLength={modalState.isEditing ? undefined : 32}
+                  title="Use 1–32 letters, numbers, underscores or hyphens; start with a letter or number."
                   value={modalState.formUsername}
                   onChange={(e) => modalState.setFormUsername(e.target.value)}
                   placeholder={T.usernamePlaceholder}
@@ -118,29 +127,17 @@ export const UserModal: React.FC<UserModalProps> = ({ modalState, onSuccess }) =
               </div>
 
               {/* Password */}
-              <div className={S.formGroup}>
+              {!modalState.isEditing && <div className={S.formGroup}>
                 <label className={S.label}>{T.passwordLabel}</label>
-                <input
-                  type="password"
-                  value={modalState.formPassword}
-                  onChange={(e) => modalState.setFormPassword(e.target.value)}
-                  placeholder={
-                    modalState.isEditing ? T.passwordEditHint : T.passwordPlaceholder
-                  }
-                  className={S.input}
-                  required={!modalState.isEditing}
-                />
-                {modalState.isEditing && (
-                  <p className="text-[11px] text-slate-400 mt-1">{T.passwordEditHint}</p>
-                )}
-              </div>
+                <p className="text-sm text-slate-500">A secure password will be generated when you create the account.</p>
+              </div>}
 
               {/* Role Selection */}
               <div className={S.formGroup}>
                 <label className={S.label}>{T.roleLabel}</label>
                 <select
                   value={modalState.formRole}
-                  onChange={(e) => modalState.setFormRole(e.target.value as SuperadminRole)}
+                  onChange={(e) => { if (isAccountRole(e.target.value)) modalState.setFormRole(e.target.value); }}
                   className={S.select}
                 >
                   <option value="registration" className={S.selectOption}>
@@ -192,6 +189,7 @@ export const UserModal: React.FC<UserModalProps> = ({ modalState, onSuccess }) =
                 onToggleCounter={modalState.toggleCounter}
               />
             )}
+            </fieldset>
           </div>
 
           {/* Footer Controls */}
@@ -202,11 +200,11 @@ export const UserModal: React.FC<UserModalProps> = ({ modalState, onSuccess }) =
               className={B.secondary}
               disabled={modalState.formLoading}
             >
-              {T.cancelButton}
+              {modalState.createdCredentials ? 'Done' : T.cancelButton}
             </button>
             <button
               type="submit"
-              disabled={modalState.formLoading}
+              disabled={modalState.formLoading || !!modalState.createdCredentials}
               className={B.primary}
             >
               {modalState.formLoading ? (

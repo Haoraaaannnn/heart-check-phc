@@ -11,6 +11,7 @@
 'use client';
 
 import React, { useState, useEffect } from 'react';
+import { AccountSettingsButton } from '@/components/auth/AccountSettingsButton';
 import { useRouter, usePathname, useSearchParams } from 'next/navigation';
 import { useTheme } from 'next-themes';
 import { toggleThemeWithRipple } from '@/lib/theme/themeTransition';
@@ -267,6 +268,7 @@ export function DashboardHeader({ onOpenMobileDrawer }: DashboardHeaderProps) {
         </div>
 
         {/* Direct Session Sign-Out Button */}
+        <AccountSettingsButton />
         <button
           type="button"
           onClick={onSignOut}

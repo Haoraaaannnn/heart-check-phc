@@ -15,6 +15,7 @@
 'use client';
 
 import React from 'react';
+import { AccountSettingsButton } from '@/components/auth/AccountSettingsButton';
 import { useRouter } from 'next/navigation';
 import { supabase } from '@/lib/supabase';
 import { handleSignOut } from '@/lib/supabase/signOut';
@@ -348,6 +349,7 @@ export function NurseSidebar({
 
       {/* Footer / Workstation Controls */}
       <div className="p-2 border-t border-slate-100 dark:border-[#2e2e2e] space-y-1 shrink-0">
+        <AccountSettingsButton sidebar expanded={isExpanded} />
         {/* Return to Select Screen */}
         <button
           type="button"
