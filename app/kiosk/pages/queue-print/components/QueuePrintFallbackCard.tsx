@@ -24,8 +24,8 @@ import { QueuePrintFallbackStyles } from '@/app/kiosk/pages/queue-print/constant
 interface QueuePrintFallbackCardProps {
   /** Detected hardware error condition. */
   condition: PrinterHardwareCondition;
-  /** Callback triggered when patient taps "I've Saved My Ticket / Finish". */
-  onFinish: () => void;
+  /** Optional callback triggered when finishing ticket view. */
+  onFinish?: () => void;
   /** Live countdown in seconds remaining before automatic redirect. */
   countdownSeconds: number;
 }
@@ -38,7 +38,7 @@ interface QueuePrintFallbackCardProps {
  */
 export default function QueuePrintFallbackCard({
   condition,
-  onFinish,
+  onFinish: _onFinish,
   countdownSeconds,
 }: QueuePrintFallbackCardProps) {
   const S = QueuePrintFallbackStyles;
@@ -86,18 +86,8 @@ export default function QueuePrintFallbackCard({
         </div>
       </div>
 
-      {/* 3. Bottom Controls: Finish Button & Auto-Close Timer */}
+      {/* 3. Bottom Controls: Auto-Close Timer */}
       <div style={S.bottomControls}>
-        <button
-          type="button"
-          onClick={onFinish}
-          style={S.finishButton}
-          aria-label="Finish and return to entrance"
-        >
-          <i className="bx bx-check-circle" style={S.finishButtonIcon} aria-hidden="true" />
-          <span>{T.finishButtonFil}</span>
-        </button>
-
         <p style={S.countdownNotice}>
           {T.autoClosePrefixFil} {countdownSeconds} {T.autoCloseSuffixFil} (
           {T.autoClosePrefix} {countdownSeconds}s)

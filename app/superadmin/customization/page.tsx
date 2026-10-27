@@ -9,7 +9,7 @@
 
 'use client';
 
-import React, { useEffect, useMemo, useState, Suspense } from 'react';
+import React, { useEffect, useMemo, useState, useCallback, Suspense } from 'react';
 import { useSearchParams, useRouter } from 'next/navigation';
 import { createClient } from '@/lib/supabase/client';
 import { Service } from '@/types/Services';
@@ -35,19 +35,9 @@ function CustomizationContent() {
   const router = useRouter();
   const searchParams = useSearchParams();
   const urlTab = searchParams.get('tab');
-
-  const [tab, setTab] = useState<'services' | 'hardware'>('services');
-
-  useEffect(() => {
-    if (urlTab === 'hardware') {
-      setTab('hardware');
-    } else {
-      setTab('services');
-    }
-  }, [urlTab]);
+  const tab: 'services' | 'hardware' = urlTab === 'hardware' ? 'hardware' : 'services';
 
   const handleTabChange = (newTab: 'services' | 'hardware') => {
-    setTab(newTab);
     router.push(`/superadmin/customization?tab=${newTab}`);
   };
 
@@ -70,7 +60,7 @@ function CustomizationContent() {
   const [deleteLoading, setDeleteLoading] = useState(false);
   const [deleteError, setDeleteError] = useState<string | null>(null);
 
-  async function loadServices() {
+  const loadServices = useCallback(async () => {
     setLoading(true);
     const { data, error: err } = await supabase
       .from('services')
@@ -84,10 +74,10 @@ function CustomizationContent() {
       setError(null);
     }
     setLoading(false);
-  }
+  }, [supabase]);
 
   useEffect(() => {
-    loadServices();
+    void loadServices();
 
     const channel = supabase
       .channel('customization-page-services')
@@ -95,15 +85,15 @@ function CustomizationContent() {
         'postgres_changes',
         { event: '*', schema: 'public', table: 'services' },
         () => {
-          loadServices();
+          void loadServices();
         }
       )
       .subscribe();
 
     return () => {
-      supabase.removeChannel(channel);
+      void supabase.removeChannel(channel);
     };
-  }, [supabase]);
+  }, [supabase, loadServices]);
 
   function startCreate() {
     setEditingId('new');

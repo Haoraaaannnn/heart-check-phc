@@ -54,8 +54,8 @@ export function CountersPanel() {
         )
       );
       setError('');
-    } catch (e: any) {
-      setError(e.message || 'Failed to load counter stations.');
+    } catch (e: unknown) {
+      setError(e instanceof Error ? e.message : 'Failed to load counter stations.');
     } finally {
       setLoading(false);
     }
@@ -70,8 +70,8 @@ export function CountersPanel() {
     try {
       await fn();
       await load();
-    } catch (e: any) {
-      setError(e.message || 'Action failed.');
+    } catch (e: unknown) {
+      setError(e instanceof Error ? e.message : 'Action failed.');
     }
   };
 
@@ -95,8 +95,8 @@ export function CountersPanel() {
       });
       setDeletingCounter(null);
       await load();
-    } catch (e: any) {
-      setDeleteError(e.message || 'Failed to delete counter station.');
+    } catch (e: unknown) {
+      setDeleteError(e instanceof Error ? e.message : 'Failed to delete counter station.');
     } finally {
       setDeleteLoading(false);
     }

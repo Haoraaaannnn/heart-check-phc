@@ -10,6 +10,7 @@
 'use client';
 
 import { useMemo, useState } from 'react';
+import Link from 'next/link';
 import type { PatientRecord } from '@/app/dashboard/hooks/useOverviewData';
 import DashboardCard from '@/app/dashboard/components/DashboardCard';
 import StatusBadge from '@/app/dashboard/components/StatusBadge';
@@ -134,10 +135,10 @@ export default function LiveQueueTable({
         </table>
       </div>
 
-      <a href={C.viewAllHref} className={DASH.card.footerLink}>
+      <Link href={C.viewAllHref} className={DASH.card.footerLink}>
         {C.viewAllLabel}
         <i className="bx bx-right-arrow-alt" />
-      </a>
+      </Link>
     </DashboardCard>
   );
 }

@@ -84,12 +84,18 @@ export function RoomsPanel() {
         .order('display_order', { ascending: true })
         .then(({ data }) => {
           if (data && data.length > 0) {
-            const cubicleServices = data
-              .filter((s: any) => s.requires_cubicle !== false)
-              .map((s: any) => s.label_en);
-            const subServices = data
-              .filter((s: any) => s.has_subcategories)
-              .map((s: any) => s.label_en);
+            interface ServiceRow {
+              label_en: string;
+              has_subcategories: boolean | null;
+              requires_cubicle: boolean | null;
+            }
+            const typedData = data as ServiceRow[];
+            const cubicleServices = typedData
+              .filter((s) => s.requires_cubicle !== false)
+              .map((s) => s.label_en);
+            const subServices = typedData
+              .filter((s) => s.has_subcategories)
+              .map((s) => s.label_en);
             if (cubicleServices.length > 0) {
               setAvailableServices(cubicleServices);
               setFCategory((prev) => (cubicleServices.includes(prev) ? prev : cubicleServices[0]));
@@ -133,8 +139,8 @@ export function RoomsPanel() {
       const data = await adminApi('/api/superadmin/cubicles');
       setCubicles(data.cubicles ?? []);
       setError('');
-    } catch (e: any) {
-      setError(e.message);
+    } catch (e: unknown) {
+      setError(e instanceof Error ? e.message : 'Failed to load cubicles.');
     } finally {
       setLoading(false);
     }
@@ -279,8 +285,8 @@ export function RoomsPanel() {
       }
       setModal(null);
       await load();
-    } catch (err: any) {
-      setModalError(err.message || 'Operation failed.');
+    } catch (err: unknown) {
+      setModalError(err instanceof Error ? err.message : 'Operation failed.');
     } finally {
       setSaving(false);
     }
