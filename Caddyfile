@@ -1,0 +1,31 @@
+# Heart Check PHC - Institutional Reverse Proxy Configuration
+# Provides TLS/HTTPS termination for hospital compliance (RA 10173, SEC-022)
+
+localhost, 127.0.0.1 {
+    # Internal automated TLS using Caddy's local Certificate Authority
+    tls internal
+
+    # Institutional Security Headers
+    header {
+        Strict-Transport-Security "max-age=31536000; includeSubDomains"
+        X-Content-Type-Options "nosniff"
+        X-Frame-Options "SAMEORIGIN"
+        Referrer-Policy "strict-origin-when-cross-origin"
+    }
+
+    # Python FastAPI Backend Endpoints (Port 8000)
+    @fastapi {
+        path /api/dashboard-data*
+        path /api/daily-drilldown*
+        path /api/available-years*
+        path /api/available-export-dates*
+        path /api/monthly-breakdown/*
+        path /api/export-excel*
+        path /api/import-file*
+        path /health
+    }
+    reverse_proxy @fastapi 127.0.0.1:8000
+
+    # Next.js Frontend & Next.js Server Actions (Port 3000)
+    reverse_proxy 127.0.0.1:3000
+}

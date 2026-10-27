@@ -17,6 +17,7 @@ Object.values(networkInterfaces).forEach((interfaces) => {
 const nextConfig: NextConfig = {
 
   allowedDevOrigins: [
+    "localhost",
     "localhost:3000",
     ...localAddresses
   ],
