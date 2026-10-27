@@ -15,6 +15,8 @@ import { useTheme } from 'next-themes';
 import { formatManilaDate, formatManilaTime } from '@/utils/formatDateTime';
 import { LANDING_TEXTS } from '@/app/landing/constants/landingTexts';
 import { LANDING_STYLES } from '@/app/landing/constants/landingStyles';
+import { BrandLogo } from '@/components/reusables/BrandLogo';
+import { toggleThemeWithRipple } from '@/lib/theme/themeTransition';
 
 /**
  * Top enterprise navigation header for the landing page.
@@ -39,19 +41,17 @@ export function LandingHeader() {
   }, []);
 
   const isDark = mounted && resolvedTheme === 'dark';
-  const toggleTheme = () => setTheme(isDark ? 'light' : 'dark');
+  const toggleTheme = (e: React.MouseEvent<HTMLButtonElement>) => {
+    toggleThemeWithRipple(e, () => {
+      setTheme(isDark ? 'light' : 'dark');
+    });
+  };
 
   return (
     <header className={S.root}>
       {/* Brand Identity */}
       <div className={S.brandGroup}>
-        <div className={S.brandBadge}>PHC</div>
-        <div className={S.brandTitlesWrap}>
-          <span className={S.brandTitle}>
-            {T.brandName} <span className={S.brandTag}>{T.brandTag}</span>
-          </span>
-          <span className={S.brandSubtitle}>{T.subBrand}</span>
-        </div>
+        <BrandLogo variant="full" className="h-12 w-auto" />
       </div>
 
       {/* Right Controls: Manila Clock, Theme Toggle, Login */}

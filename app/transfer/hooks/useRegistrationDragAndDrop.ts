@@ -4,6 +4,7 @@ import { useState, useEffect, useCallback } from 'react';
 import { supabase } from '@/lib/supabase';
 import { Patient } from '@/types/Types';
 import { DragPoint, pointOf, findDropTarget, canStartDrag } from '@/app/transfer/hooks/dragUtils';
+import { fetchOccupiedCounters, filterEligibleCounters } from '@/lib/counters';
 
 /**
  * Hook handling pointer-based drag and drop between registration counters.
@@ -62,6 +63,15 @@ export function useRegistrationDragAndDrop(
       const targetCounter = targetStr ? parseInt(targetStr, 10) : null;
 
       if (draggedPatient && targetCounter && targetCounter !== draggedPatient.counter) {
+        const occupied = await fetchOccupiedCounters();
+        const eligible = filterEligibleCounters(occupied, draggedPatient.service);
+        if (!eligible.some(c => c.counter_number === targetCounter)) {
+          setDraggedPatient(null);
+          setDragOverCounter(null);
+          setDragPoint(null);
+          return;
+        }
+
         setRegistrationPatients(prev =>
           prev.map(p => (p.id === draggedPatient.id ? { ...p, counter: targetCounter } : p))
         );

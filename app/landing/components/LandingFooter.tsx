@@ -13,6 +13,7 @@ import React from 'react';
 import Link from 'next/link';
 import { LANDING_TEXTS } from '@/app/landing/constants/landingTexts';
 import { LANDING_STYLES } from '@/app/landing/constants/landingStyles';
+import { BrandLogo } from '@/components/reusables/BrandLogo';
 
 /**
  * Enterprise footer component for the landing page.
@@ -29,11 +30,7 @@ export function LandingFooter() {
         {/* Top Row: Institution Identity & Quick Navigation Links */}
         <div className={S.topRow}>
           <div className={S.brandGroup}>
-            <div className={S.brandBadge}>PHC</div>
-            <div>
-              <div className={S.brandTitle}>{T.brandName}</div>
-              <div className={S.brandSubtitle}>{T.institutionFull}</div>
-            </div>
+            <BrandLogo variant="full" className="h-12 w-auto" />
           </div>
 
           <div className={S.linksGroup}>

@@ -1,6 +1,10 @@
 import { NextResponse } from 'next/server';
 import { requireSuperadmin } from '@/lib/supabase/superadminGuard';
-import { supabaseAdmin, countActiveAtCounter } from '@/lib/supabase/facilityHelpers';
+import {
+  supabaseAdmin,
+  countActiveAtCounter,
+  reassignCounterQueue,
+} from '@/lib/supabase/facilityHelpers';
 
 export async function GET(request: Request) {
   const guard = await requireSuperadmin(request);
@@ -54,11 +58,10 @@ export async function PUT(request: Request) {
     return NextResponse.json({ error: 'Counter number is required.' }, { status: 400 });
   }
 
-  if (active === false && (await countActiveAtCounter(counter_number)) > 0) {
-    return NextResponse.json(
-      { error: 'Patients are currently at this counter. Deactivate it once it is empty.' },
-      { status: 409 }
-    );
+  let reassignmentResult: { transferredCount: number; unassignedCount: number } | null = null;
+  if (active === false) {
+    reassignmentResult = await reassignCounterQueue(counter_number);
+    await supabaseAdmin.from('user_counters').delete().eq('counter', counter_number);
   }
 
   const { error } = await supabaseAdmin
@@ -66,7 +69,12 @@ export async function PUT(request: Request) {
     .update({ label: label?.trim() || null, ...(active !== undefined ? { active } : {}) })
     .eq('counter_number', counter_number);
   if (error) return NextResponse.json({ error: error.message }, { status: 400 });
-  return NextResponse.json({ success: true });
+
+  return NextResponse.json({
+    success: true,
+    transferredCount: reassignmentResult?.transferredCount ?? 0,
+    unassignedCount: reassignmentResult?.unassignedCount ?? 0,
+  });
 }
 
 export async function DELETE(request: Request) {
@@ -78,15 +86,14 @@ export async function DELETE(request: Request) {
     return NextResponse.json({ error: 'Counter number is required.' }, { status: 400 });
   }
 
-  if ((await countActiveAtCounter(counter_number)) > 0) {
-    return NextResponse.json(
-      { error: 'Patients are currently at this counter. Move them first.' },
-      { status: 409 }
-    );
-  }
-
+  const reassignmentResult = await reassignCounterQueue(counter_number);
   await supabaseAdmin.from('user_counters').delete().eq('counter', counter_number);
   const { error } = await supabaseAdmin.from('counters').delete().eq('counter_number', counter_number);
   if (error) return NextResponse.json({ error: error.message }, { status: 400 });
-  return NextResponse.json({ success: true });
+
+  return NextResponse.json({
+    success: true,
+    transferredCount: reassignmentResult.transferredCount,
+    unassignedCount: reassignmentResult.unassignedCount,
+  });
 }

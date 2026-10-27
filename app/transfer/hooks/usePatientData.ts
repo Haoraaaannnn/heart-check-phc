@@ -18,21 +18,27 @@
 import { useState, useEffect, useRef, useCallback } from 'react';
 import { supabase } from '@/lib/supabase';
 import { Patient } from '@/types/Types';
-import { fetchActiveCounters } from '@/lib/counters';
+import { fetchActiveCounters, fetchOccupiedCounters, filterEligibleCounters, OccupiedCounterInfo } from '@/lib/counters';
 
 let cachedRegisteredServices: string[] = ['Consultation', 'OPD Screening'];
+let lastServicesFetch = 0;
 
 /**
  * Loads the active list of service names that require patient registration intake.
  */
 const fetchRegistrationServices = async (): Promise<string[]> => {
+  const now = Date.now();
+  if (now - lastServicesFetch < 5_000 && cachedRegisteredServices.length > 0) {
+    return cachedRegisteredServices;
+  }
   const { data } = await supabase
     .from('services')
     .select('label_en, requires_registration');
   if (data && data.length > 0) {
     cachedRegisteredServices = data
-      .filter((s: any) => s.requires_registration !== false)
-      .map((s: any) => s.label_en);
+      .filter((s: { label_en: string; requires_registration?: boolean | null }) => s.requires_registration !== false)
+      .map((s: { label_en: string }) => s.label_en);
+    lastServicesFetch = now;
   }
   return cachedRegisteredServices;
 };
@@ -58,6 +64,7 @@ interface DerivedWrites {
   progressIds: number[];
   statusIds: number[];
   registration: { id: number; counter: number }[];
+  clearRegistration: number[];
   topIds: number[];
   clearTopIds: number[];
 }
@@ -84,6 +91,7 @@ async function persistDerivedFields(w: DerivedWrites): Promise<void> {
     w.progressIds.length > 0 ||
     w.statusIds.length > 0 ||
     w.registration.length > 0 ||
+    w.clearRegistration.length > 0 ||
     w.topIds.length > 0 ||
     w.clearTopIds.length > 0;
 
@@ -104,6 +112,8 @@ async function persistDerivedFields(w: DerivedWrites): Promise<void> {
     jobs.push(table().update({ status: 'On Progress' }).in('id', w.statusIds).eq('is_historical', false).is('cubicleNum', null).neq('status', 'Assigned').neq('status', 'On Progress'));
   for (const r of w.registration)
     jobs.push(table().update({ reg_start: w.nowIso, counter: r.counter }).eq('id', r.id).eq('is_historical', false).is('reg_start', null));
+  if (w.clearRegistration.length)
+    jobs.push(table().update({ counter: null, reg_start: null }).in('id', w.clearRegistration).eq('is_historical', false).not('counter', 'is', null));
   if (w.topIds.length)
     jobs.push(table().update({ cubicle_top_started_at: w.nowIso }).in('id', w.topIds).eq('is_historical', false).is('cubicle_top_started_at', null));
   if (w.clearTopIds.length)
@@ -265,29 +275,64 @@ export function usePatientData(pendingRef?: React.MutableRefObject<Patient[]>) {
     }
 
     const nowIso = new Date().toISOString();
-    const writes: DerivedWrites = { nowIso, progressIds: [], statusIds: [], registration: [], topIds: [], clearTopIds: [] };
+    const writes: DerivedWrites = { nowIso, progressIds: [], statusIds: [], registration: [], clearRegistration: [], topIds: [], clearTopIds: [] };
 
     // Queue: derive timers and counters locally.
-    const activeRegServices = cachedRegisteredServices.length > 0 ? cachedRegisteredServices : ['Consultation', 'OPD Screening'];
-    const needsReg = queue.filter(p => activeRegServices.includes(p.service ?? '') && !p.reg_start);
-    let counters: number[] = [];
-    let cursor = 0;
-    if (needsReg.length > 0) [counters, cursor] = await Promise.all([fetchActiveCounters(), getLastCounter(activeRegServices)]);
+    const activeRegServices = await fetchRegistrationServices();
+    const needsReg = queue.filter(p => activeRegServices.includes(p.service ?? '') && !p.reg_end);
+    let occupiedCounters: OccupiedCounterInfo[] = [];
+    if (needsReg.length > 0) {
+      occupiedCounters = await fetchOccupiedCounters();
+    }
+
+    // Clear registration counter if service does not require registration intake
+    for (const p of queue) {
+      if (p.counter != null && !p.reg_end && !activeRegServices.includes(p.service ?? '')) {
+        p.counter = undefined;
+        p.reg_start = undefined;
+        writes.clearRegistration.push(p.id);
+      }
+    }
 
     for (const p of queue) {
       if (!p.progress_started_at) { p.progress_started_at = nowIso; writes.progressIds.push(p.id); }
       if (p.status !== 'On Progress') { p.status = 'On Progress'; writes.statusIds.push(p.id); }
     }
+
     for (const p of needsReg) {
-      let counter = p.counter;
-      if (counter == null || !counters.includes(counter)) {
-        if (counters.length === 0) continue;
-        counter = counters.find(c => c > cursor) ?? counters[0];
-        cursor = counter;
+      const eligibleCounters = filterEligibleCounters(occupiedCounters, p.service);
+      const isCurrentEligible = p.counter != null && eligibleCounters.some(c => c.counter_number === p.counter);
+
+      if (eligibleCounters.length === 0) {
+        if (p.counter != null) {
+          p.counter = undefined;
+          p.reg_start = undefined;
+          writes.clearRegistration.push(p.id);
+        }
+        continue;
       }
-      p.reg_start = nowIso;
-      p.counter = counter;
-      writes.registration.push({ id: p.id, counter });
+
+      if (!isCurrentEligible) {
+        const counts = new Map<number, number>();
+        for (const c of eligibleCounters) counts.set(c.counter_number, 0);
+        for (const other of queue) {
+          if (other.counter && counts.has(other.counter)) {
+            counts.set(other.counter, (counts.get(other.counter) ?? 0) + 1);
+          }
+        }
+        const best = [...eligibleCounters].sort((a, b) => {
+          const diff = (counts.get(a.counter_number) ?? 0) - (counts.get(b.counter_number) ?? 0);
+          if (diff !== 0) return diff;
+          return a.counter_number - b.counter_number;
+        })[0];
+
+        p.counter = best.counter_number;
+        p.reg_start = nowIso;
+        writes.registration.push({ id: p.id, counter: best.counter_number });
+      } else if (!p.reg_start) {
+        p.reg_start = nowIso;
+        writes.registration.push({ id: p.id, counter: p.counter! });
+      }
     }
 
     // Cubicles: group, sort, and derive the top-of-cubicle timer.

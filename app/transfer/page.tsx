@@ -284,7 +284,6 @@ export default function TransferPage() {
       .from('patients')
       .select('*')
       .in('service', serviceFilter)
-      .not('counter', 'is', null)
       .is('reg_end', null)
       .neq('status', 'Assigned')
       .neq('status', 'Idle')

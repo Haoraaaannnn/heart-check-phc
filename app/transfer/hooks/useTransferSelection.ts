@@ -16,6 +16,7 @@ import { supabase } from '@/lib/supabase';
 import { Patient } from '@/types/Types';
 import { MAX_PATIENTS_PER_CUBICLE } from '@/app/transfer/lib/constants';
 import { SelectedTransferPatient, TransferSourceType } from '@/app/transfer/types/transfer';
+import { fetchOccupiedCounters, filterEligibleCounters } from '@/lib/counters';
 
 /**
  * Configuration options required by {@link useTransferSelection}.
@@ -249,6 +250,14 @@ export function useTransferSelection({
 
       const { patient, sourceId } = selectedPatient;
       if (sourceId === targetCounter) {
+        clearSelection();
+        return false;
+      }
+
+      // Verify target counter is eligible before assigning
+      const occupied = await fetchOccupiedCounters();
+      const eligible = filterEligibleCounters(occupied, patient.service);
+      if (!eligible.some(c => c.counter_number === targetCounter)) {
         clearSelection();
         return false;
       }
