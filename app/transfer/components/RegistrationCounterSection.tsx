@@ -75,6 +75,7 @@ export function RegistrationCounterSection({
   const counters = allowedCounters && allowedCounters.length > 0 ? allowedCounters : DEFAULT_COUNTERS;
   const safePatients = Array.isArray(patients) ? patients : [];
   const breaks = useStationBreaks();
+  const unassignedPatients = safePatients.filter(p => !p.counter);
 
   return (
     <div className={registrationCounterStyles.sectionCard}>
@@ -95,6 +96,20 @@ export function RegistrationCounterSection({
       </div>
 
       {breaks.error && <p role="alert" className="text-sm text-red-700 dark:text-red-300 mb-2">{breaks.error}</p>}
+
+      {unassignedPatients.length > 0 && (
+        <div className="mb-2.5 px-3 py-1.5 bg-amber-50 dark:bg-amber-950/40 border border-amber-200 dark:border-amber-800 rounded-lg flex items-center justify-between text-xs text-amber-800 dark:text-amber-200 font-medium">
+          <div className="flex items-center gap-1.5 min-w-0">
+            <i className="bx bx-error-circle text-base text-amber-600 dark:text-amber-400 shrink-0" aria-hidden="true" />
+            <span className="truncate">
+              {unassignedPatients.length} patient(s) waiting for an active registration counter
+            </span>
+          </div>
+          <span className="font-mono font-bold shrink-0 ml-2">
+            {unassignedPatients.map(p => p.patientNum).join(', ')}
+          </span>
+        </div>
+      )}
       {/* Non-scrollable Horizontal Counters Grid */}
       {counters.length === 0 ? (
         <p className={registrationCounterStyles.emptyNotice}>
