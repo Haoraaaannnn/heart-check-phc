@@ -67,7 +67,7 @@ export function useCubiclesData() {
 
       const patientMap = new Map<string, PatientRecord>();
       if (patientData) {
-        patientData.forEach((patient: any) => {
+        (patientData as PatientRecord[]).forEach((patient: PatientRecord) => {
           if (patient.cubicleNum) {
             patientMap.set(patient.cubicleNum, patient);
           }
@@ -125,9 +125,9 @@ export function useCubiclesData() {
       };
 
       setStats(computedStats);
-    } catch (err: any) {
+    } catch (err: unknown) {
       console.error('Error fetching cubicle data:', err);
-      setError(err.message || 'Failed to load cubicle data');
+      setError(err instanceof Error ? err.message : 'Failed to load cubicle data');
     } finally {
       setLoading(false);
     }

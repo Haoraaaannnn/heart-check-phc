@@ -17,6 +17,7 @@
 'use client';
 
 import { useEffect, useRef, useState } from 'react';
+import type { HistoricalSummaryPayload } from '@/app/dashboard/context/HistoricalSummaryContext';
 import { HISTORICAL_TEXTS } from '@/app/dashboard/constants/historicalTexts';
 import { HISTORICAL_STYLES } from '@/app/dashboard/constants/historicalStyles';
 import { formatMinutesToHMS } from '@/utils/formatMinutesToHMS';
@@ -44,7 +45,7 @@ export interface MonthEntry {
  */
 export interface HistoricalContextBannerProps {
   /** Longitudinal historical data payload fetched from backend analytics */
-  historicalData: any;
+  historicalData: HistoricalSummaryPayload | null;
   /** Whether the initial background analytics query is actively loading */
   historicalLoading: boolean;
   /** Whether the banner is shown because today has zero activity or requested on-demand */
@@ -64,7 +65,7 @@ function formatDuration(mins: number): string {
   return formatMinutesToHMS(mins);
 }
 
-const API_BASE = process.env.NEXT_PUBLIC_API_URL || 'http://localhost:8000';
+const API_BASE = process.env.NEXT_PUBLIC_API_URL || (typeof window !== 'undefined' ? '' : 'http://localhost:8000');
 
 /**
  * Executive historical data breakdown banner and monthly performance inspection table.

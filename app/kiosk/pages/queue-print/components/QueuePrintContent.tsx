@@ -289,16 +289,6 @@ export default function QueuePrintContent({
         return () => clearInterval(timer);
     }, [countdownSeconds, router]);
 
-    /**
-     * Completes queue ticket viewing immediately upon patient action.
-     */
-    const handleFinish = useCallback(() => {
-        console.log(
-            `${getTimestamp()} [TICKET FINISH TAP] Patient tapped finish - returning to entrance.`
-        );
-        router.push("/kiosk/pages/kiosk-new-old-selection");
-    }, [router]);
-
     const ticketCardElement = (
         <div style={QueuePrintTicketStyle.ticketContainer}>
             {/* Service Information - Large & Clean Typography (No Pillbox) */}
@@ -388,31 +378,6 @@ export default function QueuePrintContent({
                 {/* Primary patient controls */}
                 {isFallbackActive ? (
                     <div className="flex flex-col items-center justify-center gap-2 w-full max-w-[380px] mt-1">
-                        <button
-                            type="button"
-                            onClick={handleFinish}
-                            style={{
-                                backgroundColor: "#0F172A",
-                                color: "#FFFFFF",
-                                border: "none",
-                                width: "100%",
-                                height: 48,
-                                borderRadius: 12,
-                                fontWeight: 800,
-                                fontSize: 16,
-                                cursor: "pointer",
-                                display: "flex",
-                                alignItems: "center",
-                                justifyContent: "center",
-                                gap: 8,
-                                boxShadow: "0 4px 6px -1px rgba(0, 0, 0, 0.15)",
-                            }}
-                            aria-label="Finish and return to entrance"
-                        >
-                            <i className="bx bx-check-circle text-xl" aria-hidden="true" />
-                            <span>{QueuePrintTicketTexts.finishButtonFil}</span>
-                        </button>
-
                         <p className="text-xs sm:text-sm font-semibold text-slate-500 text-center m-0">
                             {QueuePrintTicketTexts.autoClosePrefixFil} {countdownSeconds} {QueuePrintTicketTexts.autoCloseSuffixFil} ({QueuePrintTicketTexts.autoClosePrefix} {countdownSeconds}s)
                         </p>

@@ -140,20 +140,25 @@ export function useSuperadminUsers(): UseSuperadminUsersReturn {
 
   // Adjust current page if out of bounds after filtering
   const totalPages = Math.max(1, Math.ceil(filteredUsers.length / USERS_PER_PAGE));
+  const safePage = Math.min(Math.max(1, currentPage), totalPages);
 
-  useEffect(() => {
-    if (currentPage > totalPages) {
-      setCurrentPage(1);
-    }
-  }, [totalPages, currentPage]);
+  const handleSearchChange = useCallback((q: string) => {
+    setSearchQuery(q);
+    setCurrentPage(1);
+  }, []);
+
+  const handleRoleFilterChange = useCallback((r: string) => {
+    setRoleFilter(r);
+    setCurrentPage(1);
+  }, []);
 
   /**
    * Slices the filtered users to the current page.
    */
   const paginatedUsers = useMemo(() => {
-    const start = (currentPage - 1) * USERS_PER_PAGE;
+    const start = (safePage - 1) * USERS_PER_PAGE;
     return filteredUsers.slice(start, start + USERS_PER_PAGE);
-  }, [filteredUsers, currentPage]);
+  }, [filteredUsers, safePage]);
 
   /**
    * Deletes a user by calling the superadmin backend endpoint.
@@ -183,15 +188,15 @@ export function useSuperadminUsers(): UseSuperadminUsersReturn {
     users: paginatedUsers,
     loading,
     error,
-    currentPage,
+    currentPage: safePage,
     totalPages,
     totalUsers: filteredUsers.length,
     searchQuery,
     roleFilter,
     stats,
     setCurrentPage,
-    setSearchQuery,
-    setRoleFilter,
+    setSearchQuery: handleSearchChange,
+    setRoleFilter: handleRoleFilterChange,
     refetch: fetchAllUsers,
     deleteUser,
   };

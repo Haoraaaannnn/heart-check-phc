@@ -13,6 +13,7 @@
  */
 
 import React from 'react';
+import { useRouter } from 'next/navigation';
 import { MONITOR_STYLES } from '@/app/monitor/constants/monitorStyles';
 import { MONITOR_TEXTS } from '@/app/monitor/constants/monitorTexts';
 
@@ -33,14 +34,24 @@ type HeaderProps = {
  * @returns The rendered monitor header element.
  */
 export function Header({ title, currentTime }: HeaderProps) {
+  const router = useRouter();
+
   return (
     <header className={MONITOR_STYLES.header.container}>
       <div className={MONITOR_STYLES.header.brandWrap}>
-        <img
-          src="/icons/logo-icon-white.png"
-          alt="Philippine Heart Center"
-          className="h-14 sm:h-16 lg:h-20 w-auto object-contain shrink-0"
-        />
+        <button
+          type="button"
+          onClick={() => router.push('/monitor')}
+          className="focus:outline-hidden cursor-pointer hover:opacity-85 active:scale-95 transition-all p-0 border-none bg-transparent shrink-0"
+          title="Back to Monitor Selections"
+          aria-label="Back to Monitor Selections"
+        >
+          <img
+            src="/icons/logo-icon-white.png"
+            alt="Philippine Heart Center"
+            className="h-14 sm:h-16 lg:h-20 w-auto object-contain shrink-0"
+          />
+        </button>
         <div>
           <p className={MONITOR_STYLES.header.subTitle}>
             {MONITOR_TEXTS.header.divisionSubTitle}

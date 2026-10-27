@@ -384,7 +384,19 @@ export function useHeaderSearch(): UseHeaderSearchReturn {
           return;
         }
 
-        const transformed: HeaderSearchPatientResult[] = (data || []).map((row: any) => {
+        interface RawPatientRow {
+          id: number | string;
+          patientNum?: string | null;
+          service?: string | null;
+          status?: string | null;
+          created_at?: string | null;
+          updated_at?: string | null;
+          consult_start?: string | null;
+          consult_end?: string | null;
+          phoneNum?: string | null;
+        }
+
+        const transformed: HeaderSearchPatientResult[] = ((data as RawPatientRow[]) || []).map((row) => {
           let calculatedWait: string | number = '--:--:--';
           if (row.created_at) {
             const registeredTime = new Date(row.created_at).getTime();
@@ -419,7 +431,7 @@ export function useHeaderSearch(): UseHeaderSearchReturn {
         });
 
         setPatientResults(transformed);
-      } catch (err: any) {
+      } catch (err: unknown) {
         if (!isStale()) {
           console.error('Header search error:', err);
           setPatientResults([]);

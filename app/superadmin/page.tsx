@@ -13,7 +13,7 @@
 
 'use client';
 
-import React, { useState, useEffect, Suspense } from 'react';
+import React, { useState, Suspense } from 'react';
 import { useSearchParams, useRouter } from 'next/navigation';
 import { useRequireAuth } from '@/app/superadmin/hooks/useRequireAuth';
 import { useIdleTimeout } from '@/app/superadmin/hooks/useIdleTimeout';
@@ -39,18 +39,10 @@ function SuperAdminContent() {
   const router = useRouter();
   const searchParams = useSearchParams();
   const urlTab = searchParams.get('tab');
-  const [activeTab, setActiveTab] = useState<'users' | 'settings'>('users');
-
-  useEffect(() => {
-    if (urlTab === 'settings' || urlTab === 'security') {
-      setActiveTab('settings');
-    } else {
-      setActiveTab('users');
-    }
-  }, [urlTab]);
+  const activeTab: 'users' | 'settings' =
+    urlTab === 'settings' || urlTab === 'security' ? 'settings' : 'users';
 
   const handleTabChange = (tab: 'users' | 'settings') => {
-    setActiveTab(tab);
     if (tab === 'settings') {
       router.push('/superadmin?tab=settings');
     } else {
@@ -91,8 +83,8 @@ function SuperAdminContent() {
     try {
       await deleteUser(deletingUser.auth_id);
       setDeletingUser(null);
-    } catch (err: any) {
-      setDeleteError(err.message || 'Failed to delete user.');
+    } catch (err: unknown) {
+      setDeleteError(err instanceof Error ? err.message : 'Failed to delete user.');
     } finally {
       setDeleteLoading(false);
     }

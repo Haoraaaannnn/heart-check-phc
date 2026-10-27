@@ -1,7 +1,8 @@
 # Heart Check PHC - Institutional Reverse Proxy Configuration
 # Provides TLS/HTTPS termination for hospital compliance (RA 10173, SEC-022)
 
-localhost, 127.0.0.1 {
+# Listen on port 443 for both localhost and any LAN IP (multi-device sharing)
+:443 {
     # Internal automated TLS using Caddy's local Certificate Authority
     tls internal
 

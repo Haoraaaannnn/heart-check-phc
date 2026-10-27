@@ -82,7 +82,7 @@ Physical self-service kiosks and waiting room TV displays introduce physical att
 | Vulnerability ID & Name | Category & Layer | Severity | Status | Verification & Remediation Summary |
 | :--- | :--- | :---: | :---: | :--- |
 | **SEC-021**<br>Kiosk Terminal OS Breakout | Physical Security<br>(OWASP A04) | **HIGH** | `[~] Production Phase` | **Planned:** Deploy physical kiosks in dedicated OS Kiosk Mode (Windows Assigned Access or ChromeOS Kiosk). Physical USB ports locked down, context menus disabled via `contextmenu` event prevention. |
-| **SEC-022**<br>Cleartext Traffic on Hospital LAN | Network Transport<br>(OWASP A02) | **HIGH** | `[~] Production Phase` | **Planned:** Configure Nginx or Caddy reverse proxy with internal TLS/HTTPS certificates and HTTP Strict Transport Security (HSTS) on the on-premises PHC hospital server. |
+| **SEC-022**<br>Cleartext Traffic on Hospital LAN | Network Transport<br>(OWASP A02) | **HIGH** | `[x] Configured & Documented` | **Resolved:** Implemented Caddy TLS 1.3 reverse proxy ([Caddyfile](file:///home/jensen/Github-Repositories/heart-check-phc/Caddyfile)) terminating port 443 with HSTS headers. See [HTTPS_AND_REVERSE_PROXY_SETUP.md](file:///home/jensen/Github-Repositories/heart-check-phc/docs/specifications/HTTPS_AND_REVERSE_PROXY_SETUP.md). |
 | **SEC-023**<br>Missing Audit Trail for Overrides | System Governance<br>(OWASP A09) | **MEDIUM** | `[~] Production Phase` | **Planned:** Deploy dedicated `audit_logs` table with PostgreSQL trigger capturing all INSERT, UPDATE, DELETE actions on `users`, `services`, and `app_settings` with `auth.uid()`. |
 
 ---
@@ -126,7 +126,7 @@ Next.js Route Handlers and Server Actions process server-side mutations, integra
 | **P2** | Enforce verified `patientRecord` check before printing | [app/api/print-ticket/route.ts](file:///home/jensen/Github-Repositories/Heart_Check_PHC/app/api/print-ticket/route.ts) | Send POST with fictitious `queueNumber: "99999"`; verify HTTP 404. | `[x] Patched & Verified` |
 | **P2** | Append `.eq('is_historical', false)` to client mutations | `app/nurse/hooks/`, `app/transfer/hooks/` | Inspect `.update()` statements; verify defensive historical scoping. | `[x] Patched & Verified` |
 | **P2** | Implement administrative audit log for user role and queue edits | `app/superadmin/`, Supabase SQL | Perform role change; verify row created in `audit_logs` table. | `[~] Production Phase` |
-| **P2** | Configure Nginx reverse proxy with TLS/HTTPS for PHC LAN | `docker-compose.yml`, Nginx conf | Send HTTP request; verify HTTP 301 redirect to HTTPS with HSTS header. | `[~] Production Phase` |
+| **P2** | Configure Caddy reverse proxy with TLS/HTTPS for PHC LAN | [Caddyfile](file:///home/jensen/Github-Repositories/heart-check-phc/Caddyfile) | Send HTTP request; verify automatic redirect to HTTPS with HSTS header. | `[x] Configured & Documented` |
 
 ---
 

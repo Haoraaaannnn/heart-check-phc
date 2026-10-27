@@ -72,8 +72,12 @@ export async function playMonitorSpeech(text: string, repeats: number, signal: A
       }
     } finally { audio.pause(); audio.src = ''; URL.revokeObjectURL(url); }
   } catch (error) {
-    if (signal.aborted) return;
-    // Offline fallback: Use native browser speech synthesis
+    if (signal.aborted) throw new Error('Monitor stopped.');
+    const message = error && typeof error === 'object' && 'message' in error ? String((error as { message: unknown }).message) : String(error);
+    if (message.includes('Monitor stopped') || message.includes('Autoplay blocked')) {
+      throw error;
+    }
+    // Offline fallback: Use native browser speech synthesis when external TTS is unavailable
     await playOfflineSpeech(text, repeats, signal);
   }
 }

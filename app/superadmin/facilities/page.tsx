@@ -13,7 +13,7 @@
 
 'use client';
 
-import React, { useState, useEffect, Suspense } from 'react';
+import React, { Suspense } from 'react';
 import { useSearchParams, useRouter } from 'next/navigation';
 import { RoomsPanel } from '@/app/superadmin/components/RoomsPanel';
 import { CountersPanel } from '@/app/superadmin/components/CountersPanel';
@@ -33,19 +33,9 @@ function FacilitiesContent() {
   const router = useRouter();
   const searchParams = useSearchParams();
   const urlTab = searchParams.get('tab');
-
-  const [tab, setTab] = useState<'rooms' | 'counters'>('rooms');
-
-  useEffect(() => {
-    if (urlTab === 'counters') {
-      setTab('counters');
-    } else {
-      setTab('rooms');
-    }
-  }, [urlTab]);
+  const tab: 'rooms' | 'counters' = urlTab === 'counters' ? 'counters' : 'rooms';
 
   const handleTabChange = (newTab: 'rooms' | 'counters') => {
-    setTab(newTab);
     router.push(`/superadmin/facilities?tab=${newTab}`);
   };
 

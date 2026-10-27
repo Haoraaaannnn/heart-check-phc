@@ -52,3 +52,4 @@ python_backend/data_entries
 # Local Supabase Docker Demo Stack
 supabase/
 docs/specifications/LOCAL_DEMO_DOCKER_SUPABASE_GUIDE.md
+docs/specifications/HTTPS_AND_REVERSE_PROXY_SETUP.md

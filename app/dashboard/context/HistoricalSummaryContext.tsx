@@ -20,11 +20,31 @@
 import { createContext, useContext, useEffect, useState, useCallback, ReactNode } from 'react';
 
 /**
+ * Longitudinal historical analytics payload from the backend.
+ */
+export interface HistoricalSummaryPayload {
+  bottleneck_analysis?: {
+    system_status?: 'Normal' | 'Elevated' | 'Overwhelmed' | 'No Data';
+    bottleneck_stage?: string;
+    stages?: { stage_name: string; avg_duration_minutes: number; is_bottleneck: boolean }[];
+  };
+  system_time?: {
+    avg_total_time?: number;
+  };
+  service_distribution?: { service: string; total_patients: number }[];
+  computational_forecasting?: {
+    next_day_forecast?: number;
+    best_algorithm?: string;
+  };
+  [key: string]: unknown;
+}
+
+/**
  * Value exposed by the {@link HistoricalSummaryContext}.
  */
 export interface HistoricalSummaryContextValue {
   /** Longitudinal historical data payload from backend analytics, or null while loading. */
-  historicalData: any;
+  historicalData: HistoricalSummaryPayload | null;
   /** Whether the initial background analytics query is actively loading. */
   historicalLoading: boolean;
   /** Error message string if the analytics request failed, or null if healthy. */
@@ -57,7 +77,7 @@ const CACHE_TTL_MS = 15 * 60 * 1000;
  * @returns JSX element wrapping children with HistoricalSummaryContext.
  */
 export function HistoricalSummaryProvider({ children }: { children: ReactNode }) {
-  const [historicalData, setHistoricalData] = useState<any>(null);
+  const [historicalData, setHistoricalData] = useState<HistoricalSummaryPayload | null>(null);
   const [historicalLoading, setHistoricalLoading] = useState(true);
   const [historicalError, setHistoricalError] = useState<string | null>(null);
 
@@ -75,7 +95,7 @@ export function HistoricalSummaryProvider({ children }: { children: ReactNode })
           const parsed = JSON.parse(raw);
           const age = Date.now() - (parsed.timestamp || 0);
           if (parsed && parsed.data && age < CACHE_TTL_MS) {
-            setHistoricalData(parsed.data);
+            setHistoricalData(parsed.data as HistoricalSummaryPayload);
             setHistoricalLoading(false);
             setHistoricalError(null);
             return;
@@ -87,10 +107,10 @@ export function HistoricalSummaryProvider({ children }: { children: ReactNode })
     }
 
     try {
-      const apiBase = process.env.NEXT_PUBLIC_API_URL || 'http://localhost:8000';
+      const apiBase = process.env.NEXT_PUBLIC_API_URL || (typeof window !== 'undefined' ? '' : 'http://localhost:8000');
       const res = await fetch(`${apiBase}/api/dashboard-data?range=all`);
       if (!res.ok) throw new Error(`Server error: ${res.status}`);
-      const json = await res.json();
+      const json = (await res.json()) as HistoricalSummaryPayload;
 
       setHistoricalData(json);
       setHistoricalLoading(false);

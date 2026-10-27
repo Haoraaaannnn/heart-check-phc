@@ -101,7 +101,7 @@ export function SettingsPanel({ focusSecurity = false }: SettingsPanelProps = {}
           }
         }
       }
-    } catch (err: any) {
+    } catch (err: unknown) {
       console.error('Error loading settings:', err);
     } finally {
       setTimeoutLoading(false);
@@ -142,8 +142,8 @@ export function SettingsPanel({ focusSecurity = false }: SettingsPanelProps = {}
       if (error) throw error;
       setTimeoutMessage(T.rotateTimeout.success);
       setTimeout(() => setTimeoutMessage(''), 2500);
-    } catch (err: any) {
-      setTimeoutError(err.message || T.feedback.genericError);
+    } catch (err: unknown) {
+      setTimeoutError(err instanceof Error ? err.message : T.feedback.genericError);
     } finally {
       setTimeoutSaving(false);
     }
@@ -176,8 +176,8 @@ export function SettingsPanel({ focusSecurity = false }: SettingsPanelProps = {}
       if (error) throw error;
       setRotationsMessage(T.maxRotations.success);
       setTimeout(() => setRotationsMessage(''), 2500);
-    } catch (err: any) {
-      setRotationsError(err.message || T.feedback.genericError);
+    } catch (err: unknown) {
+      setRotationsError(err instanceof Error ? err.message : T.feedback.genericError);
     } finally {
       setRotationsSaving(false);
     }
@@ -210,8 +210,8 @@ export function SettingsPanel({ focusSecurity = false }: SettingsPanelProps = {}
       if (error) throw error;
       setLoginAttemptsMessage(T.maxLoginAttempts.success);
       setTimeout(() => setLoginAttemptsMessage(''), 2500);
-    } catch (err: any) {
-      setLoginAttemptsError(err.message || T.feedback.genericError);
+    } catch (err: unknown) {
+      setLoginAttemptsError(err instanceof Error ? err.message : T.feedback.genericError);
     } finally {
       setLoginAttemptsSaving(false);
     }
@@ -244,8 +244,8 @@ export function SettingsPanel({ focusSecurity = false }: SettingsPanelProps = {}
       if (error) throw error;
       setLockoutMessage(T.lockoutDuration.success);
       setTimeout(() => setLockoutMessage(''), 2500);
-    } catch (err: any) {
-      setLockoutError(err.message || T.feedback.genericError);
+    } catch (err: unknown) {
+      setLockoutError(err instanceof Error ? err.message : T.feedback.genericError);
     } finally {
       setLockoutSaving(false);
     }

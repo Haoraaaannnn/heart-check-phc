@@ -187,25 +187,25 @@ export function RegistrationLayout({ patients }: RegistrationLayoutProps) {
                         style={isCalling ? undefined : { backgroundColor: '#cc3535' }}
                         className={isCalling ? MONITOR_STYLES.registrationLayout.fourCallingCard : MONITOR_STYLES.registrationLayout.fourServingCard}
                       >
-                        <div className="flex items-center gap-1.5 flex-wrap justify-center mb-1">
-                          <span className={isCalling ? MONITOR_STYLES.registrationLayout.nowCallingBadge : MONITOR_STYLES.registrationLayout.nowServingBadge}>
-                            {isCalling && <i className="bx bxs-megaphone animate-bounce text-sm sm:text-base" aria-hidden="true" />}
-                            {isCalling ? MONITOR_TEXTS.registrationLayout.nowCallingBadge : MONITOR_TEXTS.registrationLayout.nowServingBadge}
-                          </span>
-                          {isExtended && (
-                            <span className={MONITOR_STYLES.registrationLayout.extendedBadge}>
-                              <i className="bx bx-time-five" aria-hidden="true" />
-                              {MONITOR_TEXTS.registrationLayout.extendedIntakeBadge}
-                            </span>
-                          )}
-                        </div>
-                        <span className={MONITOR_STYLES.registrationLayout.fourServingTicket}>
-                          {activePatient.patientNum}
-                        </span>
                         <div
                           className={MONITOR_STYLES.registrationLayout.activePulseDot}
                           aria-hidden="true"
                         />
+                        <span className={isCalling ? MONITOR_STYLES.registrationLayout.nowCallingBadge : MONITOR_STYLES.registrationLayout.nowServingBadge}>
+                          {isCalling && <i className="bx bxs-megaphone animate-bounce text-sm sm:text-base" aria-hidden="true" />}
+                          {isCalling ? MONITOR_TEXTS.registrationLayout.nowCallingBadge : MONITOR_TEXTS.registrationLayout.nowServingBadge}
+                        </span>
+                        <span className={MONITOR_STYLES.registrationLayout.fourServingTicket}>
+                          {activePatient.patientNum}
+                        </span>
+                        {isExtended ? (
+                          <span className={MONITOR_STYLES.registrationLayout.extendedBadge}>
+                            <i className="bx bx-time-five" aria-hidden="true" />
+                            {MONITOR_TEXTS.registrationLayout.extendedIntakeBadge}
+                          </span>
+                        ) : (
+                          <div className="h-6 sm:h-7 invisible select-none pointer-events-none" aria-hidden="true" />
+                        )}
                       </div>
                     ) : (
                       <div className={MONITOR_STYLES.registrationLayout.fourEmptyCounterCard}>
@@ -220,55 +220,60 @@ export function RegistrationLayout({ patients }: RegistrationLayoutProps) {
                           {MONITOR_TEXTS.registrationLayout.nextInQueueBadge}
                         </span>
                         <span className={MONITOR_STYLES.registrationLayout.nextSubLabel}>
-                          {MONITOR_TEXTS.registrationLayout.nextInQueueSubLabel}
+                          {waitingPatients.length > 0
+                            ? MONITOR_TEXTS.registrationLayout.nextInQueueSubLabel
+                            : MONITOR_TEXTS.registrationLayout.noWaiting}
                         </span>
                       </div>
 
                       {/* Hero Next Ticket (Position 1 of waiting) */}
                       <div className={MONITOR_STYLES.registrationLayout.fourNextHeroCard}>
-                        <span className={MONITOR_STYLES.registrationLayout.fourNextTicket}>
-                          {waitingPatients[0]?.patientNum || MONITOR_TEXTS.registrationLayout.emptyPlaceholder}
-                        </span>
-                        {waitingPatients.length > 0 && (
-                          <span className={isExtended ? MONITOR_STYLES.registrationLayout.estWaitHeroExtended : MONITOR_STYLES.registrationLayout.estWaitHero}>
-                            {isExtended ? (
-                              <>
-                                <i className="bx bx-time-five animate-spin" style={{ animationDuration: '3s' }} aria-hidden="true" />
-                                {MONITOR_TEXTS.registrationLayout.estWaitNextExtended}
-                              </>
-                            ) : (
-                              MONITOR_TEXTS.registrationLayout.estWaitNext
-                            )}
+                        <div className="flex flex-col items-center justify-center my-auto">
+                          <span className={MONITOR_STYLES.registrationLayout.fourNextTicket}>
+                            {waitingPatients[0]?.patientNum || MONITOR_TEXTS.registrationLayout.emptyPlaceholder}
                           </span>
-                        )}
+                          {waitingPatients.length > 0 && (
+                            <span className={isExtended ? MONITOR_STYLES.registrationLayout.estWaitHeroExtended : MONITOR_STYLES.registrationLayout.estWaitHero}>
+                              {isExtended ? (
+                                <>
+                                  <i className="bx bx-time-five animate-spin" style={{ animationDuration: '3s' }} aria-hidden="true" />
+                                  {MONITOR_TEXTS.registrationLayout.estWaitNextExtended}
+                                </>
+                              ) : (
+                                MONITOR_TEXTS.registrationLayout.estWaitNext
+                              )}
+                            </span>
+                          )}
+                        </div>
                       </div>
 
-                      {/* When only 1 waiting (or 0), show clean "No waiting queue" centered below hero card (matches screenshot standard) */}
-                      {waitingPatients.length <= 1 ? (
-                        <div className="flex-1 flex items-center justify-center text-xs sm:text-sm text-slate-400 font-medium">
-                          {MONITOR_TEXTS.registrationLayout.noWaiting}
-                        </div>
-                      ) : (
-                        /* When 2 to 4 waiting, show upcoming roster */
-                        <div className={MONITOR_STYLES.registrationLayout.fourUpcomingRoster}>
-                          {waitingPatients.slice(1, 4).map((wp, idx) => (
-                            <div key={wp.id} className={MONITOR_STYLES.registrationLayout.fourUpcomingRow}>
-                              <span className="text-slate-600 font-bold">
-                                #{idx + 2} in line
-                                <span className={MONITOR_STYLES.registrationLayout.estWaitRowTag}>
-                                  ({getEstimatedWait(idx + 2)})
-                                </span>
+                      {/* Positions 2, 3, 4 of waiting: 3-column structured queue roster */}
+                      <div className={MONITOR_STYLES.registrationLayout.fourSubQueueGrid}>
+                        {[2, 3, 4].map(pos => {
+                          const wp = waitingPatients[pos - 1];
+                          return (
+                            <div
+                              key={pos}
+                              className={wp ? MONITOR_STYLES.registrationLayout.fourSubQueueCard : MONITOR_STYLES.registrationLayout.fourSubQueueCardEmpty}
+                            >
+                              <span className={wp ? MONITOR_STYLES.registrationLayout.fourSubQueuePosLabel : MONITOR_STYLES.registrationLayout.fourSubQueuePosLabelEmpty}>
+                                #{pos} in line
                               </span>
-                              <span className="font-black text-slate-800 text-sm sm:text-base tabular-nums">
-                                {wp.patientNum}
+                              <span className={wp ? MONITOR_STYLES.registrationLayout.fourSubQueueTicket : MONITOR_STYLES.registrationLayout.fourSubQueueTicketEmpty}>
+                                {wp?.patientNum || MONITOR_TEXTS.registrationLayout.emptyPlaceholder}
+                              </span>
+                              <span className={wp ? MONITOR_STYLES.registrationLayout.fourSubQueueWait : MONITOR_STYLES.registrationLayout.fourSubQueueWaitEmpty}>
+                                {wp ? getEstimatedWait(pos) : MONITOR_TEXTS.registrationLayout.emptyPlaceholder}
                               </span>
                             </div>
-                          ))}
-                          {waitingPatients.length > 4 && (
-                            <div className="text-center text-[11px] font-bold text-slate-400 py-0.5">
-                              +{waitingPatients.length - 4} more waiting
-                            </div>
-                          )}
+                          );
+                        })}
+                      </div>
+
+                      {/* Overflow indicator when more than 4 patients are in the queue */}
+                      {waitingPatients.length > 4 && (
+                        <div className={MONITOR_STYLES.registrationLayout.fourMoreWaitingFooter}>
+                          +{waitingPatients.length - 4}{MONITOR_TEXTS.registrationLayout.moreWaitingSuffix}
                         </div>
                       )}
                     </div>
@@ -318,25 +323,25 @@ export function RegistrationLayout({ patients }: RegistrationLayoutProps) {
                       style={isCalling ? undefined : { backgroundColor: '#cc3535' }}
                       className={isCalling ? MONITOR_STYLES.registrationLayout.callingCard : MONITOR_STYLES.registrationLayout.nowServingCard}
                     >
-                      <div className="flex items-center gap-1.5 flex-wrap justify-center mb-1">
-                        <span className={isCalling ? MONITOR_STYLES.registrationLayout.nowCallingBadge : MONITOR_STYLES.registrationLayout.nowServingBadge}>
-                          {isCalling && <i className="bx bxs-megaphone animate-bounce text-sm sm:text-base" aria-hidden="true" />}
-                          {isCalling ? MONITOR_TEXTS.registrationLayout.nowCallingBadge : MONITOR_TEXTS.registrationLayout.nowServingBadge}
-                        </span>
-                        {isExtended && (
-                          <span className={MONITOR_STYLES.registrationLayout.extendedBadge}>
-                            <i className="bx bx-time-five" aria-hidden="true" />
-                            {MONITOR_TEXTS.registrationLayout.extendedIntakeBadge}
-                          </span>
-                        )}
-                      </div>
-                      <span className={MONITOR_STYLES.registrationLayout.nowServingTicket}>
-                        {activePatient.patientNum}
-                      </span>
                       <div
                         className={MONITOR_STYLES.registrationLayout.activePulseDot}
                         aria-hidden="true"
                       />
+                      <span className={isCalling ? MONITOR_STYLES.registrationLayout.nowCallingBadge : MONITOR_STYLES.registrationLayout.nowServingBadge}>
+                        {isCalling && <i className="bx bxs-megaphone animate-bounce text-sm sm:text-base" aria-hidden="true" />}
+                        {isCalling ? MONITOR_TEXTS.registrationLayout.nowCallingBadge : MONITOR_TEXTS.registrationLayout.nowServingBadge}
+                      </span>
+                      <span className={MONITOR_STYLES.registrationLayout.nowServingTicket}>
+                        {activePatient.patientNum}
+                      </span>
+                      {isExtended ? (
+                        <span className={MONITOR_STYLES.registrationLayout.extendedBadge}>
+                          <i className="bx bx-time-five" aria-hidden="true" />
+                          {MONITOR_TEXTS.registrationLayout.extendedIntakeBadge}
+                        </span>
+                      ) : (
+                        <div className="h-5 sm:h-6 invisible select-none pointer-events-none" aria-hidden="true" />
+                      )}
                     </div>
                   ) : (
                     <div className={MONITOR_STYLES.registrationLayout.emptyCounterCard}>
@@ -374,35 +379,37 @@ export function RegistrationLayout({ patients }: RegistrationLayoutProps) {
                       </span>
                     </div>
 
-                    {/* Positions 2, 3, 4 of waiting: Ordered Sub-queue Roster */}
+                    {/* Positions 2, 3, 4 of waiting: Ordered Sub-queue Roster with high-readability tickets */}
                     <div className={MONITOR_STYLES.registrationLayout.columnUpcomingRoster}>
                       {[2, 3, 4].map(pos => {
                         const wp = waitingPatients[pos - 1];
                         return wp ? (
                           <div key={wp.id} className={MONITOR_STYLES.registrationLayout.columnUpcomingRow}>
-                            <span className="text-slate-500 font-bold">
-                              #{pos} in line
-                              <span className={MONITOR_STYLES.registrationLayout.estWaitRowTag}>
+                            <div className="flex items-center gap-1 min-w-0">
+                              <span className="text-slate-500 font-bold text-xs sm:text-sm whitespace-nowrap">
+                                #{pos} in line
+                              </span>
+                              <span className="text-[10px] sm:text-xs font-semibold text-slate-400 whitespace-nowrap hidden lg:inline">
                                 ({getEstimatedWait(pos)})
                               </span>
-                            </span>
-                            <span className="font-black text-slate-800 tabular-nums text-xs sm:text-sm">
+                            </div>
+                            <span className="font-black text-slate-900 tabular-nums text-base sm:text-lg lg:text-xl tracking-tight">
                               {wp.patientNum}
                             </span>
                           </div>
                         ) : (
                           <div key={pos} className={MONITOR_STYLES.registrationLayout.columnUpcomingRowEmpty}>
-                            <span className="text-slate-400 font-semibold">
+                            <span className="text-slate-400 font-semibold text-xs sm:text-sm">
                               #{pos} in line
                             </span>
-                            <span className="text-slate-300 font-bold">
+                            <span className="text-slate-300 font-bold text-sm sm:text-base tabular-nums">
                               {MONITOR_TEXTS.registrationLayout.emptyPlaceholder}
                             </span>
                           </div>
                         );
                       })}
                       {waitingPatients.length > 4 && (
-                        <div className="text-center text-[10px] sm:text-[11px] font-bold text-slate-400 py-0.5 flex-shrink-0">
+                        <div className="text-center text-[10px] sm:text-[11px] font-bold text-slate-500 py-0.5 flex-shrink-0">
                           +{waitingPatients.length - 4} more waiting
                         </div>
                       )}
