@@ -33,7 +33,7 @@ async function resolveStations(request: Request) {
   const allowedCubicles = new Set((cubicleLinks.data ?? []).map(link => link.cubicle_id));
   const doctorIds = new Set((doctors.data ?? []).map(doctor => doctor.id));
   const stations = [
-    ...(counters.data ?? []).filter(counter => admin || allowedCounters.has(counter.counter_number)).map(counter => ({
+    ...(counters.data ?? []).filter(counter => admin || ['registration', 'staff', 'nurse'].includes(user.role) || allowedCounters.has(counter.counter_number)).map(counter => ({
       kind: 'counter', id: counter.counter_number, label: `Counter ${counter.counter_number}`,
       onBreak: counter.on_break, active: counter.active,
     })),

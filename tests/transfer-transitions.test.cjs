@@ -119,6 +119,7 @@ test('Fast repeated Assign actions reserve capacity before React renders and do 
   let assigned = { target: Array.from({ length: 4 }, (_, id) => ({ id: id + 10 })) };
   const pendingRef = { current: [] };
   const api = load('app/transfer/hooks/useTransferSelection.ts', {
+    '@/app/transfer/lib/moveCounterPatient': { moveCounterPatient: async () => {} },
     react: { useState: () => [null, () => {}], useEffect() {}, useCallback: fn => fn },
     '@/lib/supabase': {}, '@/app/transfer/lib/constants': { MAX_PATIENTS_PER_CUBICLE: 5 },
     '@/lib/counters': { fetchOccupiedCounters: async () => [], filterEligibleCounters: () => [] },

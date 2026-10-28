@@ -47,9 +47,6 @@ export interface ConsultationFlowProps {
   cubicleDoctorMap?: Record<string, string>;
   onReleaseFromCounter: (patient: Patient) => void;
   onAssignNow?: (patient: Patient) => void;
-  idlePatients: Patient[];
-  onActivateIdle: (patient: Patient) => void;
-  onRemoveIdle: (patient: Patient) => void;
   allowedCounters?: number[];
   allowedSubcategories?: string[];
 
@@ -96,9 +93,6 @@ export function ConsultationFlow({
   cubicleDoctorMap = {},
   onReleaseFromCounter,
   onAssignNow,
-  idlePatients,
-  onActivateIdle,
-  onRemoveIdle,
   allowedCounters,
   allowedSubcategories,
   selectedPatient,
@@ -112,12 +106,11 @@ export function ConsultationFlow({
   // Step 1: Subcategory Picker
   if (!selectedSubcategory) {
     const safeOnProgress = Array.isArray(visibleOnProgress) ? visibleOnProgress : [];
-    const safeIdle = Array.isArray(idlePatients) ? idlePatients : [];
     const safeRegistration = Array.isArray(registrationPatients) ? registrationPatients : [];
 
     const countFor = (sub: string) => ({
       queue: safeOnProgress.filter(p => p.subcategory === sub).length,
-      idle: safeIdle.filter(p => p.subcategory === sub).length,
+      idle: 0,
       registration: safeRegistration.filter(p => p.subcategory === sub).length,
     });
 
@@ -156,7 +149,6 @@ export function ConsultationFlow({
     <ServiceBoard
       category="Consultation"
       onProgressPatients={visibleOnProgress}
-      idlePatients={idlePatients}
       cubicles={visibleCubicles}
       assignedPatients={assignedPatients}
       isDraggable={isDragEnabled}
@@ -170,8 +162,6 @@ export function ConsultationFlow({
       onPointerDownFromCubicle={onPointerDownFromCubicle}
       onDragStartFromCubicle={onDragStartFromCubicle}
       onAssignNow={onAssignNow}
-      onActivateIdle={onActivateIdle}
-      onRemoveIdle={onRemoveIdle}
       cubicleDoctorMap={cubicleDoctorMap}
       registrationPatients={registrationPatients}
       regDraggedPatient={regDraggedPatient}

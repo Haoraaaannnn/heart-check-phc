@@ -32,8 +32,6 @@ export interface ServiceBoardProps {
   category: string;
   /** Active queue patients list. */
   onProgressPatients: Patient[];
-  /** Idle patients list. */
-  idlePatients: Patient[];
   /** Cubicles configured for this service/room. */
   cubicles: Cubicle[];
   /** Map of assigned patients by cubicle number. */
@@ -60,10 +58,6 @@ export interface ServiceBoardProps {
   onDragStartFromCubicle?: (e: React.MouseEvent, patient: Patient, cubicleNum: string) => void;
   /** Instant assign handler. */
   onAssignNow?: (patient: Patient) => void;
-  /** Idle reactivation handler. */
-  onActivateIdle: (patient: Patient) => void;
-  /** Idle removal handler. */
-  onRemoveIdle: (patient: Patient) => void;
   /** Map of cubicle numbers to doctor names. */
   cubicleDoctorMap?: Record<string, string>;
   /** Optional timeout warning in seconds. */
@@ -111,7 +105,6 @@ export interface ServiceBoardProps {
 export function ServiceBoard({
   category,
   onProgressPatients,
-  idlePatients,
   cubicles,
   assignedPatients,
   isDraggable,
@@ -125,8 +118,6 @@ export function ServiceBoard({
   onPointerDownFromCubicle,
   onDragStartFromCubicle,
   onAssignNow,
-  onActivateIdle,
-  onRemoveIdle,
   cubicleDoctorMap = {},
   warnAfterSeconds,
   registrationPatients,
@@ -155,7 +146,6 @@ export function ServiceBoard({
         <div className={transferLayoutStyles.leftColumn}>
           <QueuePanel
             onProgressPatients={onProgressPatients}
-            idlePatients={idlePatients}
             isDraggable={isDraggable}
             selectedCategory={category}
             draggedPatientId={draggedPatient?.id}
@@ -167,8 +157,6 @@ export function ServiceBoard({
             onAssignNow={onAssignNow}
             speakingId={speakingId}
             warnAfterSeconds={warnAfterSeconds}
-            onActivateIdle={onActivateIdle}
-            onRemoveIdle={onRemoveIdle}
           />
         </div>
 

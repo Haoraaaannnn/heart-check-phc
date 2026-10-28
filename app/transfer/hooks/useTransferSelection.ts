@@ -12,11 +12,10 @@
  */
 
 import React, { useState, useCallback, useEffect, type Dispatch, type SetStateAction } from 'react';
-import { supabase } from '@/lib/supabase';
+import { moveCounterPatient } from '@/app/transfer/lib/moveCounterPatient';
 import { Patient } from '@/types/Types';
 import { MAX_PATIENTS_PER_CUBICLE } from '@/app/transfer/lib/constants';
 import { SelectedTransferPatient, TransferSourceType } from '@/app/transfer/types/transfer';
-import { fetchOccupiedCounters, filterEligibleCounters } from '@/lib/counters';
 
 /**
  * Configuration options required by {@link useTransferSelection}.
@@ -59,6 +58,7 @@ export interface UseTransferSelectionReturn {
   ) => boolean;
   /** Moves the currently selected registration counter patient to the specified target counter. */
   moveSelectedToCounter: (targetCounter: number) => Promise<boolean>;
+  counterTransferError: string;
 }
 
 /**
@@ -81,6 +81,7 @@ export function useTransferSelection({
   unpinConfirmedPatient,
 }: UseTransferSelectionOptions): UseTransferSelectionReturn {
   const [selectedPatient, setSelectedPatient] = useState<SelectedTransferPatient | null>(null);
+  const [counterTransferError, setCounterTransferError] = useState('');
 
   /**
    * Clears any active patient selection.
@@ -254,30 +255,18 @@ export function useTransferSelection({
         return false;
       }
 
-      // Verify target counter is eligible before assigning
-      const occupied = await fetchOccupiedCounters();
-      const eligible = filterEligibleCounters(occupied, patient.service);
-      if (!eligible.some(c => c.counter_number === targetCounter)) {
-        clearSelection();
-        return false;
-      }
-
-      // Optimistically update registration patients list
-      setRegistrationPatients(prev =>
-        prev.map(p => (p.id === patient.id ? { ...p, counter: targetCounter } : p))
-      );
-
-      clearSelection();
-
+      setCounterTransferError('');
       try {
-        await supabase
-          .from('patients')
-          .update({ counter: targetCounter })
-          .eq('id', patient.id)
-          .eq('is_historical', false);
+        if (typeof sourceId !== 'number') return false;
+        await moveCounterPatient({ patientId: patient.id, sourceCounter: sourceId, targetCounter });
+        setRegistrationPatients(prev => prev.map(p => p.id === patient.id ? {
+          ...p, counter: targetCounter, counter_top_started_at: null, counter_paused_at: null,
+          counter_rejoin_at: new Date().toISOString(),
+        } : p));
+        clearSelection();
         return true;
-      } catch (err) {
-        console.error('Failed to update patient counter via selection:', err);
+      } catch (err: unknown) {
+        setCounterTransferError(err instanceof Error ? err.message : 'The ticket was not moved.');
         return false;
       }
     },
@@ -303,6 +292,7 @@ export function useTransferSelection({
     assignSelectedToCubicle,
     assignPatientToCubicle,
     moveSelectedToCounter,
+    counterTransferError,
   };
 }
 

@@ -26,7 +26,7 @@ import { useAutoAssign } from '@/app/transfer/hooks/useAutoAssign';
 import { useDragAndDrop, useTransferSelection } from '@/app/transfer/hooks/useDragAndDrop';
 import { useRealtimeSubscription } from '@/app/transfer/hooks/useRealtimeSubscription';
 import { sendSMS } from '@/app/actions/sendSMS';
-import { useMaxRotations } from '@/app/transfer/hooks/useMaxRotations';
+import { useQueueShift } from '@/app/transfer/hooks/useQueueShift';
 import { useMyAccess } from '@/app/transfer/hooks/useMyAccess';
 import { useRegistrationDragAndDrop } from '@/app/transfer/hooks/useRegistrationDragAndDrop';
 import { Patient, Cubicle } from '@/types/Types';
@@ -35,7 +35,6 @@ import { useAutoRotate } from '@/app/transfer/hooks/useAutoRotate';
 import { useRotateTimeout } from '@/app/transfer/hooks/useRotateTimeout';
 import { useIdleTimeout } from '@/app/transfer/hooks/useIdleTimeout';
 import { useRequireAuth } from '@/app/transfer/hooks/useRequireAuth';
-import { useIdlePatients } from '@/app/transfer/hooks/useIdlePatients';
 import { useRegistrationRotate } from '@/app/transfer/hooks/useRegistrationRotate';
 import { requestMonitorCall } from '@/lib/requestMonitorCall';
 import './transfer.css';
@@ -138,9 +137,8 @@ export default function TransferPage() {
   const confirmingRef = useRef<boolean>(false);
 
   const rotateTimeoutMs = useRotateTimeout();
-  const maxRotations = useMaxRotations();
+  const queueShiftError = useQueueShift();
 
-  const { idlePatients, fetchIdlePatients, activatePatient, removePatient } = useIdlePatients();
   const registrationRotateBusy = useRef<boolean>(false);
   const pendingAutoRotateIdsRef = useRef<Set<number>>(new Set());
 
@@ -151,6 +149,7 @@ export default function TransferPage() {
     dragOverCounter,
     handleRegPointerDown,
     handleRegDragStart,
+    counterDragError,
   } = useRegistrationDragAndDrop(registrationPatients, setRegistrationPatients);
 
   // Core patient & cubicle data hooks
@@ -199,6 +198,7 @@ export default function TransferPage() {
     assignSelectedToCubicle,
     assignPatientToCubicle,
     moveSelectedToCounter,
+    counterTransferError,
   } = useTransferSelection({
     assignedPatients,
     setOnProgressPatients,
@@ -437,7 +437,6 @@ export default function TransferPage() {
         await Promise.all([
           fetchData(),
           fetchRegistrationPatients(),
-          fetchIdlePatients(),
         ]);
       } while (fetchQueuedRef.current && !dragInProgressRef.current);
 
@@ -446,7 +445,7 @@ export default function TransferPage() {
       setIsSyncing(false);
       globalSyncRef.current = false;
     }
-  }, [fetchData, fetchRegistrationPatients, fetchIdlePatients, reapplyPendingUpdates]);
+  }, [fetchData, fetchRegistrationPatients, reapplyPendingUpdates]);
 
   const handleRealtimeUpdate = useCallback(() => {
     if (dragInProgressRef.current) return;
@@ -571,25 +570,23 @@ export default function TransferPage() {
     allServices
   );
 
-  useAutoRotate(
+  useAutoRotate({
     onProgressPatients,
     assignedPatients,
-    syncNow,
-    autoRotateBusy,
+    fetchData: syncNow,
+    busyRef: autoRotateBusy,
     rotateTimeoutMs,
-    maxRotations,
-    pendingAutoRotateIdsRef,
+    pendingIdsRef: pendingAutoRotateIdsRef,
     confirmingRef
-  );
+  });
 
-  useRegistrationRotate(
+  useRegistrationRotate({
     registrationPatients,
-    syncNow,
-    registrationRotateBusy,
+    onRotated: syncNow,
+    busyRef: registrationRotateBusy,
     rotateTimeoutMs,
-    maxRotations,
     confirmingRef
-  );
+  });
 
   useEffect(() => {
     pendingUpdatesRef.current = pendingUpdates;
@@ -691,16 +688,6 @@ export default function TransferPage() {
       console.warn('Network offline releasing patient from counter; saved to local outbox:', err);
       void syncNow();
     }
-  };
-
-  const handleActivateIdle = async (patient: Patient) => {
-    await activatePatient(patient);
-    await syncNow();
-  };
-
-  const handleRemoveIdle = async (patient: Patient) => {
-    await removePatient(patient);
-    await syncNow();
   };
 
   /**
@@ -896,7 +883,6 @@ export default function TransferPage() {
 
     return matchesSelectedService(p, true) && matchesMyCounters(p);
   });
-  const visibleIdlePatients = idlePatients.filter(p => matchesSelectedService(p, true));
 
   const visibleRegistrationPatients = registrationPatients.filter(p => {
     if (!matchesMyCounters(p)) return false;
@@ -914,16 +900,6 @@ export default function TransferPage() {
     }
     return counts;
   }, [onProgressPatients]);
-
-  const idleCounts: Record<string, number> = useMemo(() => {
-    const counts: Record<string, number> = {};
-    for (const p of idlePatients) {
-      if (p.service) {
-        counts[p.service] = (counts[p.service] || 0) + 1;
-      }
-    }
-    return counts;
-  }, [idlePatients]);
 
   const totalUnassigned = Object.entries(queueCounts)
     .filter(([cat]) => myServices.includes(cat))
@@ -948,7 +924,6 @@ export default function TransferPage() {
           fetchData(true),
           fetchCubicles(true),
           fetchRegistrationPatients(true),
-          fetchIdlePatients(true),
           fetchMyAccess(),
         ]));
       } catch {
@@ -956,7 +931,7 @@ export default function TransferPage() {
       } finally {
         if (requestId === startupRequestId.current) setIsLoading(false);
       }
-  }, [fetchData, fetchCubicles, fetchRegistrationPatients, fetchIdlePatients, fetchMyAccess]);
+  }, [fetchData, fetchCubicles, fetchRegistrationPatients, fetchMyAccess]);
 
   useEffect(() => {
     void initialize();
@@ -1029,9 +1004,6 @@ export default function TransferPage() {
           cubicleDoctorMap={cubicleDoctorMap}
           onReleaseFromCounter={handleReleaseFromCounter}
           onAssignNow={handleAssignNow}
-          idlePatients={visibleIdlePatients}
-          onActivateIdle={handleActivateIdle}
-          onRemoveIdle={handleRemoveIdle}
           allowedCounters={myCounters}
           allowedSubcategories={getAllowedSubcategories(selectedCategory)}
           selectedPatient={selectedPatient}
@@ -1064,9 +1036,6 @@ export default function TransferPage() {
         onMoveBackToProgress={handleMoveBackToProgress}
         isDragEnabled={isDragEnabled}
         rotateTimeoutMs={rotateTimeoutMs}
-        idlePatients={visibleIdlePatients}
-        onActivateIdle={handleActivateIdle}
-        onRemoveIdle={handleRemoveIdle}
         onAssignNow={handleAssignNow}
         cubicleDoctorMap={cubicleDoctorMap}
         registrationPatients={requiresReg ? visibleRegistrationPatients : undefined}
@@ -1106,7 +1075,6 @@ export default function TransferPage() {
         isExpanded={isSidebarExpanded}
         selectedCategory={selectedCategory}
         queueCounts={queueCounts}
-        idleCounts={idleCounts}
         allowedServices={myServices}
         services={allServices}
         onSelectCategory={cat => {
@@ -1326,6 +1294,7 @@ export default function TransferPage() {
 
         {/* Main Dashboard Content (Non-scrollable, fit-to-screen) */}
         <main className={transferLayoutStyles.mainContent}>
+          {(queueShiftError || counterTransferError || counterDragError) && <p role="alert" className="shrink-0 mb-2 p-3 rounded-lg border border-red-200 bg-red-50 text-red-800 dark:border-red-900 dark:bg-red-950 dark:text-red-200">{queueShiftError || counterTransferError || counterDragError}</p>}
           {callError && <p role="alert" className="shrink-0 mb-2 p-3 rounded-lg border border-red-200 bg-red-50 text-red-800 dark:border-red-900 dark:bg-red-950 dark:text-red-200">{callError}</p>}
 
           {accessStatus === 'loading' ? (

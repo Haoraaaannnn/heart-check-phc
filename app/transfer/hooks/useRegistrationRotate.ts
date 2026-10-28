@@ -4,7 +4,7 @@
  * Periodically inspects patients stationed at registration counters and rotates
  * top patients whose elapsed intake duration exceeds the configured rotation timeout
  * (default: 3 minutes). Rotated patients are re-queued with updated rejoin timestamps
- * or escalated to Idle status if maximum rotation threshold is exceeded.
+ * or cancelled after more than five rotations in the current Manila shift.
  *
  * Security & Reliability Considerations:
  * - Uses optimistic concurrency expected fields via callRotateApi.
@@ -20,26 +20,25 @@ import { useEffect, useRef } from 'react';
 import { Patient } from '@/types/Types';
 import { callRotateApi } from '@/app/transfer/lib/rotateApi';
 import { fetchActiveCounters } from '@/lib/counters';
+import { nextShiftRotation } from '@/lib/queueRotationPolicy';
+
+/** Inputs for registration intake rotation with mutation guards. */
+interface RegistrationRotateOptions {
+  registrationPatients: Patient[];
+  onRotated: () => Promise<void>;
+  busyRef: React.MutableRefObject<boolean>;
+  rotateTimeoutMs: number;
+  confirmingRef?: React.MutableRefObject<boolean>;
+}
 
 /**
  * Periodically detects timed-out top patients at registration counters and dispatches rotation mutations.
  *
- * @param registrationPatients - Array of current patients assigned to registration counters.
- * @param onRotated - Callback function to refresh workstation data after successful rotation (e.g. syncNow).
- * @param busyRef - Mutable ref tracking in-flight rotation operations to prevent race conditions.
- * @param rotateTimeoutMs - Configured timeout in milliseconds before a counter patient is rotated.
- * @param maxRotations - Maximum allowed rotations before patient is moved to the Idle pool.
- * @param confirmingRef - Optional mutable ref indicating an active confirmation modal.
+ * @param options - Registration queue, timeout interval and mutation guards.
  * @remarks Polls on a 5-second interval and dispatches atomic batch updates to /api/rotate.
  */
-export function useRegistrationRotate(
-  registrationPatients: Patient[],
-  onRotated: () => Promise<void>,
-  busyRef: React.MutableRefObject<boolean>,
-  rotateTimeoutMs: number,
-  maxRotations: number,
-  confirmingRef?: React.MutableRefObject<boolean>
-) {
+export function useRegistrationRotate({ registrationPatients, onRotated, busyRef,
+  rotateTimeoutMs, confirmingRef }: RegistrationRotateOptions) {
   const registrationRef = useRef<Patient[]>(registrationPatients);
 
   useEffect(() => {
@@ -60,8 +59,9 @@ export function useRegistrationRotate(
       const byCounter = new Map<number, Patient[]>();
       for (const p of registrationRef.current) {
         if (!p.counter || !availableCounters.has(p.counter)) continue;
-        if (!byCounter.has(p.counter)) byCounter.set(p.counter, []);
-        byCounter.get(p.counter)!.push(p);
+        const patients = byCounter.get(p.counter) ?? [];
+        patients.push(p);
+        byCounter.set(p.counter, patients);
       }
 
       const timedOutTops: Patient[] = [];
@@ -78,31 +78,29 @@ export function useRegistrationRotate(
 
       if (timedOutTops.length === 0) return;
 
-      console.log(
-        '[registration-rotate] FIRING - rotating',
-        timedOutTops.length,
-        'patient(s):',
-        timedOutTops.map(p => ({
-          patientNum: p.patientNum,
-          counter: p.counter,
-          elapsedMs: now - new Date(p.counter_top_started_at!).getTime(),
-          thresholdMs: rotateTimeoutMs,
-        }))
-      );
-
       busyRef.current = true;
       try {
         const nowIso = new Date().toISOString();
 
         const updates = timedOutTops.map(p => {
-          const nextCount = (p.rotation_count ?? 0) + 1;
-          if (nextCount >= maxRotations) {
+          const rotation = nextShiftRotation({ rotationCount: p.rotation_count, shiftStartedAt: p.rotation_shift_started_at, nowMs: now });
+          const nextCount = rotation.rotationCount;
+          const expected = { counter: p.counter, status: p.status, rotation_count: p.rotation_count ?? 0,
+            rotation_shift_started_at: p.rotation_shift_started_at ?? null,
+            counter_paused_at: null, counter_top_started_at: p.counter_top_started_at };
+          if (rotation.cancelled) {
             return {
               id: p.id,
-              expected: { counter: p.counter, counter_paused_at: null, counter_top_started_at: p.counter_top_started_at },
-              status: 'Idle',
+              expected,
+              status: 'Removed',
               rotation_count: nextCount,
-              idle_at: nowIso,
+              removed_at: nowIso,
+              queue_position: null,
+              cubicleNum: null,
+              called_at: null,
+              progress_started_at: null,
+              cubicle_top_started_at: null,
+              counter_paused_at: null,
               counter: null,
               counter_top_started_at: null,
               counter_rejoin_at: null,
@@ -110,7 +108,7 @@ export function useRegistrationRotate(
           }
           return {
             id: p.id,
-            expected: { counter: p.counter, counter_paused_at: null, counter_top_started_at: p.counter_top_started_at },
+            expected,
             rotation_count: nextCount,
             counter_rejoin_at: nowIso,
             counter_top_started_at: null,
@@ -128,5 +126,5 @@ export function useRegistrationRotate(
     }, 5000);
 
     return () => clearInterval(interval);
-  }, [onRotated, busyRef, rotateTimeoutMs, maxRotations, confirmingRef]);
+  }, [onRotated, busyRef, rotateTimeoutMs, confirmingRef]);
 }

@@ -4,31 +4,28 @@ import { useEffect, useRef } from 'react';
 import { Patient } from '@/types/Types';
 import { supabase } from '@/lib/supabase';
 import { callRotateApi } from '@/app/transfer/lib/rotateApi';
+import { nextShiftRotation } from '@/lib/queueRotationPolicy';
 
 const MANUAL_SERVICES: string[] = [];
 
+/** Inputs for shift-aware timeout rotation. */
+interface AutoRotateOptions {
+  onProgressPatients: Patient[];
+  assignedPatients: Record<string, Patient[]>;
+  fetchData: () => Promise<void>;
+  busyRef: React.MutableRefObject<boolean>;
+  rotateTimeoutMs: number;
+  pendingIdsRef: React.MutableRefObject<Set<number>>;
+  confirmingRef?: React.MutableRefObject<boolean>;
+}
+
 /**
  * Rotates timed-out patients only at available stations.
- * @param onProgressPatients - Waiting queue patients.
- * @param assignedPatients - Patients grouped by cubicle.
- * @param fetchData - Refresh callback after applied rotations.
- * @param busyRef - In-flight mutation guard.
- * @param rotateTimeoutMs - Allowed response interval.
- * @param maxRotations - Timeout count before idle status.
- * @param pendingIdsRef - Patients awaiting assignment confirmation.
- * @param confirmingRef - Active confirmation guard.
+ * @param options - Queue snapshot, timeout interval and mutation guards.
  * @returns Nothing; installs the rotation interval.
  */
-export function useAutoRotate(
-  onProgressPatients: Patient[],
-  assignedPatients: Record<string, Patient[]>,
-  fetchData: () => Promise<void>,
-  busyRef: React.MutableRefObject<boolean>,
-  rotateTimeoutMs: number,
-  maxRotations: number,
-  pendingIdsRef: React.MutableRefObject<Set<number>>,
-  confirmingRef?: React.MutableRefObject<boolean>
-) {
+export function useAutoRotate({ onProgressPatients, assignedPatients, fetchData, busyRef,
+  rotateTimeoutMs, pendingIdsRef, confirmingRef }: AutoRotateOptions) {
   const onProgressRef = useRef(onProgressPatients);
   const assignedRef = useRef(assignedPatients);
 
@@ -94,15 +91,20 @@ export function useAutoRotate(
         let nextPosition = (maxRow?.queue_position ?? 0) + 1;
         const nowIso = new Date().toISOString();
 
-        const buildUpdate = (p: Patient, extra: Record<string, any>) => {
-          const nextCount = (p.rotation_count ?? 0) + 1;
+        const buildUpdate = (p: Patient, extra: Record<string, unknown>) => {
+          const rotation = nextShiftRotation({ rotationCount: p.rotation_count, shiftStartedAt: p.rotation_shift_started_at, nowMs: now });
+          const nextCount = rotation.rotationCount;
 
-          if (nextCount >= maxRotations) { 
+          if (rotation.cancelled) {
             return {
               id: p.id,
-              status: 'Idle',
+              status: 'Removed',
               rotation_count: nextCount,
-              idle_at: nowIso,
+              removed_at: nowIso,
+              counter: null,
+              counter_top_started_at: null,
+              counter_rejoin_at: null,
+              counter_paused_at: null,
               queue_position: null,
               cubicleNum: null,
               called_at: null,
@@ -138,7 +140,7 @@ export function useAutoRotate(
         
         const withExpected = (p: Patient, update: Record<string, unknown>) => ({
           ...update,
-          expected: { status: p.status, cubicleNum: p.cubicleNum ?? null },
+          expected: { status: p.status, cubicleNum: p.cubicleNum ?? null, rotation_count: p.rotation_count ?? 0, rotation_shift_started_at: p.rotation_shift_started_at ?? null },
         });
         const onProgressUpdates = timedOutOnProgress.map(p => withExpected(p, buildUpdate(p, {})));
         const assignedUpdates = timedOutAssigned.map(p => {
@@ -147,12 +149,12 @@ export function useAutoRotate(
               ? [p.cubicleNum, ...p.preferredCubicleNums.filter(c => c !== p.cubicleNum)]
               : p.preferredCubicleNums;
 
-          return buildUpdate(p, {
+          return withExpected(p, buildUpdate(p, {
             cubicleNum: null,
             called_at: null,
             cubicle_top_started_at: null,
             ...(reorderedPreferred ? { preferredCubicleNums: reorderedPreferred } : {}),
-          });
+          }));
         });
 
         console.log('[rotate] DB updates to write:', { onProgressUpdates, assignedUpdates });
@@ -174,5 +176,5 @@ export function useAutoRotate(
     }, 5000);
 
     return () => clearInterval(interval);
-  }, [fetchData, busyRef, rotateTimeoutMs, maxRotations, pendingIdsRef, confirmingRef]);
+  }, [fetchData, busyRef, rotateTimeoutMs, pendingIdsRef, confirmingRef]);
 }
