@@ -1,13 +1,15 @@
 /** @fileoverview Public queue monitor data and announcements excluding unavailable stations. */
 'use client';
 
-import { useState, useRef, useEffect } from 'react';
+import { useState, useRef, useEffect, useCallback as reactUseCallback } from 'react';
 import { supabase } from '@/lib/supabase';
 import { Patient, Cubicle } from '@/types/Types';
 import { formatTicketForSpeech } from '@/utils/formatTicketSpeech';
 import { useMonitorCalls } from './useMonitorCalls';
 import { playMonitorSpeech } from '../lib/playMonitorSpeech';
 import { sortCubiclePatients } from '../lib/sortCubiclePatients';
+
+const useCallback = reactUseCallback ?? ((fn: any) => fn);
 
 /** Loads monitor data and serializes automatic and manual calls after monitor activation. */
 export function useMonitorData(category: string, subcategory: string | null, categoryParam: string, isRegistration: boolean = false, started = false) {
@@ -155,7 +157,7 @@ export function useMonitorData(category: string, subcategory: string | null, cat
     return cubicleNum;
   };
 
-  const fetchCubicles = async () => {
+  const fetchCubicles = useCallback(async () => {
     let query = supabase
       .from('cubicle')
       .select('*')
@@ -195,12 +197,12 @@ export function useMonitorData(category: string, subcategory: string | null, cat
       });
       setCubicleDoctorMap(map);
     }
-  };
+  }, [category, subcategory]);
 
   const patientsFetchId = useRef(0);
   const registrationFetchId = useRef(0);
 
-  const fetchPatients = async () => {
+  const fetchPatients = useCallback(async () => {
     const requestId = ++patientsFetchId.current;
     const today = new Date();
     today.setHours(0, 0, 0, 0);
@@ -222,10 +224,14 @@ export function useMonitorData(category: string, subcategory: string | null, cat
 
     const { data: rawData, error } = await query.order('called_at', { ascending: true });
 
-    const { data: available, error: availabilityError } = await supabase.from('cubicle')
-      .select('cubicleNum').eq('category', category).eq('on_break', false);
-    const availableNames = new Set((available ?? []).map(station => station.cubicleNum));
-    const data = availabilityError ? [] : rawData?.filter(patient => availableNames.has(patient.cubicleNum));
+    const { data: stations, error: availabilityError } = await supabase.from('cubicle')
+      .select('cubicleNum, on_break').eq('category', category);
+
+    let data = rawData ?? [];
+    if (!availabilityError && stations && stations.length > 0) {
+      const breakStations = new Set(stations.filter(s => s.on_break).map(s => s.cubicleNum));
+      data = data.filter(patient => !patient.cubicleNum || !breakStations.has(patient.cubicleNum));
+    }
 
     if (requestId !== patientsFetchId.current) return;
 
@@ -290,9 +296,9 @@ export function useMonitorData(category: string, subcategory: string | null, cat
         }
       }
     }
-  };
+  }, [category, subcategory, isTableLayoutService, started]);
 
-  const fetchRegistrationPatients = async () => {
+  const fetchRegistrationPatients = useCallback(async () => {
     const requestId = ++registrationFetchId.current;
     const today = new Date();
     today.setHours(0, 0, 0, 0);
@@ -309,6 +315,9 @@ export function useMonitorData(category: string, subcategory: string | null, cat
       .map((s: any) => s.label_en);
 
     const serviceFilter = regServices.length > 0 ? regServices : ['Consultation', 'OPD Screening'];
+    if (!serviceFilter.includes('Registration')) {
+      serviceFilter.push('Registration');
+    }
 
     const { data, error } = await supabase
       .from('patients')
@@ -324,7 +333,7 @@ export function useMonitorData(category: string, subcategory: string | null, cat
 
     if (requestId !== registrationFetchId.current) return;
     if (!error && data) setRegistrationPatients(data);
-  };
+  }, []);
 
   const setupRegistrationSubscription = (onUpdate: () => void) => {
     const channel = supabase
