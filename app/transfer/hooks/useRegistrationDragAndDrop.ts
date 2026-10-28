@@ -1,10 +1,10 @@
+/** @fileoverview Acknowledged pointer-based registration counter handoffs. */
 'use client';
 
 import { useState, useEffect, useCallback } from 'react';
-import { supabase } from '@/lib/supabase';
 import { Patient } from '@/types/Types';
 import { DragPoint, pointOf, findDropTarget, canStartDrag } from '@/app/transfer/hooks/dragUtils';
-import { fetchOccupiedCounters, filterEligibleCounters } from '@/lib/counters';
+import { moveCounterPatient } from '@/app/transfer/lib/moveCounterPatient';
 
 /**
  * Hook handling pointer-based drag and drop between registration counters.
@@ -20,6 +20,7 @@ export function useRegistrationDragAndDrop(
   const [draggedPatient, setDraggedPatient] = useState<Patient | null>(null);
   const [dragOverCounter, setDragOverCounter] = useState<number | null>(null);
   const [dragPoint, setDragPoint] = useState<DragPoint | null>(null);
+  const [counterDragError, setCounterDragError] = useState('');
 
   /**
    * Pointer down starter for dragging a patient from a registration counter.
@@ -63,24 +64,17 @@ export function useRegistrationDragAndDrop(
       const targetCounter = targetStr ? parseInt(targetStr, 10) : null;
 
       if (draggedPatient && targetCounter && targetCounter !== draggedPatient.counter) {
-        const occupied = await fetchOccupiedCounters();
-        const eligible = filterEligibleCounters(occupied, draggedPatient.service);
-        if (!eligible.some(c => c.counter_number === targetCounter)) {
-          setDraggedPatient(null);
-          setDragOverCounter(null);
-          setDragPoint(null);
-          return;
+        setCounterDragError('');
+        try {
+          if (typeof draggedPatient.counter !== 'number') throw new Error('Refresh before moving this ticket.');
+          await moveCounterPatient({ patientId: draggedPatient.id, sourceCounter: draggedPatient.counter, targetCounter });
+          setRegistrationPatients(prev => prev.map(p => p.id === draggedPatient.id ? {
+            ...p, counter: targetCounter, counter_top_started_at: null, counter_paused_at: null,
+            counter_rejoin_at: new Date().toISOString(),
+          } : p));
+        } catch (failure: unknown) {
+          setCounterDragError(failure instanceof Error ? failure.message : 'The ticket was not moved.');
         }
-
-        setRegistrationPatients(prev =>
-          prev.map(p => (p.id === draggedPatient.id ? { ...p, counter: targetCounter } : p))
-        );
-
-        await supabase
-          .from('patients')
-          .update({ counter: targetCounter })
-          .eq('id', draggedPatient.id)
-          .eq('is_historical', false);
       }
 
       setDraggedPatient(null);
@@ -109,6 +103,7 @@ export function useRegistrationDragAndDrop(
     regDraggedPatient: draggedPatient,
     regDragPoint: dragPoint,
     dragOverCounter,
+    counterDragError,
     handleRegPointerDown,
     handleRegDragStart,
   };

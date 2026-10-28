@@ -168,7 +168,7 @@ export function useMyAccess(): UseMyAccessReturn {
       setMyServices(serviceList);
       setMyRooms((rooms ?? []) as RoomAccess[]);
       setAccessStatus(serviceList.length > 0 || userCounterNums.length > 0 ? 'assigned' : 'unassigned');
-      setMyCounters(userCounterNums);
+      setMyCounters(activeCounters);
     } catch (err) {
       if (requestId !== accessRequestId.current) return;
       console.error('useMyAccess: Unexpected exception while verifying access', err);

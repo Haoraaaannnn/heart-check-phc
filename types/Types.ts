@@ -112,6 +112,8 @@ export type Patient = {
   /** Timestamp freezing counter rotation while registration staff assists this patient. */
   counter_paused_at?: string | null;
   idle_at?: string | null;
+  /** Manila shift owning rotation_count; changes at midnight and 1 PM. */
+  rotation_shift_started_at?: string | null;
   removed_at?: string | null;
 };
 

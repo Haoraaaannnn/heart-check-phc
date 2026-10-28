@@ -19,10 +19,10 @@ import { NextResponse } from 'next/server';
 import { createClient } from '@supabase/supabase-js';
 import { requireUser } from '@/lib/supabase/authGuard';
 
-const supabaseAdmin = createClient(
-  process.env.NEXT_PUBLIC_SUPABASE_URL!,
-  process.env.SUPABASE_SERVICE_ROLE_KEY!
-);
+const supabaseUrl = process.env.NEXT_PUBLIC_SUPABASE_URL;
+const serviceKey = process.env.SUPABASE_SERVICE_ROLE_KEY;
+if (!supabaseUrl || !serviceKey) throw new Error('Queue service configuration is missing.');
+const supabaseAdmin = createClient(supabaseUrl, serviceKey);
 
 /**
  * Permitted patient update column whitelist for rotation mutations.
@@ -32,6 +32,7 @@ const ALLOWED_UPDATE_FIELDS = new Set<string>([
   'rotation_count',
   'queue_position',
   'idle_at',
+  'removed_at',
   'counter',
   'counter_top_started_at',
   'counter_rejoin_at',
@@ -48,6 +49,8 @@ const ALLOWED_UPDATE_FIELDS = new Set<string>([
  * Permitted concurrency check column whitelist for optimistic locking.
  */
 const ALLOWED_EXPECTED_FIELDS = new Set<string>([
+  'rotation_count',
+  'rotation_shift_started_at',
   'counter_paused_at',
   'counter_top_started_at',
   'counter_rejoin_at',
@@ -68,10 +71,9 @@ const CLINICAL_ROLES = new Set<string>([
   'registration',
 ]);
 
-interface RawRotateItem {
-  id: number;
-  expected?: Record<string, string | number | null>;
-  [key: string]: unknown;
+/** @param value - External input. @returns Whether it can be inspected by field name. */
+function isRecord(value: unknown): value is Record<string, unknown> {
+  return typeof value === 'object' && value !== null && !Array.isArray(value);
 }
 
 /**
@@ -85,11 +87,11 @@ function sanitizeUpdate(item: unknown): {
   expected: Record<string, string | number | null>;
   changes: Record<string, unknown>;
 } | null {
-  if (!item || typeof item !== 'object') return null;
-  const raw = item as RawRotateItem;
+  if (!isRecord(item)) return null;
+  const raw = item;
 
-  const id = Number(raw.id);
-  if (!Number.isInteger(id) || id <= 0) return null;
+  const id = raw.id;
+  if (typeof id !== 'number' || !Number.isSafeInteger(id) || id <= 0) return null;
 
   const cleanChanges: Record<string, unknown> = {};
   for (const [key, value] of Object.entries(raw)) {
@@ -100,13 +102,17 @@ function sanitizeUpdate(item: unknown): {
   }
 
   const cleanExpected: Record<string, string | number | null> = {};
-  if (raw.expected && typeof raw.expected === 'object') {
+  if (isRecord(raw.expected)) {
     for (const [col, expVal] of Object.entries(raw.expected)) {
-      if (ALLOWED_EXPECTED_FIELDS.has(col)) {
+      if (ALLOWED_EXPECTED_FIELDS.has(col) && (expVal === null || typeof expVal === 'string' || typeof expVal === 'number')) {
         cleanExpected[col] = expVal;
       }
     }
   }
+
+  if ('rotation_count' in cleanChanges && (typeof cleanChanges.rotation_count !== 'number' ||
+      !Number.isSafeInteger(cleanChanges.rotation_count) || cleanChanges.rotation_count < 1 ||
+      !('rotation_count' in cleanExpected) || !('rotation_shift_started_at' in cleanExpected))) return null;
 
   return { id, expected: cleanExpected, changes: cleanChanges };
 }
@@ -131,13 +137,12 @@ export async function POST(request: Request) {
       .maybeSingle();
 
     if (profileError || !userProfile || !CLINICAL_ROLES.has(userProfile.role)) {
-      console.warn(`[ROTATE FORBIDDEN] Unauthorized role attempt by user ${guard.user.id}`);
       return NextResponse.json({ error: 'Clinical authorization required.' }, { status: 403 });
     }
 
     // 3. Parse and validate payload
-    const body = await request.json();
-    const rawUpdates = body?.updates;
+    const body: unknown = await request.json();
+    const rawUpdates: unknown = isRecord(body) ? body.updates : null;
 
     if (!Array.isArray(rawUpdates) || rawUpdates.length === 0) {
       return NextResponse.json({ error: 'No valid updates provided' }, { status: 400 });
@@ -150,10 +155,10 @@ export async function POST(request: Request) {
 
     // 4. Execute whitelisted updates with historical data protection
     const results = await Promise.all(
-      rawUpdates.map(async (rawItem) => {
+      rawUpdates.map(async (rawItem: unknown) => {
         const parsed = sanitizeUpdate(rawItem);
         if (!parsed) {
-          return { id: (rawItem as any)?.id ?? 0, applied: false, error: 'Malformed update structure' };
+          return { id: isRecord(rawItem) && typeof rawItem.id === 'number' ? rawItem.id : 0, applied: false, error: 'Malformed update structure' };
         }
 
         const { id, expected, changes } = parsed;
@@ -167,7 +172,8 @@ export async function POST(request: Request) {
           .from('patients')
           .update(changes)
           .eq('id', id)
-          .eq('is_historical', false);
+          .eq('is_historical', false)
+          .in('status', ['Waiting', 'On Progress', 'Assigned']);
 
         for (const [column, value] of Object.entries(expected)) {
           query = value === null ? query.is(column, null) : query.eq(column, value);
@@ -189,8 +195,6 @@ export async function POST(request: Request) {
 
     return NextResponse.json({ success: true, results });
   } catch (error: unknown) {
-    const message = error instanceof Error ? error.message : 'Unknown server error';
-    console.error('[ROTATE SERVER ERROR]:', message);
-    return NextResponse.json({ error: 'Internal server error processing rotation' }, { status: 500 });
+    return NextResponse.json({ error: error instanceof SyntaxError ? 'Invalid rotation request.' : 'Unable to process rotation.' }, { status: error instanceof SyntaxError ? 400 : 500 });
   }
 }
