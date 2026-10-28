@@ -25,6 +25,7 @@ type PairedLayoutProps = {
     patient: Patient | null;
     cubicle: string;
     nextPatient?: Patient | null;
+    upcomingPatients?: Patient[];
     waitingCount?: number;
   }[];
   /** Cubicle number display formatter. */
@@ -116,14 +117,29 @@ export function PairedLayout({
                         <span className={MONITOR_STYLES.pairedLayout.nowServingTicketPrimary}>
                           {left.patient.patientNum}
                         </span>
-                        {left.nextPatient && (
+                        {((left.upcomingPatients && left.upcomingPatients.length > 0) || left.nextPatient) && (
                           <div className={MONITOR_STYLES.pairedLayout.nextQueueStrip}>
                             <span className={MONITOR_STYLES.pairedLayout.nextQueueStripLabel}>
                               {MONITOR_TEXTS.pairedLayout.nextPrefix}
                             </span>
-                            <span className={MONITOR_STYLES.pairedLayout.nextQueueStripTicket}>
-                              {left.nextPatient.patientNum}
-                            </span>
+                            {left.upcomingPatients && left.upcomingPatients.length > 0 ? (
+                              <div className="flex items-center gap-1.5 flex-wrap">
+                                {left.upcomingPatients.map((up, i) => (
+                                  <span key={up.id || i} className="text-white font-black text-xs sm:text-sm lg:text-base tabular-nums leading-none">
+                                    #{up.patientNum}
+                                  </span>
+                                ))}
+                                {left.waitingCount && left.waitingCount > left.upcomingPatients.length ? (
+                                  <span className="text-white/80 text-[10px] font-bold">
+                                    (+{left.waitingCount - left.upcomingPatients.length})
+                                  </span>
+                                ) : null}
+                              </div>
+                            ) : (
+                              <span className={MONITOR_STYLES.pairedLayout.nextQueueStripTicket}>
+                                {left.nextPatient?.patientNum}
+                              </span>
+                            )}
                           </div>
                         )}
                       </>
@@ -168,14 +184,29 @@ export function PairedLayout({
                         <span className={MONITOR_STYLES.pairedLayout.nowServingTicketPrimary}>
                           {right.patient.patientNum}
                         </span>
-                        {right.nextPatient && (
+                        {((right.upcomingPatients && right.upcomingPatients.length > 0) || right.nextPatient) && (
                           <div className={MONITOR_STYLES.pairedLayout.nextQueueStrip}>
                             <span className={MONITOR_STYLES.pairedLayout.nextQueueStripLabel}>
                               {MONITOR_TEXTS.pairedLayout.nextPrefix}
                             </span>
-                            <span className={MONITOR_STYLES.pairedLayout.nextQueueStripTicket}>
-                              {right.nextPatient.patientNum}
-                            </span>
+                            {right.upcomingPatients && right.upcomingPatients.length > 0 ? (
+                              <div className="flex items-center gap-1.5 flex-wrap">
+                                {right.upcomingPatients.map((up, i) => (
+                                  <span key={up.id || i} className="text-white font-black text-xs sm:text-sm lg:text-base tabular-nums leading-none">
+                                    #{up.patientNum}
+                                  </span>
+                                ))}
+                                {right.waitingCount && right.waitingCount > right.upcomingPatients.length ? (
+                                  <span className="text-white/80 text-[10px] font-bold">
+                                    (+{right.waitingCount - right.upcomingPatients.length})
+                                  </span>
+                                ) : null}
+                              </div>
+                            ) : (
+                              <span className={MONITOR_STYLES.pairedLayout.nextQueueStripTicket}>
+                                {right.nextPatient?.patientNum}
+                              </span>
+                            )}
                           </div>
                         )}
                       </>
@@ -248,19 +279,36 @@ export function PairedLayout({
                       <span className={MONITOR_STYLES.pairedLayout.nowServingTicketPrimary}>
                         {pair.patient.patientNum}
                       </span>
-                      {pair.nextPatient && (
+                      {((pair.upcomingPatients && pair.upcomingPatients.length > 0) || pair.nextPatient) && (
                         <div className={MONITOR_STYLES.pairedLayout.nextQueueStrip}>
                           <span className={MONITOR_STYLES.pairedLayout.nextQueueStripLabel}>
                             {MONITOR_TEXTS.pairedLayout.nextPrefix}
                           </span>
-                          <span className={MONITOR_STYLES.pairedLayout.nextQueueStripTicket}>
-                            {pair.nextPatient.patientNum}
-                          </span>
-                          {pair.waitingCount && pair.waitingCount > 1 ? (
-                            <span className="text-white/80 text-xs font-bold">
-                              (+{pair.waitingCount - 1})
-                            </span>
-                          ) : null}
+                          {pair.upcomingPatients && pair.upcomingPatients.length > 0 ? (
+                            <div className="flex items-center gap-2 sm:gap-3 flex-wrap">
+                              {pair.upcomingPatients.map((up, i) => (
+                                <span key={up.id || i} className="text-white font-black text-base sm:text-xl lg:text-2xl tabular-nums leading-none">
+                                  #{up.patientNum}
+                                </span>
+                              ))}
+                              {pair.waitingCount && pair.waitingCount > pair.upcomingPatients.length ? (
+                                <span className="text-white/80 text-xs sm:text-sm font-bold">
+                                  (+{pair.waitingCount - pair.upcomingPatients.length} more)
+                                </span>
+                              ) : null}
+                            </div>
+                          ) : (
+                            <>
+                              <span className={MONITOR_STYLES.pairedLayout.nextQueueStripTicket}>
+                                {pair.nextPatient?.patientNum}
+                              </span>
+                              {pair.waitingCount && pair.waitingCount > 1 ? (
+                                <span className="text-white/80 text-xs font-bold">
+                                  (+{pair.waitingCount - 1})
+                                </span>
+                              ) : null}
+                            </>
+                          )}
                         </div>
                       )}
                     </>

@@ -53,15 +53,26 @@ const formatCubicleOnly = (cubicleNum: string): string => {
  * @returns The rendered table layout element.
  */
 export function TableLayout({
+  title,
   cubicles,
   assignedPatients,
   cubicleDoctorMap = {},
   activeCall = null,
 }: TableLayoutProps) {
   const currentMs = useCurrentTimeMs(activeCall !== null);
-  const uniqueRooms = [...new Set(cubicles.map(c => c.room))].sort((a, b) => a - b);
 
-  if (cubicles.length === 0 && assignedPatients.length === 0) {
+  const effectiveCubicles: Cubicle[] = cubicles.length > 0
+    ? cubicles
+    : [...new Set(assignedPatients.map(p => p.cubicleNum || title))].map((cNum, idx) => ({
+        id: idx + 1,
+        cubicleNum: cNum,
+        category: title,
+        room: 1,
+      }));
+
+  const uniqueRooms = [...new Set(effectiveCubicles.map(c => c.room))].sort((a, b) => a - b);
+
+  if (effectiveCubicles.length === 0 && assignedPatients.length === 0) {
     return (
       <div className={MONITOR_STYLES.tableLayout.container}>
         <div className={MONITOR_STYLES.tableLayout.emptyStateWrap}>
@@ -82,7 +93,7 @@ export function TableLayout({
               <th className={MONITOR_STYLES.tableLayout.headerCellRoom}>
                 {MONITOR_TEXTS.tableLayout.colRoomCubicle}
               </th>
-              {cubicles.map((cubicle) => {
+              {effectiveCubicles.map((cubicle) => {
                 const displayName = formatCubicleOnly(cubicle.cubicleNum);
                 const doctorName = cubicleDoctorMap[cubicle.cubicleNum];
                 return (
@@ -100,15 +111,23 @@ export function TableLayout({
           </thead>
           <tbody>
             {uniqueRooms.map((room) => {
-              const roomCubicles = cubicles.filter(c => c.room === room);
               return (
                 <tr key={room} className={MONITOR_STYLES.tableLayout.dataRow}>
                   <td className={MONITOR_STYLES.tableLayout.roomCell}>
-                    {MONITOR_TEXTS.tableLayout.roomPrefix}{room}
+                    {uniqueRooms.length > 1 ? `${MONITOR_TEXTS.tableLayout.roomPrefix}${room}` : title}
                   </td>
-                  {roomCubicles.map((cubicle) => {
+                  {effectiveCubicles.map((cubicle) => {
+                    const isCubicleInRoom = cubicle.room === room || uniqueRooms.length === 1;
+                    if (!isCubicleInRoom) {
+                      return (
+                        <td key={cubicle.id} className="border-l border-slate-200 bg-slate-50/50 align-middle text-center text-slate-300">
+                          --
+                        </td>
+                      );
+                    }
+
                     const patientsInCubicle = assignedPatients.filter(
-                      p => p.cubicleNum === cubicle.cubicleNum
+                      p => (p.cubicleNum || title) === cubicle.cubicleNum
                     );
                     const sortedPatients = sortCubiclePatients(patientsInCubicle);
                     const activePatient = sortedPatients[0];

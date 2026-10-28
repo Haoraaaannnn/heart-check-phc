@@ -175,6 +175,7 @@ function StandardCategoryMonitor({ categoryParam }: { categoryParam: string }) {
       patient: any;
       cubicle: string;
       nextPatient?: any;
+      upcomingPatients?: any[];
       waitingCount?: number;
     }[] = [];
     
@@ -186,6 +187,7 @@ function StandardCategoryMonitor({ categoryParam }: { categoryParam: string }) {
         cubicle: cubicleNum,
         patient: cubiclePatients[0] || null,
         nextPatient: cubiclePatients[1] || null,
+        upcomingPatients: cubiclePatients.slice(1, 5),
         waitingCount: Math.max(0, cubiclePatients.length - 1),
       });
     }
@@ -201,6 +203,19 @@ function StandardCategoryMonitor({ categoryParam }: { categoryParam: string }) {
         cubicle: cubicleNum,
         patient: cubiclePatients[0] || null,
         nextPatient: cubiclePatients[1] || null,
+        upcomingPatients: cubiclePatients.slice(1, 5),
+        waitingCount: Math.max(0, cubiclePatients.length - 1),
+      });
+    }
+
+    const unassignedPatients = assignedPatients.filter(p => !p.cubicleNum);
+    if (unassignedPatients.length > 0 && pairs.length === 0) {
+      const cubiclePatients = sortCubiclePatients(unassignedPatients);
+      pairs.push({
+        cubicle: category,
+        patient: cubiclePatients[0] || null,
+        nextPatient: cubiclePatients[1] || null,
+        upcomingPatients: cubiclePatients.slice(1, 5),
         waitingCount: Math.max(0, cubiclePatients.length - 1),
       });
     }

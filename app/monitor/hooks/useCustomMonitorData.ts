@@ -289,10 +289,23 @@ export function useCustomMonitorData(services: string[], started: boolean) {
     // 1. Process Registration Counters if selected
     if (hasRegistration) {
       const activeCounters = await fetchActiveCounters();
+      const { data: svcData } = await supabase
+        .from('services')
+        .select('label_en, requires_registration');
+
+      const regServices = (svcData || [])
+        .filter((s: any) => s.requires_registration !== false)
+        .map((s: any) => s.label_en);
+
+      const serviceFilter = regServices.length > 0 ? regServices : ['Consultation', 'OPD Screening'];
+      if (!serviceFilter.includes('Registration')) {
+        serviceFilter.push('Registration');
+      }
+
       const { data: regPatients } = await supabase
         .from('patients')
         .select('*')
-        .eq('service', 'Registration')
+        .in('service', serviceFilter)
         .in('status', ['On Progress', 'Waiting'])
         .not('counter', 'is', null)
         .is('reg_end', null)
@@ -351,16 +364,17 @@ export function useCustomMonitorData(services: string[], started: boolean) {
         .from('patients')
         .select('*')
         .in('service', clinicalServices)
-        .in('status', ['Assigned', 'With Doctor', 'Carryout'])
-        .not('cubicleNum', 'is', null)
+        .in('status', ['Assigned', 'With Doctor', 'Carryout', 'On Progress', 'Waiting'])
         .eq('is_historical', false)
         .gte('created_at', today.toISOString())
         .lt('created_at', tomorrow.toISOString())
         .order('called_at', { ascending: true });
 
       const cPatients: Patient[] = clinicalPatients || [];
+      const processedCubicleNums = new Set<string>();
 
       for (const cubicle of cubicles) {
+        processedCubicleNums.add(cubicle.cubicleNum);
         const cubiclePatients = sortCubiclePatients(
           cPatients.filter(p => p.cubicleNum === cubicle.cubicleNum)
         );
@@ -382,6 +396,54 @@ export function useCustomMonitorData(services: string[], started: boolean) {
           isExtendedIntake: isExtendedTransaction(serving, Date.now()),
           isCalling: false,
         });
+      }
+
+      // Check for orphan patients or clinical services without rows in cubicle table
+      for (const serviceName of clinicalServices) {
+        const serviceTargets = normalizedTargets.filter(t => t.service === serviceName);
+        for (const target of serviceTargets) {
+          const serviceTargetPatients = cPatients.filter(p => {
+            if (p.service !== serviceName) return false;
+            if (target.subcategory) {
+              return (p.subcategory ?? '').toLowerCase() === target.subcategory.toLowerCase();
+            }
+            return true;
+          });
+
+          const extraPatients = serviceTargetPatients.filter(
+            p => !p.cubicleNum || !processedCubicleNums.has(p.cubicleNum)
+          );
+
+          if (extraPatients.length > 0) {
+            const cubicleGroups = new Map<string, Patient[]>();
+            for (const p of extraPatients) {
+              const key = p.cubicleNum || target.displayTitle;
+              if (!cubicleGroups.has(key)) cubicleGroups.set(key, []);
+              cubicleGroups.get(key)!.push(p);
+            }
+
+            for (const [stationLabel, groupPatients] of cubicleGroups) {
+              const sorted = sortCubiclePatients(groupPatients);
+              const serving = sorted[0] || null;
+              const waiting = sorted.slice(1);
+              const stationId = `station-${serviceName}-${stationLabel}`;
+
+              resultStations.push({
+                id: stationId,
+                type: 'cubicle',
+                service: serviceName,
+                subcategory: target.subcategory,
+                stationNumber: stationLabel,
+                label: stationLabel,
+                doctorName: null,
+                servingPatient: serving,
+                waitingPatients: waiting,
+                isExtendedIntake: isExtendedTransaction(serving, Date.now()),
+                isCalling: false,
+              });
+            }
+          }
+        }
       }
     }
 
