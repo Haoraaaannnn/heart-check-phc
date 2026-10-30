@@ -62,6 +62,8 @@ export interface NurseHeaderProps {
   claimedCubicleId?: number | null;
   /** Callback fired to launch station configuration modal. */
   onOpenStationModal?: () => void;
+  /** Opens the shared physician details and cubicle assignment editor. */
+  onOpenDoctors?: () => void;
 }
 
 /**
@@ -92,6 +94,7 @@ export function NurseHeader({
   onClearAllNotifications,
   claimedCubicleId,
   onOpenStationModal,
+  onOpenDoctors,
 }: NurseHeaderProps) {
   // Theme switching hook
   const { resolvedTheme, setTheme } = useTheme();
@@ -142,7 +145,7 @@ export function NurseHeader({
       className="bg-white dark:bg-[#141414] border-b border-slate-200 dark:border-[#2e2e2e] transition-colors"
     >
       {/* Left: Sidebar Toggle, Station Title & Active Filters / Desktop Dropdown */}
-      <div className="flex flex-wrap items-center gap-2 sm:gap-3 min-w-0 flex-1 basis-[40rem]">
+      <div className="flex flex-wrap items-center gap-2 sm:gap-3 min-w-0 flex-1 basis-[32rem]">
         {/* Sidebar Hide/Open Toggle Button */}
         {onToggleSidebar && (
           <button
@@ -159,10 +162,12 @@ export function NurseHeader({
           </button>
         )}
 
-        <div className="flex items-center gap-2 shrink-0">
-          <span className="text-slate-600 dark:text-[#a3a3a3] text-sm font-semibold tracking-tight hidden md:inline whitespace-normal break-words">
-            {nurseTexts.patientManagement}
-          </span>
+        <div className="flex min-w-0 items-center gap-2.5">
+          <span aria-hidden="true" className="flex h-9 w-9 shrink-0 items-center justify-center text-[#cc3535]"><i className="bx bx-plus-medical text-xl" /></span>
+          <div className="min-w-0">
+            <p className="break-words whitespace-normal text-sm font-bold tracking-tight text-slate-900 dark:text-[#f5f5f5]">{nurseTexts.dashboardTitle}</p>
+            <p className="hidden text-[11px] text-slate-500 dark:text-[#a3a3a3] xl:block">{nurseTexts.patientManagement}</p>
+          </div>
         </div>
 
         {/* Active Station Badge & Switch Trigger */}
@@ -301,7 +306,7 @@ export function NurseHeader({
       </div>
 
       {/* Right: Sync Status, Finished Ledger Button, Theme Toggle & Notifications */}
-      <div className="flex items-center gap-2 sm:gap-3 shrink-0 ml-2">
+      <div className="flex flex-wrap items-center gap-2 sm:gap-3 shrink-0">
         {/* Sync Indicator */}
         {isSyncing && (
           <div className="flex items-center gap-2 px-3 py-1.5 bg-blue-50 dark:bg-blue-950/40 border border-blue-200 dark:border-blue-800/50 rounded-lg">
@@ -313,6 +318,10 @@ export function NurseHeader({
         )}
 
         {/* Finished Ledger Drawer Button */}
+        {onOpenDoctors && <button type="button" onClick={onOpenDoctors}
+          className="inline-flex items-center gap-2 rounded-xl border border-slate-200 bg-white px-3 py-1.5 text-xs font-bold text-slate-700 hover:bg-slate-50 dark:border-[#2e2e2e] dark:bg-[#1a1a1a] dark:text-[#f5f5f5] dark:hover:bg-[#242424]">
+          Doctors
+        </button>}
         <button
           type="button"
           onClick={onOpenFinishedLedger}

@@ -5,6 +5,7 @@
 import { NextResponse } from 'next/server';
 import { requireUser } from '@/lib/supabase/authGuard';
 import { supabaseAdmin } from '@/lib/supabase/facilityHelpers';
+import { loadStationOwnership } from '@/lib/supabase/stationOwnership';
 
 const STAFF_ROLES = new Set(['superadmin', 'admin', 'registration', 'staff', 'nurse', 'doctor']);
 
@@ -43,14 +44,25 @@ async function resolveStations(request: Request) {
       kind: 'cubicle', id: cubicle.id, label: cubicle.cubicleNum, onBreak: cubicle.on_break, active: true,
     })),
   ];
-  return { stations };
+  const userId: unknown = user.id;
+  if (typeof userId !== 'number' && typeof userId !== 'string') {
+    return { response: NextResponse.json({ error: 'Unable to verify station identity.' }, { status: 503 }) };
+  }
+  return { stations, userId };
 }
 
 /** @returns Only stations the authenticated staff member may put on break. */
 export async function GET(request: Request) {
   const result = await resolveStations(request);
   if (result.response) return result.response;
-  return NextResponse.json({ stations: result.stations }, { headers: { 'Cache-Control': 'no-store' } });
+  if (result.userId === undefined) return NextResponse.json({ error: 'Unable to verify station identity.' }, { status: 503 });
+  try {
+    const ownership = await loadStationOwnership(result.userId);
+    const stations = result.stations?.map(station => ({ ...station, owners: ownership[`${station.kind}:${station.id}`] ?? [] }));
+    return NextResponse.json({ stations }, { headers: { 'Cache-Control': 'no-store' } });
+  } catch {
+    return NextResponse.json({ error: 'Unable to load station ownership. Please retry.' }, { status: 503 });
+  }
 }
 
 /**

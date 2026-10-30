@@ -194,12 +194,10 @@ export async function POST(request: Request) {
 
     // 2. Dispatch queue confirmation SMS asynchronously if phone number is registered
     if (patientRecord.phoneNum) {
-      sendQueueConfirmationSMS(
-        patientRecord.phoneNum,
-        queueNumber,
-        displayService,
-        ewtMinutes
-      ).catch((smsErr) => {
+      sendQueueConfirmationSMS({
+        phoneNum: patientRecord.phoneNum, patientNum: queueNumber, serviceName: displayService,
+        ewtMinutes, patientId: patientRecord.id,
+      }).catch((smsErr) => {
         console.warn(
           '%s [PRINT CONFIRMATION SMS ERROR] Failed to send SMS: %s',
           getTimestamp(),

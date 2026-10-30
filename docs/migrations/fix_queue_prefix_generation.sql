@@ -88,7 +88,7 @@ begin
     v_patient_num,
     p_service,
     'On Progress',
-    case when p_phone is null or p_phone = '' then null else p_phone::bigint end,
+    nullif(p_phone, ''),
     null,
     v_next_position,
     p_subcategory,

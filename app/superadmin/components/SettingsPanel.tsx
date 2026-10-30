@@ -51,6 +51,13 @@ export function SettingsPanel({ focusSecurity = false }: SettingsPanelProps = {}
   const [timeoutMessage, setTimeoutMessage] = useState('');
   const [timeoutError, setTimeoutError] = useState('');
 
+  // 2. Max Rotations Before Idle
+  const [maxRotations, setMaxRotations] = useState<string>('5');
+  const [rotationsLoading, setRotationsLoading] = useState(true);
+  const [rotationsSaving, setRotationsSaving] = useState(false);
+  const [rotationsMessage, setRotationsMessage] = useState('');
+  const [rotationsError, setRotationsError] = useState('');
+
   // 3. Max Login Attempts
   const [maxLoginAttempts, setMaxLoginAttempts] = useState<string>('3');
   const [loginAttemptsLoading, setLoginAttemptsLoading] = useState(true);
@@ -82,6 +89,9 @@ export function SettingsPanel({ focusSecurity = false }: SettingsPanelProps = {}
             case 'rotate_timeout_seconds':
               setMinutes((parseInt(item.value, 10) / 60).toString());
               break;
+            case 'max_rotations_before_idle':
+              setMaxRotations(item.value);
+              break;
             case 'max_login_attempts':
               setMaxLoginAttempts(item.value);
               break;
@@ -95,6 +105,7 @@ export function SettingsPanel({ focusSecurity = false }: SettingsPanelProps = {}
       console.error('Error loading settings:', err);
     } finally {
       setTimeoutLoading(false);
+      setRotationsLoading(false);
       setLoginAttemptsLoading(false);
       setLockoutLoading(false);
     }
@@ -135,6 +146,40 @@ export function SettingsPanel({ focusSecurity = false }: SettingsPanelProps = {}
       setTimeoutError(err instanceof Error ? err.message : T.feedback.genericError);
     } finally {
       setTimeoutSaving(false);
+    }
+  };
+
+  /**
+   * Saves the maximum rotations before idle value.
+   */
+  const handleSaveMaxRotations = async () => {
+    setRotationsError('');
+    setRotationsMessage('');
+
+    const count = Number(maxRotations);
+    if (!Number.isSafeInteger(count) || count <= 0) {
+      setRotationsError(T.maxRotations.errorInvalid);
+      return;
+    }
+
+    setRotationsSaving(true);
+    try {
+      const { error } = await supabase.from('app_settings').upsert(
+        {
+          key: 'max_rotations_before_idle',
+          value: count.toString(),
+          updated_at: new Date().toISOString(),
+        },
+        { onConflict: 'key' }
+      );
+
+      if (error) throw error;
+      setRotationsMessage(T.maxRotations.success);
+      setTimeout(() => setRotationsMessage(''), 2500);
+    } catch (err: unknown) {
+      setRotationsError(err instanceof Error ? err.message : T.feedback.genericError);
+    } finally {
+      setRotationsSaving(false);
     }
   };
 
@@ -261,16 +306,48 @@ export function SettingsPanel({ focusSecurity = false }: SettingsPanelProps = {}
           </div>
         </div>
 
-        {/* 2. Shift rotation policy */}
+        {/* 2. Rotations Before Idle */}
         <div className={S.card}>
           <div className={S.cardHeader}>
             <h3 className={S.cardTitle}>
               <i className={`bx bx-refresh ${S.cardIcon}`} aria-hidden="true" />
-              <span>Shift Rotation Policy</span>
+              <span>{T.maxRotations.title}</span>
             </h3>
-            <p className={S.cardDescription}>Tickets rotate up to five times per shift and are cancelled on the sixth rotation. Cancelled records remain available for reports. At 1 PM Manila time, unfinished tickets continue with a fresh rotation count.</p>
+            <p className={S.cardDescription}>{T.maxRotations.description}</p>
           </div>
 
+          <div>
+            {rotationsError && <div className={`${S.alertError} mb-3`}>{rotationsError}</div>}
+            {rotationsMessage && <div className={`${S.alertSuccess} mb-3`}>{rotationsMessage}</div>}
+
+            {rotationsLoading ? (
+              <div className={SUPERADMIN_SKELETON_STYLES.settings.inputRow}>
+                <div className={SUPERADMIN_SKELETON_STYLES.settings.inputBox} />
+                <div className={SUPERADMIN_SKELETON_STYLES.settings.unitLabel} />
+                <div className={SUPERADMIN_SKELETON_STYLES.settings.saveButton} />
+              </div>
+            ) : (
+              <div className={S.inputRow}>
+                <input
+                  type="number"
+                  min="1"
+                  step="1"
+                  value={maxRotations}
+                  onChange={(e) => setMaxRotations(e.target.value)}
+                  className={S.numberInput}
+                />
+                <span className={S.unitLabel}>{T.maxRotations.unitLabel}</span>
+                <button
+                  type="button"
+                  onClick={handleSaveMaxRotations}
+                  disabled={rotationsSaving}
+                  className={S.saveButton}
+                >
+                  {rotationsSaving ? T.maxRotations.savingButton : T.maxRotations.saveButton}
+                </button>
+              </div>
+            )}
+          </div>
         </div>
 
         {/* 3. Max Login Attempts */}

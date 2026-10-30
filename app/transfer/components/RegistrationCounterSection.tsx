@@ -15,7 +15,7 @@
 
 'use client';
 
-import React from 'react';
+import React, { useRef, useState } from 'react';
 import { Patient } from '@/types/Types';
 import { CounterTimerControl } from './CounterTimerControl';
 import { transferTexts } from '@/constants/texts/transferTexts';
@@ -25,6 +25,7 @@ import { SelectedTransferPatient } from '@/app/transfer/types/transfer';
 import { DragHandle } from '@/app/transfer/components/DragHandle';
 import { useStationBreaks } from '@/hooks/useStationBreaks';
 import { StationBreakButton } from '@/components/reusables/StationBreakButton';
+import { StationOwnerBadge } from '@/components/reusables/StationOwnerBadge';
 
 /**
  * Props for {@link RegistrationCounterSection}.
@@ -47,7 +48,7 @@ export interface RegistrationCounterSectionProps {
   /** Mouse drag handler for backward compatibility. */
   onDragStart?: (e: React.MouseEvent, patient: Patient) => void;
   /** Callback to release the front patient from the counter to the queue. */
-  onRelease: (patient: Patient) => void;
+  onRelease: (patient: Patient) => void | Promise<void>;
   /** Optional allowed counter numbers. */
   allowedCounters?: number[];
 }
@@ -62,7 +63,7 @@ const DEFAULT_COUNTERS: number[] = [];
  */
 export function RegistrationCounterSection({
   patients,
-  draggedPatient,
+  draggedPatient: _draggedPatient,
   dragOverCounter,
   selectedPatient,
   onSelectPatient,
@@ -75,6 +76,8 @@ export function RegistrationCounterSection({
   const counters = allowedCounters && allowedCounters.length > 0 ? allowedCounters : DEFAULT_COUNTERS;
   const safePatients = Array.isArray(patients) ? patients : [];
   const breaks = useStationBreaks();
+  const [releasingId, setReleasingId] = useState<number | null>(null);
+  const releasingRef = useRef(false);
   const unassignedPatients = safePatients.filter(p => !p.counter);
 
   return (
@@ -158,6 +161,9 @@ export function RegistrationCounterSection({
                 style={isTargetEligible ? TransferStyle.assignTargetCard : undefined}
                 className={`${registrationCounterStyles.counterCardBase} ${cardStateClass}`}
               >
+                <StationOwnerBadge owners={station?.owners} variant="header" actions={station
+                  ? <StationBreakButton station={station} compact busy={breaks.busy !== null} onToggle={() => void breaks.toggle(station)} />
+                  : undefined} />
                 {/* Counter Tile Header */}
                 <div className="flex items-center justify-between gap-1 mb-1 min-w-0">
                   <span className={registrationCounterStyles.counterTitle}>
@@ -173,7 +179,6 @@ export function RegistrationCounterSection({
                       {counterPatients.length} {counterPatients.length === 1 ? 'pt' : 'pts'}
                     </span>
                   )}
-                  {station && <StationBreakButton station={station} busy={breaks.busy !== null} onToggle={() => void breaks.toggle(station)} />}
                 </div>
 
                 {/* Primary Patient at Counter Window */}
@@ -218,16 +223,20 @@ export function RegistrationCounterSection({
 
                           <button
                             type="button"
+                            disabled={releasingId !== null}
                             onPointerDown={e => e.stopPropagation()}
                             onMouseDown={e => e.stopPropagation()}
-                            onClick={e => {
+                            onClick={async e => {
                               e.stopPropagation();
-                              onRelease(topPatient);
+                              if (releasingRef.current) return;
+                              releasingRef.current = true; setReleasingId(topPatient.id);
+                              try { await onRelease(topPatient); }
+                              finally { releasingRef.current = false; setReleasingId(null); }
                             }}
                             title={transferTexts.moveToQueueTooltip}
                             className={registrationCounterStyles.queueBtn}
                           >
-                            {transferTexts.sendToQueueBtn}
+                            {releasingId === topPatient.id ? 'Queuing...' : transferTexts.sendToQueueBtn}
                           </button>
                         </div>
                       </div>

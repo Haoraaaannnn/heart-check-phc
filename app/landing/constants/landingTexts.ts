@@ -62,7 +62,7 @@ export const LANDING_TEXTS = {
       },
       {
         id: 'nurse',
-        title: 'Consultation Nurse Station',
+        title: 'Doctors Station',
         subtitle: 'Clinical Kanban Coordination',
         description:
           'Interactive 3-column clinical board (Waiting, Called, Serving), multi-language chime voice synthesis, and local IndexedDB offline outbox resilience.',

@@ -107,20 +107,14 @@ export async function POST(request: Request) {
       .eq('is_historical', false);
 
     if (updateError) {
-      console.warn(
-        '%s [SMS FALLBACK PHONE UPDATE ERROR] Could not persist phone: %s',
-        getTimestamp(),
-        updateError.message
-      );
+      return NextResponse.json({ success: false, error: 'Secure phone storage is unavailable. Please contact staff.' }, { status: 503 });
     }
 
     // Dispatch queue confirmation SMS
-    const smsResult = await sendQueueConfirmationSMS(
-      normalizedPhone,
-      patientRecord.patientNum,
-      serviceName,
-      ewtMinutes
-    );
+    const smsResult = await sendQueueConfirmationSMS({
+      phoneNum: normalizedPhone, patientNum: patientRecord.patientNum, serviceName,
+      ewtMinutes, patientId: patientRecord.id,
+    });
 
     if (!smsResult.success) {
       return NextResponse.json(
@@ -145,9 +139,8 @@ export async function POST(request: Request) {
       maskedPhone,
       message: 'Queue ticket sent to your phone via SMS.',
     });
-  } catch (err: unknown) {
-    const msg = err instanceof Error ? err.message : 'Unexpected server error';
-    console.error('%s [SMS FALLBACK ROUTE ERROR] %s', getTimestamp(), msg);
+  } catch {
+    console.error('%s [SMS FALLBACK ROUTE ERROR] Dispatch failed.', getTimestamp());
     return NextResponse.json(
       { success: false, error: 'Internal server error while dispatching SMS ticket.' },
       { status: 500 }

@@ -1,9 +1,9 @@
 "use client";
 
-import { useState } from "react";
+/** @fileoverview Kiosk mobile entry, encrypted check-in and actionable creation feedback. */
+import { useRef, useState } from "react";
 import { useRouter, useSearchParams } from "next/navigation";
 import { supabase } from "@/lib/supabase";
-import { getTimestamp } from "@/lib/logger";
 import { Service } from "@/types/Services";
 import { useKioskLoading } from "@/app/kiosk/context/KioskLoadingContext";
 import PhoneInput from "@/app/kiosk/pages/sms-input/components/PhoneInput";
@@ -25,7 +25,7 @@ import {
     validatePhMobileNumber,
 } from "@/app/kiosk/pages/sms-input/utils/phoneValidation";
 import { SMSValidationTexts } from "@/app/kiosk/pages/sms-input/constants/smsValidationTexts";
-import { encryptPatientPhoneAction } from "@/app/actions/phoneSecurity";
+import { createKioskPatient, KioskTicketError } from "@/app/kiosk/pages/sms-input/utils/createKioskPatient";
 import { useWebPrinter } from "@/app/kiosk/hooks/useWebPrinter";
 
 /** Props for {@link KioskPhoneEntry}. */
@@ -122,8 +122,8 @@ async function resolvePrefixInfo(
                 }
             }
         }
-    } catch (err) {
-        console.warn(`${getTimestamp()} [PREFIX RESOLUTION] Falling back to default prefix:`, err);
+    } catch {
+        console.warn('[PREFIX RESOLUTION] Using the default queue prefix.');
     }
     return fallback;
 }
@@ -189,6 +189,8 @@ export default function KioskPhoneEntry({
 }: KioskPhoneEntryProps) {
     const preferredList = preferredCubicleNums ? preferredCubicleNums.split(",") : null;
     const [phone, setPhone] = useState("");
+    const [ticketError, setTicketError] = useState('');
+    const creatingRef = useRef(false);
     const [inputWarning, setInputWarning] = useState<{ fil: string; en: string } | null>(null);
     const [showContinueModal, setShowContinueModal] = useState(false);
     const [showSkipModal, setShowSkipModal] = useState(false);
@@ -246,109 +248,27 @@ export default function KioskPhoneEntry({
      */
     const createPatient = async (phoneToSave: string | null): Promise<string> => {
         const { prefix, groupBySubcategory } = await resolvePrefixInfo(service, subcategory);
-
-        // Diagnostic: log the resolved prefix and exact service label before the RPC call
-        // so any future prefix mismatch is immediately visible in the console.
-        console.log(`${getTimestamp()} [DB RPC] create_patient args:`, {
-            label_en: service.label_en,
-            prefix,
-            subcategory: subcategory ?? null,
-            groupBySubcategory,
-        });
-
-        const encryptedPhone = phoneToSave
-            ? await encryptPatientPhoneAction(phoneToSave)
-            : null;
-
-        const t0 = performance.now();
-        const { data, error } = await supabase.rpc("create_patient", {
-            p_service: service.label_en,
-            p_subcategory: subcategory ?? null,
-            p_preferred_cubicles: preferredList,
-            p_prefix: prefix,
-            p_group_by_subcategory: groupBySubcategory,
-            p_phone: encryptedPhone,
-        });
-
-        // Never downgrade to plaintext when the database cannot accept encryption.
-        if (error && (error.code === "22P02" || error.message?.includes("bigint"))) {
-            throw new Error('Secure phone storage is unavailable. Please skip SMS or contact staff to finish check-in.');
-        }
-        const elapsed = Math.round(performance.now() - t0);
-
-        if (error) {
-            // Supabase PostgrestError has non-enumerable properties; wrap it in a
-            // native Error so the full context is always visible in catch blocks.
-            const pgError = new Error(
-                error.message ?? "Supabase RPC error"
-            ) as Error & { code?: string; details?: string; hint?: string };
-            pgError.code = error.code;
-            pgError.details = error.details;
-            pgError.hint = error.hint;
-            throw pgError;
-        }
-        if (!data || data.length === 0) throw new Error("RPC returned no row");
-
-        const row = data[0];
-        console.log(`${getTimestamp()} [DB INSERT] New Patient Created in ${elapsed}ms:`, {
-            id: row.id,
-            patientNum: row.patientNum,
-            queue_position: row.queue_position,
-            service: service.label_en,
-        });
-        return row.patientNum;
-    };
-
-    /**
-     * Serializes any caught value into a loggable plain object.
-     *
-     * @remarks
-     * Supabase's PostgrestError defines its properties as non-enumerable and
-     * implements a toJSON() that returns {}. Using Object.getOwnPropertyNames
-     * bypasses toJSON() and captures every own property regardless of enumerability.
-     * The raw value is also logged directly so it remains inspectable in DevTools
-     * even when manual extraction is incomplete.
-     *
-     * @param e - The caught value from a try/catch block.
-     * @returns A plain, serializable object with all available error fields.
-     */
-    const serializeError = (e: unknown): Record<string, unknown> => {
-        if (e == null) return { message: String(e) };
-
-        // Collect all own property names, including non-enumerable ones,
-        // to circumvent toJSON() overrides that hide the real error data.
-        const allKeys = Object.getOwnPropertyNames(e as object);
-        const extracted: Record<string, unknown> = {};
-        for (const key of allKeys) {
-            try {
-                extracted[key] = (e as Record<string, unknown>)[key];
-            } catch {
-                extracted[key] = "[unreadable]";
-            }
-        }
-
-        // Always guarantee a message field as a final fallback.
-        if (!extracted["message"]) {
-            extracted["message"] = String(e);
-        }
-
-        return extracted;
+        return createKioskPatient({ service: service.label_en, subcategory: subcategory ?? null,
+            preferredCubicles: preferredList, prefix, groupBySubcategory, phone: phoneToSave });
     };
 
     /**
      * Handles patient confirmation of phone number and transitions to ticket printing.
      */
     const handleContinueConfirm = async () => {
+        if (creatingRef.current) return;
+        creatingRef.current = true;
+        setTicketError('');
         setShowContinueModal(false);
         showLoading("Creating queue ticket...");
         try {
             const finalPatientNum = patientNum ?? (await createPatient(phone));
             setPatientNum(finalPatientNum);
             router.push(buildQueuePrintUrl(finalPatientNum));
-        } catch (e) {
+        } catch (e: unknown) {
             hideLoading();
-            console.error(`${getTimestamp()} [SMS CONTINUE ERROR] raw:`, e);
-            console.error(`${getTimestamp()} [SMS CONTINUE ERROR]`, serializeError(e));
+            creatingRef.current = false;
+            setTicketError(e instanceof KioskTicketError ? e.message : 'Unable to create your queue ticket. Please try again or contact staff.');
         }
     };
 
@@ -356,20 +276,19 @@ export default function KioskPhoneEntry({
      * Handles skipping phone entry and transitions to ticket printing.
      */
     const handleSkipConfirm = async () => {
+        if (creatingRef.current) return;
+        creatingRef.current = true;
+        setTicketError('');
         setShowSkipModal(false);
         showLoading("Creating queue ticket...");
         try {
             const finalPatientNum = patientNum ?? (await createPatient(null));
             setPatientNum(finalPatientNum);
-            console.log(`${getTimestamp()} [SMS SKIP] Patient created without phone:`, {
-                patientNum: finalPatientNum,
-                service: service.label_en,
-            });
             router.push(buildQueuePrintUrl(finalPatientNum));
-        } catch (e) {
+        } catch (e: unknown) {
             hideLoading();
-            console.error(`${getTimestamp()} [SMS SKIP ERROR] raw:`, e);
-            console.error(`${getTimestamp()} [SMS SKIP ERROR]`, serializeError(e));
+            creatingRef.current = false;
+            setTicketError(e instanceof KioskTicketError ? e.message : 'Unable to create your queue ticket. Please try again or contact staff.');
         }
     };
 
@@ -391,6 +310,7 @@ export default function KioskPhoneEntry({
     return (
         <div style={SMSLayoutStyle.contentWrapper} className={SMSLayoutClasses.contentWrapper}>
             <SMSHeader service={service} subcategory={subcategory} />
+            {ticketError && <p role="alert" className="rounded-xl border border-red-200 bg-red-50 p-3 text-sm text-red-800 whitespace-normal">{ticketError}</p>}
 
             {/* Two-Column Entry Layout: Notice & Phone on Left, NumPad & Buttons on Right (stacked in portrait) */}
             <div className={SMSLayoutClasses.entryGrid}>

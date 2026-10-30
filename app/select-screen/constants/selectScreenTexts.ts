@@ -66,11 +66,11 @@ export const SELECT_SCREEN_TEXTS = {
       actionButton: 'Open Transfer Station',
     },
     nurse: {
-      title: 'Consultation Nurse Station',
+      title: 'Doctors Station',
       badge: 'Clinical Workstation',
       description:
         '3-column clinical Kanban board (Waiting, Called, Serving), patient voice calling chimes, and offline outbox resilience.',
-      actionButton: 'Open Nurse Station',
+      actionButton: 'Open Doctors Station',
     },
     dashboard: {
       title: 'Operations & Analytics Dashboard',

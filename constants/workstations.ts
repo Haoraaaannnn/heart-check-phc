@@ -49,7 +49,7 @@ export const WORKSTATION_CATALOG: readonly WorkstationDefinition[] = [
   },
   {
     id: 'nurse',
-    label: 'Nurse Station',
+    label: 'Doctors Station',
     description: 'Clinical queue management, vitals triage & physician cubicle consultation.',
     icon: 'bx-plus-medical',
     route: '/nurse',

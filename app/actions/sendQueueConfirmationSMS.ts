@@ -20,6 +20,8 @@
 import { decryptPhoneNumber } from '@/lib/crypto/phoneEncryption';
 import { formatEwtSmsLabel } from '@/constants/ewtTexts';
 import { getTimestamp } from '@/lib/logger';
+import { readSmsQueuePosition } from '@/lib/sms/readQueuePosition';
+import { smsQueuePositionText } from '@/lib/sms/queuePosition';
 
 /**
  * Sliding window rate limit cache for queue confirmation dispatches.
@@ -44,19 +46,11 @@ const COOLDOWN_TTL_MS = 10 * 60 * 1000;
  */
 function normalizePhilippinePhone(phone: unknown): string | null {
   if (typeof phone !== 'string' && typeof phone !== 'number') return null;
-  const rawOrDecrypted = decryptPhoneNumber(phone as string | number) ?? String(phone);
+  const rawOrDecrypted = decryptPhoneNumber(phone) ?? String(phone);
   const cleaned = rawOrDecrypted.replace(/[\s-]/g, '').trim();
 
-  let normalized = cleaned;
-  if (normalized.startsWith('+63')) {
-    normalized = normalized.slice(0, 13);
-  } else if (normalized.startsWith('63')) {
-    normalized = '+' + normalized.slice(1);
-  } else if (normalized.startsWith('09')) {
-    normalized = '+63' + normalized.slice(1);
-  } else {
-    return null;
-  }
+  const normalized = cleaned.startsWith('09') ? '+63' + cleaned.slice(1)
+    : cleaned.startsWith('639') ? '+' + cleaned : cleaned;
 
   const PH_MOBILE_REGEX = /^\+639\d{9}$/;
   return PH_MOBILE_REGEX.test(normalized) ? normalized : null;
@@ -102,21 +96,16 @@ export type QueueConfirmationSMSResponse =
 /**
  * Dispatches an automated confirmation SMS to a newly queued patient with their EWT.
  *
- * @param phoneNum - Target Philippine mobile number (raw or AES-256-GCM ciphertext).
- * @param patientNum - Patient queue ticket identifier (e.g. "C001").
- * @param serviceName - Registered clinical service name.
- * @param ewtMinutes - Computed estimated wait time in minutes.
+ * @param options - Verified ticket identity, stored contact, service and estimated wait minutes.
  * @returns Object with operation status or sanitized error message.
  *
  * @remarks
  * Called server-side from `/api/print-ticket/route.ts` upon successful ticket registration.
  */
-export async function sendQueueConfirmationSMS(
-  phoneNum: string | number | null | undefined,
-  patientNum: string,
-  serviceName: string,
-  ewtMinutes: number | null | undefined
-): Promise<QueueConfirmationSMSResponse> {
+export async function sendQueueConfirmationSMS({ phoneNum, patientNum, serviceName, ewtMinutes, patientId }: {
+  phoneNum: string | number | null | undefined; patientNum: string; serviceName: string;
+  ewtMinutes: number | null | undefined; patientId: number;
+}): Promise<QueueConfirmationSMSResponse> {
   try {
     if (!phoneNum) {
       return { success: true, message: 'No phone number provided; SMS skipped.' };
@@ -137,9 +126,8 @@ export async function sendQueueConfirmationSMS(
     const cooldown = checkConfirmationCooldown(formattedRecipient);
     if (!cooldown.allowed) {
       console.warn(
-        '%s [CONFIRMATION SMS] Cooldown throttle active for %s',
-        getTimestamp(),
-        formattedRecipient
+        '%s [CONFIRMATION SMS] Duplicate dispatch throttled.',
+        getTimestamp()
       );
       return {
         success: false,
@@ -151,21 +139,24 @@ export async function sendQueueConfirmationSMS(
     const safePatientNum = String(patientNum || '').replace(/[^\w-]/g, '').trim();
     const safeServiceName = String(serviceName || 'Consultation').replace(/[^\w\s-]/g, '').trim();
     const ewtLabel = formatEwtSmsLabel(ewtMinutes);
+    const snapshot = await readSmsQueuePosition({ patientId, patientNum: safePatientNum, nowMs: Date.now() });
+    const positionText = snapshot.ok ? smsQueuePositionText(snapshot.position) : '';
 
     // 4. Construct bilingual Taglish confirmation message
     const message =
       `Heart Check PHC: Matagumpay kang nakapag-pila!\n\n` +
       `Ticket No.: ${safePatientNum}\n` +
+      (positionText ? `${positionText}\n` : '') +
       `Serbisyo: ${safeServiceName}\n` +
       `Tinatayang oras: ${ewtLabel}\n\n` +
       `Pakiabangan ang inyong numero sa monitor. Ang oras ay pagtatantya lamang. Salamat!`;
 
     if (!process.env.UNISMS_API_KEY) {
       console.warn(
-        '%s [CONFIRMATION SMS] UNISMS_API_KEY is not configured in server environment; simulated dispatch.',
+        '%s [CONFIRMATION SMS] SMS gateway is not configured.',
         getTimestamp()
       );
-      return { success: true, message: 'SMS service simulated (missing API key).' };
+      return { success: false, error: 'SMS notification service is currently unavailable.' };
     }
 
     const credentials = Buffer.from(`${process.env.UNISMS_API_KEY}:`).toString('base64');
@@ -198,9 +189,8 @@ export async function sendQueueConfirmationSMS(
       safePatientNum
     );
     return { success: true };
-  } catch (err: unknown) {
-    const errorMsg = err instanceof Error ? err.message : 'Unknown dispatch error';
-    console.error('%s [CONFIRMATION SMS ERROR]: %s', getTimestamp(), errorMsg);
+  } catch {
+    console.error('%s [CONFIRMATION SMS ERROR] Dispatch failed.', getTimestamp());
     return { success: false, error: 'Failed to process confirmation SMS.' };
   }
 }

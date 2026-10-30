@@ -48,6 +48,34 @@ const countersLib = load('lib/counters.ts', {
   '@/lib/supabase': { supabase: {} },
 });
 
+test('Counter lanes stay hidden until staff ownership is confirmed, including on public monitors', async () => {
+  const counters = [
+    { counter_number: 3, active: true, on_break: true, occupied: true, services: ['Consultation'] },
+    { counter_number: 2, active: true, on_break: false, occupied: false, services: ['Consultation'] },
+    { counter_number: 1, active: true, on_break: false, occupied: true, services: ['Consultation'] },
+    { counter_number: 4, active: false, on_break: false, occupied: true, services: ['Consultation'] },
+  ];
+  const api = load('lib/counters.ts', { '@/lib/supabase': { supabase: {} } }, {
+    fetch: async () => ({ ok: true, json: async () => ({ counters }) }),
+  });
+  assert.deepEqual([...await api.fetchActiveCounters()], [1]);
+  assert.deepEqual([...await api.fetchActiveCounters(true)], [1, 3]);
+  counters[1].occupied = true;
+  assert.deepEqual([...await api.fetchActiveCounters()], [1, 2]);
+  counters[0].occupied = false;
+  counters[2].occupied = false;
+  assert.deepEqual([...await api.fetchActiveCounters(true)], [2]);
+});
+
+test('Active physical counters remain hidden when ownership discovery is unavailable', async () => {
+  const query = { select() { return this; }, eq() { return this; },
+    order: async () => ({ data: [{ counter_number: 1, label: 'Consultation', active: true, on_break: false }], error: null }) };
+  const api = load('lib/counters.ts', { '@/lib/supabase': { supabase: { from: () => query } } }, {
+    fetch: async () => { throw new Error('Ownership unavailable'); },
+  });
+  assert.deepEqual([...await api.fetchActiveCounters(true)], []);
+});
+
 test('matchesCounterService: matches exact service and common clinical abbreviations', () => {
   const { matchesCounterService } = countersLib;
 

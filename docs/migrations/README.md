@@ -10,6 +10,8 @@ This directory stores manual and schema migration scripts for the PostgreSQL dat
 
 | Migration Script | Target Database | Description | Applied Status |
 | :--- | :--- | :--- | :---: |
+| [repair_encrypted_phone_storage.sql](./repair_encrypted_phone_storage.sql) | Supabase PostgreSQL | Converts contacts to text and removes the bigint phone cast while preserving the live ticket function and its permissions. Apply after older phone/prefix migrations. | Pending |
+| [restore_idle_numbers.sql](./restore_idle_numbers.sql) | Supabase PostgreSQL | Removes shift cancellation and rollover enforcement when restoring the recoverable idle workflow. Preserves patient records and counter transfers. | Pending |
 | [shift_queue_rotation.sql](./shift_queue_rotation.sql) | Supabase PostgreSQL | Adds Manila shift rotation tracking, a guarded reset routine, and cancellation on the sixth rotation while retaining records. Requires station_breaks.sql. | Pending |
 | [shared_counter_transfers.sql](./shared_counter_transfers.sql) | Supabase PostgreSQL | Adds authorized handoffs to open, staffed counters with service eligibility and historical-record protection. | Pending |
 | [`docs/migrations/encrypt_phone_number.sql`](file:///home/jensen/Github-Repositories/heart-check-phc/docs/migrations/encrypt_phone_number.sql) | Supabase PostgreSQL | Converts `patients.phoneNum` from `bigint` (`int8`) to `text` and updates the `create_patient` stored procedure signature to accept encrypted AES-256-GCM ciphertext strings (`enc:v1:...`). | Production Ready |

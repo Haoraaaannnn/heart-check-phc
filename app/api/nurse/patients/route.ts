@@ -85,7 +85,7 @@ export async function GET(request: Request) {
   ]);
 
   if (linksError || servicesError || metadataError || cubiclesError) {
-    return NextResponse.json({ error: 'Unable to load nurse station assignments. Please retry.' }, { status: 503 });
+    return NextResponse.json({ error: 'Unable to load Doctors Station assignments. Please retry.' }, { status: 503 });
   }
 
   const assignedServiceNames = (userServices ?? []).map((s) => s.service).filter(Boolean);

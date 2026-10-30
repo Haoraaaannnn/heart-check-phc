@@ -66,19 +66,14 @@ export function filterEligibleCounters(
 }
 
 /**
- * Lists active counters, excluding breaks unless staff need controls to resume them.
+ * Lists active, staff-owned counters, excluding breaks unless staff need resume controls.
  * @param includeOnBreak - Includes temporarily closed desks in staff navigation.
- * @returns Counter numbers, or an empty list when availability cannot be verified.
+ * @returns Assigned counter numbers only; unverified ownership never creates a visible lane.
  */
 export async function fetchActiveCounters(includeOnBreak = false): Promise<number[]> {
-  const { data, error } = await supabase
-    .from('counters')
-    .select('counter_number, on_break')
-    .eq('active', true)
-    .order('counter_number', { ascending: true });
-
-  if (error || !data) return [];
-  return data.filter(c => includeOnBreak || !c.on_break).map(c => c.counter_number);
+  const counters = await fetchOccupiedCounters();
+  return counters.filter(counter => counter.active && counter.occupied && (includeOnBreak || !counter.on_break))
+    .map(counter => counter.counter_number).sort((firstCounter, secondCounter) => firstCounter - secondCounter);
 }
 
 /**

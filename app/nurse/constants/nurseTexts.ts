@@ -8,8 +8,22 @@
 
 export const nurseTexts = {
   // Navigation & Header
-  dashboardTitle: "Nurse Station",
+  dashboardTitle: "Doctors Station",
   patientManagement: "Patient Care Management",
+  overviewTitle: "Patient care overview",
+  overviewEyebrow: "TODAY AT YOUR STATION",
+  activePatients: "Active patients",
+  completedToday: "Finished today",
+  selectedTicketHint: "Choose a highlighted stage or use the patient actions to continue.",
+  stageDescriptions: {
+    assigned: "Ready for consultation",
+    with_doctor: "Consultation in progress",
+    carryout: "Post-care and discharge",
+    done: "Visit completed",
+  },
+  emptyStageTitle: "All clear for now",
+  ticketLabel: "Queue ticket",
+  elapsedLabel: "Time in stage",
   syncingBadge: "Syncing...",
   liveStatus: "Live",
   logoutLabel: "Logout",
@@ -112,7 +126,7 @@ export const nurseTexts = {
   unassignedDesc: "Your account does not have any cubicles assigned yet. Ask a Super Admin to assign your room before managing patients.",
 
   // Loading States
-  loadingDashboard: "Loading nurse dashboard...",
+  loadingDashboard: "Loading Doctors Station...",
   pleaseWait: "Please wait",
 
   // TTS Announcements

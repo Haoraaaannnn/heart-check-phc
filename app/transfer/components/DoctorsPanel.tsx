@@ -20,8 +20,8 @@
 
 'use client';
 
-import React, { useState, useEffect, useMemo } from 'react';
-import { supabase } from '@/lib/supabase';
+import React, { useState, useEffect, useMemo, useCallback } from 'react';
+import { fetchDoctorDirectory, saveDoctorAction } from '@/lib/doctors/client';
 import { Doctor, Cubicle } from '@/types/Types';
 import { transferTexts } from '@/constants/texts/transferTexts';
 import { doctorsPanelStyles } from '@/constants/designs/transferStyles';
@@ -35,6 +35,9 @@ export function DoctorsPanel() {
   const [doctors, setDoctors] = useState<Doctor[]>([]);
   const [cubicles, setCubicles] = useState<Cubicle[]>([]);
   const [loading, setLoading] = useState(true);
+  const [canManageDirectory, setCanManageDirectory] = useState(false);
+  const [editableCubicleIds, setEditableCubicleIds] = useState<number[]>([]);
+  const [editableDoctorIds, setEditableDoctorIds] = useState<string[]>([]);
 
   const [showModal, setShowModal] = useState(false);
   const [editingDoctor, setEditingDoctor] = useState<Doctor | null>(null);
@@ -54,25 +57,22 @@ export function DoctorsPanel() {
   /**
    * Fetches all registered doctors and cubicle records.
    */
-  const fetchAll = async () => {
+  const fetchAll = useCallback(async () => {
     setLoading(true);
-    const [{ data: docData }, { data: cubeData }] = await Promise.all([
-      supabase.from('doctors').select('*').order('full_name', { ascending: true }),
-      supabase
-        .from('cubicle')
-        .select('*')
-        .order('category', { ascending: true })
-        .order('room', { ascending: true })
-        .order('cubicleNum', { ascending: true }),
-    ]);
-    setDoctors(docData || []);
-    setCubicles(cubeData || []);
-    setLoading(false);
-  };
+    try {
+      const directory = await fetchDoctorDirectory();
+      setDoctors(directory.doctors); setCubicles(directory.cubicles);
+      setCanManageDirectory(directory.canManageDirectory);
+      setEditableCubicleIds(directory.editableCubicleIds); setEditableDoctorIds(directory.editableDoctorIds);
+    } catch (error: unknown) {
+      setActionErrorModal({ title: 'Unable to load doctors', message: error instanceof Error ? error.message : 'Please retry loading the doctor directory.' });
+    } finally { setLoading(false); }
+  }, []);
 
   useEffect(() => {
-    fetchAll();
-  }, []);
+    const timeoutId = setTimeout(() => void fetchAll(), 0);
+    return () => clearTimeout(timeoutId);
+  }, [fetchAll]);
 
   const selectedDoctor = doctors.find(d => d.id === selectedDoctorId) || null;
 
@@ -126,20 +126,9 @@ export function DoctorsPanel() {
     setFormSuccess('');
 
     try {
-      if (editingDoctor) {
-        const { error } = await supabase
-          .from('doctors')
-          .update({ full_name: formName, specialty: formSpecialty || null, active: formActive })
-          .eq('id', editingDoctor.id);
-        if (error) throw error;
-        setFormSuccess(transferTexts.doctorUpdatedSuccess);
-      } else {
-        const { error } = await supabase
-          .from('doctors')
-          .insert({ full_name: formName, specialty: formSpecialty || null, active: formActive });
-        if (error) throw error;
-        setFormSuccess(transferTexts.doctorAddedSuccess);
-      }
+      await saveDoctorAction({ action: editingDoctor ? 'update' : 'create', ...(editingDoctor ? { id: editingDoctor.id } : {}),
+        full_name: formName, specialty: formSpecialty || null, active: formActive });
+      setFormSuccess(editingDoctor ? transferTexts.doctorUpdatedSuccess : transferTexts.doctorAddedSuccess);
 
       setTimeout(() => {
         setShowModal(false);
@@ -147,8 +136,8 @@ export function DoctorsPanel() {
         setFormSuccess('');
         fetchAll();
       }, 1000);
-    } catch (err: any) {
-      setFormError(err.message || transferTexts.somethingWentWrongError);
+    } catch (err: unknown) {
+      setFormError(err instanceof Error ? err.message : transferTexts.somethingWentWrongError);
     } finally {
       setFormLoading(false);
     }
@@ -157,14 +146,12 @@ export function DoctorsPanel() {
   const handleDelete = async (doc: Doctor) => {
     setFormLoading(true);
     try {
-      await supabase.from('cubicle').update({ doctorId: null }).eq('doctorId', doc.id);
-      const { error } = await supabase.from('doctors').delete().eq('id', doc.id);
-      if (error) throw error;
+      await saveDoctorAction({ action: 'delete', id: doc.id });
       if (selectedDoctorId === doc.id) setSelectedDoctorId(null);
       setShowDeleteConfirm(null);
       fetchAll();
-    } catch (err: any) {
-      setFormError(err.message || transferTexts.failedToDeleteError);
+    } catch (err: unknown) {
+      setFormError(err instanceof Error ? err.message : transferTexts.failedToDeleteError);
     } finally {
       setFormLoading(false);
     }
@@ -172,35 +159,30 @@ export function DoctorsPanel() {
 
   const handleToggleActive = async (doc: Doctor) => {
     const nextActive = doc.active === false;
-    setDoctors(prev => prev.map(d => (d.id === doc.id ? { ...d, active: nextActive } : d)));
-    const { error } = await supabase.from('doctors').update({ active: nextActive }).eq('id', doc.id);
-    if (error) {
-      setDoctors(prev => prev.map(d => (d.id === doc.id ? { ...d, active: doc.active } : d)));
+    try {
+      await saveDoctorAction({ action: 'active', id: doc.id, active: nextActive });
+      setDoctors(prev => prev.map(d => (d.id === doc.id ? { ...d, active: nextActive } : d)));
+    } catch (error: unknown) {
       setActionErrorModal({
         title: transferTexts.doctorUpdateFailedTitle,
-        message: error.message,
+        message: error instanceof Error ? error.message : 'Doctor availability was not saved.',
       });
     }
   };
 
   const handleToggleAssign = async (cubicle: Cubicle) => {
     if (!selectedDoctor) return;
-    const previousDoctorId = cubicle.doctorId;
+    const previousDoctorId = cubicle.doctorId ?? null;
     const nextDoctorId = previousDoctorId === selectedDoctor.id ? null : selectedDoctor.id;
 
     setSavingCubicleId(cubicle.id);
-    setCubicles(prev => prev.map(c => (c.id === cubicle.id ? { ...c, doctorId: nextDoctorId } : c)));
-
-    const { error } = await supabase
-      .from('cubicle')
-      .update({ doctorId: nextDoctorId })
-      .eq('id', cubicle.id);
-
-    if (error) {
-      setCubicles(prev => prev.map(c => (c.id === cubicle.id ? { ...c, doctorId: previousDoctorId } : c)));
+    try {
+      await saveDoctorAction({ action: 'assign', cubicleId: cubicle.id, doctorId: nextDoctorId, expectedDoctorId: previousDoctorId });
+      await fetchAll();
+    } catch (error: unknown) {
       setActionErrorModal({
         title: transferTexts.assignmentUpdateFailedTitle,
-        message: error.message,
+        message: error instanceof Error ? error.message : 'The cubicle assignment was not saved.',
       });
     }
     setSavingCubicleId(null);
@@ -219,16 +201,18 @@ export function DoctorsPanel() {
             {transferTexts.doctorsHeading}
           </h2>
           <p className={doctorsPanelStyles.topHeaderSubtitle}>
-            {transferTexts.doctorsSubtitle}
+            {canManageDirectory ? transferTexts.doctorsSubtitle : editableCubicleIds.length > 0
+              ? 'Select a doctor to assign to your station. You can edit doctors assigned to your stations.'
+              : 'Doctor directory. An administrator must assign a Doctors Station before you can edit its doctors.'}
           </p>
         </div>
-        <button
+        {canManageDirectory && <button
           type="button"
           onClick={handleAddClick}
           className={doctorsPanelStyles.addDoctorBtn}
         >
           {transferTexts.addDoctorBtn}
-        </button>
+        </button>}
       </div>
 
       {doctors.length === 0 ? (
@@ -239,13 +223,13 @@ export function DoctorsPanel() {
           <p className={doctorsPanelStyles.emptyStateDesc}>
             {transferTexts.addDoctorFirstNotice}
           </p>
-          <button
+          {canManageDirectory && <button
             type="button"
             onClick={handleAddClick}
             className={doctorsPanelStyles.addDoctorBtn}
           >
             {transferTexts.addDoctorBtn}
-          </button>
+          </button>}
         </div>
       ) : (
         <>
@@ -269,6 +253,7 @@ export function DoctorsPanel() {
                   <div className="flex items-start justify-between gap-2">
                     <div className="min-w-0">
                       <p className={doctorsPanelStyles.doctorCardName}>{doc.full_name}</p>
+                      {doc.auth_id && <span className="text-xs text-slate-500 dark:text-slate-400">Doctor account</span>}
                       <p
                         className={
                           doc.specialty
@@ -300,25 +285,27 @@ export function DoctorsPanel() {
                     >
                       <button
                         type="button"
+                        disabled={!editableDoctorIds.includes(doc.id)}
                         onClick={() => handleToggleActive(doc)}
-                        className={doctorsPanelStyles.actionBtnToggle}
+                        className={`${doctorsPanelStyles.actionBtnToggle} disabled:cursor-not-allowed disabled:opacity-40`}
                       >
                         {isActive ? transferTexts.deactivateBtn : transferTexts.activateBtn}
                       </button>
                       <button
                         type="button"
+                        disabled={!editableDoctorIds.includes(doc.id)}
                         onClick={() => handleEditClick(doc)}
-                        className={doctorsPanelStyles.actionBtnEdit}
+                        className={`${doctorsPanelStyles.actionBtnEdit} disabled:cursor-not-allowed disabled:opacity-40`}
                       >
                         {transferTexts.editBtn}
                       </button>
-                      <button
+                      {canManageDirectory && !doc.auth_id && <button
                         type="button"
                         onClick={() => setShowDeleteConfirm(doc)}
                         className={doctorsPanelStyles.actionBtnDelete}
                       >
                         {transferTexts.deleteBtn}
-                      </button>
+                      </button>}
                     </div>
                   </div>
 
@@ -371,7 +358,7 @@ export function DoctorsPanel() {
                         <button
                           key={cube.id}
                           type="button"
-                          disabled={!selectedDoctor || isSaving}
+                          disabled={!selectedDoctor || isSaving || !editableCubicleIds.includes(cube.id)}
                           onClick={() => handleToggleAssign(cube)}
                           title={
                             !selectedDoctor
