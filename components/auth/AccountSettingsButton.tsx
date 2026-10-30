@@ -3,6 +3,7 @@
 
 import { useRef, useState } from 'react';
 import { ChangePasswordCard } from '@/app/superadmin/components/ChangePasswordCard';
+import { DisplaySettingsCard } from '@/components/display/DisplaySettingsCard';
 
 /**
  * Opens personal password settings without leaving the active workstation.
@@ -41,7 +42,7 @@ export function AccountSettingsButton({ expanded = false, sidebar = false }: { e
         <h2 id="account-settings-title" className="text-lg font-bold">Account settings</h2>
         <button type="button" onClick={closeSettings} disabled={saving} className="rounded-lg border border-slate-300 px-3 py-2 text-sm disabled:opacity-50 dark:border-slate-700">Close</button>
       </div>
-      {isOpen && <ChangePasswordCard onSavingChange={setSaving} />}
+      {isOpen && <div className="space-y-4"><DisplaySettingsCard /><ChangePasswordCard onSavingChange={setSaving} /></div>}
     </dialog>
   </>;
 }

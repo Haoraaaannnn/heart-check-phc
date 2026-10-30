@@ -64,6 +64,8 @@ export interface NurseHeaderProps {
   onOpenStationModal?: () => void;
   /** Opens the shared physician details and cubicle assignment editor. */
   onOpenDoctors?: () => void;
+  /** Indicates that the explicit same-service OPD Screening view is active. */
+  showAllScreening?: boolean;
 }
 
 /**
@@ -95,6 +97,7 @@ export function NurseHeader({
   claimedCubicleId,
   onOpenStationModal,
   onOpenDoctors,
+  showAllScreening = false,
 }: NurseHeaderProps) {
   // Theme switching hook
   const { resolvedTheme, setTheme } = useTheme();
@@ -252,7 +255,7 @@ export function NurseHeader({
                   onSelectCubicle(val);
                 }
               }}
-              aria-label={nurseTexts.selectCubicleDropdown}
+              aria-label={showAllScreening ? nurseTexts.screeningFilterLabel : nurseTexts.selectCubicleDropdown}
               className="bg-transparent text-xs font-bold text-slate-800 dark:text-[#f5f5f5] outline-none cursor-pointer py-0.5 pr-1 max-w-full whitespace-normal"
             >
               <option value="ALL" className="bg-white dark:bg-[#1a1a1a] text-slate-900 dark:text-[#f5f5f5]">{nurseTexts.allMyCubicles}</option>
@@ -308,14 +311,12 @@ export function NurseHeader({
       {/* Right: Sync Status, Finished Ledger Button, Theme Toggle & Notifications */}
       <div className="flex flex-wrap items-center gap-2 sm:gap-3 shrink-0">
         {/* Sync Indicator */}
-        {isSyncing && (
-          <div className="flex items-center gap-2 px-3 py-1.5 bg-blue-50 dark:bg-blue-950/40 border border-blue-200 dark:border-blue-800/50 rounded-lg">
+        <div aria-hidden={!isSyncing} className={`flex shrink-0 items-center gap-2 px-3 py-1.5 bg-blue-50 dark:bg-blue-950/40 border border-blue-200 dark:border-blue-800/50 rounded-lg ${isSyncing ? 'visible' : 'invisible'}`}>
             <div className="w-3.5 h-3.5 border-2 border-blue-500 border-t-transparent rounded-full animate-spin" />
             <span className="text-xs text-blue-600 dark:text-blue-400 font-semibold">
               {nurseTexts.syncingBadge}
             </span>
           </div>
-        )}
 
         {/* Finished Ledger Drawer Button */}
         {onOpenDoctors && <button type="button" onClick={onOpenDoctors}

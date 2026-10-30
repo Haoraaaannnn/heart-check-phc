@@ -34,10 +34,11 @@ export default async function KioskPage({ searchParams }: KioskPageProps) {
   const { type } = await searchParams;
 
   // Fetch the full service menu in the order set by the superadmin.
-  const { data: services } = await supabase
+  const { data: services, error } = await supabase
     .from("services")
     .select("*")
     .order("display_order", { ascending: true });
+  if (error) throw new Error('Unable to load services. Please try again.');
 
   // Keep only the services this patient type is allowed to see.
   const visibleServices =

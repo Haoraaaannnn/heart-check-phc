@@ -11,6 +11,7 @@
  */
 
 'use client';
+import { PatientHistoryButton } from '@/components/patients/PatientHistoryButton';
 
 import React, { useState } from 'react';
 import { Patient } from '@/types/Types';
@@ -18,11 +19,16 @@ import { ClinicalStage } from '@/app/nurse/types/nurse';
 import { nurseTexts } from '@/app/nurse/constants/nurseTexts';
 import { STAGE_CONFIGS } from '@/app/nurse/constants/nurse';
 import { PatientCardDetails } from '@/app/nurse/components/PatientCardDetails';
+import type { NurseStationContext } from '@/app/nurse/lib/stationView';
 
 /**
  * Props for the NursePatientCard component.
  */
 export interface NursePatientCardProps {
+  /** Current physician and location metadata from the station directory. */
+  stationContext?: NurseStationContext;
+  /** Global queue viewing cannot activate controls for another staff member's station. */
+  readOnly?: boolean;
   /** The patient entity being rendered. */
   patient: Patient;
   /** Active clinical stage of the patient. */
@@ -56,6 +62,8 @@ export interface NursePatientCardProps {
  * @returns The rendered patient card element.
  */
 export function NursePatientCard({
+  stationContext,
+  readOnly = false,
   patient,
   stage,
   speakingId,
@@ -76,7 +84,7 @@ export function NursePatientCard({
     actionKey: string,
     fn?: (p: Patient) => void | Promise<boolean | void>
   ) => {
-    if (!fn || pendingAction) return;
+    if (readOnly || !fn || pendingAction) return;
     setPendingAction(actionKey);
     try {
       await fn(patient);
@@ -101,6 +109,7 @@ export function NursePatientCard({
   }
 
   const handleCardClick = (e: React.MouseEvent) => {
+    if (readOnly) return;
     // If the click was on a button or drag handle, don't trigger selection
     const target = e.target;
     if (target instanceof HTMLElement && target.closest('button, [data-drag-handle="true"]')) {
@@ -112,6 +121,7 @@ export function NursePatientCard({
   };
 
   const handlePointerDownWrapper = (e: React.PointerEvent) => {
+    if (readOnly) return;
     if (onPointerDown) {
       onPointerDown(e, patient, stage);
     }
@@ -121,9 +131,9 @@ export function NursePatientCard({
     <div
       role="group"
       aria-label={`${patient.patientNum}, ${patient.cubicleNum || patient.service || ''}`}
-      tabIndex={onSelect ? 0 : undefined}
+      tabIndex={!readOnly && onSelect ? 0 : undefined}
       onKeyDown={event => {
-        if (event.target !== event.currentTarget || !onSelect || !['Enter', ' '].includes(event.key)) return;
+        if (readOnly || event.target !== event.currentTarget || !onSelect || !['Enter', ' '].includes(event.key)) return;
         event.preventDefault(); onSelect(patient, stage, patient.cubicleNum || '');
       }}
       onClick={handleCardClick}
@@ -135,10 +145,12 @@ export function NursePatientCard({
           : 'bg-white dark:bg-[#1a1a1a]'
       }`}
     >
-      <PatientCardDetails patient={patient} startedAt={timerStartedAt} warnAfterSeconds={warnAfterSeconds} />
+      <PatientCardDetails patient={patient} startedAt={timerStartedAt} warnAfterSeconds={warnAfterSeconds} stationContext={stationContext} readOnly={readOnly} />
+      {!readOnly && <div><PatientHistoryButton patientId={patient.id} ticket={patient.patientNum} /></div>}
+      {readOnly && <p className="text-xs text-slate-500 dark:text-[#a3a3a3]">{nurseTexts.viewOnlyTicket}</p>}
 
       {/* Bottom Action Buttons by Stage */}
-      <div className="flex flex-wrap items-center gap-2 [&>button]:min-h-11 [&>button]:min-w-0 [&>button]:flex-1 [&>button]:rounded-lg [&>button]:px-3 [&>button]:whitespace-normal [&>button]:focus-visible:outline-2 [&>button]:focus-visible:outline-offset-2 [&>button]:focus-visible:outline-[#cc3535]">
+      {!readOnly && <div className="flex flex-wrap items-center gap-2 [&>button]:min-h-11 [&>button]:min-w-0 [&>button]:flex-1 [&>button]:rounded-lg [&>button]:px-3 [&>button]:whitespace-normal [&>button]:focus-visible:outline-2 [&>button]:focus-visible:outline-offset-2 [&>button]:focus-visible:outline-[#cc3535]">
         {stage === 'assigned' && (
           <>
             {onCall && (
@@ -316,7 +328,7 @@ export function NursePatientCard({
             )}
           </>
         )}
-      </div>
+      </div>}
     </div>
   );
 }

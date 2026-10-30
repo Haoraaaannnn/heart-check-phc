@@ -175,6 +175,7 @@ export async function POST(request: Request) {
         let query = supabaseAdmin
           .from('patients')
           .update(changes)
+          .setHeader('x-hc-actor-id', guard.user.id)
           .eq('id', id)
           .eq('is_historical', false)
           .in('status', ['Waiting', 'On Progress', 'Assigned']);

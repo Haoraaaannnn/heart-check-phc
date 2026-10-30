@@ -23,7 +23,10 @@ function database(seed, rpcResult = true) {
   const calls = [];
   return {
     calls,
-    rpc: async (name, payload) => { calls.push({ name, payload }); return { data: rpcResult, error: null }; },
+    rpc: (name, payload) => ({
+      setHeader(key, value) { calls.push({ name, payload, headers: { [key]: value } }); return this; },
+      then(resolve, reject) { return Promise.resolve({ data: rpcResult, error: null }).then(resolve, reject); },
+    }),
     from(table) {
       let rows = [...(seed[table] ?? [])];
       const query = {
@@ -76,6 +79,7 @@ test('nurse calls route to the actual cubicle and ignore forged speech/destinati
   const api = route();
   const response = await api.POST(post({ patientId: 1, text: 'Private name', service: 'ECG', counter: 99 }));
   assert.equal(response.status, 202);
+  assert.equal(api.db.calls[0].headers['x-hc-actor-id'], 'staff');
   const payload = api.db.calls[0].payload;
   assert.equal(payload.p_service, 'Consultation');
   assert.equal(payload.p_subcategory, 'Pedia');

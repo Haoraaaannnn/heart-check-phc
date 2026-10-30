@@ -68,6 +68,30 @@ body {
   font-family: Arial, Helvetica, sans-serif;
 }
 
+/* Zoomed staff workstations keep full-screen panels within the visible viewport. */
+@media screen {
+  html[data-staff-display="true"] .h-screen {
+    height: calc(100dvh / var(--staff-page-scale, 1));
+  }
+  html[data-staff-display="true"] .min-h-screen {
+    min-height: calc(100dvh / var(--staff-page-scale, 1));
+  }
+  html[data-staff-display="true"] .w-screen {
+    width: calc(100dvw / var(--staff-page-scale, 1));
+  }
+  html[data-staff-display="true"]:not([data-staff-page-scale="1"]) dialog {
+    max-height: calc(90dvh / var(--staff-page-scale, 1));
+  }
+}
+
+/* Printing keeps its existing physical ticket and document dimensions. */
+@media print {
+  html[data-staff-display="true"] {
+    zoom: 1 !important;
+    font-size: 100% !important;
+  }
+}
+
 /* -------------------------------------------------------------------------- */
 /* Circular Screen Ripple Theme Transition (View Transitions API)             */
 /* Enables expanding circular wave revealing target theme from click origin   */

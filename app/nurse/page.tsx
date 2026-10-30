@@ -28,6 +28,8 @@ import { Patient } from '@/types/Types';
 import { NurseSidebar } from '@/app/nurse/components/NurseSidebar';
 import { NurseHeader } from '@/app/nurse/components/NurseHeader';
 import { NurseBreakControls } from '@/app/nurse/components/NurseBreakControls';
+import { StationScopeBar } from '@/app/nurse/components/StationScopeBar';
+import { filterNurseStationPatients, nurseStationContexts, isOpdScreeningService } from '@/app/nurse/lib/stationView';
 import { NurseBoard } from '@/app/nurse/components/NurseBoard';
 import { NurseQuickActionDropdown } from '@/app/nurse/components/NurseQuickActionDropdown';
 import { NurseDragGhost } from '@/app/nurse/components/NurseDragGhost';
@@ -68,6 +70,7 @@ export default function NursePage() {
   const [isSidebarExpanded, setIsSidebarExpanded] = useState<boolean>(false);
   const [selectedCategory, setSelectedCategory] = useState<string | null>(null);
   const [selectedCubicleNum, setSelectedCubicleNum] = useState<string | null>(null);
+  const [showAllScreening, setShowAllScreening] = useState(false);
 
   // Modal / Drawer State
   const [finishedDrawerOpen, setFinishedDrawerOpen] = useState(false);
@@ -103,7 +106,7 @@ export default function NursePage() {
     finishedPatients,
     assignmentStatus,
     assignedCubicles,
-    assignedServices,
+    stationDirectory,
     setAssignedPatients,
     setWithDoctorPatients,
     setCarryoutPatients,
@@ -113,7 +116,7 @@ export default function NursePage() {
     pinInFlightMutation,
     unpinMutation,
     applyRealtimeUpdate,
-  } = useNurseData();
+  } = useNurseData({ showAllScreening });
 
   // State Mutation Actions Hook
   const {
@@ -172,6 +175,12 @@ export default function NursePage() {
       setIsSyncing(false);
     }
   }, [refreshCubicles, fetchData, fetchFinished]);
+  const previousScopeRef = useRef(showAllScreening);
+  useEffect(() => {
+    if (previousScopeRef.current === showAllScreening) return;
+    previousScopeRef.current = showAllScreening;
+    void handleRealtimeUpdate().catch(() => setCallError('Unable to change the queue view. Please retry.'));
+  }, [showAllScreening, handleRealtimeUpdate]);
 
   // Connection status tracking for weak-signal / offline resilience.
   const { isOnline, channelStatus, isFullyConnected, setChannelStatus } = useConnectionStatus();
@@ -203,26 +212,6 @@ export default function NursePage() {
     return () => { ++startupRequestId.current; };
   }, [checking, initializeDashboard]);
 
-  // Auto-select initial category or cubicle when nurse assignments load
-  const hasInitializedFilterRef = useRef(false);
-  useEffect(() => {
-    if (!hasInitializedFilterRef.current) {
-      if (assignedCubicles.length > 0) {
-        hasInitializedFilterRef.current = true;
-        const first = assignedCubicles[0];
-        if (first.cubicleNum) {
-          setSelectedCubicleNum(first.cubicleNum);
-          if (first.category) {
-            setSelectedCategory(first.category);
-          }
-        }
-      } else if (assignedServices.length > 0) {
-        hasInitializedFilterRef.current = true;
-        setSelectedCategory(assignedServices[0]);
-      }
-    }
-  }, [assignedCubicles, assignedServices]);
-
   /**
    * Sends a patient call to the matching public monitor while keeping this workstation silent.
    * @param patient - The active patient selected by nursing staff.
@@ -239,24 +228,9 @@ export default function NursePage() {
   // Filtered Patient Rosters based on Category and Cubicle
   const filterPatientList = useCallback(
     (list: Patient[]) => {
-      return list.filter((patient) => {
-        // Patients must be assigned to an active cubicle to appear in clinical workstations
-        if (!patient.cubicleNum) return false;
-
-        const matchesCategory =
-          !selectedCategory ||
-          (patient.service &&
-            patient.service.trim().toLowerCase() === selectedCategory.trim().toLowerCase());
-
-        const matchesCubicle =
-          !selectedCubicleNum ||
-          (patient.cubicleNum &&
-            patient.cubicleNum.trim().toLowerCase() === selectedCubicleNum.trim().toLowerCase());
-
-        return matchesCategory && matchesCubicle;
-      });
+      return filterNurseStationPatients({ patients: list, ownedStations: assignedCubicles, showAllScreening, selectedCategory, selectedCubicleNum });
     },
-    [selectedCategory, selectedCubicleNum]
+    [assignedCubicles, showAllScreening, selectedCategory, selectedCubicleNum]
   );
 
   const visibleAssigned = useMemo(
@@ -280,31 +254,35 @@ export default function NursePage() {
   );
 
   // Category counts for sidebar indicators
+  const ownedServices = useMemo(() => [...new Set(assignedCubicles.map(station => station.category))], [assignedCubicles]);
   const categoryCounts = useMemo(() => {
     const counts: Record<string, number> = {};
     const categories = [
       ...new Set([
-        ...assignedServices,
         ...assignedCubicles.map((cubicle) => cubicle.category),
       ].filter(Boolean)),
     ];
 
     categories.forEach((category) => {
       const catNorm = category.trim().toLowerCase();
-      counts[category] =
-        assignedPatients.filter((p) => p.service && p.service.trim().toLowerCase() === catNorm).length +
-        withDoctorPatients.filter((p) => p.service && p.service.trim().toLowerCase() === catNorm).length +
-        carryoutPatients.filter((p) => p.service && p.service.trim().toLowerCase() === catNorm).length;
+      counts[category] = filterNurseStationPatients({ patients: [...assignedPatients, ...withDoctorPatients, ...carryoutPatients],
+        ownedStations: assignedCubicles, showAllScreening: false, selectedCategory: catNorm, selectedCubicleNum: null }).length;
     });
 
     return counts;
-  }, [assignedServices, assignedCubicles, assignedPatients, withDoctorPatients, carryoutPatients]);
+  }, [assignedCubicles, assignedPatients, withDoctorPatients, carryoutPatients]);
 
   // Clear category and cubicle filters
   const handleClearFilter = useCallback(() => {
     setSelectedCategory(null);
     setSelectedCubicleNum(null);
   }, []);
+  const screeningService = ownedServices.find(service => isOpdScreeningService(service));
+  const canViewAllScreening = Boolean(screeningService) && (!selectedCategory || isOpdScreeningService(selectedCategory));
+  const viewStations = showAllScreening ? stationDirectory.filter(station => isOpdScreeningService(station.category)) : assignedCubicles;
+  const stationContext = useMemo(() => nurseStationContexts({ stations: [...stationDirectory, ...assignedCubicles], ownedStations: assignedCubicles }), [assignedCubicles, stationDirectory]);
+  const displayedStations = viewStations.filter(station => (!selectedCategory || station.category === selectedCategory) &&
+    (!selectedCubicleNum || station.cubicleNum === selectedCubicleNum));
 
   // Loading State Render
   if (checking || isLoading || startupError) {
@@ -336,12 +314,14 @@ export default function NursePage() {
         selectedCubicleNum={selectedCubicleNum}
         categoryCounts={categoryCounts}
         assignedCubicles={assignedCubicles}
-        assignedServices={assignedServices}
+        assignedServices={ownedServices}
         onSelectCategory={(category) => {
+          setShowAllScreening(false);
           setSelectedCategory(category);
           setSelectedCubicleNum(null);
         }}
         onSelectCubicle={(cubicleNum) => {
+          setShowAllScreening(false);
           const cubicle = assignedCubicles.find((c) => c.cubicleNum === cubicleNum);
           setSelectedCategory(cubicle?.category ?? null);
           setSelectedCubicleNum(cubicleNum);
@@ -361,22 +341,23 @@ export default function NursePage() {
           isSyncing={isSyncing || isSyncingQueue}
           selectedCategory={selectedCategory}
           selectedCubicleNum={selectedCubicleNum}
-          assignedCubicles={assignedCubicles}
-          assignedServices={assignedServices}
+          assignedCubicles={viewStations}
+          showAllScreening={showAllScreening}
+          assignedServices={[...new Set(viewStations.map(station => station.category))]}
           finishedCount={visibleFinished.length}
           onOpenFinishedLedger={() => setFinishedDrawerOpen(true)}
           onOpenDoctors={() => setShowDoctorsModal(true)}
-          onClearFilter={handleClearFilter}
+          onClearFilter={() => { setShowAllScreening(false); handleClearFilter(); }}
           onSelectCategory={(category) => {
             setSelectedCategory(category);
             setSelectedCubicleNum(null);
           }}
           onSelectCubicle={(cubicleNum) => {
-            const cubicle = assignedCubicles.find((c) => c.cubicleNum === cubicleNum);
+            const cubicle = viewStations.find((c) => c.cubicleNum === cubicleNum);
             setSelectedCategory(cubicle?.category ?? null);
             setSelectedCubicleNum(cubicleNum);
           }}
-          showCubicleDropdown={assignedCubicles.length > 0 || assignedServices.length > 0}
+          showCubicleDropdown={viewStations.length > 0}
           notifications={notifications}
           unreadCount={unreadCount}
           onMarkAsRead={markAsRead}
@@ -388,6 +369,12 @@ export default function NursePage() {
         />
 
         <NurseBreakControls selectedCubicleNum={selectedCubicleNum} />
+        <StationScopeBar stations={displayedStations} showAllScreening={showAllScreening} canViewAllScreening={canViewAllScreening} onToggle={() => {
+          if (!showAllScreening && !canViewAllScreening) return;
+          setShowAllScreening(previous => !previous);
+          setSelectedCategory(showAllScreening ? null : screeningService ?? null);
+          setSelectedCubicleNum(null); clearSelection();
+        }} />
 
         {/* Action Error Notification Toast */}
         {callError && <p role="alert" className="shrink-0 mx-4 mt-2 p-3 rounded-lg border border-red-200 bg-red-50 text-red-800 dark:border-red-900 dark:bg-red-950 dark:text-red-200">{callError}</p>}
@@ -410,7 +397,7 @@ export default function NursePage() {
         )}
 
         {/* Workspace: Unassigned Empty State vs 3-Column Pipeline Board */}
-        {assignmentStatus === 'unassigned' ? (
+        {assignmentStatus === 'unassigned' && !showAllScreening ? (
           <div className="flex-1 flex items-center justify-center p-8">
             <div className="rounded-3xl border border-amber-200 dark:border-amber-900/50 bg-amber-50/70 dark:bg-amber-950/30 p-8 text-center shadow-sm max-w-md">
               <h2 className="text-base font-bold text-slate-900 dark:text-[#f5f5f5]">
@@ -423,8 +410,9 @@ export default function NursePage() {
           </div>
         ) : (
           <NurseBoard
+            stationContext={stationContext}
             finishedCount={visibleFinished.length}
-            scopeLabel={selectedCubicleNum ?? selectedCategory ?? nurseTexts.allMyCubicles}
+            scopeLabel={selectedCubicleNum ?? selectedCategory ?? (showAllScreening ? nurseTexts.showAllScreening : nurseTexts.allMyCubicles)}
             assignedPatients={visibleAssigned}
             withDoctorPatients={visibleWithDoctor}
             carryoutPatients={visibleCarryout}

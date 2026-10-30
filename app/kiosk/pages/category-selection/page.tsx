@@ -3,8 +3,8 @@
 import { Suspense, useState, useRef, useCallback, useEffect } from "react";
 import { useSearchParams } from "next/navigation";
 import { useKioskNavigate } from "@/app/kiosk/hooks/useKioskNavigate";
-import { createClient } from "@/lib/supabase/client";
-import { Service } from "@/types/Services";
+import { useKioskServiceFlags } from '@/app/kiosk/hooks/useKioskServiceFlags';
+import { requiresDoctorSelection } from '@/app/kiosk/lib/doctorSelection';
 import { CategoryHeaderTexts } from "@/app/kiosk/pages/category-selection/constants/categoryHeaderTexts";
 import { CategoryHeaderStyle } from "@/app/kiosk/pages/category-selection/constants/categoryHeader";
 import { CategoryCardsTexts } from "@/app/kiosk/pages/category-selection/constants/categoryCardsTexts";
@@ -12,7 +12,6 @@ import {
     CategoryCardsStyle,
     CategoryCardsClasses,
     CategoryCardsIcons,
-    categoryCardsTheme,
 } from "@/app/kiosk/pages/category-selection/constants/categoryCards";
 import {
     CategoryLayoutStyle,
@@ -30,21 +29,7 @@ function CategorySelectionContent() {
     const patientType = searchParams.get("type");
     const serviceLabel = searchParams.get("serviceLabel")?.trim().toLowerCase();
 
-    const [service, setService] = useState<Service | null>(null);
-
-    // Fetch active service record to inspect clinical capabilities checklist
-    useEffect(() => {
-        if (!serviceId) return;
-        const supabase = createClient();
-        supabase
-            .from("services")
-            .select("*")
-            .eq("id", parseInt(serviceId, 10))
-            .maybeSingle()
-            .then(({ data }) => {
-                if (data) setService(data as Service);
-            });
-    }, [serviceId]);
+    const { service, error: serviceError, loading: serviceLoading, retry } = useKioskServiceFlags(serviceId);
 
     // Scroll state tracking
     const scrollContainerRef = useRef<HTMLDivElement>(null);
@@ -105,6 +90,7 @@ function CategorySelectionContent() {
      * @param subcategory - The chosen age category ("Adult" | "Pedia").
      */
     const chooseCategory = (subcategory: "Adult" | "Pedia") => {
+        if (!service) return;
         const params = new URLSearchParams();
 
         if (serviceId) params.set("serviceId", serviceId);
@@ -114,7 +100,7 @@ function CategorySelectionContent() {
 
         // If service requires cubicle/doctor selection, route to cubicle selection; otherwise to SMS input.
         const nextPath =
-            service?.requires_cubicle
+            requiresDoctorSelection(service)
                 ? "/kiosk/pages/kiosk-cubicle-selection"
                 : "/kiosk/pages/sms-input";
 
@@ -143,6 +129,9 @@ function CategorySelectionContent() {
                             {CategoryHeaderTexts.titleEn}
                         </p>
                     </div>
+                    {serviceLoading && <p role="status" className="mt-3 text-center text-slate-600">Loading service…</p>}
+                    {serviceError && <div role="alert" className="mt-3 text-center text-red-700"><p>{serviceError}</p>
+                        <button type="button" onClick={retry} className="mt-2 rounded-lg border border-red-300 px-4 py-2 font-semibold">Try again</button></div>}
                 </header>
 
                 {/* Relative wrapper holding scrollable cards and floating scroll indicators */}
@@ -174,6 +163,7 @@ function CategorySelectionContent() {
                             <button
                                 type="button"
                                 onClick={() => chooseCategory("Adult")}
+                                disabled={!service}
                                 style={CategoryCardsStyle.card}
                                 className={CategoryCardsClasses.adultCard}
                             >
@@ -212,6 +202,7 @@ function CategorySelectionContent() {
                             <button
                                 type="button"
                                 onClick={() => chooseCategory("Pedia")}
+                                disabled={!service}
                                 style={CategoryCardsStyle.card}
                                 className={CategoryCardsClasses.pediaCard}
                             >

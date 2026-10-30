@@ -16,5 +16,5 @@ export const CubicleCardTexts = {
     /** Short label displayed on the floating scroll down badge. */
     scrollDownBadgeShort: "Pindutin para bumaba",
     /** Accessibility label for scroll down action. */
-    scrollDownAria: "Mag-scroll pababa para sa higit pang cubicle",
+    scrollDownAria: "Mag-scroll pababa para sa higit pang doktor",
 } as const;

@@ -116,9 +116,10 @@ export async function removeCubicleDependencies(ids: number[]) {
  * counters are open, unassigns the patients back to the general intake queue.
  *
  * @param counterNumber - The counter number being disabled, closed, or deleted.
+ * @param actorAuthId - Identity verified by the superadmin route, for the immutable history.
  * @returns Object with counts of transferred and unassigned patients.
  */
-export async function reassignCounterQueue(counterNumber: number): Promise<{
+export async function reassignCounterQueue(counterNumber: number, actorAuthId: string): Promise<{
   transferredCount: number;
   unassignedCount: number;
   affectedPatientIds: number[];
@@ -275,6 +276,7 @@ export async function reassignCounterQueue(counterNumber: number): Promise<{
       await supabaseAdmin
         .from('patients')
         .update({ counter: best, reg_start: nowIso })
+        .setHeader('x-hc-actor-id', actorAuthId)
         .eq('id', patient.id)
         .eq('is_historical', false);
 
@@ -283,6 +285,7 @@ export async function reassignCounterQueue(counterNumber: number): Promise<{
       await supabaseAdmin
         .from('patients')
         .update({ counter: null, reg_start: null })
+        .setHeader('x-hc-actor-id', actorAuthId)
         .eq('id', patient.id)
         .eq('is_historical', false);
 

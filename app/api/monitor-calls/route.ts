@@ -77,7 +77,7 @@ export async function POST(request: Request) {
     p_subcategory: registration ? null : cubicle?.subcategory ?? patient.subcategory ?? null,
     p_counter: registration ? patient.counter : null, p_cubicle: cubicle?.cubicleNum ?? null,
     p_ticket: patient.patientNum, p_message: `Number ${ticket}, Number ${ticket}, please proceed to ${destination}`,
-  });
+  }).setHeader('x-hc-actor-id', guard.user.id);
   if (error) return NextResponse.json({ error: 'Unable to send the call to the monitor.' }, { status: 503 });
   if (!data) return NextResponse.json({ error: 'Please wait a few seconds before calling again.' }, { status: 429 });
   return NextResponse.json({ success: true }, { status: 202 });

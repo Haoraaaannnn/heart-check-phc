@@ -16,6 +16,7 @@
 'use client';
 
 import React, { useRef, useState } from 'react';
+import { PatientHistoryButton } from '@/components/patients/PatientHistoryButton';
 import { Patient } from '@/types/Types';
 import { CounterTimerControl } from './CounterTimerControl';
 import { transferTexts } from '@/constants/texts/transferTexts';
@@ -238,6 +239,7 @@ export function RegistrationCounterSection({
                           >
                             {releasingId === topPatient.id ? 'Queuing...' : transferTexts.sendToQueueBtn}
                           </button>
+                          <PatientHistoryButton patientId={topPatient.id} ticket={topPatient.patientNum} compact />
                         </div>
                       </div>
                     );
@@ -274,6 +276,7 @@ export function RegistrationCounterSection({
                           }
                         >
                           {p.patientNum}
+                          <PatientHistoryButton patientId={p.id} ticket={p.patientNum} compact />
                         </span>
                       );
                     })}

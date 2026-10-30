@@ -37,7 +37,8 @@ export default async function SMSPage({ searchParams }: SMSPageProps) {
         .eq("id", parseInt(serviceId ?? "0", 10))
         .single();
 
-    if (!service || error) {
+    if (error) throw new Error('Unable to load the selected service. Please try again.');
+    if (!service) {
         notFound();
     }
 

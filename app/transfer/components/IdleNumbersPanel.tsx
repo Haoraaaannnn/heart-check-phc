@@ -12,6 +12,7 @@
 'use client';
 
 import React from 'react';
+import { PatientHistoryButton } from '@/components/patients/PatientHistoryButton';
 import { Patient } from '@/types/Types';
 import { transferTexts } from '@/constants/texts/transferTexts';
 import { idlePanelStyles } from '@/constants/designs/transferStyles';
@@ -89,6 +90,7 @@ export function IdleNumbersPanel({
               </div>
 
               <div className={idlePanelStyles.actionsWrap}>
+                <PatientHistoryButton patientId={p.id} ticket={p.patientNum} />
                 <button
                   type="button"
                   onClick={() => onActivate(p)}

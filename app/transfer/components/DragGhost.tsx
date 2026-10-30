@@ -15,6 +15,7 @@ import { createPortal } from 'react-dom';
 import { Patient } from '@/types/Types';
 import { DragPoint } from '@/app/transfer/hooks/dragUtils';
 import { dragGhostStyles } from '@/constants/designs/transferStyles';
+import { staffPageScale } from '@/lib/displayPreferences';
 
 /**
  * Props for `DragGhost`.
@@ -56,8 +57,8 @@ export function DragGhost({
     <div
       className={dragGhostStyles.container}
       style={{
-        left: `${point.x}px`,
-        top: `${point.y}px`,
+        left: `${point.x / staffPageScale()}px`,
+        top: `${point.y / staffPageScale()}px`,
       }}
     >
       <div

@@ -18,11 +18,14 @@ import { nurseTexts } from '@/app/nurse/constants/nurseTexts';
 import { AssignedSection } from '@/app/nurse/components/AssignedSection';
 import { WithDoctorSection } from '@/app/nurse/components/WithDoctorSection';
 import { CarryoutSection } from '@/app/nurse/components/CarryoutSection';
+import type { NurseStationContext } from '@/app/nurse/lib/stationView';
 
 /**
  * Props for the NurseBoard component.
  */
 export interface NurseBoardProps {
+  /** Current attending physicians, room labels and display-only permissions per station. */
+  stationContext?: Record<string, NurseStationContext>;
   /** Completed visits matching the page's current filters. */
   finishedCount?: number;
   /** Current station, service or all-cubicle filter label. */
@@ -64,6 +67,7 @@ export interface NurseBoardProps {
  * @returns The rendered non-scrollable board element.
  */
 export function NurseBoard({
+  stationContext,
   finishedCount = 0,
   scopeLabel = nurseTexts.allMyCubicles,
   assignedPatients,
@@ -90,16 +94,16 @@ export function NurseBoard({
       <StationOverview activeCount={assignedPatients.length + withDoctorPatients.length + carryoutPatients.length}
         finishedCount={finishedCount} scopeLabel={scopeLabel} selectedTicket={selectedPatient?.patient.patientNum} />
       <div className="grid min-h-0 flex-1 auto-rows-[minmax(18rem,1fr)] grid-cols-1 overflow-y-auto rounded-2xl border border-slate-200 bg-white dark:border-[#2e2e2e] dark:bg-[#1a1a1a] lg:auto-rows-fr lg:grid-cols-3 lg:overflow-hidden">
-        <AssignedSection patients={assignedPatients} speakingId={speakingId} selectedPatientId={selectedPatientId}
+        <AssignedSection stationContext={stationContext} patients={assignedPatients} speakingId={speakingId} selectedPatientId={selectedPatientId}
           isDragOver={dragOverStage === 'assigned'} isValidSelectionTarget={isStageValidTarget('assigned')}
           onCall={onCall} onSelectPatient={onSelectPatient} onPointerDown={onPointerDown}
           onMoveToWithDoctor={onMoveToWithDoctor} onMoveHere={() => onAssignSelectedToStage('assigned')} />
-        <WithDoctorSection patients={withDoctorPatients} selectedPatientId={selectedPatientId}
+        <WithDoctorSection stationContext={stationContext} patients={withDoctorPatients} selectedPatientId={selectedPatientId}
           isDragOver={dragOverStage === 'with_doctor'} isValidSelectionTarget={isStageValidTarget('with_doctor')}
           onMoveBack={onMoveBackFromDoctor} onMoveToCarryout={onMoveToCarryout}
           onSelectPatient={onSelectPatient} onPointerDown={onPointerDown}
           onMoveHere={() => onAssignSelectedToStage('with_doctor')} />
-        <CarryoutSection patients={carryoutPatients} selectedPatientId={selectedPatientId}
+        <CarryoutSection stationContext={stationContext} patients={carryoutPatients} selectedPatientId={selectedPatientId}
           isDragOver={dragOverStage === 'carryout'} isValidSelectionTarget={isStageValidTarget('carryout')}
           onMoveBack={onMoveBackFromCarryout} onFinish={onFinish} onSelectPatient={onSelectPatient} onPointerDown={onPointerDown}
           onMoveHere={() => onAssignSelectedToStage('carryout')} />

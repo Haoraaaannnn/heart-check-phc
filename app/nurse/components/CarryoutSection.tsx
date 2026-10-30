@@ -16,11 +16,14 @@ import { nurseTexts } from '@/app/nurse/constants/nurseTexts';
 import { STAGE_CONFIGS } from '@/app/nurse/constants/nurse';
 import { StageColumn } from '@/app/nurse/components/StageColumn';
 import { NursePatientCard } from '@/app/nurse/components/NursePatientCard';
+import type { NurseStationContext } from '@/app/nurse/lib/stationView';
 
 /**
  * Props for the CarryoutSection component.
  */
 export interface CarryoutSectionProps {
+  /** Physician, room and read-only status keyed by cubicle. */
+  stationContext?: Record<string, NurseStationContext>;
   /** Roster of patients in post-consultation care orders. */
   patients: Patient[];
   /** ID of patient currently selected in tablet selection mode. */
@@ -48,6 +51,7 @@ export interface CarryoutSectionProps {
  * @returns The rendered Carryout section component.
  */
 export function CarryoutSection({
+  stationContext,
   patients,
   selectedPatientId,
   isDragOver = false,
@@ -73,6 +77,8 @@ export function CarryoutSection({
         <NursePatientCard
           key={patient.id}
           patient={patient}
+          stationContext={stationContext?.[patient.cubicleNum ?? '']}
+          readOnly={stationContext ? stationContext[patient.cubicleNum ?? '']?.readOnly ?? true : false}
           stage="carryout"
           isSelected={selectedPatientId === patient.id}
           onSelect={onSelectPatient}
