@@ -17,8 +17,8 @@ import { OnProgressSection } from '@/app/transfer/components/OnProgressSection';
 import { IdleNumbersPanel } from '@/app/transfer/components/IdleNumbersPanel';
 import { NotificationBadge } from '@/components/reusables/NotificationBadge';
 import { transferTexts } from '@/constants/texts/transferTexts';
-import { queuePanelStyles } from '@/constants/designs/transferStyles';
 import { SelectedTransferPatient } from '@/app/transfer/types/transfer';
+import { queuePanelStyles } from '@/constants/designs/transferStyles';
 
 /**
  * Props for {@link QueuePanel}.
@@ -128,6 +128,7 @@ export function QueuePanel({
             className="shrink-0"
           />
         </button>
+
         {onHide && <button type="button" onClick={onHide} aria-label="Hide On Progress and Idle panel"
           aria-controls={panelId} aria-expanded={true} title="Hide On Progress and Idle panel"
           className="shrink-0 inline-flex items-center gap-1 rounded-lg border border-slate-200 bg-white px-2 py-1 text-xs font-semibold text-slate-600 hover:bg-slate-50 dark:border-slate-700 dark:bg-slate-900 dark:text-slate-300 dark:hover:bg-slate-800">

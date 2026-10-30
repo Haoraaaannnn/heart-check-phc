@@ -15,7 +15,7 @@
 
 'use client';
 
-import React, { useRef, useState } from 'react';
+import React, { useMemo, useRef, useState } from 'react';
 import { Patient } from '@/types/Types';
 import { CounterTimerControl } from './CounterTimerControl';
 import { transferTexts } from '@/constants/texts/transferTexts';
@@ -49,8 +49,14 @@ export interface RegistrationCounterSectionProps {
   onDragStart?: (e: React.MouseEvent, patient: Patient) => void;
   /** Callback to release the front patient from the counter to the queue. */
   onRelease: (patient: Patient) => void | Promise<void>;
-  /** Optional allowed counter numbers. */
+  /** Optional allowed counter numbers that this user can interact with. */
   allowedCounters?: number[];
+  /** All available physical counters in the facility. */
+  allCounters?: number[];
+  /** Callback to trigger auto-sort / equal distribution. */
+  onAutoSort?: () => void | Promise<void>;
+  /** Indicates if auto-sort operation is currently running. */
+  isAutoSorting?: boolean;
 }
 
 const DEFAULT_COUNTERS: number[] = [];
@@ -72,13 +78,65 @@ export function RegistrationCounterSection({
   onDragStart,
   onRelease,
   allowedCounters,
+  allCounters,
+  onAutoSort,
+  isAutoSorting = false,
 }: RegistrationCounterSectionProps) {
-  const counters = allowedCounters && allowedCounters.length > 0 ? allowedCounters : DEFAULT_COUNTERS;
   const safePatients = Array.isArray(patients) ? patients : [];
   const breaks = useStationBreaks();
   const [releasingId, setReleasingId] = useState<number | null>(null);
   const releasingRef = useRef(false);
-  const unassignedPatients = safePatients.filter(p => !p.counter);
+
+  // Compute active counters: only those logged in with an account, with "my counter" strictly first
+  const activeCounters = useMemo(() => {
+    const rawCounters = (allCounters && allCounters.length > 0)
+      ? allCounters
+      : (allowedCounters && allowedCounters.length > 0 ? allowedCounters : DEFAULT_COUNTERS);
+
+    const hasLoadedOwnership = breaks.stations.some(s => s.kind === 'counter' && s.owners !== undefined);
+
+    // Filter counters to only those logged in with an account
+    const filtered = rawCounters.filter(counterNum => {
+      const isMine = allowedCounters ? allowedCounters.includes(counterNum) : false;
+      if (isMine) return true;
+
+      if (hasLoadedOwnership) {
+        const station = breaks.stations.find(item => item.kind === 'counter' && item.id === counterNum);
+        return Boolean(station && station.owners && station.owners.length > 0);
+      }
+
+      // If station metadata is not loaded yet, trust the pre-filtered allCounters from page
+      return true;
+    });
+
+    const candidateSet = new Set(filtered);
+
+    // If breaks discovered any logged-in counter that wasn't in allCounters yet, include it
+    if (hasLoadedOwnership) {
+      for (const st of breaks.stations) {
+        if (st.kind === 'counter' && st.owners && st.owners.length > 0) {
+          candidateSet.add(st.id);
+        }
+      }
+    }
+
+    // Always include allowedCounters (the user's own counter)
+    if (allowedCounters) {
+      for (const c of allowedCounters) candidateSet.add(c);
+    }
+
+    // Sort: My counter ALWAYS first, then other counters in ascending numerical order
+    return Array.from(candidateSet).sort((a, b) => {
+      const aIsMine = allowedCounters ? allowedCounters.includes(a) : false;
+      const bIsMine = allowedCounters ? allowedCounters.includes(b) : false;
+      if (aIsMine && !bIsMine) return -1;
+      if (!aIsMine && bIsMine) return 1;
+      return a - b;
+    });
+  }, [allCounters, allowedCounters, breaks.stations]);
+
+  const activeCounterSet = useMemo(() => new Set(activeCounters), [activeCounters]);
+  const unassignedPatients = safePatients.filter(p => !p.counter || !activeCounterSet.has(p.counter));
 
   return (
     <div className={registrationCounterStyles.sectionCard}>
@@ -93,9 +151,24 @@ export function RegistrationCounterSection({
             {safePatients.length}
           </span>
         </div>
-        <span className={registrationCounterStyles.headerHint}>
-          {transferTexts.dragCounterHint}
-        </span>
+
+        <div className="flex items-center gap-2.5 shrink-0">
+          {onAutoSort && (
+            <button
+              type="button"
+              onClick={() => void onAutoSort()}
+              disabled={isAutoSorting || safePatients.length === 0 || activeCounters.length === 0}
+              className="inline-flex items-center gap-1.5 px-2.5 py-1 text-xs font-bold rounded-lg border border-slate-200 dark:border-[#333333] bg-white dark:bg-[#1f1f1f] text-slate-700 dark:text-[#e5e5e5] hover:bg-slate-50 dark:hover:bg-[#282828] active:scale-[0.98] transition cursor-pointer disabled:opacity-50 disabled:cursor-not-allowed shadow-xs"
+              title="Equally distribute waiting patients across all active counters"
+            >
+              <i className={`bx ${isAutoSorting ? 'bx-loader-alt animate-spin text-[#cc3535]' : 'bx-sort-alt-2 text-[#cc3535] dark:text-[#f87171]'}`} aria-hidden="true" />
+              <span>{isAutoSorting ? 'Sorting...' : 'Auto-Sort'}</span>
+            </button>
+          )}
+          <span className={registrationCounterStyles.headerHint}>
+            {transferTexts.dragCounterHint}
+          </span>
+        </div>
       </div>
 
       {breaks.error && <p role="alert" className="text-sm text-red-700 dark:text-red-300 mb-2">{breaks.error}</p>}
@@ -114,13 +187,15 @@ export function RegistrationCounterSection({
         </div>
       )}
       {/* Non-scrollable Horizontal Counters Grid */}
-      {counters.length === 0 ? (
+      {activeCounters.length === 0 ? (
         <p className={registrationCounterStyles.emptyNotice}>
           {transferTexts.noCountersAssigned}
         </p>
       ) : (
         <div className={registrationCounterStyles.counterGrid}>
-          {counters.map(counterNum => {
+          {activeCounters.map(counterNum => {
+            const isInteractive = allowedCounters ? allowedCounters.includes(counterNum) : false;
+
             const counterPatients = safePatients
               .filter(p => p.counter === counterNum)
               .sort(
@@ -136,18 +211,19 @@ export function RegistrationCounterSection({
 
             // Check if this counter is an eligible target to receive selected counter patient
             const isTargetEligible =
+              isInteractive &&
               !station?.onBreak &&
               Boolean(selectedPatient) &&
               selectedPatient?.sourceType === 'counter' &&
               selectedPatient.sourceId !== counterNum;
 
             const handleCounterClick = () => {
-              if (isTargetEligible && onTargetCounterClick) {
+              if (isInteractive && isTargetEligible && onTargetCounterClick) {
                 onTargetCounterClick(counterNum);
               }
             };
 
-            const cardStateClass = isOver
+            const cardStateClass = isOver && isInteractive
               ? registrationCounterStyles.counterCardDropOver
               : isTargetEligible
               ? registrationCounterStyles.counterCardTargetEligible
@@ -156,19 +232,34 @@ export function RegistrationCounterSection({
             return (
               <div
                 key={counterNum}
-                data-counter={station?.onBreak ? undefined : counterNum}
+                data-counter={isInteractive && !station?.onBreak ? counterNum : undefined}
                 onClick={handleCounterClick}
                 style={isTargetEligible ? TransferStyle.assignTargetCard : undefined}
                 className={`${registrationCounterStyles.counterCardBase} ${cardStateClass}`}
               >
-                <StationOwnerBadge owners={station?.owners} variant="header" actions={station
-                  ? <StationBreakButton station={station} compact busy={breaks.busy !== null} onToggle={() => void breaks.toggle(station)} />
-                  : undefined} />
+                <StationOwnerBadge
+                  owners={station?.owners}
+                  variant="header"
+                  actions={isInteractive && station
+                    ? <StationBreakButton station={station} compact busy={breaks.busy !== null} onToggle={() => void breaks.toggle(station)} />
+                    : undefined}
+                />
                 {/* Counter Tile Header */}
                 <div className="flex items-center justify-between gap-1 mb-1 min-w-0">
-                  <span className={registrationCounterStyles.counterTitle}>
-                    {transferTexts.counterPrefix} {counterNum}
-                  </span>
+                  <div className="flex items-center gap-1.5 min-w-0">
+                    <span className={registrationCounterStyles.counterTitle}>
+                      {transferTexts.counterPrefix} {counterNum}
+                    </span>
+                    {isInteractive ? (
+                      <span className="text-[9px] font-bold text-emerald-700 dark:text-emerald-400 px-1 py-0.5 rounded bg-emerald-50 dark:bg-emerald-950/40 border border-emerald-200 dark:border-emerald-800 shrink-0">
+                        Your Counter
+                      </span>
+                    ) : (
+                      <span className="text-[9px] font-medium text-slate-500 dark:text-slate-400 px-1 py-0.5 rounded bg-slate-100 dark:bg-[#262626] border border-slate-200 dark:border-[#333333] shrink-0">
+                        View Only
+                      </span>
+                    )}
+                  </div>
 
                   {isTargetEligible ? (
                     <span className={registrationCounterStyles.counterTargetPill}>
@@ -187,6 +278,7 @@ export function RegistrationCounterSection({
                     const isTopSelected = selectedPatient?.patient.id === topPatient.id;
 
                     const handleTopPatientClick = (e: React.MouseEvent) => {
+                      if (!isInteractive) return;
                       e.stopPropagation();
                       if (onSelectPatient) {
                         onSelectPatient(topPatient, counterNum);
@@ -195,14 +287,16 @@ export function RegistrationCounterSection({
 
                     return (
                       <div
-                        onPointerDown={e => onPointerDown?.(e, topPatient)}
-                        onMouseDown={e => onDragStart?.(e, topPatient)}
+                        onPointerDown={e => isInteractive && onPointerDown?.(e, topPatient)}
+                        onMouseDown={e => isInteractive && onDragStart?.(e, topPatient)}
                         onClick={handleTopPatientClick}
                         style={isTopSelected ? TransferStyle.selectedPatientRow : undefined}
                         className={
                           isTopSelected
                             ? registrationCounterStyles.topPatientCardSelected
-                            : registrationCounterStyles.topPatientCard
+                            : isInteractive
+                            ? registrationCounterStyles.topPatientCard
+                            : 'p-2 rounded-xl border border-slate-200 dark:border-[#2e2e2e] bg-slate-50/60 dark:bg-[#1a1a1a]/60 flex items-center justify-between gap-2 min-w-0'
                         }
                       >
                         <div className="flex items-center gap-1.5 shrink-0">
@@ -210,8 +304,10 @@ export function RegistrationCounterSection({
                             <span className="px-1 py-0.5 rounded bg-[#cc3535] text-white text-[9px] font-bold shrink-0">
                               SEL
                             </span>
-                          ) : (
+                          ) : isInteractive ? (
                             <DragHandle title={transferTexts.tapToSelectHint} />
+                          ) : (
+                            <i className="bx bx-receipt text-xs text-slate-400 dark:text-[#737373] shrink-0" aria-hidden="true" />
                           )}
                           <span className={registrationCounterStyles.patientNum}>
                             {topPatient.patientNum}
@@ -219,25 +315,35 @@ export function RegistrationCounterSection({
                         </div>
 
                         <div className="flex flex-wrap items-center gap-2">
-                          <CounterTimerControl key={`${topPatient.id}:${topPatient.counter_top_started_at}:${topPatient.counter_paused_at}`} patient={topPatient} />
+                          <CounterTimerControl
+                            key={`${topPatient.id}:${topPatient.counter_top_started_at}:${topPatient.counter_paused_at}`}
+                            patient={topPatient}
+                            readOnly={!isInteractive}
+                          />
 
-                          <button
-                            type="button"
-                            disabled={releasingId !== null}
-                            onPointerDown={e => e.stopPropagation()}
-                            onMouseDown={e => e.stopPropagation()}
-                            onClick={async e => {
-                              e.stopPropagation();
-                              if (releasingRef.current) return;
-                              releasingRef.current = true; setReleasingId(topPatient.id);
-                              try { await onRelease(topPatient); }
-                              finally { releasingRef.current = false; setReleasingId(null); }
-                            }}
-                            title={transferTexts.moveToQueueTooltip}
-                            className={registrationCounterStyles.queueBtn}
-                          >
-                            {releasingId === topPatient.id ? 'Queuing...' : transferTexts.sendToQueueBtn}
-                          </button>
+                          {isInteractive ? (
+                            <button
+                              type="button"
+                              disabled={releasingId !== null}
+                              onPointerDown={e => e.stopPropagation()}
+                              onMouseDown={e => e.stopPropagation()}
+                              onClick={async e => {
+                                e.stopPropagation();
+                                if (releasingRef.current) return;
+                                releasingRef.current = true; setReleasingId(topPatient.id);
+                                try { await onRelease(topPatient); }
+                                finally { releasingRef.current = false; setReleasingId(null); }
+                              }}
+                              title={transferTexts.moveToQueueTooltip}
+                              className={registrationCounterStyles.queueBtn}
+                            >
+                              {releasingId === topPatient.id ? 'Queuing...' : transferTexts.sendToQueueBtn}
+                            </button>
+                          ) : (
+                            <span className="text-[11px] font-medium text-slate-400 dark:text-[#737373] px-2 py-1">
+                              In Service
+                            </span>
+                          )}
                         </div>
                       </div>
                     );
@@ -261,16 +367,19 @@ export function RegistrationCounterSection({
                       return (
                         <span
                           key={p.id}
-                          onPointerDown={e => onPointerDown?.(e, p)}
-                          onMouseDown={e => onDragStart?.(e, p)}
+                          onPointerDown={e => isInteractive && onPointerDown?.(e, p)}
+                          onMouseDown={e => isInteractive && onDragStart?.(e, p)}
                           onClick={e => {
+                            if (!isInteractive) return;
                             e.stopPropagation();
                             onSelectPatient?.(p, counterNum);
                           }}
                           className={
                             isWaitingSelected
                               ? registrationCounterStyles.waitingPatientChipSelected
-                              : registrationCounterStyles.waitingPatientChip
+                              : isInteractive
+                              ? registrationCounterStyles.waitingPatientChip
+                              : 'px-1.5 py-0.5 rounded text-[11px] font-bold font-mono bg-slate-100 dark:bg-[#202020] text-slate-500 dark:text-[#888888] border border-slate-200 dark:border-[#2e2e2e] select-none'
                           }
                         >
                           {p.patientNum}

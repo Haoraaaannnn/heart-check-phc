@@ -49,6 +49,9 @@ export interface OPScreeningFlowProps {
   onActivateIdle: (patient: Patient) => void;
   onRemoveIdle: (patient: Patient) => void;
   allowedCounters?: number[];
+  allCounters?: number[];
+  onAutoSort?: () => void | Promise<void>;
+  isAutoSorting?: boolean;
   allowedSubcategories?: string[];
 
   // Click-to-Select tablet mode props
@@ -98,6 +101,9 @@ export function OPScreeningFlow({
   onActivateIdle,
   onRemoveIdle,
   allowedCounters,
+  allCounters,
+  onAutoSort,
+  isAutoSorting,
   allowedSubcategories,
   selectedPatient,
   onSelectQueuePatient,
@@ -178,6 +184,9 @@ export function OPScreeningFlow({
       onRegDragStart={onRegDragStart}
       onReleaseFromCounter={onReleaseFromCounter}
       allowedCounters={allowedCounters}
+      allCounters={allCounters}
+      onAutoSort={onAutoSort}
+      isAutoSorting={isAutoSorting}
       selectedPatient={selectedPatient}
       onSelectQueuePatient={onSelectQueuePatient}
       onSelectCubiclePatient={onSelectCubiclePatient}

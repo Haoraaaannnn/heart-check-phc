@@ -35,9 +35,7 @@ const fetchRegistrationServices = async (): Promise<string[]> => {
     .from('services')
     .select('label_en, requires_registration');
   if (data && data.length > 0) {
-    cachedRegisteredServices = data
-      .filter((s: { label_en: string; requires_registration?: boolean | null }) => s.requires_registration !== false)
-      .map((s: { label_en: string }) => s.label_en);
+    cachedRegisteredServices = data.map((s: { label_en: string }) => s.label_en);
     lastServicesFetch = now;
   }
   return cachedRegisteredServices;
@@ -279,19 +277,10 @@ export function usePatientData(pendingRef?: React.MutableRefObject<Patient[]>) {
 
     // Queue: derive timers and counters locally.
     const activeRegServices = await fetchRegistrationServices();
-    const needsReg = queue.filter(p => activeRegServices.includes(p.service ?? '') && !p.reg_end);
+    const needsReg = queue.filter(p => !p.reg_end);
     let occupiedCounters: OccupiedCounterInfo[] = [];
     if (needsReg.length > 0) {
       occupiedCounters = await fetchOccupiedCounters();
-    }
-
-    // Clear registration counter if service does not require registration intake
-    for (const p of queue) {
-      if (p.counter != null && !p.reg_end && !activeRegServices.includes(p.service ?? '')) {
-        p.counter = undefined;
-        p.reg_start = undefined;
-        writes.clearRegistration.push(p.id);
-      }
     }
 
     for (const p of queue) {

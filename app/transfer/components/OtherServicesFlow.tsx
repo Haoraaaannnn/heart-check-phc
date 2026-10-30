@@ -47,6 +47,9 @@ export interface OtherServicesFlowProps {
   onRegDragStart?: (e: React.MouseEvent, patient: Patient) => void;
   onReleaseFromCounter?: (patient: Patient) => void;
   allowedCounters?: number[];
+  allCounters?: number[];
+  onAutoSort?: () => void | Promise<void>;
+  isAutoSorting?: boolean;
 
   // Click-to-Select tablet mode props
   selectedPatient?: SelectedTransferPatient | null;
@@ -92,6 +95,9 @@ export function OtherServicesFlow({
   onRegDragStart,
   onReleaseFromCounter,
   allowedCounters,
+  allCounters,
+  onAutoSort,
+  isAutoSorting,
   selectedPatient,
   onSelectQueuePatient,
   onSelectCubiclePatient,
@@ -129,6 +135,9 @@ export function OtherServicesFlow({
       onRegDragStart={onRegDragStart}
       onReleaseFromCounter={onReleaseFromCounter}
       allowedCounters={allowedCounters}
+      allCounters={allCounters}
+      onAutoSort={onAutoSort}
+      isAutoSorting={isAutoSorting}
       selectedPatient={selectedPatient}
       onSelectQueuePatient={onSelectQueuePatient}
       onSelectCubiclePatient={onSelectCubiclePatient}
