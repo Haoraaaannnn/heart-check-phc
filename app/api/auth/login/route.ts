@@ -3,6 +3,7 @@ import { NextResponse } from 'next/server'
 import { createClient } from '@supabase/supabase-js'
 import { createServerClient } from '@supabase/ssr'
 import { cookies } from 'next/headers'
+import { syncDoctorAccounts } from '@/lib/doctors/syncAccounts'
 
 const supabaseAdmin = createClient(
   process.env.NEXT_PUBLIC_SUPABASE_URL!,
@@ -173,8 +174,18 @@ export async function POST(request: Request) {
       )
     }
 
+    let doctorDirectoryWarning: string | undefined
+    if (resolvedRole === 'doctor') {
+      try { await syncDoctorAccounts({ db: supabaseAdmin, authId: signInData.user.id }) }
+      catch {
+        doctorDirectoryWarning = 'Signed in, but the doctor directory could not refresh. Reopen Doctors to retry.'
+        console.warn('[DOCTOR DIRECTORY] Account linking will be retried when the directory opens.')
+      }
+    }
+
     const response = NextResponse.json({
       role: resolvedRole,
+      ...(doctorDirectoryWarning ? { warning: doctorDirectoryWarning } : {}),
     })
     response.headers.set('Cache-Control', 'no-store, no-cache, must-revalidate, proxy-revalidate')
     response.headers.set('Pragma', 'no-cache')

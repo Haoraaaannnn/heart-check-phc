@@ -33,6 +33,9 @@ export interface OtherServicesFlowProps {
   onMoveBackToProgress: (patient: Patient, cubicleNum: string) => void;
   isDragEnabled: boolean;
   rotateTimeoutMs: number;
+  idlePatients: Patient[];
+  onActivateIdle: (patient: Patient) => void;
+  onRemoveIdle: (patient: Patient) => void;
   onAssignNow?: (patient: Patient) => void;
   cubicleDoctorMap?: Record<string, string>;
 
@@ -77,6 +80,9 @@ export function OtherServicesFlow({
   onMoveBackToProgress,
   isDragEnabled,
   rotateTimeoutMs,
+  idlePatients,
+  onActivateIdle,
+  onRemoveIdle,
   onAssignNow,
   cubicleDoctorMap,
   registrationPatients,
@@ -98,6 +104,7 @@ export function OtherServicesFlow({
     <ServiceBoard
       category={selectedCategory}
       onProgressPatients={visibleOnProgress}
+      idlePatients={idlePatients}
       cubicles={visibleCubicles}
       assignedPatients={assignedPatients}
       isDraggable={isDragEnabled}
@@ -111,6 +118,8 @@ export function OtherServicesFlow({
       onPointerDownFromCubicle={onPointerDownFromCubicle}
       onDragStartFromCubicle={onDragStartFromCubicle}
       onAssignNow={onAssignNow}
+      onActivateIdle={onActivateIdle}
+      onRemoveIdle={onRemoveIdle}
       warnAfterSeconds={rotateTimeoutMs / 1000}
       cubicleDoctorMap={cubicleDoctorMap}
       registrationPatients={registrationPatients}

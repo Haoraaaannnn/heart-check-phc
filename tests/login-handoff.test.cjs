@@ -21,6 +21,7 @@ test('First login writes server cookies before confirming success and does not r
   const profileQuery = { select() { return this; }, eq() { return this; }, order() { return this; }, limit() { return this; },
     maybeSingle: async () => ({ data: { role: 'superadmin' } }), upsert: async () => ({ error: null }) };
   const api = load('app/api/auth/login/route.ts', {
+    '@/lib/doctors/syncAccounts': { syncDoctorAccounts: async () => { throw new Error('Non-doctor login must not create physicians.'); } },
     'next/server': { NextResponse: { json: (body, init) => {
       assert.ok(writes.length > 0, 'Response must follow cookie installation'); return Response.json(body, init);
     } } },

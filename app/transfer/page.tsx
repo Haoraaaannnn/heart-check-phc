@@ -26,7 +26,7 @@ import { useAutoAssign } from '@/app/transfer/hooks/useAutoAssign';
 import { useDragAndDrop, useTransferSelection } from '@/app/transfer/hooks/useDragAndDrop';
 import { useRealtimeSubscription } from '@/app/transfer/hooks/useRealtimeSubscription';
 import { sendSMS } from '@/app/actions/sendSMS';
-import { useQueueShift } from '@/app/transfer/hooks/useQueueShift';
+import { useMaxRotations } from '@/app/transfer/hooks/useMaxRotations';
 import { useMyAccess } from '@/app/transfer/hooks/useMyAccess';
 import { useRegistrationDragAndDrop } from '@/app/transfer/hooks/useRegistrationDragAndDrop';
 import { Patient, Cubicle } from '@/types/Types';
@@ -35,12 +35,12 @@ import { useAutoRotate } from '@/app/transfer/hooks/useAutoRotate';
 import { useRotateTimeout } from '@/app/transfer/hooks/useRotateTimeout';
 import { useIdleTimeout } from '@/app/transfer/hooks/useIdleTimeout';
 import { useRequireAuth } from '@/app/transfer/hooks/useRequireAuth';
+import { useIdlePatients } from '@/app/transfer/hooks/useIdlePatients';
 import { useRegistrationRotate } from '@/app/transfer/hooks/useRegistrationRotate';
 import { requestMonitorCall } from '@/lib/requestMonitorCall';
 import './transfer.css';
 import { useConnectionStatus } from '@/hooks/useConnectionStatus';
 import { useOfflineQueue } from '@/hooks/useOfflineQueue';
-import { enqueueMutation, removeMutation } from '@/lib/offlineQueue';
 import { ConnectionStatusBanner } from '@/components/reusables/ConnectionStatusBanner';
 import { NotificationBadge } from '@/components/reusables/NotificationBadge';
 import { useBottleneckNotifications } from '@/app/dashboard/hooks/useBottleneckNotifications';
@@ -52,6 +52,8 @@ import { StationSetupModal } from '@/components/reusables/StationSetupModal';
 import { useStationClaim } from '@/hooks/useStationClaim';
 import { assignmentCandidates, saveTransferAssignments } from '@/app/transfer/lib/transferMutations';
 import { withRequestDeadline } from '@/lib/requestFetch';
+import { releaseCounterPatient } from '@/app/transfer/lib/releaseCounterPatient';
+import { removeRotatedPatient } from '@/app/transfer/lib/removeRotatedPatient';
 import { WorkstationLoading } from '@/components/auth/WorkstationLoading';
 
 
@@ -137,8 +139,9 @@ export default function TransferPage() {
   const confirmingRef = useRef<boolean>(false);
 
   const rotateTimeoutMs = useRotateTimeout();
-  const queueShiftError = useQueueShift();
+  const maxRotations = useMaxRotations();
 
+  const { idlePatients, idleError, busyPatientId, fetchIdlePatients, activatePatient, removePatient } = useIdlePatients();
   const registrationRotateBusy = useRef<boolean>(false);
   const pendingAutoRotateIdsRef = useRef<Set<number>>(new Set());
 
@@ -437,6 +440,7 @@ export default function TransferPage() {
         await Promise.all([
           fetchData(),
           fetchRegistrationPatients(),
+          fetchIdlePatients(),
         ]);
       } while (fetchQueuedRef.current && !dragInProgressRef.current);
 
@@ -445,7 +449,7 @@ export default function TransferPage() {
       setIsSyncing(false);
       globalSyncRef.current = false;
     }
-  }, [fetchData, fetchRegistrationPatients, reapplyPendingUpdates]);
+  }, [fetchData, fetchRegistrationPatients, fetchIdlePatients, reapplyPendingUpdates]);
 
   const handleRealtimeUpdate = useCallback(() => {
     if (dragInProgressRef.current) return;
@@ -576,6 +580,7 @@ export default function TransferPage() {
     fetchData: syncNow,
     busyRef: autoRotateBusy,
     rotateTimeoutMs,
+    maxRotations,
     pendingIdsRef: pendingAutoRotateIdsRef,
     confirmingRef
   });
@@ -585,6 +590,7 @@ export default function TransferPage() {
     onRotated: syncNow,
     busyRef: registrationRotateBusy,
     rotateTimeoutMs,
+    maxRotations,
     confirmingRef
   });
 
@@ -643,50 +649,60 @@ export default function TransferPage() {
     }
   };
 
-  /**
-   * Releases a patient from the registration window into the queue with offline outbox persistence.
-   */
+  const counterReleaseBusy = useRef(false);
+
+  /** Completes registration and assigns an available matching cubicle with one acknowledged save. */
   const handleReleaseFromCounter = async (patient: Patient) => {
-    const now = new Date().toISOString();
-    let queuedId: string | null = null;
-
+    if (counterReleaseBusy.current) return;
+    counterReleaseBusy.current = true;
+    setCallError('');
     try {
-      const queued = await enqueueMutation({
-        table: 'patients',
-        type: 'update',
-        payload: { reg_end: now },
-        matchKey: 'id',
-        matchValue: patient.id,
-        clientTimestamp: now,
-        description: `Release patient #${patient.id} from counter`,
-      });
-      queuedId = queued.id;
-    } catch (e) {
-      console.warn('Offline outbox enqueue warning:', e);
-    }
-
-    try {
-      if (typeof navigator !== 'undefined' && navigator.onLine) {
-        const { error } = await supabase
-          .from('patients')
-          .update({ reg_end: now })
-          .eq('id', patient.id)
-          .eq('is_historical', false);
-
-        if (!error && queuedId) {
-          await removeMutation(queuedId);
-        } else if (error) {
-          console.error('Failed to release patient from counter:', error);
-        }
+      const result = await releaseCounterPatient({ patient, cubicles, assigned: assignedPatients, nowMs: Date.now() });
+      const released = result.patient;
+      if (released.status === 'Assigned' && released.cubicleNum) {
+        const destination = released.cubicleNum;
+        pinConfirmedPatient(released.id, destination, 'Assigned');
+        setAssignedPatients(previous => ({ ...previous,
+          [destination]: [...(previous[destination] ?? []).filter(item => item.id !== released.id), released] }));
+        setOnProgressPatients(previous => previous.filter(item => item.id !== released.id));
+      } else {
+        setOnProgressPatients(previous => [...previous.filter(item => item.id !== released.id), released]);
       }
+      setRegistrationPatients(previous => previous.filter(item => item.id !== released.id));
+      if (selectedPatient?.patient.id === released.id) clearSelection();
+      setCallError(!result.online ? 'Saved on this device; the counter release will sync when connected.'
+        : released.status === 'Assigned' ? '' : 'Registration completed. Waiting for an available matching cubicle.');
+      if (result.online) await syncNow();
+    } catch (error: unknown) {
+      setCallError(error instanceof Error ? error.message : 'Unable to release this ticket. Please retry.');
+    } finally { counterReleaseBusy.current = false; }
+  };
 
-      setRegistrationPatients(prev => prev.filter(p => p.id !== patient.id));
-      setOnProgressPatients(prev =>
-        prev.map(p => (p.id === patient.id ? { ...p, reg_end: now } : p))
-      );
-    } catch (err: unknown) {
-      console.warn('Network offline releasing patient from counter; saved to local outbox:', err);
-      void syncNow();
+  const handleActivateIdle = async (patient: Patient) => {
+    const result = await activatePatient(patient);
+    if (result.ok) await syncNow();
+  };
+
+  const handleRemoveIdle = async (patient: Patient) => {
+    if (patient.status === 'Idle') {
+      const result = await removePatient(patient);
+      if (result.ok) await syncNow();
+      return;
+    }
+    setCallError('');
+    try {
+      await removeRotatedPatient(patient);
+      unpinConfirmedPatient(patient.id);
+      if (selectedPatient?.patient.id === patient.id) clearSelection();
+      setRegistrationPatients(previous => previous.filter(item => item.id !== patient.id));
+      setOnProgressPatients(previous => previous.filter(item => item.id !== patient.id));
+      setAssignedPatients(previous => Object.fromEntries(Object.entries(previous)
+        .map(([station, patients]) => [station, patients.filter(item => item.id !== patient.id)])));
+      setPendingUpdates(previous => previous.filter(item => item.id !== patient.id));
+      pendingUpdatesRef.current = pendingUpdatesRef.current.filter(item => item.id !== patient.id);
+      await syncNow();
+    } catch (error: unknown) {
+      setCallError(error instanceof Error ? error.message : 'Unable to remove this ticket. Refresh and retry.');
     }
   };
 
@@ -730,7 +746,8 @@ export default function TransferPage() {
         void Promise.all(snapshot.filter(patient => patient.phoneNum &&
           patient.status === 'Assigned' && patient.cubicleNum).map(patient => {
             if (!patient.cubicleNum) return Promise.resolve();
-            return sendSMS(String(patient.phoneNum), patient.patientNum, patient.cubicleNum);
+            return sendSMS({ phoneNum: String(patient.phoneNum), patientNum: patient.patientNum,
+              cubicleNum: patient.cubicleNum, patientId: patient.id });
           })).catch(() => console.warn('Assignment notification delivery was deferred.'));
       }
 
@@ -883,6 +900,7 @@ export default function TransferPage() {
 
     return matchesSelectedService(p, true) && matchesMyCounters(p);
   });
+  const visibleIdlePatients = idlePatients.filter(p => matchesSelectedService(p, true));
 
   const visibleRegistrationPatients = registrationPatients.filter(p => {
     if (!matchesMyCounters(p)) return false;
@@ -900,6 +918,16 @@ export default function TransferPage() {
     }
     return counts;
   }, [onProgressPatients]);
+
+  const idleCounts: Record<string, number> = useMemo(() => {
+    const counts: Record<string, number> = {};
+    for (const p of idlePatients) {
+      if (p.service) {
+        counts[p.service] = (counts[p.service] || 0) + 1;
+      }
+    }
+    return counts;
+  }, [idlePatients]);
 
   const totalUnassigned = Object.entries(queueCounts)
     .filter(([cat]) => myServices.includes(cat))
@@ -924,6 +952,7 @@ export default function TransferPage() {
           fetchData(true),
           fetchCubicles(true),
           fetchRegistrationPatients(true),
+          fetchIdlePatients(true),
           fetchMyAccess(),
         ]));
       } catch {
@@ -931,7 +960,7 @@ export default function TransferPage() {
       } finally {
         if (requestId === startupRequestId.current) setIsLoading(false);
       }
-  }, [fetchData, fetchCubicles, fetchRegistrationPatients, fetchMyAccess]);
+  }, [fetchData, fetchCubicles, fetchRegistrationPatients, fetchIdlePatients, fetchMyAccess]);
 
   useEffect(() => {
     void initialize();
@@ -1004,6 +1033,9 @@ export default function TransferPage() {
           cubicleDoctorMap={cubicleDoctorMap}
           onReleaseFromCounter={handleReleaseFromCounter}
           onAssignNow={handleAssignNow}
+          idlePatients={visibleIdlePatients}
+          onActivateIdle={handleActivateIdle}
+          onRemoveIdle={handleRemoveIdle}
           allowedCounters={myCounters}
           allowedSubcategories={getAllowedSubcategories(selectedCategory)}
           selectedPatient={selectedPatient}
@@ -1036,6 +1068,9 @@ export default function TransferPage() {
         onMoveBackToProgress={handleMoveBackToProgress}
         isDragEnabled={isDragEnabled}
         rotateTimeoutMs={rotateTimeoutMs}
+        idlePatients={visibleIdlePatients}
+        onActivateIdle={handleActivateIdle}
+        onRemoveIdle={handleRemoveIdle}
         onAssignNow={handleAssignNow}
         cubicleDoctorMap={cubicleDoctorMap}
         registrationPatients={requiresReg ? visibleRegistrationPatients : undefined}
@@ -1075,6 +1110,7 @@ export default function TransferPage() {
         isExpanded={isSidebarExpanded}
         selectedCategory={selectedCategory}
         queueCounts={queueCounts}
+        idleCounts={idleCounts}
         allowedServices={myServices}
         services={allServices}
         onSelectCategory={cat => {
@@ -1294,7 +1330,8 @@ export default function TransferPage() {
 
         {/* Main Dashboard Content (Non-scrollable, fit-to-screen) */}
         <main className={transferLayoutStyles.mainContent}>
-          {(queueShiftError || counterTransferError || counterDragError) && <p role="alert" className="shrink-0 mb-2 p-3 rounded-lg border border-red-200 bg-red-50 text-red-800 dark:border-red-900 dark:bg-red-950 dark:text-red-200">{queueShiftError || counterTransferError || counterDragError}</p>}
+          {(idleError || counterTransferError || counterDragError) && <p role="alert" className="shrink-0 mb-2 p-3 rounded-lg border border-red-200 bg-red-50 text-red-800 dark:border-red-900 dark:bg-red-950 dark:text-red-200">{idleError || counterTransferError || counterDragError}</p>}
+          {busyPatientId !== null && <p role="status" className="mb-2 text-sm text-slate-500">Updating idle ticket...</p>}
           {callError && <p role="alert" className="shrink-0 mb-2 p-3 rounded-lg border border-red-200 bg-red-50 text-red-800 dark:border-red-900 dark:bg-red-950 dark:text-red-200">{callError}</p>}
 
           {accessStatus === 'loading' ? (

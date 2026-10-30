@@ -17,6 +17,8 @@
 
 import { createClient } from '@/lib/supabase/server';
 import { decryptPhoneNumber } from '@/lib/crypto/phoneEncryption';
+import { readSmsQueuePosition } from '@/lib/sms/readQueuePosition';
+import { smsQueuePositionText } from '@/lib/sms/queuePosition';
 
 /**
  * Sliding window rate limiter state stored in-memory per Node process.
@@ -44,19 +46,11 @@ const DUPLICATE_COOLDOWN_MS = 10 * 1000;
  */
 function normalizePhilippinePhone(phone: unknown): string | null {
   if (typeof phone !== 'string' && typeof phone !== 'number') return null;
-  const rawOrDecrypted = decryptPhoneNumber(phone as string | number) ?? String(phone);
+  const rawOrDecrypted = decryptPhoneNumber(phone) ?? String(phone);
   const cleaned = rawOrDecrypted.replace(/[\s-]/g, '').trim();
 
-  let normalized = cleaned;
-  if (normalized.startsWith('+63')) {
-    normalized = normalized.slice(0, 13);
-  } else if (normalized.startsWith('63')) {
-    normalized = '+' + normalized.slice(0, 12);
-  } else if (normalized.startsWith('09')) {
-    normalized = '+63' + normalized.slice(1);
-  } else {
-    return null;
-  }
+  const normalized = cleaned.startsWith('09') ? '+63' + cleaned.slice(1)
+    : cleaned.startsWith('639') ? '+' + cleaned : cleaned;
 
   const PH_MOBILE_REGEX = /^\+639\d{9}$/;
   return PH_MOBILE_REGEX.test(normalized) ? normalized : null;
@@ -74,7 +68,7 @@ function checkRateLimit(userId: string, recipient: string): { allowed: boolean; 
   let record = rateLimitMap.get(userId);
 
   if (!record) {
-    record = { timestamps: [], lastRecipient: recipient, lastSentAt: now };
+    record = { timestamps: [] };
     rateLimitMap.set(userId, record);
   }
 
@@ -107,12 +101,12 @@ function checkRateLimit(userId: string, recipient: string): { allowed: boolean; 
 /**
  * Dispatches an SMS notification to a queued patient.
  *
- * @param phoneNum - Target Philippine mobile number.
- * @param patientNum - Patient queue number identifier.
- * @param cubicleNum - Target service station or counter.
+ * @param options - Stored phone contact, ticket ID/number and assignment destination.
  * @returns Object with operation status or sanitized error message.
  */
-export async function sendSMS(phoneNum: string, patientNum: string, cubicleNum: string) {
+export async function sendSMS({ phoneNum, patientNum, cubicleNum, patientId }: {
+  phoneNum: string; patientNum: string; cubicleNum: string; patientId: number;
+}) {
   try {
     // 1. Enforce session authentication (SEC-028)
     const supabase = await createClient();
@@ -149,7 +143,10 @@ export async function sendSMS(phoneNum: string, patientNum: string, cubicleNum: 
       return { error: 'Valid patient queue number is required.' };
     }
 
-    const message = `Heart Check PHC: Ang iyong numerong ${safePatientNum} ay susunod na sa ${safeCubicleNum || 'Waiting Area'}, hintayin nalang na matawag ang iyong numero. Salamat!`;
+    const snapshot = await readSmsQueuePosition({ patientId, patientNum: safePatientNum, nowMs: Date.now() });
+    const positionText = snapshot.ok ? smsQueuePositionText(snapshot.position) : '';
+    const locationText = positionText || `Nakapila ka sa ${safeCubicleNum || 'Waiting Area'}.`;
+    const message = `Heart Check PHC: Ticket ${safePatientNum}. ${locationText} Hintayin na matawag ang iyong numero. Salamat!`;
 
     if (!process.env.UNISMS_API_KEY) {
       console.error('[SMS ERROR] UNISMS_API_KEY is not configured in server environment');
@@ -176,11 +173,9 @@ export async function sendSMS(phoneNum: string, patientNum: string, cubicleNum: 
       return { error: 'SMS delivery gateway rejected message.' };
     }
 
-    const result = await response.json().catch(() => ({ success: true }));
-    return { success: true, data: result };
-  } catch (err: unknown) {
-    const message = err instanceof Error ? err.message : 'Unknown dispatch error';
-    console.error('[SMS UNEXPECTED ERROR]:', message);
+    return { success: true };
+  } catch {
+    console.error('[SMS UNEXPECTED ERROR] Dispatch failed.');
     return { error: 'Failed to process SMS notification.' };
   }
 }

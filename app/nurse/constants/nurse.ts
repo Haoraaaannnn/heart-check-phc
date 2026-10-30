@@ -117,28 +117,27 @@ export const NurseStyle = {
 
   boardContainer: {
     flex: 1,
-    display: 'grid',
-    gridTemplateColumns: 'repeat(3, minmax(0, 1fr))',
-    gap: '1rem',
-    padding: '1rem 1.5rem',
+    display: 'flex',
+    flexDirection: 'column',
+    gap: '0.875rem',
+    padding: '1rem',
     minHeight: 0,
     overflow: 'hidden',
   } as CSSProperties,
 
   stageColumn: {
-    borderRadius: '1rem',
-    borderWidth: '1px',
+    borderRadius: '0',
     borderStyle: 'solid',
     display: 'flex',
     flexDirection: 'column',
     minHeight: 0,
     overflow: 'hidden',
-    boxShadow: '0 1px 3px 0 rgba(0, 0, 0, 0.05)',
+    boxShadow: 'none',
     transition: 'all 200ms ease',
   } as CSSProperties,
 
   stageColumnHeader: {
-    padding: '0.875rem 1rem',
+    padding: '0.75rem 1.5rem',
     borderBottomWidth: '1px',
     borderBottomStyle: 'solid',
     display: 'flex',
@@ -150,10 +149,10 @@ export const NurseStyle = {
   stageColumnContent: {
     flex: 1,
     overflowY: 'auto',
-    padding: '0.75rem',
+    padding: '0',
     display: 'flex',
     flexDirection: 'column',
-    gap: '0.75rem',
+    gap: '0',
     minHeight: 0,
   } as CSSProperties,
 

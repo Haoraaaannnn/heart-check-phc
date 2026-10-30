@@ -14,7 +14,7 @@
 
 'use client';
 
-import React from 'react';
+import React, { useId, useState } from 'react';
 import { Cubicle, Patient } from '@/types/Types';
 import { QueuePanel } from '@/app/transfer/components/QueuePanel';
 import { RegistrationCounterSection } from '@/app/transfer/components/RegistrationCounterSection';
@@ -23,6 +23,7 @@ import { QuickAssignDropdown } from '@/app/transfer/components/QuickAssignDropdo
 import { transferTexts } from '@/constants/texts/transferTexts';
 import { transferLayoutStyles, cubicleStyles } from '@/constants/designs/transferStyles';
 import { SelectedTransferPatient } from '@/app/transfer/types/transfer';
+import { RotatedTicketsPanel } from './RotatedTicketsPanel';
 
 /**
  * Props for {@link ServiceBoard}.
@@ -32,6 +33,8 @@ export interface ServiceBoardProps {
   category: string;
   /** Active queue patients list. */
   onProgressPatients: Patient[];
+  /** Idle patients list. */
+  idlePatients: Patient[];
   /** Cubicles configured for this service/room. */
   cubicles: Cubicle[];
   /** Map of assigned patients by cubicle number. */
@@ -58,6 +61,10 @@ export interface ServiceBoardProps {
   onDragStartFromCubicle?: (e: React.MouseEvent, patient: Patient, cubicleNum: string) => void;
   /** Instant assign handler. */
   onAssignNow?: (patient: Patient) => void;
+  /** Idle reactivation handler. */
+  onActivateIdle: (patient: Patient) => void;
+  /** Soft removal handler for idle tickets and active tickets with four completed rotations. */
+  onRemoveIdle: (patient: Patient) => void | Promise<void>;
   /** Map of cubicle numbers to doctor names. */
   cubicleDoctorMap?: Record<string, string>;
   /** Optional timeout warning in seconds. */
@@ -105,6 +112,7 @@ export interface ServiceBoardProps {
 export function ServiceBoard({
   category,
   onProgressPatients,
+  idlePatients,
   cubicles,
   assignedPatients,
   isDraggable,
@@ -118,6 +126,8 @@ export function ServiceBoard({
   onPointerDownFromCubicle,
   onDragStartFromCubicle,
   onAssignNow,
+  onActivateIdle,
+  onRemoveIdle,
   cubicleDoctorMap = {},
   warnAfterSeconds,
   registrationPatients,
@@ -135,17 +145,25 @@ export function ServiceBoard({
   onTargetCounterClick,
   onCancelSelection,
 }: ServiceBoardProps) {
-  const hasRegistrationCounters = Boolean(
-    registrationPatients !== undefined && onReleaseFromCounter
-  );
-
+  const [queueHidden, setQueueHidden] = useState(false);
+  const queuePanelId = useId();
   return (
-    <>
+    <div className="flex h-full min-h-0 flex-1 flex-col gap-2">
+      <RotatedTicketsPanel patients={[...onProgressPatients, ...(registrationPatients ?? []),
+        ...Object.values(assignedPatients).flat().filter(patient => patient.service === category)]} onRemove={onRemoveIdle} />
+      {queueHidden && <div className="flex shrink-0 flex-wrap items-center justify-between gap-2 rounded-xl border border-slate-200 bg-white px-3 py-2 text-sm dark:border-slate-700 dark:bg-slate-900">
+        <span className="text-slate-500 dark:text-slate-400">On Progress: {onProgressPatients.length} · Idle: {idlePatients.length}</span>
+        <button type="button" onClick={() => setQueueHidden(false)} aria-controls={queuePanelId} aria-expanded={false}
+          className="inline-flex items-center gap-1.5 rounded-lg border border-slate-200 bg-slate-50 px-3 py-1.5 text-xs font-semibold text-slate-700 hover:bg-slate-100 dark:border-slate-700 dark:bg-slate-800 dark:text-slate-200 dark:hover:bg-slate-700">
+          <i className="bx bx-chevrons-right text-base" aria-hidden="true" />Show On Progress / Idle
+        </button>
+      </div>}
       <div className={transferLayoutStyles.twoColumnGrid}>
         {/* Left Column: Queue & Idle Panel (4 cols on tablet and desktop) */}
-        <div className={transferLayoutStyles.leftColumn}>
+        <div id={queuePanelId} className={queueHidden ? 'hidden' : transferLayoutStyles.leftColumn}>
           <QueuePanel
             onProgressPatients={onProgressPatients}
+            idlePatients={idlePatients}
             isDraggable={isDraggable}
             selectedCategory={category}
             draggedPatientId={draggedPatient?.id}
@@ -157,15 +175,21 @@ export function ServiceBoard({
             onAssignNow={onAssignNow}
             speakingId={speakingId}
             warnAfterSeconds={warnAfterSeconds}
+            onActivateIdle={onActivateIdle}
+            onRemoveIdle={onRemoveIdle}
+            onHide={() => setQueueHidden(true)}
+            panelId={queuePanelId}
           />
         </div>
 
         {/* Right Column: Counters + Cubicles (8 cols on tablet and desktop) */}
-        <div className={transferLayoutStyles.rightColumn}>
+        <div className={queueHidden
+          ? 'md:col-span-12 h-full flex flex-col min-h-0 gap-4 overflow-y-auto overscroll-contain'
+          : transferLayoutStyles.rightColumn}>
           {/* Registration Counters (if available) - Horizontal compact grid, NO scrollbar */}
-          {hasRegistrationCounters && (
+          {registrationPatients && onReleaseFromCounter && (
             <RegistrationCounterSection
-              patients={registrationPatients!}
+              patients={registrationPatients}
               draggedPatient={regDraggedPatient ?? null}
               dragOverCounter={dragOverCounter ?? null}
               selectedPatient={selectedPatient}
@@ -173,7 +197,7 @@ export function ServiceBoard({
               onTargetCounterClick={onTargetCounterClick}
               onPointerDown={onRegPointerDown}
               onDragStart={onRegDragStart}
-              onRelease={onReleaseFromCounter!}
+              onRelease={onReleaseFromCounter}
               allowedCounters={allowedCounters}
             />
           )}
@@ -273,7 +297,7 @@ export function ServiceBoard({
           onClose={onCancelSelection || (() => {})}
         />
       )}
-    </>
+    </div>
   );
 }
 

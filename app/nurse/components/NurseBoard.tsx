@@ -1,8 +1,8 @@
 /**
- * @fileoverview 3-Column Non-scrollable Clinical Pipeline Board for the Nurse Dashboard.
+ * @fileoverview Familiar three-stage clinical board using the shared workstation visual language.
  *
- * Renders the three core clinical stages (Assigned, With Doctor, Carryout) side-by-side
- * in a fit-to-screen grid layout where only the internal column lists scroll.
+ * Preserves the Assigned, With Doctor and Carryout workflow and drag destinations while
+ * keeping patient controls directly beside their tickets with all care stages visible together.
  *
  * Adheres strictly to AGENTS.md guidelines with full JSDoc and zero emojis.
  */
@@ -13,6 +13,8 @@ import React from 'react';
 import { Patient } from '@/types/Types';
 import { ClinicalStage, SelectedNursePatient } from '@/app/nurse/types/nurse';
 import { NurseStyle } from '@/app/nurse/constants/nurse';
+import { StationOverview } from '@/app/nurse/components/StationOverview';
+import { nurseTexts } from '@/app/nurse/constants/nurseTexts';
 import { AssignedSection } from '@/app/nurse/components/AssignedSection';
 import { WithDoctorSection } from '@/app/nurse/components/WithDoctorSection';
 import { CarryoutSection } from '@/app/nurse/components/CarryoutSection';
@@ -21,6 +23,10 @@ import { CarryoutSection } from '@/app/nurse/components/CarryoutSection';
  * Props for the NurseBoard component.
  */
 export interface NurseBoardProps {
+  /** Completed visits matching the page's current filters. */
+  finishedCount?: number;
+  /** Current station, service or all-cubicle filter label. */
+  scopeLabel?: string;
   /** Roster of waiting patients assigned to cubicles. */
   assignedPatients: Patient[];
   /** Roster of patients currently in medical consultation. */
@@ -52,12 +58,14 @@ export interface NurseBoardProps {
 }
 
 /**
- * 3-Column clinical progression board rendering active patient stages simultaneously.
+ * Clinical board presenting all stages and their existing patient actions directly.
  *
  * @param props - Patient datasets, drag states, selection models, and action dispatchers.
  * @returns The rendered non-scrollable board element.
  */
 export function NurseBoard({
+  finishedCount = 0,
+  scopeLabel = nurseTexts.allMyCubicles,
   assignedPatients,
   withDoctorPatients,
   carryoutPatients,
@@ -79,45 +87,23 @@ export function NurseBoard({
 
   return (
     <main style={NurseStyle.boardContainer}>
-      {/* Column 1: Assigned Queue (Waiting / Calling) */}
-      <AssignedSection
-        patients={assignedPatients}
-        speakingId={speakingId}
-        selectedPatientId={selectedPatientId}
-        isDragOver={dragOverStage === 'assigned'}
-        isValidSelectionTarget={isStageValidTarget('assigned')}
-        onCall={onCall}
-        onSelectPatient={onSelectPatient}
-        onPointerDown={onPointerDown}
-        onMoveToWithDoctor={onMoveToWithDoctor}
-        onMoveHere={() => onAssignSelectedToStage('assigned')}
-      />
-
-      {/* Column 2: With Doctor (Active Consultation) */}
-      <WithDoctorSection
-        patients={withDoctorPatients}
-        selectedPatientId={selectedPatientId}
-        isDragOver={dragOverStage === 'with_doctor'}
-        isValidSelectionTarget={isStageValidTarget('with_doctor')}
-        onMoveBack={onMoveBackFromDoctor}
-        onMoveToCarryout={onMoveToCarryout}
-        onSelectPatient={onSelectPatient}
-        onPointerDown={onPointerDown}
-        onMoveHere={() => onAssignSelectedToStage('with_doctor')}
-      />
-
-      {/* Column 3: Carryout & Post-Care */}
-      <CarryoutSection
-        patients={carryoutPatients}
-        selectedPatientId={selectedPatientId}
-        isDragOver={dragOverStage === 'carryout'}
-        isValidSelectionTarget={isStageValidTarget('carryout')}
-        onMoveBack={onMoveBackFromCarryout}
-        onFinish={onFinish}
-        onSelectPatient={onSelectPatient}
-        onPointerDown={onPointerDown}
-        onMoveHere={() => onAssignSelectedToStage('carryout')}
-      />
+      <StationOverview activeCount={assignedPatients.length + withDoctorPatients.length + carryoutPatients.length}
+        finishedCount={finishedCount} scopeLabel={scopeLabel} selectedTicket={selectedPatient?.patient.patientNum} />
+      <div className="grid min-h-0 flex-1 auto-rows-[minmax(18rem,1fr)] grid-cols-1 overflow-y-auto rounded-2xl border border-slate-200 bg-white dark:border-[#2e2e2e] dark:bg-[#1a1a1a] lg:auto-rows-fr lg:grid-cols-3 lg:overflow-hidden">
+        <AssignedSection patients={assignedPatients} speakingId={speakingId} selectedPatientId={selectedPatientId}
+          isDragOver={dragOverStage === 'assigned'} isValidSelectionTarget={isStageValidTarget('assigned')}
+          onCall={onCall} onSelectPatient={onSelectPatient} onPointerDown={onPointerDown}
+          onMoveToWithDoctor={onMoveToWithDoctor} onMoveHere={() => onAssignSelectedToStage('assigned')} />
+        <WithDoctorSection patients={withDoctorPatients} selectedPatientId={selectedPatientId}
+          isDragOver={dragOverStage === 'with_doctor'} isValidSelectionTarget={isStageValidTarget('with_doctor')}
+          onMoveBack={onMoveBackFromDoctor} onMoveToCarryout={onMoveToCarryout}
+          onSelectPatient={onSelectPatient} onPointerDown={onPointerDown}
+          onMoveHere={() => onAssignSelectedToStage('with_doctor')} />
+        <CarryoutSection patients={carryoutPatients} selectedPatientId={selectedPatientId}
+          isDragOver={dragOverStage === 'carryout'} isValidSelectionTarget={isStageValidTarget('carryout')}
+          onMoveBack={onMoveBackFromCarryout} onFinish={onFinish} onSelectPatient={onSelectPatient} onPointerDown={onPointerDown}
+          onMoveHere={() => onAssignSelectedToStage('carryout')} />
+      </div>
     </main>
   );
 }

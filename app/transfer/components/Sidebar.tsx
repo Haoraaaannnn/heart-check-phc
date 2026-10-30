@@ -34,6 +34,8 @@ export interface SidebarProps {
   selectedCategory: string | null;
   /** Map of service category names to active queue counts. */
   queueCounts: Record<string, number>;
+  /** Map of service category names to idle counts. */
+  idleCounts?: Record<string, number>;
   /** Callback fired when a category is clicked. */
   onSelectCategory: (category: string) => void;
   /** Optional allowed service categories for restricted roles. */
@@ -53,6 +55,7 @@ export interface SidebarProps {
 export function Sidebar({
   selectedCategory,
   queueCounts,
+  idleCounts = {},
   allowedServices,
   services,
   onSelectCategory,
@@ -138,7 +141,8 @@ export function Sidebar({
       <nav className="flex-1 overflow-y-auto py-4 px-2 space-y-1 phc-scroll">
         {visibleCategories.map(category => {
           const queueCount = queueCounts[category] || 0;
-          const totalCount = queueCount;
+          const idleCount = idleCounts[category] || 0;
+          const totalCount = queueCount + idleCount;
           const isActive = selectedCategory === category;
           const serviceObj = serviceMap.get(category.trim().toLowerCase());
           const icon = resolveServiceIcon(
@@ -147,7 +151,7 @@ export function Sidebar({
 
           const tooltip = `${category}${
             queueCount > 0 ? ` — ${queueCount} waiting` : ''
-          }`;
+          }${idleCount > 0 ? ` — ${idleCount} idle` : ''}`;
 
           return (
             <button
@@ -187,6 +191,13 @@ export function Sidebar({
                       color={isActive ? 'brand' : 'amber'}
                       pulse={queueCount > 3}
                       className={isActive ? '!text-white' : ''}
+                    />
+                  )}
+                  {idleCount > 0 && (
+                    <NotificationBadge
+                      count={idleCount}
+                      color="gray"
+                      className={isActive ? '!text-white/80' : ''}
                     />
                   )}
                 </div>

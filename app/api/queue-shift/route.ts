@@ -1,9 +1,9 @@
-/** @fileoverview Authorized shift rollover without deleting or recalling active tickets. */
+/** @fileoverview Compatibility acknowledgement for older tabs after restoring idle numbers. */
 import { NextResponse } from 'next/server';
 import { requireUser } from '@/lib/supabase/authGuard';
 import { supabaseAdmin } from '@/lib/supabase/facilityHelpers';
 
-/** @param request - Authenticated staff request. @returns Rollover acknowledgement or explicit error. */
+/** @param request - Authenticated staff request. @returns Acknowledgement without resetting rotations. */
 export async function POST(request: Request) {
   const guard = await requireUser(request);
   if (!guard.authorized) return guard.response;
@@ -11,7 +11,5 @@ export async function POST(request: Request) {
   if (error || !profile || !['superadmin', 'admin', 'registration', 'nurse', 'staff', 'doctor'].includes(profile.role)) {
     return NextResponse.json({ error: 'Staff authorization required.' }, { status: 403 });
   }
-  const { error: resetError } = await supabaseAdmin.rpc('reset_queue_shift');
-  if (resetError) return NextResponse.json({ error: 'Shift rollover is unavailable. Verify the shift queue migration has been applied.' }, { status: 503 });
-  return NextResponse.json({ success: true }, { headers: { 'Cache-Control': 'no-store' } });
+  return NextResponse.json({ success: true, mode: 'idle' }, { headers: { 'Cache-Control': 'no-store' } });
 }

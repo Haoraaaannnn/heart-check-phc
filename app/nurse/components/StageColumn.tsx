@@ -1,5 +1,5 @@
 /**
- * @fileoverview Pipeline stage column component for the Nurse Dashboard Kanban board.
+ * @fileoverview Open stage list with patient rows and the existing clinical drop-target behavior.
  *
  * Houses patient cards for a specific clinical stage with internal vertical scrolling
  * (`flex-1 overflow-y-auto min-h-0`), dropzone hit-testing via `data-stage-id`,
@@ -14,6 +14,7 @@ import React from 'react';
 import { ClinicalStage } from '@/app/nurse/types/nurse';
 import { NurseStyle } from '@/app/nurse/constants/nurse';
 import { nurseTexts } from '@/app/nurse/constants/nurseTexts';
+import { cubicleStyles } from '@/constants/designs/transferStyles';
 
 /**
  * Props for the StageColumn component.
@@ -65,25 +66,23 @@ export function StageColumn({
 
   return (
     <section
+      id={`care-list-${stage}`}
       data-stage-id={stage}
       style={columnStyle}
-      className={`transition-all duration-150 bg-white dark:bg-[#1a1a1a] border border-slate-200 dark:border-[#2e2e2e] ${
+      aria-label={title}
+      className={`min-w-0 flex-1 border-b border-slate-200 transition-colors duration-150 bg-white dark:border-[#2e2e2e] dark:bg-[#1a1a1a] lg:border-b-0 lg:border-r lg:last:border-r-0 ${
         isTargetActive
-          ? 'border-emerald-500 ring-2 ring-emerald-400/40 bg-emerald-50/20 dark:bg-emerald-950/30'
+          ? 'ring-2 ring-inset ring-emerald-600/20'
           : ''
       }`}
     >
       {/* Column Header */}
-      <div style={NurseStyle.stageColumnHeader} className="flex items-center justify-between gap-2 min-w-0 border-b border-slate-100 dark:border-[#2e2e2e]">
-        <div className="flex items-center gap-2 min-w-0 flex-1 overflow-hidden">
-          <h2 className="text-sm font-bold text-slate-800 dark:text-[#f5f5f5] tracking-tight truncate">
-            {title}
-          </h2>
-          <span
-            className={`font-mono text-xs font-extrabold shrink-0 ${badgeColorClass}`}
-          >
-            {count}
-          </span>
+      <div style={NurseStyle.stageColumnHeader} className="flex flex-wrap items-center justify-between gap-2 min-w-0 border-b border-slate-100 dark:border-[#2e2e2e]">
+        <div className="flex items-baseline gap-3 min-w-0 flex-1">
+          <div className="min-w-0 flex-1">
+            <h2 className={cubicleStyles.headerTitle}>{title}</h2>
+          </div>
+          <span className={`${cubicleStyles.headerCountBadge} ${badgeColorClass}`}>{count}</span>
         </div>
 
         {/* Quick 'Move Here' button during Click-to-Select tablet mode */}
@@ -91,7 +90,7 @@ export function StageColumn({
           <button
             type="button"
             onClick={onMoveHere}
-            className="inline-flex items-center px-2 py-0.5 rounded-lg text-xs font-bold bg-emerald-600 hover:bg-emerald-700 active:bg-emerald-800 text-white shadow-xs transition-colors cursor-pointer animate-pulse shrink-0 whitespace-nowrap ml-1.5"
+            className="inline-flex min-h-10 items-center px-3 py-1 rounded-lg border border-emerald-300 bg-emerald-50 text-xs font-bold text-emerald-800 hover:bg-emerald-100 dark:border-emerald-800 dark:bg-emerald-950 dark:text-emerald-200 transition-colors cursor-pointer shrink-0 whitespace-normal"
           >
             <span>{nurseTexts.btnMoveHere}</span>
           </button>
@@ -101,8 +100,8 @@ export function StageColumn({
       {/* Internal Scrollable Content (Page does NOT scroll) */}
       <div style={NurseStyle.stageColumnContent} className="phc-scroll">
         {count === 0 ? (
-          <div className="flex-1 flex flex-col items-center justify-center p-8 text-center min-h-[160px]">
-            <p className="text-xs text-slate-400 dark:text-[#737373] font-medium max-w-[200px]">
+          <div className="flex-1 flex flex-col items-center justify-center px-4 py-12 text-center min-h-[160px]">
+            <p className="text-xs text-slate-400 dark:text-[#737373] font-medium max-w-[220px] leading-relaxed">
               {emptyText}
             </p>
           </div>

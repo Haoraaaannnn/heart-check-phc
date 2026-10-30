@@ -146,7 +146,7 @@ export function NurseSidebar({
       className={`fixed left-0 top-0 h-full bg-white dark:bg-[#141414] border-r border-slate-200 dark:border-[#2e2e2e] shadow-xs z-30 flex flex-col transition-all duration-300 select-none ${
         isExpanded ? 'w-64' : 'w-18'
       }`}
-      aria-label="Nurse Station navigation"
+      aria-label="Doctors Station navigation"
     >
       {/* Brand Header */}
       <div

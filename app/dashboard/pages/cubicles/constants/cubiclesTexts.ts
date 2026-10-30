@@ -265,14 +265,14 @@ export const CUBICLES_TEXTS = {
       title: 'Interactive Outpatient Stage Pipeline Map',
       subtitle:
         'Click any stage node or branching cubicle station to inspect patient flow, timers, and idle intervals',
-      branchingTitle: 'Stage 3 Nurse Clinical Service Stations',
+      branchingTitle: 'Stage 3 Doctors Clinical Service Stations',
       branchingSubtitle:
         'Real-time room occupancy, physician roster, active consultation speed, and turnaround idle gaps',
-      branchStem: 'Stage 3 Branch: Nurse Stations',
+      branchStem: 'Stage 3 Branch: Doctors Stations',
       filterAll: 'All Stages',
       filterWaiting: '1. Kiosk',
       filterDispatch: '2. Registration',
-      filterExam: '3. Nurse',
+      filterExam: '3. Doctors',
       filterCarryout: '4. Carryout',
       filterCompleted: '5. Finished',
       zoomHint: 'Interactive Stage Map: Click any node to highlight pathway',

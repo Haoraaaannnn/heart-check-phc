@@ -16,9 +16,8 @@ import React, { useState } from 'react';
 import { Patient } from '@/types/Types';
 import { ClinicalStage } from '@/app/nurse/types/nurse';
 import { nurseTexts } from '@/app/nurse/constants/nurseTexts';
-import { NurseStyle, STAGE_CONFIGS } from '@/app/nurse/constants/nurse';
-import { ElapsedTimer } from '@/app/nurse/components/ElapsedTimer';
-import { NurseDragHandle } from '@/app/nurse/components/NurseDragHandle';
+import { STAGE_CONFIGS } from '@/app/nurse/constants/nurse';
+import { PatientCardDetails } from '@/app/nurse/components/PatientCardDetails';
 
 /**
  * Props for the NursePatientCard component.
@@ -90,8 +89,8 @@ export function NursePatientCard({
 
   // Determine timer start timestamp and warning threshold based on clinical stage
   let timerStartedAt: string | null | undefined = null;
-  const stageConfig = STAGE_CONFIGS[stage as keyof typeof STAGE_CONFIGS];
-  const warnThreshold = stageConfig?.warnAfterSeconds ?? 600;
+  const stageConfig = stage === 'done' ? undefined : STAGE_CONFIGS[stage];
+  const warnAfterSeconds = stageConfig?.warnAfterSeconds ?? 600;
 
   if (stage === 'assigned') {
     timerStartedAt = patient.reg_end || patient.created_at;
@@ -103,8 +102,8 @@ export function NursePatientCard({
 
   const handleCardClick = (e: React.MouseEvent) => {
     // If the click was on a button or drag handle, don't trigger selection
-    const target = e.target as HTMLElement | null;
-    if (target?.closest('button, [data-drag-handle="true"]')) {
+    const target = e.target;
+    if (target instanceof HTMLElement && target.closest('button, [data-drag-handle="true"]')) {
       return;
     }
     if (onSelect) {
@@ -120,44 +119,26 @@ export function NursePatientCard({
 
   return (
     <div
+      role="group"
+      aria-label={`${patient.patientNum}, ${patient.cubicleNum || patient.service || ''}`}
+      tabIndex={onSelect ? 0 : undefined}
+      onKeyDown={event => {
+        if (event.target !== event.currentTarget || !onSelect || !['Enter', ' '].includes(event.key)) return;
+        event.preventDefault(); onSelect(patient, stage, patient.cubicleNum || '');
+      }}
       onClick={handleCardClick}
       onPointerDown={handlePointerDownWrapper}
-      style={isSelected ? NurseStyle.selectedPatientRow : undefined}
-      className={`rounded-2xl p-3.5 flex flex-col gap-2.5 bg-white dark:bg-[#1a1a1a] border transition-all cursor-pointer select-none ${
+      style={{ borderLeftColor: isSelected ? '#cc3535' : 'transparent' }}
+      className={`flex shrink-0 flex-col gap-3 border-b border-l-2 border-slate-100 px-4 py-4 transition-colors select-none outline-none last:border-b-0 dark:border-[#2e2e2e] focus-visible:ring-2 focus-visible:ring-inset focus-visible:ring-[#cc3535] ${
         isSelected
-          ? 'ring-2 ring-red-400 border-[#cc3535] shadow-md'
-          : 'border-slate-200/80 dark:border-[#2e2e2e] hover:border-slate-300 dark:hover:border-[#404040]'
+          ? 'bg-slate-100 dark:bg-[#242424]'
+          : 'bg-white dark:bg-[#1a1a1a]'
       }`}
     >
-      {/* Top Header: Queue Number, Cubicle, Timer & Drag Handle */}
-      <div className="flex items-center justify-between gap-2">
-        <div className="flex items-center gap-2 min-w-0">
-          <span className="text-[#cc3535] font-black text-lg tracking-tight shrink-0">
-            {patient.patientNum}
-          </span>
-          {patient.cubicleNum && (
-            <span className="px-2 py-0.5 rounded-md bg-slate-100 dark:bg-[#242424] text-slate-700 dark:text-[#d4d4d4] border border-slate-200 dark:border-[#383838] text-[11px] font-semibold whitespace-normal break-words shrink">
-              {patient.cubicleNum}
-            </span>
-          )}
-        </div>
-
-        <div className="flex items-center gap-1.5 shrink-0">
-          <ElapsedTimer startedAt={timerStartedAt} warnAfterSeconds={warnThreshold} className="shrink-0" />
-          <NurseDragHandle title={nurseTexts.dragCardHint} />
-        </div>
-      </div>
-
-      {/* Middle Body: Service and Subcategory */}
-      <div className="min-w-0">
-        <p className="text-xs font-semibold text-slate-700 dark:text-[#f5f5f5] break-words whitespace-normal leading-snug">
-          {patient.service}
-          {patient.subcategory ? ` · ${patient.subcategory}` : ''}
-        </p>
-      </div>
+      <PatientCardDetails patient={patient} startedAt={timerStartedAt} warnAfterSeconds={warnAfterSeconds} />
 
       {/* Bottom Action Buttons by Stage */}
-      <div className="flex items-center gap-2 pt-1 border-t border-slate-100 dark:border-[#2e2e2e]">
+      <div className="flex flex-wrap items-center gap-2 [&>button]:min-h-11 [&>button]:min-w-0 [&>button]:flex-1 [&>button]:rounded-lg [&>button]:px-3 [&>button]:whitespace-normal [&>button]:focus-visible:outline-2 [&>button]:focus-visible:outline-offset-2 [&>button]:focus-visible:outline-[#cc3535]">
         {stage === 'assigned' && (
           <>
             {onCall && (

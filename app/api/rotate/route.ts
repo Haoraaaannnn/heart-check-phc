@@ -50,7 +50,6 @@ const ALLOWED_UPDATE_FIELDS = new Set<string>([
  */
 const ALLOWED_EXPECTED_FIELDS = new Set<string>([
   'rotation_count',
-  'rotation_shift_started_at',
   'counter_paused_at',
   'counter_top_started_at',
   'counter_rejoin_at',
@@ -112,7 +111,12 @@ function sanitizeUpdate(item: unknown): {
 
   if ('rotation_count' in cleanChanges && (typeof cleanChanges.rotation_count !== 'number' ||
       !Number.isSafeInteger(cleanChanges.rotation_count) || cleanChanges.rotation_count < 1 ||
-      !('rotation_count' in cleanExpected) || !('rotation_shift_started_at' in cleanExpected))) return null;
+      !('rotation_count' in cleanExpected))) return null;
+
+  if (cleanChanges.status === 'Removed' &&
+      (typeof cleanExpected.rotation_count !== 'number' || !Number.isSafeInteger(cleanExpected.rotation_count) ||
+       cleanExpected.rotation_count < 4 || !['Waiting', 'On Progress', 'Assigned'].includes(String(cleanExpected.status)) ||
+       typeof cleanChanges.removed_at !== 'string' || !Number.isFinite(Date.parse(cleanChanges.removed_at)))) return null;
 
   return { id, expected: cleanExpected, changes: cleanChanges };
 }
@@ -158,13 +162,13 @@ export async function POST(request: Request) {
       rawUpdates.map(async (rawItem: unknown) => {
         const parsed = sanitizeUpdate(rawItem);
         if (!parsed) {
-          return { id: isRecord(rawItem) && typeof rawItem.id === 'number' ? rawItem.id : 0, applied: false, error: 'Malformed update structure' };
+          return { id: isRecord(rawItem) && typeof rawItem.id === 'number' ? rawItem.id : 0, applied: false, code: 'invalid', error: 'Malformed update structure' };
         }
 
         const { id, expected, changes } = parsed;
 
         if (Object.keys(changes).length === 0) {
-          return { id, applied: false, error: 'No whitelisted fields to update' };
+          return { id, applied: false, code: 'invalid', error: 'No whitelisted fields to update' };
         }
 
         // Apply strict historical data protection (.eq('is_historical', false))
@@ -188,6 +192,7 @@ export async function POST(request: Request) {
         return {
           id,
           applied: !error && (data?.length ?? 0) > 0,
+          code: error ? 'rejected' : (data?.length ?? 0) > 0 ? 'applied' : 'stale',
           error: error ? 'Database update rejected' : undefined,
         };
       })

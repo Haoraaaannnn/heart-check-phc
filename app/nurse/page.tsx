@@ -32,6 +32,7 @@ import { NurseBoard } from '@/app/nurse/components/NurseBoard';
 import { NurseQuickActionDropdown } from '@/app/nurse/components/NurseQuickActionDropdown';
 import { NurseDragGhost } from '@/app/nurse/components/NurseDragGhost';
 import { FinishedDrawer } from '@/app/nurse/components/FinishedDrawer';
+import { DoctorsModal } from '@/app/transfer/components/DoctorsModal';
 
 import { useRequireAuth } from '@/app/nurse/hooks/useRequireAuth';
 import { useIdleTimeout } from '@/app/nurse/hooks/useIdleTimeout';
@@ -70,6 +71,7 @@ export default function NursePage() {
 
   // Modal / Drawer State
   const [finishedDrawerOpen, setFinishedDrawerOpen] = useState(false);
+  const [showDoctorsModal, setShowDoctorsModal] = useState(false);
 
   // Audio Announcement State
   const [speakingId, setSpeakingId] = useState<number | null>(null);
@@ -190,7 +192,7 @@ export default function NursePage() {
           await Promise.all([fetchData(), fetchFinished()]);
         })());
       } catch {
-        if (requestId === startupRequestId.current) setStartupError('Unable to finish loading the nurse station. Please retry.');
+        if (requestId === startupRequestId.current) setStartupError('Unable to finish loading the Doctors Station. Please retry.');
       } finally {
         if (requestId === startupRequestId.current) setIsLoading(false);
       }
@@ -363,6 +365,7 @@ export default function NursePage() {
           assignedServices={assignedServices}
           finishedCount={visibleFinished.length}
           onOpenFinishedLedger={() => setFinishedDrawerOpen(true)}
+          onOpenDoctors={() => setShowDoctorsModal(true)}
           onClearFilter={handleClearFilter}
           onSelectCategory={(category) => {
             setSelectedCategory(category);
@@ -420,6 +423,8 @@ export default function NursePage() {
           </div>
         ) : (
           <NurseBoard
+            finishedCount={visibleFinished.length}
+            scopeLabel={selectedCubicleNum ?? selectedCategory ?? nurseTexts.allMyCubicles}
             assignedPatients={visibleAssigned}
             withDoctorPatients={visibleWithDoctor}
             carryoutPatients={visibleCarryout}
@@ -462,6 +467,10 @@ export default function NursePage() {
       />
 
       {/* Finished Today Archive Slide-over Drawer */}
+      {showDoctorsModal && <DoctorsModal onClose={() => {
+        setShowDoctorsModal(false);
+        void handleRealtimeUpdate().catch(() => setCallError('Doctor details were saved, but the station could not refresh. Please retry.'));
+      }} />}
       <FinishedDrawer
         isOpen={finishedDrawerOpen}
         onClose={() => setFinishedDrawerOpen(false)}
