@@ -40,8 +40,8 @@ export interface AvailableCubicle {
 export interface StationServiceOption {
   id: number;
   label_en: string;
-  requires_nurse: boolean | null;
-  requires_registration: boolean | null;
+  requires_nurse?: boolean | null;
+  requires_registration?: boolean | null;
 }
 
 /** Caller's current saved station assignment. */
@@ -135,8 +135,16 @@ export function useStationClaim(): UseStationClaimReturn {
   useEffect(() => {
     mountedRef.current = true;
     void refresh();
+
+    const channel = supabase
+      .channel('staff-station-claim-realtime')
+      .on('postgres_changes', { event: '*', schema: 'public', table: 'user_counters' }, () => void refresh())
+      .on('postgres_changes', { event: '*', schema: 'public', table: 'counters' }, () => void refresh())
+      .subscribe();
+
     return () => {
       mountedRef.current = false;
+      void supabase.removeChannel(channel);
     };
   }, [refresh]);
 

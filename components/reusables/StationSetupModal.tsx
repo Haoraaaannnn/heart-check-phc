@@ -66,15 +66,10 @@ export function StationSetupModal({
 
   const hasConfiguredStation = currentAssignment.counter !== null || currentAssignment.cubicleId !== null;
 
-  // Filter services relevant to the workstation
+  // Display all available hospital services so staff can configure any service at their station
   const eligibleServices = useMemo(() => {
-    if (isRegistration) {
-      const reg = services.filter((s) => s.requires_registration !== false);
-      return reg.length > 0 ? reg : services;
-    }
-    const nurse = services.filter((s) => s.requires_nurse !== false);
-    return nurse.length > 0 ? nurse : services;
-  }, [services, isRegistration]);
+    return services;
+  }, [services]);
 
   // Distinct room numbers available for cubicles
   const availableRooms = useMemo(() => {

@@ -21,6 +21,7 @@ import { requireUser } from '@/lib/supabase/authGuard';
 import { Patient } from '@/types/Types';
 import { handleNurseTransition } from './transition';
 import { manilaDayRange } from '@/utils/manilaDayRange';
+import { getCachedServices, getCachedCubicles } from '@/lib/cache/facilityMetadataCache';
 
 const supabaseAdmin = createClient(
   process.env.NEXT_PUBLIC_SUPABASE_URL!,
@@ -75,16 +76,16 @@ export async function GET(request: Request) {
   const [
     { data: links, error: linksError },
     { data: userServices, error: servicesError },
-    { data: allServices, error: metadataError },
-    { data: allCubicles, error: cubiclesError },
+    allServices,
+    allCubicles,
   ] = await Promise.all([
     supabaseAdmin.from('user_cubicles').select('cubicle_id').eq('user_id', user.id),
     supabaseAdmin.from('user_services').select('service').eq('user_id', user.id),
-    supabaseAdmin.from('services').select('label_en, requires_nurse, requires_registration, display_order').order('display_order', { ascending: true }),
-    supabaseAdmin.from('cubicle').select('id, cubicleNum, category, room, subcategory, doctorId').order('room').order('cubicleNum'),
+    getCachedServices(supabaseAdmin),
+    getCachedCubicles(supabaseAdmin),
   ]);
 
-  if (linksError || servicesError || metadataError || cubiclesError) {
+  if (linksError || servicesError) {
     return NextResponse.json({ error: 'Unable to load Doctors Station assignments. Please retry.' }, { status: 503 });
   }
 

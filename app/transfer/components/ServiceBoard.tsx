@@ -83,8 +83,14 @@ export interface ServiceBoardProps {
   onRegDragStart?: (e: React.MouseEvent, patient: Patient) => void;
   /** Release from counter callback. */
   onReleaseFromCounter?: (patient: Patient) => void;
-  /** Allowed counter numbers. */
+  /** Allowed counter numbers that this user can interact with. */
   allowedCounters?: number[];
+  /** All available physical counters in the facility. */
+  allCounters?: number[];
+  /** Callback to trigger auto-sort / equal distribution across counters. */
+  onAutoSort?: () => void | Promise<void>;
+  /** Indicates if auto-sort operation is currently running. */
+  isAutoSorting?: boolean;
 
   // Click-to-Select Tablet Interaction Mode Props
   /** Currently selected patient in Click-to-Select mode. */
@@ -137,6 +143,9 @@ export function ServiceBoard({
   onRegDragStart,
   onReleaseFromCounter,
   allowedCounters,
+  allCounters,
+  onAutoSort,
+  isAutoSorting,
   selectedPatient,
   onSelectQueuePatient,
   onSelectCubiclePatient,
@@ -199,6 +208,9 @@ export function ServiceBoard({
               onDragStart={onRegDragStart}
               onRelease={onReleaseFromCounter}
               allowedCounters={allowedCounters}
+              allCounters={allCounters}
+              onAutoSort={onAutoSort}
+              isAutoSorting={isAutoSorting}
             />
           )}
 

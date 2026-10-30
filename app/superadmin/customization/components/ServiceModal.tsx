@@ -19,6 +19,7 @@ import {
 import { CUSTOMIZATION_TEXTS } from '@/app/superadmin/customization/constants/customizationTexts';
 import { CUSTOMIZATION_STYLES } from '@/app/superadmin/customization/constants/customizationStyles';
 import { SUPERADMIN_STYLES } from '@/app/superadmin/constants/superadminStyles';
+import { invalidateFacilityMetadataCache } from '@/lib/cache/facilityMetadataCache';
 
 type PatientType = 'new' | 'old' | 'both';
 
@@ -311,6 +312,7 @@ export function ServiceModal({
       }
     }
 
+    invalidateFacilityMetadataCache('services');
     setSaving(false);
     onSaved();
     onClose();

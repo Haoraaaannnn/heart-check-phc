@@ -25,6 +25,7 @@ export function useMonitorData(category: string, subcategory: string | null, cat
   const isPlayingRef = useRef(false);
   const announcedCubiclePatients = useRef<Map<string, Set<number>>>(new Map());
   const audioController = useRef<AbortController | null>(null);
+  const stationBreakCacheRef = useRef<Map<string, { onBreak: boolean; timestamp: number }>>(new Map());
   useEffect(() => {
     if (!started) return;
     const controller = new AbortController();
@@ -90,9 +91,17 @@ export function useMonitorData(category: string, subcategory: string | null, cat
         if (item.expiresAt && Date.parse(item.expiresAt) <= Date.now()) continue;
         const destination = item.patient?.cubicleNum ?? item.cubicle;
         if (destination) {
-          const { data: station } = await supabase.from('cubicle').select('id')
-            .eq('cubicleNum', destination).eq('on_break', false).maybeSingle();
-          if (!station) continue;
+          const cachedBreak = stationBreakCacheRef.current.get(destination);
+          let isOnBreak = false;
+          if (cachedBreak && Date.now() - cachedBreak.timestamp < 5000) {
+            isOnBreak = cachedBreak.onBreak;
+          } else {
+            const { data: station } = await supabase.from('cubicle').select('id, on_break')
+              .eq('cubicleNum', destination).maybeSingle();
+            isOnBreak = !station || Boolean(station.on_break);
+            stationBreakCacheRef.current.set(destination, { onBreak: isOnBreak, timestamp: Date.now() });
+          }
+          if (isOnBreak) continue;
         }
         setActiveCall({ ticket: item.patient?.patientNum, cubicle: destination, expiry: Date.now() + 15000 });
         try { await playMonitorSpeech(item.message, 3, controller.signal); }
