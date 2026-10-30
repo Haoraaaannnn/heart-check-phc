@@ -55,6 +55,9 @@ import { withRequestDeadline } from '@/lib/requestFetch';
 import { releaseCounterPatient } from '@/app/transfer/lib/releaseCounterPatient';
 import { removeRotatedPatient } from '@/app/transfer/lib/removeRotatedPatient';
 import { WorkstationLoading } from '@/components/auth/WorkstationLoading';
+import { usePatientHistory } from '@/app/transfer/hooks/usePatientHistory';
+import { PatientHistoryModal } from '@/app/transfer/components/PatientHistoryModal';
+import { EnrichedHistoryPatient } from '@/app/transfer/types/history';
 
 
 /**
@@ -130,6 +133,13 @@ export default function TransferPage() {
     refresh: refreshStationClaim,
   } = useStationClaim();
   const [showStationModal, setShowStationModal] = useState<boolean>(false);
+  const historyState = usePatientHistory();
+  const [showHistoryModal, setShowHistoryModal] = useState<boolean>(false);
+  const [selectedHistoryPatient, setSelectedHistoryPatient] = useState<EnrichedHistoryPatient | null>(null);
+  const handleOpenHistoryModal = useCallback((item?: EnrichedHistoryPatient) => {
+    setSelectedHistoryPatient(item ?? null);
+    setShowHistoryModal(true);
+  }, []);
 
   const [isLoading, setIsLoading] = useState<boolean>(true);
   const [startupError, setStartupError] = useState('');
@@ -274,23 +284,14 @@ export default function TransferPage() {
     const tomorrow = new Date(today);
     tomorrow.setDate(today.getDate() + 1);
 
-    const currentServices = allServicesRef.current;
-    const registrationServices = (currentServices ?? [])
-      .filter((s) => s.requires_registration !== false)
-      .map((s) => s.label_en);
-    const serviceFilter =
-      registrationServices.length > 0
-        ? registrationServices
-        : ['Consultation', 'OPD Screening'];
-
     const { data, error } = await supabase
       .from('patients')
       .select('*')
-      .in('service', serviceFilter)
       .is('reg_end', null)
       .neq('status', 'Assigned')
       .neq('status', 'Idle')
       .neq('status', 'Removed')
+      .neq('status', 'Done')
       .gte('created_at', today.toISOString())
       .lt('created_at', tomorrow.toISOString())
       .order('counter', { ascending: true, nullsFirst: false })
@@ -903,7 +904,6 @@ export default function TransferPage() {
   const visibleIdlePatients = idlePatients.filter(p => matchesSelectedService(p, true));
 
   const visibleRegistrationPatients = registrationPatients.filter(p => {
-    if (!matchesMyCounters(p)) return false;
     if (selectedCategory && p.service !== selectedCategory) return false;
     if (serviceHasSubcategories && selectedSubcategory) return p.subcategory === selectedSubcategory;
     return true;
@@ -941,6 +941,78 @@ export default function TransferPage() {
     setSelectedRoom(null);
     setShowUnassignedMenu(false);
   };
+
+  const myInteractiveCounters = useMemo(() => {
+    if (stationAssignment.counter != null) {
+      return [stationAssignment.counter];
+    }
+    return myCounters;
+  }, [stationAssignment.counter, myCounters]);
+
+  const allAvailableCounterNums = useMemo(() => {
+    const myCounter = stationAssignment.counter;
+    const occupiedSet = new Set<number>();
+
+    // Always include current user's assigned/claimed counter(s)
+    if (myCounter != null) {
+      occupiedSet.add(myCounter);
+    }
+    for (const mc of myCounters) {
+      occupiedSet.add(mc);
+    }
+
+    // Include other counters that are occupied by another staff user
+    if (availableCounters && availableCounters.length > 0) {
+      for (const c of availableCounters) {
+        if (c.occupiedBy != null) {
+          occupiedSet.add(c.counter_number);
+        }
+      }
+    }
+
+    // Sort: My counter ALWAYS first, then remaining occupied counters in numerical order
+    const list = Array.from(occupiedSet);
+    return list.sort((a, b) => {
+      const aIsMine = myCounter != null ? a === myCounter : myCounters.includes(a);
+      const bIsMine = myCounter != null ? b === myCounter : myCounters.includes(b);
+      if (aIsMine && !bIsMine) return -1;
+      if (!aIsMine && bIsMine) return 1;
+      return a - b;
+    });
+  }, [availableCounters, stationAssignment.counter, myCounters]);
+
+  const [isAutoSorting, setIsAutoSorting] = useState<boolean>(false);
+
+  const handleAutoSort = useCallback(async () => {
+    if (isAutoSorting) return;
+    setIsAutoSorting(true);
+    try {
+      const { data: { session } } = await supabase.auth.getSession();
+      if (!session) return;
+
+      const res = await fetch('/api/workstation/auto-sort-counters', {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json',
+          Authorization: `Bearer ${session.access_token}`,
+        },
+        body: JSON.stringify({
+          service: selectedCategory || undefined,
+        }),
+      });
+
+      if (res.ok) {
+        await Promise.allSettled([
+          fetchRegistrationPatients(),
+          fetchData(),
+        ]);
+      }
+    } catch (err) {
+      console.error('Auto-sort failed', err);
+    } finally {
+      setIsAutoSorting(false);
+    }
+  }, [isAutoSorting, selectedCategory, fetchRegistrationPatients, fetchData]);
 
   /** Bounds initial synchronization and exposes a retry instead of an indefinite spinner. */
   const initialize = useCallback(async () => {
@@ -1036,7 +1108,10 @@ export default function TransferPage() {
           idlePatients={visibleIdlePatients}
           onActivateIdle={handleActivateIdle}
           onRemoveIdle={handleRemoveIdle}
-          allowedCounters={myCounters}
+          allowedCounters={myInteractiveCounters}
+          allCounters={allAvailableCounterNums}
+          onAutoSort={handleAutoSort}
+          isAutoSorting={isAutoSorting}
           allowedSubcategories={getAllowedSubcategories(selectedCategory)}
           selectedPatient={selectedPatient}
           onSelectQueuePatient={handleSelectQueuePatient}
@@ -1048,8 +1123,6 @@ export default function TransferPage() {
         />
       );
     }
-
-    const requiresReg = currentService?.requires_registration ?? (selectedCategory === 'Consultation' || selectedCategory === 'OPD Screening');
 
     return (
       <OtherServicesFlow
@@ -1073,13 +1146,16 @@ export default function TransferPage() {
         onRemoveIdle={handleRemoveIdle}
         onAssignNow={handleAssignNow}
         cubicleDoctorMap={cubicleDoctorMap}
-        registrationPatients={requiresReg ? visibleRegistrationPatients : undefined}
-        regDraggedPatient={requiresReg ? regDraggedPatient : undefined}
-        dragOverCounter={requiresReg ? dragOverCounter : undefined}
-        onRegPointerDown={requiresReg ? handleRegPointerDown : undefined}
-        onRegDragStart={requiresReg ? handleRegDragStart : undefined}
-        onReleaseFromCounter={requiresReg ? handleReleaseFromCounter : undefined}
-        allowedCounters={myCounters}
+        registrationPatients={visibleRegistrationPatients}
+        regDraggedPatient={regDraggedPatient}
+        dragOverCounter={dragOverCounter}
+        onRegPointerDown={handleRegPointerDown}
+        onRegDragStart={handleRegDragStart}
+        onReleaseFromCounter={handleReleaseFromCounter}
+        allowedCounters={myInteractiveCounters}
+        allCounters={allAvailableCounterNums}
+        onAutoSort={handleAutoSort}
+        isAutoSorting={isAutoSorting}
         selectedPatient={selectedPatient}
         onSelectQueuePatient={handleSelectQueuePatient}
         onSelectCubiclePatient={handleSelectCubiclePatient}
@@ -1146,8 +1222,8 @@ export default function TransferPage() {
 
             {/* Current Active Desk Badge & Switch Trigger */}
             {stationAssignment.counter ? (
-              <div className="flex items-center gap-2 px-2.5 py-1 rounded-lg bg-slate-100 dark:bg-[#1f1f1f] border border-slate-200 dark:border-[#2e2e2e]">
-                <span className="text-[11px] font-bold text-[#a8071a] dark:text-[#f87171] uppercase tracking-wider">
+              <div className="flex items-center gap-2 px-3 py-1.5 min-h-[38px] rounded-xl bg-slate-100 dark:bg-[#1f1f1f] border border-slate-200 dark:border-[#2e2e2e]">
+                <span className="text-xs font-bold text-[#a8071a] dark:text-[#f87171] uppercase tracking-wider">
                   Counter {stationAssignment.counter}
                 </span>
                 {myServices.length > 0 && (
@@ -1158,33 +1234,33 @@ export default function TransferPage() {
                 <button
                   type="button"
                   onClick={() => setShowStationModal(true)}
-                  className="text-[11px] font-semibold text-slate-500 hover:text-slate-800 dark:text-[#a3a3a3] dark:hover:text-[#f5f5f5] transition underline cursor-pointer"
+                  className="text-xs font-semibold text-slate-500 hover:text-slate-800 dark:text-[#a3a3a3] dark:hover:text-[#f5f5f5] transition underline cursor-pointer"
                 >
                   Switch
                 </button>
               </div>
             ) : myCounters.length > 1 ? (
-              <div className="flex items-center gap-2 px-2.5 py-1 rounded-lg bg-slate-100 dark:bg-[#1f1f1f] border border-slate-200 dark:border-[#2e2e2e]">
-                <span className="text-[11px] font-bold text-slate-700 dark:text-[#d4d4d4] uppercase tracking-wider">
+              <div className="flex items-center gap-2 px-3 py-1.5 min-h-[38px] rounded-xl bg-slate-100 dark:bg-[#1f1f1f] border border-slate-200 dark:border-[#2e2e2e]">
+                <span className="text-xs font-bold text-slate-700 dark:text-[#d4d4d4] uppercase tracking-wider">
                   All Counters ({myCounters.length})
                 </span>
                 <button
                   type="button"
                   onClick={() => setShowStationModal(true)}
-                  className="text-[11px] font-semibold text-[#a8071a] dark:text-[#f87171] hover:underline cursor-pointer"
+                  className="text-xs font-semibold text-[#a8071a] dark:text-[#f87171] hover:underline cursor-pointer"
                 >
                   Configure Desk
                 </button>
               </div>
             ) : myCounters.length === 1 ? (
-              <div className="flex items-center gap-2 px-2.5 py-1 rounded-lg bg-slate-100 dark:bg-[#1f1f1f] border border-slate-200 dark:border-[#2e2e2e]">
-                <span className="text-[11px] font-bold text-[#a8071a] dark:text-[#f87171] uppercase tracking-wider">
+              <div className="flex items-center gap-2 px-3 py-1.5 min-h-[38px] rounded-xl bg-slate-100 dark:bg-[#1f1f1f] border border-slate-200 dark:border-[#2e2e2e]">
+                <span className="text-xs font-bold text-[#a8071a] dark:text-[#f87171] uppercase tracking-wider">
                   Counter {myCounters[0]}
                 </span>
                 <button
                   type="button"
                   onClick={() => setShowStationModal(true)}
-                  className="text-[11px] font-semibold text-slate-500 hover:text-slate-800 dark:text-[#a3a3a3] dark:hover:text-[#f5f5f5] transition underline cursor-pointer"
+                  className="text-xs font-semibold text-slate-500 hover:text-slate-800 dark:text-[#a3a3a3] dark:hover:text-[#f5f5f5] transition underline cursor-pointer"
                 >
                   Switch
                 </button>
@@ -1270,7 +1346,24 @@ export default function TransferPage() {
               className={transferLayoutStyles.manageDoctorsBtn}
               title="Manage Doctors"
             >
-              {transferTexts.doctorsBtn}
+              <i className="bx bx-user-pin text-sm text-slate-500 dark:text-[#a3a3a3]" aria-hidden="true" />
+              <span>{transferTexts.doctorsBtn}</span>
+            </button>
+
+            {/* Patient Journey & Stage History Action */}
+            <button
+              type="button"
+              onClick={() => handleOpenHistoryModal()}
+              className={transferLayoutStyles.historyBtn}
+              title="View today's patient journey history and stage tracker"
+            >
+              <i className="bx bx-history text-sm text-slate-500 dark:text-[#a3a3a3]" aria-hidden="true" />
+              <span>History</span>
+              {historyState.counts.total > 0 && (
+                <span className="ml-0.5 px-1.5 py-0.5 rounded-md bg-slate-100 dark:bg-[#262626] text-slate-600 dark:text-[#d4d4d4] text-[10px] font-bold border border-slate-200 dark:border-[#333333]">
+                  {historyState.counts.total}
+                </span>
+              )}
             </button>
 
             {/* System Notifications Dropdown */}
@@ -1400,13 +1493,27 @@ export default function TransferPage() {
           currentAssignment={stationAssignment}
           counters={availableCounters}
           cubicles={availableCubicles}
-          services={availableStationServices}
+          services={availableStationServices.length > 0 ? availableStationServices : allServices}
           onSave={claimStation}
           onRemove={() => removeStationClaim('registration')}
           onSuccess={() => {
             void refreshStationClaim();
             void fetchMyAccess();
+            void handleAutoSort();
           }}
+        />
+      )}
+
+      {/* Patient History & Stage Progression Modal */}
+      {showHistoryModal && (
+        <PatientHistoryModal
+          isOpen={showHistoryModal}
+          onClose={() => {
+            setShowHistoryModal(false);
+            setSelectedHistoryPatient(null);
+          }}
+          historyState={historyState}
+          initialSelectedPatient={selectedHistoryPatient}
         />
       )}
     </div>

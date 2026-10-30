@@ -134,8 +134,8 @@ async function resolvePrefixInfo(
  *
  * @remarks
  * Routing logic:
- * - Consultation: returns to cubicle selection (only consultation uses cubicles).
- * - OPD Screening: returns to unified age category selection (cubicles are bypassed).
+ * - Services with picker selection enabled: return to physician selection.
+ * - Services using age categories: return to age category selection when the picker is disabled.
  * - Other direct services: returns to the main kiosk services menu.
  *
  * @param service - The active service record.

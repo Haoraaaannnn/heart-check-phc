@@ -2,6 +2,7 @@ import { Suspense } from "react";
 import { createClient } from "@/lib/supabase/server";
 import KioskPhoneEntry from "@/app/kiosk/pages/sms-input/components/KioskPhoneEntry";
 import { notFound } from "next/navigation";
+import { getCachedServices } from "@/lib/cache/facilityMetadataCache";
 
 /** Props Next.js passes to the SMS phone input page. */
 interface SMSPageProps {
@@ -30,14 +31,16 @@ export default async function SMSPage({ searchParams }: SMSPageProps) {
         await searchParams;
     const supabase = await createClient();
 
-    // Query active service to forward details to phone entry
-    const { data: service, error } = await supabase
-        .from("services")
-        .select("*")
-        .eq("id", parseInt(serviceId ?? "0", 10))
-        .single();
+    // Query active service from facility cache (with automatic 3-minute TTL)
+    const targetId = parseInt(serviceId ?? "0", 10);
+    const services = await getCachedServices(supabase);
+    let service = services.find((s) => s.id === targetId) || null;
 
-    if (error) throw new Error('Unable to load the selected service. Please try again.');
+    if (!service && targetId > 0) {
+        const { data, error } = await supabase.from("services").select("*").eq("id", targetId).single();
+        if (error) throw new Error('Unable to load the selected service. Please try again.');
+        service = data;
+    }
     if (!service) {
         notFound();
     }

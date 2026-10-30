@@ -23,11 +23,11 @@ interface CubicleCardProps {
 }
 
 /**
- * Tappable card button representing a cubicle choice for Consultation.
+ * Tappable physician option for a service with picker selection enabled in Superadmin.
  *
  * @remarks
- * Filters linked cubicles to match `category === "Consultation"` and the selected
- * `subcategory`. When tapped, navigates to `/kiosk/pages/sms-input` with the preferred
+ * The server supplies stations for the configured service; the card preserves the selected
+ * `subcategory`. When tapped, it navigates to `/kiosk/pages/sms-input` with the preferred
  * cubicle numbers encoded in `preferredCubicleNums`.
  *
  * Displays only the active physician assigned to that station

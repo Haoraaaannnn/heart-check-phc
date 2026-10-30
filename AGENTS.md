@@ -42,22 +42,25 @@ Security is non-negotiable across all code writes and edits:
 
 ## Core Operational Rules (High-Speed & Accuracy)
 
-### 1. Direct-to-Code Pipeline & Autonomous Search
+### 1. Absolute File Scope Boundary: Never Touch or Change Files Unless Explicitly Stated
+- **Zero Unprompted File Modifications:** The agent must NEVER touch, edit, refactor, reorganize, create, or delete ANY file unless that specific file is explicitly named, targeted, or directly required by the user prompt.
+- **Strict Prohibition of Unprompted Cascades:** Never perform unsolicited code cleanups, speculative refactors, prop removals, or "helpful" adjustments across peripheral, parent, child, or sibling components. If the user asks for a fix in `ComponentA`, touch ONLY `ComponentA`. Touching `ComponentB`, `ServiceBoard`, `ConsultationFlow`, `styles`, or any other file without an explicit instruction is a strict violation.
+- **Single-Point-of-Change:** Every routine bugfix, localized layout adjustment, or component update must be executed entirely within the single target file directly. Do not propagate edits across constants dictionaries (`Texts.ts`, `Styles.ts`), documentation (`README.md`, `CURRENT.md`), or neighboring files unless explicitly requested.
+
+### 2. Direct-to-Code Pipeline & Autonomous Search
 - **Source Code is Ground Truth:** Go straight to the target source code. Do not perform pre-task reading rituals on `brain/` notes or `README.md` files for routine coding or bugfixes.
 - **Autonomous Read-Only Searching:** The agent is fully authorized to autonomously search and view files using built-in read-only tools (`grep_search`, `view_file`, `list_dir`) without asking for user permission.
 - **Explicit Permission for Shell Commands:** State-altering or operational terminal commands (`npm`, `git commit/push`, `build`, migrations) **strictly require explicit user confirmation prior to execution**.
 
-### 2. Direct File Viewing (< 300 Lines) for Zero Delusions
+### 3. Direct File Viewing (< 300 Lines) for Zero Delusions
 - **Files Under 300 Lines:** Always view the complete file directly. Having full visibility of imports, state hooks, props, and JSX closing tags guarantees first-try edit accuracy with `replace_file_content` and eliminates hallucinated variables or syntax errors.
 - **Files Over 300 Lines:** Scope searches using targeted `grep_search` and inspect line-sliced views around the specific function or component. Never dump entire 1,000+ line files into context.
 
-### 3. Single-Point-of-Change (No Artificial Cascades)
-- For routine bugfixes, localized styling adjustments, or component fixes, edit the target file directly.
-- Do not force multi-file cascading edits across `Texts.ts`, `Styles.ts`, `README.md`, and `CURRENT.md` for simple 1-line or localized changes.
-- Modular separation of concerns (`Texts.ts`, `Styles.ts`) applies when scaffolding new major features or full-page modules.
-
-### 4. Prohibition of Text Ellipsis & Truncation
-- Never use `truncate`, `text-ellipsis`, or `text-overflow: ellipsis` on medical or operational data (doctor names, ticket codes, room labels, service names). Text must wrap naturally (`break-words`, `whitespace-normal`).
+### 4. Text Readability & Layout Preservation Standard (No Compression, No Squeezing, No Vertical Character Wrapping)
+- **Zero Squeezing or Compression:** All text, numbers, labels, badges, and headers across every workstation, dialog, card, and modal must be immediately legible and visually balanced. Never allow containers, flex items, or grid tracks to compress or squeeze text into narrow vertical slivers or awkward single-character wraps (such as letters stacking vertically).
+- **Enforce Dedicated Minimum Widths:** Multi-column layouts (dialogs, inspector panes, sidebar rosters, split views) must declare explicit minimum widths and non-shrinking dimensions (e.g. `w-[340px] shrink-0` for lists, `flex-1 min-w-0` for detail panes). Never rely on fragile 12-column grid tracks that can collapse contents into microscopic columns.
+- **Protected Identifiers & Single-Line Labels:** Ticket codes (`font-mono font-black whitespace-nowrap`), timestamps, counter badges, room numbers, action button titles, and stage milestone captions must specify `whitespace-nowrap` so they remain intact on a single clean line.
+- **Prohibition of Text Ellipsis on Clinical Data:** Never use `truncate`, `text-ellipsis`, or `text-overflow: ellipsis` on medical or operational data (doctor names, ticket codes, room labels, service names). Containers must be sized generously to display the complete label naturally without clipping or compression.
 
 ### 5. Reference Image Adherence & UI Preservation
 - Follow user-provided images and mockups as definitive ground truth. Replicate exact typography, alignment, and proportions without inventing alternate designs.
@@ -67,6 +70,7 @@ Security is non-negotiable across all code writes and edits:
 - Workstations (`/superadmin`, `/dashboard`, `/nurse`, `/transfer`) must use solid surfaces (`bg-slate-50 dark:bg-slate-950`, `bg-white dark:bg-slate-900`) with 1px crisp borders. Blurry glassmorphism is prohibited.
 - Kiosk interactive contents, cards, and keypads must be centered vertically and horizontally.
 - Neon or glowing saturated pill/background accents are prohibited across the entire system. Badges, chips, and pills must use subdued, enterprise solid fills or subtle tonal borders.
+- **Prohibition of Decorative Header Icon Boxes:** Never place decorative rounded or square colored icon boxes (e.g. `w-8 h-8 rounded-xl bg-blue-50 border border-blue-200 flex items-center justify-center`) next to titles, dialog headers, modal tops, or workstation banners. Modal and section headers must rely on clean, typographic hierarchy with a bold title (`text-base font-bold text-slate-900 dark:text-[#f5f5f5]`) and optional descriptive subtitle (`text-xs text-slate-500 dark:text-[#888888]`) directly flush without decorative icon wrappers.
 
 ### 7. Zero Emojis Standard
 - Emojis are strictly banned from all documentation (`.md`), code comments, JSDocs, commit messages, and UI strings. Use clean, plain-text formatting.
@@ -91,10 +95,13 @@ Security is non-negotiable across all code writes and edits:
 - [ ] No tests or type checks weakened or deleted.
 - [ ] No private secrets or service role keys exposed in client bundles.
 - [ ] No text ellipsis (`truncate`, `text-ellipsis`) on clinical data.
+- [ ] Text readability and layout preservation verified: zero compressed vertical text slivers, minimum widths enforced, no vertical character wrapping, and whitespace-nowrap used on ticket codes, numbers, and milestone badges.
 - [ ] Public TV monitors enforce zero dark mode, zero scrollbars, maximum queue number scale, and active calling highlights.
 - [ ] User reference images were faithfully matched (if applicable).
 - [ ] Zero unintended visual regressions introduced.
 - [ ] Solid surfaces and enterprise navigation standards preserved.
+- [ ] No decorative header icon boxes or rounded colored icon wrapper tiles in dialog or section titles.
+- [ ] Absolute file scope boundary verified: ZERO unprompted files touched or modified. Only files explicitly stated or directly targeted in the user prompt were changed.
 - [ ] No emojis used anywhere in documentation, code, or comments.
 - [ ] Operational shell commands received explicit user confirmation prior to execution.
 

@@ -1,6 +1,7 @@
 import { createClient } from "@/lib/supabase/server";
 import KioskServicesGrid from "@/app/kiosk/pages/kiosk-services/components/KioskServicesGrid";
 import { Service } from "@/types/Services";
+import { getCachedServices } from "@/lib/cache/facilityMetadataCache";
 
 /** Props Next.js passes to the kiosk services page. */
 interface KioskPageProps {
@@ -33,12 +34,13 @@ export default async function KioskPage({ searchParams }: KioskPageProps) {
   const supabase = await createClient();
   const { type } = await searchParams;
 
-  // Fetch the full service menu in the order set by the superadmin.
-  const { data: services, error } = await supabase
-    .from("services")
-    .select("*")
-    .order("display_order", { ascending: true });
-  if (error) throw new Error('Unable to load services. Please try again.');
+  // Keep cached catalog loading and a retryable error when the initial cache read fails.
+  let services = await getCachedServices(supabase);
+  if (services.length === 0) {
+    const { data, error } = await supabase.from("services").select("*").order("display_order", { ascending: true });
+    if (error) throw new Error('Unable to load services. Please try again.');
+    services = data ?? [];
+  }
 
   // Keep only the services this patient type is allowed to see.
   const visibleServices =

@@ -14,6 +14,7 @@
 import { NextResponse } from 'next/server';
 import { requireUser } from '@/lib/supabase/authGuard';
 import { supabaseAdmin } from '@/lib/supabase/facilityHelpers';
+import { equallyDistributeCounterQueues } from '@/lib/supabase/queueDistribution';
 
 /** Staff roles authorized to configure and claim operational stations. */
 const AUTHORIZED_ROLES = new Set([
@@ -268,6 +269,14 @@ export async function POST(request: Request) {
       service,
     }));
     await supabaseAdmin.from('user_services').insert(serviceRows);
+
+    // Automatically trigger queue balance/equal distribution across open counters serving these services
+    try {
+      const distribution = await equallyDistributeCounterQueues({ actorAuthId: guard.user.id, targetServices: cleanServices });
+      if (!distribution.ok) console.warn('Counter claimed; queue distribution needs a manual retry.');
+    } catch {
+      console.warn('Counter claimed; queue distribution needs a manual retry.');
+    }
 
     return NextResponse.json({
       success: true,

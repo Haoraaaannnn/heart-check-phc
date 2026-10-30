@@ -24,6 +24,10 @@ import { supabase } from '@/lib/supabase';
 import { Patient } from '@/types/Types';
 import { parseNurseStations, isOpdScreeningService } from '@/app/nurse/lib/stationView';
 import {
+  getCachedServices,
+  getCachedDoctorsMap,
+} from '@/lib/cache/facilityMetadataCache';
+import {
   AssignedNurseCubicle,
   ClinicalStage,
   stageToDbStatus,
@@ -194,11 +198,11 @@ export function useNurseData({ showAllScreening = false }: { showAllScreening?: 
     const [
       { data: links, error: linkError },
       { data: userServices, error: serviceError },
-      { data: allServices, error: allServicesError },
+      allServices,
     ] = await Promise.all([
       supabase.from('user_cubicles').select('cubicle_id').eq('user_id', user.id),
       supabase.from('user_services').select('service').eq('user_id', user.id),
-      supabase.from('services').select('label_en, requires_nurse, requires_registration, display_order').order('display_order', { ascending: true }),
+      getCachedServices(supabase),
     ]);
 
     const regServices = (allServices || [])
@@ -241,7 +245,7 @@ export function useNurseData({ showAllScreening = false }: { showAllScreening?: 
       );
     } else {
       if (linkError || serviceError) {
-        console.error('Failed to load user assignments:', { linkError, serviceError, allServicesError });
+        console.error('Failed to load user assignments:', { linkError, serviceError });
         if (cachedCubicleNumsRef.current.length === 0 && cachedAssignedServicesRef.current.length === 0) {
           setAssignmentStatus('error');
         }
@@ -282,22 +286,11 @@ export function useNurseData({ showAllScreening = false }: { showAllScreening?: 
     }
 
     // Attach doctor name metadata if doctorId is present
-    const doctorIds = Array.from(
-      new Set(cubiclesToFetch.map((c) => c.doctorId).filter(Boolean))
-    ) as string[];
-
-    if (doctorIds.length > 0) {
-      const { data: doctorsData } = await supabase
-        .from('doctors')
-        .select('id, full_name')
-        .in('id', doctorIds);
-
-      const doctorMap = new Map((doctorsData || []).map((d) => [d.id, d.full_name]));
-      cubiclesToFetch = cubiclesToFetch.map((c) => ({
-        ...c,
-        doctorName: c.doctorId ? doctorMap.get(c.doctorId) || null : null,
-      }));
-    }
+    const doctorMap = await getCachedDoctorsMap(supabase);
+    cubiclesToFetch = cubiclesToFetch.map((c) => ({
+      ...c,
+      doctorName: c.doctorId ? doctorMap[c.doctorId] || null : null,
+    }));
 
     const cubicleNums = cubiclesToFetch.map((cubicle) => cubicle.cubicleNum);
 

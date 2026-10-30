@@ -87,7 +87,7 @@ test('Counter cards display their assigned usernames and mark only your own coun
   ];
   const api = load('app/transfer/components/RegistrationCounterSection.tsx', {
     '@/components/patients/PatientHistoryButton': { PatientHistoryButton: () => null },
-    'react/jsx-runtime': runtime, react: { useState: value => [value, () => {}], useRef: current => ({ current }) },
+    'react/jsx-runtime': runtime, react: { useState: value => [value, () => {}], useRef: current => ({ current }), useMemo: fn => fn() },
     './CounterTimerControl': { CounterTimerControl: () => null },
     '@/constants/texts/transferTexts': { transferTexts: {} },
     '@/app/transfer/constants/transfer': { TransferStyle: {} },

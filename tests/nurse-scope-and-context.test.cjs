@@ -229,6 +229,7 @@ test('The data hook keeps view-switch callbacks stable, preserves doctor names, 
   };
   const api = load('app/nurse/hooks/useNurseData.ts', {
     react, '@/lib/supabase': { supabase: fixture.db }, '@/app/nurse/lib/stationView': rules,
+    '@/lib/cache/facilityMetadataCache': load('lib/cache/facilityMetadataCache.ts'),
     '@/app/nurse/types/nurse': load('app/nurse/types/nurse.ts'),
   }, { fetch: async url => { requests.push(url); return fixture.api.GET(new Request('http://localhost' + url)); } });
   let firstRender = true;

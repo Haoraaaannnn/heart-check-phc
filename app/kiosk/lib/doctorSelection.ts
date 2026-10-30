@@ -8,16 +8,15 @@ export function parseDoctorSelectionService(value: unknown): { label_en: string;
   return { label_en: value.label_en, requires_cubicle: value.requires_cubicle === true };
 }
 
-/** @returns Whether this service asks the patient to choose a physician. */
+/** @returns Whether Superadmin enabled the picker for this service; service names never override configuration. */
 export function requiresDoctorSelection(service: { label_en?: string | null; requires_cubicle?: boolean | null } | null | undefined): boolean {
-  const label = service?.label_en?.trim().toLowerCase().replace(/\s+/g, ' ');
-  return service?.requires_cubicle === true && label !== 'opd screening' && label !== 'opd screenings';
+  return service?.requires_cubicle === true;
 }
 
 /** @returns Valid matching stations behind a physician option; their IDs remain internal routing data. */
 export function matchingDoctorCubicles(options: { selector: CubicleSelectorType; subcategory?: string }): ActualCubicle[] {
   return (options.selector.cubicles ?? []).map(link => link.cubicle).filter((station): station is ActualCubicle =>
-    station !== null && station.category === 'Consultation' && (!options.subcategory || station.subcategory === options.subcategory));
+    station !== null && (!options.subcategory || station.subcategory === options.subcategory));
 }
 
 /** @returns Physician names only, with each title applied once and no cubicle fallback label. */

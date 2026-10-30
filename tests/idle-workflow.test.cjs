@@ -119,6 +119,7 @@ test('Idle tab renders its count and passes reactivation/removal actions to the 
     '@/components/reusables/NotificationBadge': { NotificationBadge: badge },
     '@/constants/texts/transferTexts': { transferTexts: { idleTabTitle: 'Idle Numbers' } },
     '@/constants/designs/transferStyles': { queuePanelStyles: {} },
+    '@/app/transfer/components/HistoryPanel': { HistoryPanel: () => null },
   });
   const patient = { id: 1, patientNum: 'TEST-1' };
   const view = api.QueuePanel({ onProgressPatients: [], idlePatients: [patient],

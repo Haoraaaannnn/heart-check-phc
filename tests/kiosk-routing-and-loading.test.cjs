@@ -1,4 +1,4 @@
-/** @fileoverview Kiosk doctor choices, OPD bypass and navigation completion without live patient writes. */
+/** @fileoverview Configurable kiosk doctor choices and navigation completion without live patient writes. */
 const test = require('node:test');
 const assert = require('node:assert/strict');
 const fs = require('node:fs');
@@ -27,9 +27,11 @@ function nodes(node) {
 const station = { cubicleNum: 'Consultation R2 C5', category: 'Consultation', subcategory: 'Adult', doctorId: '10', doctorName: 'Maria Santos' };
 const selector = { id: 1, cubicle_name: 'Cubicle R2 C5', cubicle_order: 1, cubicles: [{ cubicle: station }] };
 
-test('OPD Screening bypasses doctor selection regardless of cubicle configuration, while Consultation retains it', () => {
-  for (const label_en of ['OPD Screening', 'OPD Screenings', ' opd   screening ']) {
-    assert.equal(rules.requiresDoctorSelection({ label_en, requires_cubicle: true }), false);
+test('Every service follows Superadmin picker settings, including OPD Screening and custom service names', () => {
+  for (const label_en of ['OPD Screening', 'OPD Screenings', ' opd   screening ', 'Consultation', 'Renamed Specialty Clinic']) {
+    assert.equal(rules.requiresDoctorSelection({ label_en, requires_cubicle: true }), true);
+    assert.equal(rules.requiresDoctorSelection({ label_en, requires_cubicle: false }), false);
+    assert.equal(rules.requiresDoctorSelection({ label_en, requires_cubicle: null }), false);
   }
   assert.equal(rules.requiresDoctorSelection({ label_en: 'Consultation', requires_cubicle: true }), true);
   assert.equal(rules.parseDoctorSelectionService({ label_en: 'Consultation', requires_cubicle: 'true' }), null);
@@ -50,9 +52,14 @@ test('Physician cards show only the doctor name and preserve internal station ro
   assert.equal(url.searchParams.get('preferredCubicleNums'), station.cubicleNum);
   assert.equal(url.searchParams.get('subcategory'), 'Adult');
   assert.equal(api.default({ cubicle: selector, subcategory: 'Pedia' }), null);
+  const customStation = { ...station, category: 'Renamed Specialty Clinic', cubicleNum: 'Specialty R1 C1' };
+  const custom = api.default({ cubicle: { ...selector, cubicles: [{ cubicle: customStation }] }, serviceId: '3', subcategory: 'Adult' });
+  assert.equal(nodes(custom).filter(value => typeof value === 'string').join(' '), 'Dr. Maria Santos');
+  custom.props.onClick();
+  assert.equal(new URL(destinations.at(-1), 'https://kiosk.invalid').searchParams.get('preferredCubicleNums'), customStation.cubicleNum);
 });
 
-test('OPD confirmation never enters doctor selection when it has no age-category step', () => {
+test('OPD confirmation uses the saved picker flag when it has no age-category step', () => {
   const destinations = [];
   const api = load('app/kiosk/pages/confirmation/components/ConfirmationActions.tsx', {
     'react/jsx-runtime': { jsx, jsxs: jsx }, '@/app/kiosk/lib/doctorSelection': rules,
@@ -61,24 +68,30 @@ test('OPD confirmation never enters doctor selection when it has no age-category
     '@/app/kiosk/pages/confirmation/constants/confirmationActionsTexts': { ConfirmationActionsTexts: {} },
     '@/app/kiosk/pages/confirmation/constants/confirmationActions': { ConfirmationActionsStyle: {}, ConfirmationActionsClasses: {} },
   });
-  const tree = api.default({ service: { id: 1, label_en: 'OPD Screening', requires_cubicle: true, has_subcategories: false } });
-  nodes(tree).find(node => node?.type === 'button').props.onClick();
-  assert.match(destinations[0], /^\/kiosk\/pages\/sms-input/);
+  for (const enabled of [false, true]) {
+    const tree = api.default({ service: { id: 1, label_en: 'OPD Screening', requires_cubicle: enabled, has_subcategories: false } });
+    nodes(tree).find(node => node?.type === 'button').props.onClick();
+    assert.match(destinations.at(-1), enabled ? /^\/kiosk\/pages\/kiosk-cubicle-selection/ : /^\/kiosk\/pages\/sms-input/);
+  }
 });
 
-test('Server guard redirects OPD before querying the physician roster and retains triage options', async () => {
+test('Server guard respects the saved OPD picker flag and retains triage options when bypassing it', async () => {
   let rosterReads = 0;
+  let enabled = false;
   const query = { select() { return this; }, eq() { return this; }, abortSignal() { return this; },
-    maybeSingle() { return Promise.resolve({ data: { label_en: 'OPD Screening', requires_cubicle: true }, error: null }); } };
+    maybeSingle() { return Promise.resolve({ data: { label_en: 'OPD Screening', requires_cubicle: enabled }, error: null }); } };
   const api = load('app/kiosk/pages/kiosk-cubicle-selection/page.tsx', {
     'react/jsx-runtime': { jsx, jsxs: jsx }, '@/lib/supabase/server': { createClient: async () => ({ from: () => query }) },
     '@/lib/supabase/facilityHelpers': { supabaseAdmin: {} }, 'next/navigation': { redirect: href => { throw new Error(`redirect:${href}`); } },
-    './components/CubicleCardsGrid': {}, './components/CubicleHeader': {}, './constants/cubicleLayout': {},
-    '@/app/kiosk/lib/doctorSelection': rules, '@/app/kiosk/lib/loadDoctorOptions': { loadDoctorOptions: () => { rosterReads++; } },
+    './components/CubicleCardsGrid': {}, './components/CubicleHeader': {}, './constants/cubicleLayout': { CubicleLayoutClasses: {}, CubicleLayoutStyle: {} },
+    '@/app/kiosk/lib/doctorSelection': rules, '@/app/kiosk/lib/loadDoctorOptions': { loadDoctorOptions: () => { rosterReads++; return []; } },
   });
   await assert.rejects(api.default({ searchParams: Promise.resolve({ serviceId: '1', type: 'new', subcategory: 'Adult' }) }),
     /redirect:\/kiosk\/pages\/sms-input\?serviceId=1&type=new&subcategory=Adult/);
   assert.equal(rosterReads, 0);
+  enabled = true;
+  await api.default({ searchParams: Promise.resolve({ serviceId: '1', type: 'new', subcategory: 'Adult' }) });
+  assert.equal(rosterReads, 1);
 });
 
 test('Doctor options read station lists concurrently and resolve names in one server-only query', async () => {
@@ -165,7 +178,7 @@ test('Fast category taps cannot use stale routing metadata and old requests cann
   harness.requests[0].resolve({ data: { label_en: 'Consultation', requires_cubicle: true }, error: null });
   await new Promise(resolve => setImmediate(resolve));
   state = harness.render('2'); assert.equal(state.loading, false); assert.equal(state.service.label_en, 'OPD Screening');
-  assert.equal(rules.requiresDoctorSelection(state.service), false);
+  assert.equal(rules.requiresDoctorSelection(state.service), true);
 });
 
 test('Failed service metadata reads have a working retry and never silently guess a destination', async () => {

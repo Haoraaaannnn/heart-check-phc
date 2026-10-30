@@ -44,15 +44,15 @@ export const transferLayoutStyles = {
 
   /** Sidebar toggle button */
   sidebarToggleBtn:
-    'p-1.5 sm:p-2 rounded-xl text-slate-500 hover:text-slate-800 hover:bg-slate-100 active:bg-slate-200 dark:text-[#a3a3a3] dark:hover:text-[#f5f5f5] dark:hover:bg-[#242424] transition-colors cursor-pointer shrink-0',
+    'w-9.5 h-9.5 sm:w-10 sm:h-10 flex items-center justify-center rounded-xl text-slate-600 hover:text-slate-900 bg-white hover:bg-slate-50 dark:bg-[#1a1a1a] dark:text-[#a3a3a3] dark:hover:text-[#f5f5f5] dark:hover:bg-[#242424] border border-slate-200 dark:border-[#2e2e2e] shadow-2xs transition-colors cursor-pointer shrink-0',
 
   /** Unassigned queue counter button (active attention state) */
   unassignedBtnActive:
-    'flex items-center gap-1.5 px-3 py-1.5 rounded-xl border text-base font-bold transition-all cursor-pointer whitespace-nowrap shrink-0 bg-red-50 dark:bg-red-950/40 border-red-200 dark:border-red-900/60 text-[#cc3535] dark:text-[#f87171] hover:bg-red-100 dark:hover:bg-red-900/50 shadow-2xs',
+    'inline-flex items-center gap-1.5 px-3 py-1.5 min-h-[38px] rounded-xl border text-xs font-bold transition-all cursor-pointer whitespace-nowrap shrink-0 bg-red-50 dark:bg-red-950/40 border-red-200 dark:border-red-900/60 text-[#cc3535] dark:text-[#f87171] hover:bg-red-100 dark:hover:bg-red-900/50 shadow-2xs',
 
   /** Unassigned queue counter button (zero items state) */
   unassignedBtnInactive:
-    'flex items-center gap-1.5 px-3 py-1.5 rounded-xl border text-base font-bold transition-all cursor-pointer whitespace-nowrap shrink-0 bg-slate-50 dark:bg-[#1f1f1f] border-slate-200 dark:border-[#2e2e2e] text-slate-400 dark:text-[#737373]',
+    'inline-flex items-center gap-1.5 px-3 py-1.5 min-h-[38px] rounded-xl border text-xs font-bold transition-all cursor-pointer whitespace-nowrap shrink-0 bg-slate-50 dark:bg-[#1f1f1f] border-slate-200 dark:border-[#2e2e2e] text-slate-400 dark:text-[#737373]',
 
   /** Unassigned dropdown floating menu */
   unassignedDropdown:
@@ -60,23 +60,27 @@ export const transferLayoutStyles = {
 
   /** Unassigned dropdown header title bar */
   unassignedDropdownHeader:
-    'px-4 py-2.5 border-b border-slate-100 dark:border-[#2e2e2e] text-base font-bold text-slate-600 dark:text-[#a3a3a3] uppercase tracking-wider bg-slate-50 dark:bg-[#141414]',
+    'px-4 py-2.5 border-b border-slate-100 dark:border-[#2e2e2e] text-xs font-bold text-slate-600 dark:text-[#a3a3a3] uppercase tracking-wider bg-slate-50 dark:bg-[#141414]',
 
   /** Unassigned dropdown row item */
   unassignedDropdownItem:
-    'w-full flex items-center justify-between px-4 py-2.5 text-base font-semibold hover:bg-red-50 dark:hover:bg-[#242424] transition-colors text-left border-b border-slate-50 dark:border-[#2e2e2e] cursor-pointer',
+    'w-full flex items-center justify-between px-4 py-2.5 text-xs font-semibold hover:bg-red-50 dark:hover:bg-[#242424] transition-colors text-left border-b border-slate-50 dark:border-[#2e2e2e] cursor-pointer',
 
   /** Real-time sync indicator badge */
   syncBadge:
-    'flex items-center gap-2 px-3 py-1 bg-blue-50 dark:bg-blue-950/40 text-blue-700 dark:text-blue-300 border border-blue-200 dark:border-blue-900/60 rounded-xl text-base font-semibold whitespace-nowrap shrink-0',
+    'inline-flex items-center gap-2 px-3 py-1.5 min-h-[38px] bg-blue-50 dark:bg-blue-950/40 text-blue-700 dark:text-blue-300 border border-blue-200 dark:border-blue-900/60 rounded-xl text-xs font-semibold whitespace-nowrap shrink-0',
 
   /** Manage Doctors modal button */
   manageDoctorsBtn:
-    'px-3 py-1.5 bg-slate-100 dark:bg-[#242424] hover:bg-slate-200 dark:hover:bg-[#2e2e2e] active:bg-slate-300 dark:active:bg-[#404040] rounded-xl text-base font-bold transition-colors text-slate-700 dark:text-[#f5f5f5] border border-slate-200 dark:border-[#383838] cursor-pointer shadow-2xs whitespace-nowrap shrink-0',
+    'inline-flex items-center gap-1.5 px-3 py-1.5 min-h-[38px] bg-white dark:bg-[#1a1a1a] hover:bg-slate-50 dark:hover:bg-[#242424] active:bg-slate-100 dark:active:bg-[#2e2e2e] rounded-xl text-xs font-bold transition-colors text-slate-700 dark:text-[#f5f5f5] border border-slate-200 dark:border-[#2e2e2e] cursor-pointer shadow-2xs whitespace-nowrap shrink-0',
+
+  /** Patient Journey History modal button */
+  historyBtn:
+    'inline-flex items-center gap-1.5 px-3 py-1.5 min-h-[38px] bg-white dark:bg-[#1a1a1a] hover:bg-slate-50 dark:hover:bg-[#242424] active:bg-slate-100 dark:active:bg-[#2e2e2e] rounded-xl text-xs font-bold transition-colors text-slate-700 dark:text-[#f5f5f5] border border-slate-200 dark:border-[#2e2e2e] cursor-pointer shadow-2xs whitespace-nowrap shrink-0',
 
   /** Theme switcher button */
   themeToggleBtn:
-    'p-1.5 sm:p-2 rounded-xl text-slate-500 hover:text-slate-800 hover:bg-slate-100 active:bg-slate-200 dark:text-[#a3a3a3] dark:hover:text-[#f5f5f5] dark:hover:bg-[#242424] transition-colors cursor-pointer shrink-0',
+    'w-9.5 h-9.5 sm:w-10 sm:h-10 flex items-center justify-center rounded-xl text-slate-600 hover:text-slate-900 bg-white hover:bg-slate-50 dark:bg-[#1a1a1a] dark:text-[#a3a3a3] dark:hover:text-[#f5f5f5] dark:hover:bg-[#242424] border border-slate-200 dark:border-[#2e2e2e] shadow-2xs transition-colors cursor-pointer shrink-0',
 
   /** Centered empty service selected panel */
   emptyServiceCard:

@@ -1,4 +1,4 @@
-/** @fileoverview Server-validated physician selection with bounded roster loading and OPD bypass. */
+/** @fileoverview Server-validated physician selection using Superadmin service flags and bounded roster loading. */
 import { createClient } from '@/lib/supabase/server';
 import { supabaseAdmin } from '@/lib/supabase/facilityHelpers';
 import { redirect } from 'next/navigation';
@@ -14,7 +14,7 @@ interface KioskCubicleSelectionPageProps {
 }
 
 /**
- * Keeps OPD Screening out of physician selection even when the configurable cubicle flag is enabled.
+ * Uses Superadmin's saved picker setting for every service, including OPD Screening and renamed services.
  * @param props - Service, patient type and selected age category.
  * @returns Name-only physician choices with internal cubicle links preserved for assignment.
  * @remarks The directory client remains server-only; no credentials or account fields reach the kiosk.

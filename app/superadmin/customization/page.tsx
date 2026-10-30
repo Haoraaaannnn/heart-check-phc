@@ -23,6 +23,7 @@ import { SUPERADMIN_STYLES } from '@/app/superadmin/constants/superadminStyles';
 import { DeleteServiceModal } from '@/app/superadmin/customization/components/DeleteServiceModal';
 import { ServiceModal } from '@/app/superadmin/customization/components/ServiceModal';
 import { HardwarePrinterConfigCard } from '@/app/superadmin/customization/components/HardwarePrinterConfigCard';
+import { invalidateFacilityMetadataCache } from '@/lib/cache/facilityMetadataCache';
 import { KioskDetectionCard } from '@/app/superadmin/customization/components/KioskDetectionCard';
 
 /**
@@ -129,6 +130,8 @@ function CustomizationContent() {
       setDeleteError(delErr.message);
       setDeleteLoading(false);
     } else {
+      invalidateFacilityMetadataCache('services');
+      invalidateFacilityMetadataCache('cubicles');
       try {
         const { data: cubiclesToDelete } = await supabase
           .from('cubicle')
