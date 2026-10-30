@@ -3,10 +3,12 @@
   "version": "0.1.0",
   "private": true,
   "scripts": {
-    "dev": "next dev --webpack",
+    "dev": "node ./scripts/dev-https.mjs",
+    "dev:plain": "next dev --webpack",
     "proxy": "caddy run --config ./Caddyfile",
     "build": "next build --webpack",
-    "start": "next start -H 0.0.0.0 -p 3000",
+    "start": "node ./scripts/start-https.mjs",
+    "start:plain": "next start -H 0.0.0.0 -p 3000",
     "lint": "eslint"
   },
   "dependencies": {

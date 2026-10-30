@@ -159,8 +159,7 @@ test('Live Database Verification: Service "Others" with prefix 67 generates sequ
     const { data: verifyRecord, error: verifyErr } = await supabase
       .from('patients')
       .select('id, patientNum, service, is_historical')
-      .eq('patientNum', '67002')
-      .eq('is_historical', false)
+      .eq('id', createdPatientIds[1])
       .single();
 
     assert.ifError(verifyErr);
