@@ -5,6 +5,7 @@ import { useSearchParams } from "next/navigation";
 import { useKioskNavigate } from "@/app/kiosk/hooks/useKioskNavigate";
 import { createClient } from "@/lib/supabase/client";
 import { Service } from "@/types/Services";
+import { getCachedServiceById } from "@/lib/cache/facilityMetadataCache";
 import { CategoryHeaderTexts } from "@/app/kiosk/pages/category-selection/constants/categoryHeaderTexts";
 import { CategoryHeaderStyle } from "@/app/kiosk/pages/category-selection/constants/categoryHeader";
 import { CategoryCardsTexts } from "@/app/kiosk/pages/category-selection/constants/categoryCardsTexts";
@@ -32,18 +33,19 @@ function CategorySelectionContent() {
 
     const [service, setService] = useState<Service | null>(null);
 
-    // Fetch active service record to inspect clinical capabilities checklist
+    // Fetch active service record from cache to inspect clinical capabilities checklist
     useEffect(() => {
         if (!serviceId) return;
+        let isMounted = true;
         const supabase = createClient();
-        supabase
-            .from("services")
-            .select("*")
-            .eq("id", parseInt(serviceId, 10))
-            .maybeSingle()
-            .then(({ data }) => {
-                if (data) setService(data as Service);
-            });
+        void getCachedServiceById(supabase, serviceId).then((resolved) => {
+            if (isMounted && resolved) {
+                setService(resolved);
+            }
+        });
+        return () => {
+            isMounted = false;
+        };
     }, [serviceId]);
 
     // Scroll state tracking

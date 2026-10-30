@@ -1,6 +1,7 @@
 import { createClient } from "@/lib/supabase/server";
 import { notFound } from "next/navigation";
 import { Service } from "@/types/Services";
+import { getCachedServiceById } from "@/lib/cache/facilityMetadataCache";
 import QueuePrintContent from "@/app/kiosk/pages/queue-print/components/QueuePrintContent";
 
 /** Props Next.js passes to the ticket printing confirmation page. */
@@ -29,12 +30,7 @@ export default async function QueuePrintPage({ searchParams }: QueuePrintPagePro
     let service: Service | null = null;
 
     if (serviceId) {
-        const { data } = await supabase
-            .from("services")
-            .select("*")
-            .eq("id", parseInt(serviceId, 10))
-            .single();
-        service = data;
+        service = await getCachedServiceById(supabase, serviceId);
     }
 
     if (!service) {

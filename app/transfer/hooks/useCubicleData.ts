@@ -4,6 +4,7 @@
 import { useState, useCallback, useEffect } from 'react';
 import { supabase } from '@/lib/supabase';
 import { Cubicle } from '@/types/Types';
+import { getCachedDoctorsMap } from '@/lib/cache/facilityMetadataCache';
 
 /**
  * Shape of doctor record returned from Supabase for cubicle mapping.
@@ -33,27 +34,12 @@ export function useCubicleData() {
     if (!error && data) {
       setCubicles(data as Cubicle[]);
 
-      const doctorIds = [
-        ...new Set((data as Cubicle[]).map(c => c.doctorId).filter(Boolean)),
-      ] as string[];
-
-      if (doctorIds.length === 0) {
-        setCubicleDoctorMap({});
-        return;
-      }
-
-      const { data: doctorsData } = await supabase
-        .from('doctors')
-        .select('id, full_name')
-        .in('id', doctorIds);
-
-      const typedDoctors = (doctorsData || []) as DoctorNameRow[];
-      const nameById = new Map(typedDoctors.map(d => [d.id, d.full_name]));
+      const doctorNameMap = await getCachedDoctorsMap(supabase);
       const map: Record<string, string> = {};
 
       (data as Cubicle[]).forEach(c => {
-        if (c.doctorId && nameById.has(c.doctorId)) {
-          map[c.cubicleNum] = nameById.get(c.doctorId)!;
+        if (c.doctorId && doctorNameMap[c.doctorId]) {
+          map[c.cubicleNum] = doctorNameMap[c.doctorId];
         }
       });
 

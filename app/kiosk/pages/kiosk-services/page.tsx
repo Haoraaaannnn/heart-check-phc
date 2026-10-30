@@ -1,6 +1,7 @@
 import { createClient } from "@/lib/supabase/server";
 import KioskServicesGrid from "@/app/kiosk/pages/kiosk-services/components/KioskServicesGrid";
 import { Service } from "@/types/Services";
+import { getCachedServices } from "@/lib/cache/facilityMetadataCache";
 
 /** Props Next.js passes to the kiosk services page. */
 interface KioskPageProps {
@@ -33,11 +34,8 @@ export default async function KioskPage({ searchParams }: KioskPageProps) {
   const supabase = await createClient();
   const { type } = await searchParams;
 
-  // Fetch the full service menu in the order set by the superadmin.
-  const { data: services } = await supabase
-    .from("services")
-    .select("*")
-    .order("display_order", { ascending: true });
+  // Retrieve service catalog from facility cache (with automatic 3-minute TTL)
+  const services = await getCachedServices(supabase);
 
   // Keep only the services this patient type is allowed to see.
   const visibleServices =

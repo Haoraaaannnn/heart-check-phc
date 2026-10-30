@@ -23,6 +23,7 @@ import { AssignedNurseCubicle } from '@/app/nurse/types/nurse';
 import { nurseTexts } from '@/app/nurse/constants/nurseTexts';
 import { NotificationBadge } from '@/components/reusables/NotificationBadge';
 import { BrandLogo } from '@/components/reusables/BrandLogo';
+import { getCachedServices } from '@/lib/cache/facilityMetadataCache';
 import { SIDEBAR_ICONS, resolveServiceIcon } from '@/constants/icons';
 
 /**
@@ -71,15 +72,16 @@ export function NurseSidebar({
   React.useEffect(() => {
     let isDisposed = false;
 
-    const fetchServices = async () => {
+    const fetchServices = async (force = false) => {
       try {
-        const { data, error } = await supabase
-          .from('services')
-          .select('label_en, icon_src')
-          .order('display_order', { ascending: true });
-
-        if (!error && data && !isDisposed) {
-          setDbServices(data as Array<{ label_en: string; icon_src: string }>);
+        const services = await getCachedServices(supabase, force);
+        if (!isDisposed) {
+          setDbServices(
+            services.map((s) => ({
+              label_en: s.label_en,
+              icon_src: s.icon_src || '',
+            }))
+          );
         }
       } catch (err) {
         console.warn('NurseSidebar: failed to fetch services catalog:', err);
@@ -94,7 +96,7 @@ export function NurseSidebar({
         'postgres_changes',
         { event: '*', schema: 'public', table: 'services' },
         () => {
-          void fetchServices();
+          void fetchServices(true);
         }
       )
       .subscribe();

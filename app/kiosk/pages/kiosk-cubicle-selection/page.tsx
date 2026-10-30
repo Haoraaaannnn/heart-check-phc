@@ -1,6 +1,7 @@
 import { createClient } from "@/lib/supabase/server";
 import { supabaseAdmin } from "@/lib/supabase/facilityHelpers";
 import { redirect } from "next/navigation";
+import { getCachedServiceById, getCachedDoctorsMap } from "@/lib/cache/facilityMetadataCache";
 import CubicleCardsGrid from "@/app/kiosk/pages/kiosk-cubicle-selection/components/CubicleCardsGrid";
 import CubicleHeader from "@/app/kiosk/pages/kiosk-cubicle-selection/components/CubicleHeader";
 import { CubicleSelectorType } from "@/app/kiosk/pages/kiosk-cubicle-selection/types/CubicleSelectorType";
@@ -64,12 +65,8 @@ export default async function KioskCubicleSelectionPage({
         );
     }
 
-    // Fetch active service to verify eligibility for cubicle selection
-    const { data: service } = await supabase
-        .from("services")
-        .select("*")
-        .eq("id", parseInt(serviceId, 10))
-        .single();
+    // Fetch active service from cache to verify eligibility for cubicle selection
+    const service = await getCachedServiceById(supabase, serviceId);
 
     const serviceLabel = service?.label_en?.trim().toLowerCase();
 
@@ -142,26 +139,28 @@ export default async function KioskCubicleSelectionPage({
     const doctorNameById = new Map<string, string>();
 
     if (doctorIdsList.length > 0) {
-        let doctorsData: { id: string; full_name: string }[] | null = null;
+        const cachedDoctors = await getCachedDoctorsMap(supabase);
+        const missingDoctorIds: string[] = [];
 
-        // Attempt read via current session
-        const { data: publicDocs, error: docError } = await supabase
-            .from("doctors")
-            .select("id, full_name")
-            .in("id", doctorIdsList);
+        for (const docId of doctorIdsList) {
+            if (cachedDoctors[docId]) {
+                doctorNameById.set(docId, cachedDoctors[docId]);
+            } else {
+                missingDoctorIds.push(docId);
+            }
+        }
 
-        if (!docError && publicDocs && publicDocs.length > 0) {
-            doctorsData = publicDocs;
-        } else {
-            // Fallback to service-role client on server if anonymous RLS restricts public read
+        if (missingDoctorIds.length > 0) {
             try {
                 const { data: adminDocs } = await supabaseAdmin
                     .from("doctors")
                     .select("id, full_name")
-                    .in("id", doctorIdsList);
-                if (adminDocs) {
-                    doctorsData = adminDocs;
-                }
+                    .in("id", missingDoctorIds);
+                (adminDocs || []).forEach((d) => {
+                    if (d.id && d.full_name) {
+                        doctorNameById.set(d.id, d.full_name.trim());
+                    }
+                });
             } catch (adminErr) {
                 console.error(
                     `${getTimestamp()} [CUBICLE DOCTOR FETCH ERROR]:`,
@@ -169,12 +168,6 @@ export default async function KioskCubicleSelectionPage({
                 );
             }
         }
-
-        (doctorsData || []).forEach((d) => {
-            if (d.id && d.full_name) {
-                doctorNameById.set(d.id, d.full_name.trim());
-            }
-        });
     }
 
     // Enrich each cubicle selector record with resolved doctor names
