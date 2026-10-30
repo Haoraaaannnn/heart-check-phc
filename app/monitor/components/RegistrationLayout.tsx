@@ -1,10 +1,11 @@
-/** @fileoverview Public registration counters excluding administrative closures and staff breaks. */
+/** @fileoverview Public registration counters retain existing patients while a staffed counter is on break. */
 'use client';
 
 import { Patient } from '@/types/Types';
-import { fetchActiveCounters } from '@/lib/counters';
+import { fetchActiveCounters, fetchOccupiedCounters, type OccupiedCounterInfo } from '@/lib/counters';
+import { visibleRegistrationCounters, isVisibleRegistrationPatient } from '@/app/monitor/lib/registrationVisibility';
 import { supabase } from '@/lib/supabase';
-import { useEffect, useRef, useState } from 'react';
+import { useEffect, useMemo, useRef, useState } from 'react';
 import { formatTicketForSpeech } from '@/utils/formatTicketSpeech';
 import { useMonitorCalls } from '@/app/monitor/hooks/useMonitorCalls';
 import { playMonitorSpeech } from '@/app/monitor/lib/playMonitorSpeech';
@@ -63,7 +64,9 @@ type RegistrationLayoutProps = {
  * @returns The rendered registration monitor layout element.
  */
 export function RegistrationLayout({ patients }: RegistrationLayoutProps) {
-  const [counters, setCounters] = useState<number[]>([]);
+  const [counterDirectory, setCounterDirectory] = useState<OccupiedCounterInfo[]>([]);
+  const livePatients = useMemo(() => patients.filter(isVisibleRegistrationPatient), [patients]);
+  const counters = useMemo(() => visibleRegistrationCounters({ counters: counterDirectory, patients: livePatients }), [counterDirectory, livePatients]);
   const [activeCall, setActiveCall] = useState<{ ticket: string; counterNum: number; expiry: number } | null>(null);
   const [currentMs, setCurrentMs] = useState(Date.now);
   const announcedPatientsRef = useRef<Set<number>>(new Set());
@@ -90,7 +93,7 @@ export function RegistrationLayout({ patients }: RegistrationLayoutProps) {
   }, []);
 
   useEffect(() => {
-    const load = () => fetchActiveCounters().then(setCounters);
+    const load = () => fetchOccupiedCounters().then(setCounterDirectory);
     load();
     const interval = setInterval(load, 5000);
     const channel = supabase.channel('registration-counter-breaks')
@@ -129,7 +132,8 @@ export function RegistrationLayout({ patients }: RegistrationLayoutProps) {
     const newAnnouncements: { ticket: string; counterNum: number }[] = [];
 
     for (const counterNum of counters) {
-      const counterPatients = patients.filter(p => p.counter === counterNum);
+      if (counterDirectory.find(counter => counter.counter_number === counterNum)?.on_break) continue;
+      const counterPatients = livePatients.filter(p => p.counter === counterNum);
 
       if (counterPatients.length > 0) {
         const topPatient = counterPatients[0];
@@ -147,7 +151,7 @@ export function RegistrationLayout({ patients }: RegistrationLayoutProps) {
       pendingAnnouncements.current.push(...newAnnouncements);
       processAnnouncements();
     }
-  }, [patients, counters]);
+  }, [livePatients, counters, counterDirectory]);
 
   const isFourCounters = counters.length === 4;
 
@@ -157,7 +161,7 @@ export function RegistrationLayout({ patients }: RegistrationLayoutProps) {
         <div className={MONITOR_STYLES.registrationLayout.gridWrapper}>
           <div className={MONITOR_STYLES.registrationLayout.fourGridContainer}>
             {counters.map(counterNum => {
-              const counterPatients = patients.filter(p => p.counter === counterNum);
+              const counterPatients = livePatients.filter(p => p.counter === counterNum);
               const activePatient = counterPatients[0];
               const waitingPatients = counterPatients.slice(1);
               const isCalling = activeCall !== null &&
@@ -296,7 +300,7 @@ export function RegistrationLayout({ patients }: RegistrationLayoutProps) {
           style={{ gridTemplateColumns: `repeat(${Math.max(1, counters.length)}, minmax(0, 1fr))` }}
         >
           {counters.map(counterNum => {
-            const counterPatients = patients.filter(p => p.counter === counterNum);
+            const counterPatients = livePatients.filter(p => p.counter === counterNum);
             const activePatient = counterPatients[0];
             const waitingPatients = counterPatients.slice(1);
             const isCalling = activeCall !== null &&

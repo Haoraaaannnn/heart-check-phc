@@ -17,10 +17,13 @@ import { formatTicketForSpeech } from '@/utils/formatTicketSpeech';
 import { useMonitorCalls, MonitorCall } from './useMonitorCalls';
 import { playMonitorSpeech } from '../lib/playMonitorSpeech';
 import { sortCubiclePatients } from '../lib/sortCubiclePatients';
-import { fetchActiveCounters } from '@/lib/counters';
+import { fetchOccupiedCounters } from '@/lib/counters';
+import { visibleRegistrationCounters, isVisibleRegistrationPatient } from '@/app/monitor/lib/registrationVisibility';
 
 /** Uniform station definition combining intake counters and clinical cubicles. */
 export interface CustomStation {
+  /** A break blocks new arrivals while the station finishes its existing intake queue. */
+  onBreak?: boolean;
   id: string;
   type: 'counter' | 'cubicle';
   service: string;
@@ -288,7 +291,7 @@ export function useCustomMonitorData(services: string[], started: boolean) {
 
     // 1. Process Registration Counters if selected
     if (hasRegistration) {
-      const activeCounters = await fetchActiveCounters();
+      const counterDirectory = await fetchOccupiedCounters();
       const { data: svcData } = await supabase
         .from('services')
         .select('label_en, requires_registration');
@@ -315,7 +318,8 @@ export function useCustomMonitorData(services: string[], started: boolean) {
         .order('counter', { ascending: true })
         .order('created_at', { ascending: true });
 
-      const patientList = regPatients || [];
+      const patientList = (regPatients || []).filter(isVisibleRegistrationPatient);
+      const activeCounters = visibleRegistrationCounters({ counters: counterDirectory, patients: patientList });
       for (const counterNum of activeCounters) {
         const counterPatients = patientList.filter(p => p.counter === counterNum);
         const serving = counterPatients[0] || null;
@@ -325,6 +329,7 @@ export function useCustomMonitorData(services: string[], started: boolean) {
         resultStations.push({
           id: stationId,
           type: 'counter',
+          onBreak: counterDirectory.find(counter => counter.counter_number === counterNum)?.on_break ?? false,
           service: 'Registration',
           stationNumber: counterNum,
           label: `Counter ${counterNum}`,
@@ -507,7 +512,7 @@ export function useCustomMonitorData(services: string[], started: boolean) {
       return true;
     });
 
-    const openStationCount = serviceStations.length;
+    const openStationCount = serviceStations.filter(station => !station.onBreak).length;
     const openStationSummary = target.service === 'Registration'
       ? `${openStationCount} ${openStationCount === 1 ? 'Counter' : 'Counters'} Open`
       : `${openStationCount} ${openStationCount === 1 ? 'Cubicle' : 'Cubicles'} Open`;

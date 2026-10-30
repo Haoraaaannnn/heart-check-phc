@@ -200,6 +200,7 @@ test('Multiple and single monitor (useCustomMonitorData): synthesizes queues for
     '../lib/playMonitorSpeech': {},
     '../lib/sortCubiclePatients': { sortCubiclePatients: arr => arr },
     '@/lib/counters': { fetchActiveCounters: async () => [1, 2] },
+    '@/app/monitor/lib/registrationVisibility': load('app/monitor/lib/registrationVisibility.ts'),
   });
 
   // Verify normalizeMonitorTargets works for both single service and multiple services

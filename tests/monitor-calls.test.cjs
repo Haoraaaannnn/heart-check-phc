@@ -304,6 +304,7 @@ test('normalizeMonitorTargets splits services with subcategories into discrete P
     '../lib/playMonitorSpeech': { playMonitorSpeech: async () => {} },
     '../lib/sortCubiclePatients': { sortCubiclePatients: arr => arr },
     '@/lib/counters': { fetchActiveCounters: async () => [] },
+    '@/app/monitor/lib/registrationVisibility': load('app/monitor/lib/registrationVisibility.ts', {}),
   });
 
   // Coarse service name with subcategories splits automatically into Pedia and Adult

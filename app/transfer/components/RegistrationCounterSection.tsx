@@ -209,22 +209,22 @@ export function RegistrationCounterSection({
             const topPatient = counterPatients[0];
             const station = breaks.stations.find(item => item.kind === 'counter' && item.id === counterNum);
             const waitingPatients = counterPatients.slice(1);
+            const canReceivePatient = Boolean(station?.active && !station.onBreak && station.owners?.length);
 
             // Check if this counter is an eligible target to receive selected counter patient
             const isTargetEligible =
-              isInteractive &&
-              !station?.onBreak &&
+              canReceivePatient &&
               Boolean(selectedPatient) &&
               selectedPatient?.sourceType === 'counter' &&
               selectedPatient.sourceId !== counterNum;
 
             const handleCounterClick = () => {
-              if (isInteractive && isTargetEligible && onTargetCounterClick) {
+              if (isTargetEligible && onTargetCounterClick) {
                 onTargetCounterClick(counterNum);
               }
             };
 
-            const cardStateClass = isOver && isInteractive
+            const cardStateClass = isOver && canReceivePatient
               ? registrationCounterStyles.counterCardDropOver
               : isTargetEligible
               ? registrationCounterStyles.counterCardTargetEligible
@@ -233,7 +233,7 @@ export function RegistrationCounterSection({
             return (
               <div
                 key={counterNum}
-                data-counter={isInteractive && !station?.onBreak ? counterNum : undefined}
+                data-counter={canReceivePatient ? counterNum : undefined}
                 onClick={handleCounterClick}
                 style={isTargetEligible ? TransferStyle.assignTargetCard : undefined}
                 className={`${registrationCounterStyles.counterCardBase} ${cardStateClass}`}
