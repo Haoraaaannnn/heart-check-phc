@@ -40,6 +40,13 @@ export default function WelcomeBanner({ currentTime, isMounted }: WelcomeBannerP
         </h1>
         <p className={S.subtitle}>{BANNER.subtitle}</p>
       </div>
+      <div className={S.badgesWrap}>
+        <div className={S.privacyBadge} title="Republic Act 10173 Data Privacy Compliance">
+          <i className="bx bx-shield-quarter text-emerald-600 dark:text-emerald-400 text-sm" />
+          <span className="font-semibold text-content">{BANNER.privacyBadge}</span>
+          <span className="text-content-subtle font-mono text-[11px]">• {BANNER.privacyBadgeDesc}</span>
+        </div>
+      </div>
     </section>
   );
 }

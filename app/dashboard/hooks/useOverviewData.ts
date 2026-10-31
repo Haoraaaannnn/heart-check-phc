@@ -249,6 +249,25 @@ function getDateBoundaries(
   const currentMonth = now.getMonth();
   const currentDate = now.getDate();
 
+  // Support specific date format: "date:YYYY-MM-DD" or direct ISO "YYYY-MM-DD"
+  if (range.startsWith('date:') || /^\d{4}-\d{2}-\d{2}$/.test(range)) {
+    const rawStr = range.replace('date:', '').trim();
+    const [y, m, d] = rawStr.split('-').map(Number);
+    if (!isNaN(y) && !isNaN(m) && !isNaN(d)) {
+      const start = new Date(y, m - 1, d, 0, 0, 0, 0);
+      const end = new Date(y, m - 1, d + 1, 0, 0, 0, 0);
+      const prevStart = new Date(y, m - 1, d - 1, 0, 0, 0, 0);
+      const prevEnd = new Date(y, m - 1, d, 0, 0, 0, 0);
+
+      return {
+        startDate: start.toISOString(),
+        endDate: end.toISOString(),
+        prevStartDate: prevStart.toISOString(),
+        prevEndDate: prevEnd.toISOString(),
+      };
+    }
+  }
+
   if (range === 'today') {
     const start = new Date(currentYear, currentMonth, currentDate, 0, 0, 0, 0);
     const end = new Date(currentYear, currentMonth, currentDate + 1, 0, 0, 0, 0);
@@ -483,7 +502,11 @@ export function useOverviewData(): UseOverviewDataResult {
       setDeptStats(derived.deptStats);
       setHourlyData(derived.hourlyData);
       setComparisonCount(comparisonBaseline);
-      setComparisonLabel(METRIC_RANGE_CONFIG[targetRange].trendLabel);
+      const customTrendLabel =
+        targetRange.startsWith('date:') || /^\d{4}-\d{2}-\d{2}$/.test(targetRange)
+          ? 'vs. prev day'
+          : (METRIC_RANGE_CONFIG as any)[targetRange]?.trendLabel ?? 'vs. prev day';
+      setComparisonLabel(customTrendLabel);
       setIsRangeLoading(false);
     }
   }, []);
@@ -519,7 +542,11 @@ export function useOverviewData(): UseOverviewDataResult {
         setDeptStats(cached.deptStats);
         setHourlyData(cached.hourlyData);
         setComparisonCount(cached.comparisonCount);
-        setComparisonLabel(METRIC_RANGE_CONFIG[newRange].trendLabel);
+        const customTrendLabel =
+          newRange.startsWith('date:') || /^\d{4}-\d{2}-\d{2}$/.test(newRange)
+            ? 'vs. prev day'
+            : (METRIC_RANGE_CONFIG as any)[newRange]?.trendLabel ?? 'vs. prev day';
+        setComparisonLabel(customTrendLabel);
         setIsRangeLoading(false);
       } else {
         void fetchHistoricalRange(newRange);

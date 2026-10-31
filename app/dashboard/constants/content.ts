@@ -31,6 +31,8 @@ export const BANNER = {
   /** Hour (0-23, Manila) before which the morning / afternoon greeting applies. */
   morningUntil: 12,
   afternoonUntil: 18,
+  privacyBadge: 'RA 10173 Protected',
+  privacyBadgeDesc: 'PII Redacted',
 } as const;
 
 /** Text shown next to the trend arrow on the "Total Patients" card. */
@@ -59,7 +61,13 @@ export const DASHBOARD_REALTIME = {
 /**
  * Valid timeframe options for filtering overview executive metrics.
  */
-export type OverviewDateRange = 'today' | 'yesterday' | '7d' | 'mtd';
+export type OverviewDateRange =
+  | 'today'
+  | 'yesterday'
+  | '7d'
+  | 'mtd'
+  | `date:${string}`
+  | (string & {});
 
 /**
  * Configuration for an overview date range preset pill.

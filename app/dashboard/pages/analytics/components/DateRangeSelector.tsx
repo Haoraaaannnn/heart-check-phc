@@ -40,7 +40,7 @@ export default function DateRangeSelector({
 
   useEffect(() => {
     let isCancelled = false;
-    const baseUrl = process.env.NEXT_PUBLIC_API_URL || 'http://localhost:8000';
+    const baseUrl = process.env.NEXT_PUBLIC_API_URL || '';
 
     fetch(`${baseUrl}/api/available-years`)
       .then((res) => {
@@ -60,6 +60,8 @@ export default function DateRangeSelector({
       isCancelled = true;
     };
   }, []);
+
+  const isSpecificDate = /^\d{4}-\d{2}-\d{2}$/.test(value);
 
   return (
     <div className={S.wrap}>
@@ -141,6 +143,43 @@ export default function DateRangeSelector({
           })}
         </>
       )}
+
+      <span className={S.divider} aria-hidden="true" />
+
+      {/* Specific Date Filter Control */}
+      <div
+        className={`flex items-center gap-1.5 px-3 py-1.5 rounded-xl text-xs font-semibold border transition ${
+          isSpecificDate
+            ? 'border-[#a8071a] bg-[#a8071a]/10 text-[#a8071a] dark:text-[#f87171]'
+            : 'border-line bg-surface text-content-muted hover:border-slate-400'
+        }`}
+      >
+        <i className="bx bx-calendar text-sm" />
+        <span className="text-[11px] font-bold whitespace-nowrap">Specific Date:</span>
+        <input
+          type="date"
+          value={isSpecificDate ? value : ''}
+          max={new Date().toISOString().split('T')[0]}
+          onChange={(e) => {
+            if (e.target.value) {
+              onChange(e.target.value as AnalyticsRange);
+            }
+          }}
+          className="bg-transparent text-xs font-semibold text-content outline-none cursor-pointer"
+          aria-label="Filter analytics by specific clinic date"
+        />
+        {isSpecificDate && (
+          <button
+            type="button"
+            onClick={() => onChange('all' as AnalyticsRange)}
+            className="text-content-subtle hover:text-content text-sm cursor-pointer ml-1"
+            title="Reset to All Time"
+            aria-label="Reset to All Time"
+          >
+            <i className="bx bx-x" />
+          </button>
+        )}
+      </div>
     </div>
   );
 }

@@ -18,7 +18,11 @@ from datetime import date, datetime, timedelta
 import pandas as pd
 from dotenv import load_dotenv
 import httpx
-from supabase import create_client, Client
+try:
+    from supabase import create_client, Client
+except (ImportError, AttributeError):
+    create_client = None  # type: ignore
+    Client = object  # type: ignore
 
 BASE_DIR = os.path.dirname(os.path.abspath(__file__))
 env_path = os.path.join(BASE_DIR, "..", ".env.local")

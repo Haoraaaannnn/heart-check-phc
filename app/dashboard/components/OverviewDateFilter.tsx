@@ -14,6 +14,7 @@
 
 'use client';
 
+import { useMemo } from 'react';
 import {
   OVERVIEW_DATE_FILTER_ICONS,
   OVERVIEW_DATE_FILTER_TEXTS,
@@ -37,7 +38,7 @@ export interface OverviewDateFilterProps {
 }
 
 /**
- * Filter pill bar for toggling between live queue metrics and historical reporting windows.
+ * Filter pill bar for toggling between live queue metrics, specific clinic dates, and historical reporting windows.
  *
  * @param props - Component properties.
  * @returns Rendered JSX element.
@@ -51,6 +52,15 @@ export default function OverviewDateFilter({
   const S = DASH.dateFilter;
   const T = OVERVIEW_DATE_FILTER_TEXTS;
   const I = OVERVIEW_DATE_FILTER_ICONS;
+
+  const isSpecificDate =
+    selectedRange.startsWith('date:') || /^\d{4}-\d{2}-\d{2}$/.test(selectedRange);
+  const selectedDateVal = isSpecificDate ? selectedRange.replace('date:', '') : '';
+
+  const todayStr = useMemo(() => {
+    const d = new Date();
+    return d.toISOString().split('T')[0];
+  }, []);
 
   return (
     <div className={S.root}>
@@ -105,6 +115,63 @@ export default function OverviewDateFilter({
             </button>
           );
         })}
+
+        <span className="hidden sm:inline-block h-4 w-[1px] bg-line mx-1" aria-hidden="true" />
+
+        {/* Specific Date Picker Control */}
+        <div
+          className={`flex items-center gap-1.5 px-3 py-1 rounded-xl text-xs font-semibold border transition ${
+            isSpecificDate
+              ? 'border-[#a8071a] bg-[#a8071a]/10 text-[#a8071a] dark:text-[#f87171]'
+              : 'border-line bg-surface-muted text-content-muted hover:border-slate-400'
+          }`}
+        >
+          <i className="bx bx-calendar text-sm" />
+          <span className="text-[11px] font-bold whitespace-nowrap">Specific Date:</span>
+          <input
+            type="date"
+            value={selectedDateVal}
+            max={todayStr}
+            onChange={(e) => {
+              if (e.target.value) {
+                onRangeChange(`date:${e.target.value}` as OverviewDateRange);
+              }
+            }}
+            className="bg-transparent text-xs font-semibold text-content outline-none cursor-pointer"
+            aria-label="Filter by specific clinic date"
+          />
+          {isSpecificDate && (
+            <button
+              type="button"
+              onClick={() => onRangeChange('today')}
+              className="text-content-subtle hover:text-content text-sm cursor-pointer ml-1"
+              title="Reset to today"
+              aria-label="Reset to today"
+            >
+              <i className="bx bx-x" />
+            </button>
+          )}
+        </div>
+      </div>
+
+      {/* Right Stream / Historical Indicator Badge */}
+      <div className="flex items-center gap-2 shrink-0">
+        {selectedRange === 'today' ? (
+          <span className={S.badgeLive} title="Continuous Supabase Realtime WebSocket feed">
+            <span className={S.badgeLiveDot} />
+            <span>{T.liveBadge}</span>
+          </span>
+        ) : isSpecificDate ? (
+          <span className="inline-flex items-center gap-1.5 px-2.5 py-1 rounded-lg text-[11px] font-semibold bg-rose-50 text-rose-700 dark:bg-rose-950/60 dark:text-rose-300 border border-rose-200 dark:border-rose-900 select-none whitespace-nowrap">
+            <i className="bx bx-calendar-check" />
+            <span>Clinic Date: {selectedDateVal}</span>
+          </span>
+        ) : (
+          <span className={S.badgeHistorical} title="Static snapshot query">
+            <i className={`bx ${I.history} ${S.badgeHistoricalIcon}`} />
+            <span>{T.historicalBadge}</span>
+          </span>
+        )}
       </div>
     </div>
   );

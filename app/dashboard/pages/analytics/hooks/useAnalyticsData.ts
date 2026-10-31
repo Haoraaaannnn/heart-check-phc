@@ -46,7 +46,7 @@ export function useAnalyticsData() {
   const fetchAnalytics = useCallback((forRange: AnalyticsRange, isBackground = false) => {
     if (isBackground) setIsRefreshing(true);
 
-    const baseUrl = process.env.NEXT_PUBLIC_API_URL || 'http://localhost:8000';
+    const baseUrl = process.env.NEXT_PUBLIC_API_URL || '';
 
     fetch(`${baseUrl}/api/dashboard-data?range=${forRange}`)
       .then((res) => {

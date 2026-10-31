@@ -19,7 +19,7 @@ import { themeTokens, sizeTokens } from '@/constants/themeTokens';
  */
 export const DASHBOARD_SKELETON_STYLES = {
   /** Root wrapper with pulse animation */
-  root: 'mx-auto flex w-full max-w-[1680px] flex-col gap-6 animate-pulse select-none',
+  root: 'w-full flex flex-col gap-5 md:gap-6 animate-pulse select-none',
 
   /** Welcome banner skeleton card */
   banner: {

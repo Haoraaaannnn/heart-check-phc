@@ -96,7 +96,19 @@ export default function DashboardMetrics({
   if (isLoading) {
     return <DashboardMetricsSkeleton />;
   }
-  const rangeConfig = METRIC_RANGE_CONFIG[range] ?? METRIC_RANGE_CONFIG.today;
+  const isCustomDate = range.startsWith('date:') || /^\d{4}-\d{2}-\d{2}$/.test(range);
+  const customDateStr = isCustomDate ? range.replace('date:', '') : '';
+  const rangeConfig =
+    (METRIC_RANGE_CONFIG as Record<string, any>)[range] ?? {
+      totalLabel: isCustomDate ? `Total Patients (${customDateStr})` : METRIC_RANGE_CONFIG.today.totalLabel,
+      totalSubtitle: isCustomDate ? 'Registrations on selected date' : METRIC_RANGE_CONFIG.today.totalSubtitle,
+      trendLabel: 'vs. prev day',
+      onQueueLabel: isCustomDate ? 'Unserved at Close' : METRIC_RANGE_CONFIG.today.onQueueLabel,
+      onQueueSubtitle: isCustomDate ? 'Ended day waiting' : METRIC_RANGE_CONFIG.today.onQueueSubtitle,
+      servedLabel: isCustomDate ? 'Served on Date' : METRIC_RANGE_CONFIG.today.servedLabel,
+      servedSubtitle: isCustomDate ? 'Completed visits on date' : METRIC_RANGE_CONFIG.today.servedSubtitle,
+      avgWaitSubtitle: isCustomDate ? 'Selected date average' : METRIC_RANGE_CONFIG.today.avgWaitSubtitle,
+    };
   const baseline = comparisonCount !== undefined ? comparisonCount : (yesterdayCount ?? null);
   const trendText = comparisonLabel ?? rangeConfig.trendLabel ?? TREND_LABEL;
 
@@ -106,6 +118,11 @@ export default function DashboardMetrics({
     served: stats.served,
     avgWait: avgWaitTime,
   };
+
+  const servedPercent =
+    isMounted && stats.todayCount > 0
+      ? Math.round((stats.served / stats.todayCount) * 100)
+      : 0;
 
   return (
     <div className={DASH.layout.metricGrid}>
@@ -139,21 +156,84 @@ export default function DashboardMetrics({
               <i className={`bx ${metric.icon}`} />
             </span>
 
-            <div>
+            <div className="flex-1 min-w-0">
               <p className={S.label}>{cardLabel}</p>
-              <p className={S.value}>
-                {value}
+              <div className="flex items-baseline gap-1.5 flex-wrap">
+                <span className={S.value}>{value}</span>
                 {showUnit && <span className={S.unit}>{metric.unit}</span>}
-              </p>
+                {metric.key === 'served' && isMounted && stats.todayCount > 0 && (
+                  <span className="text-sm font-bold text-emerald-700 dark:text-emerald-400">
+                    / {stats.todayCount}
+                  </span>
+                )}
+              </div>
 
-              {trend ? (
+              {trend && (
                 <p className={trend.up ? S.trendUp : S.trendDown}>
                   <i className={`bx ${trend.up ? 'bx-up-arrow-alt' : 'bx-down-arrow-alt'}`} />
                   {trend.percent}%
                   <span className={S.trendLabel}>{trendText}</span>
                 </p>
-              ) : (
-                cardSubtitle && <p className={S.subtitle}>{cardSubtitle}</p>
+              )}
+
+              {/* Card-specific analyst ratio and operational health enrichments */}
+              {metric.key === 'todayCount' && isMounted && (
+                <div className={S.ratioBox}>
+                  <div className={S.ratioLabel}>
+                    <span>Served vs. Total:</span>
+                    <span className={S.ratioValue}>
+                      {stats.served} of {stats.todayCount} ({servedPercent}%)
+                    </span>
+                  </div>
+                  <div className={S.progressTrack}>
+                    <div
+                      className={`${S.progressFill} bg-rose-600 dark:bg-rose-400`}
+                      style={{ width: `${Math.min(servedPercent, 100)}%` }}
+                    />
+                  </div>
+                </div>
+              )}
+
+              {metric.key === 'onQueue' && isMounted && (
+                <div className={S.ratioBox}>
+                  <div className={S.ratioLabel}>
+                    <span>Workload Distribution:</span>
+                    <span className="font-mono font-semibold text-content text-[10px]">
+                      {stats.inService} in care
+                    </span>
+                  </div>
+                  <p className="text-[11px] text-content-muted">
+                    {stats.onQueue} waiting in active line
+                  </p>
+                </div>
+              )}
+
+              {metric.key === 'served' && isMounted && (
+                <div className={S.ratioBox}>
+                  <div className={S.ratioLabel}>
+                    <span>Completion Rate:</span>
+                    <span className="font-mono font-bold text-emerald-700 dark:text-emerald-400 text-[11px]">
+                      {servedPercent}%
+                    </span>
+                  </div>
+                  <p className="text-[11px] text-content-muted">
+                    {stats.served} out of {stats.todayCount} completed
+                  </p>
+                </div>
+              )}
+
+              {metric.key === 'avgWait' && isMounted && (
+                <div className={S.ratioBox}>
+                  <div className={S.ratioLabel}>
+                    <span>PHC Target:</span>
+                    <span className="font-mono font-bold text-purple-700 dark:text-purple-300 text-[11px]">
+                      &le; 150 min
+                    </span>
+                  </div>
+                  <p className="text-[11px] text-content-muted">
+                    {cardSubtitle || 'Active queue average'}
+                  </p>
+                </div>
               )}
             </div>
           </div>
