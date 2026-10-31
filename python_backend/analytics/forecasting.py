@@ -1,15 +1,37 @@
 """
 forecasting.py
-Five time-series forecasting algorithms evaluated via backtesting.
-Winner (lowest MAE) produces the next-day patient volume forecast.
+Five time-series forecasting algorithms plus a seasonal-naive baseline
+evaluated via walk-forward (rolling-origin) back-testing.
+The winner (lowest MAE) produces the next-day patient volume forecast.
 
 Algorithms:
-  SMA   — Simple Moving Average          (statistical)
-  WMA   — Weighted Moving Average        (statistical)
-  EMA   — Exponential Moving Average     (statistical)
-  LR    — Linear Regression              (machine learning)
-  ARIMA — AutoRegressive Integrated      (machine learning /
-           Moving Average                 time-series model)
+  NAIVE — Seasonal-Naive (same weekday, one business week ago) (baseline)
+  SMA   — Simple Moving Average                                (statistical)
+  WMA   — Weighted Moving Average                              (statistical)
+  EMA   — Exponential Moving Average                           (statistical)
+  LR    — Linear Regression                                    (machine learning)
+  ARIMA — AutoRegressive Integrated Moving Average             (time-series model)
+
+Method notes:
+  Walk-forward evaluation: each prediction uses only data observed before
+  that date, preventing look-ahead bias.
+
+  MASE (Mean Absolute Scaled Error) is reported alongside MAE.
+  MASE = MAE_model / MAE_naive. Values < 1 mean the model beats the
+  seasonal-naive baseline; values >= 1 mean it does not.
+
+  ARIMA date-gap limitation:
+  PHC operates Monday to Friday only (weekends and public holidays are
+  non-clinic days). The daily volume series has irregular gaps that are
+  NOT reindexed before ARIMA fitting. ARIMA(1,1,1) treats consecutive
+  rows as equally spaced, so a Friday-to-Monday gap is identical to a
+  Tuesday-to-Wednesday step in the model's view. This suppresses the
+  weekly seasonality signal. On the 10-week historical sample currently
+  available (~74 clinic days), this limitation has minimal practical
+  impact because the short window cannot support seasonal ARIMA (SARIMA)
+  with reliable parameter estimation. The limitation is documented as a
+  stated assumption: ARIMA is used as a smoothed autoregressive estimator,
+  not as a seasonal model.
 """
 
 import warnings
@@ -22,8 +44,9 @@ from .constants import WINDOW_SIZE, EMA_ALPHA, ARIMA_REFIT_INTERVAL
 
 # ARIMA order — (p, d, q)
 # p=1 autoregressive, d=1 differencing, q=1 moving average
-# This is the standard starting point for weekly OPD data.
-# Can be tuned once real data is available.
+# Standard starting point for short weekly OPD data.
+# A seasonal ARIMA order would require substantially more history
+# than the current ~10-week sample provides.
 ARIMA_ORDER = (1, 1, 1)
 
 
@@ -96,6 +119,53 @@ def _backtest_arima(volumes: np.ndarray, window_size: int, refit_interval: int =
     return preds
 
 
+def _seasonal_naive_baseline(volumes: np.ndarray, window_size: int) -> list:
+    """
+    Seasonal-naive baseline for walk-forward back-testing.
+
+    For each step i in [window_size, len(volumes)-1], the prediction is
+    the observation from one business week ago (i - 5 positions back in
+    the series). This preserves within-week structure without any model
+    complexity.
+
+    If i - 5 < 0 (not enough history for the seasonal lag), the prediction
+    falls back to the mean of the available history up to step i.
+
+    @param volumes     Ordered daily patient count array.
+    @param window_size Starting index for the evaluation loop.
+    @returns           List of one-step-ahead predictions aligned with actuals[0:].
+    """
+    preds = []
+    seasonal_lag = 5  # one PHC business week (Monday -> next Monday)
+    for i in range(window_size, len(volumes)):
+        lag_idx = i - seasonal_lag
+        if lag_idx >= 0:
+            preds.append(float(volumes[lag_idx]))
+        else:
+            preds.append(float(np.mean(volumes[:i])))
+    return preds
+
+
+def _compute_mase(actuals: list, model_preds: list, naive_preds: list) -> float:
+    """
+    Mean Absolute Scaled Error.
+
+    MASE = MAE_model / MAE_naive.
+    Values < 1 mean the model beats the seasonal-naive baseline.
+    Values >= 1 mean the model does not improve over naive.
+    Returns None when the naive MAE is zero (all predictions identical).
+
+    @param actuals      True observation values.
+    @param model_preds  Model predictions, same length as actuals.
+    @param naive_preds  Seasonal-naive predictions, same length as actuals.
+    @returns            MASE score rounded to 4 decimal places, or None.
+    """
+    naive_mae = mean_absolute_error(actuals, naive_preds)
+    if naive_mae == 0:
+        return None
+    return round(mean_absolute_error(actuals, model_preds) / naive_mae, 4)
+
+
 def evaluate_forecasting_algorithms(
     df          : pd.DataFrame,
     window_size : int   = WINDOW_SIZE,
@@ -123,7 +193,7 @@ def evaluate_forecasting_algorithms(
     weights     = np.arange(1, window_size + 1, dtype=float)
     current_ema = float(np.mean(volumes[:window_size]))
 
-    # SMA / WMA / EMA / LR are cheap — evaluate them per-iteration as before.
+    # SMA / WMA / EMA / LR are cheap — evaluate them per-iteration.
     for i in range(window_size, len(volumes)):
         w           = volumes[i - window_size:i]
         ema         = alpha * volumes[i - 1] + (1 - alpha) * current_ema
@@ -146,21 +216,34 @@ def evaluate_forecasting_algorithms(
     # up with `actuals` one-to-one.
     arima_p = _backtest_arima(volumes, window_size)
 
+    # Seasonal-naive baseline — used as the MASE denominator.
+    # A model with MASE < 1 genuinely outperforms naive prediction.
+    naive_p = _seasonal_naive_baseline(volumes, window_size)
+
+    model_preds = {
+        "SMA"              : sma_p,
+        "WMA"              : wma_p,
+        "EMA"              : ema_p,
+        "Linear Regression": lr_p,
+        "ARIMA"            : arima_p,
+        "Seasonal Naive"   : naive_p,
+    }
+
+    naive_mae_val = mean_absolute_error(actuals, naive_p)
+
     results = {
         name: {
             "MAE" : round(mean_absolute_error(actuals, preds), 4),
             "RMSE": round(float(np.sqrt(mean_squared_error(actuals, preds))), 4),
+            "MASE": _compute_mase(actuals, preds, naive_p),
         }
-        for name, preds in {
-            "SMA"              : sma_p,
-            "WMA"              : wma_p,
-            "EMA"              : ema_p,
-            "Linear Regression": lr_p,
-            "ARIMA"            : arima_p,
-        }.items()
+        for name, preds in model_preds.items()
     }
 
-    best   = min(results, key=lambda k: results[k]["MAE"])
+    # Model selection excludes the naive baseline itself (it is the
+    # denominator, not a candidate winner).
+    candidate_models = {k: v for k, v in results.items() if k != "Seasonal Naive"}
+    best   = min(candidate_models, key=lambda k: candidate_models[k]["MAE"])
     latest = volumes[-window_size:]
 
     forecasts = {
@@ -176,12 +259,26 @@ def evaluate_forecasting_algorithms(
     }
 
     next_day = forecasts[best]
+
+    best_beats_naive = (
+        results[best]["MASE"] is not None
+        and results[best]["MASE"] < 1.0
+    )
+    conclusion_suffix = (
+        f" MASE = {results[best]['MASE']} (beats seasonal-naive baseline)."
+        if best_beats_naive
+        else f" MASE = {results[best]['MASE']} (does not improve over seasonal-naive baseline — "
+             "volume may be policy-capped rather than trend-driven)."
+    )
+
     return {
         "status"                : "Forecast computed",
         "evaluation_metrics"    : results,
+        "naive_mae"             : round(naive_mae_val, 4),
         "algorithmic_conclusion": (
-            f"Based on historical backtesting, {best} yielded the lowest MAE. "
+            f"Based on historical walk-forward backtesting, {best} yielded the lowest MAE. "
             f"Next-day forecast: {int(round(next_day))} patients."
+            + conclusion_suffix
         ),
         "best_algorithm"        : best,
         "next_day_forecast"     : max(0, int(round(next_day))),

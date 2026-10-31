@@ -111,19 +111,33 @@ Presents the empirical patient count and mean stage times across all 12 calendar
 
 ---
 
-## 6. Generated CSV Artifacts & Thesis Usage Map
+## 6. Generated Publication Artifacts & Thesis Usage Map
 
-All generated CSV files are saved in `python_backend/output/`. These files provide raw tabular data ready for inclusion in Chapter 4 tables and appendices:
+All generated CSV summary tables are saved in `python_backend/output/tables/` and all high-resolution visual figures are saved in `python_backend/output/figures/` (at 300 DPI PNG and vector PDF). These files provide verified empirical artifacts ready for immediate inclusion in Chapter 4:
+
+### 6.1 Publication Summary Tables (`output/tables/`)
 
 | Generated File | File Size | Thesis Chapter 4 Usage | Description |
 | :--- | :---: | :--- | :--- |
-| `chapter4_stage_comparison.csv` | ~441 B | Table 4.1: Stage-by-Stage Comparative Summary | Per-stage breakdown of Manual vs. Digital durations, time saved, and percentage reduction. |
-| `chapter4_mm1_metrics.csv` | ~309 B | Table 4.2: Registration Desk Queueing Performance | Closed-form M/M/1 queueing metrics ($\lambda, \mu, \rho, L_q, W_q, W$) during the morning peak arrival window. |
-| `chapter4_compliance_summary.csv` | ~187 B | Table 4.3: OPD Compliance Rate Comparison | Compliance rates and percentage-point improvements for 150-min, 180-min, and 08:00 peak hour targets. |
-| `chapter4_sensitivity_analysis.csv` | ~405 B | Table 4.4: Sensitivity Analysis on Desk Acceleration | Multi-scenario evaluation across 1.0 min, 2.0 min, and 3.0 min kiosk pre-fill reductions. |
-| `chapter4_monthly_breakdown_2024.csv` | ~548 B | Appendix A: 2024 Empirical Monthly Continuity | Month-by-month patient counts and stage durations across all 12 months of 2024. |
-| `chapter4_scenario_a_patient_stats.csv` | ~414 B | Appendix B: Scenario A Descriptive Statistics | Parametric summary (mean, std, min, 25%, median, 75%, max) for all simulated Manual stages. |
-| `chapter4_scenario_b_patient_stats.csv` | ~414 B | Appendix C: Scenario B Descriptive Statistics | Parametric summary (mean, std, min, 25%, median, 75%, max) for all simulated Digital stages. |
+| `table4_1_empirical_baseline.csv` | ~387 B | Table 4.1: Empirical Baseline Descriptive Statistics | Full-year 2024 Grand Mean descriptive statistics across all clinical stages (N = 26,753). |
+| `table4_2_stage_comparison.csv` | ~399 B | Table 4.2: Outpatient Flow Comparative Analysis | Per-stage comparison of Scenario A (Manual) vs Scenario B (Digital), time saved, and % reduction. |
+| `table4_3_mm1_metrics.csv` | ~443 B | Table 4.3: Registration Counter M/M/1 Queue Metrics | Peak morning window (08:00–12:00) queueing metrics ($\lambda, \mu, \rho, L_q, W_q, W$). |
+| `table4_4_compliance_summary.csv` | ~333 B | Table 4.4: Hospital Target Compliance Comparison | Compliance rates and improvements for 150-min target, 180-min ceiling, and 08:00 peak hour. |
+| `table4_5_sensitivity_analysis.csv` | ~294 B | Table 4.5: Sensitivity Analysis Across Kiosk Reductions | Robustness evaluation across 1.0 min, 2.0 min, and 3.0 min kiosk pre-fill reductions. |
+| `table4_6_monthly_continuity_2024.csv` | ~548 B | Table 4.6: 2024 Monthly Continuity Breakdown | Month-by-month patient counts and stage durations across all 12 calendar months of 2024. |
+| `table4_7_inferential_statistics.csv` | ~408 B | Table 4.7: Inferential Hypothesis Testing & Bias Metrics | Paired t-test, Wilcoxon signed-rank test, Cohen's d effect size, and 95% confidence interval. |
+
+### 6.2 Publication Figures (`output/figures/`)
+
+| Generated Figure | Format | Thesis Chapter 4 Figure | Description |
+| :--- | :---: | :--- | :--- |
+| `fig4_1_stage_comparison.png` | PNG / PDF | Figure 4.1: Stage Comparison | Horizontal bar chart contrasting Scenario A vs B across journey stages. |
+| `fig4_2_duration_distribution_kde.png` | PNG / PDF | Figure 4.2: Duration Distribution KDE | Kernel Density Estimation showing leftward shift in patient visit times. |
+| `fig4_3_empirical_cdf_compliance.png` | PNG / PDF | Figure 4.3: Empirical CDF Compliance | Cumulative distribution curves highlighting compliance expansion at 150 min. |
+| `fig4_4_mm1_operating_curve.png` | PNG / PDF | Figure 4.4: M/M/1 Operating Curve | Non-linear queueing curve showing shift away from steep exponential congestion. |
+| `fig4_5_hourly_intake_congestion.png` | PNG / PDF | Figure 4.5: Hourly Intake Congestion | Diurnal arrival pattern showing morning peak arrival pressure (08:00-12:00). |
+| `fig4_6_sensitivity_analysis.png` | PNG / PDF | Figure 4.6: Sensitivity Analysis | Multi-scenario evaluation across 1.0, 2.0, and 3.0 min desk acceleration. |
+| `fig4_7_discrete_event_queue_buildup.png` | PNG / PDF | Figure 4.7: Discrete-Event Queue Buildup | Peak-day queue trajectory contrasting manual buildup vs digital queue control. |
 
 ---
 

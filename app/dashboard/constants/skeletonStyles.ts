@@ -31,11 +31,14 @@ export const DASHBOARD_SKELETON_STYLES = {
 
   /** Timeframe date filter bar skeleton */
   dateFilter: {
-    root: 'flex flex-col sm:flex-row sm:items-center sm:justify-between gap-3 p-3 rounded-2xl border border-line bg-surface shadow-2xs',
+    root: 'flex flex-col md:flex-row md:items-center md:justify-between gap-3 p-2.5 rounded-xl border border-line bg-surface shadow-2xs',
     group: 'flex items-center gap-2 flex-wrap',
     label: 'h-4 w-20 rounded-md bg-surface-muted',
-    pill: 'h-8 w-20 sm:w-24 rounded-xl bg-surface-muted border border-line',
-    badge: 'h-7 w-28 rounded-lg bg-surface-muted border border-line',
+    segmented: 'h-8 w-64 rounded-lg bg-surface-muted border border-line',
+    custom: 'h-8 w-36 rounded-lg bg-surface-muted border border-line',
+    context: 'h-8 w-44 rounded-lg bg-surface-muted border border-line',
+    pill: 'h-8 w-20 sm:w-24 rounded-lg bg-surface-muted border border-line',
+    badge: 'h-8 w-44 rounded-lg bg-surface-muted border border-line',
   },
 
   /** Executive 4-tile KPI metric cards skeleton */

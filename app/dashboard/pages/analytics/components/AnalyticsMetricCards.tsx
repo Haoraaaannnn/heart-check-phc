@@ -55,7 +55,7 @@ export default function AnalyticsMetricCards({ data }: AnalyticsMetricCardsProps
       <div className={`${SC.base} ${SC[status]}`}>
         <div>
           <span className={SC.eyebrow}>{T.systemStatus.label}</span>
-          <p className={SC.value}>{status}</p>
+          <p className={SC.value}>{ANALYTICS_TEXTS.bottleneckTable.levels[status] ?? status}</p>
         </div>
         <div>
           <p className={SC.bottleneck}>
@@ -63,6 +63,12 @@ export default function AnalyticsMetricCards({ data }: AnalyticsMetricCardsProps
             {primary?.stage_label || bottleneck?.bottleneck_stage || T.systemStatus.noneLabel}
           </p>
           {primary?.reason && <p className={SC.reason}>{primary.reason}</p>}
+          <div className="mt-2 pt-2 border-t border-line/40 text-[11px] text-content leading-snug">
+            <span className="font-bold uppercase tracking-wider text-[10px] text-content-subtle block">
+              Operational Direction:
+            </span>
+            <span>{T.systemStatus.directions[status]}</span>
+          </div>
         </div>
       </div>
 

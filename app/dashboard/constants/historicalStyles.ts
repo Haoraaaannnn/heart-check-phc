@@ -28,8 +28,10 @@ export const HISTORICAL_STYLES = {
     title: 'text-lg sm:text-xl font-extrabold text-content leading-tight',
     subtitle: 'text-xs sm:text-sm text-content-muted mt-1 leading-relaxed max-w-2xl',
     actions: 'flex items-center gap-2.5 flex-wrap shrink-0',
+    legendBtn:
+      'inline-flex items-center gap-1.5 px-3 py-1.5 rounded-lg border border-line bg-surface-muted text-xs font-semibold text-content-muted hover:text-content hover:bg-surface transition cursor-pointer select-none',
     collapseBtn:
-      'inline-flex items-center gap-1.5 px-3 py-1.5 rounded-xl border border-line bg-surface-muted text-xs font-semibold text-content-muted hover:text-content hover:bg-surface transition cursor-pointer select-none',
+      'inline-flex items-center gap-1.5 px-3 py-1.5 rounded-lg border border-line bg-surface-muted text-xs font-semibold text-content-muted hover:text-content hover:bg-surface transition cursor-pointer select-none',
   },
 
   /** High-contrast clinical status badges */
@@ -91,9 +93,9 @@ export const HISTORICAL_STYLES = {
     subtitle: 'text-xs text-content-muted mt-0.5',
     controls: 'flex items-center gap-2.5 flex-wrap',
     pillGroup:
-      'flex items-center gap-1.5 p-1 rounded-xl bg-surface-muted border border-line select-none',
+      'flex items-center gap-1.5 p-1 rounded-lg bg-surface-muted border border-line select-none',
     yearPill:
-      'px-3 py-1.5 rounded-lg text-xs font-semibold transition cursor-pointer select-none outline-none',
+      'px-2.5 py-1 rounded-md text-xs font-semibold transition cursor-pointer select-none outline-none',
     yearPillActive: 'bg-rose-600 text-white font-bold shadow-2xs border border-rose-600',
     yearPillIdle:
       'text-content-muted hover:text-content hover:bg-surface border border-transparent',
@@ -125,7 +127,7 @@ export const HISTORICAL_STYLES = {
 
   /** On-demand expand/collapse trigger bar */
   triggerBar: {
-    root: 'flex items-center justify-between gap-4 p-4 rounded-2xl border border-line bg-surface shadow-2xs transition hover:border-rose-300 dark:hover:border-rose-900 cursor-pointer select-none',
+    root: 'flex items-center justify-between gap-4 p-4 rounded-xl border border-line bg-surface shadow-2xs transition hover:border-rose-300 dark:hover:border-rose-900 cursor-pointer select-none',
     left: 'flex items-center gap-3.5 min-w-0',
     iconBadge:
       'text-rose-600 dark:text-rose-400 flex items-center justify-center text-xl shrink-0',
@@ -133,12 +135,29 @@ export const HISTORICAL_STYLES = {
     title: 'text-sm font-extrabold text-content whitespace-nowrap',
     subtitle: 'text-xs text-content-muted whitespace-nowrap hidden sm:inline mt-0.5',
     toggleBtn:
-      'inline-flex items-center gap-1.5 px-3 py-1.5 rounded-xl bg-[#a8071a] hover:bg-[#8e0616] active:scale-95 text-white text-xs font-bold transition shrink-0 cursor-pointer shadow-2xs',
+      'inline-flex items-center gap-1.5 px-3 py-1.5 rounded-lg bg-[#a8071a] hover:bg-[#8e0616] active:scale-95 text-white text-xs font-bold transition shrink-0 cursor-pointer shadow-2xs',
   },
 
   /** Bottom clinical notice strip */
   footer: {
     root: 'flex items-start gap-2.5 px-4 py-3 rounded-xl border border-line bg-surface-muted text-xs text-content-muted leading-relaxed',
     icon: 'text-base text-rose-600 dark:text-rose-400 shrink-0 mt-0.5',
+  },
+
+  /** System status legend & directive panel */
+  legendPanel: {
+    root: 'rounded-xl border border-line bg-surface-muted p-4 sm:p-5 flex flex-col gap-3.5 transition-all shadow-2xs',
+    header: 'flex items-center justify-between gap-3 border-b border-line pb-3',
+    title: 'text-xs font-bold uppercase tracking-wider text-content flex items-center gap-1.5',
+    subtitle: 'text-[11px] text-content-muted mt-0.5',
+    grid: 'grid grid-cols-1 md:grid-cols-3 gap-3.5',
+    card: 'flex flex-col gap-2 p-3.5 rounded-lg border border-line bg-surface shadow-2xs',
+    cardHeader: 'flex items-center justify-between gap-2',
+    badge:
+      'inline-flex items-center gap-1.5 px-2.5 py-0.5 rounded text-[11px] font-bold uppercase tracking-wider select-none shrink-0',
+    criteriaWrap: 'flex items-center gap-1.5 text-[11px] font-mono font-semibold text-content-muted',
+    directionBlock: 'flex flex-col gap-1 border-t border-line/60 pt-2 mt-auto',
+    directionLabel: 'text-[10px] font-bold uppercase tracking-wider text-content-subtle',
+    direction: 'text-xs text-content leading-relaxed',
   },
 } as const;

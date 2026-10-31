@@ -17,7 +17,7 @@ export const NOTIFICATION_STYLES = {
     iconButton:
       'relative w-10 h-10 flex items-center justify-center rounded-xl bg-white dark:bg-[#141414] text-slate-600 dark:text-[#a3a3a3] hover:bg-slate-100 dark:hover:bg-[#242424] transition shadow-2xs border border-slate-200 dark:border-[#2e2e2e] cursor-pointer',
     pillButton:
-      'relative inline-flex items-center gap-1.5 px-3 py-1.5 rounded-xl text-xs font-bold bg-white hover:bg-slate-50 text-slate-700 dark:bg-[#141414] dark:hover:bg-[#242424] dark:text-[#f5f5f5] border border-slate-200 dark:border-[#2e2e2e] shadow-2xs transition-all cursor-pointer',
+      'relative inline-flex items-center gap-1.5 px-3 py-1.5 rounded-lg text-xs font-bold bg-white hover:bg-slate-50 text-slate-700 dark:bg-[#141414] dark:hover:bg-[#242424] dark:text-[#f5f5f5] border border-slate-200 dark:border-[#2e2e2e] shadow-2xs transition-all cursor-pointer',
     unreadBadge:
       'absolute -top-1 -right-1 inline-flex items-center justify-center px-1.5 py-0.5 text-[10px] font-bold leading-none text-white bg-rose-600 rounded-md shadow-xs',
   },

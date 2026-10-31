@@ -29,7 +29,7 @@ export const DASHBOARD_NAV_TEXTS = {
   /** Sidebar route link labels */
   links: {
     dashboard: 'Dashboard Overview',
-    cubicles: 'Live Cubicles',
+    cubicles: 'Cubicles',
     patients: 'Patient Flow & Records',
     import: 'Import Data',
     export: 'Export Data',
@@ -55,7 +55,7 @@ export const DASHBOARD_NAV_TEXTS = {
     },
     pages: {
       dashboard: 'Dashboard',
-      cubicles: 'Live Cubicles',
+      cubicles: 'Cubicles',
       patients: 'Patient Records',
       import: 'Import Data',
       export: 'Export Data',

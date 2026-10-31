@@ -108,6 +108,12 @@ export const ANALYTICS_TEXTS = {
       label: 'System Status',
       bottleneckPrefix: 'Bottleneck:',
       noneLabel: 'None',
+      directions: {
+        Normal: 'Optimal throughput. Maintain standard cubicle allocation.',
+        Elevated: 'Moderate queue buildup. Monitor intake and alert standby consultation staff.',
+        Overwhelmed: 'Capacity threshold exceeded (>60m avg wait). Mobilize relief staff immediately.',
+        'No Data': 'Awaiting active patient check-in records.',
+      },
     },
     avgPatientTime: {
       label: 'Avg. Total Patient Time',
@@ -139,9 +145,17 @@ export const ANALYTICS_TEXTS = {
       reason: 'Reason',
     },
     levels: {
-      Normal: 'Normal',
-      Elevated: 'Elevated',
-      Overwhelmed: 'Overwhelmed',
+      Normal: 'Optimal Flow',
+      Elevated: 'Elevated Delay',
+      Overwhelmed: 'Capacity Threshold Exceeded',
+      'No Data': 'No Data',
+    },
+  },
+  bottleneckStages: {
+    levels: {
+      Normal: 'Optimal Flow',
+      Elevated: 'Elevated Delay',
+      Overwhelmed: 'Capacity Threshold Exceeded',
       'No Data': 'No Data',
     },
   },
@@ -159,7 +173,7 @@ export const ANALYTICS_TEXTS = {
     activeBadge: 'Drill-Down Active',
     historicalBadge: 'Historical Data: Registration to With Doctor',
     historicalNotice: 'Physical kiosk ticketing was not deployed in historical records. Displaying Registration, With Doctor, and Carryout stages.',
-    liveBadge: 'Live Flow: Kiosk to With Doctor',
+    liveBadge: 'Queue Flow: Kiosk to With Doctor',
     kioskNotAvailable: 'N/A (No Kiosk in Historical Data)',
     modes: {
       volume: 'Patients by Stage',

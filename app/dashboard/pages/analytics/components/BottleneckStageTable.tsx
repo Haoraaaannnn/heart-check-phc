@@ -49,6 +49,19 @@ export default function BottleneckStageTable({ stages }: BottleneckStageTablePro
 
   return (
     <DashboardCard title={T.title} subtitle={T.subtitle} icon="bx-git-commit">
+      {/* Status Threshold Key & Legend */}
+      <div className="flex items-center gap-3 px-4 py-2 border-b border-line bg-surface-muted/60 text-xs text-content-muted flex-wrap">
+        <span className="font-bold text-[11px] uppercase tracking-wider text-content">Status Threshold Key:</span>
+        <span className="flex items-center gap-1.5 font-medium">
+          <span className="w-2 h-2 rounded-full bg-emerald-500" /> Optimal Flow (&le; 30m)
+        </span>
+        <span className="flex items-center gap-1.5 font-medium">
+          <span className="w-2 h-2 rounded-full bg-amber-500" /> Elevated Delay (30–60m)
+        </span>
+        <span className="flex items-center gap-1.5 font-medium">
+          <span className="w-2 h-2 rounded-full bg-rose-500" /> Capacity Threshold Exceeded (&gt; 60m)
+        </span>
+      </div>
       <div className={S.wrap}>
         <table className={S.table}>
           <thead>
@@ -77,7 +90,7 @@ export default function BottleneckStageTable({ stages }: BottleneckStageTablePro
                   </td>
                   <td className={`${S.td} whitespace-nowrap`}>
                     <span className={`${B.base} ${badgeStyle}`}>
-                      {stage.level}
+                      {T.levels[stage.level] ?? stage.level}
                     </span>
                   </td>
                   <td className={`${S.td} max-w-md leading-relaxed text-content-muted`}>

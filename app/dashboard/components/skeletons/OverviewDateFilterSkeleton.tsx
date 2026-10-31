@@ -21,12 +21,10 @@ export function OverviewDateFilterSkeleton(): React.ReactElement {
     <div className={S.root}>
       <div className={S.group}>
         <div className={S.label} />
-        <div className={S.pill} />
-        <div className={S.pill} />
-        <div className={S.pill} />
-        <div className={S.pill} />
+        <div className={S.segmented} />
+        <div className={S.custom} />
       </div>
-      <div className={S.badge} />
+      <div className={S.context} />
     </div>
   );
 }
