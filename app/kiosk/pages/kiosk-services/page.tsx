@@ -34,8 +34,13 @@ export default async function KioskPage({ searchParams }: KioskPageProps) {
   const supabase = await createClient();
   const { type } = await searchParams;
 
-  // Retrieve service catalog from facility cache (with automatic 3-minute TTL)
-  const services = await getCachedServices(supabase);
+  // Keep cached catalog loading and a retryable error when the initial cache read fails.
+  let services = await getCachedServices(supabase);
+  if (services.length === 0) {
+    const { data, error } = await supabase.from("services").select("*").order("display_order", { ascending: true });
+    if (error) throw new Error('Unable to load services. Please try again.');
+    services = data ?? [];
+  }
 
   // Keep only the services this patient type is allowed to see.
   const visibleServices =

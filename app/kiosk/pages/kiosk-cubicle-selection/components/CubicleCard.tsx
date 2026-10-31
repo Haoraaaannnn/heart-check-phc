@@ -1,3 +1,4 @@
+/** @fileoverview Physician-name cards retaining internal cubicle preferences for queue routing. */
 "use client";
 
 import { CubicleSelectorType } from "@/app/kiosk/pages/kiosk-cubicle-selection/types/CubicleSelectorType";
@@ -7,7 +8,7 @@ import {
     CubicleCardClasses,
     CubicleCardIcons,
 } from "@/app/kiosk/pages/kiosk-cubicle-selection/constants/cubicleCard";
-import { CubicleCardTexts } from "@/app/kiosk/pages/kiosk-cubicle-selection/constants/cubicleCardTexts";
+import { doctorSelectionLabel, matchingDoctorCubicles } from '@/app/kiosk/lib/doctorSelection';
 
 /** Props for {@link CubicleCard}. */
 interface CubicleCardProps {
@@ -22,14 +23,14 @@ interface CubicleCardProps {
 }
 
 /**
- * Tappable card button representing a cubicle choice for Consultation.
+ * Tappable physician option for a service with picker selection enabled in Superadmin.
  *
  * @remarks
- * Filters linked cubicles to match `category === "Consultation"` and the selected
- * `subcategory`. When tapped, navigates to `/kiosk/pages/sms-input` with the preferred
+ * The server supplies stations for the configured service; the card preserves the selected
+ * `subcategory`. When tapped, it navigates to `/kiosk/pages/sms-input` with the preferred
  * cubicle numbers encoded in `preferredCubicleNums`.
  *
- * Displays the cubicle designation along with the active physician assigned to that station
+ * Displays only the active physician assigned to that station
  * (with automatic `Dr.` prefixing and full text-wrapping compliance).
  *
  * @param props - Component props.
@@ -44,31 +45,9 @@ export default function CubicleCard({
     const navigate = useKioskNavigate();
 
     // Filter linked cubicles matching category and chosen subcategory
-    const matchingCubicles = (cubicle.cubicles ?? [])
-        .map((link) => link.cubicle)
-        .filter(
-            (actualCubicle) =>
-                actualCubicle &&
-                actualCubicle.category === "Consultation" &&
-                (!subcategory || actualCubicle.subcategory === subcategory)
-        );
-
-    // Extract doctor name from matching cubicles, falling back to top-level selector doctor
-    const matchingDoctorNames = Array.from(
-        new Set(matchingCubicles.map((c) => c?.doctorName).filter(Boolean))
-    ) as string[];
-
-    const rawDoctorName =
-        matchingDoctorNames.length > 0
-            ? matchingDoctorNames.join(", ")
-            : cubicle.doctorName || null;
-
-    // Format doctor name with "Dr." prefix if not already present
-    const formattedDoctorName = rawDoctorName
-        ? /^dr\.?\s+/i.test(rawDoctorName.trim())
-            ? rawDoctorName.trim()
-            : `${CubicleCardTexts.doctorPrefix} ${rawDoctorName.trim()}`
-        : null;
+    const matchingCubicles = matchingDoctorCubicles({ selector: cubicle, subcategory });
+    const formattedDoctorName = doctorSelectionLabel({ selector: cubicle, subcategory });
+    if (!formattedDoctorName || !matchingCubicles.length) return null;
 
     /**
      * Resolves matching cubicle numbers and pushes to the SMS input route.
@@ -77,7 +56,7 @@ export default function CubicleCard({
         const params = new URLSearchParams();
 
         // Extract cubicle numbers matching category and chosen subcategory
-        const cubicleNums = matchingCubicles.map((actualCubicle) => actualCubicle!.cubicleNum);
+        const cubicleNums = matchingCubicles.map(actualCubicle => actualCubicle.cubicleNum);
 
         if (cubicleNums.length === 0) return;
 
@@ -117,11 +96,7 @@ export default function CubicleCard({
             {/* Labels. min-w-0 lets the text wrap instead of pushing the arrow out. */}
             <div style={CubicleCardStyle.labelWrapper}>
                 <span style={CubicleCardStyle.title}>
-                    {cubicle.cubicle_name}
-                </span>
-                <div style={CubicleCardStyle.divider} />
-                <span style={CubicleCardStyle.subtitle}>
-                    {formattedDoctorName || CubicleCardTexts.unassignedDoctor}
+                    {formattedDoctorName}
                 </span>
             </div>
 

@@ -1,4 +1,5 @@
 "use client";
+import { requiresDoctorSelection } from '@/app/kiosk/lib/doctorSelection';
 
 import { useKioskNavigate } from "@/app/kiosk/hooks/useKioskNavigate";
 import { getTimestamp } from "@/lib/logger";
@@ -72,7 +73,7 @@ export default function ConfirmationActions({
         }
 
         // 2. If service requires physical doctor cubicle selection directly, route to cubicle selection
-        if (service.requires_cubicle) {
+        if (requiresDoctorSelection(service)) {
             console.log(
                 `${getTimestamp()} [CONFIRMATION ACCEPTED] Cubicle service (${service.label_en}) - Redirecting to cubicle selection - ServiceId: ${service.id}`
             );

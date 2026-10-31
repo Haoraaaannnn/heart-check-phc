@@ -25,17 +25,18 @@ function clinicalApi({ role = 'nurse', cubicleIds = [10], services = [], histori
     user_cubicles: cubicleIds.map(cubicle_id => ({ cubicle_id })), user_services: services.map(service => ({ service })),
     user_rooms: [], doctors: [], cubicle: [{ id: 10, cubicleNum: patient.cubicleNum, category: 'Consultation' }] };
   const db = { from: table => {
-    const filters = []; let fields;
+    const filters = []; const headers = {}; let fields;
     const result = single => {
       let rows = tables[table] ?? [];
       rows = rows.filter(row => filters.every(([key, value]) => key === 'auth_id' || key === 'user_id' || row[key] === value));
       if (fields) {
         if (conflict) rows = [];
-        for (const row of rows) { writes.push({ fields, filters }); Object.assign(row, fields); }
+        for (const row of rows) { writes.push({ fields, filters, headers }); Object.assign(row, fields); }
       }
       return { data: single ? rows[0] ?? null : rows, error: null };
     };
     return { select() { return this; }, eq(key, value) { filters.push([key, value]); return this; },
+      setHeader(key, value) { headers[key] = value; return this; },
       update(value) { fields = value; return this; }, maybeSingle: async () => result(true),
       then(resolve) { return Promise.resolve(result(false)).then(resolve); } };
   } };
@@ -57,6 +58,7 @@ test('A synthetic patient completes Assigned -> With Doctor -> Carryout -> Done 
   assert.ok(harness.patient.consult_start && harness.patient.consult_end && harness.patient.carryout_end);
   assert.equal((await harness.send({ status: 'With Doctor' }, 'Done')).status, 409);
   assert.ok(harness.writes.every(write => write.filters.some(([key, value]) => key === 'is_historical' && value === false)));
+  assert.ok(harness.writes.every(write => write.headers['x-hc-actor-id'] === 'staff'));
 });
 
 test('Nurse back actions clear only the matching stage timestamps', async () => {

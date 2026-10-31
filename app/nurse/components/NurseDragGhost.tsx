@@ -15,6 +15,7 @@ import { Patient } from '@/types/Types';
 import { DragPoint } from '@/app/nurse/hooks/dragUtils';
 import { ClinicalStage } from '@/app/nurse/types/nurse';
 import { nurseTexts } from '@/app/nurse/constants/nurseTexts';
+import { staffPageScale } from '@/lib/displayPreferences';
 
 /**
  * Props for the NurseDragGhost component.
@@ -61,8 +62,8 @@ export function NurseDragGhost({
     <div
       className="phc-ghost pointer-events-none fixed z-99999 select-none"
       style={{
-        left: `${point.x}px`,
-        top: `${point.y}px`,
+        left: `${point.x / staffPageScale()}px`,
+        top: `${point.y / staffPageScale()}px`,
         transform: 'translate(-50%, -50%)',
       }}
     >
@@ -78,12 +79,12 @@ export function NurseDragGhost({
             {patient.patientNum}
           </div>
           <div className="min-w-0">
-            <p className="text-xs font-bold text-gray-800 dark:text-[#f5f5f5] truncate">
+            <p className="text-xs font-bold text-gray-800 dark:text-[#f5f5f5] whitespace-normal break-words">
               {patient.service}
               {patient.subcategory ? ` · ${patient.subcategory}` : ''}
             </p>
             {originLabel && (
-              <p className="text-[10px] text-gray-500 dark:text-[#a3a3a3] font-medium truncate">
+              <p className="text-[10px] text-gray-500 dark:text-[#a3a3a3] font-medium whitespace-normal break-words">
                 {originLabel}
               </p>
             )}

@@ -289,6 +289,9 @@ export function usePatientData(pendingRef?: React.MutableRefObject<Patient[]>) {
     }
 
     for (const p of needsReg) {
+      const currentCounter = occupiedCounters.find(counter => counter.counter_number === p.counter);
+      // A staffed counter on break retains its existing intake queue; only new assignments are blocked.
+      if (currentCounter?.active && currentCounter.occupied && currentCounter.on_break) continue;
       const eligibleCounters = filterEligibleCounters(occupiedCounters, p.service);
       const isCurrentEligible = p.counter != null && eligibleCounters.some(c => c.counter_number === p.counter);
 

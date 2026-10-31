@@ -16,11 +16,14 @@ import { nurseTexts } from '@/app/nurse/constants/nurseTexts';
 import { STAGE_CONFIGS } from '@/app/nurse/constants/nurse';
 import { StageColumn } from '@/app/nurse/components/StageColumn';
 import { NursePatientCard } from '@/app/nurse/components/NursePatientCard';
+import type { NurseStationContext } from '@/app/nurse/lib/stationView';
 
 /**
  * Props for the AssignedSection component.
  */
 export interface AssignedSectionProps {
+  /** Physician, room and read-only status keyed by cubicle. */
+  stationContext?: Record<string, NurseStationContext>;
   /** Roster of waiting patients assigned to cubicles. */
   patients: Patient[];
   /** ID of patient currently being called by TTS, or null. */
@@ -50,6 +53,7 @@ export interface AssignedSectionProps {
  * @returns The rendered Assigned section component.
  */
 export function AssignedSection({
+  stationContext,
   patients,
   speakingId = null,
   selectedPatientId,
@@ -76,6 +80,8 @@ export function AssignedSection({
         <NursePatientCard
           key={patient.id}
           patient={patient}
+          stationContext={stationContext?.[patient.cubicleNum ?? '']}
+          readOnly={stationContext ? stationContext[patient.cubicleNum ?? '']?.readOnly ?? true : false}
           stage="assigned"
           speakingId={speakingId}
           isSelected={selectedPatientId === patient.id}

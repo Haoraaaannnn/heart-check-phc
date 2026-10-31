@@ -4,6 +4,7 @@
 import { useRouter } from "next/navigation";
 import { flushSync } from "react-dom";
 import { useKioskLoading } from "@/app/kiosk/context/KioskLoadingContext";
+import { kioskRouteKey } from '@/app/kiosk/components/KioskRouteChangeIndicator';
 
 /**
  * Drop-in replacement for `router.push()` on kiosk pages.
@@ -43,6 +44,9 @@ export function useKioskNavigate() {
     const { showLoading } = useKioskLoading();
 
     return (href: string) => {
+        const destination = new URL(href, window.location.href);
+        if (destination.origin === window.location.origin && kioskRouteKey(destination.pathname, destination.search)
+            === kioskRouteKey(window.location.pathname, window.location.search)) return;
         flushSync(() => {
             showLoading();
         });

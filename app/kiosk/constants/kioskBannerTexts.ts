@@ -40,11 +40,11 @@ export const sharedKioskBannerTexts = {
     },
     cubicle: {
         bannerTitle: KIOSK_DEFAULT_BANNER_TITLE,
-        bannerSubtitle: "Pumili at pindutin ang cubicle na naangkop sa inyo:",
+        bannerSubtitle: "Pumili at pindutin ang pangalan ng inyong doktor:",
         headerTitle: KIOSK_DEFAULT_BANNER_TITLE,
-        headerSubtitle: "Pumili at pindutin ang cubicle na naangkop sa inyo:",
+        headerSubtitle: "Pumili at pindutin ang pangalan ng inyong doktor:",
         title: KIOSK_DEFAULT_BANNER_TITLE,
-        subtitle: "Pumili at pindutin ang cubicle na naangkop sa inyo:",
+        subtitle: "Pumili at pindutin ang pangalan ng inyong doktor:",
     },
     sms: {
         bannerTitle: "Ilagay ang Mobile Number",

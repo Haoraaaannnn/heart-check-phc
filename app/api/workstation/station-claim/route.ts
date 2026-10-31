@@ -272,9 +272,10 @@ export async function POST(request: Request) {
 
     // Automatically trigger queue balance/equal distribution across open counters serving these services
     try {
-      await equallyDistributeCounterQueues({ targetServices: cleanServices });
-    } catch (distErr) {
-      console.warn('Auto-distribution after counter claim non-fatal error:', distErr);
+      const distribution = await equallyDistributeCounterQueues({ actorAuthId: guard.user.id, targetServices: cleanServices });
+      if (!distribution.ok) console.warn('Counter claimed; queue distribution needs a manual retry.');
+    } catch {
+      console.warn('Counter claimed; queue distribution needs a manual retry.');
     }
 
     return NextResponse.json({

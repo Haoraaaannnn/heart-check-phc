@@ -119,6 +119,7 @@ function removalRoute({ authorized = true, role = 'staff', row = ticket } = {}) 
   const admin = { from(table) {
     const filters = []; let fields;
     return { select() { return this; }, update(value) { fields = value; writes.push(value); return this; },
+      setHeader(key, value) { assert.equal(key, 'x-hc-actor-id'); assert.equal(value, 'synthetic-user'); return this; },
       eq(key, value) { filters.push(item => item[key] === value); return this; },
       is(key, value) { filters.push(item => (item[key] ?? null) === value); return this; },
       in(key, values) { filters.push(item => values.includes(item[key])); return this; },

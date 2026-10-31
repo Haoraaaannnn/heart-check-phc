@@ -21,10 +21,11 @@ export default async function KioskNewOldSelectionPage() {
     const supabase = await createClient();
 
     // Query categories in the order defined by administrators.
-    const { data: patientTypes } = await supabase
+    const { data: patientTypes, error } = await supabase
         .from("patient_category")
         .select("*")
         .order("order", { ascending: true });
+    if (error) throw new Error('Unable to load patient categories. Please try again.');
 
     return (
         <div className={PatientTypeCardsClasses.grid}>

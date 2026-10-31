@@ -333,6 +333,7 @@ export function useMonitorData(category: string, subcategory: string | null, cat
       .select('*')
       .in('service', serviceFilter)
       .in('status', ['On Progress', 'Waiting'])
+      .eq('is_historical', false)
       .not('counter', 'is', null)
       .is('reg_end', null)
       .gte('created_at', today.toISOString())

@@ -6,6 +6,7 @@ import "@/app/globals.css";
 import "boxicons/css/boxicons.min.css";
 import { ThemeProvider } from "@/app/provider";
 import { StaffSessionProvider } from '@/components/auth/StaffSessionProvider';
+import { DisplayPreferencesProvider } from '@/components/display/DisplayPreferencesProvider';
 
 
 const geistSans = Geist({
@@ -33,7 +34,7 @@ export default function RootLayout({
     <html lang="en" className={`${tiltWarp.variable} ${Baloo.variable}`} suppressHydrationWarning>
       <body className={`${geistSans.variable} ${geistMono.variable} antialiased bg-gray-50 dark:bg-[#0d0d0d] dark:text-[#f5f5f5] transition-colors duration-300`}>
         <ThemeProvider>          
-          <StaffSessionProvider>{children}</StaffSessionProvider>
+          <DisplayPreferencesProvider><StaffSessionProvider>{children}</StaffSessionProvider></DisplayPreferencesProvider>
         </ThemeProvider>
       </body>
     </html>

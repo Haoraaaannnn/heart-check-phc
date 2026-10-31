@@ -15,44 +15,29 @@ import { NextResponse } from 'next/server';
 import { requireUser } from '@/lib/supabase/authGuard';
 import { equallyDistributeCounterQueues } from '@/lib/supabase/queueDistribution';
 
-/** Authorized staff roles. */
-const AUTHORIZED_ROLES = new Set([
-  'superadmin',
-  'admin',
-  'registration',
-  'nurse',
-  'doctor',
-  'staff',
-]);
-
 /** Response headers disabling caching. */
 const NO_CACHE_HEADERS = { 'Cache-Control': 'no-store, no-cache, must-revalidate' };
 
-interface AutoSortRequestBody {
-  service?: string;
-}
-
+/** @returns Acknowledged sorting only after database-backed account and service authorization. */
 export async function POST(request: Request) {
   const guard = await requireUser(request);
   if (!guard.authorized) return guard.response;
 
-  // Verify staff role
-  const role = guard.user.user_metadata?.role || guard.user.role || '';
-  if (role && !AUTHORIZED_ROLES.has(role)) {
-    return NextResponse.json({ error: 'Staff authorization required.' }, { status: 403 });
+  const body: unknown = await request.json().catch(() => null);
+  const service = typeof body === 'object' && body !== null && 'service' in body ? body.service : undefined;
+  if (service !== undefined && (typeof service !== 'string' || !service.trim() || service.length > 128)) {
+    return NextResponse.json({ error: 'A valid service is required.' }, { status: 400 });
   }
-
-  const body = (await request.json().catch(() => ({}))) as AutoSortRequestBody;
-  const targetServices = body.service && typeof body.service === 'string' && body.service.trim().length > 0
-    ? [body.service.trim()]
+  const targetServices = typeof service === 'string'
+    ? [service.trim()]
     : undefined;
 
-  const result = await equallyDistributeCounterQueues({ targetServices });
+  const result = await equallyDistributeCounterQueues({ actorAuthId: guard.user.id, targetServices });
 
   if (!result.ok) {
     return NextResponse.json(
       { error: result.error || 'Failed to auto-sort counter queues.' },
-      { status: 500, headers: NO_CACHE_HEADERS }
+      { status: result.status, headers: NO_CACHE_HEADERS }
     );
   }
 

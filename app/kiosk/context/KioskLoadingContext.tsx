@@ -53,7 +53,7 @@ export function KioskLoadingProvider({
     const [message, setMessage] = useState<string>(DEFAULT_MESSAGE);
 
     const showLoading = useCallback((nextMessage?: string) => {
-        if (nextMessage) setMessage(nextMessage);
+        setMessage(nextMessage || DEFAULT_MESSAGE);
         setIsLoading(true);
     }, []);
 

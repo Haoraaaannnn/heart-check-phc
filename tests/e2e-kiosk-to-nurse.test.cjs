@@ -143,7 +143,8 @@ function createClinicDatabase() {
           expires_at: new Date(Date.now() + 90000).toISOString(),
         };
         state.monitor_calls.push(call);
-        return Promise.resolve({ data: true, error: null });
+        return { setHeader(key, value) { assert.equal(key, 'x-hc-actor-id'); assert.equal(value, payload.p_actor_id); return this; },
+          then(resolve, reject) { return Promise.resolve({ data: true, error: null }).then(resolve, reject); } };
       }
 
       return Promise.resolve({ data: null, error: new Error(`Unknown RPC ${name}`) });
@@ -153,6 +154,7 @@ function createClinicDatabase() {
       let updateFields = null;
 
       const query = {
+        setHeader(key, value) { assert.equal(key, 'x-hc-actor-id'); assert.equal(typeof value, 'string'); return this; },
         select() { return this; },
         eq(col, val) { filters.push(row => row[col] === val); return this; },
         neq(col, val) { filters.push(row => row[col] !== val); return this; },

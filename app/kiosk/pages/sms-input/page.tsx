@@ -37,14 +37,10 @@ export default async function SMSPage({ searchParams }: SMSPageProps) {
     let service = services.find((s) => s.id === targetId) || null;
 
     if (!service && targetId > 0) {
-        const { data } = await supabase
-            .from("services")
-            .select("*")
-            .eq("id", targetId)
-            .single();
+        const { data, error } = await supabase.from("services").select("*").eq("id", targetId).single();
+        if (error) throw new Error('Unable to load the selected service. Please try again.');
         service = data;
     }
-
     if (!service) {
         notFound();
     }

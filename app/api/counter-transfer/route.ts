@@ -23,7 +23,7 @@ export async function POST(request: Request) {
   }
   const { data, error } = await supabaseAdmin.rpc('move_registration_ticket', {
     caller_auth_id: guard.user.id, patient_id: body.patientId, source_counter: body.sourceCounter, destination_counter: body.targetCounter,
-  });
+  }).setHeader('x-hc-actor-id', guard.user.id);
   if (error || data !== true) return NextResponse.json({ error: 'Transfer rejected. Refresh and choose an open, staffed counter serving this service.' }, { status: 409 });
   return NextResponse.json({ success: true }, { headers: { 'Cache-Control': 'no-store' } });
 }

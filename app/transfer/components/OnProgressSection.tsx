@@ -16,6 +16,7 @@
 'use client';
 
 import React from 'react';
+import { PatientHistoryButton } from '@/components/patients/PatientHistoryButton';
 import { Patient } from '@/types/Types';
 import { ElapsedTimer } from '@/app/transfer/components/ElapsedTimer';
 import { transferTexts } from '@/constants/texts/transferTexts';
@@ -223,6 +224,7 @@ export function OnProgressSection({
 
                 {/* Right Action Buttons */}
                 <div className="flex items-center gap-1.5 shrink-0">
+                  <PatientHistoryButton patientId={p.id} ticket={p.patientNum} />
                   <ElapsedTimer
                     startedAt={p.progress_started_at}
                     warnAfterSeconds={warnAfterSeconds}

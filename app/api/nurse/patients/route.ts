@@ -21,7 +21,7 @@ import { requireUser } from '@/lib/supabase/authGuard';
 import { Patient } from '@/types/Types';
 import { handleNurseTransition } from './transition';
 import { manilaDayRange } from '@/utils/manilaDayRange';
-import { getCachedServices, getCachedCubicles } from '@/lib/cache/facilityMetadataCache';
+import { isOpdScreeningService } from '@/app/nurse/lib/stationView';
 
 const supabaseAdmin = createClient(
   process.env.NEXT_PUBLIC_SUPABASE_URL!,
@@ -29,6 +29,8 @@ const supabaseAdmin = createClient(
 );
 
 const ALLOWED_ROLES = ['nurse', 'staff', 'doctor', 'admin', 'superadmin'];
+/** Shared OPD Screening viewing exposes operational numbers and timings, excluding names and contact details. */
+const QUEUE_VIEW_FIELDS = 'id,patientNum,status,cubicleNum,service,subcategory,created_at,updated_at,reg_start,reg_end,consult_start,consult_end,carryout_start,carryout_end,called_at,queue_position,progress_started_at,cubicle_top_started_at,is_historical';
 
 /**
  * GET: Retrieves today's active and completed patients for the authenticated nurse.
@@ -70,31 +72,36 @@ export async function GET(request: Request) {
     return NextResponse.json({ error: 'Access denied: clinical nurse workstation role required.' }, { status: 403 });
   }
 
-  const isSupervisor = user.role.toLowerCase() === 'superadmin' || user.role.toLowerCase() === 'admin';
+  const requestedScope = new URL(request.url).searchParams.get('scope');
+  if (requestedScope && requestedScope !== 'opd-screening') {
+    return NextResponse.json({ error: 'Only owned cubicles or the OPD Screening service view are supported.' }, { status: 400 });
+  }
+  const showAllScreening = requestedScope === 'opd-screening';
 
   // Discover user assignments and facility metadata concurrently
   const [
     { data: links, error: linksError },
-    { data: userServices, error: servicesError },
-    allServices,
-    allCubicles,
+    { data: allServices, error: metadataError },
+    { data: allCubicles, error: cubiclesError },
+    { data: doctors, error: doctorsError },
   ] = await Promise.all([
     supabaseAdmin.from('user_cubicles').select('cubicle_id').eq('user_id', user.id),
-    supabaseAdmin.from('user_services').select('service').eq('user_id', user.id),
-    getCachedServices(supabaseAdmin),
-    getCachedCubicles(supabaseAdmin),
+    supabaseAdmin.from('services').select('label_en, requires_nurse, requires_registration, display_order').order('display_order', { ascending: true }),
+    supabaseAdmin.from('cubicle').select('id, cubicleNum, category, room, subcategory, doctorId').order('room').order('cubicleNum'),
+    supabaseAdmin.from('doctors').select('id,full_name,auth_id'),
   ]);
 
-  if (linksError || servicesError) {
+  if (linksError || metadataError || cubiclesError || doctorsError) {
     return NextResponse.json({ error: 'Unable to load Doctors Station assignments. Please retry.' }, { status: 503 });
   }
 
-  const assignedServiceNames = (userServices ?? []).map((s) => s.service).filter(Boolean);
   const cubicleIds = (links ?? []).map((l) => l.cubicle_id).filter(Boolean);
-  const activeNurseServices = (allServices ?? [])
-    .filter((s) => s.requires_nurse !== false)
-    .map((s) => s.label_en)
-    .filter(Boolean);
+  const ownedDoctorIds = new Set((doctors ?? []).filter(doctor => doctor.auth_id === guard.user.id).map(doctor => doctor.id));
+  const doctorNames = new Map((doctors ?? []).map(doctor => [doctor.id, doctor.full_name]));
+  const stationDirectory = (allCubicles ?? []).map(station => {
+    const name: unknown = doctorNames.get(station.doctorId);
+    return { ...station, doctorName: typeof name === 'string' ? name : null };
+  });
 
   const regRequiredServices = new Set(
     (allServices ?? [])
@@ -102,37 +109,29 @@ export async function GET(request: Request) {
       .map((s) => s.label_en.trim().toLowerCase())
   );
 
-  // Filter cubicles applicable to this nurse (strictly enforce 1-to-1 cubicle claim)
-  const hasClaimedCubicle = cubicleIds.length > 0;
-  const cubicles = (allCubicles ?? []).filter((c) => {
-    if (hasClaimedCubicle) {
-      return cubicleIds.includes(c.id);
-    }
-    return isSupervisor || assignedServiceNames.includes(c.category);
-  });
+  // Supervisory permissions do not implicitly turn an owned-station view into a global view.
+  const cubicles = stationDirectory.filter(station => cubicleIds.includes(station.id) || ownedDoctorIds.has(station.doctorId));
+  const screeningServices = [...new Set(cubicles.filter(station => isOpdScreeningService(station.category)).map(station => station.category))];
+  if (showAllScreening && screeningServices.length === 0) {
+    return NextResponse.json({ error: 'The shared patient view is available only for assigned OPD Screening stations.' }, { status: 403 });
+  }
+  const hasClaimedCubicle = cubicles.length > 0;
   const cubicleNums = cubicles.map((c) => c.cubicleNum).filter(Boolean);
   const cubicleCategories = Array.from(new Set(cubicles.map((c) => c.category).filter(Boolean)));
 
-  // Combine explicit user_services with categories of assigned cubicles
-  const combinedServices = Array.from(
-    new Set([
-      ...assignedServiceNames,
-      ...cubicleCategories,
-      ...(isSupervisor && assignedServiceNames.length === 0 && cubicleIds.length === 0 ? activeNurseServices : []),
-    ])
-  );
-  const effectiveServices = (isSupervisor && !hasClaimedCubicle) ? activeNurseServices : combinedServices;
+  const effectiveServices = cubicleCategories;
 
   // Today in Manila time
   const { start: today, end: tomorrow } = manilaDayRange(Date.now());
 
   // Query active non-terminal patients that have been assigned to a cubicle
   const activeQueries = [];
-  if (isSupervisor) {
+  if (showAllScreening) {
     activeQueries.push(
       supabaseAdmin
         .from('patients')
-        .select('*')
+        .select(QUEUE_VIEW_FIELDS)
+        .in('service', screeningServices)
         .in('status', ['Assigned', 'With Doctor', 'Carryout'])
         .not('cubicleNum', 'is', null)
         .eq('is_historical', false)
@@ -193,11 +192,12 @@ export async function GET(request: Request) {
 
   // Query completed patients today
   const finishedQueries = [];
-  if (isSupervisor) {
+  if (showAllScreening) {
     finishedQueries.push(
       supabaseAdmin
         .from('patients')
-        .select('*')
+        .select(QUEUE_VIEW_FIELDS)
+        .in('service', screeningServices)
         .eq('status', 'Done')
         .eq('is_historical', false)
         .gte('created_at', today)
@@ -250,6 +250,7 @@ export async function GET(request: Request) {
   for (const res of finishedResults) {
     if (res.data) {
       for (const p of res.data) {
+        if (!showAllScreening && !cubicleNums.includes(p.cubicleNum)) continue;
         finishedMap.set(p.id, p as Patient);
       }
     }
@@ -264,8 +265,9 @@ export async function GET(request: Request) {
     patients: rawActive,
     finishedPatients: rawFinished,
     cubicles,
+    viewCubicles: showAllScreening ? stationDirectory.filter(station => screeningServices.includes(station.category)) : cubicles,
     effectiveServices,
-  });
+  }, { headers: { 'Cache-Control': 'no-store' } });
 }
 
 /**

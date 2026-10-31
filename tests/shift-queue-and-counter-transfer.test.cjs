@@ -51,7 +51,10 @@ function transferRoute({ authorized = true, result = true, error = null } = {}) 
     'next/server': { NextResponse: { json: (body, options) => Response.json(body, options) } },
     '@/lib/supabase/authGuard': { requireUser: async () => authorized
       ? { authorized: true, user: { id: 'actual-caller' } } : { authorized: false, response: new Response(null, { status: 401 }) } },
-    '@/lib/supabase/facilityHelpers': { supabaseAdmin: { rpc: async (name, params) => { calls.push({ name, params }); return { data: result, error }; } } },
+    '@/lib/supabase/facilityHelpers': { supabaseAdmin: { rpc: (name, params) => ({
+      setHeader(key, value) { calls.push({ name, params, headers: { [key]: value } }); return this; },
+      then(resolve, reject) { return Promise.resolve({ data: result, error }).then(resolve, reject); },
+    }) } },
   });
   return { api, calls };
 }
@@ -70,6 +73,7 @@ test('Handoffs use the authenticated caller and require a durable database ackno
   const { api, calls } = transferRoute();
   const response = await api.POST({ json: async () => body });
   assert.equal(response.status, 200); assert.equal(calls[0].params.caller_auth_id, 'actual-caller');
+  assert.equal(calls[0].headers['x-hc-actor-id'], 'actual-caller');
   assert.equal(calls[0].params.source_counter, 1); assert.equal(calls[0].params.destination_counter, 2);
   assert.equal(response.headers.get('cache-control'), 'no-store');
   for (const options of [{ result: false }, { result: null, error: { message: 'private diagnostic' } }]) {

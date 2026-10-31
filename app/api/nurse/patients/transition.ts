@@ -110,6 +110,7 @@ export async function handleNurseTransition(request: Request, db: SupabaseClient
   const fields = transitionFields(data.status, String(updates.status), updates);
   if (!fields) return NextResponse.json({ error: 'The timestamps do not match this stage change.' }, { status: 400 });
   const { data: applied, error } = await db.from('patients').update({ ...fields, updated_at: new Date().toISOString() })
+    .setHeader('x-hc-actor-id', guard.user.id)
     .eq('id', body.patientId).eq('is_historical', false).eq('status', data.status).eq('cubicleNum', data.cubicleNum)
     .select('id').maybeSingle();
   if (error || !applied) return NextResponse.json({ error: 'The patient changed or the update was rejected.' }, { status: 409 });

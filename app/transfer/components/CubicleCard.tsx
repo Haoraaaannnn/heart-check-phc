@@ -17,6 +17,7 @@
 'use client';
 
 import React, { useState } from 'react';
+import { PatientHistoryButton } from '@/components/patients/PatientHistoryButton';
 import { Patient, Cubicle } from '@/types/Types';
 import { MAX_PATIENTS_PER_CUBICLE } from '@/app/transfer/lib/constants';
 import { ElapsedTimer } from '@/app/transfer/components/ElapsedTimer';
@@ -288,6 +289,7 @@ export function CubicleCard({
                     <span>{transferTexts.backBtn}</span>
                   )}
                 </button>
+                <PatientHistoryButton patientId={topPatient.id} ticket={topPatient.patientNum} compact />
               </div>
             </div>
           );
@@ -322,6 +324,7 @@ export function CubicleCard({
                 }
               >
                 {p.patientNum}
+                <PatientHistoryButton patientId={p.id} ticket={p.patientNum} compact />
               </span>
             );
           })}

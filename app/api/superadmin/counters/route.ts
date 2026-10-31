@@ -60,7 +60,7 @@ export async function PUT(request: Request) {
 
   let reassignmentResult: { transferredCount: number; unassignedCount: number } | null = null;
   if (active === false) {
-    reassignmentResult = await reassignCounterQueue(counter_number);
+    reassignmentResult = await reassignCounterQueue(counter_number, guard.user.id);
     await supabaseAdmin.from('user_counters').delete().eq('counter', counter_number);
   }
 
@@ -86,7 +86,7 @@ export async function DELETE(request: Request) {
     return NextResponse.json({ error: 'Counter number is required.' }, { status: 400 });
   }
 
-  const reassignmentResult = await reassignCounterQueue(counter_number);
+  const reassignmentResult = await reassignCounterQueue(counter_number, guard.user.id);
   await supabaseAdmin.from('user_counters').delete().eq('counter', counter_number);
   const { error } = await supabaseAdmin.from('counters').delete().eq('counter_number', counter_number);
   if (error) return NextResponse.json({ error: error.message }, { status: 400 });

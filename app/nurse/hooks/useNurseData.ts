@@ -3,7 +3,7 @@
  * and optimistic in-flight mutation pinning for the Nurse Dashboard.
  *
  * Implements Superadmin and Admin bypass parity with the Transfer Dashboard
- * so supervisors can view and coordinate any nurse station without manual assignment links.
+ * while defaulting to owned stations and restricting shared viewing to the OPD Screening service.
  *
  * Weak-Signal Stabilization Features:
  * - In-flight mutation pinning: Prevents optimistic state transitions from being reverted
@@ -22,9 +22,9 @@
 import { useState, useCallback, useRef, useEffect } from 'react';
 import { supabase } from '@/lib/supabase';
 import { Patient } from '@/types/Types';
+import { parseNurseStations, isOpdScreeningService } from '@/app/nurse/lib/stationView';
 import {
   getCachedServices,
-  getCachedCubicles,
   getCachedDoctorsMap,
 } from '@/lib/cache/facilityMetadataCache';
 import {
@@ -59,6 +59,7 @@ export interface UseNurseDataReturn {
   assignmentStatus: AssignmentStatus;
   assignedCubicleNums: string[];
   assignedCubicles: AssignedNurseCubicle[];
+  stationDirectory: AssignedNurseCubicle[];
   assignedServices: string[];
   setAssignedPatients: React.Dispatch<React.SetStateAction<Patient[]>>;
   setWithDoctorPatients: React.Dispatch<React.SetStateAction<Patient[]>>;
@@ -75,9 +76,10 @@ export interface UseNurseDataReturn {
 /**
  * Hook to retrieve and maintain patient rosters across clinical stages for assigned cubicles.
  *
+ * @param options - Explicit shared OPD Screening view; clinical permissions remain server-verified.
  * @returns State models, setters, and synchronizing fetch callbacks.
  */
-export function useNurseData(): UseNurseDataReturn {
+export function useNurseData({ showAllScreening = false }: { showAllScreening?: boolean } = {}): UseNurseDataReturn {
   const [assignedPatients, setAssignedPatients] = useState<Patient[]>([]);
   const [withDoctorPatients, setWithDoctorPatients] = useState<Patient[]>([]);
   const [carryoutPatients, setCarryoutPatients] = useState<Patient[]>([]);
@@ -85,6 +87,7 @@ export function useNurseData(): UseNurseDataReturn {
   const [assignmentStatus, setAssignmentStatus] = useState<AssignmentStatus>('loading');
   const [assignedCubicleNums, setAssignedCubicleNums] = useState<string[]>([]);
   const [assignedCubicles, setAssignedCubicles] = useState<AssignedNurseCubicle[]>([]);
+  const [stationDirectory, setStationDirectory] = useState<AssignedNurseCubicle[]>([]);
   const [assignedServices, setAssignedServices] = useState<string[]>([]);
 
   // Cached cubicle and service discovery to avoid redundant SQL queries on every poll tick
@@ -97,6 +100,12 @@ export function useNurseData(): UseNurseDataReturn {
   // Monotonic sequence guards to discard stale out-of-order network responses
   const fetchSeqRef = useRef<number>(0);
   const finishedSeqRef = useRef<number>(0);
+  const showAllScreeningRef = useRef(showAllScreening);
+  useEffect(() => {
+    showAllScreeningRef.current = showAllScreening;
+    fetchSeqRef.current += 1;
+    finishedSeqRef.current += 1;
+  }, [showAllScreening]);
 
   // In-flight mutation map to prevent optimistic state from jumping backward
   const inFlightMutationsRef = useRef<Map<number, InFlightPin>>(new Map());
@@ -126,7 +135,7 @@ export function useNurseData(): UseNurseDataReturn {
 
   /**
    * Discovers and retrieves cubicles and services assigned to the active user,
-   * granting full visibility if user has superadmin or admin privileges.
+   * keeping the cached discovery list restricted to owned cubicles for every staff role.
    *
    * @param forceRefresh - If true, bypasses the local cache and queries the database.
    */
@@ -210,9 +219,23 @@ export function useNurseData(): UseNurseDataReturn {
       .map((s) => s.label_en)
       .filter(Boolean);
 
-    // Superadmin / Admin fallback: full visibility only if supervisor has NOT claimed a specific desk
+    // Accounts without explicit claims retain an empty owned list; the server handles the separate global view.
     if ((user.role === 'superadmin' || user.role === 'admin') && !hasExplicitCubicle) {
-      const allCubicles = await getCachedCubicles(supabase);
+      const { data: allCubicles, error: cubicleError } = await supabase
+        .from('cubicle')
+        .select('id, cubicleNum, category, room, subcategory, doctorId')
+        .in('id', cubicleIds)
+        .order('room', { ascending: true })
+        .order('cubicleNum', { ascending: true });
+
+      if (cubicleError) {
+        console.error('Failed to load cubicles for admin:', cubicleError);
+        if (cachedCubicleNumsRef.current.length === 0 && cachedAssignedServicesRef.current.length === 0) {
+          setAssignmentStatus('error');
+        }
+        return cachedCubicleNumsRef.current;
+      }
+
       cubiclesToFetch = (allCubicles || []) as AssignedNurseCubicle[];
       finalServices = Array.from(
         new Set([
@@ -240,11 +263,11 @@ export function useNurseData(): UseNurseDataReturn {
           .in('id', cubicleIds);
         cubiclesToFetch = (explicitCubicles || []) as AssignedNurseCubicle[];
       } else if (effectiveServices.length > 0) {
-        // Fallback to category cubicles only if no explicit cubicle is claimed
+        // Service permission alone never expands the owned-station list.
         const { data: categoryCubicles } = await supabase
           .from('cubicle')
           .select('id, cubicleNum, category, room, subcategory, doctorId')
-          .in('category', effectiveServices);
+          .in('id', cubicleIds);
         cubiclesToFetch = (categoryCubicles || []) as AssignedNurseCubicle[];
       }
 
@@ -300,13 +323,10 @@ export function useNurseData(): UseNurseDataReturn {
    */
   const fetchData = useCallback(async () => {
     const requestId = ++fetchSeqRef.current;
+    const requestedAllScreening = showAllScreeningRef.current;
     const cubicleNums = await getMyCubicleNums(false);
     const myServices = cachedAssignedServicesRef.current;
     const isSupervisor = userRoleRef.current === 'superadmin' || userRoleRef.current === 'admin';
-
-    if (!isSupervisor && cubicleNums.length === 0 && myServices.length === 0) {
-      return;
-    }
 
     let rawPatients: Patient[] = [];
     let serverApiSucceeded = false;
@@ -315,25 +335,29 @@ export function useNurseData(): UseNurseDataReturn {
     try {
       const { data: { session } } = await supabase.auth.getSession();
       if (session?.access_token) {
-        const response = await fetch('/api/nurse/patients', {
+        const response = await fetch(requestedAllScreening ? '/api/nurse/patients?scope=opd-screening' : '/api/nurse/patients', {
           headers: { Authorization: `Bearer ${session.access_token}` },
         });
         if (response.ok) {
           const json = await response.json();
+          if (requestId !== fetchSeqRef.current || requestedAllScreening !== showAllScreeningRef.current) return;
           rawPatients = (json.patients || []) as Patient[];
           if (json.finishedPatients) {
             setFinishedPatients((json.finishedPatients || []) as Patient[]);
           }
-          if (Array.isArray(json.effectiveServices) && json.effectiveServices.length > 0) {
+          if (Array.isArray(json.effectiveServices)) {
             cachedAssignedServicesRef.current = json.effectiveServices;
             setAssignedServices(json.effectiveServices);
           }
-          if (Array.isArray(json.cubicles) && json.cubicles.length > 0) {
-            cachedCubiclesRef.current = json.cubicles;
-            cachedCubicleNumsRef.current = json.cubicles.map((c: AssignedNurseCubicle) => c.cubicleNum);
-            setAssignedCubicles(json.cubicles);
-            setAssignedCubicleNums(json.cubicles.map((c: AssignedNurseCubicle) => c.cubicleNum));
-            setAssignmentStatus('assigned');
+          if (Array.isArray(json.cubicles)) {
+            const ownedStations = parseNurseStations(json.cubicles);
+            const visibleStations = parseNurseStations(json.viewCubicles ?? json.cubicles);
+            cachedCubiclesRef.current = ownedStations;
+            cachedCubicleNumsRef.current = ownedStations.map(station => station.cubicleNum);
+            setAssignedCubicles(ownedStations);
+            setAssignedCubicleNums(cachedCubicleNumsRef.current);
+            setStationDirectory(visibleStations);
+            setAssignmentStatus(ownedStations.length > 0 ? 'assigned' : 'unassigned');
           }
           serverApiSucceeded = true;
         }
@@ -344,18 +368,20 @@ export function useNurseData(): UseNurseDataReturn {
 
     // 2. Fallback: Direct client query if server API was unreachable
     if (!serverApiSucceeded) {
+      if (requestedAllScreening) throw new Error('OPD Screening patients could not be loaded. Please retry.');
       const today = new Date();
       today.setHours(0, 0, 0, 0);
 
       const tomorrow = new Date(today);
       tomorrow.setDate(today.getDate() + 1);
 
-      if (isSupervisor) {
+      if (isSupervisor && cubicleNums.length === 0) {
         const { data, error } = await supabase
           .from('patients')
           .select('*')
           .in('status', ['Assigned', 'With Doctor', 'Carryout'])
           .not('cubicleNum', 'is', null)
+          .in('cubicleNum', cubicleNums)
           .gte('created_at', today.toISOString())
           .lt('created_at', tomorrow.toISOString())
           .order('created_at', { ascending: true });
@@ -385,14 +411,14 @@ export function useNurseData(): UseNurseDataReturn {
               .order('created_at', { ascending: true })
           );
         }
-        if (myServices.length > 0) {
+        if (cubicleNums.length === 0 && myServices.length > 0) {
           queries.push(
             supabase
               .from('patients')
               .select('*')
               .in('status', ['Assigned', 'With Doctor', 'Carryout'])
               .not('cubicleNum', 'is', null)
-              .in('service', myServices)
+              .in('cubicleNum', cubicleNums)
               .gte('created_at', today.toISOString())
               .lt('created_at', tomorrow.toISOString())
               .order('created_at', { ascending: true })
@@ -462,13 +488,10 @@ export function useNurseData(): UseNurseDataReturn {
    */
   const fetchFinished = useCallback(async () => {
     const requestId = ++finishedSeqRef.current;
+    const requestedAllScreening = showAllScreeningRef.current;
     const cubicleNums = await getMyCubicleNums(false);
     const myServices = cachedAssignedServicesRef.current;
     const isSupervisor = userRoleRef.current === 'superadmin' || userRoleRef.current === 'admin';
-
-    if (!isSupervisor && cubicleNums.length === 0 && myServices.length === 0) {
-      return;
-    }
 
     let rawFinished: Patient[] = [];
     let serverApiSucceeded = false;
@@ -476,11 +499,12 @@ export function useNurseData(): UseNurseDataReturn {
     try {
       const { data: { session } } = await supabase.auth.getSession();
       if (session?.access_token) {
-        const response = await fetch('/api/nurse/patients', {
+        const response = await fetch(requestedAllScreening ? '/api/nurse/patients?scope=opd-screening' : '/api/nurse/patients', {
           headers: { Authorization: `Bearer ${session.access_token}` },
         });
         if (response.ok) {
           const json = await response.json();
+          if (requestId !== finishedSeqRef.current || requestedAllScreening !== showAllScreeningRef.current) return;
           if (json.finishedPatients) {
             rawFinished = (json.finishedPatients || []) as Patient[];
             serverApiSucceeded = true;
@@ -492,17 +516,19 @@ export function useNurseData(): UseNurseDataReturn {
     }
 
     if (!serverApiSucceeded) {
+      if (requestedAllScreening) throw new Error('Finished OPD Screening patients could not be loaded. Please retry.');
       const today = new Date();
       today.setHours(0, 0, 0, 0);
 
       const tomorrow = new Date(today);
       tomorrow.setDate(today.getDate() + 1);
 
-      if (isSupervisor) {
+      if (isSupervisor && cubicleNums.length === 0) {
         const { data, error } = await supabase
           .from('patients')
           .select('*')
           .eq('status', 'Done')
+          .in('cubicleNum', cubicleNums)
           .gte('created_at', today.toISOString())
           .lt('created_at', tomorrow.toISOString())
           .order('updated_at', { ascending: false });
@@ -526,13 +552,13 @@ export function useNurseData(): UseNurseDataReturn {
               .order('updated_at', { ascending: false })
           );
         }
-        if (myServices.length > 0) {
+        if (cubicleNums.length === 0 && myServices.length > 0) {
           queries.push(
             supabase
               .from('patients')
               .select('*')
               .eq('status', 'Done')
-              .in('service', myServices)
+              .in('cubicleNum', cubicleNums)
               .gte('created_at', today.toISOString())
               .lt('created_at', tomorrow.toISOString())
               .order('updated_at', { ascending: false })
@@ -589,9 +615,6 @@ export function useNurseData(): UseNurseDataReturn {
 
     const patient = newRow;
     const myCubicles = cachedCubicleNumsRef.current;
-    const myServices = cachedAssignedServicesRef.current;
-    const isSupervisor = userRoleRef.current === 'superadmin' || userRoleRef.current === 'admin';
-
     // Clinical workstation constraint: patient must have an assigned cubicle
     if (!patient.cubicleNum) {
       setAssignedPatients((prev) => prev.filter((p) => p.id !== patient.id));
@@ -609,20 +632,10 @@ export function useNurseData(): UseNurseDataReturn {
       return;
     }
 
-    const matchesCubicle =
-      myCubicles.length === 0 ||
-      myCubicles.some((c) => String(c).trim().toLowerCase() === String(patient.cubicleNum).trim().toLowerCase());
-
-    const matchesCubicleCategory =
-      patient.service &&
-      cachedCubiclesRef.current.some(
-        (c) => c.category && String(c.category).trim().toLowerCase() === String(patient.service).trim().toLowerCase()
-      );
-
-    const belongsToMe =
-      isSupervisor ||
-      (myCubicles.length === 0 && myServices.length === 0) ||
-      Boolean(matchesCubicle || matchesCubicleCategory);
+    const screeningAllowed = cachedCubiclesRef.current.some(station => isOpdScreeningService(station.category));
+    const belongsToMe = showAllScreeningRef.current
+      ? screeningAllowed && isOpdScreeningService(patient.service)
+      : myCubicles.includes(patient.cubicleNum);
 
     // If active pin exists and server status caught up, unpin
     const pin = inFlightMutationsRef.current.get(patient.id);
@@ -677,6 +690,7 @@ export function useNurseData(): UseNurseDataReturn {
     assignmentStatus,
     assignedCubicleNums,
     assignedCubicles,
+    stationDirectory,
     assignedServices,
     setAssignedPatients,
     setWithDoctorPatients,

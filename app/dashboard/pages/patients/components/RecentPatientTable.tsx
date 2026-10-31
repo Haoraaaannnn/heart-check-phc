@@ -19,8 +19,9 @@ import {
   PATIENT_STATUS_COLORS,
 } from '@/app/dashboard/pages/patients/constants/patients';
 import { PATIENTS_TEXTS } from '@/app/dashboard/pages/patients/constants/patientsTexts';
-import { formatMinutesToHMS, formatDurationString } from '@/utils/formatMinutesToHMS';
+import { formatDurationString } from '@/utils/formatMinutesToHMS';
 import ElapsedTimer from '@/components/reusables/ElapsedTimer';
+import { PatientHistoryButton } from '@/components/patients/PatientHistoryButton';
 
 /**
  * Properties for RecentPatientsTable component.
@@ -304,6 +305,7 @@ export default function RecentPatientsTable({
                         <span className={S.ticketBadge}>
                           {patient.patientNum || T.fallbackTicket}
                         </span>
+                        <div className="mt-2"><PatientHistoryButton patientId={patient.id} ticket={patient.patientNum} /></div>
                       </td>
                       <td className={`${S.td} font-semibold text-content`}>
                         {patient.service}

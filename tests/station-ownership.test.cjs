@@ -86,6 +86,7 @@ test('Counter cards display their assigned usernames and mark only your own coun
     { kind: 'counter', id: 2, active: true, onBreak: false, owners: [{ username: 'maria', isCurrentUser: true }] },
   ];
   const api = load('app/transfer/components/RegistrationCounterSection.tsx', {
+    '@/components/patients/PatientHistoryButton': { PatientHistoryButton: () => null },
     'react/jsx-runtime': runtime, react: { useState: value => [value, () => {}], useRef: current => ({ current }), useMemo: fn => fn() },
     './CounterTimerControl': { CounterTimerControl: () => null },
     '@/constants/texts/transferTexts': { transferTexts: {} },
@@ -99,6 +100,39 @@ test('Counter cards display their assigned usernames and mark only your own coun
   const visible = text(api.RegistrationCounterSection({ patients: [], allowedCounters: [1, 2] }));
   assert.match(visible, /Owner: juan/); assert.match(visible, /Owner: maria \(You\)/);
   assert.ok(!visible.includes('juan (You)'));
+});
+
+/** Verifies destination selection independently of another counter's operational controls. */
+test('Owned tickets can move to another staffed open counter without unlocking its queue controls', () => {
+  const transfers = [];
+  const stations = [1, 2, 3, 4].map(id => ({ kind: 'counter', id, active: id !== 4, onBreak: id === 3,
+    owners: [{ username: `staff-${id}`, isCurrentUser: id === 1 }] }));
+  const api = load('app/transfer/components/RegistrationCounterSection.tsx', {
+    'react/jsx-runtime': runtime, react: { useState: value => [value, () => {}], useRef: current => ({ current }), useMemo: fn => fn() },
+    '@/components/patients/PatientHistoryButton': { PatientHistoryButton: 'history' },
+    './CounterTimerControl': { CounterTimerControl: 'timer' }, '@/constants/texts/transferTexts': { transferTexts: { sendToQueueBtn: 'Queue' } },
+    '@/app/transfer/constants/transfer': { TransferStyle: {} }, '@/constants/designs/transferStyles': { registrationCounterStyles: {} },
+    '@/app/transfer/components/DragHandle': { DragHandle: 'drag-handle' },
+    '@/hooks/useStationBreaks': { useStationBreaks: () => ({ stations, error: '', busy: null }) },
+    '@/components/reusables/StationBreakButton': { StationBreakButton: 'break-control' },
+    '@/components/reusables/StationOwnerBadge': { StationOwnerBadge: 'owner' },
+  });
+  /** Collects real rendered ticket controls and destination callbacks without changing their behavior. */
+  function nodes(node) {
+    if (Array.isArray(node)) return node.flatMap(nodes);
+    return node && typeof node === 'object' ? [node, ...nodes(node.props?.children)] : [];
+  }
+  const patients = [1, 2].map(id => ({ id, counter: id, patientNum: `TEST-${id}`, service: 'Consultation' }));
+  const tree = nodes(api.RegistrationCounterSection({ patients, allCounters: [1, 2, 3, 4], allowedCounters: [1],
+    selectedPatient: { patient: patients[0], sourceType: 'counter', sourceId: 1 },
+    onTargetCounterClick: counter => transfers.push(counter), onRelease() {} }));
+  const destinations = tree.filter(node => node.props?.['data-counter'] != null);
+  assert.deepEqual(destinations.map(node => node.props['data-counter']), [1, 2]);
+  destinations.find(node => node.props['data-counter'] === 2).props.onClick();
+  destinations.find(node => node.props['data-counter'] === 1).props.onClick();
+  assert.deepEqual(transfers, [2]);
+  assert.equal(tree.filter(node => node.type === 'button' && node.props.children === 'Queue').length, 1);
+  assert.equal(tree.find(node => node.type === 'timer' && node.props.patient.id === 2).props.readOnly, true);
 });
 
 /** Creates the actual authenticated station endpoint with controlled permissions. */

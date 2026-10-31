@@ -27,6 +27,7 @@ import {
 import { SMSValidationTexts } from "@/app/kiosk/pages/sms-input/constants/smsValidationTexts";
 import { createKioskPatient, KioskTicketError } from "@/app/kiosk/pages/sms-input/utils/createKioskPatient";
 import { useWebPrinter } from "@/app/kiosk/hooks/useWebPrinter";
+import { requiresDoctorSelection } from '@/app/kiosk/lib/doctorSelection';
 
 /** Props for {@link KioskPhoneEntry}. */
 interface KioskPhoneEntryProps {
@@ -133,8 +134,8 @@ async function resolvePrefixInfo(
  *
  * @remarks
  * Routing logic:
- * - Consultation: returns to cubicle selection (only consultation uses cubicles).
- * - OPD Screening: returns to unified age category selection (cubicles are bypassed).
+ * - Services with picker selection enabled: return to physician selection.
+ * - Services using age categories: return to age category selection when the picker is disabled.
  * - Other direct services: returns to the main kiosk services menu.
  *
  * @param service - The active service record.
@@ -150,7 +151,7 @@ function buildCancelHref(
     const serviceId = service?.id;
 
     // 1. Services requiring cubicle selection back up to the cubicle selector
-    if (service?.requires_cubicle) {
+    if (requiresDoctorSelection(service)) {
         const params = new URLSearchParams();
         if (serviceId !== undefined) params.set("serviceId", String(serviceId));
         if (patientType) params.set("type", patientType);
@@ -187,7 +188,7 @@ export default function KioskPhoneEntry({
     subcategory,
     cubicleNum,
 }: KioskPhoneEntryProps) {
-    const preferredList = preferredCubicleNums ? preferredCubicleNums.split(",") : null;
+    const preferredList = requiresDoctorSelection(service) && preferredCubicleNums ? preferredCubicleNums.split(",") : null;
     const [phone, setPhone] = useState("");
     const [ticketError, setTicketError] = useState('');
     const creatingRef = useRef(false);
@@ -203,10 +204,10 @@ export default function KioskPhoneEntry({
     const patientType = searchParams.get("type");
     const cancelHref = buildCancelHref(service, patientType, subcategory);
 
-    const resolvedCubicleParam =
+    const resolvedCubicleParam = requiresDoctorSelection(service) ? (
         cubicleNum ||
         searchParams.get("cubicleNum") ||
-        (preferredCubicleNums ? preferredCubicleNums.split(",")[0] : undefined);
+        (preferredCubicleNums ? preferredCubicleNums.split(",")[0] : undefined)) : undefined;
 
     /**
      * Constructs the destination URL for the queue ticket printing screen with all metadata.
