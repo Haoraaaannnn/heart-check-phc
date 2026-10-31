@@ -47,6 +47,11 @@ export const HISTORICAL_TEXTS = {
       patientsUnit: 'patients',
       fallback: 'Model calibration pending',
     },
+    serviceMix: {
+      label: 'Primary Clinical Service',
+      subtitle: 'Highest historical outpatient volume share',
+      fallback: 'Outpatient Department',
+    },
   },
 
   monthlySection: {

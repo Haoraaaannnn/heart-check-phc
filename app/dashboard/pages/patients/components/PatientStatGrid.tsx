@@ -38,6 +38,9 @@ export default function PatientStatGrid({ stats }: PatientStatGridProps) {
   const S = PATIENTS_STYLES.metricCard;
   const T = PATIENTS_TEXTS.metrics;
 
+  const servedPercent =
+    stats.totalToday > 0 ? Math.round((stats.servedToday / stats.totalToday) * 100) : 0;
+
   const items: MetricCardDef[] = [
     {
       key: 'totalToday',
@@ -95,11 +98,63 @@ export default function PatientStatGrid({ stats }: PatientStatGridProps) {
 
             <div className={S.content}>
               <span className={S.label}>{item.label}</span>
-              <div className="flex items-baseline">
+              <div className="flex items-baseline flex-wrap">
                 <span className={S.value}>{item.value}</span>
                 {item.unit && <span className={S.unit}>{item.unit}</span>}
+                {item.key === 'servedToday' && stats.totalToday > 0 && (
+                  <span className="ml-1.5 text-sm font-bold text-emerald-700 dark:text-emerald-400">
+                    / {stats.totalToday}
+                  </span>
+                )}
               </div>
               <span className={S.subtitle}>{item.subtitle}</span>
+
+              {item.key === 'totalToday' && (
+                <div className="mt-2.5 pt-2 border-t border-line/60 flex flex-col gap-1">
+                  <div className="flex items-center justify-between text-[11px] text-content-muted">
+                    <span>Served vs Total:</span>
+                    <span className="font-mono font-bold text-content">
+                      {stats.servedToday} of {stats.totalToday} ({servedPercent}%)
+                    </span>
+                  </div>
+                  <div className="h-1.5 w-full overflow-hidden rounded-full bg-slate-200 dark:bg-slate-700/60">
+                    <div
+                      className="h-full rounded-full transition-all duration-500 bg-rose-600 dark:bg-rose-400"
+                      style={{ width: `${Math.min(servedPercent, 100)}%` }}
+                    />
+                  </div>
+                </div>
+              )}
+
+              {item.key === 'servedToday' && (
+                <div className="mt-2.5 pt-2 border-t border-line/60 flex flex-col gap-1">
+                  <div className="flex items-center justify-between text-[11px] text-content-muted">
+                    <span>Completed:</span>
+                    <span className="font-mono font-bold text-emerald-700 dark:text-emerald-400">
+                      {servedPercent}%
+                    </span>
+                  </div>
+                  <span className="text-[11px] text-content-muted">
+                    {stats.servedToday} out of {stats.totalToday} completed
+                  </span>
+                </div>
+              )}
+
+              {item.key === 'inQueue' && (
+                <div className="mt-2.5 pt-2 border-t border-line/60 flex flex-col gap-1">
+                  <span className="text-[11px] text-content-muted">
+                    {stats.inQueue} waiting &bull; {stats.inService} in care
+                  </span>
+                </div>
+              )}
+
+              {item.key === 'avgWaitTime' && (
+                <div className="mt-2.5 pt-2 border-t border-line/60 flex flex-col gap-1">
+                  <span className="text-[11px] text-content-muted">
+                    PHC Target: &le; 150m queue time
+                  </span>
+                </div>
+              )}
             </div>
           </div>
         );

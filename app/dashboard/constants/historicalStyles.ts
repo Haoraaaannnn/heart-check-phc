@@ -49,8 +49,8 @@ export const HISTORICAL_STYLES = {
     'No DataDot': 'bg-slate-400',
   },
 
-  /** Three-column KPI summary cards */
-  cardsGrid: 'grid grid-cols-1 sm:grid-cols-3 gap-4',
+  /** Four-column KPI summary cards */
+  cardsGrid: 'grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4',
 
   card: {
     tile: 'flex items-start gap-4 rounded-xl border border-line bg-surface-muted p-4 shadow-2xs transition',
@@ -75,6 +75,10 @@ export const HISTORICAL_STYLES = {
     emerald: {
       tile: 'border-emerald-200/80 dark:border-emerald-900/60 bg-emerald-50/50 dark:bg-emerald-950/20',
       icon: 'text-emerald-700 dark:text-emerald-300',
+    },
+    blue: {
+      tile: 'border-blue-200/80 dark:border-blue-900/60 bg-blue-50/50 dark:bg-blue-950/20',
+      icon: 'text-blue-700 dark:text-blue-300',
     },
   },
 

@@ -13,6 +13,7 @@ import { useCallback, useEffect, useRef, useState } from 'react';
 import { supabase } from '@/lib/supabase';
 import { PatientStats, RecentPatient, AllRecentPatient } from '@/types/Types';
 import { formatSecondsToHMS } from '@/utils/formatMinutesToHMS';
+import { maskPhoneDisplay } from '@/utils/phoneMask';
 
 const RECENT_LIST_SIZE = 20;
 const PATIENT_COLUMNS = 'id, patientNum, service, status, created_at, consult_start, consult_end, updated_at, phoneNum';
@@ -53,13 +54,7 @@ function formatPhoneNumber(rawPhone: unknown): string | null {
   if (rawPhone === null || rawPhone === undefined || rawPhone === '') return null;
   const str = String(rawPhone).trim();
   if (!str || str === '0') return null;
-  if (str.startsWith('enc:v1:')) {
-    return 'Protected';
-  }
-  if (/^\d{10}$/.test(str)) {
-    return `0${str}`;
-  }
-  return str;
+  return maskPhoneDisplay(str);
 }
 
 /**
@@ -79,7 +74,8 @@ function formatPhoneNumber(rawPhone: unknown): string | null {
 export function usePatientData(
   setStats: React.Dispatch<React.SetStateAction<PatientStats>>,
   service: string | null = null,
-  initialSearchQuery: string = ''
+  initialSearchQuery: string = '',
+  selectedDate: string | null = null
 ): UsePatientDataReturn {
   const [recentPatients, setRecentPatients] = useState<RecentPatient[]>([]);
   const [baselinePatients, setBaselinePatients] = useState<AllRecentPatient[]>([]);
@@ -122,9 +118,17 @@ export function usePatientData(
     try {
       setError(null);
       const now = new Date();
-      const startOfDay = new Date(now.getFullYear(), now.getMonth(), now.getDate()).toISOString();
-      const endOfDay = new Date(now.getFullYear(), now.getMonth(), now.getDate() + 1).toISOString();
-      const thirtyDaysAgo = new Date(now.getTime() - 30 * 24 * 60 * 60 * 1000).toISOString();
+      let startOfDay: string;
+      let endOfDay: string;
+
+      if (selectedDate && /^\d{4}-\d{2}-\d{2}$/.test(selectedDate)) {
+        const [y, m, d] = selectedDate.split('-').map(Number);
+        startOfDay = new Date(y, m - 1, d, 0, 0, 0, 0).toISOString();
+        endOfDay = new Date(y, m - 1, d + 1, 0, 0, 0, 0).toISOString();
+      } else {
+        startOfDay = new Date(now.getFullYear(), now.getMonth(), now.getDate(), 0, 0, 0, 0).toISOString();
+        endOfDay = new Date(now.getFullYear(), now.getMonth(), now.getDate() + 1, 0, 0, 0, 0).toISOString();
+      }
 
       let todayQuery = supabase
         .from('patients')
@@ -136,8 +140,13 @@ export function usePatientData(
       let allQuery = supabase
         .from('patients')
         .select(PATIENT_COLUMNS)
-        .order('created_at', { ascending: false })
-        .limit(300);
+        .order('created_at', { ascending: false });
+
+      if (selectedDate && /^\d{4}-\d{2}-\d{2}$/.test(selectedDate)) {
+        allQuery = allQuery.gte('created_at', startOfDay).lt('created_at', endOfDay);
+      } else {
+        allQuery = allQuery.limit(300);
+      }
 
       if (service) {
         todayQuery = todayQuery.ilike('service', service);
@@ -304,7 +313,7 @@ export function usePatientData(
         setServiceDistribution([]);
       }
     }
-  }, [service, setStats]);
+  }, [service, selectedDate, setStats]);
 
   /**
    * Executes multi-field debounced patient search across ID, Ticket Number, and Phone Number.
