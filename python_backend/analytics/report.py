@@ -7,6 +7,7 @@ into the single payload served to the admin dashboard.
 import pandas as pd
 import numpy as np
 import math
+from .constants import MAX_ADULT_CUBICLES, MAX_PEDIA_CUBICLES
 from .preprocessing  import preprocess_queue_data
 from .descriptive    import (
     daily_summary,
@@ -190,7 +191,7 @@ def _empty_report() -> dict:
             "adult": {
                 "clinic": "adult",
                 "active_cubicles": 0,
-                "max_cubicles": 20,
+                "max_cubicles": MAX_ADULT_CUBICLES,
                 "per_cubicle": {},
                 "system_benchmark": {},
                 "balance_metrics": {},
@@ -198,7 +199,7 @@ def _empty_report() -> dict:
             "pedia": {
                 "clinic": "pedia",
                 "active_cubicles": 0,
-                "max_cubicles": 20,
+                "max_cubicles": MAX_PEDIA_CUBICLES,
                 "per_cubicle": {},
                 "system_benchmark": {},
                 "balance_metrics": {},

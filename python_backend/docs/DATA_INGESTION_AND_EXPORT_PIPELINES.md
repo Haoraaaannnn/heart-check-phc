@@ -136,7 +136,7 @@ Every imported record written to Supabase `patients` table includes:
 - `is_historical`: Boolean flag (`True` for imported files).
 
 ### 5.3 Batch Insert Operation
-Implemented in `insert_records_batch(records, batch_size=500)` in [importer.py](file:///home/jensen/Github-Repositories/heart-check-phc/python_backend/importer.py) and `insert_in_batches` in [import_phc_data.py](file:///home/jensen/Github-Repositories/heart-check-phc/python_backend/import_phc_data.py):
+Implemented in `insert_records_batch(records, batch_size=500)` in [importer.py](file:///home/jensen/Github-Repositories/Heart_Check_PHC/python_backend/importer.py) and `insert_in_batches` in [import_phc_data.py](file:///home/jensen/Github-Repositories/Heart_Check_PHC/python_backend/import_phc_data.py):
 - Dispatches batch insertions directly to the Supabase PostgREST endpoint (`/rest/v1/patients`) using `httpx`.
 - Chunks records into slices of `batch_size` (default 500) with `Prefer: return=minimal`.
 - Supports both legacy 3-part JWT keys and modern secret keys (`sb_secret_*`) without failing client-side regex validations.

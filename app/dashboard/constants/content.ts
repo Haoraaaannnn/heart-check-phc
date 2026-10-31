@@ -94,21 +94,27 @@ export const OVERVIEW_DATE_PRESETS: readonly OverviewDatePreset[] = [
 ] as const;
 
 /**
- * Static UI copy for the date filter pill bar.
+ * Static UI copy for the timeframe date filter.
  */
 export const OVERVIEW_DATE_FILTER_TEXTS = {
   label: 'Timeframe:',
-  liveBadge: 'Live Streaming',
-  historicalBadge: 'Historical Snapshot',
+  customLabel: 'Custom Date:',
+  recordedDatesLabel: 'Recorded Dates',
+  selectRecordedDatePlaceholder: 'Recorded Dates...',
+  prevRecordedDate: 'Navigate to previous recorded clinic date',
+  nextRecordedDate: 'Navigate to next recorded clinic date',
+  pickCalendarDate: 'Pick any calendar date',
+  activeWindowPrefix: 'Active Window:',
   loadingAria: 'Loading range metrics',
+  resetToday: 'Reset to Today',
+  recordedClinicDay: 'Recorded Clinic Day',
 } as const;
 
 /**
- * Icon identifiers for the date filter pill bar.
+ * Icon identifiers for the timeframe date filter.
  */
 export const OVERVIEW_DATE_FILTER_ICONS = {
   filter: 'bx-slider-alt',
-  history: 'bx-history',
 } as const;
 
 /**
@@ -214,7 +220,7 @@ export const SECTIONS = {
     icon: 'bx-link-alt',
   },
   liveQueue: {
-    title: 'Live Queue',
+    title: 'Active Queue',
     subtitle: 'Real-time patient ticket status',
     icon: 'bxs-heart',
     emptyText: 'No patients in the queue today.',

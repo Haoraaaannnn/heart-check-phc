@@ -90,6 +90,7 @@ export default function HistoricalContextBanner({
   const [months, setMonths] = useState<MonthEntry[]>([]);
   const [monthsLoading, setMonthsLoading] = useState(false);
   const [monthsError, setMonthsError] = useState<string | null>(null);
+  const [showLegend, setShowLegend] = useState(false);
 
   // Client-side cache to avoid redundant network round-trips when switching years
   const monthCache = useRef<Record<number, MonthEntry[]>>({});
@@ -283,9 +284,21 @@ export default function HistoricalContextBanner({
               className={`${S.statusBadge.dot} ${S.statusBadge[`${status}Dot` as keyof typeof S.statusBadge]}`}
             />
             <span>
-              {T.header.badgeLabel} {status}
+              {T.header.badgeLabel} {T.statusLabels[status] ?? status}
             </span>
           </span>
+
+          {/* Status Legend & Directive Toggle Button */}
+          <button
+            type="button"
+            onClick={() => setShowLegend((prev) => !prev)}
+            className={S.header.legendBtn}
+            aria-expanded={showLegend}
+            aria-label={showLegend ? T.statusLegend.hideButton : T.statusLegend.toggleButton}
+          >
+            <i className="bx bx-info-circle text-sm" />
+            <span>{showLegend ? T.statusLegend.hideButton : T.statusLegend.toggleButton}</span>
+          </button>
 
           {/* Optional collapse trigger button */}
           {onClose && (
@@ -301,6 +314,58 @@ export default function HistoricalContextBanner({
           )}
         </div>
       </div>
+
+      {/* System Status Legend & Action Directives Panel */}
+      {showLegend && (
+        <div className={S.legendPanel.root}>
+          <div className={S.legendPanel.header}>
+            <div className="flex flex-col">
+              <span className={S.legendPanel.title}>
+                <i className="bx bx-compass text-rose-600 dark:text-rose-400" />
+                <span>{T.statusLegend.title}</span>
+              </span>
+              <p className={S.legendPanel.subtitle}>{T.statusLegend.subtitle}</p>
+            </div>
+            <button
+              type="button"
+              onClick={() => setShowLegend(false)}
+              className="text-content-muted hover:text-content text-base cursor-pointer p-1"
+              aria-label={T.statusLegend.hideButton}
+            >
+              <i className="bx bx-x" />
+            </button>
+          </div>
+
+          <div className={S.legendPanel.grid}>
+            {T.statusLegend.items.map((item) => {
+              const itemStatus = item.key as keyof typeof S.statusBadge;
+              const badgeStyle = S.statusBadge[itemStatus] ?? S.statusBadge.Normal;
+              const dotStyle =
+                S.statusBadge[`${itemStatus}Dot` as keyof typeof S.statusBadge] ??
+                S.statusBadge.NormalDot;
+
+              return (
+                <div key={item.key} className={S.legendPanel.card}>
+                  <div className={S.legendPanel.cardHeader}>
+                    <span className={`${S.legendPanel.badge} ${badgeStyle}`}>
+                      <span className={`w-1.5 h-1.5 rounded-full ${dotStyle}`} />
+                      <span>{item.badge}</span>
+                    </span>
+                  </div>
+                  <div className={S.legendPanel.criteriaWrap}>
+                    <i className="bx bx-time text-xs" />
+                    <span>{item.criteria}</span>
+                  </div>
+                  <div className={S.legendPanel.directionBlock}>
+                    <span className={S.legendPanel.directionLabel}>Clinical Direction:</span>
+                    <p className={S.legendPanel.direction}>{item.direction}</p>
+                  </div>
+                </div>
+              );
+            })}
+          </div>
+        </div>
+      )}
 
       {/* Four Enriched Executive Stat Cards */}
       <div className={S.cardsGrid}>
@@ -520,6 +585,7 @@ export default function HistoricalContextBanner({
                         <td className={S.table.td}>
                           <span
                             className={`${S.statusBadge.base} ${S.statusBadge[rowStatus]}`}
+                            title={T.statusDescriptions[rowStatus] ?? rowStatus}
                           >
                             <span
                               className={`${S.statusBadge.dot} ${
@@ -528,7 +594,7 @@ export default function HistoricalContextBanner({
                                 ]
                               }`}
                             />
-                            <span>{m.system_status}</span>
+                            <span>{T.statusShortLabels[rowStatus] ?? m.system_status}</span>
                           </span>
                         </td>
                       </tr>
@@ -552,12 +618,27 @@ export default function HistoricalContextBanner({
                       {formatDuration(annualSummary.avgDuration)} Mean Duration
                     </td>
                     <td className="px-4 py-3 text-xs text-content-muted">
-                      {status}
+                      {T.statusShortLabels[status] ?? status}
                     </td>
                   </tr>
                 </tfoot>
               )}
             </table>
+            {/* Inline Operational Status Target Key */}
+            <div className="flex items-center gap-3 px-4 py-2.5 border-t border-line bg-surface-muted/60 text-xs text-content-muted flex-wrap">
+              <span className="font-bold text-[11px] uppercase tracking-wider text-content">
+                Operational Status Target Key:
+              </span>
+              <span className="flex items-center gap-1.5 font-medium">
+                <span className="w-2 h-2 rounded-full bg-emerald-500" /> Optimal (&le; 30m)
+              </span>
+              <span className="flex items-center gap-1.5 font-medium">
+                <span className="w-2 h-2 rounded-full bg-amber-500" /> Elevated Delay (30–60m)
+              </span>
+              <span className="flex items-center gap-1.5 font-medium">
+                <span className="w-2 h-2 rounded-full bg-rose-500" /> Capacity Threshold Exceeded (&gt; 60m)
+              </span>
+            </div>
           </div>
         </div>
       )}

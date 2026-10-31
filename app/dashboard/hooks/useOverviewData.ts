@@ -119,6 +119,8 @@ export interface UseOverviewDataResult {
   channelStatus: ChannelStatus;
   /** True when browser is online and Realtime channel is SUBSCRIBED */
   isFullyConnected: boolean;
+  /** Distinct dates containing recorded patient consultations (YYYY-MM-DD), sorted newest first */
+  availableDates: string[];
   /** Imperative refresh handler to manually re-synchronize data */
   refresh: () => Promise<void>;
 }
@@ -357,6 +359,7 @@ export function useOverviewData(): UseOverviewDataResult {
   const [yesterdayCount, setYesterdayCount] = useState<number | null>(null);
   const [comparisonCount, setComparisonCount] = useState<number | null>(null);
   const [comparisonLabel, setComparisonLabel] = useState<string>(METRIC_RANGE_CONFIG.today.trendLabel);
+  const [availableDates, setAvailableDates] = useState<string[]>([]);
   const [isLoading, setIsLoading] = useState<boolean>(true);
   const [isRangeLoading, setIsRangeLoading] = useState<boolean>(false);
 
@@ -446,6 +449,51 @@ export function useOverviewData(): UseOverviewDataResult {
       if (rangeRef.current === 'today') {
         setComparisonCount(count);
       }
+    }
+  }, []);
+
+  /**
+   * Fetches distinct dates with patient records for direct custom date navigation.
+   */
+  const fetchAvailableDates = useCallback(async () => {
+    try {
+      const baseUrl = process.env.NEXT_PUBLIC_API_URL || 'http://localhost:8000';
+      const res = await fetch(`${baseUrl}/api/available-export-dates`);
+      if (res.ok) {
+        const data = (await res.json()) as { days?: string[] };
+        if (Array.isArray(data.days) && data.days.length > 0) {
+          setAvailableDates(data.days);
+          return;
+        }
+      }
+    } catch {
+      // Fall through to Supabase query fallback
+    }
+
+    try {
+      const { data } = await supabase
+        .from('patients')
+        .select('created_at, consult_start')
+        .not('created_at', 'is', null)
+        .order('created_at', { ascending: false })
+        .limit(500);
+
+      if (data && data.length > 0) {
+        const dateSet = new Set<string>();
+        data.forEach((row: { created_at?: string | null; consult_start?: string | null }) => {
+          const ts = row.consult_start || row.created_at;
+          if (ts && typeof ts === 'string') {
+            const parsed = ts.slice(0, 10);
+            if (/^\d{4}-\d{2}-\d{2}$/.test(parsed)) {
+              dateSet.add(parsed);
+            }
+          }
+        });
+        const sorted = Array.from(dateSet).sort((a, b) => b.localeCompare(a));
+        setAvailableDates(sorted);
+      }
+    } catch (err) {
+      console.warn('Could not fetch available operational dates:', err);
     }
   }, []);
 
@@ -744,6 +792,7 @@ export function useOverviewData(): UseOverviewDataResult {
 
     void fetchTodayStatsRef.current();
     void fetchYesterdayRef.current();
+    void fetchAvailableDates();
 
     const channel = supabase
       .channel(DASHBOARD_REALTIME.channelName)
@@ -835,6 +884,7 @@ export function useOverviewData(): UseOverviewDataResult {
     isOnline,
     channelStatus,
     isFullyConnected,
+    availableDates,
     refresh: handleRefresh,
   };
 }

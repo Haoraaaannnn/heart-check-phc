@@ -1,6 +1,10 @@
+'use client';
+
+import { useEffect, useState } from 'react';
 import { BANNER, DASHBOARD_USER } from '@/app/dashboard/constants/content';
 import { DASH } from '@/app/dashboard/constants/styles';
 import { getManilaHour } from '@/utils/formatDateTime';
+import { supabase } from '@/lib/supabase';
 
 const S = DASH.banner;
 
@@ -9,6 +13,8 @@ interface WelcomeBannerProps {
   currentTime: Date | null;
   /** False during SSR/first paint, when the time-based greeting isn't known yet. */
   isMounted: boolean;
+  /** Active staff username to display in greeting banner */
+  userName?: string;
 }
 
 /**
@@ -26,9 +32,65 @@ function getGreeting(date: Date): string {
  * Welcome banner at the top of the main column.
  * Pure gradient design (no image), using the theme-aware `bg-banner-gradient`.
  */
-export default function WelcomeBanner({ currentTime, isMounted }: WelcomeBannerProps) {
+export default function WelcomeBanner({ currentTime, isMounted, userName }: WelcomeBannerProps) {
+  const [resolvedUsername, setResolvedUsername] = useState<string>(userName || '');
+
+  useEffect(() => {
+    if (userName) {
+      setResolvedUsername(userName);
+      return;
+    }
+
+    let isSubscribed = true;
+    const loadUsername = async () => {
+      try {
+        const { data: { user } } = await supabase.auth.getUser();
+        if (!user || !isSubscribed) return;
+
+        let name = '';
+        if (user.id) {
+          const { data: userData } = await supabase
+            .from('users')
+            .select('username')
+            .eq('auth_id', user.id)
+            .maybeSingle();
+          if (userData?.username) name = userData.username;
+        }
+
+        if (!name && user.email) {
+          const { data: userDataByEmail } = await supabase
+            .from('users')
+            .select('username')
+            .ilike('email', user.email)
+            .maybeSingle();
+          if (userDataByEmail?.username) name = userDataByEmail.username;
+        }
+
+        if (!name) {
+          name =
+            (user.user_metadata?.username as string) ||
+            (user.user_metadata?.name as string) ||
+            (user.user_metadata?.full_name as string) ||
+            (user.email ? user.email.split('@')[0] : '');
+        }
+
+        if (name && isSubscribed) {
+          setResolvedUsername(name);
+        }
+      } catch {
+        // Fallback silently to configured default
+      }
+    };
+
+    loadUsername();
+    return () => {
+      isSubscribed = false;
+    };
+  }, [userName]);
+
   const greeting =
     isMounted && currentTime ? getGreeting(currentTime) : BANNER.fallbackGreeting;
+  const displayName = resolvedUsername || userName || DASHBOARD_USER.name;
 
   return (
     <section className={S.root}>
@@ -36,7 +98,7 @@ export default function WelcomeBanner({ currentTime, isMounted }: WelcomeBannerP
       <div className={S.content}>
         <p className={S.eyebrow}>{BANNER.eyebrow}</p>
         <h1 className={S.title}>
-          {greeting}, {DASHBOARD_USER.name}
+          {greeting}, {displayName}
         </h1>
         <p className={S.subtitle}>{BANNER.subtitle}</p>
       </div>

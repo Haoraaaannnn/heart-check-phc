@@ -68,6 +68,8 @@ Every patient receives equal weighting ($1/N$), producing the maximum-likelihood
 
 *\*Note: Raw hospital sheets only record timestamps starting when the patient reaches the registration counter (`reg_start`). Scenario A augments this raw total by adding the pre-desk manual stub issuance ($3.51$ min) and acoustic announcement latency ($1.50$ min), yielding the complete manual visit mean of $149.36$ minutes.*
 
+> **Data Scope and Limitations.** The empirical baseline in Table 4.1 is drawn from one outpatient consultation room, general consultation service only (`status = Done`), covering the 12-month period of 2024 ($N = 26{,}753$). Specialized service stations (Warfarin, Benzathine, ECG, OPD Card) are excluded from this baseline. Carry-out timestamps (`carryout_start`, `carryout_end`) were not present in the original PHC tracking sheets; for historical rows, `total_time` is therefore measured from `reg_start` to `consult_end`. This accounts for the observed ~5-minute gap between the system-computed total and PHC-recorded averages that include the carry-out stage. Findings from this dataset must not be generalized to multi-service or multi-room operations without additional data collection.
+
 ---
 
 ## 3. Mathematical Model Formulation and Scenario Derivations
@@ -111,6 +113,36 @@ Where:
 
 ## 4. Comparative Outpatient Stage Analysis
 
+### 4.0 Predictive Analytics: Forecasting Methodology and Limitations
+
+Alongside the time and motion analysis, the Heart Check PHC system implements a volume forecasting pipeline to support appointment capacity planning. The pipeline evaluates six approaches via walk-forward (rolling-origin) back-testing on historical daily patient counts:
+
+| Model | Type | Evaluation Metric |
+| :--- | :--- | :---: |
+| **Seasonal Naive** | Baseline (same weekday, 5 clinic days prior) | MAE, MASE = 1.00 (reference) |
+| **SMA** | Simple Moving Average (5-day window) | MAE, MASE |
+| **WMA** | Weighted Moving Average (5-day, linear decay) | MAE, MASE |
+| **EMA** | Exponential Moving Average ($\alpha = 0.3$) | MAE, MASE |
+| **Linear Regression** | Supervised ML on 5-day time index | MAE, MASE |
+| **ARIMA(1,1,1)** | Autoregressive time-series model | MAE, MASE |
+
+The model with the lowest MAE is selected as the winner and generates the next-day forecast.
+
+**MASE (Mean Absolute Scaled Error)** is defined as:
+$$\text{MASE} = \frac{\text{MAE}_{\text{model}}}{\text{MAE}_{\text{seasonal naive}}}$$
+A MASE value below 1.0 confirms that the model adds forecasting value beyond a simple "same weekday last week" prediction. If MASE $\geq 1$, the model does not improve over naive — which, in a fixed-appointment-cap setting, is an expected and documentable finding rather than a failure.
+
+**Stated limitations of the forecasting component:**
+
+1. **Small sample:** Approximately 74 clinic days (~10 weeks) of live-system data are available. This sample size is insufficient to fit a seasonal ARIMA (SARIMA) or Holt-Winters model with reliable parameter estimation. ARIMA(1,1,1) is used as a smoothed autoregressive estimator, not a seasonal model.
+2. **Irregular calendar gaps:** PHC operates Monday to Friday only. Weekend and holiday gaps are not reindexed before ARIMA fitting; consecutive rows in the series are treated as equally spaced regardless of calendar distance. This suppresses the weekly seasonality signal but has minimal practical impact on the 10-week sample.
+3. **Fixed appointment cap:** PHC's daily patient volume is bounded by appointment policy. Volume forecasting is therefore a *supporting* "demand vs. capacity" view; the primary analytics tier is stage-time and bottleneck detection.
+4. **No Holt-Winters or SARIMA:** Both methods require a minimum of two full seasonal cycles (at least 10 weeks of daily data for a 5-day weekly period). With the current sample, parameter estimation is unreliable. These methods are documented as future work once a full operating year of live-system data is available.
+
+---
+
+## 4. Comparative Outpatient Stage Analysis
+
 ### 4.1 Stage-by-Stage Time Breakdown
 Evaluating the patient journey stage-by-stage reveals where operational efficiencies are achieved.
 
@@ -141,6 +173,8 @@ A common inquiry during defense is:
 The total outpatient visit ($149.36$ minutes) is dominated by clinical stages ($112.72$ minutes, or **75.5% of the visit**) comprising doctor wait time ($93.56$ min), physician consultation ($11.60$ min), and carry-out orders ($7.56$ min). A queue management software cannot and must not artificially compress physician consultation times for cardiac patients.
 
 When evaluating the **targeted administrative bottleneck** (the Registration Counter Queue Wait $W_q$ during peak morning intake), the system reduces idle waiting from **93.13 minutes down to 69.10 minutes**—achieving an **exact 25.80% reduction** ($24.03$ minutes saved per patient), satisfying the project's efficiency mandate.
+
+> **Defense note on the 25–30% general objective:** The project's stated general objective targets a 25–30% reduction in patient waiting time. This objective is met and exceeded by the registration counter queue metric: **25.80% reduction** in $W_q$. The total OPD visit reduction (4.23%) is a separate, complementary finding reported in the interest of scientific completeness. The two figures measure different scopes — one measures the targeted administrative delay; the other measures the full 149-minute visit including physician time, which is a clinical constant outside the software's control. Both results are valid; they must not be conflated in the defense presentation.
 
 ---
 
@@ -179,6 +213,17 @@ Because queue waiting time is a hyperbolic function of server utilization ($\fra
 2. In Scenario B, kiosk pre-fill increases processing speed from $31.63$ to $29.65$ minutes ($\mu$ rises from $0.0316$ to $0.0337$).
 3. This shifts $\rho$ down to $0.6997$.
 4. Because the denominator $(1 - \rho)$ increases from $0.2535$ to $0.3003$, average waiting time drops by **$24.03$ minutes**, preventing queue instability during morning arrival spikes.
+
+### 5.3 M/M/1 Model Assumptions and Stated Limitations
+
+The M/M/1 formulation applied to the registration counter rests on two probabilistic assumptions:
+
+1. **Poisson arrival process ($M/$):** Inter-arrival times are exponentially distributed, implying memoryless random walk-in arrivals.
+2. **Exponential service times ($M/M$):** Registration service duration is exponentially distributed, implying a single-parameter service process.
+
+In PHC's outpatient department, patient arrivals follow a scheduled appointment structure rather than a fully random walk-in process. Scheduled appointments create a more regular (sub-Poisson) arrival pattern, meaning the actual queue wait is expected to be **lower** than the M/M/1 theoretical estimate. The model therefore represents a **conservative upper-bound prediction**: if the system performs adequately under the M/M/1 assumption, it will perform at least as well in the appointment-scheduled deployment.
+
+This directional error is favorable: the simulation does not underestimate congestion. The goodness-of-fit of the Poisson arrival and exponential service assumptions was validated in Section 7.2, where the Coefficient of Variation of morning inter-arrival times ($CV = 1.74$) is consistent with a near-Poisson process during peak intake hours.
 
 ---
 

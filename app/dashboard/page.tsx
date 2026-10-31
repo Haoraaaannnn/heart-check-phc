@@ -51,6 +51,7 @@ export default function DashboardPage() {
   const router = useRouter();
   const { isMounted, currentTime } = useMountedClock();
   const [isHistoricalExpanded, setIsHistoricalExpanded] = useState<boolean>(false);
+  const [userName, setUserName] = useState<string>('');
 
   const {
     stats,
@@ -68,14 +69,34 @@ export default function DashboardPage() {
     isOnline,
     channelStatus,
     isFullyConnected,
+    availableDates,
   } = useOverviewData();
   const { historicalData, historicalLoading } = useHistoricalSummary();
 
-  // Session guard: redirect unauthenticated sessions to login
+  // Session guard: redirect unauthenticated sessions to login and fetch username
   useEffect(() => {
     const checkSession = async () => {
-      const { data } = await supabase.auth.getSession();
-      if (!data.session) router.replace('/login');
+      const {
+        data: { session },
+      } = await supabase.auth.getSession();
+      if (!session) {
+        router.replace('/login');
+        return;
+      }
+
+      if (session.user) {
+        const { data: profile } = await supabase
+          .from('users')
+          .select('username')
+          .eq('auth_id', session.user.id)
+          .maybeSingle();
+
+        const resolved =
+          profile?.username ||
+          (session.user.user_metadata?.username as string) ||
+          (session.user.email ? session.user.email.split('@')[0] : '');
+        if (resolved) setUserName(resolved);
+      }
     };
     checkSession();
   }, [router]);
@@ -99,13 +120,18 @@ export default function DashboardPage() {
         showIcon={false}
       />
 
-      <WelcomeBanner currentTime={currentTime} isMounted={isMounted} />
+      <WelcomeBanner
+        currentTime={currentTime}
+        isMounted={isMounted}
+        userName={userName}
+      />
 
       <OverviewDateFilter
         selectedRange={range}
         onRangeChange={setRange}
         isLoading={isRangeLoading}
         isMounted={isMounted}
+        availableDates={availableDates}
       />
 
       <DashboardMetrics
