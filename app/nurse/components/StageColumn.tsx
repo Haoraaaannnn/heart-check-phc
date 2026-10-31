@@ -82,7 +82,7 @@ export function StageColumn({
           <div className="min-w-0 flex-1">
             <h2 className={cubicleStyles.headerTitle}>{title}</h2>
           </div>
-          <span className={`${cubicleStyles.headerCountBadge} ${badgeColorClass}`}>{count}</span>
+          <span className={`${cubicleStyles.headerCountBadge} ${badgeColorClass} text-lg`}>{count}</span>
         </div>
 
         {/* Quick 'Move Here' button during Click-to-Select tablet mode */}
@@ -90,7 +90,7 @@ export function StageColumn({
           <button
             type="button"
             onClick={onMoveHere}
-            className="inline-flex min-h-10 items-center px-3 py-1 rounded-lg border border-emerald-300 bg-emerald-50 text-xs font-bold text-emerald-800 hover:bg-emerald-100 dark:border-emerald-800 dark:bg-emerald-950 dark:text-emerald-200 transition-colors cursor-pointer shrink-0 whitespace-normal"
+            className="inline-flex min-h-[38px] items-center px-3.5 py-1.5 rounded-xl border border-emerald-300 bg-emerald-50 text-sm font-bold text-emerald-800 hover:bg-emerald-100 shadow-2xs dark:border-emerald-800 dark:bg-emerald-950 dark:text-emerald-200 transition-colors cursor-pointer shrink-0 whitespace-normal"
           >
             <span>{nurseTexts.btnMoveHere}</span>
           </button>
@@ -101,7 +101,7 @@ export function StageColumn({
       <div style={NurseStyle.stageColumnContent} className="phc-scroll">
         {count === 0 ? (
           <div className="flex-1 flex flex-col items-center justify-center px-4 py-12 text-center min-h-[160px]">
-            <p className="text-xs text-slate-400 dark:text-[#737373] font-medium max-w-[220px] leading-relaxed">
+            <p className="text-sm text-slate-400 dark:text-[#737373] font-medium max-w-[260px] leading-relaxed">
               {emptyText}
             </p>
           </div>

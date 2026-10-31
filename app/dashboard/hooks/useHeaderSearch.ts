@@ -329,7 +329,7 @@ export function useHeaderSearch(): UseHeaderSearchReturn {
       setIsLoading(true);
 
       try {
-        const cleanTerm = trimmed.replace(/[,()]/g, '');
+        const cleanTerm = trimmed.replace(/[,.:()]/g, '');
         const digitsOnly = trimmed.replace(/\D/g, '');
         const now = new Date();
 

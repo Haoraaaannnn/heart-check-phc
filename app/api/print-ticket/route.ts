@@ -308,7 +308,7 @@ export async function POST(request: Request) {
         getTimestamp(),
         configuredPrinterIp
       );
-      const networkResult = await sendToNetworkPrinter(configuredPrinterIp, buffer, 9100, 3500);
+      const networkResult = await sendToNetworkPrinter(configuredPrinterIp, buffer, 9100, 1500);
       if (networkResult.success) {
         printedSuccessfully = true;
         printMethod = 'network';

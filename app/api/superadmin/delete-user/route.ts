@@ -49,21 +49,20 @@ export async function DELETE(request: Request) {
       .eq('auth_id', authId)
 
     if (dbError) {
-      return NextResponse.json({ error: dbError.message }, { status: 400 })
+      return NextResponse.json({ error: 'Failed to delete user directory record.' }, { status: 400 })
     }
 
     const { error: authError } = await supabaseAdmin.auth.admin.deleteUser(authId)
 
     if (authError) {
-      return NextResponse.json({ error: authError.message }, { status: 400 })
+      return NextResponse.json({ error: 'Failed to delete user authentication record.' }, { status: 400 })
     }
 
     return NextResponse.json(
       { success: true, message: 'User deleted successfully' },
       { status: 200 }
     )
-  } catch (error: unknown) {
-    const message = error instanceof Error ? error.message : 'Unknown server error';
-    return NextResponse.json({ error: message }, { status: 500 })
+  } catch {
+    return NextResponse.json({ error: 'Server error while deleting user.' }, { status: 500 })
   }
 }

@@ -109,6 +109,7 @@ export function useNurseData({ showAllScreening = false }: { showAllScreening?: 
 
   // In-flight mutation map to prevent optimistic state from jumping backward
   const inFlightMutationsRef = useRef<Map<number, InFlightPin>>(new Map());
+  const inFlightFetchRef = useRef<Promise<void> | null>(null);
 
   /**
    * Pins an active mutation so subsequent background server fetches do not
@@ -312,285 +313,199 @@ export function useNurseData({ showAllScreening = false }: { showAllScreening?: 
     return getMyCubicleNums(true);
   }, [getMyCubicleNums]);
 
-  // Load cubicle assignments once on initial mount
+  // Load cubicle assignments once on initial mount if not yet populated
   useEffect(() => {
-    void getMyCubicleNums(true);
+    if (cachedCubicleNumsRef.current.length === 0 && cachedAssignedServicesRef.current.length === 0) {
+      void getMyCubicleNums(false);
+    }
   }, [getMyCubicleNums]);
 
   /**
    * Fetches active patients currently progressing through cubicle stages today.
-   * Overlays active in-flight mutations to prevent UI jumping.
+   * Overlays active in-flight mutations to prevent UI jumping. Coalesces concurrent in-flight calls.
    */
   const fetchData = useCallback(async () => {
-    const requestId = ++fetchSeqRef.current;
-    const requestedAllScreening = showAllScreeningRef.current;
-    const cubicleNums = await getMyCubicleNums(false);
-    const myServices = cachedAssignedServicesRef.current;
-    const isSupervisor = userRoleRef.current === 'superadmin' || userRoleRef.current === 'admin';
+    if (inFlightFetchRef.current) return inFlightFetchRef.current;
 
-    let rawPatients: Patient[] = [];
-    let serverApiSucceeded = false;
+    const task = (async () => {
+      const requestId = ++fetchSeqRef.current;
+      const requestedAllScreening = showAllScreeningRef.current;
+      const cubicleNums = await getMyCubicleNums(false);
+      const myServices = cachedAssignedServicesRef.current;
+      const isSupervisor = userRoleRef.current === 'superadmin' || userRoleRef.current === 'admin';
 
-    // 1. Primary: Server API fetch (uses service-role to avoid client RLS null-cubicle drops)
-    try {
-      const { data: { session } } = await supabase.auth.getSession();
-      if (session?.access_token) {
-        const response = await fetch(requestedAllScreening ? '/api/nurse/patients?scope=opd-screening' : '/api/nurse/patients', {
-          headers: { Authorization: `Bearer ${session.access_token}` },
-        });
-        if (response.ok) {
-          const json = await response.json();
-          if (requestId !== fetchSeqRef.current || requestedAllScreening !== showAllScreeningRef.current) return;
-          rawPatients = (json.patients || []) as Patient[];
-          if (json.finishedPatients) {
-            setFinishedPatients((json.finishedPatients || []) as Patient[]);
-          }
-          if (Array.isArray(json.effectiveServices)) {
-            cachedAssignedServicesRef.current = json.effectiveServices;
-            setAssignedServices(json.effectiveServices);
-          }
-          if (Array.isArray(json.cubicles)) {
-            const ownedStations = parseNurseStations(json.cubicles);
-            const visibleStations = parseNurseStations(json.viewCubicles ?? json.cubicles);
-            cachedCubiclesRef.current = ownedStations;
-            cachedCubicleNumsRef.current = ownedStations.map(station => station.cubicleNum);
-            setAssignedCubicles(ownedStations);
-            setAssignedCubicleNums(cachedCubicleNumsRef.current);
-            setStationDirectory(visibleStations);
-            setAssignmentStatus(ownedStations.length > 0 ? 'assigned' : 'unassigned');
-          }
-          serverApiSucceeded = true;
-        }
-      }
-    } catch (apiErr) {
-      console.warn('Nurse server API fetch failed, falling back to direct client queries:', apiErr);
-    }
+      let rawPatients: Patient[] = [];
+      let serverApiSucceeded = false;
 
-    // 2. Fallback: Direct client query if server API was unreachable
-    if (!serverApiSucceeded) {
-      if (requestedAllScreening) throw new Error('OPD Screening patients could not be loaded. Please retry.');
-      const today = new Date();
-      today.setHours(0, 0, 0, 0);
-
-      const tomorrow = new Date(today);
-      tomorrow.setDate(today.getDate() + 1);
-
-      if (isSupervisor && cubicleNums.length === 0) {
-        const { data, error } = await supabase
-          .from('patients')
-          .select('*')
-          .in('status', ['Assigned', 'With Doctor', 'Carryout'])
-          .not('cubicleNum', 'is', null)
-          .in('cubicleNum', cubicleNums)
-          .gte('created_at', today.toISOString())
-          .lt('created_at', tomorrow.toISOString())
-          .order('created_at', { ascending: true });
-
-        if (error) {
-          console.warn('Nurse background fetch dropped:', error.message);
-          return;
-        }
-        rawPatients = ((data || []) as Patient[]).filter((p) => {
-          if (!p.cubicleNum) return false;
-          const svc = p.service?.trim().toLowerCase() || '';
-          if (cachedRegServicesRef.current.has(svc) && !p.reg_end) return false;
-          return true;
-        });
-      } else {
-        const queries = [];
-        if (cubicleNums.length > 0) {
-          queries.push(
-            supabase
-              .from('patients')
-              .select('*')
-              .in('status', ['Assigned', 'With Doctor', 'Carryout'])
-              .not('cubicleNum', 'is', null)
-              .in('cubicleNum', cubicleNums)
-              .gte('created_at', today.toISOString())
-              .lt('created_at', tomorrow.toISOString())
-              .order('created_at', { ascending: true })
-          );
-        }
-        if (cubicleNums.length === 0 && myServices.length > 0) {
-          queries.push(
-            supabase
-              .from('patients')
-              .select('*')
-              .in('status', ['Assigned', 'With Doctor', 'Carryout'])
-              .not('cubicleNum', 'is', null)
-              .in('cubicleNum', cubicleNums)
-              .gte('created_at', today.toISOString())
-              .lt('created_at', tomorrow.toISOString())
-              .order('created_at', { ascending: true })
-          );
-        }
-
-        const results = await Promise.all(queries);
-        const patientMap = new Map<number, Patient>();
-        for (const res of results) {
-          if (!res.error && res.data) {
-            for (const p of res.data) {
-              if (!p.cubicleNum) continue;
-              const svc = p.service?.trim().toLowerCase() || '';
-              if (cachedRegServicesRef.current.has(svc) && !p.reg_end) continue;
-              patientMap.set(p.id, p as Patient);
+      // 1. Primary: Server API fetch (uses service-role to avoid client RLS null-cubicle drops)
+      try {
+        const { data: { session } } = await supabase.auth.getSession();
+        if (session?.access_token) {
+          const response = await fetch(requestedAllScreening ? '/api/nurse/patients?scope=opd-screening' : '/api/nurse/patients', {
+            headers: { Authorization: `Bearer ${session.access_token}` },
+          });
+          if (response.ok) {
+            const json = await response.json();
+            if (requestId !== fetchSeqRef.current || requestedAllScreening !== showAllScreeningRef.current) return;
+            rawPatients = (json.patients || []) as Patient[];
+            if (json.finishedPatients) {
+              setFinishedPatients((json.finishedPatients || []) as Patient[]);
             }
-          } else if (res.error) {
-            console.warn('Nurse background fetch subquery error:', res.error.message);
+            if (Array.isArray(json.effectiveServices)) {
+              cachedAssignedServicesRef.current = json.effectiveServices;
+              setAssignedServices(json.effectiveServices);
+            }
+            if (Array.isArray(json.cubicles)) {
+              const ownedStations = parseNurseStations(json.cubicles);
+              const visibleStations = parseNurseStations(json.viewCubicles ?? json.cubicles);
+              cachedCubiclesRef.current = ownedStations;
+              cachedCubicleNumsRef.current = ownedStations.map(station => station.cubicleNum);
+              setAssignedCubicles(ownedStations);
+              setAssignedCubicleNums(cachedCubicleNumsRef.current);
+              setStationDirectory(visibleStations);
+              setAssignmentStatus(ownedStations.length > 0 ? 'assigned' : 'unassigned');
+            }
+            serverApiSucceeded = true;
           }
         }
-
-        rawPatients = Array.from(patientMap.values()).sort(
-          (a, b) => new Date(a.created_at || 0).getTime() - new Date(b.created_at || 0).getTime()
-        );
+      } catch (apiErr) {
+        console.warn('Nurse server API fetch failed, falling back to direct client queries:', apiErr);
       }
-    }
 
-    // Discard response if a newer fetch was initiated in the meantime
-    if (requestId !== fetchSeqRef.current) {
-      return;
-    }
+      // 2. Fallback: Direct client query if server API was unreachable
+      if (!serverApiSucceeded) {
+        if (requestedAllScreening) throw new Error('OPD Screening patients could not be loaded. Please retry.');
+        const today = new Date();
+        today.setHours(0, 0, 0, 0);
 
-    // Clean up expired in-flight mutation pins
-    const now = Date.now();
-    for (const [id, pin] of inFlightMutationsRef.current.entries()) {
-      if (now > pin.expiresAt) {
-        inFlightMutationsRef.current.delete(id);
-      }
-    }
+        const tomorrow = new Date(today);
+        tomorrow.setDate(today.getDate() + 1);
 
-    // Overlay active pins onto server data so slow writes never revert local state
-    const processedData = rawPatients.map((patient) => {
-      const pin = inFlightMutationsRef.current.get(patient.id);
-      if (pin) {
-        if (dbStatusToStage(patient.status) === pin.stage) {
-          inFlightMutationsRef.current.delete(patient.id);
+        if (isSupervisor && cubicleNums.length === 0) {
+          const { data, error } = await supabase
+            .from('patients')
+            .select('*')
+            .in('status', ['Assigned', 'With Doctor', 'Carryout'])
+            .not('cubicleNum', 'is', null)
+            .in('cubicleNum', cubicleNums)
+            .gte('created_at', today.toISOString())
+            .lt('created_at', tomorrow.toISOString())
+            .order('created_at', { ascending: true });
+
+          if (error) {
+            console.warn('Nurse background fetch dropped:', error.message);
+            return;
+          }
+          rawPatients = ((data || []) as Patient[]).filter((p) => {
+            if (!p.cubicleNum) return false;
+            const svc = p.service?.trim().toLowerCase() || '';
+            if (cachedRegServicesRef.current.has(svc) && !p.reg_end) return false;
+            return true;
+          });
         } else {
-          return { ...patient, status: stageToDbStatus(pin.stage) };
+          const queries = [];
+          if (cubicleNums.length > 0) {
+            queries.push(
+              supabase
+                .from('patients')
+                .select('*')
+                .in('status', ['Assigned', 'With Doctor', 'Carryout'])
+                .not('cubicleNum', 'is', null)
+                .in('cubicleNum', cubicleNums)
+                .gte('created_at', today.toISOString())
+                .lt('created_at', tomorrow.toISOString())
+                .order('created_at', { ascending: true })
+            );
+          }
+          if (cubicleNums.length === 0 && myServices.length > 0) {
+            queries.push(
+              supabase
+                .from('patients')
+                .select('*')
+                .in('status', ['Assigned', 'With Doctor', 'Carryout'])
+                .not('cubicleNum', 'is', null)
+                .in('cubicleNum', cubicleNums)
+                .gte('created_at', today.toISOString())
+                .lt('created_at', tomorrow.toISOString())
+                .order('created_at', { ascending: true })
+            );
+          }
+
+          const results = await Promise.all(queries);
+          const patientMap = new Map<number, Patient>();
+          for (const res of results) {
+            if (!res.error && res.data) {
+              for (const p of res.data) {
+                if (!p.cubicleNum) continue;
+                const svc = p.service?.trim().toLowerCase() || '';
+                if (cachedRegServicesRef.current.has(svc) && !p.reg_end) continue;
+                patientMap.set(p.id, p as Patient);
+              }
+            } else if (res.error) {
+              console.warn('Nurse background fetch subquery error:', res.error.message);
+            }
+          }
+
+          rawPatients = Array.from(patientMap.values()).sort(
+            (a, b) => new Date(a.created_at || 0).getTime() - new Date(b.created_at || 0).getTime()
+          );
         }
       }
-      return patient;
-    });
 
-    setAssignedPatients(
-      processedData.filter((p) => dbStatusToStage(p.status) === 'assigned')
-    );
-    setWithDoctorPatients(
-      processedData.filter((p) => dbStatusToStage(p.status) === 'with_doctor')
-    );
-    setCarryoutPatients(
-      processedData.filter((p) => dbStatusToStage(p.status) === 'carryout')
-    );
+      // Discard response if a newer fetch was initiated in the meantime
+      if (requestId !== fetchSeqRef.current) {
+        return;
+      }
+
+      // Clean up expired in-flight mutation pins
+      const now = Date.now();
+      for (const [id, pin] of inFlightMutationsRef.current.entries()) {
+        if (now > pin.expiresAt) {
+          inFlightMutationsRef.current.delete(id);
+        }
+      }
+
+      // Overlay active pins onto server data so slow writes never revert local state
+      const processedData = rawPatients.map((patient) => {
+        const pin = inFlightMutationsRef.current.get(patient.id);
+        if (pin) {
+          if (dbStatusToStage(patient.status) === pin.stage) {
+            inFlightMutationsRef.current.delete(patient.id);
+          } else {
+            return { ...patient, status: stageToDbStatus(pin.stage) };
+          }
+        }
+        return patient;
+      });
+
+      setAssignedPatients(
+        processedData.filter((p) => dbStatusToStage(p.status) === 'assigned')
+      );
+      setWithDoctorPatients(
+        processedData.filter((p) => dbStatusToStage(p.status) === 'with_doctor')
+      );
+      setCarryoutPatients(
+        processedData.filter((p) => dbStatusToStage(p.status) === 'carryout')
+      );
+    })();
+
+    inFlightFetchRef.current = task;
+    try {
+      await task;
+    } finally {
+      if (inFlightFetchRef.current === task) {
+        inFlightFetchRef.current = null;
+      }
+    }
   }, [getMyCubicleNums]);
 
   /**
    * Fetches completed patients archived in the daily ledger today.
+   * Leverages the unified server API response in fetchData to avoid redundant duplicate queries.
    */
   const fetchFinished = useCallback(async () => {
-    const requestId = ++finishedSeqRef.current;
-    const requestedAllScreening = showAllScreeningRef.current;
-    const cubicleNums = await getMyCubicleNums(false);
-    const myServices = cachedAssignedServicesRef.current;
-    const isSupervisor = userRoleRef.current === 'superadmin' || userRoleRef.current === 'admin';
-
-    let rawFinished: Patient[] = [];
-    let serverApiSucceeded = false;
-
-    try {
-      const { data: { session } } = await supabase.auth.getSession();
-      if (session?.access_token) {
-        const response = await fetch(requestedAllScreening ? '/api/nurse/patients?scope=opd-screening' : '/api/nurse/patients', {
-          headers: { Authorization: `Bearer ${session.access_token}` },
-        });
-        if (response.ok) {
-          const json = await response.json();
-          if (requestId !== finishedSeqRef.current || requestedAllScreening !== showAllScreeningRef.current) return;
-          if (json.finishedPatients) {
-            rawFinished = (json.finishedPatients || []) as Patient[];
-            serverApiSucceeded = true;
-          }
-        }
-      }
-    } catch (apiErr) {
-      console.warn('Nurse server API finished fetch failed, falling back to direct client queries:', apiErr);
-    }
-
-    if (!serverApiSucceeded) {
-      if (requestedAllScreening) throw new Error('Finished OPD Screening patients could not be loaded. Please retry.');
-      const today = new Date();
-      today.setHours(0, 0, 0, 0);
-
-      const tomorrow = new Date(today);
-      tomorrow.setDate(today.getDate() + 1);
-
-      if (isSupervisor && cubicleNums.length === 0) {
-        const { data, error } = await supabase
-          .from('patients')
-          .select('*')
-          .eq('status', 'Done')
-          .in('cubicleNum', cubicleNums)
-          .gte('created_at', today.toISOString())
-          .lt('created_at', tomorrow.toISOString())
-          .order('updated_at', { ascending: false });
-
-        if (error) {
-          console.warn('Nurse finished fetch dropped:', error.message);
-          return;
-        }
-        rawFinished = (data || []) as Patient[];
-      } else {
-        const queries = [];
-        if (cubicleNums.length > 0) {
-          queries.push(
-            supabase
-              .from('patients')
-              .select('*')
-              .eq('status', 'Done')
-              .in('cubicleNum', cubicleNums)
-              .gte('created_at', today.toISOString())
-              .lt('created_at', tomorrow.toISOString())
-              .order('updated_at', { ascending: false })
-          );
-        }
-        if (cubicleNums.length === 0 && myServices.length > 0) {
-          queries.push(
-            supabase
-              .from('patients')
-              .select('*')
-              .eq('status', 'Done')
-              .in('cubicleNum', cubicleNums)
-              .gte('created_at', today.toISOString())
-              .lt('created_at', tomorrow.toISOString())
-              .order('updated_at', { ascending: false })
-          );
-        }
-
-        const results = await Promise.all(queries);
-        const patientMap = new Map<number, Patient>();
-        for (const res of results) {
-          if (!res.error && res.data) {
-            for (const p of res.data) {
-              patientMap.set(p.id, p as Patient);
-            }
-          } else if (res.error) {
-            console.warn('Nurse finished fetch subquery error:', res.error.message);
-          }
-        }
-
-        rawFinished = Array.from(patientMap.values()).sort(
-          (a, b) =>
-            new Date(b.updated_at || b.created_at || 0).getTime() -
-            new Date(a.updated_at || a.created_at || 0).getTime()
-        );
-      }
-    }
-
-    if (requestId !== finishedSeqRef.current) {
-      return;
-    }
-
-    setFinishedPatients(rawFinished);
-  }, [getMyCubicleNums]);
+    return fetchData();
+  }, [fetchData]);
 
   /**
    * Directly patches incoming Supabase Realtime payloads into local state in 0ms,

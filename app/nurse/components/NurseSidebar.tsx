@@ -229,7 +229,7 @@ export function NurseSidebar({
         </button>
 
         {isExpanded && (
-          <p className="mb-2 px-2 text-[10px] font-bold uppercase tracking-wider text-slate-400 dark:text-[#737373] animate-in fade-in duration-200">
+          <p className="mb-2 px-2 text-xs font-bold uppercase tracking-wider text-slate-400 dark:text-[#737373] animate-in fade-in duration-200">
             {nurseTexts.myCoverage}
           </p>
         )}
@@ -327,11 +327,11 @@ export function NurseSidebar({
                               : 'text-slate-600 hover:bg-slate-100 hover:text-slate-900 dark:text-[#a3a3a3] dark:hover:bg-[#242424] dark:hover:text-[#f5f5f5]'
                           }`}
                         >
-                          <p className="text-xs font-bold leading-tight">
+                          <p className="text-sm font-bold leading-tight">
                             {nurseTexts.cubiclePrefix} {cubicle.cubicleNum}
                           </p>
                           <p
-                            className={`text-[10px] leading-tight truncate ${
+                            className={`text-xs font-medium leading-tight truncate ${
                               active ? 'text-white/80' : 'text-slate-400 dark:text-[#737373]'
                             }`}
                           >
@@ -364,7 +364,7 @@ export function NurseSidebar({
         >
           <i className={`bx ${SIDEBAR_ICONS.selectScreen} text-xl shrink-0`} aria-hidden="true" />
           {isExpanded && (
-            <span className="text-xs font-semibold ml-3 truncate animate-in fade-in duration-200">
+            <span className="text-sm font-semibold ml-3 truncate animate-in fade-in duration-200">
               {nurseTexts.selectScreenLabel}
             </span>
           )}
@@ -381,7 +381,7 @@ export function NurseSidebar({
         >
           <i className={`bx ${SIDEBAR_ICONS.logout} text-xl shrink-0`} aria-hidden="true" />
           {isExpanded && (
-            <span className="text-xs font-semibold ml-3 truncate animate-in fade-in duration-200">
+            <span className="text-sm font-semibold ml-3 truncate animate-in fade-in duration-200">
               {nurseTexts.logoutLabel}
             </span>
           )}

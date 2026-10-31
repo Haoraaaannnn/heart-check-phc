@@ -26,7 +26,7 @@ export async function POST(request: Request) {
     await supabaseAdmin.auth.admin.signOut(guard.token, 'others')
 
     return NextResponse.json({ success: true })
-  } catch (error: any) {
-    return NextResponse.json({ error: error.message }, { status: 500 })
+  } catch {
+    return NextResponse.json({ error: 'Failed to reset password. Please try again.' }, { status: 500 })
   }
 }

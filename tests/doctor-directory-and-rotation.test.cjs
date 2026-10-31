@@ -268,7 +268,11 @@ test('Nurse header exposes the shared Doctors editor action', () => {
   function find(node) {
     if (Array.isArray(node)) return node.flatMap(find);
     if (!node || typeof node !== 'object') return [];
-    return [...(node.type === 'button' && node.props.children === 'Doctors' ? [node] : []), ...find(node.props?.children)];
+    const isDocBtn = node.type === 'button' && (
+      node.props?.children === 'Doctors' ||
+      JSON.stringify(node.props?.children || '').includes('Doctors')
+    );
+    return [...(isDocBtn ? [node] : []), ...find(node.props?.children)];
   }
   const buttons = find(tree); assert.equal(buttons.length, 1); buttons[0].props.onClick(); assert.equal(opened, true);
 });
