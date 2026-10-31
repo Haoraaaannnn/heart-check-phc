@@ -1,0 +1,7 @@
+Statistical Test / Metric,Value
+Paired Samples t-Test (t-statistic),t = 1163.2804
+Significance Level (p-value),"p = 0.0000e+00 (p < 0.0001, Statistically Significant)"
+Wilcoxon Signed-Rank Test (W),"W = 0.0, p = 0.0000e+00"
+Effect Size (Cohen's d),d = 7.1121 (Substantial Operational Effect)
+95% Confidence Interval of Difference,"[6.31, 6.33] minutes"
+Mean Difference (Scenario A - Scenario B),6.32 minutes

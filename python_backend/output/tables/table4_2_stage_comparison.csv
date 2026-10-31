@@ -1,0 +1,8 @@
+Stage,Scenario A (Manual),Scenario B (Digital),Time Saved (min),Reduction (%)
+Ticket / Stub Acquisition,3.51,0.67,2.84,80.96
+Queue Callout Latency,1.5,0.0,1.5,100.2
+Registration Counter Service,31.63,29.65,1.98,6.26
+Wait for Doctor Consultation,93.56,93.56,0.0,0.0
+Physician Consultation Service,11.6,11.6,0.0,0.0
+Carry-Out Service,7.56,7.56,0.0,0.0
+TOTAL OPD VISIT DURATION,149.36,143.04,6.32,4.23
