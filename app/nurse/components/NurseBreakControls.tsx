@@ -21,23 +21,43 @@ export function NurseBreakControls({ selectedCubicleNum }: { selectedCubicleNum:
   const station = stations.find(item => String(item.id) === selectedId)
     ?? stations.find(item => item.owners?.some(owner => owner.isCurrentUser)) ?? stations[0];
   return (
-    <div className="shrink-0 flex flex-wrap items-center gap-x-4 gap-y-2 border-b border-slate-200 dark:border-[#2e2e2e] bg-white dark:bg-[#1a1a1a] px-6 py-2 max-h-40 overflow-y-auto">
-      {myStations.length > 0 && <p className="min-w-0 flex-1 basis-56 text-xs font-medium leading-relaxed text-slate-500 dark:text-[#a3a3a3] whitespace-normal break-words">
-        Your stations{myUsername ? ` (${myUsername})` : ''}: {myStations.map(item => item.label).join(', ')}
+    <div className="shrink-0 flex flex-wrap items-center justify-between gap-x-6 gap-y-2 border-b border-slate-200 dark:border-[#2e2e2e] bg-white dark:bg-[#1a1a1a] px-4 sm:px-6 py-2 min-h-[48px] max-h-36 overflow-y-auto">
+      {myStations.length > 0 && <p className="min-w-0 text-xs sm:text-sm font-medium text-slate-600 dark:text-[#a3a3a3] whitespace-normal break-words">
+        Your stations{myUsername ? ` (${myUsername})` : ''}: <span className="font-bold text-slate-900 dark:text-[#f5f5f5]">{myStations.map(item => item.label).join(', ')}</span>
       </p>}
-      {station && <>
-        {stations.length > 1 ? <label className="flex flex-wrap items-center gap-2 text-sm text-slate-700 dark:text-[#f5f5f5]">
-          Station availability
-          <select aria-label="Station for break control" value={station.id} onChange={event => setSelectedId(event.target.value)}
-            className="max-w-full rounded-lg border border-slate-300 dark:border-[#383838] bg-white dark:bg-[#1a1a1a] px-2 py-1.5">
-            {stations.map(item => <option key={item.id} value={item.id}>{item.label}{item.owners?.length
-              ? ` — ${item.owners.map(owner => `${owner.username}${owner.isCurrentUser ? ' (You)' : ''}`).join(', ')}` : ' — Unassigned'}</option>)}
-          </select>
-        </label> : <span className="text-sm font-semibold text-slate-700 dark:text-[#f5f5f5] whitespace-normal break-words">{station.label}</span>}
-        <StationOwnerBadge owners={station.owners} />
-        <StationBreakButton station={station} busy={breaks.busy !== null} onToggle={() => void breaks.toggle(station)} />
-      </>}
-      {breaks.error && <p role="alert" className="text-sm text-red-700 dark:text-red-300">{breaks.error}</p>}
+      {station && (
+        <div className="flex flex-wrap items-center gap-3 sm:gap-4">
+          {stations.length > 1 ? (
+            <label className="flex flex-wrap items-center gap-2 text-xs sm:text-sm font-semibold text-slate-700 dark:text-[#d4d4d4]">
+              <span>Station availability</span>
+              <select
+                aria-label="Station for break control"
+                value={station.id}
+                onChange={event => setSelectedId(event.target.value)}
+                className="max-w-full rounded-lg border border-slate-300 dark:border-[#383838] bg-white dark:bg-[#1a1a1a] px-3 py-1.5 text-xs sm:text-sm font-semibold text-slate-800 dark:text-[#f5f5f5] shadow-2xs cursor-pointer outline-none"
+              >
+                {stations.map(item => (
+                  <option key={item.id} value={item.id}>
+                    {item.label}{item.owners?.length ? ` — ${item.owners.map(owner => `${owner.username}${owner.isCurrentUser ? ' (You)' : ''}`).join(', ')}` : ' — Unassigned'}
+                  </option>
+                ))}
+              </select>
+            </label>
+          ) : (
+            <span className="text-xs sm:text-sm font-bold text-slate-800 dark:text-[#f5f5f5] whitespace-normal break-words">{station.label}</span>
+          )}
+          <div className="shrink-0">
+            <StationOwnerBadge
+              owners={station.owners}
+              className="rounded-lg px-3 py-1.5 text-sm font-bold shadow-2xs"
+            />
+          </div>
+          <div className="shrink-0 [&>button]:min-h-[34px] [&>button]:px-3.5 [&>button]:py-1.5 [&>button]:rounded-lg [&>button]:text-xs sm:[&>button]:text-sm [&>button]:font-semibold [&>button]:shadow-2xs">
+            <StationBreakButton station={station} busy={breaks.busy !== null} onToggle={() => void breaks.toggle(station)} />
+          </div>
+        </div>
+      )}
+      {breaks.error && <p role="alert" className="text-xs sm:text-sm font-semibold text-red-700 dark:text-red-300 w-full">{breaks.error}</p>}
     </div>
   );
 }

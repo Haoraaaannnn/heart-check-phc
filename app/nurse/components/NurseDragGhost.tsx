@@ -68,23 +68,23 @@ export function NurseDragGhost({
       }}
     >
       <div
-        className={`w-64 p-3 rounded-2xl bg-white dark:bg-[#1a1a1a] border-2 shadow-2xl backdrop-blur-md flex items-center justify-between gap-3 ${
+        className={`w-72 p-3.5 rounded-2xl bg-white dark:bg-[#1a1a1a] border-2 shadow-2xl backdrop-blur-md flex items-center justify-between gap-3 ${
           isValidDropTarget
             ? 'border-emerald-500 ring-2 ring-emerald-400/40 bg-emerald-50/95 dark:bg-emerald-950/90'
             : 'border-[#cc3535] ring-2 ring-red-400/30'
         }`}
       >
-        <div className="flex items-center gap-2.5 min-w-0">
-          <div className="w-9 h-9 rounded-xl bg-[#cc3535] text-white flex items-center justify-center font-black text-sm shrink-0 shadow-xs">
+        <div className="flex items-center gap-3 min-w-0">
+          <div className="w-10 h-10 rounded-xl bg-[#cc3535] text-white flex items-center justify-center font-black text-base shrink-0 shadow-xs">
             {patient.patientNum}
           </div>
           <div className="min-w-0">
-            <p className="text-xs font-bold text-gray-800 dark:text-[#f5f5f5] whitespace-normal break-words">
+            <p className="text-sm font-bold text-gray-800 dark:text-[#f5f5f5] whitespace-normal break-words">
               {patient.service}
               {patient.subcategory ? ` · ${patient.subcategory}` : ''}
             </p>
             {originLabel && (
-              <p className="text-[10px] text-gray-500 dark:text-[#a3a3a3] font-medium whitespace-normal break-words">
+              <p className="text-xs text-gray-500 dark:text-[#a3a3a3] font-medium whitespace-normal break-words">
                 {originLabel}
               </p>
             )}
@@ -93,7 +93,7 @@ export function NurseDragGhost({
 
         <div className="shrink-0 text-right">
           <span
-            className={`text-[10px] font-bold px-2 py-0.5 rounded-md ${
+            className={`text-xs font-bold px-2.5 py-1 rounded-md ${
               isValidDropTarget
                 ? 'bg-emerald-100 text-emerald-800 border border-emerald-300 dark:bg-emerald-950/80 dark:text-emerald-300 dark:border-emerald-800/80'
                 : 'bg-red-100 text-[#cc3535] border border-red-200 dark:bg-red-950/80 dark:text-[#f87171] dark:border-red-900/80'

@@ -12,6 +12,15 @@ const supabaseAdmin = createClient(
 
 const DEFAULT_MAX_ATTEMPTS = 3
 const DEFAULT_LOCKOUT_MS = 30 * 1000
+const SETTINGS_CACHE_TTL_MS = 60 * 1000
+
+interface CachedSettings {
+  maxAttempts: number
+  lockoutMs: number
+  expiresAt: number
+}
+
+let settingsCache: CachedSettings | null = null
 
 /** @returns Role confirmation with session cookies, or a bounded authentication error. */
 export async function POST(request: Request) {
@@ -26,36 +35,52 @@ export async function POST(request: Request) {
     const normalizedEmail = email.trim().toLowerCase()
     const now = Date.now()
 
-    const [{ data: maxAttemptsRow }, { data: lockoutRow }] = await Promise.all([
-      supabaseAdmin
-        .from('app_settings')
-        .select('value')
-        .eq('key', 'max_login_attempts')
-        .maybeSingle(),
-      supabaseAdmin
-        .from('app_settings')
-        .select('value')
-        .eq('key', 'login_lockout_seconds')
-        .maybeSingle(),
-    ])
-
-    const parsedMaxAttempts = maxAttemptsRow ? parseInt(maxAttemptsRow.value, 10) : NaN
-    const MAX_ATTEMPTS =
-      !isNaN(parsedMaxAttempts) && parsedMaxAttempts > 0 ? parsedMaxAttempts : DEFAULT_MAX_ATTEMPTS
-
-    const parsedLockoutSeconds = lockoutRow ? parseInt(lockoutRow.value, 10) : NaN
-    const LOCKOUT_MS =
-      !isNaN(parsedLockoutSeconds) && parsedLockoutSeconds > 0
-        ? parsedLockoutSeconds * 1000
-        : DEFAULT_LOCKOUT_MS
-
-    const { data: attemptRow } = await supabaseAdmin
+    const attemptPromise = supabaseAdmin
       .from('login_attempts')
       .select('*')
       .eq('email', normalizedEmail)
       .order('updated_at', { ascending: false })
       .limit(1)
       .maybeSingle()
+
+    let maxAttempts = DEFAULT_MAX_ATTEMPTS
+    let lockoutMs = DEFAULT_LOCKOUT_MS
+
+    if (settingsCache && now < settingsCache.expiresAt) {
+      maxAttempts = settingsCache.maxAttempts
+      lockoutMs = settingsCache.lockoutMs
+    } else {
+      const [{ data: maxAttemptsRow }, { data: lockoutRow }] = await Promise.all([
+        supabaseAdmin
+          .from('app_settings')
+          .select('value')
+          .eq('key', 'max_login_attempts')
+          .maybeSingle(),
+        supabaseAdmin
+          .from('app_settings')
+          .select('value')
+          .eq('key', 'login_lockout_seconds')
+          .maybeSingle(),
+      ])
+
+      const parsedMaxAttempts = maxAttemptsRow ? parseInt(maxAttemptsRow.value, 10) : NaN
+      if (!isNaN(parsedMaxAttempts) && parsedMaxAttempts > 0) {
+        maxAttempts = parsedMaxAttempts
+      }
+
+      const parsedLockoutSeconds = lockoutRow ? parseInt(lockoutRow.value, 10) : NaN
+      if (!isNaN(parsedLockoutSeconds) && parsedLockoutSeconds > 0) {
+        lockoutMs = parsedLockoutSeconds * 1000
+      }
+
+      settingsCache = {
+        maxAttempts,
+        lockoutMs,
+        expiresAt: now + SETTINGS_CACHE_TTL_MS,
+      }
+    }
+
+    const { data: attemptRow } = await attemptPromise
 
     if (attemptRow?.locked_until) {
       const lockedUntilMs = new Date(attemptRow.locked_until).getTime()
@@ -114,15 +139,15 @@ export async function POST(request: Request) {
     if (signInError || !signInData.session) {
       const newCount = (attemptRow?.attempt_count ?? 0) + 1
 
-      if (newCount >= MAX_ATTEMPTS) {
+      if (newCount >= maxAttempts) {
         await supabaseAdmin.from('login_attempts').upsert({
           email: normalizedEmail,
           attempt_count: newCount,
-          locked_until: new Date(now + LOCKOUT_MS).toISOString(),
+          locked_until: new Date(now + lockoutMs).toISOString(),
           updated_at: new Date().toISOString(),
         }, { onConflict: 'email' })
         return NextResponse.json(
-          { error: 'locked', secondsRemaining: Math.ceil(LOCKOUT_MS / 1000) },
+          { error: 'locked', secondsRemaining: Math.ceil(lockoutMs / 1000) },
           { status: 429 }
         )
       }
@@ -137,19 +162,20 @@ export async function POST(request: Request) {
       return NextResponse.json({ error: 'Invalid email or password' }, { status: 401 })
     }
 
-    await supabaseAdmin.from('login_attempts').upsert({
-      email: normalizedEmail,
-      attempt_count: 0,
-      locked_until: null,
-      updated_at: new Date().toISOString(),
-    }, { onConflict: 'email' })
-
-    // Verify user role in users table and link auth_id if needed
-    const { data: userProfile } = await supabaseAdmin
-      .from('users')
-      .select('role')
-      .eq('auth_id', signInData.user.id)
-      .maybeSingle()
+    // Concurrently reset login attempts and resolve user role from users table
+    const [, { data: userProfile }] = await Promise.all([
+      supabaseAdmin.from('login_attempts').upsert({
+        email: normalizedEmail,
+        attempt_count: 0,
+        locked_until: null,
+        updated_at: new Date().toISOString(),
+      }, { onConflict: 'email' }),
+      supabaseAdmin
+        .from('users')
+        .select('role')
+        .eq('auth_id', signInData.user.id)
+        .maybeSingle(),
+    ])
 
     let resolvedRole = userProfile?.role
     if (!resolvedRole) {

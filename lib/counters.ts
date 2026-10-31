@@ -76,8 +76,11 @@ export async function fetchActiveCounters(includeOnBreak = false): Promise<numbe
     .map(counter => counter.counter_number).sort((firstCounter, secondCounter) => firstCounter - secondCounter);
 }
 
+let inFlightCountersPromise: Promise<OccupiedCounterInfo[]> | null = null;
+
 /**
  * Fetches registration counters alongside their real-time staff occupancy and designated service scopes.
+ * Coalesces concurrent in-flight requests to eliminate duplicate HTTP round-trips.
  *
  * @param fallbackServicesByCounter - Optional local mapping of counter numbers to services.
  * @returns Promise resolving to an array of counter status records.
@@ -85,39 +88,52 @@ export async function fetchActiveCounters(includeOnBreak = false): Promise<numbe
 export async function fetchOccupiedCounters(
   fallbackServicesByCounter?: Record<number, string[]>
 ): Promise<OccupiedCounterInfo[]> {
-  try {
-    const res = await fetch('/api/workstation/occupied-counters', {
-      headers: { 'Cache-Control': 'no-store' },
-    });
-    if (res.ok) {
-      const json = await res.json();
-      if (Array.isArray(json.counters)) {
-        return json.counters;
+  if (inFlightCountersPromise) return inFlightCountersPromise;
+
+  const task = (async (): Promise<OccupiedCounterInfo[]> => {
+    try {
+      const res = await fetch('/api/workstation/occupied-counters', {
+        headers: { 'Cache-Control': 'no-store' },
+      });
+      if (res.ok) {
+        const json = await res.json();
+        if (Array.isArray(json.counters)) {
+          return json.counters;
+        }
       }
+    } catch {
+      // Non-fatal network fallback to direct Supabase query
     }
-  } catch {
-    // Non-fatal network fallback to direct Supabase query
+
+    // Fallback: Query counters table directly
+    const { data: counters, error } = await supabase
+      .from('counters')
+      .select('counter_number, label, active, on_break')
+      .eq('active', true)
+      .order('counter_number', { ascending: true });
+
+    if (error || !counters) return [];
+
+    return counters.map(c => {
+      const fallbackServices = fallbackServicesByCounter?.[c.counter_number] ?? [];
+      const isOccupied = fallbackServices.length > 0;
+      return {
+        counter_number: c.counter_number,
+        label: c.label || `Counter ${c.counter_number}`,
+        active: Boolean(c.active),
+        on_break: Boolean(c.on_break),
+        occupied: isOccupied,
+        services: fallbackServices,
+      };
+    });
+  })();
+
+  inFlightCountersPromise = task;
+  try {
+    return await task;
+  } finally {
+    if (inFlightCountersPromise === task) {
+      inFlightCountersPromise = null;
+    }
   }
-
-  // Fallback: Query counters table directly
-  const { data: counters, error } = await supabase
-    .from('counters')
-    .select('counter_number, label, active, on_break')
-    .eq('active', true)
-    .order('counter_number', { ascending: true });
-
-  if (error || !counters) return [];
-
-  return counters.map(c => {
-    const fallbackServices = fallbackServicesByCounter?.[c.counter_number] ?? [];
-    const isOccupied = fallbackServices.length > 0;
-    return {
-      counter_number: c.counter_number,
-      label: c.label || `Counter ${c.counter_number}`,
-      active: Boolean(c.active),
-      on_break: Boolean(c.on_break),
-      occupied: isOccupied,
-      services: fallbackServices,
-    };
-  });
 }

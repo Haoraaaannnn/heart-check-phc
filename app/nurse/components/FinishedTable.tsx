@@ -82,7 +82,7 @@ export function FinishedTable({ patients, className = '' }: FinishedTableProps) 
   }, [patients, searchTerm]);
 
   return (
-    <div className={`flex flex-col gap-3 ${className}`.trim()}>
+    <div className={`flex flex-col gap-3.5 ${className}`.trim()}>
       {/* Search Filter Input */}
       {patients.length > 5 && (
         <div className="relative">
@@ -91,7 +91,7 @@ export function FinishedTable({ patients, className = '' }: FinishedTableProps) 
             value={searchTerm}
             onChange={(e) => setSearchTerm(e.target.value)}
             placeholder={nurseTexts.searchFinishedPlaceholder}
-            className="w-full px-3.5 py-2 rounded-xl text-xs bg-slate-50 dark:bg-[#1f1f1f] border border-slate-200 dark:border-[#2e2e2e] text-slate-700 dark:text-[#f5f5f5] placeholder-slate-400 dark:placeholder-[#737373] focus:outline-hidden focus:ring-2 focus:ring-[#cc3535]/30 focus:border-[#cc3535] transition"
+            className="w-full px-4 py-2.5 rounded-xl text-sm bg-slate-50 dark:bg-[#1f1f1f] border border-slate-200 dark:border-[#2e2e2e] text-slate-700 dark:text-[#f5f5f5] placeholder-slate-400 dark:placeholder-[#737373] focus:outline-hidden focus:ring-2 focus:ring-[#cc3535]/30 focus:border-[#cc3535] transition"
           />
         </div>
       )}
@@ -99,31 +99,31 @@ export function FinishedTable({ patients, className = '' }: FinishedTableProps) 
       {/* Table Content */}
       {filteredPatients.length === 0 ? (
         <div className="py-12 text-center">
-          <p className="text-xs text-slate-400 dark:text-[#737373] font-medium">
+          <p className="text-sm text-slate-400 dark:text-[#737373] font-medium">
             {searchTerm ? nurseTexts.noMatchingPatients : nurseTexts.emptyFinished}
           </p>
         </div>
       ) : (
         <div className="overflow-x-auto rounded-xl border border-slate-200 dark:border-[#2e2e2e]">
-          <table className="w-full text-xs text-left">
-            <thead className="bg-slate-50 dark:bg-[#1f1f1f] text-slate-500 dark:text-[#a3a3a3] font-semibold border-b border-slate-200 dark:border-[#2e2e2e]">
+          <table className="w-full text-sm text-left">
+            <thead className="bg-slate-50 dark:bg-[#1f1f1f] text-slate-500 dark:text-[#a3a3a3] font-bold text-xs uppercase tracking-wider border-b border-slate-200 dark:border-[#2e2e2e]">
               <tr>
-                <th scope="col" className="px-3.5 py-3">
+                <th scope="col" className="px-4 py-3.5">
                   {nurseTexts.tableQueueNo}
                 </th>
-                <th scope="col" className="px-3.5 py-3">
+                <th scope="col" className="px-4 py-3.5">
                   {nurseTexts.tableService}
                 </th>
-                <th scope="col" className="px-3.5 py-3">
+                <th scope="col" className="px-4 py-3.5">
                   {nurseTexts.tableCubicle}
                 </th>
-                <th scope="col" className="px-3.5 py-3">
+                <th scope="col" className="px-4 py-3.5">
                   {nurseTexts.tableConsultEnd}
                 </th>
-                <th scope="col" className="px-3.5 py-3">
+                <th scope="col" className="px-4 py-3.5">
                   {nurseTexts.tableCarryoutEnd}
                 </th>
-                <th scope="col" className="px-3.5 py-3 text-right">
+                <th scope="col" className="px-4 py-3.5 text-right">
                   {nurseTexts.tableTotalTime}
                 </th>
               </tr>
@@ -140,23 +140,23 @@ export function FinishedTable({ patients, className = '' }: FinishedTableProps) 
                     key={patient.id}
                     className="hover:bg-slate-50/80 dark:hover:bg-[#242424] transition-colors"
                   >
-                    <td className="px-3.5 py-2.5 font-black text-[#cc3535]">
+                    <td className="px-4 py-3 text-base font-black text-[#cc3535]">
                       {patient.patientNum}
                     </td>
-                    <td className="px-3.5 py-2.5 font-medium text-slate-700 dark:text-[#f5f5f5]">
+                    <td className="px-4 py-3 font-medium text-slate-700 dark:text-[#f5f5f5]">
                       {patient.service}
                       {patient.subcategory ? ` · ${patient.subcategory}` : ''}
                     </td>
-                    <td className="px-3.5 py-2.5 text-slate-600 dark:text-[#a3a3a3] font-semibold">
+                    <td className="px-4 py-3 text-slate-600 dark:text-[#a3a3a3] font-semibold">
                       {patient.cubicleNum || '-'}
                     </td>
-                    <td className="px-3.5 py-2.5 text-slate-500 dark:text-[#737373]">
+                    <td className="px-4 py-3 text-slate-500 dark:text-[#737373]">
                       {formatTime(patient.consult_end)}
                     </td>
-                    <td className="px-3.5 py-2.5 text-slate-500 dark:text-[#737373]">
+                    <td className="px-4 py-3 text-slate-500 dark:text-[#737373]">
                       {formatTime(patient.carryout_end)}
                     </td>
-                    <td className="px-3.5 py-2.5 text-right font-mono text-slate-600 dark:text-[#a3a3a3]">
+                    <td className="px-4 py-3 text-right font-mono text-slate-600 dark:text-[#a3a3a3]">
                       {totalDuration}
                     </td>
                   </tr>

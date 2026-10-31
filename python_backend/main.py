@@ -830,6 +830,9 @@ def export_excel(
     )
 
 
+MAX_IMPORT_FILE_SIZE_BYTES = 50 * 1024 * 1024  # 50 MB threshold to protect against memory exhaustion DoS
+
+
 @app.post("/api/import-file")
 async def import_file(
     request: Request,
@@ -846,6 +849,10 @@ async def import_file(
     """
     global _monthly_cache, _years_cache, _export_dates_cache, _daily_drilldown_cache, _dashboard_cache
 
+    content_length = request.headers.get("content-length")
+    if content_length and content_length.isdigit() and int(content_length) > MAX_IMPORT_FILE_SIZE_BYTES:
+        raise HTTPException(status_code=413, detail="File size exceeds maximum permitted limit of 50 MB.")
+
     try:
         file_bytes = await request.body()
     except Exception as e:
@@ -854,10 +861,17 @@ async def import_file(
     if not file_bytes:
         raise HTTPException(status_code=400, detail="Uploaded file payload is empty.")
 
+    if len(file_bytes) > MAX_IMPORT_FILE_SIZE_BYTES:
+        raise HTTPException(status_code=413, detail="File size exceeds maximum permitted limit of 50 MB.")
+
+    safe_filename = os.path.basename(filename.strip())
+    if not safe_filename:
+        raise HTTPException(status_code=400, detail="Invalid file name provided.")
+
     try:
         records, meta = parse_and_process_file(
             file_bytes=file_bytes,
-            filename=filename,
+            filename=safe_filename,
             service=service,
             is_historical=is_historical,
         )

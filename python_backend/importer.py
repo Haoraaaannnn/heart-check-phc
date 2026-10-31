@@ -426,7 +426,12 @@ def process_tabular_dataset(
     else:
         df["status"] = df["status"].fillna("Done")
 
-    if "phoneNum" not in df.columns:
+    if "phoneNum" in df.columns:
+        # Strictly enforce RA 10173: Never persist plaintext phone numbers from imported files
+        df["phoneNum"] = df["phoneNum"].apply(
+            lambda v: v if isinstance(v, str) and v.startswith("enc:v1:") else None
+        )
+    else:
         df["phoneNum"] = None
 
     if "cubicleNum" not in df.columns:

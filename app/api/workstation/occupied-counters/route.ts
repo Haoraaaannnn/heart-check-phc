@@ -120,10 +120,9 @@ export async function GET() {
         },
       }
     );
-  } catch (error: unknown) {
-    const message = error instanceof Error ? error.message : 'Failed to retrieve occupied counters.';
+  } catch {
     return NextResponse.json(
-      { error: message },
+      { error: 'Failed to retrieve occupied counters.' },
       { status: 500 }
     );
   }
