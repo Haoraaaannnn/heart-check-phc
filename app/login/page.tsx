@@ -172,7 +172,7 @@ function LoginPageInner() {
 
       setEmail('');
       setPassword('');
-      window.location.replace('/select-screen');
+      window.location.replace(data.mustChangePassword === true ? '/select-screen?changePassword=required' : '/select-screen');
     } catch {
       setPassword('');
       if (passwordInputRef.current) {

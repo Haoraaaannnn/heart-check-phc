@@ -185,6 +185,7 @@ export async function POST(request: Request) {
 
     const response = NextResponse.json({
       role: resolvedRole,
+      mustChangePassword: signInData.user.user_metadata?.must_change_password === true,
       ...(doctorDirectoryWarning ? { warning: doctorDirectoryWarning } : {}),
     })
     response.headers.set('Cache-Control', 'no-store, no-cache, must-revalidate, proxy-revalidate')

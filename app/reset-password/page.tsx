@@ -26,7 +26,7 @@ export default function ResetPasswordPage() {
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
     setError('');
-    if (password.length < 8) return setError('Password must be at least 8 characters.');
+    if (password.length < 8 || password.length > 64) return setError('Password must be between 8 and 64 characters.');
     if (password !== confirm) return setError('Passwords do not match.');
 
     setLoading(true);
@@ -71,10 +71,11 @@ export default function ResetPasswordPage() {
     <div className="flex h-screen items-center justify-center px-5">
       <form onSubmit={handleSubmit} className="w-full max-w-md rounded-[32px] border border-white/40 bg-white/60 p-8 shadow-lg">
         <h1 className="text-2xl font-bold text-gray-800 mb-6 text-center">Set a new password</h1>
-        <input type="password" placeholder="New password" value={password}
+        <p className="text-sm text-gray-600 mb-3">Use 8–64 characters; 12 or more is recommended. Avoid common words and personal details. Character variety is optional.</p>
+        <input type="password" placeholder="New password" value={password} minLength={8} maxLength={64}
           onChange={(e) => setPassword(e.target.value)}
           className="w-full rounded-2xl border border-gray-300 px-4 py-3 mb-3 text-sm text-black" required />
-        <input type="password" placeholder="Confirm new password" value={confirm}
+        <input type="password" placeholder="Confirm new password" value={confirm} minLength={8} maxLength={64}
           onChange={(e) => setConfirm(e.target.value)}
           className="w-full rounded-2xl border border-gray-300 px-4 py-3 mb-4 text-sm text-black" required />
         {error && <p className="text-sm text-red-600 mb-3">{error}</p>}
