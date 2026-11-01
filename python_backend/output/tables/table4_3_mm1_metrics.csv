@@ -1,0 +1,7 @@
+Metric,Scenario A,Scenario B,Improvement
+Arrival Rate lambda (patients/min),0.0236,0.0236,Equal morning arrival surge
+Service Rate mu (patients/min),0.0316,0.0337,+6.7% capacity
+Traffic Intensity rho,0.7465,0.6997,-0.0468 utilization reduction
+Average Queue Length Lq (patients),2.1978,1.6307,-25.8% fewer queueing patients
+Average Queue Wait Wq (min),93.13,69.10,-24.03 min saved
+Total Time in Subsystem W (min),124.76,98.75,-26.01 min saved

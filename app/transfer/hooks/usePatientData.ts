@@ -129,6 +129,7 @@ export function usePatientData(pendingRef?: React.MutableRefObject<Patient[]>) {
   const [onProgressPatients, setOnProgressPatients] = useState<Patient[]>([]);
   const [assignedPatients, setAssignedPatients] = useState<Record<string, Patient[]>>({});
   const fetchIdRef = useRef(0);
+  const inFlightFetchRef = useRef<Promise<void> | null>(null);
   const assignedRef = useRef(assignedPatients);
   const onProgressRef = useRef(onProgressPatients);
 
@@ -202,147 +203,160 @@ export function usePatientData(pendingRef?: React.MutableRefObject<Patient[]>) {
   }, []);
 
   const fetchData = useCallback(async (failOnError = false) => {
-    const requestId = ++fetchIdRef.current;
-    const start = new Date(); start.setHours(0, 0, 0, 0);
-    const end = new Date(start); end.setDate(start.getDate() + 1);
+    if (inFlightFetchRef.current) return inFlightFetchRef.current;
 
-    const { data, error } = await supabase
-      .from('patients').select('*')
-      .neq('status', 'Done').neq('status', 'Idle').neq('status', 'Removed')
-      .gte('created_at', start.toISOString()).lt('created_at', end.toISOString())
-      .order('queue_position', { ascending: true, nullsFirst: false })
-      .order('created_at', { ascending: true });
-    if (error || !data) {
-      if (failOnError) throw new Error('Unable to load the patient queue. Please retry.');
-      return;
-    }
+    const task = (async () => {
+      const requestId = ++fetchIdRef.current;
+      const start = new Date(); start.setHours(0, 0, 0, 0);
+      const end = new Date(start); end.setDate(start.getDate() + 1);
 
-    // Discard stale out-of-order response
-    if (requestId !== fetchIdRef.current) return;
+      const { data, error } = await supabase
+        .from('patients').select('*')
+        .neq('status', 'Done').neq('status', 'Idle').neq('status', 'Removed')
+        .gte('created_at', start.toISOString()).lt('created_at', end.toISOString())
+        .order('queue_position', { ascending: true, nullsFirst: false })
+        .order('created_at', { ascending: true });
+      if (error || !data) {
+        if (failOnError) throw new Error('Unable to load the patient queue. Please retry.');
+        return;
+      }
 
-    const rows = [...(data as Patient[])];
+      // Discard stale out-of-order response
+      if (requestId !== fetchIdRef.current) return;
 
-    // Clean expired confirmed pins and enforce active ones onto server rows
-    const now = Date.now();
-    for (const [id, pin] of inFlightConfirmedRef.current.entries()) {
-      if (now > pin.expiresAt) {
-        inFlightConfirmedRef.current.delete(id);
-      } else {
-        const target = rows.find(p => p.id === id);
-        if (target) {
-          if (target.status === pin.status && String(target.cubicleNum) === String(pin.cubicleNum)) {
-            // Keep pin active for a 2.5s grace window after first match to absorb delayed echo packets
-            if (!pin.matchedAt) {
-              pin.matchedAt = now;
-            } else if (now - pin.matchedAt > 2_500) {
-              inFlightConfirmedRef.current.delete(id);
+      const rows = [...(data as Patient[])];
+
+      // Clean expired confirmed pins and enforce active ones onto server rows
+      const now = Date.now();
+      for (const [id, pin] of inFlightConfirmedRef.current.entries()) {
+        if (now > pin.expiresAt) {
+          inFlightConfirmedRef.current.delete(id);
+        } else {
+          const target = rows.find(p => p.id === id);
+          if (target) {
+            if (target.status === pin.status && String(target.cubicleNum) === String(pin.cubicleNum)) {
+              // Keep pin active for a 2.5s grace window after first match to absorb delayed echo packets
+              if (!pin.matchedAt) {
+                pin.matchedAt = now;
+              } else if (now - pin.matchedAt > 2_500) {
+                inFlightConfirmedRef.current.delete(id);
+              }
+            } else {
+              target.status = pin.status;
+              target.cubicleNum = pin.cubicleNum;
             }
-          } else {
-            target.status = pin.status;
-            target.cubicleNum = pin.cubicleNum;
           }
         }
       }
-    }
 
-    // Retain any pinned patients that may be temporarily omitted from the server response
-    for (const [id, pin] of inFlightConfirmedRef.current.entries()) {
-      if (now <= pin.expiresAt && !rows.some(p => p.id === id)) {
-        const existing =
-          Object.values(assignedRef.current).flat().find(p => p.id === id) ||
-          onProgressRef.current.find(p => p.id === id);
-        if (existing) {
-          rows.push({
-            ...existing,
-            cubicleNum: pin.cubicleNum,
-            status: pin.status,
-          });
-        }
-      }
-    }
-
-    let queue = rows.filter(p => !p.cubicleNum && p.status !== 'Assigned');
-    let assigned = rows.filter(p => p.status === 'Assigned' && p.cubicleNum);
-
-    // Overlay unconfirmed local moves so they do not flicker back to the server state.
-    for (const pending of pendingRef?.current ?? []) {
-      queue = queue.filter(p => p.id !== pending.id);
-      assigned = assigned.filter(p => p.id !== pending.id);
-      if (pending.status === 'Assigned' && pending.cubicleNum) assigned.push({ ...pending });
-      else queue.push({ ...pending });
-    }
-
-    const nowIso = new Date().toISOString();
-    const writes: DerivedWrites = { nowIso, progressIds: [], statusIds: [], registration: [], clearRegistration: [], topIds: [], clearTopIds: [] };
-
-    // Queue: derive timers and counters locally.
-    const activeRegServices = await fetchRegistrationServices();
-    const needsReg = queue.filter(p => !p.reg_end);
-    let occupiedCounters: OccupiedCounterInfo[] = [];
-    if (needsReg.length > 0) {
-      occupiedCounters = await fetchOccupiedCounters();
-    }
-
-    for (const p of queue) {
-      if (!p.progress_started_at) { p.progress_started_at = nowIso; writes.progressIds.push(p.id); }
-      if (p.status !== 'On Progress') { p.status = 'On Progress'; writes.statusIds.push(p.id); }
-    }
-
-    for (const p of needsReg) {
-      const currentCounter = occupiedCounters.find(counter => counter.counter_number === p.counter);
-      // A staffed counter on break retains its existing intake queue; only new assignments are blocked.
-      if (currentCounter?.active && currentCounter.occupied && currentCounter.on_break) continue;
-      const eligibleCounters = filterEligibleCounters(occupiedCounters, p.service);
-      const isCurrentEligible = p.counter != null && eligibleCounters.some(c => c.counter_number === p.counter);
-
-      if (eligibleCounters.length === 0) {
-        if (p.counter != null) {
-          p.counter = undefined;
-          p.reg_start = undefined;
-          writes.clearRegistration.push(p.id);
-        }
-        continue;
-      }
-
-      if (!isCurrentEligible) {
-        const counts = new Map<number, number>();
-        for (const c of eligibleCounters) counts.set(c.counter_number, 0);
-        for (const other of queue) {
-          if (other.counter && counts.has(other.counter)) {
-            counts.set(other.counter, (counts.get(other.counter) ?? 0) + 1);
+      // Retain any pinned patients that may be temporarily omitted from the server response
+      for (const [id, pin] of inFlightConfirmedRef.current.entries()) {
+        if (now <= pin.expiresAt && !rows.some(p => p.id === id)) {
+          const existing =
+            Object.values(assignedRef.current).flat().find(p => p.id === id) ||
+            onProgressRef.current.find(p => p.id === id);
+          if (existing) {
+            rows.push({
+              ...existing,
+              cubicleNum: pin.cubicleNum,
+              status: pin.status,
+            });
           }
         }
-        const best = [...eligibleCounters].sort((a, b) => {
-          const diff = (counts.get(a.counter_number) ?? 0) - (counts.get(b.counter_number) ?? 0);
-          if (diff !== 0) return diff;
-          return a.counter_number - b.counter_number;
-        })[0];
+      }
 
-        p.counter = best.counter_number;
-        p.reg_start = nowIso;
-        writes.registration.push({ id: p.id, counter: best.counter_number });
-      } else if (!p.reg_start) {
-        p.reg_start = nowIso;
-        writes.registration.push({ id: p.id, counter: p.counter! });
+      let queue = rows.filter(p => !p.cubicleNum && p.status !== 'Assigned');
+      let assigned = rows.filter(p => p.status === 'Assigned' && p.cubicleNum);
+
+      // Overlay unconfirmed local moves so they do not flicker back to the server state.
+      for (const pending of pendingRef?.current ?? []) {
+        queue = queue.filter(p => p.id !== pending.id);
+        assigned = assigned.filter(p => p.id !== pending.id);
+        if (pending.status === 'Assigned' && pending.cubicleNum) assigned.push({ ...pending });
+        else queue.push({ ...pending });
+      }
+
+      const nowIso = new Date().toISOString();
+      const writes: DerivedWrites = { nowIso, progressIds: [], statusIds: [], registration: [], clearRegistration: [], topIds: [], clearTopIds: [] };
+
+      // Queue: derive timers and counters locally.
+      const activeRegServices = await fetchRegistrationServices();
+      const needsReg = queue.filter(p => !p.reg_end);
+      let occupiedCounters: OccupiedCounterInfo[] = [];
+      if (needsReg.length > 0) {
+        occupiedCounters = await fetchOccupiedCounters();
+      }
+
+      for (const p of queue) {
+        if (!p.progress_started_at) { p.progress_started_at = nowIso; writes.progressIds.push(p.id); }
+        if (p.status !== 'On Progress') { p.status = 'On Progress'; writes.statusIds.push(p.id); }
+      }
+
+      for (const p of needsReg) {
+        const currentCounter = occupiedCounters.find(counter => counter.counter_number === p.counter);
+        // A staffed counter on break retains its existing intake queue; only new assignments are blocked.
+        if (currentCounter?.active && currentCounter.occupied && currentCounter.on_break) continue;
+        const eligibleCounters = filterEligibleCounters(occupiedCounters, p.service);
+        const isCurrentEligible = p.counter != null && eligibleCounters.some(c => c.counter_number === p.counter);
+
+        if (eligibleCounters.length === 0) {
+          if (p.counter != null) {
+            p.counter = undefined;
+            p.reg_start = undefined;
+            writes.clearRegistration.push(p.id);
+          }
+          continue;
+        }
+
+        if (!isCurrentEligible) {
+          const counts = new Map<number, number>();
+          for (const c of eligibleCounters) counts.set(c.counter_number, 0);
+          for (const other of queue) {
+            if (other.counter && counts.has(other.counter)) {
+              counts.set(other.counter, (counts.get(other.counter) ?? 0) + 1);
+            }
+          }
+          const best = [...eligibleCounters].sort((a, b) => {
+            const diff = (counts.get(a.counter_number) ?? 0) - (counts.get(b.counter_number) ?? 0);
+            if (diff !== 0) return diff;
+            return a.counter_number - b.counter_number;
+          })[0];
+
+          p.counter = best.counter_number;
+          p.reg_start = nowIso;
+          writes.registration.push({ id: p.id, counter: best.counter_number });
+        } else if (!p.reg_start) {
+          p.reg_start = nowIso;
+          writes.registration.push({ id: p.id, counter: p.counter! });
+        }
+      }
+
+      // Cubicles: group, sort, and derive the top-of-cubicle timer.
+      const grouped: Record<string, Patient[]> = {};
+      for (const p of assigned) (grouped[p.cubicleNum!] ??= []).push(p);
+      for (const list of Object.values(grouped)) {
+        list.sort((a, b) => calledAtMs(a) - calledAtMs(b));
+        const [top, ...rest] = list;
+        if (top && !top.cubicle_top_started_at) { top.cubicle_top_started_at = nowIso; writes.topIds.push(top.id); }
+        for (const p of rest) {
+          if (p.cubicle_top_started_at) { p.cubicle_top_started_at = null; writes.clearTopIds.push(p.id); }
+        }
+      }
+
+      if (requestId !== fetchIdRef.current) return;
+      setOnProgressPatients(queue);
+      setAssignedPatients(grouped);
+      void persistDerivedFields(writes);
+    })();
+
+    inFlightFetchRef.current = task;
+    try {
+      await task;
+    } finally {
+      if (inFlightFetchRef.current === task) {
+        inFlightFetchRef.current = null;
       }
     }
-
-    // Cubicles: group, sort, and derive the top-of-cubicle timer.
-    const grouped: Record<string, Patient[]> = {};
-    for (const p of assigned) (grouped[p.cubicleNum!] ??= []).push(p);
-    for (const list of Object.values(grouped)) {
-      list.sort((a, b) => calledAtMs(a) - calledAtMs(b));
-      const [top, ...rest] = list;
-      if (top && !top.cubicle_top_started_at) { top.cubicle_top_started_at = nowIso; writes.topIds.push(top.id); }
-      for (const p of rest) {
-        if (p.cubicle_top_started_at) { p.cubicle_top_started_at = null; writes.clearTopIds.push(p.id); }
-      }
-    }
-
-    if (requestId !== fetchIdRef.current) return;
-    setOnProgressPatients(queue);
-    setAssignedPatients(grouped);
-    void persistDerivedFields(writes);
   }, [pendingRef]);
 
   return {

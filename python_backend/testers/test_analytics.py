@@ -32,30 +32,31 @@ def fetch_supabase_table(table_name: str, select: str = "*") -> list[dict]:
         response.raise_for_status()
         return response.json()
 
-print("🔍 Testing Supabase connection...")
-try:
-    # Test connection
-    data = fetch_supabase_table(
-        "patients",
-        select="id,created_at,patientNum,service,status,reg_start,reg_end,consult_start,consult_end,cubicleNum"
-    )
-    print(f"✅ Connection successful! Found {len(data)} patient records")
-    
-    if data:
-        print(f"\n📊 Sample data (first 3 records):")
-        df = pd.DataFrame(data)
-        print(df.head(3))
-        print(f"\n📋 DataFrame shape: {df.shape}")
-        print(f"📋 DataFrame columns: {list(df.columns)}")
-        print(f"📋 DataFrame dtypes:\n{df.dtypes}")
+if __name__ == "__main__":
+    print("[INFO] Testing Supabase connection...")
+    try:
+        # Test connection
+        data = fetch_supabase_table(
+            "patients",
+            select="id,created_at,patientNum,service,status,reg_start,reg_end,consult_start,consult_end,cubicleNum"
+        )
+        print(f"[SUCCESS] Connection successful! Found {len(data)} patient records")
         
-        # Check for seeded data
-        seeded_count = len(df[df['patientNum'].str.startswith('seed-', na=False)])
-        print(f"\n🌱 Seeded records found: {seeded_count} out of {len(df)}")
-    else:
-        print("❌ No patient records found in Supabase!")
-        
-except Exception as e:
-    print(f"❌ Error: {e}")
-    import traceback
-    traceback.print_exc()
+        if data:
+            print(f"\n[INFO] Sample data (first 3 records):")
+            df = pd.DataFrame(data)
+            print(df.head(3))
+            print(f"\n[INFO] DataFrame shape: {df.shape}")
+            print(f"[INFO] DataFrame columns: {list(df.columns)}")
+            print(f"[INFO] DataFrame dtypes:\n{df.dtypes}")
+            
+            # Check for seeded data
+            seeded_count = len(df[df['patientNum'].str.startswith('seed-', na=False)])
+            print(f"\n[INFO] Seeded records found: {seeded_count} out of {len(df)}")
+        else:
+            print("[ERROR] No patient records found in Supabase!")
+            
+    except Exception as e:
+        print(f"[ERROR] Error: {e}")
+        import traceback
+        traceback.print_exc()

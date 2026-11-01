@@ -1,0 +1,4 @@
+Reduction Model,Effective Reg Time,Traffic Intensity (rho),Queue Wait Wq (min),Total Stay Saved (min),150-Min Compliance (%)
+Conservative (1.0 min),30.63 min,0.723,79.9496,5.33,61.52
+Base Case (2.0 min),29.65 min,0.6997,69.0968,6.32,62.09
+Optimistic (3.0 min),28.68 min,0.677,60.1125,7.28,62.7

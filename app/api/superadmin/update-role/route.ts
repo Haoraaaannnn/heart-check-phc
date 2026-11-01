@@ -85,7 +85,7 @@ export async function PUT(request: Request) {
       .eq('id', userRow.id);
 
     if (updateError) {
-      return NextResponse.json({ error: updateError.message }, { status: 400 });
+      return NextResponse.json({ error: 'Failed to update user profile in directory.' }, { status: 400 });
     }
 
     const targetAuthId = authId || userRow.auth_id;
@@ -237,8 +237,7 @@ export async function PUT(request: Request) {
       { success: true, message: 'User updated successfully' },
       { status: 200 }
     )
-  } catch (error: unknown) {
-    const message = error instanceof Error ? error.message : 'Unknown server error';
-    return NextResponse.json({ error: message }, { status: 500 })
+  } catch {
+    return NextResponse.json({ error: 'Server error while updating user.' }, { status: 500 })
   }
 }

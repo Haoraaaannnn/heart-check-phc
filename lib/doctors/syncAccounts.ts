@@ -15,9 +15,15 @@ function isRecord(value: unknown): value is Record<string, unknown> {
 export async function syncDoctorAccounts(options: { db: SupabaseClient; authId?: string }): Promise<void> {
   const { db } = options;
   let query = db.from('users').select('auth_id,username').eq('role', 'doctor');
-  if (options.authId) query = query.eq('auth_id', options.authId);
-  const { data: accounts, error: accountError } = await query;
-  const { data: doctors, error: doctorError } = await db.from('doctors').select('auth_id');
+  let doctorQuery = db.from('doctors').select('auth_id');
+  if (options.authId) {
+    query = query.eq('auth_id', options.authId);
+    doctorQuery = doctorQuery.eq('auth_id', options.authId);
+  }
+  const [{ data: accounts, error: accountError }, { data: doctors, error: doctorError }] = await Promise.all([
+    query,
+    doctorQuery,
+  ]);
   const accountRows: unknown = accounts; const doctorRows: unknown = doctors;
   if (accountError || doctorError || !Array.isArray(accountRows) || !Array.isArray(doctorRows) ||
       !accountRows.every(isRecord) || !doctorRows.every(isRecord)) throw new Error('Doctor accounts could not be loaded.');

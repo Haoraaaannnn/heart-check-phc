@@ -67,7 +67,7 @@ export const HEATMAP_IDLE_THRESHOLDS = {
 /** Styling tokens specific to the Cubicles page. */
 export const CUBICLES_STYLES = {
   /** Outer page wrapper matching the admin dashboard shell. */
-  page: 'mx-auto flex w-full max-w-[1680px] flex-col gap-6',
+  page: 'w-full flex flex-col gap-5 md:gap-6',
 
   /** Top banner / header region. */
   header: {
@@ -91,8 +91,8 @@ export const CUBICLES_STYLES = {
     subtitle: 'mt-0.5 text-xs text-content-subtle',
   },
 
-  /** Grid of cubicle tiles (4 columns on large screens). */
-  cubiclesGrid: 'grid grid-cols-1 gap-4 sm:grid-cols-2 lg:grid-cols-4',
+  /** Grid of cubicle tiles (responsive columns on large screens). */
+  cubiclesGrid: 'grid grid-cols-1 gap-4 sm:grid-cols-2 lg:grid-cols-4 2xl:grid-cols-5',
 
   /** Individual cubicle status card. */
   cubicleCard: {
@@ -386,7 +386,7 @@ export const CUBICLES_STYLES = {
     canvasControls: 'flex items-center gap-2',
     canvasScroll: 'w-full overflow-x-auto pb-4 pt-2 phc-scroll relative',
     canvasBoard:
-      'relative min-w-[1260px] rounded-xl border border-line/60 bg-slate-50/50 dark:bg-[#0d0d0d]/60 p-4 select-none',
+      'relative min-w-[1260px] w-full rounded-xl border border-line/60 bg-slate-50/50 dark:bg-[#0d0d0d]/60 p-4 select-none',
     svgOverlay: 'absolute inset-0 w-full h-full pointer-events-none z-0',
 
     // Rectangular Stage Nodes with Thin Borders

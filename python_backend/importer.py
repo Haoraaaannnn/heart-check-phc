@@ -18,7 +18,11 @@ from datetime import date, datetime, timedelta
 import pandas as pd
 from dotenv import load_dotenv
 import httpx
-from supabase import create_client, Client
+try:
+    from supabase import create_client, Client
+except (ImportError, AttributeError):
+    create_client = None  # type: ignore
+    Client = object  # type: ignore
 
 BASE_DIR = os.path.dirname(os.path.abspath(__file__))
 env_path = os.path.join(BASE_DIR, "..", ".env.local")
@@ -426,7 +430,12 @@ def process_tabular_dataset(
     else:
         df["status"] = df["status"].fillna("Done")
 
-    if "phoneNum" not in df.columns:
+    if "phoneNum" in df.columns:
+        # Strictly enforce RA 10173: Never persist plaintext phone numbers from imported files
+        df["phoneNum"] = df["phoneNum"].apply(
+            lambda v: v if isinstance(v, str) and v.startswith("enc:v1:") else None
+        )
+    else:
         df["phoneNum"] = None
 
     if "cubicleNum" not in df.columns:

@@ -104,7 +104,10 @@ export default function ServiceQueuePanel({ service }: ServiceQueuePanelProps) {
                         <div className={S.patientMeta}>
                           <span className={S.patientName}>
                             {isNext ? (
-                              `★ ${T.servingBadge}`
+                              <span className="inline-flex items-center gap-1 font-bold text-rose-700 dark:text-rose-300">
+                                <i className="bx bxs-star text-amber-500" />
+                                <span>{T.servingBadge}</span>
+                              </span>
                             ) : (
                               <span className="inline-flex items-center gap-1">
                                 {T.waitingPrefix}{' '}

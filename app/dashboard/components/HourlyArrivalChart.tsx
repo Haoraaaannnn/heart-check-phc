@@ -26,8 +26,41 @@ interface HourlyArrivalsChartProps {
 export default function HourlyArrivalsChart({ hourlyData, isMounted }: HourlyArrivalsChartProps) {
   const { chartColors } = useDashboardTheme();
 
+  const totalArrivals = isMounted
+    ? hourlyData.reduce((acc, curr) => acc + curr.patients, 0)
+    : 0;
+
+  const peakHour = isMounted
+    ? hourlyData.reduce(
+        (max, curr) => (curr.patients > max.patients ? curr : max),
+        { time: '--', patients: 0 }
+      )
+    : { time: '--', patients: 0 };
+
   return (
-    <DashboardCard title={C.title} subtitle={C.subtitle} icon={C.icon}>
+    <DashboardCard
+      title={C.title}
+      subtitle={C.subtitle}
+      icon={C.icon}
+      action={
+        isMounted && totalArrivals > 0 ? (
+          <div className="flex items-center gap-2 flex-wrap justify-end">
+            {peakHour.patients > 0 && (
+              <span className="inline-flex items-center gap-1 rounded-lg border border-amber-200 bg-amber-50 px-2.5 py-1 text-xs font-semibold text-amber-800 dark:border-amber-900/60 dark:bg-amber-950/40 dark:text-amber-300 whitespace-nowrap">
+                <i className="bx bx-trending-up text-sm" />
+                <span>Peak:</span>
+                <span className="font-mono font-bold">{peakHour.time}</span>
+                <span className="text-[11px] opacity-80">({peakHour.patients} arrivals)</span>
+              </span>
+            )}
+            <span className="inline-flex items-center gap-1.5 rounded-lg border border-line bg-surface-muted px-2.5 py-1 text-xs font-semibold text-content-muted whitespace-nowrap">
+              <span>Total Intake:</span>
+              <span className="font-mono font-bold text-content">{totalArrivals}</span>
+            </span>
+          </div>
+        ) : undefined
+      }
+    >
       <div style={{ width: '100%', height: HOURLY_CHART.height }}>
         {isMounted ? (
           <ResponsiveContainer width="99%" height="100%">

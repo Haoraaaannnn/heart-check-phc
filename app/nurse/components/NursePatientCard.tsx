@@ -139,7 +139,7 @@ export function NursePatientCard({
       onClick={handleCardClick}
       onPointerDown={handlePointerDownWrapper}
       style={{ borderLeftColor: isSelected ? '#cc3535' : 'transparent' }}
-      className={`flex shrink-0 flex-col gap-3 border-b border-l-2 border-slate-100 px-4 py-4 transition-colors select-none outline-none last:border-b-0 dark:border-[#2e2e2e] focus-visible:ring-2 focus-visible:ring-inset focus-visible:ring-[#cc3535] ${
+      className={`flex shrink-0 flex-col gap-3.5 border-b border-l-2 border-slate-100 p-4 sm:p-4.5 transition-colors select-none outline-none last:border-b-0 dark:border-[#2e2e2e] focus-visible:ring-2 focus-visible:ring-inset focus-visible:ring-[#cc3535] ${
         isSelected
           ? 'bg-slate-100 dark:bg-[#242424]'
           : 'bg-white dark:bg-[#1a1a1a]'
@@ -147,10 +147,10 @@ export function NursePatientCard({
     >
       <PatientCardDetails patient={patient} startedAt={timerStartedAt} warnAfterSeconds={warnAfterSeconds} stationContext={stationContext} readOnly={readOnly} />
       {!readOnly && <div><PatientHistoryButton patientId={patient.id} ticket={patient.patientNum} /></div>}
-      {readOnly && <p className="text-xs text-slate-500 dark:text-[#a3a3a3]">{nurseTexts.viewOnlyTicket}</p>}
+      {readOnly && <p className="text-sm text-slate-500 dark:text-[#a3a3a3]">{nurseTexts.viewOnlyTicket}</p>}
 
       {/* Bottom Action Buttons by Stage */}
-      {!readOnly && <div className="flex flex-wrap items-center gap-2 [&>button]:min-h-11 [&>button]:min-w-0 [&>button]:flex-1 [&>button]:rounded-lg [&>button]:px-3 [&>button]:whitespace-normal [&>button]:focus-visible:outline-2 [&>button]:focus-visible:outline-offset-2 [&>button]:focus-visible:outline-[#cc3535]">
+      {!readOnly && <div className="flex flex-wrap items-center gap-2.5 [&>button]:min-h-[42px] [&>button]:min-w-0 [&>button]:flex-1 [&>button]:rounded-xl [&>button]:px-3.5 [&>button]:whitespace-normal [&>button]:focus-visible:outline-2 [&>button]:focus-visible:outline-offset-2 [&>button]:focus-visible:outline-[#cc3535]">
         {stage === 'assigned' && (
           <>
             {onCall && (
@@ -161,7 +161,7 @@ export function NursePatientCard({
                   onCall(patient);
                 }}
                 disabled={isSpeaking || pendingAction !== null}
-                className={`flex-1 flex items-center justify-center py-1.5 px-2 rounded-xl text-xs font-semibold whitespace-nowrap transition cursor-pointer select-none ${
+                className={`flex-1 flex items-center justify-center py-2 px-3 rounded-xl text-sm font-semibold whitespace-nowrap transition cursor-pointer select-none ${
                   isSpeaking
                     ? 'bg-blue-100 dark:bg-blue-950/60 text-blue-400 dark:text-blue-300 cursor-not-allowed'
                     : pendingAction !== null
@@ -181,7 +181,7 @@ export function NursePatientCard({
                   e.stopPropagation();
                   handleTriggerAction('with_doctor', onMoveToWithDoctor);
                 }}
-                className={`flex-1 flex items-center justify-center py-1.5 px-2 rounded-xl text-xs font-semibold whitespace-nowrap transition cursor-pointer select-none ${
+                className={`flex-1 flex items-center justify-center py-2 px-3 rounded-xl text-sm font-semibold whitespace-nowrap transition cursor-pointer select-none ${
                   pendingAction === 'with_doctor'
                     ? 'bg-purple-200 dark:bg-purple-900 text-purple-900 dark:text-purple-100 cursor-wait'
                     : pendingAction !== null
@@ -191,7 +191,7 @@ export function NursePatientCard({
               >
                 {pendingAction === 'with_doctor' ? (
                   <span className="flex items-center gap-1.5 animate-pulse">
-                    <svg className="w-3.5 h-3.5 animate-spin shrink-0" fill="none" viewBox="0 0 24 24">
+                    <svg className="w-4 h-4 animate-spin shrink-0" fill="none" viewBox="0 0 24 24">
                       <circle className="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" strokeWidth="4" />
                       <path className="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4zm2 5.291A7.962 7.962 0 014 12H0c0 3.042 1.135 5.824 3 7.938l3-2.647z" />
                     </svg>
@@ -215,7 +215,7 @@ export function NursePatientCard({
                   e.stopPropagation();
                   handleTriggerAction('back_doctor', onMoveBackFromDoctor);
                 }}
-                className={`flex items-center justify-center py-1.5 px-2.5 rounded-xl text-xs font-semibold whitespace-nowrap transition cursor-pointer select-none shrink-0 ${
+                className={`flex items-center justify-center py-2 px-3 rounded-xl text-sm font-semibold whitespace-nowrap transition cursor-pointer select-none shrink-0 ${
                   pendingAction === 'back_doctor'
                     ? 'bg-slate-300 dark:bg-[#2e2e2e] text-slate-800 dark:text-[#f5f5f5] cursor-wait'
                     : pendingAction !== null
@@ -225,7 +225,7 @@ export function NursePatientCard({
                 title={nurseTexts.btnBack}
               >
                 {pendingAction === 'back_doctor' ? (
-                  <svg className="w-3.5 h-3.5 animate-spin shrink-0" fill="none" viewBox="0 0 24 24">
+                  <svg className="w-4 h-4 animate-spin shrink-0" fill="none" viewBox="0 0 24 24">
                     <circle className="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" strokeWidth="4" />
                     <path className="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4zm2 5.291A7.962 7.962 0 014 12H0c0 3.042 1.135 5.824 3 7.938l3-2.647z" />
                   </svg>
@@ -243,7 +243,7 @@ export function NursePatientCard({
                   e.stopPropagation();
                   handleTriggerAction('carryout', onMoveToCarryout);
                 }}
-                className={`flex-1 flex items-center justify-center py-1.5 px-2 rounded-xl text-xs font-semibold whitespace-nowrap transition cursor-pointer select-none ${
+                className={`flex-1 flex items-center justify-center py-2 px-3 rounded-xl text-sm font-semibold whitespace-nowrap transition cursor-pointer select-none ${
                   pendingAction === 'carryout'
                     ? 'bg-orange-200 dark:bg-orange-950 text-orange-900 dark:text-orange-200 cursor-wait'
                     : pendingAction !== null
@@ -253,7 +253,7 @@ export function NursePatientCard({
               >
                 {pendingAction === 'carryout' ? (
                   <span className="flex items-center gap-1.5 animate-pulse">
-                    <svg className="w-3.5 h-3.5 animate-spin shrink-0" fill="none" viewBox="0 0 24 24">
+                    <svg className="w-4 h-4 animate-spin shrink-0" fill="none" viewBox="0 0 24 24">
                       <circle className="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" strokeWidth="4" />
                       <path className="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4zm2 5.291A7.962 7.962 0 014 12H0c0 3.042 1.135 5.824 3 7.938l3-2.647z" />
                     </svg>
@@ -277,7 +277,7 @@ export function NursePatientCard({
                   e.stopPropagation();
                   handleTriggerAction('back_carryout', onMoveBackFromCarryout);
                 }}
-                className={`flex items-center justify-center py-1.5 px-2.5 rounded-xl text-xs font-semibold whitespace-nowrap transition cursor-pointer select-none shrink-0 ${
+                className={`flex items-center justify-center py-2 px-3 rounded-xl text-sm font-semibold whitespace-nowrap transition cursor-pointer select-none shrink-0 ${
                   pendingAction === 'back_carryout'
                     ? 'bg-slate-300 dark:bg-[#2e2e2e] text-slate-800 dark:text-[#f5f5f5] cursor-wait'
                     : pendingAction !== null
@@ -287,7 +287,7 @@ export function NursePatientCard({
                 title={nurseTexts.btnBack}
               >
                 {pendingAction === 'back_carryout' ? (
-                  <svg className="w-3.5 h-3.5 animate-spin shrink-0" fill="none" viewBox="0 0 24 24">
+                  <svg className="w-4 h-4 animate-spin shrink-0" fill="none" viewBox="0 0 24 24">
                     <circle className="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" strokeWidth="4" />
                     <path className="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4zm2 5.291A7.962 7.962 0 014 12H0c0 3.042 1.135 5.824 3 7.938l3-2.647z" />
                   </svg>
@@ -305,7 +305,7 @@ export function NursePatientCard({
                   e.stopPropagation();
                   handleTriggerAction('finish', onFinish);
                 }}
-                className={`flex-1 flex items-center justify-center py-1.5 px-2 rounded-xl text-xs font-semibold whitespace-nowrap transition cursor-pointer select-none ${
+                className={`flex-1 flex items-center justify-center py-2 px-3 rounded-xl text-sm font-semibold whitespace-nowrap transition cursor-pointer select-none ${
                   pendingAction === 'finish'
                     ? 'bg-emerald-200 dark:bg-emerald-950 text-emerald-900 dark:text-emerald-200 cursor-wait'
                     : pendingAction !== null
@@ -315,7 +315,7 @@ export function NursePatientCard({
               >
                 {pendingAction === 'finish' ? (
                   <span className="flex items-center gap-1.5 animate-pulse">
-                    <svg className="w-3.5 h-3.5 animate-spin shrink-0" fill="none" viewBox="0 0 24 24">
+                    <svg className="w-4 h-4 animate-spin shrink-0" fill="none" viewBox="0 0 24 24">
                       <circle className="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" strokeWidth="4" />
                       <path className="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4zm2 5.291A7.962 7.962 0 014 12H0c0 3.042 1.135 5.824 3 7.938l3-2.647z" />
                     </svg>

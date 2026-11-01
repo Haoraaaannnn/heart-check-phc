@@ -119,6 +119,8 @@ export interface UseOverviewDataResult {
   channelStatus: ChannelStatus;
   /** True when browser is online and Realtime channel is SUBSCRIBED */
   isFullyConnected: boolean;
+  /** Distinct dates containing recorded patient consultations (YYYY-MM-DD), sorted newest first */
+  availableDates: string[];
   /** Imperative refresh handler to manually re-synchronize data */
   refresh: () => Promise<void>;
 }
@@ -249,6 +251,25 @@ function getDateBoundaries(
   const currentMonth = now.getMonth();
   const currentDate = now.getDate();
 
+  // Support specific date format: "date:YYYY-MM-DD" or direct ISO "YYYY-MM-DD"
+  if (range.startsWith('date:') || /^\d{4}-\d{2}-\d{2}$/.test(range)) {
+    const rawStr = range.replace('date:', '').trim();
+    const [y, m, d] = rawStr.split('-').map(Number);
+    if (!isNaN(y) && !isNaN(m) && !isNaN(d)) {
+      const start = new Date(y, m - 1, d, 0, 0, 0, 0);
+      const end = new Date(y, m - 1, d + 1, 0, 0, 0, 0);
+      const prevStart = new Date(y, m - 1, d - 1, 0, 0, 0, 0);
+      const prevEnd = new Date(y, m - 1, d, 0, 0, 0, 0);
+
+      return {
+        startDate: start.toISOString(),
+        endDate: end.toISOString(),
+        prevStartDate: prevStart.toISOString(),
+        prevEndDate: prevEnd.toISOString(),
+      };
+    }
+  }
+
   if (range === 'today') {
     const start = new Date(currentYear, currentMonth, currentDate, 0, 0, 0, 0);
     const end = new Date(currentYear, currentMonth, currentDate + 1, 0, 0, 0, 0);
@@ -338,6 +359,7 @@ export function useOverviewData(): UseOverviewDataResult {
   const [yesterdayCount, setYesterdayCount] = useState<number | null>(null);
   const [comparisonCount, setComparisonCount] = useState<number | null>(null);
   const [comparisonLabel, setComparisonLabel] = useState<string>(METRIC_RANGE_CONFIG.today.trendLabel);
+  const [availableDates, setAvailableDates] = useState<string[]>([]);
   const [isLoading, setIsLoading] = useState<boolean>(true);
   const [isRangeLoading, setIsRangeLoading] = useState<boolean>(false);
 
@@ -431,6 +453,51 @@ export function useOverviewData(): UseOverviewDataResult {
   }, []);
 
   /**
+   * Fetches distinct dates with patient records for direct custom date navigation.
+   */
+  const fetchAvailableDates = useCallback(async () => {
+    try {
+      const baseUrl = process.env.NEXT_PUBLIC_API_URL || 'http://localhost:8000';
+      const res = await fetch(`${baseUrl}/api/available-export-dates`);
+      if (res.ok) {
+        const data = (await res.json()) as { days?: string[] };
+        if (Array.isArray(data.days) && data.days.length > 0) {
+          setAvailableDates(data.days);
+          return;
+        }
+      }
+    } catch {
+      // Fall through to Supabase query fallback
+    }
+
+    try {
+      const { data } = await supabase
+        .from('patients')
+        .select('created_at, consult_start')
+        .not('created_at', 'is', null)
+        .order('created_at', { ascending: false })
+        .limit(500);
+
+      if (data && data.length > 0) {
+        const dateSet = new Set<string>();
+        data.forEach((row: { created_at?: string | null; consult_start?: string | null }) => {
+          const ts = row.consult_start || row.created_at;
+          if (ts && typeof ts === 'string') {
+            const parsed = ts.slice(0, 10);
+            if (/^\d{4}-\d{2}-\d{2}$/.test(parsed)) {
+              dateSet.add(parsed);
+            }
+          }
+        });
+        const sorted = Array.from(dateSet).sort((a, b) => b.localeCompare(a));
+        setAvailableDates(sorted);
+      }
+    } catch (err) {
+      console.warn('Could not fetch available operational dates:', err);
+    }
+  }, []);
+
+  /**
    * Fetches historical patient data for a specified non-today timeframe range.
    *
    * @param targetRange - The historical range to query.
@@ -483,7 +550,11 @@ export function useOverviewData(): UseOverviewDataResult {
       setDeptStats(derived.deptStats);
       setHourlyData(derived.hourlyData);
       setComparisonCount(comparisonBaseline);
-      setComparisonLabel(METRIC_RANGE_CONFIG[targetRange].trendLabel);
+      const customTrendLabel =
+        targetRange.startsWith('date:') || /^\d{4}-\d{2}-\d{2}$/.test(targetRange)
+          ? 'vs. prev day'
+          : (METRIC_RANGE_CONFIG as any)[targetRange]?.trendLabel ?? 'vs. prev day';
+      setComparisonLabel(customTrendLabel);
       setIsRangeLoading(false);
     }
   }, []);
@@ -519,7 +590,11 @@ export function useOverviewData(): UseOverviewDataResult {
         setDeptStats(cached.deptStats);
         setHourlyData(cached.hourlyData);
         setComparisonCount(cached.comparisonCount);
-        setComparisonLabel(METRIC_RANGE_CONFIG[newRange].trendLabel);
+        const customTrendLabel =
+          newRange.startsWith('date:') || /^\d{4}-\d{2}-\d{2}$/.test(newRange)
+            ? 'vs. prev day'
+            : (METRIC_RANGE_CONFIG as any)[newRange]?.trendLabel ?? 'vs. prev day';
+        setComparisonLabel(customTrendLabel);
         setIsRangeLoading(false);
       } else {
         void fetchHistoricalRange(newRange);
@@ -717,6 +792,7 @@ export function useOverviewData(): UseOverviewDataResult {
 
     void fetchTodayStatsRef.current();
     void fetchYesterdayRef.current();
+    void fetchAvailableDates();
 
     const channel = supabase
       .channel(DASHBOARD_REALTIME.channelName)
@@ -808,6 +884,7 @@ export function useOverviewData(): UseOverviewDataResult {
     isOnline,
     channelStatus,
     isFullyConnected,
+    availableDates,
     refresh: handleRefresh,
   };
 }

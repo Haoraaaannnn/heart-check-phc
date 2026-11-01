@@ -47,8 +47,14 @@ export function isValidPrinterHost(host: unknown): boolean {
   }
   const clean = host.trim();
 
-  // Block link-local metadata service (e.g. AWS/GCP 169.254.169.254)
-  if (clean.startsWith('169.254.')) {
+  // Block link-local metadata service (e.g. AWS/GCP 169.254.169.254) and local loopbacks
+  if (
+    clean.startsWith('169.254.') ||
+    clean.startsWith('127.') ||
+    clean === '0.0.0.0' ||
+    clean === 'localhost' ||
+    clean === '::1'
+  ) {
     return false;
   }
 

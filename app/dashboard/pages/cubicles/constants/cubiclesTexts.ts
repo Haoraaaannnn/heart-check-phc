@@ -9,7 +9,7 @@
 
 export const CUBICLES_TEXTS = {
   header: {
-    title: 'Live Cubicle Dashboard',
+    title: 'Cubicle Dashboard',
     subtitle: 'Real-time status of examination cubicles and active consultations',
     lastUpdatedPrefix: 'Last updated:',
     loading: 'Loading cubicle data',
@@ -65,10 +65,10 @@ export const CUBICLES_TEXTS = {
     },
     date: {
       label: 'Operational Day:',
-      today: 'Today (Live)',
+      today: 'Today',
       allAvailable: 'Available Dates',
       refresh: 'Refresh Heatmap',
-      liveIndicator: 'Live Sync',
+      liveIndicator: 'Sync',
       operatingHoursLabel: 'Clinic Schedule: 07:00 - 17:00',
     },
     kpis: {
@@ -302,7 +302,7 @@ export const CUBICLES_TEXTS = {
       idleStation: 'Ready',
       stalledStation: 'Bottleneck',
       clickToInspect: 'Click stage to inspect details',
-      liveSync: 'Live Queue Synchronized',
+      liveSync: 'Queue Synchronized',
       itemsHeading: 'Items in transit / buffer',
       inTransit: 'In Transit',
       routingTo: 'Routing to',
@@ -312,8 +312,8 @@ export const CUBICLES_TEXTS = {
       simulateDayBtn: 'Simulate Day Flow',
       stopSimulateBtn: 'Stop Simulation',
       simulatingDayLabel: 'Replaying Day Traffic',
-      liveProcessActive: 'Live queue process in progress',
-      liveModeBadge: 'Live Mode',
+      liveProcessActive: 'Queue process in progress',
+      liveModeBadge: 'Active',
       simulationModeBadge: 'Day Replay Mode',
       activeItemsBadge: 'Active Pipeline Items',
       noActivePatientsOnRoute: 'No moving queue items (idle route)',

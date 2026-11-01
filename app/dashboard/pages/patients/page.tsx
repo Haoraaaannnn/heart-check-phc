@@ -31,6 +31,7 @@ function PatientsContent() {
   const pathname = usePathname();
   const searchParams = useSearchParams();
   const service = searchParams.get('service'); // null = All Services
+  const selectedDate = searchParams.get('date') || null;
   const urlSearch = searchParams.get('search') || searchParams.get('q') || '';
 
   const { stats, setStats, hourlyData, fetchAnalyticsData } = usePatientsAnalyticsData();
@@ -42,7 +43,7 @@ function PatientsContent() {
     searchQuery,
     setSearchQuery,
     isSearching,
-  } = usePatientData(setStats, service, urlSearch);
+  } = usePatientData(setStats, service, urlSearch, selectedDate);
   const { historicalData } = useHistoricalSummary();
 
   // Hourly pattern comes from the FastAPI report and isn't per-service, so load it once
@@ -50,7 +51,7 @@ function PatientsContent() {
     fetchAnalyticsData();
   }, [fetchAnalyticsData]);
 
-  // Refetches when service filter changes and sets up recurring refresh
+  // Refetches when service filter or date changes and sets up recurring refresh
   useEffect(() => {
     fetchPatientData();
     const timer = setInterval(fetchPatientData, PATIENT_REFRESH_INTERVAL_MS);
@@ -61,6 +62,14 @@ function PatientsContent() {
     const params = new URLSearchParams(searchParams.toString());
     if (next) params.set('service', next);
     else params.delete('service');
+    const qs = params.toString();
+    router.replace(qs ? `${pathname}?${qs}` : pathname, { scroll: false });
+  };
+
+  const handleDateSelect = (nextDate: string | null) => {
+    const params = new URLSearchParams(searchParams.toString());
+    if (nextDate) params.set('date', nextDate);
+    else params.delete('date');
     const qs = params.toString();
     router.replace(qs ? `${pathname}?${qs}` : pathname, { scroll: false });
   };
@@ -76,7 +85,12 @@ function PatientsContent() {
     <div className={PATIENTS_STYLES.page}>
       <PatientsHeader service={service} error={error} />
 
-      <ServiceFilterBar selected={service} onSelect={handleSelect} />
+      <ServiceFilterBar
+        selected={service}
+        onSelect={handleSelect}
+        selectedDate={selectedDate}
+        onDateSelect={handleDateSelect}
+      />
 
       <PatientStatGrid stats={stats} />
 

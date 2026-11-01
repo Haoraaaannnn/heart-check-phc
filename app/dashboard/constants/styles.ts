@@ -57,7 +57,7 @@ export const DASH = {
     stage: 'flex-1 flex flex-col min-w-0 min-h-screen',
     body: 'flex min-h-0 flex-1',
     main: 'flex-1 overflow-y-auto p-4 md:p-6 phc-scroll',
-    page: 'mx-auto flex w-full max-w-[1680px] flex-col gap-6',
+    page: 'w-full flex flex-col gap-5 md:gap-6',
     /** Main column + right rail (stacks below xl). */
     grid: 'grid grid-cols-1 gap-6 xl:grid-cols-[minmax(0,1.6fr)_minmax(0,1fr)]',
     column: 'flex min-w-0 flex-col gap-6',
@@ -65,13 +65,30 @@ export const DASH = {
     metricGrid: 'grid grid-cols-1 gap-4 sm:grid-cols-2 xl:grid-cols-4',
   },
 
-  /** Timeframe date filter pill bar adhering to the enterprise solid surfaces standard. */
+  /** Timeframe date filter bar adhering to the enterprise solid surfaces standard. */
   dateFilter: {
-    root: 'flex flex-col sm:flex-row sm:items-center sm:justify-between gap-3 p-3 rounded-2xl border border-line bg-surface shadow-2xs',
-    group: 'flex items-center gap-1.5 flex-wrap',
+    root: 'flex flex-col md:flex-row md:items-center md:justify-between gap-3 p-2.5 rounded-xl border border-line bg-surface shadow-2xs',
+    group: 'flex items-center gap-2 flex-wrap',
     labelWrap: 'flex items-center gap-1.5 text-xs font-bold uppercase tracking-wider text-content-muted px-1.5 select-none',
     labelIcon: 'text-sm text-content-subtle',
-    pill: 'flex items-center gap-1.5 px-3 py-1.5 rounded-xl text-xs font-semibold transition-all duration-150 cursor-pointer outline-none select-none',
+    segmentedTrack: 'inline-flex items-center p-1 rounded-lg border border-line bg-surface-muted select-none gap-0.5',
+    segmentBtn: 'px-3 py-1.5 text-xs font-semibold rounded-md transition cursor-pointer select-none outline-none inline-flex items-center gap-1.5',
+    segmentActive: 'bg-[#a8071a] text-white shadow-2xs font-bold border border-[#a8071a]',
+    segmentIdle: 'text-content-muted hover:text-content hover:bg-surface/60 border border-transparent',
+    customControl: 'inline-flex items-center gap-1 px-2 py-1 rounded-lg text-xs font-semibold border transition select-none',
+    customControlActive: 'border-[#a8071a] bg-[#a8071a]/10 text-[#a8071a] dark:text-[#f87171]',
+    customControlIdle: 'border-line bg-surface-muted text-content-muted hover:border-slate-400',
+    navStepBtn: 'flex items-center justify-center w-6 h-6 rounded-md hover:bg-surface text-content-muted hover:text-content disabled:opacity-25 disabled:cursor-not-allowed transition cursor-pointer select-none',
+    recordedSelect: 'bg-transparent text-xs font-semibold text-content outline-none cursor-pointer max-w-[145px] sm:max-w-[185px]',
+    calendarBtn: 'flex items-center justify-center w-6 h-6 rounded-md hover:bg-surface text-content-muted hover:text-content transition cursor-pointer',
+    dateInput: 'sr-only',
+    recordedBadge: 'hidden xl:inline-flex items-center px-1.5 py-0.5 rounded text-[10px] font-mono font-bold bg-surface border border-line text-content-subtle',
+    activeContext: 'inline-flex items-center gap-2 px-3 py-1.5 rounded-lg border border-line bg-surface-muted text-xs select-none shrink-0 self-start md:self-auto',
+    activeContextLabel: 'text-[11px] font-bold uppercase tracking-wider text-content-subtle',
+    activeContextValue: 'font-mono font-bold text-content',
+    spinner: 'h-3 w-3 animate-spin text-current',
+    // Backward-compatible keys:
+    pill: 'flex items-center gap-1.5 px-3 py-1.5 rounded-lg text-xs font-semibold transition-all duration-150 cursor-pointer outline-none select-none',
     pillActive: 'bg-[#a8071a] text-white shadow-2xs font-bold border border-[#a8071a]',
     pillIdle:
       `bg-surface-muted text-content-muted border ${themeTokens.border.default} hover:bg-surface hover:text-content`,
@@ -81,7 +98,6 @@ export const DASH = {
     badgeHistorical:
       `inline-flex items-center gap-1.5 px-2.5 py-1 rounded-lg text-[11px] font-semibold bg-slate-100 dark:bg-[#242424] border ${themeTokens.border.default} ${themeTokens.text.secondary} select-none`,
     badgeHistoricalIcon: 'text-xs text-slate-400',
-    spinner: 'h-3 w-3 animate-spin text-current',
   },
 
   /** Responsive mobile slide-over drawer */
@@ -195,25 +211,32 @@ export const DASH = {
 
   /** Welcome banner. Solid professional surface. */
   banner: {
-    root: 'relative overflow-hidden rounded-2xl border border-line bg-surface p-6 shadow-sm',
+    root: 'relative overflow-hidden rounded-2xl border border-line bg-surface p-6 shadow-sm flex flex-col md:flex-row md:items-center md:justify-between gap-4',
     decor: 'hidden',
-    content: 'relative z-10',
+    content: 'relative z-10 min-w-0',
     eyebrow: 'text-xs font-bold uppercase tracking-widest text-accent',
-    title: 'mt-1 text-3xl font-extrabold text-content',
+    title: 'mt-1 text-2xl sm:text-3xl font-extrabold text-content',
     subtitle: 'mt-1 text-sm text-content-muted',
+    badgesWrap: 'flex items-center gap-2 flex-wrap shrink-0',
+    privacyBadge: 'inline-flex items-center gap-1.5 px-3 py-1.5 rounded-lg border border-line bg-surface-muted text-xs font-semibold text-content-muted',
   },
 
   /** Top-row metric cards. Solid tiles with subtle elevation. */
   metric: {
-    tile: 'flex items-center gap-4 rounded-2xl border p-5 shadow-sm',
-    iconWrap: 'flex shrink-0 items-center justify-center text-2xl',
-    label: 'text-xs font-semibold text-content-muted',
-    value: 'text-3xl font-extrabold leading-tight text-content',
-    unit: 'ml-1 text-lg font-bold',
+    tile: 'flex items-start gap-4 rounded-2xl border p-5 shadow-sm bg-surface transition-all',
+    iconWrap: 'flex shrink-0 items-center justify-center text-2xl mt-0.5',
+    label: 'text-xs font-semibold text-content-muted uppercase tracking-wider',
+    value: 'text-3xl font-extrabold leading-tight text-content tabular-nums font-mono',
+    unit: 'ml-1 text-lg font-bold text-content-muted',
     subtitle: 'text-xs text-content-muted',
-    trendUp: 'text-xs font-semibold text-green-600 dark:text-green-400',
-    trendDown: 'text-xs font-semibold text-red-600 dark:text-red-400',
+    trendUp: 'text-xs font-semibold text-green-600 dark:text-green-400 mt-1 flex items-center',
+    trendDown: 'text-xs font-semibold text-red-600 dark:text-red-400 mt-1 flex items-center',
     trendLabel: 'ml-1 font-normal text-content-muted',
+    progressTrack: 'mt-2 h-1.5 w-full rounded-full bg-slate-200/80 dark:bg-slate-800 overflow-hidden',
+    progressFill: 'h-full rounded-full transition-all duration-500',
+    ratioBox: 'mt-2.5 pt-2 border-t border-line/70 flex flex-col gap-1 w-full',
+    ratioLabel: 'flex items-center justify-between text-[11px] font-semibold text-content-muted',
+    ratioValue: 'font-mono font-bold text-content tabular-nums',
   },
 
   /** Live queue table. */
@@ -268,6 +291,6 @@ export const DASH = {
     dot: 'mt-1.5 h-2 w-2 shrink-0 rounded-full',
     text: 'flex-1 text-content-muted',
     strong: 'font-semibold text-content',
-    time: 'shrink-0 text-xs text-content-subtle',
+    time: 'shrink-0 text-xs text-content-subtle whitespace-nowrap',
   },
 } as const;

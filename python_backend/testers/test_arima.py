@@ -40,63 +40,64 @@ def fetch_supabase_table(table_name: str, select: str = "*") -> list[dict]:
         response.raise_for_status()
         return response.json()
 
-print("🔍 Testing ARIMA forecasting module...")
-print("=" * 60)
+if __name__ == "__main__":
+    print("[INFO] Testing ARIMA forecasting module...")
+    print("=" * 60)
 
-try:
-    # Fetch data
-    print("\n📥 Fetching patient data from Supabase...")
-    data = fetch_supabase_table(
-        "patients",
-        select="id,created_at,service,status,reg_start,reg_end,consult_start,consult_end,patientNum"
-    )
-    print(f"✅ Fetched {len(data)} patient records")
-    
-    # Convert to DataFrame
-    df = pd.DataFrame(data)
-    
-    # Rename columns to match preprocessing expectations
-    df = df.rename(columns={k: v for k, v in {
-        'id': 'patient_id',
-        'created_at': 'kiosk_time',
-        'service': 'purpose',
-        'patientNum': 'queue_number',
-    }.items() if k in df.columns and v not in df.columns})
-    
-    print(f"✅ DataFrame created with {df.shape[0]} rows and {df.shape[1]} columns")
-    
-    # Preprocess data
-    print("\n🔧 Preprocessing data...")
-    df_processed = preprocess_queue_data(df)
-    print(f"✅ Preprocessing complete")
-    print(f"   - Total time range: {df_processed['kiosk_time'].min()} to {df_processed['kiosk_time'].max()}")
-    print(f"   - Unique days: {df_processed['visit_date'].nunique()}")
-    
-    # Test forecasting algorithms
-    print("\n📊 Testing forecasting algorithms (including ARIMA)...")
-    print("-" * 60)
-    
-    result = evaluate_forecasting_algorithms(df_processed)
-    
-    print(f"\n✅ Forecasting completed successfully!")
-    print(f"\n📈 Results:")
-    print(f"   Status: {result['status']}")
-    print(f"   Best Algorithm: {result['best_algorithm']}")
-    print(f"   Next Day Forecast: {result['next_day_forecast']} patients")
-    
-    print(f"\n📊 Evaluation Metrics:")
-    for algo, metrics in result['evaluation_metrics'].items():
-        print(f"   {algo:20} - MAE: {metrics['MAE']:8.4f}  RMSE: {metrics['RMSE']:8.4f}")
-    
-    print(f"\n📝 Algorithmic Conclusion:")
-    print(f"   {result['algorithmic_conclusion']}")
-    
-    print("\n" + "=" * 60)
-    print("✅ ARIMA test PASSED - All forecasting algorithms working!")
-    
-except Exception as e:
-    print(f"\n❌ ARIMA test FAILED!")
-    print(f"Error: {type(e).__name__}: {str(e)}")
-    import traceback
-    traceback.print_exc()
-    sys.exit(1)
+    try:
+        # Fetch data
+        print("\n[INFO] Fetching patient data from Supabase...")
+        data = fetch_supabase_table(
+            "patients",
+            select="id,created_at,service,status,reg_start,reg_end,consult_start,consult_end,patientNum"
+        )
+        print(f"[SUCCESS] Fetched {len(data)} patient records")
+        
+        # Convert to DataFrame
+        df = pd.DataFrame(data)
+        
+        # Rename columns to match preprocessing expectations
+        df = df.rename(columns={k: v for k, v in {
+            'id': 'patient_id',
+            'created_at': 'kiosk_time',
+            'service': 'purpose',
+            'patientNum': 'queue_number',
+        }.items() if k in df.columns and v not in df.columns})
+        
+        print(f"[SUCCESS] DataFrame created with {df.shape[0]} rows and {df.shape[1]} columns")
+        
+        # Preprocess data
+        print("\n[INFO] Preprocessing data...")
+        df_processed = preprocess_queue_data(df)
+        print(f"[SUCCESS] Preprocessing complete")
+        print(f"   - Total time range: {df_processed['kiosk_time'].min()} to {df_processed['kiosk_time'].max()}")
+        print(f"   - Unique days: {df_processed['visit_date'].nunique()}")
+        
+        # Test forecasting algorithms
+        print("\n[INFO] Testing forecasting algorithms (including ARIMA)...")
+        print("-" * 60)
+        
+        result = evaluate_forecasting_algorithms(df_processed)
+        
+        print(f"\n[SUCCESS] Forecasting completed successfully!")
+        print(f"\n[RESULTS] Results:")
+        print(f"   Status: {result['status']}")
+        print(f"   Best Algorithm: {result['best_algorithm']}")
+        print(f"   Next Day Forecast: {result['next_day_forecast']} patients")
+        
+        print(f"\n[METRICS] Evaluation Metrics:")
+        for algo, metrics in result['evaluation_metrics'].items():
+            print(f"   {algo:20} - MAE: {metrics['MAE']:8.4f}  RMSE: {metrics['RMSE']:8.4f}")
+        
+        print(f"\n[CONCLUSION] Algorithmic Conclusion:")
+        print(f"   {result['algorithmic_conclusion']}")
+        
+        print("\n" + "=" * 60)
+        print("[SUCCESS] ARIMA test PASSED - All forecasting algorithms working!")
+        
+    except Exception as e:
+        print(f"\n[ERROR] ARIMA test FAILED!")
+        print(f"Error: {type(e).__name__}: {str(e)}")
+        import traceback
+        traceback.print_exc()
+        sys.exit(1)

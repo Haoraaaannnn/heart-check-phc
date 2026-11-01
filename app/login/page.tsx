@@ -64,6 +64,14 @@ function LoginPageInner() {
   const T = LOGIN_TEXTS;
 
   /**
+   * Pre-initializes client auth state on mount so credential submission does
+   * not incur cold-start SDK recovery latency.
+   */
+  useEffect(() => {
+    void supabase.auth.initialize();
+  }, []);
+
+  /**
    * Clears restored password fields without revoking the shared staff session.
    * Visiting or prefetching Login is read-only; only an explicit logout ends a session.
    */

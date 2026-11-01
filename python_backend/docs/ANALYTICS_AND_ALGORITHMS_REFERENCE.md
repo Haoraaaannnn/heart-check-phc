@@ -24,7 +24,7 @@ All system thresholds, capacity limits, and operational parameters are centraliz
 | `PHC_EXCEL_WAITING_TIME_TARGET_MINUTES` | `180` | minutes | Hardcoded constant | Authentic criteria in the hospital's official Excel template formula (`<= 03:00:00` / 3 hours) despite the cell label saying `<= 2.5 hrs.`. |
 | `PHC_CONSULTATION_SHIFT_HOURS` | `7` | hours | Hardcoded constant | Standard consultation shift divisor used in PHC formula: `Patients Seen / Doctors on Duty / 7`. |
 | `EMA_ALPHA` | `0.3` | scalar (0 to 1) | Hardcoded constant | Smoothing parameter for Exponential Moving Average forecasting. Gives 30% weight to current observation and 70% to previous smooth. |
-| `WINDOW_SIZE` | `2` | days | Hardcoded constant | Minimum sliding window size for moving averages (SMA, WMA, Linear Regression). |
+| `WINDOW_SIZE` | `5` | days | Hardcoded constant | Minimum sliding window size for moving averages (SMA, WMA, Linear Regression), representing one PHC business week (Monday through Friday). |
 | `ARIMA_REFIT_INTERVAL` | `7` | days | Hardcoded constant | Parameter refitting interval during walk-forward backtesting to prevent performance degradation on large datasets. |
 | `CONSULTATION_SERVICE` | `'consultation'` | string | Hardcoded constant | Normalized string identifier for general outpatient doctor consultation. |
 | `SPECIALIZED_SERVICES` | list of 7 strings | string identifiers | Hardcoded list | Specialized single-server outpatient stations: `['warfarin', 'benzathine', 'ecg', 'opd_card', 'opd_screening', 'refill_prescription', 'opd_reschedule']`. |
@@ -233,12 +233,12 @@ Located in [analytics/descriptive.py](file:///home/jensen/Github-Repositories/He
 
 Located in [analytics/forecasting.py](file:///home/jensen/Github-Repositories/Heart_Check_PHC/python_backend/analytics/forecasting.py).
 
-The system evaluates 5 distinct mathematical and statistical models on historical daily patient arrival volumes using walk-forward backtesting. The model achieving the lowest Mean Absolute Error (MAE) is selected to generate the next-day forecast.
+The system evaluates 5 distinct candidate mathematical and statistical models against a Seasonal-Naive baseline on historical daily patient arrival volumes using walk-forward backtesting. The candidate model achieving the lowest Mean Absolute Error (MAE) is selected to generate the next-day forecast.
 
 ### 5.1 Volume Time-Series Construction
 - Historical patient volumes are grouped by `visit_date`:
   `volumes = df.groupby('visit_date')['patient_id'].count().sort_index().values`
-- **Minimum Data Requirement:** Requires at least `WINDOW_SIZE + 2` days (4 days minimum). If fewer days exist, falls back to the historical mean.
+- **Minimum Data Requirement:** Requires at least `WINDOW_SIZE + 2` days (7 days minimum, representing 5 window days plus 2 test days). If fewer days exist, falls back to the historical mean.
 
 ### 5.2 Evaluated Forecasting Algorithms
 
@@ -246,14 +246,14 @@ The system evaluates 5 distinct mathematical and statistical models on historica
 - **Type:** Statistical moving average.
 - **Formula:**
   $$\hat{Y}_{t+1} = \frac{1}{k} \sum_{i=0}^{k-1} Y_{t-i}$$
-- **Window Size ($k$):** `WINDOW_SIZE = 2` days.
-- **Rationale:** Smooths short-term fluctuations by equal weighting.
+- **Window Size ($k$):** `WINDOW_SIZE = 5` days (one PHC business week).
+- **Rationale:** Smooths short-term fluctuations by equal weighting across the past week.
 
 #### Model 2: Weighted Moving Average (WMA)
 - **Type:** Statistical linear-decay moving average.
 - **Formula:**
   $$\hat{Y}_{t+1} = \frac{\sum_{i=1}^{k} i \cdot Y_{t - k + i}}{\sum_{i=1}^{k} i}$$
-- **Weights:** Ascending linear weights `[1, 2]`. The most recent day receives weight 2; the previous day receives weight 1.
+- **Weights:** Ascending linear weights `[1, 2, 3, 4, 5]` for $k = 5$. The most recent day receives weight 5; earlier days receive proportionally lower weights.
 - **Rationale:** Gives greater importance to the most recent patient trend.
 
 #### Model 3: Exponential Moving Average (EMA)
@@ -291,14 +291,22 @@ The system evaluates 5 distinct mathematical and statistical models on historica
   $$AIC = 2k - 2\ln(\hat{L})$$
   Extracted via `result.aic` for assessing model quality.
 
+#### Model 6: Seasonal-Naive Baseline
+- **Type:** Non-parametric persistence baseline.
+- **Definition:** Predicts the patient volume observed exactly one business week prior (5 clinic days ago): $\hat{Y}_{t+1} = Y_{t - 4}$. If insufficient history exists for the 5-day seasonal lag, falls back to the running mean.
+- **Role:** Serves as the benchmark denominator for Mean Absolute Scaled Error (MASE).
+
 ### 5.3 Model Selection and Evaluation Metrics
-Every model is tested across the entire backtest range $[k, \dots, N-1]$:
+Every candidate model is tested across the entire backtest range $[k, \dots, N-1]$:
 - **Mean Absolute Error (MAE):**
   $$\text{MAE} = \frac{1}{n} \sum_{i=1}^{n} |Y_i - \hat{Y}_i|$$
 - **Root Mean Squared Error (RMSE):**
   $$\text{RMSE} = \sqrt{\frac{1}{n} \sum_{i=1}^{n} (Y_i - \hat{Y}_i)^2}$$
+- **Mean Absolute Scaled Error (MASE):**
+  $$\text{MASE} = \frac{\text{MAE}_{\text{model}}}{\text{MAE}_{\text{seasonal-naive}}}$$
+  A value below $1.0$ confirms that the model outperforms the simple same-day-last-week naive baseline. Values $\ge 1.0$ indicate that the volume series is policy-constrained (fixed clinic appointment cap) rather than following a seasonal trend.
 - **Selection Decision:**
-  The winning model is selected by strictly minimizing MAE:
+  The winning candidate model is selected by strictly minimizing MAE:
   $$\text{Best Model} = \arg\min_m (\text{MAE}_m)$$
   The winning model is then executed on the most recent window to output `next_day_forecast`.
 

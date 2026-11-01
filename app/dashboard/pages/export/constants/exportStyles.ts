@@ -12,7 +12,7 @@
  */
 
 export const EXPORT_STYLES = {
-  page: 'space-y-6 pb-12',
+  page: 'w-full space-y-6 pb-12',
   header: {
     root: 'rounded-xl border border-slate-200 bg-white p-6 shadow-xs dark:border-[#2e2e2e] dark:bg-[#1a1a1a]',
     topRow: 'flex flex-col gap-4 sm:flex-row sm:items-center sm:justify-between',

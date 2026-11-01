@@ -35,6 +35,8 @@ import { NurseQuickActionDropdown } from '@/app/nurse/components/NurseQuickActio
 import { NurseDragGhost } from '@/app/nurse/components/NurseDragGhost';
 import { FinishedDrawer } from '@/app/nurse/components/FinishedDrawer';
 import { DoctorsModal } from '@/app/transfer/components/DoctorsModal';
+import { PatientHistoryModal } from '@/app/transfer/components/PatientHistoryModal';
+import { usePatientHistory } from '@/app/transfer/hooks/usePatientHistory';
 
 import { useRequireAuth } from '@/app/nurse/hooks/useRequireAuth';
 import { useIdleTimeout } from '@/app/nurse/hooks/useIdleTimeout';
@@ -75,6 +77,8 @@ export default function NursePage() {
   // Modal / Drawer State
   const [finishedDrawerOpen, setFinishedDrawerOpen] = useState(false);
   const [showDoctorsModal, setShowDoctorsModal] = useState(false);
+  const historyState = usePatientHistory();
+  const [showHistoryModal, setShowHistoryModal] = useState(false);
 
   // Audio Announcement State
   const [speakingId, setSpeakingId] = useState<number | null>(null);
@@ -170,11 +174,11 @@ export default function NursePage() {
   const handleRealtimeUpdate = useCallback(async () => {
     setIsSyncing(true);
     try {
-      await Promise.all([refreshCubicles(), fetchData(), fetchFinished()]);
+      await fetchData();
     } finally {
       setIsSyncing(false);
     }
-  }, [refreshCubicles, fetchData, fetchFinished]);
+  }, [fetchData]);
   const previousScopeRef = useRef(showAllScreening);
   useEffect(() => {
     if (previousScopeRef.current === showAllScreening) return;
@@ -196,16 +200,13 @@ export default function NursePage() {
       setIsLoading(true);
       setStartupError('');
       try {
-        await withRequestDeadline((async () => {
-          await refreshCubicles();
-          await Promise.all([fetchData(), fetchFinished()]);
-        })());
+        await withRequestDeadline(fetchData());
       } catch {
         if (requestId === startupRequestId.current) setStartupError('Unable to finish loading the Doctors Station. Please retry.');
       } finally {
         if (requestId === startupRequestId.current) setIsLoading(false);
       }
-  }, [refreshCubicles, fetchData, fetchFinished]);
+  }, [fetchData]);
 
   useEffect(() => {
     if (!checking) void initializeDashboard();
@@ -347,6 +348,8 @@ export default function NursePage() {
           finishedCount={visibleFinished.length}
           onOpenFinishedLedger={() => setFinishedDrawerOpen(true)}
           onOpenDoctors={() => setShowDoctorsModal(true)}
+          onOpenHistory={() => setShowHistoryModal(true)}
+          historyCount={historyState.counts.total}
           onClearFilter={() => { setShowAllScreening(false); handleClearFilter(); }}
           onSelectCategory={(category) => {
             setSelectedCategory(category);
@@ -377,11 +380,11 @@ export default function NursePage() {
         }} />
 
         {/* Action Error Notification Toast */}
-        {callError && <p role="alert" className="shrink-0 mx-4 mt-2 p-3 rounded-lg border border-red-200 bg-red-50 text-red-800 dark:border-red-900 dark:bg-red-950 dark:text-red-200">{callError}</p>}
+        {callError && <p role="alert" className="shrink-0 mx-6 mt-3 p-3.5 rounded-xl border border-red-200 bg-red-50 text-red-800 dark:border-red-900 dark:bg-red-950 dark:text-red-200 text-sm font-semibold">{callError}</p>}
         {actionError && (
           <div
             role="alert"
-            className="mx-6 mt-3 px-4 py-3 rounded-xl bg-red-50 dark:bg-red-950/40 border border-red-200 dark:border-red-900/60 text-red-800 dark:text-red-300 text-xs font-semibold flex items-center justify-between shrink-0 shadow-xs animate-in fade-in duration-150"
+            className="mx-6 mt-3 px-4 py-3 rounded-xl bg-red-50 dark:bg-red-950/40 border border-red-200 dark:border-red-900/60 text-red-800 dark:text-red-300 text-sm font-semibold flex items-center justify-between shrink-0 shadow-xs animate-in fade-in duration-150"
           >
             <div className="flex items-center gap-2">
               <span>{actionError}</span>
@@ -389,7 +392,7 @@ export default function NursePage() {
             <button
               type="button"
               onClick={clearActionError}
-              className="text-red-500 hover:text-red-800 dark:text-red-400 dark:hover:text-red-200 font-bold ml-4 cursor-pointer text-xs underline"
+              className="text-red-500 hover:text-red-800 dark:text-red-400 dark:hover:text-red-200 font-bold ml-4 cursor-pointer text-sm underline"
             >
               {nurseTexts.dismiss}
             </button>
@@ -400,10 +403,10 @@ export default function NursePage() {
         {assignmentStatus === 'unassigned' && !showAllScreening ? (
           <div className="flex-1 flex items-center justify-center p-8">
             <div className="rounded-3xl border border-amber-200 dark:border-amber-900/50 bg-amber-50/70 dark:bg-amber-950/30 p-8 text-center shadow-sm max-w-md">
-              <h2 className="text-base font-bold text-slate-900 dark:text-[#f5f5f5]">
+              <h2 className="text-lg font-bold text-slate-900 dark:text-[#f5f5f5]">
                 {nurseTexts.unassignedTitle}
               </h2>
-              <p className="mt-2 text-xs text-slate-600 dark:text-[#a3a3a3] leading-relaxed">
+              <p className="mt-2 text-sm text-slate-600 dark:text-[#a3a3a3] leading-relaxed">
                 {nurseTexts.unassignedDesc}
               </p>
             </div>
@@ -464,6 +467,15 @@ export default function NursePage() {
         onClose={() => setFinishedDrawerOpen(false)}
         patients={visibleFinished}
       />
+
+      {/* Patient Journey & Stage Progression Modal */}
+      {showHistoryModal && (
+        <PatientHistoryModal
+          isOpen={showHistoryModal}
+          onClose={() => setShowHistoryModal(false)}
+          historyState={historyState}
+        />
+      )}
 
       {/* Station Configuration Modal */}
       {showStationModal && (

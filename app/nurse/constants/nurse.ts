@@ -119,8 +119,8 @@ export const NurseStyle = {
     flex: 1,
     display: 'flex',
     flexDirection: 'column',
-    gap: '0.875rem',
-    padding: '1rem',
+    gap: '1rem',
+    padding: '1.25rem',
     minHeight: 0,
     overflow: 'hidden',
   } as CSSProperties,
@@ -137,7 +137,7 @@ export const NurseStyle = {
   } as CSSProperties,
 
   stageColumnHeader: {
-    padding: '0.75rem 1.5rem',
+    padding: '0.875rem 1.25rem',
     borderBottomWidth: '1px',
     borderBottomStyle: 'solid',
     display: 'flex',
@@ -214,9 +214,9 @@ export const nurseQuickActionStyles = {
   header:
     'px-5 py-3.5 bg-surface-muted border-b border-line flex items-center justify-between',
   ticketNumber:
-    'font-black text-lg text-[#cc3535] dark:text-[#f87171] tracking-tight shrink-0',
-  title: 'text-sm font-bold text-content truncate',
-  subtitle: 'text-[11px] text-content-muted truncate mt-0.5',
+    'font-black text-xl text-[#cc3535] dark:text-[#f87171] tracking-tight shrink-0',
+  title: 'text-base font-bold text-content truncate',
+  subtitle: 'text-xs text-content-muted truncate mt-0.5',
   closeHeaderBtn:
     'w-8 h-8 rounded-lg text-content-muted hover:text-content hover:bg-surface border border-transparent hover:border-line flex items-center justify-center transition cursor-pointer shrink-0 disabled:opacity-40',
   body: 'p-3.5 space-y-2',
@@ -224,11 +224,11 @@ export const nurseQuickActionStyles = {
     'w-full flex items-center justify-between p-3 rounded-xl border border-line bg-surface-muted hover:bg-surface dark:hover:bg-[#202020] transition-all text-left select-none cursor-pointer active:scale-[0.99] group shadow-2xs',
   actionBtnDisabled:
     'w-full flex items-center justify-between p-3 rounded-xl border border-line bg-surface-muted/50 opacity-40 cursor-not-allowed text-left select-none',
-  actionTitle: 'text-sm font-bold text-content transition-colors',
-  actionDesc: 'text-xs text-content-muted transition-colors',
+  actionTitle: 'text-base font-bold text-content transition-colors',
+  actionDesc: 'text-sm text-content-muted transition-colors',
   footer:
     'px-5 py-3 bg-surface-muted border-t border-line flex items-center justify-between',
-  footerHint: 'text-[11px] text-content-muted font-medium',
+  footerHint: 'text-xs text-content-muted font-medium',
   closeFooterBtn:
-    'px-3.5 py-1.5 rounded-xl text-xs font-bold text-content bg-surface hover:bg-surface-muted border border-line shadow-2xs hover:shadow-xs transition cursor-pointer disabled:opacity-40',
+    'px-4 py-2 rounded-xl text-sm font-bold min-h-[38px] text-content bg-surface hover:bg-surface-muted border border-line shadow-2xs hover:shadow-xs transition cursor-pointer disabled:opacity-40',
 } as const;

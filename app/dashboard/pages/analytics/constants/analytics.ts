@@ -52,7 +52,7 @@ export const CACHE_STALE_MS = 30_000;
 /** Styling tokens specific to the Analytics page. */
 export const ANALYTICS_STYLES = {
   /** Outer page wrapper matching the admin dashboard shell. */
-  page: 'mx-auto flex w-full max-w-[1680px] flex-col gap-6',
+  page: 'w-full flex flex-col gap-5 md:gap-6',
 
   /** Top banner / header region. */
   header: {

@@ -3,9 +3,9 @@
  *
  * Implements an executive intelligence surface featuring:
  * 1. Longitudinal system status badge and clinical capacity health indicator.
- * 2. Three high-contrast solid KPI cards (Primary Bottleneck, Avg. Total Journey, Next-Day Forecast).
+ * 2. Four high-contrast solid KPI cards (Primary Bottleneck, Avg. Total Journey, Next-Day Forecast, Primary Service Mix).
  * 3. Year-filtered monthly performance breakdown table conforming to the Enterprise Solid Surfaces standard.
- * 4. Longitudinal clinical notice and session-scoped year caching.
+ * 4. Volume share distributions, annual total footers, and resilient fallback handling.
  *
  * @remarks
  * Conforms strictly to AGENTS.md: pure assembly and rendering, strict separation of concerns,
@@ -16,11 +16,13 @@
 
 'use client';
 
-import { useEffect, useRef, useState } from 'react';
+import { useEffect, useRef, useState, useMemo } from 'react';
 import type { HistoricalSummaryPayload } from '@/app/dashboard/context/HistoricalSummaryContext';
+import { useHistoricalSummary } from '@/app/dashboard/context/HistoricalSummaryContext';
 import { HISTORICAL_TEXTS } from '@/app/dashboard/constants/historicalTexts';
 import { HISTORICAL_STYLES } from '@/app/dashboard/constants/historicalStyles';
 import { formatMinutesToHMS } from '@/utils/formatMinutesToHMS';
+import { supabase } from '@/lib/supabase';
 
 /**
  * Monthly performance record returned from backend analytics.
@@ -65,8 +67,6 @@ function formatDuration(mins: number): string {
   return formatMinutesToHMS(mins);
 }
 
-const API_BASE = process.env.NEXT_PUBLIC_API_URL || (typeof window !== 'undefined' ? '' : 'http://localhost:8000');
-
 /**
  * Executive historical data breakdown banner and monthly performance inspection table.
  *
@@ -82,34 +82,60 @@ export default function HistoricalContextBanner({
   const S = HISTORICAL_STYLES;
   const T = HISTORICAL_TEXTS;
 
+  const { refreshHistorical } = useHistoricalSummary();
+
   const [years, setYears] = useState<number[]>([]);
   const [yearsLoading, setYearsLoading] = useState(true);
   const [activeYear, setActiveYear] = useState<number | null>(null);
   const [months, setMonths] = useState<MonthEntry[]>([]);
   const [monthsLoading, setMonthsLoading] = useState(false);
   const [monthsError, setMonthsError] = useState<string | null>(null);
+  const [showLegend, setShowLegend] = useState(false);
 
   // Client-side cache to avoid redundant network round-trips when switching years
   const monthCache = useRef<Record<number, MonthEntry[]>>({});
 
+  /**
+   * Helper retrieving active staff session bearer token for API route authentication.
+   */
+  const getAuthHeaders = async (): Promise<HeadersInit> => {
+    try {
+      const { data } = await supabase.auth.getSession();
+      const token = data.session?.access_token;
+      return token ? { Authorization: `Bearer ${token}` } : {};
+    } catch {
+      return {};
+    }
+  };
+
   // Fetch available archive years once on mount
   useEffect(() => {
-    fetch(`${API_BASE}/api/available-years`)
+    let isMounted = true;
+    getAuthHeaders()
+      .then((headers) => fetch('/api/available-years', { headers }))
       .then((res) => {
         if (!res.ok) throw new Error(`Server error: ${res.status}`);
         return res.json();
       })
       .then((json) => {
+        if (!isMounted) return;
         const fetchedYears: number[] = json.years || [];
         const sorted = [...fetchedYears].sort((a, b) => b - a);
         setYears(sorted);
-        setActiveYear(sorted[0] ?? null);
+        setActiveYear(sorted[0] ?? new Date().getFullYear());
         setYearsLoading(false);
       })
       .catch(() => {
-        setYears([]);
+        if (!isMounted) return;
+        const currentYear = new Date().getFullYear();
+        setYears([currentYear]);
+        setActiveYear(currentYear);
         setYearsLoading(false);
       });
+
+    return () => {
+      isMounted = false;
+    };
   }, []);
 
   // Fetch or retrieve cached monthly records whenever activeYear changes
@@ -125,7 +151,8 @@ export default function HistoricalContextBanner({
     setMonthsLoading(true);
     setMonthsError(null);
 
-    fetch(`${API_BASE}/api/monthly-breakdown/${activeYear}`)
+    getAuthHeaders()
+      .then((headers) => fetch(`/api/monthly-breakdown/${activeYear}`, { headers }))
       .then((res) => {
         if (!res.ok) throw new Error(`Server error: ${res.status}`);
         return res.json();
@@ -137,10 +164,38 @@ export default function HistoricalContextBanner({
         setMonthsLoading(false);
       })
       .catch((err) => {
-        setMonthsError(err.message);
+        setMonthsError(err.message || 'Unable to retrieve monthly breakdown');
         setMonthsLoading(false);
       });
   }, [activeYear]);
+
+  // Derive top clinical specialty from service distribution
+  const topService = useMemo(() => {
+    if (!historicalData?.service_distribution || historicalData.service_distribution.length === 0) {
+      return null;
+    }
+    const sorted = [...historicalData.service_distribution].sort(
+      (a, b) => b.total_patients - a.total_patients
+    );
+    const totalAll = sorted.reduce((sum, item) => sum + item.total_patients, 0);
+    const top = sorted[0];
+    const pct = totalAll > 0 ? Math.round((top.total_patients / totalAll) * 100) : 0;
+    return { name: top.service, count: top.total_patients, pct };
+  }, [historicalData]);
+
+  // Calculate annual summary from monthly records
+  const annualSummary = useMemo(() => {
+    const totalPatients = months.reduce((acc, m) => acc + (m.patient_count || 0), 0);
+    const validDurations = months
+      .filter((m) => m.avg_total_time_min > 0)
+      .map((m) => m.avg_total_time_min);
+    const avgDuration =
+      validDurations.length > 0
+        ? Math.round(validDurations.reduce((a, b) => a + b, 0) / validDurations.length)
+        : 0;
+
+    return { totalPatients, avgDuration };
+  }, [months]);
 
   // Loading skeleton state conforming to solid surfaces standard
   if (historicalLoading) {
@@ -157,12 +212,38 @@ export default function HistoricalContextBanner({
           <div className="h-28 rounded-xl bg-surface-muted border border-line animate-pulse" />
           <div className="h-28 rounded-xl bg-surface-muted border border-line animate-pulse" />
           <div className="h-28 rounded-xl bg-surface-muted border border-line animate-pulse" />
+          <div className="h-28 rounded-xl bg-surface-muted border border-line animate-pulse" />
         </div>
       </div>
     );
   }
 
-  if (!historicalData) return null;
+  // Resilient Error Recovery State: never return null and leave user with empty screen
+  if (!historicalData) {
+    return (
+      <section className={S.container} aria-label={T.header.titleOnDemand}>
+        <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-4 p-5 rounded-xl border border-line bg-surface-muted">
+          <div className="flex items-center gap-3">
+            <i className="bx bx-error-circle text-2xl text-amber-600 dark:text-amber-400" />
+            <div>
+              <p className="text-sm font-bold text-content">Historical Baseline Calibrating</p>
+              <p className="text-xs text-content-muted">
+                Connecting to longitudinal database records...
+              </p>
+            </div>
+          </div>
+          <button
+            type="button"
+            onClick={() => refreshHistorical()}
+            className="inline-flex items-center gap-2 rounded-xl bg-[#a8071a] px-3.5 py-2 text-xs font-semibold text-white shadow-2xs hover:bg-[#8e0616] cursor-pointer"
+          >
+            <i className="bx bx-refresh text-base" />
+            <span>Re-fetch Baseline</span>
+          </button>
+        </div>
+      </section>
+    );
+  }
 
   const rawStatus = (historicalData.bottleneck_analysis?.system_status || 'No Data') as
     | 'Normal'
@@ -203,9 +284,21 @@ export default function HistoricalContextBanner({
               className={`${S.statusBadge.dot} ${S.statusBadge[`${status}Dot` as keyof typeof S.statusBadge]}`}
             />
             <span>
-              {T.header.badgeLabel} {status}
+              {T.header.badgeLabel} {T.statusLabels[status] ?? status}
             </span>
           </span>
+
+          {/* Status Legend & Directive Toggle Button */}
+          <button
+            type="button"
+            onClick={() => setShowLegend((prev) => !prev)}
+            className={S.header.legendBtn}
+            aria-expanded={showLegend}
+            aria-label={showLegend ? T.statusLegend.hideButton : T.statusLegend.toggleButton}
+          >
+            <i className="bx bx-info-circle text-sm" />
+            <span>{showLegend ? T.statusLegend.hideButton : T.statusLegend.toggleButton}</span>
+          </button>
 
           {/* Optional collapse trigger button */}
           {onClose && (
@@ -222,7 +315,59 @@ export default function HistoricalContextBanner({
         </div>
       </div>
 
-      {/* Three Executive Stat Cards */}
+      {/* System Status Legend & Action Directives Panel */}
+      {showLegend && (
+        <div className={S.legendPanel.root}>
+          <div className={S.legendPanel.header}>
+            <div className="flex flex-col">
+              <span className={S.legendPanel.title}>
+                <i className="bx bx-compass text-rose-600 dark:text-rose-400" />
+                <span>{T.statusLegend.title}</span>
+              </span>
+              <p className={S.legendPanel.subtitle}>{T.statusLegend.subtitle}</p>
+            </div>
+            <button
+              type="button"
+              onClick={() => setShowLegend(false)}
+              className="text-content-muted hover:text-content text-base cursor-pointer p-1"
+              aria-label={T.statusLegend.hideButton}
+            >
+              <i className="bx bx-x" />
+            </button>
+          </div>
+
+          <div className={S.legendPanel.grid}>
+            {T.statusLegend.items.map((item) => {
+              const itemStatus = item.key as keyof typeof S.statusBadge;
+              const badgeStyle = S.statusBadge[itemStatus] ?? S.statusBadge.Normal;
+              const dotStyle =
+                S.statusBadge[`${itemStatus}Dot` as keyof typeof S.statusBadge] ??
+                S.statusBadge.NormalDot;
+
+              return (
+                <div key={item.key} className={S.legendPanel.card}>
+                  <div className={S.legendPanel.cardHeader}>
+                    <span className={`${S.legendPanel.badge} ${badgeStyle}`}>
+                      <span className={`w-1.5 h-1.5 rounded-full ${dotStyle}`} />
+                      <span>{item.badge}</span>
+                    </span>
+                  </div>
+                  <div className={S.legendPanel.criteriaWrap}>
+                    <i className="bx bx-time text-xs" />
+                    <span>{item.criteria}</span>
+                  </div>
+                  <div className={S.legendPanel.directionBlock}>
+                    <span className={S.legendPanel.directionLabel}>Clinical Direction:</span>
+                    <p className={S.legendPanel.direction}>{item.direction}</p>
+                  </div>
+                </div>
+              );
+            })}
+          </div>
+        </div>
+      )}
+
+      {/* Four Enriched Executive Stat Cards */}
       <div className={S.cardsGrid}>
         {/* Card 1: Primary Bottleneck */}
         <div className={`${S.card.tile} ${S.cardTones.amber.tile}`}>
@@ -242,7 +387,12 @@ export default function HistoricalContextBanner({
             <i className="bx bx-hourglass" />
           </div>
           <div className={S.card.content}>
-            <p className={S.card.label}>{T.cards.journey.label}</p>
+            <div className="flex items-center justify-between">
+              <p className={S.card.label}>{T.cards.journey.label}</p>
+              <span className="font-mono text-[10px] font-bold text-purple-700 dark:text-purple-300">
+                PHC Target: &le; 150m
+              </span>
+            </div>
             <p className={S.card.value}>{formatDuration(avgTotalMins)}</p>
             <p className={S.card.subtitle}>{T.cards.journey.subtitle}</p>
           </div>
@@ -270,6 +420,24 @@ export default function HistoricalContextBanner({
             )}
           </div>
         </div>
+
+        {/* Card 4: Top Clinical Service Share */}
+        <div className={`${S.card.tile} ${S.cardTones.blue.tile}`}>
+          <div className={`${S.card.iconWrap} ${S.cardTones.blue.icon}`}>
+            <i className="bx bx-pulse" />
+          </div>
+          <div className={S.card.content}>
+            <p className={S.card.label}>{T.cards.serviceMix.label}</p>
+            <p className={S.card.value}>
+              {topService ? topService.name : T.cards.serviceMix.fallback}
+            </p>
+            <p className={S.card.subtitle}>
+              {topService
+                ? `${topService.count.toLocaleString()} patients (${topService.pct}% volume share)`
+                : T.cards.serviceMix.subtitle}
+            </p>
+          </div>
+        </div>
       </div>
 
       {/* Monthly Breakdown Section */}
@@ -278,7 +446,12 @@ export default function HistoricalContextBanner({
           <div className={S.monthlySection.header}>
             <div className={S.monthlySection.titleBlock}>
               <h3 className={S.monthlySection.title}>{T.monthlySection.title}</h3>
-              <p className={S.monthlySection.subtitle}>{T.monthlySection.subtitle}</p>
+              <p className={S.monthlySection.subtitle}>
+                {T.monthlySection.subtitle} &bull;{' '}
+                <span className="font-semibold text-content">
+                  {annualSummary.totalPatients.toLocaleString()} total in {activeYear}
+                </span>
+              </p>
             </div>
 
             {/* Year Selector Pills */}
@@ -309,7 +482,7 @@ export default function HistoricalContextBanner({
 
           {/* Table Container */}
           <div className={S.table.wrap}>
-            <table className={S.table.table}>
+            <table className={`${S.table.table} min-w-[700px]`}>
               <thead>
                 <tr className={S.table.headRow}>
                   <th className={S.table.th}>{T.table.columns.month}</th>
@@ -363,6 +536,11 @@ export default function HistoricalContextBanner({
                       ? m.system_status
                       : 'No Data';
 
+                    const monthSharePct =
+                      annualSummary.totalPatients > 0
+                        ? Math.round((m.patient_count / annualSummary.totalPatients) * 100)
+                        : 0;
+
                     return (
                       <tr key={m.month} className={S.table.row}>
                         {/* Month */}
@@ -373,11 +551,18 @@ export default function HistoricalContextBanner({
                           </span>
                         </td>
 
-                        {/* Patient Count */}
+                        {/* Patient Count & Volume Share */}
                         <td className={S.table.td}>
-                          <span className={S.table.patientBadge}>
-                            {m.patient_count.toLocaleString()}
-                          </span>
+                          <div className="flex items-center gap-2">
+                            <span className={S.table.patientBadge}>
+                              {m.patient_count.toLocaleString()}
+                            </span>
+                            {m.patient_count > 0 && (
+                              <span className="font-mono text-xs font-semibold text-content-muted tabular-nums">
+                                ({monthSharePct}%)
+                              </span>
+                            )}
+                          </div>
                         </td>
 
                         {/* Bottleneck Stage */}
@@ -400,6 +585,7 @@ export default function HistoricalContextBanner({
                         <td className={S.table.td}>
                           <span
                             className={`${S.statusBadge.base} ${S.statusBadge[rowStatus]}`}
+                            title={T.statusDescriptions[rowStatus] ?? rowStatus}
                           >
                             <span
                               className={`${S.statusBadge.dot} ${
@@ -408,14 +594,51 @@ export default function HistoricalContextBanner({
                                 ]
                               }`}
                             />
-                            <span>{m.system_status}</span>
+                            <span>{T.statusShortLabels[rowStatus] ?? m.system_status}</span>
                           </span>
                         </td>
                       </tr>
                     );
                   })}
               </tbody>
+              {/* Annual Summary Footer Row */}
+              {!monthsLoading && !monthsError && months.length > 0 && (
+                <tfoot>
+                  <tr className="border-t-2 border-line bg-surface-muted/90 font-bold">
+                    <td className="px-4 py-3 text-xs uppercase tracking-wider text-content">
+                      Annual Summary ({activeYear})
+                    </td>
+                    <td className="px-4 py-3 text-xs font-mono text-content tabular-nums">
+                      {annualSummary.totalPatients.toLocaleString()} Total Patients
+                    </td>
+                    <td className="px-4 py-3 text-xs text-content-muted">
+                      {bottleneckStage} (Dominant)
+                    </td>
+                    <td className="px-4 py-3 text-xs font-mono text-content tabular-nums">
+                      {formatDuration(annualSummary.avgDuration)} Mean Duration
+                    </td>
+                    <td className="px-4 py-3 text-xs text-content-muted">
+                      {T.statusShortLabels[status] ?? status}
+                    </td>
+                  </tr>
+                </tfoot>
+              )}
             </table>
+            {/* Inline Operational Status Target Key */}
+            <div className="flex items-center gap-3 px-4 py-2.5 border-t border-line bg-surface-muted/60 text-xs text-content-muted flex-wrap">
+              <span className="font-bold text-[11px] uppercase tracking-wider text-content">
+                Operational Status Target Key:
+              </span>
+              <span className="flex items-center gap-1.5 font-medium">
+                <span className="w-2 h-2 rounded-full bg-emerald-500" /> Optimal (&le; 30m)
+              </span>
+              <span className="flex items-center gap-1.5 font-medium">
+                <span className="w-2 h-2 rounded-full bg-amber-500" /> Elevated Delay (30–60m)
+              </span>
+              <span className="flex items-center gap-1.5 font-medium">
+                <span className="w-2 h-2 rounded-full bg-rose-500" /> Capacity Threshold Exceeded (&gt; 60m)
+              </span>
+            </div>
           </div>
         </div>
       )}

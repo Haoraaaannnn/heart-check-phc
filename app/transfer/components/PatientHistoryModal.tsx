@@ -9,6 +9,7 @@
  * - Enterprise solid surfaces (bg-white dark:bg-[#161616], 1px crisp borders, zero glassmorphism)
  * - Zero emojis in icons or labels
  * - Natural text wrapping without truncate
+ * - Fully responsive and bounded so it never crops in windowed or full-screen viewports
  *
  * @module app/transfer/components/PatientHistoryModal
  */
@@ -16,7 +17,7 @@
 'use client';
 
 import React, { useEffect, useState } from 'react';
-import { EnrichedHistoryPatient, PatientJourneyStage } from '@/app/transfer/types/history';
+import { EnrichedHistoryPatient } from '@/app/transfer/types/history';
 import { PatientStageProgress } from '@/app/transfer/components/PatientStageProgress';
 import { HistoryStageFilter, UsePatientHistoryReturn } from '@/app/transfer/hooks/usePatientHistory';
 import { formatManilaTime } from '@/utils/formatDateTime';
@@ -33,16 +34,13 @@ export interface PatientHistoryModalProps {
 }
 
 const MODAL_FILTER_PILLS: readonly { key: HistoryStageFilter; label: string }[] = [
-  { key: 'all', label: 'All Tickets' },
-  { key: 'done', label: 'Completed' },
-  { key: 'in_service', label: 'In Service' },
-  { key: 'queued', label: 'Waiting Queue' },
-  { key: 'registration', label: 'Registration' },
-  { key: 'idle', label: 'On Hold (Idle)' },
+  { key: 'all', label: 'All Tickets' }, { key: 'done', label: 'Completed' },
+  { key: 'in_service', label: 'In Service' }, { key: 'queued', label: 'Waiting Queue' },
+  { key: 'registration', label: 'Registration' }, { key: 'idle', label: 'On Hold (Idle)' },
 ] as const;
 
 /**
- * Patient History & Stage Progression Inspection Modal component.
+ * Rebuilt Patient History & Stage Progression Inspection Modal component.
  */
 export function PatientHistoryModal({
   isOpen,
@@ -52,7 +50,6 @@ export function PatientHistoryModal({
 }: PatientHistoryModalProps) {
   const {
     filteredPatients,
-    counts,
     loading,
     searchTerm,
     setSearchTerm,
@@ -72,44 +69,56 @@ export function PatientHistoryModal({
       return;
     }
     if (filteredPatients.length > 0) {
-      const stillExists = filteredPatients.some(
-        (p) => p.patient.id === selectedItem?.patient.id
-      );
-      if (!stillExists) {
-        setSelectedItem(filteredPatients[0]);
-      }
+      const stillExists = filteredPatients.some((p) => p.patient.id === selectedItem?.patient.id);
+      if (!stillExists) setSelectedItem(filteredPatients[0]);
     } else {
       setSelectedItem(null);
     }
   }, [isOpen, initialSelectedPatient, filteredPatients, selectedItem]);
 
-  // Handle ESC key to dismiss modal
+  // Handle ESC key and lock body scroll when modal is open
   useEffect(() => {
     if (!isOpen) return;
+    const originalOverflow = document.body.style.overflow;
+    document.body.style.overflow = 'hidden';
+
     const handleKeyDown = (e: KeyboardEvent) => {
       if (e.key === 'Escape') onClose();
     };
     window.addEventListener('keydown', handleKeyDown);
-    return () => window.removeEventListener('keydown', handleKeyDown);
+
+    return () => {
+      document.body.style.overflow = originalOverflow;
+      window.removeEventListener('keydown', handleKeyDown);
+    };
   }, [isOpen, onClose]);
 
   if (!isOpen) return null;
 
   return (
-    <div className="fixed inset-0 z-50 overflow-y-auto bg-slate-900/60 dark:bg-black/75 p-3 sm:p-6 flex items-start justify-center">
+    <div
+      className="fixed inset-0 z-[10000] flex items-center justify-center p-3 sm:p-5 bg-slate-900/60 dark:bg-black/75 overflow-hidden select-none animate-in fade-in duration-150"
+      onClick={(e) => {
+        if (e.target === e.currentTarget) onClose();
+      }}
+    >
       <div
-        className="relative w-full max-w-5xl h-[86vh] max-h-[750px] my-auto flex flex-col rounded-2xl bg-white dark:bg-[#161616] border border-slate-200 dark:border-[#2e2e2e] shadow-2xl overflow-hidden"
+        style={{
+          height: 'min(85vh, 700px)',
+          maxHeight: 'calc(100dvh - 2.5rem)',
+        }}
+        className="relative w-full max-w-5xl lg:max-w-6xl xl:max-w-7xl flex flex-col rounded-2xl bg-white dark:bg-[#161616] border border-slate-200 dark:border-[#2e2e2e] shadow-2xl overflow-hidden select-text"
         role="dialog"
         aria-modal="true"
         aria-labelledby="history-modal-title"
       >
         {/* Header */}
-        <div className="shrink-0 px-6 py-4 border-b border-slate-200 dark:border-[#2b2b2b] flex items-center justify-between gap-3 bg-slate-50/70 dark:bg-[#1a1a1a]/70">
+        <div className="shrink-0 px-5 sm:px-6 py-3 border-b border-slate-200 dark:border-[#2b2b2b] flex items-center justify-between gap-3 bg-slate-50 dark:bg-[#1a1a1a]">
           <div className="min-w-0">
-            <h2 id="history-modal-title" className="text-base font-bold text-slate-900 dark:text-[#f5f5f5] tracking-tight whitespace-nowrap">
+            <h2 id="history-modal-title" className="text-lg sm:text-xl font-bold text-slate-900 dark:text-[#f5f5f5] tracking-tight whitespace-nowrap">
               Patient Journey & Stage History
             </h2>
-            <p className="text-xs text-slate-500 dark:text-[#888888] whitespace-nowrap mt-0.5">
+            <p className="text-xs sm:text-sm text-slate-500 dark:text-[#888888] whitespace-nowrap mt-0.5">
               Real-time tracking of today’s patient ticket progress across clinical stages
             </p>
           </div>
@@ -117,19 +126,20 @@ export function PatientHistoryModal({
           <button
             type="button"
             onClick={onClose}
-            className="w-8 h-8 rounded-lg border border-slate-200 dark:border-[#333333] hover:bg-slate-100 dark:hover:bg-[#252525] flex items-center justify-center text-slate-500 dark:text-[#999999] transition cursor-pointer shrink-0"
+            style={{ minHeight: 'auto' }}
+            className="w-8 h-8 !min-h-0 rounded-lg border border-slate-300 dark:border-[#444444] bg-white dark:bg-[#222222] hover:bg-slate-100 dark:hover:bg-[#2c2c2c] flex items-center justify-center text-slate-600 hover:text-slate-900 dark:text-[#a0a0a0] dark:hover:text-[#ffffff] shadow-2xs transition cursor-pointer shrink-0"
             aria-label="Close patient history modal"
           >
-            <i className="bx bx-x text-lg" aria-hidden="true" />
+            <i className="bx bx-x text-xl" aria-hidden="true" />
           </button>
         </div>
 
         {/* Filter & Search Bar */}
-        <div className="shrink-0 px-6 py-3 border-b border-slate-200 dark:border-[#2b2b2b] bg-slate-50/30 dark:bg-[#181818]/30 flex flex-col sm:flex-row gap-3 items-stretch sm:items-center justify-between">
+        <div className="shrink-0 px-5 sm:px-6 py-2.5 border-b border-slate-200 dark:border-[#2b2b2b] bg-slate-50/50 dark:bg-[#171717] flex flex-col sm:flex-row gap-2.5 items-stretch sm:items-center justify-between">
           {/* Search Box */}
           <div className="relative flex-1 max-w-md">
             <i
-              className="bx bx-search absolute left-3 top-2.5 text-slate-400 dark:text-[#737373] text-sm pointer-events-none"
+              className="bx bx-search absolute left-3 top-2.5 text-slate-400 dark:text-[#737373] text-base pointer-events-none"
               aria-hidden="true"
             />
             <input
@@ -138,13 +148,14 @@ export function PatientHistoryModal({
               value={searchTerm}
               onChange={(e) => setSearchTerm(e.target.value)}
               placeholder="Filter by ticket # (e.g. C001) or service..."
-              className="w-full pl-9 pr-8 py-1.5 text-xs rounded-xl border border-slate-200 dark:border-[#333333] bg-white dark:bg-[#1f1f1f] text-slate-800 dark:text-[#f5f5f5] placeholder-slate-400 dark:placeholder-[#666666] focus:outline-hidden focus:border-blue-500"
+              className="w-full pl-9 pr-8 py-1.5 text-xs sm:text-sm rounded-lg border border-slate-200 dark:border-[#333333] bg-white dark:bg-[#1f1f1f] text-slate-800 dark:text-[#f5f5f5] placeholder-slate-400 dark:placeholder-[#666666] focus:outline-hidden focus:border-blue-500"
             />
             {searchTerm && (
               <button
                 type="button"
                 onClick={() => setSearchTerm('')}
-                className="absolute right-2.5 top-2 text-slate-400 hover:text-slate-600 dark:hover:text-[#cccccc] text-xs cursor-pointer"
+                style={{ minHeight: 'auto' }}
+                className="absolute right-2.5 top-2 !min-h-0 text-slate-400 hover:text-slate-600 dark:hover:text-[#cccccc] text-xs cursor-pointer"
               >
                 <i className="bx bx-x" aria-hidden="true" />
               </button>
@@ -152,7 +163,7 @@ export function PatientHistoryModal({
           </div>
 
           {/* Quick Stage Filter Chips */}
-          <div className="flex items-center gap-1.5 overflow-x-auto phc-scroll pb-1 sm:pb-0">
+          <div className="flex items-center gap-1.5 overflow-x-auto phc-scroll pb-0.5 sm:pb-0">
             {MODAL_FILTER_PILLS.map((pill) => {
               const isSelected = stageFilter === pill.key;
               return (
@@ -160,7 +171,8 @@ export function PatientHistoryModal({
                   key={pill.key}
                   type="button"
                   onClick={() => setStageFilter(pill.key)}
-                  className={`inline-flex items-center gap-1 px-3 py-1.5 rounded-lg text-xs font-semibold whitespace-nowrap transition cursor-pointer shrink-0 ${
+                  style={{ minHeight: 'auto' }}
+                  className={`inline-flex items-center gap-1 px-3 py-1.5 !min-h-0 rounded-lg text-xs font-semibold whitespace-nowrap transition cursor-pointer shrink-0 ${
                     isSelected
                       ? 'bg-slate-800 dark:bg-white text-white dark:text-slate-900 shadow-xs'
                       : 'bg-white dark:bg-[#202020] border border-slate-200 dark:border-[#333333] text-slate-600 dark:text-[#a3a3a3] hover:bg-slate-100 dark:hover:bg-[#282828]'
@@ -173,17 +185,17 @@ export function PatientHistoryModal({
           </div>
         </div>
 
-        {/* Modal Body: Guaranteed Two-column layout (Left: List, Right: Stage Inspector) */}
-        <div className="flex-1 min-h-0 flex flex-row divide-x divide-slate-200 dark:divide-[#2e2e2e]">
-          {/* Left Column: Tickets List with dedicated fixed width */}
-          <div className="w-80 sm:w-96 shrink-0 flex flex-col min-h-0 overflow-y-auto p-3.5 space-y-2 phc-scroll bg-slate-50/50 dark:bg-[#151515]/50">
+        {/* Modal Body: Two-column layout (Left: List, Right: Stage Inspector) */}
+        <div className="flex-1 min-h-0 flex flex-row divide-x divide-slate-200 dark:divide-[#2e2e2e] overflow-hidden">
+          {/* Left Column: Tickets List */}
+          <div className="w-72 sm:w-80 lg:w-96 shrink-0 flex flex-col min-h-0 overflow-y-auto overscroll-contain p-3 sm:p-3.5 space-y-2 phc-scroll bg-slate-50/50 dark:bg-[#151515]/50">
             {loading ? (
-              <div className="py-16 text-center text-xs text-slate-400 dark:text-[#737373]">
+              <div className="py-12 text-center text-xs text-slate-400 dark:text-[#737373]">
                 <div className="w-5 h-5 border-2 border-slate-300 dark:border-[#444444] border-t-[#cc3535] rounded-full animate-spin mx-auto mb-2" />
                 Loading today’s tickets...
               </div>
             ) : filteredPatients.length === 0 ? (
-              <div className="py-16 text-center text-xs text-slate-400 dark:text-[#737373]">
+              <div className="py-12 text-center text-xs text-slate-400 dark:text-[#737373]">
                 No matching tickets found.
               </div>
             ) : (
@@ -205,7 +217,7 @@ export function PatientHistoryModal({
                           {item.patient.patientNum}
                         </span>
                         {item.patient.service && (
-                          <span className="text-[11px] font-semibold px-2 py-0.5 rounded-md bg-slate-100 dark:bg-[#252525] text-slate-700 dark:text-[#cccccc] border border-slate-200 dark:border-[#333333] whitespace-nowrap">
+                          <span className="text-xs font-semibold px-2 py-0.5 rounded-md bg-slate-100 dark:bg-[#252525] text-slate-700 dark:text-[#cccccc] border border-slate-200 dark:border-[#333333] whitespace-nowrap">
                             {item.patient.service}
                           </span>
                         )}
@@ -219,7 +231,7 @@ export function PatientHistoryModal({
                       <span className="font-bold text-slate-700 dark:text-slate-200 whitespace-nowrap">
                         {item.stageInfo.label}
                       </span>
-                      <span className="text-xs text-slate-500 dark:text-[#888888] whitespace-nowrap shrink-0">
+                      <span className="text-slate-500 dark:text-[#888888] whitespace-nowrap shrink-0">
                         {item.elapsedWaitMinutes}m elapsed
                       </span>
                     </div>
@@ -229,17 +241,17 @@ export function PatientHistoryModal({
             )}
           </div>
 
-          {/* Right Column: Detailed Stage Progression Inspector (Full remaining width) */}
-          <div className="flex-1 min-w-0 flex flex-col min-h-0 overflow-y-auto p-5 sm:p-7 phc-scroll bg-white dark:bg-[#161616]">
+          {/* Right Column: Detailed Stage Progression Inspector */}
+          <div className="flex-1 min-w-0 flex flex-col min-h-0 overflow-y-auto overscroll-contain p-4 sm:p-5 lg:p-6 phc-scroll bg-white dark:bg-[#161616]">
             {selectedItem ? (
-              <div className="flex flex-col gap-5">
+              <div className="flex flex-col gap-3.5 sm:gap-4">
                 {/* Patient Summary Header */}
-                <div className="flex items-center justify-between gap-4 border-b border-slate-200 dark:border-[#2b2b2b] pb-4">
+                <div className="flex items-center justify-between gap-3 border-b border-slate-200 dark:border-[#2b2b2b] pb-3 shrink-0">
                   <div className="min-w-0">
                     <span className="text-xs font-bold uppercase tracking-wider text-slate-400 dark:text-[#888888] block whitespace-nowrap">
                       Ticket Stage Overview
                     </span>
-                    <h3 className="text-3xl font-black font-mono text-slate-900 dark:text-[#f5f5f5] tracking-tight whitespace-nowrap mt-0.5">
+                    <h3 className="text-3xl sm:text-4xl font-black font-mono text-slate-900 dark:text-[#f5f5f5] tracking-tight whitespace-nowrap mt-0.5">
                       {selectedItem.patient.patientNum}
                     </h3>
                   </div>
@@ -248,7 +260,7 @@ export function PatientHistoryModal({
                     <span className="text-xs font-bold uppercase tracking-wider text-slate-400 dark:text-[#888888] block whitespace-nowrap">
                       Department
                     </span>
-                    <span className="text-sm font-bold text-slate-800 dark:text-[#d4d4d4] whitespace-nowrap mt-0.5 block">
+                    <span className="text-sm sm:text-base font-bold text-slate-800 dark:text-[#d4d4d4] whitespace-nowrap mt-0.5 block">
                       {selectedItem.patient.service || 'General Service'}
                       {selectedItem.patient.subcategory ? ` (${selectedItem.patient.subcategory})` : ''}
                     </span>
@@ -263,15 +275,15 @@ export function PatientHistoryModal({
                 />
 
                 {/* Milestones Timeline */}
-                <div className="rounded-xl border border-slate-200 dark:border-[#2e2e2e] bg-slate-50/70 dark:bg-[#1a1a1a]/70 p-4 sm:p-5 flex flex-col gap-3">
-                  <span className="text-xs font-bold uppercase tracking-wider text-slate-700 dark:text-[#d4d4d4] whitespace-nowrap">
+                <div className="rounded-xl border border-slate-200 dark:border-[#2e2e2e] bg-slate-50/70 dark:bg-[#1a1a1a]/70 p-3.5 sm:p-4 flex flex-col gap-2.5 shrink-0">
+                  <span className="text-xs sm:text-sm font-bold uppercase tracking-wider text-slate-700 dark:text-[#d4d4d4] whitespace-nowrap">
                     Recorded Milestone Timestamps
                   </span>
 
-                  <div className="space-y-2.5 text-xs">
-                    <div className="flex justify-between items-center py-1.5 border-b border-slate-200/70 dark:border-[#262626] gap-3">
+                  <div className="space-y-2 text-xs sm:text-sm">
+                    <div className="flex justify-between items-center py-1 border-b border-slate-200/70 dark:border-[#262626] gap-3">
                       <span className="text-slate-600 dark:text-[#a0a0a0] font-medium whitespace-nowrap">
-                        1. Ticket Intake / Registration Start:
+                        1. Ticket Intake / Registration:
                       </span>
                       <span className="font-mono font-bold text-slate-800 dark:text-[#f0f0f0] whitespace-nowrap shrink-0">
                         {selectedItem.patient.created_at
@@ -280,9 +292,9 @@ export function PatientHistoryModal({
                       </span>
                     </div>
 
-                    <div className="flex justify-between items-center py-1.5 border-b border-slate-200/70 dark:border-[#262626] gap-3">
+                    <div className="flex justify-between items-center py-1 border-b border-slate-200/70 dark:border-[#262626] gap-3">
                       <span className="text-slate-600 dark:text-[#a0a0a0] font-medium whitespace-nowrap">
-                        2. Registration Window Assigned:
+                        2. Registration Counter:
                       </span>
                       <span className="font-mono font-bold text-slate-800 dark:text-[#f0f0f0] whitespace-nowrap shrink-0">
                         {selectedItem.patient.counter
@@ -291,9 +303,9 @@ export function PatientHistoryModal({
                       </span>
                     </div>
 
-                    <div className="flex justify-between items-center py-1.5 border-b border-slate-200/70 dark:border-[#262626] gap-3">
+                    <div className="flex justify-between items-center py-1 border-b border-slate-200/70 dark:border-[#262626] gap-3">
                       <span className="text-slate-600 dark:text-[#a0a0a0] font-medium whitespace-nowrap">
-                        3. Clinical Station / Cubicle:
+                        3. Clinical Cubicle:
                       </span>
                       <span className="font-mono font-bold text-slate-800 dark:text-[#f0f0f0] whitespace-nowrap shrink-0">
                         {selectedItem.patient.cubicleNum
@@ -302,28 +314,26 @@ export function PatientHistoryModal({
                       </span>
                     </div>
 
-                    <div className="flex justify-between items-center py-1.5 gap-3">
+                    <div className="flex justify-between items-center py-1 gap-3">
                       <span className="text-slate-600 dark:text-[#a0a0a0] font-medium whitespace-nowrap">
-                        4. Consultation Finished / Done:
+                        4. Consultation Completed:
                       </span>
                       <span className="font-mono font-bold text-slate-800 dark:text-[#f0f0f0] whitespace-nowrap shrink-0">
-                        {selectedItem.patient.consult_end || selectedItem.patient.carryout_end
-                          ? formatManilaTime(
-                              new Date(
-                                (selectedItem.patient.consult_end || selectedItem.patient.carryout_end)!
-                              ),
-                              true
-                            )
-                          : selectedItem.stageInfo.stage === 'done'
-                          ? 'Completed today'
-                          : 'In progress'}
+                        {(() => {
+                          const end = selectedItem.patient.consult_end || selectedItem.patient.carryout_end;
+                          return end
+                            ? formatManilaTime(new Date(end), true)
+                            : selectedItem.stageInfo.stage === 'done'
+                            ? 'Completed today'
+                            : 'In progress';
+                        })()}
                       </span>
                     </div>
                   </div>
                 </div>
               </div>
             ) : (
-              <div className="flex-1 flex items-center justify-center text-xs text-slate-400 dark:text-[#737373] py-20 text-center whitespace-nowrap">
+              <div className="flex-1 flex items-center justify-center text-xs text-slate-400 dark:text-[#737373] py-12 text-center whitespace-nowrap">
                 Select a ticket from the left list to inspect its detailed stage progression.
               </div>
             )}

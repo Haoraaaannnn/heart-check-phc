@@ -196,7 +196,7 @@ export function NurseQuickActionDropdown({
                 >
                   {nurseTexts.quickActionTitle}
                 </h2>
-                <span className={`text-[10px] font-bold px-2 py-0.5 rounded-md border ${currentStageClasses}`}>
+                <span className={`text-xs font-bold px-2.5 py-0.5 rounded-md border ${currentStageClasses}`}>
                   {currentStageBadge}
                 </span>
               </div>
@@ -262,12 +262,12 @@ export function NurseQuickActionDropdown({
                     </div>
                   </div>
                   {loadingAction === 'with_doctor' ? (
-                    <span className="text-[11px] font-bold px-2 py-0.5 rounded-md bg-purple-200 dark:bg-purple-900 text-purple-900 dark:text-purple-100 flex items-center gap-1.5 shrink-0 animate-pulse border border-purple-300 dark:border-purple-700">
+                    <span className="text-xs font-bold px-2.5 py-0.5 rounded-md bg-purple-200 dark:bg-purple-900 text-purple-900 dark:text-purple-100 flex items-center gap-1.5 shrink-0 animate-pulse border border-purple-300 dark:border-purple-700">
                       <span className="w-1.5 h-1.5 rounded-full bg-purple-700 animate-ping" />
                       {nurseTexts.updatingAction}
                     </span>
                   ) : (
-                    <span className="text-[11px] font-bold px-2 py-0.5 rounded-md bg-purple-100 dark:bg-purple-950 text-purple-800 dark:text-purple-300 border border-purple-200 dark:border-purple-800 shrink-0">
+                    <span className="text-xs font-bold px-2.5 py-0.5 rounded-md bg-purple-100 dark:bg-purple-950 text-purple-800 dark:text-purple-300 border border-purple-200 dark:border-purple-800 shrink-0">
                       {nurseTexts.badgeNextStep}
                     </span>
                   )}
@@ -309,7 +309,7 @@ export function NurseQuickActionDropdown({
                       </div>
                     </div>
                   </div>
-                  <span className="text-[11px] font-semibold px-2 py-0.5 rounded-md bg-blue-100 dark:bg-blue-950 text-blue-800 dark:text-blue-300 border border-blue-200 dark:border-blue-800 shrink-0">
+                  <span className="text-xs font-semibold px-2.5 py-0.5 rounded-md bg-blue-100 dark:bg-blue-950 text-blue-800 dark:text-blue-300 border border-blue-200 dark:border-blue-800 shrink-0">
                     {nurseTexts.badgeSpeaker}
                   </span>
                 </button>
@@ -356,12 +356,12 @@ export function NurseQuickActionDropdown({
                     </div>
                   </div>
                   {loadingAction === 'carryout' ? (
-                    <span className="text-[11px] font-bold px-2 py-0.5 rounded-md bg-amber-200 dark:bg-amber-900 text-amber-900 dark:text-amber-100 flex items-center gap-1.5 shrink-0 animate-pulse border border-amber-300 dark:border-amber-700">
+                    <span className="text-xs font-bold px-2.5 py-0.5 rounded-md bg-amber-200 dark:bg-amber-900 text-amber-900 dark:text-amber-100 flex items-center gap-1.5 shrink-0 animate-pulse border border-amber-300 dark:border-amber-700">
                       <span className="w-1.5 h-1.5 rounded-full bg-amber-700 animate-ping" />
                       {nurseTexts.updatingAction}
                     </span>
                   ) : (
-                    <span className="text-[11px] font-bold px-2 py-0.5 rounded-md bg-amber-100 dark:bg-amber-950 text-amber-800 dark:text-amber-300 border border-amber-200 dark:border-amber-800 shrink-0">
+                    <span className="text-xs font-bold px-2.5 py-0.5 rounded-md bg-amber-100 dark:bg-amber-950 text-amber-800 dark:text-amber-300 border border-amber-200 dark:border-amber-800 shrink-0">
                       {nurseTexts.badgeNextStep}
                     </span>
                   )}
@@ -445,12 +445,12 @@ export function NurseQuickActionDropdown({
                     </div>
                   </div>
                   {loadingAction === 'back_queue' ? (
-                    <span className="text-[11px] font-bold px-2 py-0.5 rounded-md bg-slate-200 dark:bg-[#2e2e2e] text-slate-800 dark:text-[#f5f5f5] flex items-center gap-1.5 shrink-0 animate-pulse border border-slate-300 dark:border-[#383838]">
+                    <span className="text-xs font-bold px-2.5 py-0.5 rounded-md bg-slate-200 dark:bg-[#2e2e2e] text-slate-800 dark:text-[#f5f5f5] flex items-center gap-1.5 shrink-0 animate-pulse border border-slate-300 dark:border-[#383838]">
                       <span className="w-1.5 h-1.5 rounded-full bg-slate-600 animate-ping" />
                       {nurseTexts.returningAction}
                     </span>
                   ) : (
-                    <span className="text-[11px] font-medium px-2 py-0.5 rounded-md bg-slate-100 dark:bg-slate-800 text-slate-700 dark:text-slate-300 border border-slate-200 dark:border-slate-700 shrink-0">
+                    <span className="text-xs font-medium px-2.5 py-0.5 rounded-md bg-slate-100 dark:bg-slate-800 text-slate-700 dark:text-slate-300 border border-slate-200 dark:border-slate-700 shrink-0">
                       {nurseTexts.badgeReturn}
                     </span>
                   )}
@@ -498,12 +498,12 @@ export function NurseQuickActionDropdown({
                     </div>
                   </div>
                   {loadingAction === 'finish' ? (
-                    <span className="text-[11px] font-bold px-2 py-0.5 rounded-md bg-emerald-200 dark:bg-emerald-900 text-emerald-900 dark:text-emerald-100 flex items-center gap-1.5 shrink-0 animate-pulse border border-emerald-300 dark:border-emerald-700">
+                    <span className="text-xs font-bold px-2.5 py-0.5 rounded-md bg-emerald-200 dark:bg-emerald-900 text-emerald-900 dark:text-emerald-100 flex items-center gap-1.5 shrink-0 animate-pulse border border-emerald-300 dark:border-emerald-700">
                       <span className="w-1.5 h-1.5 rounded-full bg-emerald-700 animate-ping" />
                       {nurseTexts.completingAction}
                     </span>
                   ) : (
-                    <span className="text-[11px] font-bold px-2 py-0.5 rounded-md bg-emerald-100 dark:bg-emerald-950 text-emerald-800 dark:text-emerald-300 border border-emerald-200 dark:border-emerald-800 shrink-0">
+                    <span className="text-xs font-bold px-2.5 py-0.5 rounded-md bg-emerald-100 dark:bg-emerald-950 text-emerald-800 dark:text-emerald-300 border border-emerald-200 dark:border-emerald-800 shrink-0">
                       {nurseTexts.badgeFinish}
                     </span>
                   )}
@@ -546,12 +546,12 @@ export function NurseQuickActionDropdown({
                     </div>
                   </div>
                   {loadingAction === 'back_doctor' ? (
-                    <span className="text-[11px] font-bold px-2 py-0.5 rounded-md bg-slate-200 dark:bg-[#2e2e2e] text-slate-800 dark:text-[#f5f5f5] flex items-center gap-1.5 shrink-0 animate-pulse border border-slate-300 dark:border-[#383838]">
+                    <span className="text-xs font-bold px-2.5 py-0.5 rounded-md bg-slate-200 dark:bg-[#2e2e2e] text-slate-800 dark:text-[#f5f5f5] flex items-center gap-1.5 shrink-0 animate-pulse border border-slate-300 dark:border-[#383838]">
                       <span className="w-1.5 h-1.5 rounded-full bg-slate-600 animate-ping" />
                       {nurseTexts.returningAction}
                     </span>
                   ) : (
-                    <span className="text-[11px] font-medium px-2 py-0.5 rounded-md bg-slate-100 dark:bg-slate-800 text-slate-700 dark:text-slate-300 border border-slate-200 dark:border-slate-700 shrink-0">
+                    <span className="text-xs font-medium px-2.5 py-0.5 rounded-md bg-slate-100 dark:bg-slate-800 text-slate-700 dark:text-slate-300 border border-slate-200 dark:border-slate-700 shrink-0">
                       {nurseTexts.badgeReturn}
                     </span>
                   )}

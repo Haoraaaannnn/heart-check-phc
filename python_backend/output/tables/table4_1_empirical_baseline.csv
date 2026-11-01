@@ -1,0 +1,6 @@
+Stage,Mean (min),Std Dev (min),Median (min),Min (min),Max (min),N
+Registration Desk Service Duration,31.63,27.33,23.0,1.0,280.0,26753
+Wait for Doctor Consultation,93.56,58.89,81.0,1.0,507.0,26752
+Physician Consultation Duration,11.6,3.57,10.0,1.0,190.0,26753
+Carry-Out Processing Duration,7.56,8.72,7.0,1.0,555.0,26748
+Total Outpatient Visit Duration,144.35,65.09,133.0,16.0,646.0,26753

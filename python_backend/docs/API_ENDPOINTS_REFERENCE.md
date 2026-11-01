@@ -13,7 +13,7 @@ This document provides a comprehensive technical reference for all HTTP endpoint
 - **Classification:** Configurable via startup flags or [run.py](file:///home/jensen/Github-Repositories/Heart_Check_PHC/python_backend/run.py); hardcoded defaults in script.
 
 ### 1.2 Cross-Origin Resource Sharing (CORS)
-The server configures `CORSMiddleware` in [main.py:L42-L48](file:///home/jensen/Github-Repositories/Heart_Check_PHC/python_backend/main.py#L42-L48).
+The server configures `CORSMiddleware` in [main.py:L44-L50](file:///home/jensen/Github-Repositories/Heart_Check_PHC/python_backend/main.py#L44-L50).
 
 - **Allowed Origins:**
   - Evaluated dynamically from the `ALLOWED_ORIGINS` environment variable (comma-delimited list).
@@ -27,7 +27,7 @@ The server configures `CORSMiddleware` in [main.py:L42-L48](file:///home/jensen/
 - **Allow Credentials:** `True`.
 
 ### 1.3 Database Connection Configuration
-The backend connects to Supabase REST API via `httpx.Client(timeout=30.0)` in [main.py:L66](file:///home/jensen/Github-Repositories/Heart_Check_PHC/python_backend/main.py#L66).
+The backend connects to Supabase REST API via `httpx.Client(timeout=30.0)` in [main.py:L68](file:///home/jensen/Github-Repositories/Heart_Check_PHC/python_backend/main.py#L68).
 
 - **Environment Variables:**
   - `NEXT_PUBLIC_SUPABASE_URL`: Supabase project URL (e.g., `https://xyzcompany.supabase.co`).
@@ -39,10 +39,10 @@ The backend connects to Supabase REST API via `httpx.Client(timeout=30.0)` in [m
   - `Range`: Pagination range header (e.g., `0-999`, `1000-1999`).
 - **Pagination Strategy:**
   - Hardcoded batch size: `1000` records per request.
-  - The client loops incrementing page index until fewer than 1000 records return or HTTP 416 (Requested Range Not Satisfiable) is received.
+  - The client probes page 0 with `Prefer: count=exact` and parses `Content-Range` to concurrently fetch remaining pages in parallel via `concurrent.futures.ThreadPoolExecutor` when records exceed 1000, or falls back to sequential pagination.
 
 ### 1.4 In-Memory Caching Architecture
-To maintain sub-second response times and prevent repetitive full-table scans, [main.py:L73-L78](file:///home/jensen/Github-Repositories/Heart_Check_PHC/python_backend/main.py#L73-L78) implements an in-memory Time-To-Live (TTL) cache:
+To maintain sub-second response times and prevent repetitive full-table scans, [main.py:L74-L80](file:///home/jensen/Github-Repositories/Heart_Check_PHC/python_backend/main.py#L74-L80) implements an in-memory Time-To-Live (TTL) cache:
 
 - **Cache TTL:** `CACHE_TTL_SECONDS = 300` (5 minutes, hardcoded constant).
 - **Cache Stores:**
@@ -50,6 +50,7 @@ To maintain sub-second response times and prevent repetitive full-table scans, [
   - `_years_cache: tuple[float, list[int]] | None`: Cached tuple of timestamp and available years list.
   - `_export_dates_cache: tuple[float, dict] | None`: Cached tuple of available export years, months, and days.
   - `_daily_drilldown_cache: dict[str, tuple[float, dict]]`: Keyed by date string `YYYY-MM-DD`.
+  - `_dashboard_cache: dict[str, tuple[float, dict]]`: Keyed by range string (e.g., `"90d"`, `"2024"`).
 - **Cache Invalidation:**
   - Automatic expiration after 300 seconds.
   - Manual invalidation via query parameter `?refresh=true` on supported endpoints.
@@ -63,7 +64,7 @@ To maintain sub-second response times and prevent repetitive full-table scans, [
 
 ### Endpoint: Health Check
 - **Route:** `GET /health`
-- **Controller Function:** `health_check()` in [main.py:L213-L216](file:///home/jensen/Github-Repositories/Heart_Check_PHC/python_backend/main.py#L213-L216)
+- **Controller Function:** `health_check()` in [main.py:L276-L279](file:///home/jensen/Github-Repositories/Heart_Check_PHC/python_backend/main.py#L276-L279)
 - **Description:** Verifies that the FastAPI process is running and accepting HTTP requests.
 - **Query Parameters:** None.
 - **Request Body:** None.
@@ -81,7 +82,7 @@ To maintain sub-second response times and prevent repetitive full-table scans, [
 
 ### Endpoint: Dashboard Analytics Data
 - **Route:** `GET /api/dashboard-data`
-- **Controller Function:** `get_dashboard_data(range: str = DEFAULT_RANGE)` in [main.py:L219-L258](file:///home/jensen/Github-Repositories/Heart_Check_PHC/python_backend/main.py#L219-L258)
+- **Controller Function:** `get_dashboard_data(range: str = DEFAULT_RANGE)` in [main.py:L282-L327](file:///home/jensen/Github-Repositories/Heart_Check_PHC/python_backend/main.py#L282-L327)
 - **Description:** Primary analytics payload serving the Administrative Workstation overview, queue metrics, service distribution, bottleneck detection, 5-model forecasting, and staffing recommendations.
 
 #### Parameters:
@@ -90,7 +91,7 @@ To maintain sub-second response times and prevent repetitive full-table scans, [
 | `range` | Query | `string` | No | `"90d"` | Configurable via query parameter | Date window filter. Accepted tokens: `"90d"`, `"180d"`, `"365d"`, `"all"`, or a 4-digit calendar year (e.g. `"2024"`). |
 
 #### Parameter Parsing and Date Resolution:
-Implemented in `resolve_date_range(range_param: str)` in [main.py:L191-L210](file:///home/jensen/Github-Repositories/Heart_Check_PHC/python_backend/main.py#L191-L210):
+Implemented in `resolve_date_range(range_param: str)` in [main.py:L255-L274](file:///home/jensen/Github-Repositories/Heart_Check_PHC/python_backend/main.py#L255-L274):
 - If `range == "all"`: Returns `(None, None)`. The query fetches all historical records without date boundaries.
 - If `range` is 4 digits (e.g., `"2024"`): Filters `created_at >= 2024-01-01` and `created_at < 2025-01-01`.
 - If rolling range (`"90d"`, `"180d"`, `"365d"`):
@@ -284,13 +285,13 @@ Returns a JSON object generated by `generate_report(df)`:
 ```
 
 #### Empty State Fallback:
-If no patient records are found in the range, returns `get_empty_data()` in [main.py:L542-L610](file:///home/jensen/Github-Repositories/Heart_Check_PHC/python_backend/main.py#L542-L610) with empty arrays and zero values.
+If no patient records are found in the range, returns `get_empty_data()` in [main.py:L615-L683](file:///home/jensen/Github-Repositories/Heart_Check_PHC/python_backend/main.py#L615-L683) with empty arrays and zero values.
 
 ---
 
 ### Endpoint: Daily Drilldown Analytics
 - **Route:** `GET /api/daily-drilldown`
-- **Controller Function:** `get_daily_drilldown(date_param: str = Query(..., alias="date"))` in [main.py:L260-L385](file:///home/jensen/Github-Repositories/Heart_Check_PHC/python_backend/main.py#L260-L385)
+- **Controller Function:** `get_daily_drilldown(date_param: str = Query(..., alias="date"))` in [main.py:L329-L457](file:///home/jensen/Github-Repositories/Heart_Check_PHC/python_backend/main.py#L329-L457)
 - **Description:** Provides hour-by-hour distributions, queue stage bottleneck status, peak operational hour, and stage dwell times for a single specified calendar date in Asia/Manila (`UTC+8`).
 
 #### Parameters:
@@ -348,7 +349,7 @@ Cached in `_daily_drilldown_cache` for 300 seconds.
 
 ### Endpoint: Available Years Listing
 - **Route:** `GET /api/available-years`
-- **Controller Function:** `get_available_years()` in [main.py:L387-L419](file:///home/jensen/Github-Repositories/Heart_Check_PHC/python_backend/main.py#L387-L419)
+- **Controller Function:** `get_available_years()` in [main.py:L460-L492](file:///home/jensen/Github-Repositories/Heart_Check_PHC/python_backend/main.py#L460-L492)
 - **Description:** Returns the range of historical years present in the `patients` table.
 - **Optimization:** Executes two lightweight requests (`fetch_supabase_edge`) fetching the single earliest row and single latest row sorted by `created_at` (`limit=1`), rather than downloading thousands of records.
 - **Cache:** Cached in `_years_cache` for 300 seconds.
@@ -363,7 +364,7 @@ Cached in `_daily_drilldown_cache` for 300 seconds.
 
 ### Endpoint: Available Export Dates
 - **Route:** `GET /api/available-export-dates`
-- **Controller Function:** `get_available_export_dates(refresh: bool = False)` in [main.py:L421-L482](file:///home/jensen/Github-Repositories/Heart_Check_PHC/python_backend/main.py#L421-L482)
+- **Controller Function:** `get_available_export_dates(refresh: bool = False)` in [main.py:L494-L555](file:///home/jensen/Github-Repositories/Heart_Check_PHC/python_backend/main.py#L494-L555)
 - **Description:** Inspects all records in `patients` with non-null `reg_start` timestamps and extracts distinct years, calendar months, and individual calendar days formatted in Asia/Manila time.
 
 #### Parameters:
@@ -394,7 +395,7 @@ Cached in `_export_dates_cache` for 300 seconds.
 
 ### Endpoint: Monthly Breakdown for Year
 - **Route:** `GET /api/monthly-breakdown/{year}`
-- **Controller Function:** `get_monthly_breakdown_for_year(year: int, refresh: bool = False)` in [main.py:L484-L540](file:///home/jensen/Github-Repositories/Heart_Check_PHC/python_backend/main.py#L484-L540)
+- **Controller Function:** `get_monthly_breakdown_for_year(year: int, refresh: bool = False)` in [main.py:L557-L613](file:///home/jensen/Github-Repositories/Heart_Check_PHC/python_backend/main.py#L557-L613)
 - **Description:** Returns month-by-month bottleneck stages, patient counts, and average total stay times for a single specific year.
 
 #### Parameters:
@@ -439,7 +440,7 @@ Queries records with `created_at >= {year}-01-01` and `created_at < {year+1}-01-
 
 ### Endpoint: Export Excel / CSV
 - **Route:** `GET /api/export-excel`
-- **Controller Function:** `export_excel(...)` in [main.py:L612-L758](file:///home/jensen/Github-Repositories/Heart_Check_PHC/python_backend/main.py#L612-L758)
+- **Controller Function:** `export_excel(...)` in [main.py:L685-L831](file:///home/jensen/Github-Repositories/Heart_Check_PHC/python_backend/main.py#L685-L831)
 - **Description:** Streams an official Philippine Heart Center Time and Motion Analysis workbook (`.xlsx`) or flat comma-separated values (`.csv`).
 
 #### Parameters:
@@ -476,7 +477,7 @@ Queries records with `created_at >= {year}-01-01` and `created_at < {year+1}-01-
 
 ### Endpoint: Ingest and Import File
 - **Route:** `POST /api/import-file`
-- **Controller Function:** `import_file(...)` in [main.py:L760-L850](file:///home/jensen/Github-Repositories/Heart_Check_PHC/python_backend/main.py#L760-L850)
+- **Controller Function:** `import_file(...)` in [main.py:L836-L938](file:///home/jensen/Github-Repositories/Heart_Check_PHC/python_backend/main.py#L836-L938)
 - **Description:** Accepts binary file uploads (.xls, .xlsx, .csv). Parses records matching PHC Time and Motion sheets or standard tabular datasets. Supports dry-run inspection and batched database committing.
 
 #### Parameters:

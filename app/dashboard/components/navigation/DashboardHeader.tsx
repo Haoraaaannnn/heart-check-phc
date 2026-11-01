@@ -44,7 +44,8 @@ export function DashboardHeader({ onOpenMobileDrawer }: DashboardHeaderProps) {
   const searchParams = useSearchParams();
 
   const [userEmail, setUserEmail] = useState('');
-  const [userRole, setUserRole] = useState(DASHBOARD_NAV_TEXTS.actions.defaultRole);
+  const [userName, setUserName] = useState('');
+  const [userRole, setUserRole] = useState<string>(DASHBOARD_NAV_TEXTS.actions.defaultRole);
   const [mounted, setMounted] = useState(false);
 
   const { resolvedTheme, setTheme } = useTheme();
@@ -73,16 +74,48 @@ export function DashboardHeader({ onOpenMobileDrawer }: DashboardHeaderProps) {
         data: { user },
       } = await supabase.auth.getUser();
 
-      if (user?.email) {
-        setUserEmail(user.email);
-        const { data: userData } = await supabase
-          .from('users')
-          .select('role')
-          .eq('email', user.email)
-          .single();
+      if (user) {
+        if (user.email) setUserEmail(user.email);
 
-        if (userData?.role) {
-          setUserRole(userData.role.toUpperCase());
+        let resolvedUsername = '';
+        let resolvedRole = '';
+
+        if (user.id) {
+          const { data: userData } = await supabase
+            .from('users')
+            .select('username, role')
+            .eq('auth_id', user.id)
+            .maybeSingle();
+
+          if (userData?.username) resolvedUsername = userData.username;
+          if (userData?.role) resolvedRole = userData.role;
+        }
+
+        if (!resolvedUsername && user.email) {
+          const { data: userDataByEmail } = await supabase
+            .from('users')
+            .select('username, role')
+            .ilike('email', user.email)
+            .maybeSingle();
+
+          if (userDataByEmail?.username) resolvedUsername = userDataByEmail.username;
+          if (userDataByEmail?.role && !resolvedRole) resolvedRole = userDataByEmail.role;
+        }
+
+        if (!resolvedUsername) {
+          resolvedUsername =
+            (user.user_metadata?.username as string) ||
+            (user.user_metadata?.name as string) ||
+            (user.user_metadata?.full_name as string) ||
+            (user.email ? user.email.split('@')[0] : '');
+        }
+
+        if (resolvedUsername) {
+          setUserName(resolvedUsername);
+        }
+
+        if (resolvedRole) {
+          setUserRole(resolvedRole.toUpperCase());
         }
       }
     };
@@ -259,10 +292,10 @@ export function DashboardHeader({ onOpenMobileDrawer }: DashboardHeaderProps) {
         {/* Authenticated User Identity Chip */}
         <div className={S.userChip}>
           <div className={S.userAvatar}>
-            {userEmail ? userEmail.charAt(0).toUpperCase() : 'A'}
+            {(userName || userEmail || 'A').charAt(0).toUpperCase()}
           </div>
-          <span className={S.userEmail}>
-            {userEmail || T.actions.defaultUserName}
+          <span className={S.userEmail} title={userEmail || userName}>
+            {userName || (userEmail ? userEmail.split('@')[0] : T.actions.defaultUserName)}
           </span>
           <span className={S.roleTag}>{userRole}</span>
         </div>

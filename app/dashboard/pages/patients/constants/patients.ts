@@ -48,7 +48,7 @@ export const PATIENT_REFRESH_INTERVAL_MS = 30000;
 /** Styling tokens specific to the Patients page. */
 export const PATIENTS_STYLES = {
   /** Outer page wrapper matching the admin dashboard shell. */
-  page: 'mx-auto flex w-full max-w-[1680px] flex-col gap-6',
+  page: 'w-full flex flex-col gap-5 md:gap-6',
 
   /** Top banner / header region. */
   header: {
@@ -74,7 +74,7 @@ export const PATIENTS_STYLES = {
   },
 
   /** Top metric card grid (5 columns on desktop). */
-  metricsGrid: 'grid grid-cols-1 gap-4 sm:grid-cols-2 lg:grid-cols-5',
+  metricsGrid: 'grid grid-cols-1 gap-4 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-5',
 
   /** Individual metric card token matching DashboardMetrics. */
   metricCard: {
@@ -95,7 +95,7 @@ export const PATIENTS_STYLES = {
     root: `${cardSurface} rounded-2xl p-6`,
     header: 'mb-4 flex items-center justify-between flex-wrap gap-3',
     toolbar: 'mb-4 flex flex-col sm:flex-row items-stretch sm:items-center justify-between gap-3',
-    searchWrap: 'relative flex-1 sm:max-w-sm w-full',
+    searchWrap: 'relative flex-1 sm:max-w-md w-full',
     searchIcon: 'absolute left-3 top-1/2 -translate-y-1/2 text-sm text-content-subtle',
     searchInput:
       'w-full rounded-xl border border-line bg-surface-muted py-2 pl-9 pr-8 text-xs text-content placeholder:text-content-subtle focus:border-[#a8071a] focus:bg-surface focus:outline-none transition shadow-2xs',
@@ -161,7 +161,7 @@ export const PATIENTS_STYLES = {
       'flex items-center justify-between rounded-xl border-2 border-[#a8071a] dark:border-[#f87171] bg-rose-50 dark:bg-rose-950/40 p-4 transition',
     patientInfo: 'flex items-center gap-3 min-w-0',
     patientNumber:
-      'inline-block rounded-lg bg-red-50 border border-red-200 px-3 py-1 font-mono text-sm font-extrabold text-red-700 dark:bg-[#76000d]/40 dark:border-[#a8071a]/70 dark:text-[#fca5a5]',
+      'inline-block rounded-lg bg-red-50 border border-red-200 px-3 py-1 font-mono text-sm font-extrabold text-red-700 dark:bg-[#76000d]/40 dark:border-[#a8071a]/70 dark:text-[#fca5a5] whitespace-nowrap',
     patientMeta: 'flex flex-col',
     patientName: 'text-sm font-semibold text-content truncate',
     patientWait: 'text-xs text-content-muted',

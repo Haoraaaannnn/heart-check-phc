@@ -31,6 +31,8 @@ export const BANNER = {
   /** Hour (0-23, Manila) before which the morning / afternoon greeting applies. */
   morningUntil: 12,
   afternoonUntil: 18,
+  privacyBadge: 'RA 10173 Protected',
+  privacyBadgeDesc: 'PII Redacted',
 } as const;
 
 /** Text shown next to the trend arrow on the "Total Patients" card. */
@@ -59,7 +61,13 @@ export const DASHBOARD_REALTIME = {
 /**
  * Valid timeframe options for filtering overview executive metrics.
  */
-export type OverviewDateRange = 'today' | 'yesterday' | '7d' | 'mtd';
+export type OverviewDateRange =
+  | 'today'
+  | 'yesterday'
+  | '7d'
+  | 'mtd'
+  | `date:${string}`
+  | (string & {});
 
 /**
  * Configuration for an overview date range preset pill.
@@ -86,21 +94,27 @@ export const OVERVIEW_DATE_PRESETS: readonly OverviewDatePreset[] = [
 ] as const;
 
 /**
- * Static UI copy for the date filter pill bar.
+ * Static UI copy for the timeframe date filter.
  */
 export const OVERVIEW_DATE_FILTER_TEXTS = {
   label: 'Timeframe:',
-  liveBadge: 'Live Streaming',
-  historicalBadge: 'Historical Snapshot',
+  customLabel: 'Custom Date:',
+  recordedDatesLabel: 'Recorded Dates',
+  selectRecordedDatePlaceholder: 'Recorded Dates...',
+  prevRecordedDate: 'Navigate to previous recorded clinic date',
+  nextRecordedDate: 'Navigate to next recorded clinic date',
+  pickCalendarDate: 'Pick any calendar date',
+  activeWindowPrefix: 'Active Window:',
   loadingAria: 'Loading range metrics',
+  resetToday: 'Reset to Today',
+  recordedClinicDay: 'Recorded Clinic Day',
 } as const;
 
 /**
- * Icon identifiers for the date filter pill bar.
+ * Icon identifiers for the timeframe date filter.
  */
 export const OVERVIEW_DATE_FILTER_ICONS = {
   filter: 'bx-slider-alt',
-  history: 'bx-history',
 } as const;
 
 /**
@@ -206,7 +220,7 @@ export const SECTIONS = {
     icon: 'bx-link-alt',
   },
   liveQueue: {
-    title: 'Live Queue',
+    title: 'Active Queue',
     subtitle: 'Real-time patient ticket status',
     icon: 'bxs-heart',
     emptyText: 'No patients in the queue today.',

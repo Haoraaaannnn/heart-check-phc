@@ -69,15 +69,15 @@ export function FinishedDrawer({ isOpen, onClose, patients }: FinishedDrawerProp
               <div className="flex items-center gap-2">
                 <h2
                   id="finished-drawer-title"
-                  className="text-base font-bold text-slate-800 dark:text-[#f5f5f5] tracking-tight"
+                  className="text-lg font-bold text-slate-800 dark:text-[#f5f5f5] tracking-tight"
                 >
                   {nurseTexts.stageFinishedHeading}
                 </h2>
-                <span className="font-mono text-xs font-extrabold text-emerald-600 dark:text-emerald-400 shrink-0">
+                <span className="font-mono text-sm font-extrabold text-emerald-600 dark:text-emerald-400 shrink-0">
                   {patients.length}
                 </span>
               </div>
-              <p className="text-xs text-slate-500 dark:text-[#a3a3a3] font-medium">
+              <p className="text-sm text-slate-500 dark:text-[#a3a3a3] font-medium mt-0.5">
                 {nurseTexts.drawerSubtitle}
               </p>
             </div>
@@ -86,7 +86,7 @@ export function FinishedDrawer({ isOpen, onClose, patients }: FinishedDrawerProp
           <button
             type="button"
             onClick={onClose}
-            className="px-3 py-1.5 rounded-xl text-xs font-semibold text-slate-500 hover:text-slate-700 hover:bg-slate-200/60 active:bg-slate-300/60 dark:text-[#a3a3a3] dark:hover:text-[#f5f5f5] dark:hover:bg-[#242424] transition cursor-pointer"
+            className="px-3.5 py-1.5 rounded-xl text-sm font-semibold text-slate-500 hover:text-slate-700 hover:bg-slate-200/60 active:bg-slate-300/60 dark:text-[#a3a3a3] dark:hover:text-[#f5f5f5] dark:hover:bg-[#242424] transition cursor-pointer"
             aria-label={nurseTexts.btnCloseFinished}
           >
             {nurseTexts.btnCloseFinished}
@@ -103,7 +103,7 @@ export function FinishedDrawer({ isOpen, onClose, patients }: FinishedDrawerProp
           <button
             type="button"
             onClick={onClose}
-            className="px-4 py-2 rounded-xl text-xs font-bold bg-slate-200 dark:bg-[#242424] hover:bg-slate-300 dark:hover:bg-[#2e2e2e] text-slate-700 dark:text-[#f5f5f5] border border-transparent dark:border-[#2e2e2e] transition cursor-pointer"
+            className="px-4 py-2 rounded-xl text-sm font-bold min-h-[38px] bg-slate-200 dark:bg-[#242424] hover:bg-slate-300 dark:hover:bg-[#2e2e2e] text-slate-700 dark:text-[#f5f5f5] border border-transparent dark:border-[#2e2e2e] transition cursor-pointer"
           >
             {nurseTexts.btnCloseFinished}
           </button>

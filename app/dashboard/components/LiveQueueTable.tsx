@@ -92,11 +92,11 @@ export default function LiveQueueTable({
   return (
     <DashboardCard title={C.title} subtitle={C.subtitle} icon={C.icon} action={filterAction}>
       <div className={S.wrap}>
-        <table className={S.table}>
+        <table className={`${S.table} min-w-[580px]`}>
           <thead>
             <tr className={S.headRow}>
               {LIVE_QUEUE_COLUMNS.map((col) => (
-                <th key={col.key} className={S.th}>
+                <th key={col.key} className={`${S.th} whitespace-nowrap`}>
                   {col.label}
                 </th>
               ))}
@@ -107,11 +107,17 @@ export default function LiveQueueTable({
               rows.map((patient) => (
                 <tr key={patient.id} className={S.row}>
                   <td className={S.td}>
-                    <span className={S.ticket}>{patient.patientNum || EMPTY_CELL}</span>
+                    <span className={`${S.ticket} font-mono font-bold whitespace-nowrap`}>
+                      {patient.patientNum || EMPTY_CELL}
+                    </span>
                   </td>
-                  <td className={S.td}>{patient.service || 'General'}</td>
-                  <td className={S.td}>{patient.cubicleNum || EMPTY_CELL}</td>
-                  <td className={S.td}>
+                  <td className={`${S.td} whitespace-nowrap font-medium text-content`}>
+                    {patient.service || 'General'}
+                  </td>
+                  <td className={`${S.td} whitespace-nowrap font-semibold text-content`}>
+                    {patient.cubicleNum || EMPTY_CELL}
+                  </td>
+                  <td className={`${S.td} whitespace-nowrap font-mono text-xs tabular-nums`}>
                     <ElapsedTimer
                       startedAt={patient.created_at}
                       endedAt={getPatientWaitEndTime(patient)}
@@ -119,7 +125,7 @@ export default function LiveQueueTable({
                       includeSeconds={true}
                     />
                   </td>
-                  <td className={S.td}>
+                  <td className={`${S.td} whitespace-nowrap`}>
                     <StatusBadge status={patient.status || 'Pending'} />
                   </td>
                 </tr>
@@ -135,10 +141,19 @@ export default function LiveQueueTable({
         </table>
       </div>
 
-      <Link href={C.viewAllHref} className={DASH.card.footerLink}>
-        {C.viewAllLabel}
-        <i className="bx bx-right-arrow-alt" />
-      </Link>
+      <div className="mt-4 flex flex-col sm:flex-row sm:items-center sm:justify-between gap-2 border-t border-line/60 pt-3">
+        <span className="text-[11px] font-medium text-content-muted flex items-center gap-1.5">
+          <i className="bx bx-shield-quarter text-emerald-600 dark:text-emerald-400 text-sm" />
+          <span>RA 10173 Protected &bull; Contact identifiers masked</span>
+        </span>
+        <Link
+          href={C.viewAllHref}
+          className="flex items-center justify-end gap-1 text-xs font-semibold text-content-muted transition hover:text-[#a8071a] dark:hover:text-[#f87171]"
+        >
+          {C.viewAllLabel}
+          <i className="bx bx-right-arrow-alt" />
+        </Link>
+      </div>
     </DashboardCard>
   );
 }

@@ -29,9 +29,9 @@ export function forSubcategory(query: any, subcategory: string | null) {
  */
 export async function countActiveAtCubicles(cubicleNums: string[]): Promise<number> {
   if (cubicleNums.length === 0) return 0;
-  const { data, count, error } = await supabaseAdmin
+  const { count, error } = await supabaseAdmin
     .from('patients')
-    .select('id, patientNum, status, cubicleNum, created_at', { count: 'exact' })
+    .select('id', { count: 'exact', head: true })
     .in('cubicleNum', cubicleNums)
     .neq('status', 'Done')
     .neq('status', 'Idle')
@@ -39,10 +39,7 @@ export async function countActiveAtCubicles(cubicleNums: string[]): Promise<numb
     .gte('created_at', startOfToday());
 
   if (error) {
-    console.error('[countActiveAtCubicles ERROR]', error);
-  }
-  if (count && count > 0) {
-    console.log('[countActiveAtCubicles FOUND ACTIVE PATIENTS]', { cubicleNums, count, patients: data });
+    console.error('[countActiveAtCubicles ERROR]', error.message);
   }
   return count ?? 0;
 }

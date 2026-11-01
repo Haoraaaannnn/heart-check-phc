@@ -20,6 +20,7 @@ import {
 } from '@/app/dashboard/pages/patients/constants/patients';
 import { PATIENTS_TEXTS } from '@/app/dashboard/pages/patients/constants/patientsTexts';
 import { formatDurationString } from '@/utils/formatMinutesToHMS';
+import { maskPhoneDisplay } from '@/utils/phoneMask';
 import ElapsedTimer from '@/components/reusables/ElapsedTimer';
 import { PatientHistoryButton } from '@/components/patients/PatientHistoryButton';
 
@@ -278,16 +279,16 @@ export default function RecentPatientsTable({
       ) : (
         <>
           <div className={S.wrap}>
-            <table className={S.table}>
+            <table className={`${S.table} min-w-[720px]`}>
               <thead>
                 <tr className={S.headRow}>
-                  <th className={S.th}>{T.headers.id}</th>
-                  <th className={S.th}>{T.headers.patientNum}</th>
-                  <th className={S.th}>{T.headers.service}</th>
-                  <th className={S.th}>{T.headers.status}</th>
-                  <th className={S.th}>{T.headers.phone}</th>
-                  <th className={S.th}>{T.headers.time}</th>
-                  <th className={S.th}>{T.headers.waitTime}</th>
+                  <th className={`${S.th} whitespace-nowrap`}>{T.headers.id}</th>
+                  <th className={`${S.th} whitespace-nowrap`}>{T.headers.patientNum}</th>
+                  <th className={`${S.th} whitespace-nowrap`}>{T.headers.service}</th>
+                  <th className={`${S.th} whitespace-nowrap`}>{T.headers.status}</th>
+                  <th className={`${S.th} whitespace-nowrap`}>{T.headers.phone}</th>
+                  <th className={`${S.th} whitespace-nowrap`}>{T.headers.time}</th>
+                  <th className={`${S.th} whitespace-nowrap`}>{T.headers.waitTime}</th>
                 </tr>
               </thead>
               <tbody>
@@ -298,27 +299,30 @@ export default function RecentPatientsTable({
 
                   return (
                     <tr key={patient.id} className={S.row}>
-                      <td className={S.td}>
+                      <td className={`${S.td} whitespace-nowrap`}>
                         <span className={S.idBadge}>#{patient.id}</span>
                       </td>
-                      <td className={S.td}>
+                      <td className={`${S.td} whitespace-nowrap`}>
                         <span className={S.ticketBadge}>
                           {patient.patientNum || T.fallbackTicket}
                         </span>
-                        <div className="mt-2"><PatientHistoryButton patientId={patient.id} ticket={patient.patientNum} /></div>
+                        <div className="mt-1.5">
+                          <PatientHistoryButton patientId={patient.id} ticket={patient.patientNum} />
+                        </div>
                       </td>
-                      <td className={`${S.td} font-semibold text-content`}>
+                      <td className={`${S.td} font-semibold text-content whitespace-nowrap`}>
                         {patient.service}
                       </td>
-                      <td className={S.td}>
+                      <td className={`${S.td} whitespace-nowrap`}>
                         <span className={`${S.statusBadge} ${badgeStyle.bg} ${badgeStyle.text}`}>
                           <span className={`h-1.5 w-1.5 rounded-full ${badgeStyle.dot}`} />
                           {patient.status}
                         </span>
                       </td>
-                      <td className={S.td}>
-                        <span className={S.phoneText}>
-                          {patient.phoneNum || T.fallbackPhone}
+                      <td className={`${S.td} whitespace-nowrap`}>
+                        <span className={`${S.phoneText} inline-flex items-center gap-1 font-mono`}>
+                          <i className="bx bx-shield-quarter text-xs text-content-subtle" aria-hidden="true" />
+                          <span>{maskPhoneDisplay(patient.phoneNum, T.fallbackPhone)}</span>
                         </span>
                       </td>
                       <td className={`${S.td} whitespace-nowrap`}>

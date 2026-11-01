@@ -241,7 +241,7 @@ export async function POST(request: Request) {
       });
     }
 
-    const apiKey = process.env.DEEPGRAM_API_KEY || process.env.NEXT_PUBLIC_DEEPGRAM_KEY;
+    const apiKey = process.env.DEEPGRAM_API_KEY;
     if (!apiKey) {
       console.error(
         '%s [TTS ERROR] DEEPGRAM_API_KEY is not configured in server environment',

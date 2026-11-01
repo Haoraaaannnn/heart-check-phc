@@ -21,6 +21,7 @@ import {
   HeaderSearchResultItem,
 } from '@/app/dashboard/hooks/useHeaderSearch';
 import { formatDurationString } from '@/utils/formatMinutesToHMS';
+import { maskPhoneDisplay } from '@/utils/phoneMask';
 
 const S = HEADER_SEARCH_STYLES;
 const T = HEADER_SEARCH_TEXTS;
@@ -260,7 +261,7 @@ export function HeaderSearch() {
                             {patient.phoneNum && (
                               <>
                                 <span>•</span>
-                                <span>{patient.phoneNum}</span>
+                                <span className="font-mono">{maskPhoneDisplay(patient.phoneNum)}</span>
                               </>
                             )}
                           </div>
