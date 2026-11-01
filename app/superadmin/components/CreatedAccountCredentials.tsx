@@ -24,7 +24,7 @@ export function CreatedAccountCredentials({ credentials }: { credentials: Accoun
       <dt>Login</dt><dd className="select-all break-all font-mono mb-2">{credentials.email}</dd>
       <dt>Password</dt><dd className="select-all break-all font-mono">{credentials.password}</dd>
     </dl>
-    <p className="text-xs text-slate-500 mb-3">Save these credentials and share them privately with the user. The password will no longer be shown after this window closes.</p>
+    <p className="text-xs text-slate-500 mb-3">The temporary password follows username, role, creation date, and counter format. Share it privately. The user will be prompted to choose a personal password at first sign-in. It will no longer be shown after this window closes.</p>
     <button type="button" onClick={copyCredentials} className="rounded-lg border border-slate-300 px-3 py-2 text-sm dark:border-slate-700">Copy credentials</button>
     <p role="status" className="mt-2 text-xs">{copyStatus}</p>
   </section>;

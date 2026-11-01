@@ -1,6 +1,7 @@
 import { NextResponse } from 'next/server'
 import { createClient } from '@supabase/supabase-js'
 import { requireUser } from '@/lib/supabase/authGuard'
+import { isPasswordLengthAllowed } from '@/lib/passwordPolicy'
 
 const supabaseAdmin = createClient(
   process.env.NEXT_PUBLIC_SUPABASE_URL!,
@@ -12,9 +13,10 @@ export async function POST(request: Request) {
     const guard = await requireUser(request)
     if (!guard.authorized) return guard.response
 
-    const { password } = await request.json()
-    if (!password || password.length < 8) {
-      return NextResponse.json({ error: 'Password must be at least 8 characters.' }, { status: 400 })
+    const body: unknown = await request.json()
+    const password = typeof body === 'object' && body !== null && 'password' in body ? body.password : null
+    if (!isPasswordLengthAllowed(password)) {
+      return NextResponse.json({ error: 'Password must be between 8 and 64 characters.' }, { status: 400 })
     }
 
     const { error } = await supabaseAdmin.auth.admin.updateUserById(guard.user.id, { password })

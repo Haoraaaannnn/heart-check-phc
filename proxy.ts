@@ -218,6 +218,13 @@ export async function proxy(request: NextRequest) {
             return redirectRes;
         }
 
+        if (
+            user.user_metadata?.must_change_password === true &&
+            path !== '/select-screen'
+        ) {
+            return redirectWithSession('/select-screen?changePassword=required');
+        }
+
         /**
          * User is authenticated. Fetch their role from the `users` table.
          * Join must use `auth_id` (matches `auth.uid()`), NOT the table's `id`

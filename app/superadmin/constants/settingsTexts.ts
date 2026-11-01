@@ -77,7 +77,7 @@ export const SETTINGS_TEXTS = {
     currentPasswordLabel: 'Current Password',
     currentPasswordPlaceholder: 'Enter your existing password',
     newPasswordLabel: 'New Password',
-    newPasswordPlaceholder: 'Enter a strong new password (min 8 characters)',
+    newPasswordPlaceholder: 'Enter a password (8–64 characters; 12+ recommended)',
     confirmPasswordLabel: 'Confirm New Password',
     confirmPasswordPlaceholder: 'Re-enter your new password',
     saveButton: 'Update Password',

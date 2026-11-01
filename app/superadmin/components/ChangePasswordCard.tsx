@@ -38,8 +38,8 @@ export const ChangePasswordCard: React.FC<{ onSavingChange?: (saving: boolean) =
     setError('');
     setMessage('');
 
-    if (newPassword.length < 8) {
-      setError(T.errorMinLength);
+    if (newPassword.length < 8 || newPassword.length > 64) {
+      setError('New password must be between 8 and 64 characters.');
       return;
     }
     if (newPassword !== confirmPassword) {
@@ -131,6 +131,7 @@ export const ChangePasswordCard: React.FC<{ onSavingChange?: (saving: boolean) =
               id="new-password"
               autoComplete="new-password"
               minLength={8}
+              maxLength={64}
               disabled={saving}
               value={newPassword}
               onChange={(e) => setNewPassword(e.target.value)}
@@ -149,6 +150,7 @@ export const ChangePasswordCard: React.FC<{ onSavingChange?: (saving: boolean) =
               id="confirm-password"
               autoComplete="new-password"
               minLength={8}
+              maxLength={64}
               disabled={saving}
               value={confirmPassword}
               onChange={(e) => setConfirmPassword(e.target.value)}

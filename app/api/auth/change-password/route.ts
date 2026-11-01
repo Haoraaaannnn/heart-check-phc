@@ -2,6 +2,7 @@
 import { NextResponse } from 'next/server'
 import { createClient } from '@supabase/supabase-js'
 import { requireUser } from '@/lib/supabase/authGuard'
+import { isPasswordLengthAllowed } from '@/lib/passwordPolicy'
 
 /** @param value - Untrusted request body. @returns Valid password fields or null. */
 function parsePasswords(value: unknown): { currentPassword: string; newPassword: string } | null {
@@ -23,15 +24,17 @@ export async function POST(request: Request) {
 
     const body: unknown = await request.json()
     const passwords = parsePasswords(body)
+    const isForcedChange = typeof body === 'object' && body !== null && 'force' in body && body.force === true
     if (!passwords) {
-      return NextResponse.json({ error: 'Current and new password are required.' }, { status: 400 })
+      if (!isForcedChange) return NextResponse.json({ error: 'Current and new password are required.' }, { status: 400 })
     }
-    const { currentPassword, newPassword } = passwords
-    if (newPassword.length < 8) {
-      return NextResponse.json({ error: 'New password must be at least 8 characters.' }, { status: 400 })
+    const newPassword = passwords?.newPassword ?? (typeof body === 'object' && body !== null && 'newPassword' in body && typeof body.newPassword === 'string' ? body.newPassword : '')
+    const currentPassword = passwords?.currentPassword ?? ''
+    if (!isPasswordLengthAllowed(newPassword)) {
+      return NextResponse.json({ error: 'New password must be between 8 and 64 characters.' }, { status: 400 })
     }
     if (newPassword === currentPassword) return NextResponse.json({ error: 'Choose a password different from your current password.' }, { status: 400 })
-    if (!guard.user.email) {
+    if (!isForcedChange && !guard.user.email) {
       return NextResponse.json({ error: 'Account has no email on file.' }, { status: 400 })
     }
 
@@ -42,11 +45,17 @@ export async function POST(request: Request) {
     const clientOptions = { auth: { persistSession: false, autoRefreshToken: false, detectSessionInUrl: false } }
     const supabaseAnon = createClient(url, anonKey, clientOptions)
     const supabaseAdmin = createClient(url, serviceKey, clientOptions)
-    const { data: verified, error: signInError } = await supabaseAnon.auth.signInWithPassword({
+    const { data: verified, error: signInError } = isForcedChange
+      ? { data: null, error: null }
+      : await supabaseAnon.auth.signInWithPassword({
       email: guard.user.email,
       password: currentPassword,
     })
-    if (signInError || verified.user?.id !== guard.user.id) {
+    const { data: authUser } = await supabaseAdmin.auth.admin.getUserById(guard.user.id)
+    if (isForcedChange && authUser.user?.user_metadata?.must_change_password !== true) {
+      return NextResponse.json({ error: 'This password change is not required for your account.' }, { status: 400 })
+    }
+    if (!isForcedChange && (signInError || verified?.user?.id !== guard.user.id)) {
       return NextResponse.json({ error: 'Current password is incorrect.' }, { status: 401 })
     }
 
@@ -54,6 +63,15 @@ export async function POST(request: Request) {
     if (error) {
       await supabaseAnon.auth.signOut({ scope: 'local' })
       return NextResponse.json({ error: 'Unable to update password. Choose a different password and try again.' }, { status: 400 })
+    }
+
+    if (authUser.user?.user_metadata?.must_change_password === true) {
+      const { error: metadataError } = await supabaseAdmin.auth.admin.updateUserById(guard.user.id, {
+        user_metadata: { ...authUser.user.user_metadata, must_change_password: false },
+      })
+      if (metadataError) {
+        return NextResponse.json({ success: true, warning: 'Password updated. Sign out and contact your administrator if this prompt appears again.' }, { headers: { 'Cache-Control': 'no-store' } })
+      }
     }
 
     const { error: revokeError } = await supabaseAdmin.auth.admin.signOut(guard.token, 'others')
