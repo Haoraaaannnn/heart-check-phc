@@ -37,13 +37,29 @@ export async function GET(request: Request) {
     if (access.admin || access.role === 'nurse' || access.role === 'doctor') {
       await syncDoctorAccounts({ db: access.db, ...(access.role === 'doctor' ? { authId: access.authId } : {}) });
     }
-    const doctors = await access.db.from('doctors').select('id,full_name,specialty,active,auth_id').order('full_name');
-    const doctorRows: unknown = doctors.data;
-    if (doctors.error || !Array.isArray(doctorRows) || !doctorRows.every(isDoctorRecord)) throw new Error('Directory read failed.');
-    const linkedIds = new Set(access.cubicles.filter(station => typeof station.id === 'number' && access.editableIds.includes(station.id)).map(station => station.doctorId));
+    const [doctorsRes, userCubiclesRes] = await Promise.all([
+      access.db.from('doctors').select('id,full_name,specialty,active,auth_id').order('full_name'),
+      access.db.from('user_cubicles').select('cubicle_id, user_id, users(id, username)'),
+    ]);
+    const doctorRows: unknown = doctorsRes.data;
+    if (doctorsRes.error || !Array.isArray(doctorRows) || !doctorRows.every(isDoctorRecord)) throw new Error('Directory read failed.');
+
+    const cubicleOccupancy: Record<number, { userId: number; username: string }> = {};
+    for (const item of (userCubiclesRes.data ?? []) as Array<Record<string, unknown>>) {
+      const userObj = item.users as { id?: number; username?: string } | null;
+      if (typeof item.cubicle_id === 'number' && userObj?.username && typeof userObj.id === 'number') {
+        cubicleOccupancy[item.cubicle_id] = { userId: userObj.id, username: userObj.username };
+      }
+    }
+    const enrichedCubicles = access.cubicles.map(station => ({
+      ...station,
+      occupiedBy: typeof station.id === 'number' ? cubicleOccupancy[station.id] ?? null : null,
+    }));
+
+    const linkedIds = new Set(enrichedCubicles.filter(station => typeof station.id === 'number' && access.editableIds.includes(station.id)).map(station => station.doctorId));
     const editableDoctorIds = doctorRows.flatMap(doctor => typeof doctor.id === 'string' &&
       (access.admin || linkedIds.has(doctor.id)) ? [doctor.id] : []);
-    return NextResponse.json(parseDoctorDirectory({ doctors: doctorRows, cubicles: access.cubicles,
+    return NextResponse.json(parseDoctorDirectory({ doctors: doctorRows, cubicles: enrichedCubicles,
       canManageDirectory: access.admin, editableCubicleIds: access.editableIds, editableDoctorIds }), { headers: HEADERS });
   } catch {
     return NextResponse.json({ error: 'Unable to load doctor accounts and assignments. Please retry.' }, { status: 503, headers: HEADERS });
@@ -79,18 +95,80 @@ async function saveDoctor(options: { db: SupabaseClient; body: Record<string, un
 }
 
 /** @param options - Scoped station assignment. @returns Acknowledged, concurrency-protected station change. */
-async function assignDoctor(options: { db: SupabaseClient; body: Record<string, unknown> }): Promise<boolean> {
+async function assignDoctor(options: { db: SupabaseClient; body: Record<string, unknown> }): Promise<{ ok: boolean; error?: string }> {
   const { db, body } = options;
   if (typeof body.cubicleId !== 'number' || !Number.isSafeInteger(body.cubicleId) || body.cubicleId < 1 ||
-      !(body.doctorId === null || isDoctorId(body.doctorId)) || !(body.expectedDoctorId === null || isDoctorId(body.expectedDoctorId))) return false;
-  if (body.doctorId !== null) {
-    const doctor = await db.from('doctors').select('id').eq('id', body.doctorId).maybeSingle();
-    if (doctor.error || !doctor.data) return false;
+      !(body.doctorId === null || isDoctorId(body.doctorId)) || !(body.expectedDoctorId === null || isDoctorId(body.expectedDoctorId))) {
+    return { ok: false, error: 'Invalid cubicle or physician identifier.' };
   }
+
+  // 1. Check if cubicle is actively in use by a logged-in account in user_cubicles
+  const { data: cubicleOccupant } = await db
+    .from('user_cubicles')
+    .select('cubicle_id, user_id, users(id, username, auth_id)')
+    .eq('cubicle_id', body.cubicleId)
+    .maybeSingle();
+
+  if (body.doctorId !== null) {
+    const doctor = await db.from('doctors').select('id, auth_id, full_name').eq('id', body.doctorId).maybeSingle();
+    if (doctor.error || !doctor.data) return { ok: false, error: 'Physician not found.' };
+
+    let doctorUserId: number | null = null;
+    if (doctor.data.auth_id) {
+      const { data: docUser } = await db.from('users').select('id').eq('auth_id', doctor.data.auth_id).maybeSingle();
+      if (docUser?.id && typeof docUser.id === 'number') doctorUserId = docUser.id;
+    }
+
+    // Cannot reassign a cubicle currently occupied by another logged-in user
+    if (cubicleOccupant) {
+      const occupantUser = cubicleOccupant.users as { username?: string; id?: number } | null;
+      if (occupantUser && occupantUser.id !== doctorUserId) {
+        return {
+          ok: false,
+          error: `This cubicle is currently in use by ${occupantUser.username || 'another logged-in account'}. It cannot be assigned while occupied.`,
+        };
+      }
+    }
+
+    // 1 account 1 cubicle: check if this doctor account is already logged into another cubicle
+    if (doctorUserId) {
+      const { data: existingDoctorCubicle } = await db
+        .from('user_cubicles')
+        .select('cubicle_id')
+        .eq('user_id', doctorUserId)
+        .neq('cubicle_id', body.cubicleId)
+        .maybeSingle();
+
+      if (existingDoctorCubicle) {
+        return {
+          ok: false,
+          error: `${doctor.data.full_name} is already logged in to another cubicle. 1 account 1 cubicle restriction applies.`,
+        };
+      }
+    }
+
+    // Detach physician from all other cubicles to ensure 1 doctor = 1 station invariant
+    await db.from('cubicle').update({ doctorId: null }).eq('doctorId', body.doctorId).neq('id', body.cubicleId);
+
+    // If doctor has an active account, update user_cubicles
+    if (doctorUserId) {
+      await db.from('user_cubicles').delete().eq('user_id', doctorUserId);
+      await db.from('user_cubicles').insert({ user_id: doctorUserId, cubicle_id: body.cubicleId });
+    }
+  } else if (cubicleOccupant) {
+    // Unassigning: cannot unassign if an active logged-in account is in the cubicle
+    const occupantUser = cubicleOccupant.users as { username?: string } | null;
+    return {
+      ok: false,
+      error: `Cannot unassign this cubicle because ${occupantUser?.username || 'a staff member'} is currently logged in.`,
+    };
+  }
+
   let query = db.from('cubicle').update({ doctorId: body.doctorId }).eq('id', body.cubicleId);
   query = body.expectedDoctorId === null ? query.is('doctorId', null) : query.eq('doctorId', body.expectedDoctorId);
   const { data, error } = await query.select('id,doctorId').maybeSingle();
-  return !error && isDoctorRecord(data) && data.id === body.cubicleId && data.doctorId === body.doctorId;
+  const saved = !error && isDoctorRecord(data) && data.id === body.cubicleId && data.doctorId === body.doctorId;
+  return saved ? { ok: true } : { ok: false, error: 'Cubicle assignment could not be saved. Please retry.' };
 }
 
 /** @param options - Manual physician row. @returns Acknowledged deletion; account-linked physicians must be deactivated. */
@@ -120,13 +198,35 @@ export async function POST(request: Request) {
       return NextResponse.json({ error: 'You can edit doctors and assignments for your assigned Doctors Stations only.' }, { status: 403, headers: HEADERS });
     }
     const options = { db: access.db, body };
-    const saved = body.action === 'assign' ? await assignDoctor(options)
-      : body.action === 'delete' ? await deleteDoctor(options) : await saveDoctor(options);
-    if (!saved) return NextResponse.json({ error: body.action === 'delete'
-      ? 'This doctor could not be deleted. Account-linked doctors must be deactivated instead.'
-      : 'The doctor or assignment was not saved. Refresh and retry.' }, { status: 409, headers: HEADERS });
+    let saved: { ok: boolean; error?: string };
+    if (body.action === 'assign') {
+      saved = await assignDoctor(options);
+    } else if (body.action === 'delete') {
+      const ok = await deleteDoctor(options);
+      saved = {
+        ok,
+        error: ok
+          ? undefined
+          : 'This doctor could not be deleted. Account-linked doctors must be deactivated instead.',
+      };
+    } else {
+      const ok = await saveDoctor(options);
+      saved = {
+        ok,
+        error: ok ? undefined : 'The doctor details could not be saved. Refresh and retry.',
+      };
+    }
+
+    if (!saved.ok) {
+      return NextResponse.json(
+        { error: saved.error || 'The doctor or assignment was not saved. Refresh and retry.' },
+        { status: 409, headers: HEADERS }
+      );
+    }
     return NextResponse.json({ success: true }, { headers: HEADERS });
-  } catch {
+  } catch (error: unknown) {
+    const message = error instanceof Error ? error.message : 'Unknown doctor action failure';
+    console.error('[DOCTORS POST ERROR]:', message);
     return NextResponse.json({ error: 'Unable to save doctor details. Please retry.' }, { status: 503, headers: HEADERS });
   }
 }

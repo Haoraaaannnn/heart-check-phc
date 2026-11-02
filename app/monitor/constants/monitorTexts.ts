@@ -80,7 +80,8 @@ export const MONITOR_TEXTS = {
     moreWaitingSuffix: ' more in queue',
   },
   selector: {
-    title: 'Select Monitor',
+    title: 'Select Monitor Services',
+    subtitle: 'Check one or more clinical services or intake stations to display on this monitor',
     typeSelectionPrefix: 'Select ',
     typeSelectionSuffix: ' Type',
     backToCategories: 'Back to Categories',
@@ -91,7 +92,9 @@ export const MONITOR_TEXTS = {
     selectAll: 'Select All',
     clearAll: 'Clear',
     launchCustomMonitor: 'Launch Custom Monitor',
+    launchMonitor: 'Launch Monitor',
     selectedServicesCount: 'Selected Services',
-    noServicesSelected: 'Select at least one service to start the custom monitor',
+    selectedCountLabel: 'selected',
+    noServicesSelected: 'Select at least one service to start the monitor',
   },
 } as const;

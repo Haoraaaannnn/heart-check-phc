@@ -89,7 +89,10 @@ export function normalizeMonitorTargets(rawServices: string[]): NormalizedMonito
       continue;
     }
 
-    if (SERVICES_WITH_SUBCATEGORIES.has(trimmed)) {
+    const isSubcategoryService = Array.from(SERVICES_WITH_SUBCATEGORIES).some(
+      s => s.toLowerCase() === trimmed.toLowerCase()
+    );
+    if (isSubcategoryService) {
       for (const sub of ['Pedia', 'Adult']) {
         const key = `${trimmed}-${sub}`;
         if (!seenKeys.has(key)) {
@@ -170,6 +173,28 @@ function isExtendedTransaction(patient: Patient | null, currentMs: number): bool
 }
 
 /**
+ * Formats station destination text for voice announcement, matching single category standards.
+ * @param label - Station label string.
+ * @param type - Counter or cubicle.
+ * @param stationNumber - Station identifier.
+ * @returns Human-spoken destination phrase.
+ */
+function formatStationSpeechDestination(label: string, type: 'counter' | 'cubicle', stationNumber: number | string): string {
+  if (type === 'counter') {
+    return `Counter ${stationNumber}`;
+  }
+  const roomMatch = String(stationNumber).match(/R(\d+)/);
+  const cubicleMatch = String(stationNumber).match(/C(\d+)$/);
+  if (roomMatch && cubicleMatch) {
+    return `Room ${roomMatch[1]}, Cubicle ${cubicleMatch[1]}`;
+  }
+  if (roomMatch) {
+    return `Room ${roomMatch[1]}`;
+  }
+  return label || String(stationNumber);
+}
+
+/**
  * Hook to manage data fetching, real-time sync, and speech dispatch for custom multi-service monitors.
  * @param services - Array of service names selected for this monitor.
  * @param started - True if the staff user has activated the monitor screen.
@@ -187,6 +212,8 @@ export function useCustomMonitorData(services: string[], started: boolean) {
   const audioController = useRef<AbortController | null>(null);
   const announcedPatients = useRef<Map<string, Set<number>>>(new Map());
 
+  const servicesKey = useMemo(() => services.join(','), [services]);
+
   // Reset audio controller and announcement queue on unmount or services change
   useEffect(() => {
     if (!started) return;
@@ -198,7 +225,7 @@ export function useCustomMonitorData(services: string[], started: boolean) {
       announcementQueue.current = [];
       announced.clear();
     };
-  }, [started, services]);
+  }, [started, servicesKey]);
 
   // Tick clock and expire active call highlights
   useEffect(() => {
@@ -238,6 +265,16 @@ export function useCustomMonitorData(services: string[], started: boolean) {
             console.warn('Custom monitor speech playback failed:', error);
           }
         }
+
+        if (announcementQueue.current.length > 0 && !controller.signal.aborted) {
+          await new Promise<void>(resolve => {
+            const timer = setTimeout(resolve, 600);
+            controller.signal.addEventListener('abort', () => {
+              clearTimeout(timer);
+              resolve();
+            }, { once: true });
+          });
+        }
       }
     } finally {
       isPlayingRef.current = false;
@@ -248,28 +285,6 @@ export function useCustomMonitorData(services: string[], started: boolean) {
   }, []);
 
   const normalizedTargets = useMemo(() => normalizeMonitorTargets(services), [services]);
-
-  const pollParam = useMemo(() => {
-    return normalizedTargets.map(t => t.subcategory ? `${t.service}-${t.subcategory}` : t.service).join(',');
-  }, [normalizedTargets]);
-
-  // Poll for destination-scoped calls across all selected services and subcategories
-  useMonitorCalls(pollParam, null, started, (call: MonitorCall) => {
-    setActiveCall({
-      ticket: call.ticket,
-      counter: call.counter,
-      cubicle: call.cubicle,
-      expiry: Date.now() + 15000,
-    });
-    announcementQueue.current.push({
-      message: call.message,
-      ticket: call.ticket,
-      counter: call.counter,
-      cubicle: call.cubicle,
-      expiresAt: call.expiresAt,
-    });
-    void processQueue();
-  });
 
   /** Fetches all active stations and patient queues for the selected services. */
   const fetchAllData = useCallback(async () => {
@@ -284,17 +299,28 @@ export function useCustomMonitorData(services: string[], started: boolean) {
     const tomorrow = new Date(today);
     tomorrow.setDate(today.getDate() + 1);
 
+    const { data: svcData } = await supabase
+      .from('services')
+      .select('label_en, requires_registration, has_subcategories');
+
+    const canonicalMap = new Map<string, string>();
+    if (svcData) {
+      for (const s of svcData) {
+        canonicalMap.set(s.label_en.toLowerCase(), s.label_en);
+      }
+    }
+    canonicalMap.set('registration', 'Registration');
+
     const hasRegistration = normalizedTargets.some(t => t.service === 'Registration');
-    const clinicalServices = [...new Set(normalizedTargets.filter(t => t.service !== 'Registration').map(t => t.service))];
+    const clinicalServices = [...new Set(normalizedTargets
+      .filter(t => t.service !== 'Registration')
+      .map(t => canonicalMap.get(t.service.toLowerCase()) || t.service))];
 
     const resultStations: CustomStation[] = [];
 
     // 1. Process Registration Counters if selected
     if (hasRegistration) {
       const counterDirectory = await fetchOccupiedCounters();
-      const { data: svcData } = await supabase
-        .from('services')
-        .select('label_en, requires_registration');
 
       const regServices = (svcData || [])
         .filter((s: any) => s.requires_registration !== false)
@@ -456,6 +482,29 @@ export function useCustomMonitorData(services: string[], started: boolean) {
     setLoading(false);
   }, [normalizedTargets]);
 
+  const pollParam = useMemo(() => {
+    return normalizedTargets.map(t => t.subcategory ? `${t.service}-${t.subcategory}` : t.service).join(',');
+  }, [normalizedTargets]);
+
+  // Poll for destination-scoped calls across all selected services and subcategories
+  useMonitorCalls(pollParam, null, started, (call: MonitorCall) => {
+    setActiveCall({
+      ticket: call.ticket,
+      counter: call.counter,
+      cubicle: call.cubicle,
+      expiry: Date.now() + 15000,
+    });
+    void fetchAllData();
+    announcementQueue.current.push({
+      message: call.message,
+      ticket: call.ticket,
+      counter: call.counter,
+      cubicle: call.cubicle,
+      expiresAt: call.expiresAt,
+    });
+    void processQueue();
+  });
+
   // Initial fetch and polling loop
   useEffect(() => {
     void fetchAllData();
@@ -484,6 +533,51 @@ export function useCustomMonitorData(services: string[], started: boolean) {
       void supabase.removeChannel(channel);
     };
   }, [fetchAllData]);
+
+  // Announce newly serving patients automatically across all stations (just like Single Category)
+  useEffect(() => {
+    if (!started || stations.length === 0) return;
+
+    for (const st of stations) {
+      if (!st.servingPatient || st.onBreak) continue;
+
+      const patient = st.servingPatient;
+      let announcedSet = announcedPatients.current.get(st.id);
+      if (!announcedSet) {
+        announcedSet = new Set<number>();
+        announcedPatients.current.set(st.id, announcedSet);
+      }
+
+      if (!announcedSet.has(patient.id)) {
+        announcedSet.add(patient.id);
+
+        const ticket = formatTicketForSpeech(patient.patientNum);
+        const destText = formatStationSpeechDestination(st.label, st.type, st.stationNumber);
+        const message = `Number ${ticket}, Number ${ticket}, proceed to ${destText}`;
+
+        announcementQueue.current.push({
+          message,
+          ticket: patient.patientNum,
+          counter: st.type === 'counter' ? Number(st.stationNumber) || null : null,
+          cubicle: st.type === 'cubicle' ? String(st.stationNumber) : null,
+        });
+        void processQueue();
+      }
+    }
+
+    // Clean up announced sets for stations that no longer have a serving patient
+    for (const [stId, set] of announcedPatients.current) {
+      const liveStation = stations.find(s => s.id === stId);
+      if (!liveStation || !liveStation.servingPatient) {
+        set.clear();
+      } else {
+        const liveId = liveStation.servingPatient.id;
+        for (const id of set) {
+          if (id !== liveId) set.delete(id);
+        }
+      }
+    }
+  }, [stations, started, processQueue]);
 
   // Determine active calling state per station
   const stationsWithCalling = stations.map(station => {
@@ -529,7 +623,34 @@ export function useCustomMonitorData(services: string[], started: boolean) {
 
     // Prioritize actively calling station as primary serving card
     const callingEntry = allServing.find(e => e.isCalling);
-    const primaryServing = callingEntry || allServing[0] || null;
+    let primaryServing = callingEntry || allServing[0] || null;
+
+    if (activeCall !== null && currentMs < activeCall.expiry) {
+      const isTargetMatch = (
+        (target.service === 'Registration' && activeCall.counter != null) ||
+        (target.service !== 'Registration' && serviceStations.some(s =>
+          (activeCall.cubicle && s.stationNumber === activeCall.cubicle) ||
+          (activeCall.ticket && s.servingPatient?.patientNum === activeCall.ticket) ||
+          (activeCall.ticket && s.waitingPatients.some(w => w.patientNum === activeCall.ticket))
+        ))
+      );
+
+      if (isTargetMatch && (!primaryServing || primaryServing.ticket !== activeCall.ticket)) {
+        const matchingStation = serviceStations.find(s =>
+          (activeCall.cubicle && s.stationNumber === activeCall.cubicle) ||
+          (activeCall.ticket && s.servingPatient?.patientNum === activeCall.ticket) ||
+          (activeCall.ticket && s.waitingPatients.some(w => w.patientNum === activeCall.ticket))
+        );
+        primaryServing = {
+          ticket: activeCall.ticket,
+          stationLabel: matchingStation?.label || (activeCall.counter ? `Counter ${activeCall.counter}` : (activeCall.cubicle || target.displayTitle)),
+          doctorName: matchingStation?.doctorName || null,
+          isCalling: true,
+          isExtended: false,
+        };
+      }
+    }
+
     const otherServing = allServing.filter(e => e !== primaryServing);
 
     // Deduplicate and order waiting queue for this service and subcategory

@@ -702,107 +702,107 @@ export const quickAssignStyles = {
  * Doctors and cubicle association panel styles.
  */
 export const doctorsPanelStyles = {
-  container: 'flex flex-col gap-6',
+  container: 'flex flex-col gap-5',
 
-  topHeader: 'flex items-start justify-between gap-4',
-  topHeaderTitle: 'text-lg font-bold text-slate-900 dark:text-[#f5f5f5]',
-  topHeaderSubtitle: 'text-slate-500 dark:text-[#a3a3a3] text-base mt-1',
+  topHeader: 'flex items-start justify-between gap-4 flex-wrap',
+  topHeaderTitle: 'text-base font-bold text-slate-900 dark:text-[#f5f5f5]',
+  topHeaderSubtitle: 'text-slate-500 dark:text-[#a3a3a3] text-xs mt-0.5',
 
   addDoctorBtn:
-    'shrink-0 px-4 py-2 bg-blue-600 hover:bg-blue-700 active:bg-blue-800 text-white rounded-lg transition text-base font-semibold shadow-xs cursor-pointer',
+    'shrink-0 px-3.5 py-1.5 bg-blue-600 hover:bg-blue-700 active:bg-blue-800 text-white rounded-lg transition text-xs font-bold shadow-xs cursor-pointer',
 
   emptyStateCard:
-    'bg-white dark:bg-[#1a1a1a] rounded-2xl border-2 border-dashed border-slate-200 dark:border-[#2e2e2e] p-10 text-center',
-  emptyStateTitle: 'text-slate-700 dark:text-[#f5f5f5] font-semibold',
-  emptyStateDesc: 'text-slate-400 dark:text-[#a3a3a3] text-base mt-1 mb-4',
+    'bg-white dark:bg-[#1a1a1a] rounded-xl border border-dashed border-slate-300 dark:border-[#2e2e2e] p-8 text-center',
+  emptyStateTitle: 'text-slate-800 dark:text-[#f5f5f5] font-bold text-sm',
+  emptyStateDesc: 'text-slate-500 dark:text-[#a3a3a3] text-xs mt-1 mb-4',
 
   doctorGrid: 'grid gap-3 sm:grid-cols-2 lg:grid-cols-3',
 
   doctorCardBase:
-    'rounded-2xl border-2 p-4 flex flex-col gap-3 transition cursor-pointer select-none',
+    'rounded-xl border p-3.5 flex flex-col justify-between gap-3 transition cursor-pointer select-none text-left',
   doctorCardSelected:
-    'border-blue-500 bg-blue-50/70 dark:bg-blue-950/40 shadow-xs',
+    'border-blue-500 dark:border-blue-500 bg-blue-50/80 dark:bg-blue-950/40 ring-2 ring-blue-500/20 border-l-4 border-l-blue-600 dark:border-l-blue-500 shadow-xs',
   doctorCardUnselected:
-    'border-slate-200 dark:border-[#2e2e2e] bg-white dark:bg-[#1a1a1a] hover:border-blue-300 dark:hover:border-blue-800',
+    'border-slate-200 dark:border-[#2e2e2e] bg-white dark:bg-[#1a1a1a] hover:border-slate-300 dark:hover:border-slate-700 hover:shadow-xs',
 
-  doctorCardName: 'font-semibold text-slate-900 dark:text-[#f5f5f5] break-words whitespace-normal',
-  doctorCardSpecialty: 'text-base mt-0.5 break-words whitespace-normal text-slate-500 dark:text-[#a3a3a3]',
-  doctorCardNoSpecialty: 'text-base mt-0.5 break-words whitespace-normal text-slate-400 dark:text-[#737373] italic',
+  doctorCardName: 'text-sm font-bold text-slate-900 dark:text-[#f5f5f5] leading-snug break-words whitespace-normal',
+  doctorCardSpecialty: 'text-xs font-medium mt-0.5 break-words whitespace-normal text-slate-600 dark:text-[#a3a3a3]',
+  doctorCardNoSpecialty: 'text-xs font-normal mt-0.5 break-words whitespace-normal text-slate-400 dark:text-[#737373] italic',
 
   statusBadgeActive:
-    'shrink-0 text-base font-extrabold text-emerald-600 dark:text-emerald-400',
+    'shrink-0 inline-flex items-center gap-1.5 px-2 py-0.5 rounded-md text-[11px] font-bold uppercase tracking-wider bg-emerald-50 text-emerald-700 border border-emerald-200 dark:bg-emerald-950/60 dark:text-emerald-300 dark:border-emerald-800',
   statusBadgeInactive:
-    'shrink-0 text-base font-extrabold text-slate-500 dark:text-[#a3a3a3]',
+    'shrink-0 inline-flex items-center gap-1.5 px-2 py-0.5 rounded-md text-[11px] font-bold uppercase tracking-wider bg-slate-100 text-slate-600 border border-slate-200 dark:bg-slate-800 dark:text-slate-400 dark:border-slate-700',
 
-  cardFooter: 'flex items-center justify-between',
-  roomCountText: 'text-base text-slate-500 dark:text-[#a3a3a3]',
+  cardFooter: 'flex items-center justify-between gap-2 pt-2 border-t border-slate-100 dark:border-[#262626]',
+  roomCountText: 'text-xs font-medium text-slate-500 dark:text-[#a3a3a3] whitespace-nowrap',
 
   actionBtnToggle:
-    'px-2 py-0.5 rounded-lg text-base font-semibold text-slate-500 dark:text-[#a3a3a3] hover:bg-slate-100 dark:hover:bg-[#242424] hover:text-slate-800 dark:hover:text-[#f5f5f5] transition cursor-pointer',
+    'px-2 py-1 rounded-md text-xs font-semibold text-slate-600 dark:text-[#a3a3a3] hover:bg-slate-100 dark:hover:bg-[#242424] hover:text-slate-900 dark:hover:text-[#f5f5f5] border border-slate-200 dark:border-[#2e2e2e] transition cursor-pointer',
   actionBtnEdit:
-    'px-2 py-0.5 rounded-lg text-base font-semibold text-blue-600 dark:text-blue-400 hover:bg-blue-50 dark:hover:bg-blue-950/40 transition cursor-pointer',
+    'px-2 py-1 rounded-md text-xs font-semibold text-blue-700 dark:text-blue-300 bg-blue-50/60 dark:bg-blue-950/40 hover:bg-blue-100 dark:hover:bg-blue-900/60 border border-blue-200 dark:border-blue-800/80 transition cursor-pointer',
   actionBtnDelete:
-    'px-2 py-0.5 rounded-lg text-base font-semibold text-red-600 dark:text-red-400 hover:bg-red-50 dark:hover:bg-red-950/40 transition cursor-pointer',
+    'px-2 py-1 rounded-md text-xs font-semibold text-red-700 dark:text-red-300 bg-red-50/60 dark:bg-red-950/40 hover:bg-red-100 dark:hover:bg-red-900/60 border border-red-200 dark:border-red-800/80 transition cursor-pointer',
 
-  editingNotice: 'text-base font-semibold text-blue-600 dark:text-blue-400 -mb-1',
+  editingNotice: 'text-xs font-bold text-blue-700 dark:text-blue-400 -mb-1',
 
   assignmentSection:
-    'bg-white dark:bg-[#1a1a1a] rounded-2xl border border-slate-200 dark:border-[#2e2e2e] shadow-xs overflow-hidden',
+    'bg-white dark:bg-[#1a1a1a] rounded-xl border border-slate-200 dark:border-[#2e2e2e] shadow-xs overflow-hidden',
   assignmentHeader:
-    'px-6 py-4 border-b border-slate-200 dark:border-[#2e2e2e] flex items-center justify-between gap-3 flex-wrap bg-slate-50/50 dark:bg-[#141414]',
-  assignmentTitle: 'text-base font-bold text-slate-900 dark:text-[#f5f5f5]',
-  assignmentSubtitle: 'text-slate-500 dark:text-[#a3a3a3] text-base mt-0.5',
+    'px-5 py-3.5 border-b border-slate-200 dark:border-[#2e2e2e] flex items-center justify-between gap-3 flex-wrap bg-slate-50/70 dark:bg-[#161616]',
+  assignmentTitle: 'text-sm font-bold text-slate-900 dark:text-[#f5f5f5]',
+  assignmentSubtitle: 'text-slate-500 dark:text-[#a3a3a3] text-xs mt-0.5',
 
   doneBtn:
-    'text-base font-semibold text-slate-600 dark:text-[#a3a3a3] hover:text-slate-900 dark:hover:text-[#f5f5f5] px-3 py-1.5 rounded-lg hover:bg-slate-100 dark:hover:bg-[#242424] border border-slate-200 dark:border-[#2e2e2e] transition cursor-pointer',
+    'text-xs font-bold text-slate-700 dark:text-[#f5f5f5] hover:text-slate-900 px-3 py-1.5 rounded-lg bg-white dark:bg-[#242424] hover:bg-slate-100 dark:hover:bg-[#2e2e2e] border border-slate-300 dark:border-[#383838] transition cursor-pointer shadow-2xs',
 
-  assignmentBody: 'p-6 flex flex-col gap-5 max-h-[420px] overflow-y-auto phc-scroll',
-  groupTitle: 'text-base font-bold uppercase tracking-wide text-slate-500 dark:text-[#a3a3a3] mb-2',
+  assignmentBody: 'p-4 sm:p-5 flex flex-col gap-4',
+  groupTitle: 'text-xs font-bold uppercase tracking-wider text-slate-600 dark:text-[#a3a3a3] mb-2',
 
   cubicleTileBase:
-    'relative flex flex-col items-start gap-0.5 rounded-xl border px-3 py-2 text-left transition min-w-[112px] select-none',
+    'relative flex flex-col justify-between gap-2 rounded-xl border p-3 text-left transition min-w-[170px] flex-1 max-w-[240px] select-none shadow-2xs',
   cubicleTileThisDoctor:
     'border-blue-600 bg-blue-600 text-white shadow-xs hover:bg-blue-700 cursor-pointer',
   cubicleTileOtherDoctor:
-    'border-slate-200 dark:border-[#2e2e2e] bg-slate-50 dark:bg-[#1f1f1f] text-slate-600 dark:text-[#a3a3a3] hover:border-blue-300 dark:hover:border-blue-700 hover:bg-blue-50 dark:hover:bg-blue-950/30 cursor-pointer',
+    'border-slate-200 dark:border-[#2e2e2e] bg-slate-50/80 dark:bg-[#1f1f1f] text-slate-800 dark:text-[#f5f5f5] hover:border-blue-300 dark:hover:border-blue-700 hover:bg-blue-50/40 dark:hover:bg-blue-950/20 cursor-pointer',
   cubicleTileUnassigned:
-    'border-slate-200 dark:border-[#2e2e2e] bg-white dark:bg-[#1f1f1f] text-slate-700 dark:text-[#f5f5f5] hover:border-blue-300 dark:hover:border-blue-700 hover:bg-blue-50 dark:hover:bg-blue-950/30 cursor-pointer',
-  cubicleTileDisabled: 'cursor-default opacity-80',
+    'border-dashed border-slate-300 dark:border-[#383838] bg-white dark:bg-[#181818] text-slate-700 dark:text-[#d4d4d4] hover:border-blue-400 dark:hover:border-blue-600 hover:bg-blue-50/30 dark:hover:bg-blue-950/20 cursor-pointer',
+  cubicleTileDisabled: 'cursor-default opacity-60',
 
-  cubicleTileNum: 'text-base font-semibold leading-none',
-  cubicleTileRoom: 'text-base leading-none text-slate-400 dark:text-[#737373]',
-  cubicleTileRoomActive: 'text-base leading-none text-blue-100',
-  cubicleTileDoctor: 'text-base font-medium mt-0.5 text-slate-500 dark:text-[#a3a3a3]',
-  cubicleTileDoctorActive: 'text-base font-medium mt-0.5 text-blue-100',
-  cubicleTileDoctorUnassigned: 'text-base font-medium mt-0.5 text-slate-400 dark:text-[#525252]',
+  cubicleTileNum: 'font-mono font-black text-sm leading-none',
+  cubicleTileRoom: 'text-xs font-semibold leading-none text-slate-500 dark:text-[#888888]',
+  cubicleTileRoomActive: 'text-xs font-semibold leading-none text-blue-100',
+  cubicleTileDoctor: 'text-xs font-bold mt-0.5 text-slate-800 dark:text-[#f5f5f5] break-words',
+  cubicleTileDoctorActive: 'text-xs font-bold mt-0.5 text-white break-words',
+  cubicleTileDoctorUnassigned: 'text-xs font-medium mt-0.5 text-slate-400 dark:text-[#666666] italic',
 
   modalCard:
-    'bg-white dark:bg-[#1a1a1a] border border-slate-200 dark:border-[#2e2e2e] rounded-2xl p-6 w-full max-w-md shadow-2xl animate-in zoom-in-95 duration-150',
-  modalTitle: 'text-xl font-bold text-slate-900 dark:text-[#f5f5f5] mb-4',
-  modalTitleDanger: 'text-xl font-bold text-red-600 dark:text-red-400 mb-4',
+    'bg-white dark:bg-[#1a1a1a] border border-slate-200 dark:border-[#2e2e2e] rounded-xl p-5 w-full max-w-md max-h-[calc(100vh-2rem)] overflow-y-auto shadow-2xl animate-in zoom-in-95 duration-150',
+  modalTitle: 'text-base font-bold text-slate-900 dark:text-[#f5f5f5] mb-3',
+  modalTitleDanger: 'text-base font-bold text-red-600 dark:text-red-400 mb-3',
 
   formErrorBox:
-    'mb-4 p-3 bg-red-100 dark:bg-red-950/50 border border-red-200 dark:border-red-900/60 text-red-700 dark:text-red-300 rounded-lg text-base',
+    'mb-3 p-2.5 bg-red-50 dark:bg-red-950/50 border border-red-200 dark:border-red-900/60 text-red-700 dark:text-red-300 rounded-lg text-xs font-medium',
   formSuccessBox:
-    'mb-4 p-3 bg-emerald-100 dark:bg-emerald-950/50 border border-emerald-200 dark:border-emerald-900/60 text-emerald-700 dark:text-emerald-300 rounded-lg text-base',
+    'mb-3 p-2.5 bg-emerald-50 dark:bg-emerald-950/50 border border-emerald-200 dark:border-emerald-900/60 text-emerald-700 dark:text-emerald-300 rounded-lg text-xs font-medium',
 
-  inputLabel: 'block text-base font-medium text-slate-700 dark:text-[#a3a3a3] mb-1',
+  inputLabel: 'block text-xs font-bold uppercase tracking-wider text-slate-700 dark:text-[#a3a3a3] mb-1',
   inputField:
-    'w-full p-2.5 border border-slate-300 dark:border-[#2e2e2e] bg-white dark:bg-[#1f1f1f] rounded-xl mb-3 text-slate-900 dark:text-[#f5f5f5] placeholder-slate-400 dark:placeholder-[#737373] focus:outline-hidden focus:ring-2 focus:ring-blue-500 transition text-base',
+    'w-full px-3 py-2 border border-slate-300 dark:border-[#2e2e2e] bg-white dark:bg-[#1f1f1f] rounded-lg mb-3 text-slate-900 dark:text-[#f5f5f5] placeholder-slate-400 dark:placeholder-[#737373] focus:outline-hidden focus:ring-2 focus:ring-blue-500 transition text-sm',
 
-  checkboxLabel: 'flex items-center gap-2 mb-5 text-base text-slate-700 dark:text-[#a3a3a3] cursor-pointer',
+  checkboxLabel: 'flex items-center gap-2 mb-4 text-xs font-medium text-slate-700 dark:text-[#a3a3a3] cursor-pointer',
   checkboxInput: 'rounded border-slate-300 dark:border-[#2e2e2e] text-blue-600 focus:ring-blue-500 w-4 h-4',
 
   btnCancel:
-    'px-4 py-2 bg-slate-200 dark:bg-[#242424] text-slate-700 dark:text-[#a3a3a3] hover:bg-slate-300 dark:hover:bg-[#2e2e2e] hover:text-slate-900 dark:hover:text-[#f5f5f5] rounded-xl transition text-base font-semibold cursor-pointer',
+    'px-3.5 py-2 bg-slate-100 dark:bg-[#242424] text-slate-700 dark:text-[#a3a3a3] hover:bg-slate-200 dark:hover:bg-[#2e2e2e] hover:text-slate-900 dark:hover:text-[#f5f5f5] rounded-lg transition text-xs font-bold cursor-pointer border border-slate-200 dark:border-[#333]',
   btnSubmit:
-    'px-4 py-2 bg-blue-600 hover:bg-blue-700 active:bg-blue-800 text-white rounded-xl transition text-base font-semibold shadow-xs disabled:opacity-50 cursor-pointer',
+    'px-3.5 py-2 bg-blue-600 hover:bg-blue-700 active:bg-blue-800 text-white rounded-lg transition text-xs font-bold shadow-xs disabled:opacity-50 cursor-pointer',
   btnDeleteConfirm:
-    'px-4 py-2 bg-red-600 hover:bg-red-700 active:bg-red-800 text-white rounded-xl transition text-base font-semibold shadow-xs disabled:opacity-50 cursor-pointer',
+    'px-3.5 py-2 bg-red-600 hover:bg-red-700 active:bg-red-800 text-white rounded-lg transition text-xs font-bold shadow-xs disabled:opacity-50 cursor-pointer',
 
-  deleteWarningText: 'text-slate-700 dark:text-[#a3a3a3] text-base leading-relaxed',
-  deleteHighlightText: 'font-semibold text-slate-900 dark:text-[#f5f5f5]',
-  deleteSubNotice: 'text-base text-red-600 dark:text-red-400 block mt-2',
+  deleteWarningText: 'text-slate-700 dark:text-[#a3a3a3] text-sm leading-relaxed',
+  deleteHighlightText: 'font-bold text-slate-900 dark:text-[#f5f5f5]',
+  deleteSubNotice: 'text-xs text-red-600 dark:text-red-400 block mt-2',
 } as const;
 
 /**

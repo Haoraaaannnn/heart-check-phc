@@ -7,6 +7,6 @@ import { useStaffAuthorization } from '@/hooks/useStaffAuthorization';
 
 /** @returns True until the workstation's permitted staff role is verified. */
 export function useRequireAuth(): boolean {
-  return useStaffAuthorization(['registration', 'nurse', 'staff', 'admin', 'superadmin'], 'transfer');
+  return useStaffAuthorization(['registration', 'nurse', 'staff', 'doctor', 'admin', 'superadmin'], 'transfer');
 }
 export default useRequireAuth;

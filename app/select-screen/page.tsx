@@ -42,6 +42,7 @@ export default function SelectScreenPage() {
 
   const {
     assignment,
+    savedConfiguration,
     counters,
     cubicles,
     services,
@@ -226,6 +227,7 @@ export default function SelectScreenPage() {
           onClose={() => setSetupWorkstation(null)}
           workstation={setupWorkstation}
           currentAssignment={assignment}
+          savedConfiguration={savedConfiguration}
           counters={counters}
           cubicles={cubicles}
           services={services}

@@ -68,9 +68,14 @@ export function findDropTarget(point: DragPoint, targetAttribute: string): strin
 
   const elements = document.elementsFromPoint(point.x, point.y);
   for (const el of elements) {
-    const attr = (el as HTMLElement).getAttribute(targetAttribute);
-    if (attr) {
-      return attr;
+    const directAttr = (el as HTMLElement).getAttribute?.(targetAttribute);
+    if (directAttr) {
+      return directAttr;
+    }
+    const closestEl = (el as HTMLElement).closest?.(`[${targetAttribute}]`);
+    if (closestEl) {
+      const attr = closestEl.getAttribute(targetAttribute);
+      if (attr) return attr;
     }
   }
 

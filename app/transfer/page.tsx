@@ -125,6 +125,7 @@ export default function TransferPage() {
 
   const {
     assignment: stationAssignment,
+    savedConfiguration,
     counters: availableCounters,
     cubicles: availableCubicles,
     services: availableStationServices,
@@ -607,12 +608,11 @@ export default function TransferPage() {
   const serviceHasSubcategories = currentService?.has_subcategories ?? (selectedCategory === 'Consultation' || selectedCategory === 'OPD Screening');
   const serviceRequiresCubicle = currentService?.requires_cubicle ?? (selectedCategory === 'Consultation' || selectedCategory === 'OPD Screening');
   const isConsultation = serviceHasSubcategories;
-  const isDragEnabled = serviceRequiresCubicle;
 
   useEffect(() => {
-    const cleanup = setupGlobalDragHandlers(isDragEnabled);
+    const cleanup = setupGlobalDragHandlers(serviceRequiresCubicle);
     return cleanup;
-  }, [draggedPatient, dragOverCubicle, assignedPatients, isDragEnabled, setupGlobalDragHandlers]);
+  }, [serviceRequiresCubicle, setupGlobalDragHandlers]);
 
   /** Sends this patient's call to its server-selected monitor without local audio. */
   const speak = async (_text: string, patientId: number) => {
@@ -865,6 +865,7 @@ export default function TransferPage() {
 
   const visibleCubicles = getVisibleCubicles();
   const rooms = getAvailableRooms();
+  const isDragEnabled = serviceRequiresCubicle || visibleCubicles.length > 0;
 
   const matchesSelectedService = (p: Patient, requireSubcategory: boolean) => {
     if (myServices.length > 0 && p.service && !myServices.includes(p.service)) {
@@ -1444,10 +1445,17 @@ export default function TransferPage() {
             </div>
           ) : accessStatus === 'unassigned' ? (
             <div className="rounded-2xl border border-amber-200 dark:border-amber-900/50 bg-amber-50 dark:bg-amber-950/30 p-6 text-center max-w-md mx-auto my-12 shadow-xs">
-              <h2 className="text-sm font-bold text-slate-800 dark:text-amber-100">No services assigned</h2>
+              <h2 className="text-sm font-bold text-slate-800 dark:text-amber-100">No desk assigned for this shift</h2>
               <p className="mt-1 text-xs text-slate-600 dark:text-amber-300">
-                Ask a Super Admin to assign your services, rooms, and counters before managing patients.
+                Configure your registration counter and accepted services to begin managing patients.
               </p>
+              <button
+                type="button"
+                onClick={() => setShowStationModal(true)}
+                className="mt-4 px-4 py-2 rounded-xl bg-[#a8071a] text-white font-bold text-xs hover:bg-[#850615] transition cursor-pointer"
+              >
+                Configure Desk
+              </button>
             </div>
           ) : (
             renderContent()
@@ -1491,6 +1499,7 @@ export default function TransferPage() {
           onClose={() => setShowStationModal(false)}
           workstation="registration"
           currentAssignment={stationAssignment}
+          savedConfiguration={savedConfiguration}
           counters={availableCounters}
           cubicles={availableCubicles}
           services={availableStationServices.length > 0 ? availableStationServices : allServices}
