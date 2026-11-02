@@ -16,6 +16,7 @@ import {
   POLL_INTERVAL_MS,
   CACHE_STALE_MS,
 } from '@/app/dashboard/pages/analytics/constants/analytics';
+import { supabase } from '@/lib/supabase';
 
 export type AnalyticsRange = '90d' | '180d' | '365d' | 'all' | string;
 
@@ -48,7 +49,13 @@ export function useAnalyticsData() {
 
     const baseUrl = process.env.NEXT_PUBLIC_API_URL || '';
 
-    fetch(`${baseUrl}/api/dashboard-data?range=${forRange}`)
+    supabase.auth.getSession().then(({ data: { session } }) => {
+      const headers: Record<string, string> = {};
+      if (session?.access_token) {
+        headers['Authorization'] = `Bearer ${session.access_token}`;
+      }
+      return fetch(`${baseUrl}/api/dashboard-data?range=${forRange}`, { headers });
+    })
       .then((res) => {
         if (!res.ok) throw new Error(`Server error: ${res.status}`);
         return res.json();

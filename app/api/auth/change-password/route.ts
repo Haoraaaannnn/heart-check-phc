@@ -48,7 +48,7 @@ export async function POST(request: Request) {
     const { data: verified, error: signInError } = isForcedChange
       ? { data: null, error: null }
       : await supabaseAnon.auth.signInWithPassword({
-      email: guard.user.email,
+      email: guard.user.email || '',
       password: currentPassword,
     })
     const { data: authUser } = await supabaseAdmin.auth.admin.getUserById(guard.user.id)

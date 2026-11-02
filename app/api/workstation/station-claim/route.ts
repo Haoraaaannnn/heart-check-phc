@@ -417,7 +417,7 @@ export async function POST(request: Request) {
     // Verify cubicle exists
     const { data: cubicleRecord } = await supabaseAdmin
       .from('cubicle')
-      .select('id, cubicleNum, room, category')
+      .select('id, cubicleNum, room, category, doctorId')
       .eq('id', cubicleId)
       .maybeSingle();
 
