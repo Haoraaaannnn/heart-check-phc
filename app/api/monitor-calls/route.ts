@@ -58,9 +58,10 @@ export async function POST(request: Request) {
     (cubicle && ((cubicles.data ?? []).some(link => link.cubicle_id === cubicle.id) ||
       (doctors.data ?? []).some(doctor => doctor.id === cubicle.doctorId) ||
       (rooms.data ?? []).some(room => room.service === cubicle.category && room.room === cubicle.room &&
-        (room.subcategory == null || room.subcategory === cubicle.subcategory))));
+        (room.subcategory == null || room.subcategory === cubicle.subcategory)))) ||
+    Boolean(patient.cubicleNum && !cubicle);
   if (!scoped) return NextResponse.json({ error: 'This patient is outside your assigned stations.' }, { status: 403 });
-  if (cubicleError || (patient.cubicleNum && (!cubicle || cubicle.on_break))) {
+  if (cubicleError || (cubicle && cubicle.on_break)) {
     return NextResponse.json({ error: 'The destination cubicle is unavailable or on break.' }, { status: 409 });
   }
   if (registration) {
@@ -70,12 +71,19 @@ export async function POST(request: Request) {
   }
 
   const ticket = formatTicketForSpeech(patient.patientNum);
-  const destination = registration ? `Counter ${patient.counter}` : cubicle ? cubicle.cubicleNum : `the ${patient.service} area`;
+  const destination = registration
+    ? `Counter ${patient.counter}`
+    : cubicle
+    ? cubicle.cubicleNum
+    : patient.cubicleNum
+    ? patient.cubicleNum
+    : `the ${patient.service} area`;
   const { data, error } = await supabaseAdmin.rpc('enqueue_monitor_call', {
     p_patient_id: patient.id, p_actor_id: guard.user.id,
     p_service: registration ? 'Registration' : patient.service,
     p_subcategory: registration ? null : cubicle?.subcategory ?? patient.subcategory ?? null,
-    p_counter: registration ? patient.counter : null, p_cubicle: cubicle?.cubicleNum ?? null,
+    p_counter: registration ? patient.counter : null,
+    p_cubicle: cubicle?.cubicleNum ?? patient.cubicleNum ?? null,
     p_ticket: patient.patientNum, p_message: `Number ${ticket}, Number ${ticket}, please proceed to ${destination}`,
   }).setHeader('x-hc-actor-id', guard.user.id);
   if (error) return NextResponse.json({ error: 'Unable to send the call to the monitor.' }, { status: 503 });
@@ -102,10 +110,20 @@ export async function GET(request: Request) {
     return NextResponse.json({ error: 'Invalid monitor destination.' }, { status: 400 });
   }
 
+  const { data: dbServices } = await supabaseAdmin.from('services').select('label_en');
+  const serviceCanonicalMap = new Map<string, string>();
+  if (dbServices) {
+    for (const svc of dbServices) {
+      serviceCanonicalMap.set(svc.label_en.toLowerCase(), svc.label_en);
+    }
+  }
+  serviceCanonicalMap.set('registration', 'Registration');
+
   const targetDestinations = rawServices.map(s => {
     const [base, sub] = s.includes('-') ? s.split('-') : [s, null];
+    const canonicalBase = serviceCanonicalMap.get(base.trim().toLowerCase()) || base.trim();
     return {
-      service: base.trim(),
+      service: canonicalBase,
       subcategory: sub ? sub.trim() : (subcategory || null)
     };
   });
@@ -149,24 +167,24 @@ export async function GET(request: Request) {
 
     // Match destination service and subcategory (e.g. Consultation-Pedia vs Consultation-Adult)
     const targetMatch = targetDestinations.find(dest =>
-      dest.service === event.service &&
-      (!dest.subcategory || dest.subcategory === event.subcategory)
+      dest.service.toLowerCase() === event.service.toLowerCase() &&
+      (!dest.subcategory || dest.subcategory.toLowerCase() === (event.subcategory ?? '').toLowerCase())
     );
     if (!targetMatch) return false;
 
     if (event.counter != null) {
-      return targetMatch.service === 'Registration' &&
+      return targetMatch.service.toLowerCase() === 'registration' &&
         openCounters.has(event.counter) &&
         patient.counter === event.counter &&
         !patient.reg_end &&
         !patient.cubicleNum;
     }
 
-    if (patient.service !== event.service) return false;
-    if (targetMatch.subcategory && (patient.subcategory ?? null) !== targetMatch.subcategory) return false;
+    if (patient.service.toLowerCase() !== event.service.toLowerCase()) return false;
+    if (targetMatch.subcategory && (patient.subcategory ?? '').toLowerCase() !== targetMatch.subcategory.toLowerCase()) return false;
 
     if (event.cubicle) return openCubicles.has(event.cubicle) && patient.cubicleNum === event.cubicle;
-    return !patient.cubicleNum && (patient.subcategory ?? null) === event.subcategory &&
+    return (!targetMatch.subcategory || (patient.subcategory ?? '').toLowerCase() === (event.subcategory ?? '').toLowerCase()) &&
       (patient.counter == null || Boolean(patient.reg_end));
   }).map(({ id, ticket, message, counter, cubicle, expires_at }) => ({ id, ticket, message, counter, cubicle, expiresAt: expires_at }));
   return NextResponse.json({ calls, cursor: events[events.length - 1].id }, { headers: HEADERS });

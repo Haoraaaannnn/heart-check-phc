@@ -48,6 +48,16 @@ export function useRegistrationDragAndDrop(
   );
 
   useEffect(() => {
+    const onBlur = () => {
+      setDraggedPatient(null);
+      setDragOverCounter(null);
+      setDragPoint(null);
+    };
+    window.addEventListener('blur', onBlur);
+    return () => window.removeEventListener('blur', onBlur);
+  }, []);
+
+  useEffect(() => {
     if (!draggedPatient) return;
 
     const handlePointerMove = (e: PointerEvent) => {
@@ -89,13 +99,13 @@ export function useRegistrationDragAndDrop(
     };
 
     window.addEventListener('pointermove', handlePointerMove);
-    window.addEventListener('pointerup', handlePointerUp);
-    window.addEventListener('pointercancel', handlePointerCancel);
+    window.addEventListener('pointerup', handlePointerUp, true);
+    window.addEventListener('pointercancel', handlePointerCancel, true);
 
     return () => {
       window.removeEventListener('pointermove', handlePointerMove);
-      window.removeEventListener('pointerup', handlePointerUp);
-      window.removeEventListener('pointercancel', handlePointerCancel);
+      window.removeEventListener('pointerup', handlePointerUp, true);
+      window.removeEventListener('pointercancel', handlePointerCancel, true);
     };
   }, [draggedPatient, setRegistrationPatients]);
 

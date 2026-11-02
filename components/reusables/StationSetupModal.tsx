@@ -29,6 +29,7 @@ export interface StationSetupModalProps {
   onClose: () => void;
   workstation: 'registration' | 'nurse';
   currentAssignment: CurrentStationAssignment;
+  savedConfiguration?: CurrentStationAssignment | null;
   counters: AvailableCounter[];
   cubicles: AvailableCubicle[];
   services: StationServiceOption[];
@@ -47,6 +48,7 @@ export function StationSetupModal({
   onClose,
   workstation,
   currentAssignment,
+  savedConfiguration,
   counters,
   cubicles,
   services,
@@ -80,15 +82,44 @@ export function StationSetupModal({
     return Array.from(set).sort((a, b) => a - b);
   }, [cubicles]);
 
-  // Sync state when modal opens or currentAssignment updates
+  // Sync state when modal opens or currentAssignment/savedConfiguration updates
   useEffect(() => {
     if (isOpen) {
-      setSelectedCounter(currentAssignment.counter ?? null);
-      setSelectedCubicleId(currentAssignment.cubicleId ?? null);
+      let initialCounter = currentAssignment.counter ?? null;
+      let initialCubicleId = currentAssignment.cubicleId ?? null;
+      let initialServices =
+        currentAssignment.services && currentAssignment.services.length > 0
+          ? currentAssignment.services
+          : savedConfiguration?.services && savedConfiguration.services.length > 0
+            ? savedConfiguration.services
+            : [];
+
+      // Pre-select saved counter if currently unassigned and desk is not occupied by another active user
+      if (initialCounter === null && savedConfiguration?.counter != null) {
+        const isOccupiedByOther = counters.some(
+          (c) => c.counter_number === savedConfiguration.counter && c.occupiedBy != null
+        );
+        if (!isOccupiedByOther) {
+          initialCounter = savedConfiguration.counter;
+        }
+      }
+
+      // Pre-select saved cubicle if currently unassigned and cubicle is not occupied by another active user
+      if (initialCubicleId === null && savedConfiguration?.cubicleId != null) {
+        const isOccupiedByOther = cubicles.some(
+          (c) => c.id === savedConfiguration.cubicleId && c.occupiedBy != null
+        );
+        if (!isOccupiedByOther) {
+          initialCubicleId = savedConfiguration.cubicleId;
+        }
+      }
+
+      setSelectedCounter(initialCounter);
+      setSelectedCubicleId(initialCubicleId);
 
       // Auto-focus room tab of selected cubicle if assigned
-      if (currentAssignment.cubicleId) {
-        const found = cubicles.find((c) => c.id === currentAssignment.cubicleId);
+      if (initialCubicleId) {
+        const found = cubicles.find((c) => c.id === initialCubicleId);
         if (found && found.room) {
           setSelectedRoomTab(String(found.room));
         } else {
@@ -98,14 +129,10 @@ export function StationSetupModal({
         setSelectedRoomTab('all');
       }
 
-      if (currentAssignment.services && currentAssignment.services.length > 0) {
-        setSelectedServices(currentAssignment.services);
-      } else {
-        setSelectedServices([]);
-      }
+      setSelectedServices(initialServices);
       setErrorMsg(null);
     }
-  }, [isOpen, currentAssignment, eligibleServices, cubicles]);
+  }, [isOpen, currentAssignment, savedConfiguration, eligibleServices, cubicles, counters]);
 
   // Hooks must run even while the modal is closed so opening it preserves hook order.
   const displayedCubicles = useMemo(() => {
@@ -287,15 +314,19 @@ export function StationSetupModal({
                       <button
                         key={c.counter_number}
                         type="button"
-                        onClick={() =>
+                        disabled={isOccupiedByOther}
+                        onClick={() => {
+                          if (isOccupiedByOther) return;
                           setSelectedCounter((prev) =>
                             prev === c.counter_number ? null : c.counter_number
-                          )
-                        }
-                        className={`p-2.5 rounded-xl border text-left transition flex flex-col justify-between cursor-pointer min-h-[56px] touch-manipulation active:scale-[0.98] ${
-                          isSelected
-                            ? 'bg-[#a8071a] border-[#a8071a] text-white shadow-xs'
-                            : 'bg-white dark:bg-[#1a1a1a] border-slate-200 dark:border-[#2e2e2e] text-slate-800 dark:text-[#f5f5f5] hover:border-slate-300 dark:hover:border-[#404040]'
+                          );
+                        }}
+                        className={`p-2.5 rounded-xl border text-left transition flex flex-col justify-between min-h-[56px] touch-manipulation ${
+                          isOccupiedByOther
+                            ? 'bg-slate-100 dark:bg-[#1a1a1a] border-slate-200 dark:border-[#2e2e2e] opacity-60 cursor-not-allowed text-slate-400 dark:text-[#737373]'
+                            : isSelected
+                              ? 'bg-[#a8071a] border-[#a8071a] text-white shadow-xs cursor-pointer active:scale-[0.98]'
+                              : 'bg-white dark:bg-[#1a1a1a] border-slate-200 dark:border-[#2e2e2e] text-slate-800 dark:text-[#f5f5f5] hover:border-slate-300 dark:hover:border-[#404040] cursor-pointer active:scale-[0.98]'
                         }`}
                       >
                         <div className="flex items-center justify-between gap-1.5">
@@ -303,16 +334,13 @@ export function StationSetupModal({
                             {c.label || `Counter ${c.counter_number}`}
                           </span>
                           {isSelected && <i className="bx bx-check-circle text-sm text-white" />}
+                          {isOccupiedByOther && (
+                            <i className="bx bx-lock-alt text-xs text-amber-600 dark:text-amber-400" />
+                          )}
                         </div>
                         {isOccupiedByOther && (
-                          <span
-                            className={`mt-1 text-[9px] leading-tight px-1 py-0.5 rounded font-medium ${
-                              isSelected
-                                ? 'bg-black/20 text-white/90'
-                                : 'bg-amber-50 dark:bg-amber-950/50 text-amber-700 dark:text-amber-300 border border-amber-200 dark:border-amber-900/50'
-                            }`}
-                          >
-                            In use: {c.occupiedBy?.username}
+                          <span className="mt-1 text-[9px] leading-tight px-1.5 py-0.5 rounded font-medium bg-amber-50 dark:bg-amber-950/50 text-amber-700 dark:text-amber-300 border border-amber-200 dark:border-amber-900/50 whitespace-nowrap">
+                            In use: {c.occupiedBy?.username} (Locked)
                           </span>
                         )}
                       </button>
@@ -329,13 +357,17 @@ export function StationSetupModal({
                       <button
                         key={cub.id}
                         type="button"
-                        onClick={() =>
-                          setSelectedCubicleId((prev) => (prev === cub.id ? null : cub.id))
-                        }
-                        className={`p-2.5 rounded-xl border text-left transition flex flex-col justify-between cursor-pointer min-h-[58px] touch-manipulation active:scale-[0.98] ${
-                          isSelected
-                            ? 'bg-[#a8071a] border-[#a8071a] text-white shadow-xs'
-                            : 'bg-white dark:bg-[#1a1a1a] border-slate-200 dark:border-[#2e2e2e] text-slate-800 dark:text-[#f5f5f5] hover:border-slate-300 dark:hover:border-[#404040]'
+                        disabled={isOccupiedByOther}
+                        onClick={() => {
+                          if (isOccupiedByOther) return;
+                          setSelectedCubicleId((prev) => (prev === cub.id ? null : cub.id));
+                        }}
+                        className={`p-2.5 rounded-xl border text-left transition flex flex-col justify-between min-h-[58px] touch-manipulation ${
+                          isOccupiedByOther
+                            ? 'bg-slate-100 dark:bg-[#1a1a1a] border-slate-200 dark:border-[#2e2e2e] opacity-60 cursor-not-allowed text-slate-400 dark:text-[#737373]'
+                            : isSelected
+                              ? 'bg-[#a8071a] border-[#a8071a] text-white shadow-xs cursor-pointer active:scale-[0.98]'
+                              : 'bg-white dark:bg-[#1a1a1a] border-slate-200 dark:border-[#2e2e2e] text-slate-800 dark:text-[#f5f5f5] hover:border-slate-300 dark:hover:border-[#404040] cursor-pointer active:scale-[0.98]'
                         }`}
                       >
                         <div className="flex items-center justify-between gap-1.5">
@@ -343,6 +375,9 @@ export function StationSetupModal({
                             Cubicle {cub.cubicleNum}
                           </span>
                           {isSelected && <i className="bx bx-check-circle text-sm text-white" />}
+                          {isOccupiedByOther && (
+                            <i className="bx bx-lock-alt text-xs text-amber-600 dark:text-amber-400" />
+                          )}
                         </div>
                         <span
                           className={`mt-0.5 text-[10px] break-words whitespace-normal leading-tight ${
@@ -352,14 +387,8 @@ export function StationSetupModal({
                           Room {cub.room} · {cub.category}
                         </span>
                         {isOccupiedByOther && (
-                          <span
-                            className={`mt-1.5 text-[9px] leading-tight px-1 py-0.5 rounded font-medium ${
-                              isSelected
-                                ? 'bg-black/20 text-white/90'
-                                : 'bg-amber-50 dark:bg-amber-950/50 text-amber-700 dark:text-amber-300 border border-amber-200 dark:border-amber-900/50'
-                            }`}
-                          >
-                            In use: {cub.occupiedBy?.username}
+                          <span className="mt-1.5 text-[9px] leading-tight px-1.5 py-0.5 rounded font-medium bg-amber-50 dark:bg-amber-950/50 text-amber-700 dark:text-amber-300 border border-amber-200 dark:border-amber-900/50 whitespace-nowrap">
+                            In use: {cub.occupiedBy?.username} (Locked)
                           </span>
                         )}
                       </button>

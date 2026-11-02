@@ -22,8 +22,8 @@ export const KIOSK_ROUTES = {
 
 /** Shared timeout and delay constants for the kiosk. */
 export const KIOSK_TIMING = {
-    /** Auto-redirect timeout after printing ticket (5 seconds). */
-    PRINT_REDIRECT_MS: 5000,
+    /** Auto-redirect timeout after printing ticket (10 seconds). */
+    PRINT_REDIRECT_MS: 10000,
     /** Page fade-in transition duration (300ms). */
     TRANSITION_DURATION_MS: 300,
     /** Inactivity duration before displaying the "Are You Still There?" countdown modal (45 seconds). */

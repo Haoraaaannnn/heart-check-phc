@@ -73,7 +73,7 @@ export default function QueuePrintContent({
     const [isFallbackActive, setIsFallbackActive] = useState<boolean>(false);
     const [fallbackCondition, setFallbackCondition] = useState<PrinterHardwareCondition>('not_detected');
     const [showNoticeModal, setShowNoticeModal] = useState<boolean>(false);
-    const [countdownSeconds, setCountdownSeconds] = useState<number>(7);
+    const [countdownSeconds, setCountdownSeconds] = useState<number>(10);
 
     useEffect(() => {
         if (cubicleNum && cubicleNum !== "---" && cubicleNum.toLowerCase() !== "waiting area") {
@@ -200,7 +200,7 @@ export default function QueuePrintContent({
                             `${getTimestamp()} [PRINT SUCCESS] Printed by server via ${printMethod} - Queue: ${patientNum}, EWT: ${ewtDisplay || 'N/A'}`
                         );
                         setIsFallbackActive(false);
-                        setCountdownSeconds(7);
+                        setCountdownSeconds(10);
                     } else if (escposBase64) {
                         // Dispatch to connected WebUSB / WebSerial printer on this client device
                         try {
@@ -210,7 +210,7 @@ export default function QueuePrintContent({
                                     `${getTimestamp()} [PRINT SUCCESS] Printed via Client WebUSB/Serial - Queue: ${patientNum}, EWT: ${ewtDisplay || 'N/A'}`
                                 );
                                 setIsFallbackActive(false);
-                                setCountdownSeconds(7);
+                                setCountdownSeconds(10);
                             } else {
                                 console.log(
                                     `${getTimestamp()} [PRINT FALLBACK] Client printer not ready (${clientPrint.message}) - Queue: ${patientNum}. Activating modal notice fallback.`
@@ -222,7 +222,7 @@ export default function QueuePrintContent({
                                         : 'not_detected'
                                 );
                                 setShowNoticeModal(true);
-                                setCountdownSeconds(25);
+                                setCountdownSeconds(10);
                             }
                         } catch (clientErr) {
                             console.warn(
@@ -232,7 +232,7 @@ export default function QueuePrintContent({
                             setIsFallbackActive(true);
                             setFallbackCondition('offline');
                             setShowNoticeModal(true);
-                            setCountdownSeconds(25);
+                            setCountdownSeconds(10);
                         }
                     } else {
                         // Server did not print and no client payload was returned
@@ -243,7 +243,7 @@ export default function QueuePrintContent({
                                 : 'not_detected'
                         );
                         setShowNoticeModal(true);
-                        setCountdownSeconds(25);
+                        setCountdownSeconds(10);
                     }
                 } else {
                     console.warn(
@@ -251,10 +251,11 @@ export default function QueuePrintContent({
                         response.status,
                         data.error || "Unknown error"
                     );
+                    setEstimatedWaitLabel((prev) => (prev === EWT_TEXTS.calculating ? EWT_TEXTS.about10to30 : prev));
                     setIsFallbackActive(true);
                     setFallbackCondition('offline');
                     setShowNoticeModal(true);
-                    setCountdownSeconds(25);
+                    setCountdownSeconds(10);
                 }
             } catch (error) {
                 const errorMessage = error instanceof Error ? error.message : String(error);
@@ -262,10 +263,11 @@ export default function QueuePrintContent({
                     `${getTimestamp()} [PRINT FETCH ERROR] Failed to call print API:`,
                     errorMessage
                 );
+                setEstimatedWaitLabel((prev) => (prev === EWT_TEXTS.calculating ? EWT_TEXTS.about10to30 : prev));
                 setIsFallbackActive(true);
                 setFallbackCondition('offline');
                 setShowNoticeModal(true);
-                setCountdownSeconds(25);
+                setCountdownSeconds(10);
             }
         };
 

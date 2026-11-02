@@ -326,3 +326,49 @@ test('normalizeMonitorTargets splits services with subcategories into discrete P
   assert.equal(normalized2[1].subcategory, null);
 });
 
+test('multi-service monitor announcement queue serializes calls strictly one-by-one without collisions', async () => {
+  let activeSpeech = 0;
+  let maxConcurrentSpeech = 0;
+  const spokenTickets = [];
+
+  const mockPlayMonitorSpeech = async (message) => {
+    activeSpeech++;
+    maxConcurrentSpeech = Math.max(maxConcurrentSpeech, activeSpeech);
+    const match = message.match(/Number\s+([A-Z0-9\s]+?),/);
+    if (match) spokenTickets.push(match[1].trim());
+    await new Promise(r => setTimeout(r, 10));
+    activeSpeech--;
+  };
+
+  const announcementQueue = [
+    { message: 'Number 1 0 0 1, Number 1 0 0 1, proceed to Room 1', ticket: '1001' },
+    { message: 'Number 2 0 0 1, Number 2 0 0 1, proceed to Room 2', ticket: '2001' },
+    { message: 'Number 3 0 0 1, Number 3 0 0 1, proceed to Room 3', ticket: '3001' },
+    { message: 'Number 4 0 0 1, Number 4 0 0 1, proceed to Room 4', ticket: '4001' },
+  ];
+
+  let isPlaying = false;
+  const processQueue = async () => {
+    if (isPlaying) return;
+    isPlaying = true;
+    try {
+      while (announcementQueue.length > 0) {
+        const item = announcementQueue.shift();
+        await mockPlayMonitorSpeech(item.message);
+      }
+    } finally {
+      isPlaying = false;
+    }
+  };
+
+  await Promise.all([
+    processQueue(),
+    processQueue(),
+    processQueue(),
+  ]);
+
+  assert.equal(maxConcurrentSpeech, 1, 'Speech calls must never overlap simultaneously');
+  assert.equal(spokenTickets.length, 4, 'All queued tickets must be voiced');
+  assert.deepEqual(spokenTickets, ['1 0 0 1', '2 0 0 1', '3 0 0 1', '4 0 0 1'], 'Tickets must play in FIFO order');
+});
+

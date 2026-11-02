@@ -17,4 +17,4 @@ export const AUTO_ASSIGN_SERVICES = [
   'Warfarin', 'OPD Reschedule', 'Benzathine'
 ];
 
-export const MAX_PATIENTS_PER_CUBICLE = 5;
+export const MAX_PATIENTS_PER_CUBICLE = 3;

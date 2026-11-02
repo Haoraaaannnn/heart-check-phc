@@ -19,6 +19,7 @@ import { supabase } from '@/lib/supabase';
 import { createAdminClient } from '@/lib/supabase/admin';
 import { encryptPhoneNumber, maskPhoneNumber } from '@/lib/crypto/phoneEncryption';
 import { sendQueueConfirmationSMS } from '@/app/actions/sendQueueConfirmationSMS';
+import { computeEstimatedWaitMinutes } from '@/app/api/print-ticket/ewtComputation';
 import { getTimestamp } from '@/lib/logger';
 
 /**
@@ -74,7 +75,7 @@ export async function POST(request: Request) {
     // Verify patient ticket exists in active queue records
     const { data: patientRecord, error: fetchError } = await dbClient
       .from('patients')
-      .select('id, patientNum, service, estimated_wait_minutes')
+      .select('id, patientNum, service, subcategory, created_at, estimated_wait_minutes')
       .eq('patientNum', rawPatientNum)
       .eq('is_historical', false)
       .order('created_at', { ascending: false })
@@ -94,7 +95,25 @@ export async function POST(request: Request) {
     }
 
     const serviceName = rawServiceName || patientRecord.service || 'General Service';
-    const ewtMinutes = rawEwtMinutes ?? patientRecord.estimated_wait_minutes ?? 15;
+    let ewtMinutes = rawEwtMinutes ?? patientRecord.estimated_wait_minutes;
+    if (ewtMinutes === null || ewtMinutes === undefined) {
+      try {
+        const ewtResult = await computeEstimatedWaitMinutes(
+          dbClient,
+          patientRecord.service || serviceName,
+          patientRecord.created_at,
+          patientRecord.subcategory
+        );
+        ewtMinutes = ewtResult.estimatedWaitMinutes;
+        await dbClient
+          .from('patients')
+          .update({ estimated_wait_minutes: ewtMinutes })
+          .eq('id', patientRecord.id)
+          .eq('is_historical', false);
+      } catch {
+        ewtMinutes = 15;
+      }
+    }
 
     // Encrypt phone number using AES-256-GCM before database persistence
     const encryptedPhone = encryptPhoneNumber(normalizedPhone);

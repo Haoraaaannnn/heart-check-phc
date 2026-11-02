@@ -234,14 +234,14 @@ export async function POST(request: Request) {
       return new Response(cachedBuffer, {
         status: 200,
         headers: {
-          'Content-Type': 'audio/mp3',
+          'Content-Type': 'audio/mpeg',
           'Cache-Control': 'public, max-age=3600, s-maxage=3600',
           'X-Cache-Lookup': 'HIT',
         },
       });
     }
 
-    const apiKey = process.env.DEEPGRAM_API_KEY;
+    const apiKey = process.env.DEEPGRAM_API_KEY || process.env.NEXT_PUBLIC_DEEPGRAM_KEY;
     if (!apiKey) {
       console.error(
         '%s [TTS ERROR] DEEPGRAM_API_KEY is not configured in server environment',
@@ -279,7 +279,7 @@ export async function POST(request: Request) {
     return new Response(audioBuffer, {
       status: 200,
       headers: {
-        'Content-Type': 'audio/mp3',
+        'Content-Type': 'audio/mpeg',
         'Cache-Control': 'public, max-age=3600, s-maxage=3600',
         'X-Cache-Lookup': 'MISS',
       },

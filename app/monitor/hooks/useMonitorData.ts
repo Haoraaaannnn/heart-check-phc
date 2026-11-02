@@ -21,7 +21,7 @@ export function useMonitorData(category: string, subcategory: string | null, cat
   const [monitorLayout, setMonitorLayout] = useState<string | null>(null);
   const [activeCall, setActiveCall] = useState<{ ticket?: string; cubicle?: string | null; expiry: number } | null>(null);
 
-  const announcementQueue = useRef<{ patient?: Patient; message: string; cubicle?: string | null; expiresAt?: string }[]>([]);
+  const announcementQueue = useRef<{ patient?: Patient; ticket?: string; message: string; cubicle?: string | null; expiresAt?: string }[]>([]);
   const isPlayingRef = useRef(false);
   const announcedCubiclePatients = useRef<Map<string, Set<number>>>(new Map());
   const audioController = useRef<AbortController | null>(null);
@@ -103,9 +103,14 @@ export function useMonitorData(category: string, subcategory: string | null, cat
           }
           if (isOnBreak) continue;
         }
-        setActiveCall({ ticket: item.patient?.patientNum, cubicle: destination, expiry: Date.now() + 15000 });
+        setActiveCall({ ticket: item.ticket ?? item.patient?.patientNum, cubicle: destination, expiry: Date.now() + 15000 });
         try { await playMonitorSpeech(item.message, 3, controller.signal); }
         catch (error) { if (!controller.signal.aborted) console.warn('Monitor call playback failed:', error); }
+        finally {
+          if (announcementQueue.current.length === 0) {
+            setActiveCall(null);
+          }
+        }
       }
     } finally {
       isPlayingRef.current = false;
@@ -115,7 +120,7 @@ export function useMonitorData(category: string, subcategory: string | null, cat
 
   useMonitorCalls(category, subcategory, started && !isRegistration, call => {
     setActiveCall({ ticket: call.ticket, cubicle: call.cubicle, expiry: Date.now() + 15000 });
-    announcementQueue.current.push({ message: call.message, cubicle: call.cubicle, expiresAt: call.expiresAt });
+    announcementQueue.current.push({ ticket: call.ticket, message: call.message, cubicle: call.cubicle, expiresAt: call.expiresAt });
     void processQueue();
   });
 

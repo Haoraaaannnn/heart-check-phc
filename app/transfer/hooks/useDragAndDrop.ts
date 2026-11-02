@@ -42,12 +42,22 @@ export function useDragAndDrop(
   const [pendingUpdates, setPendingUpdates] = useState<Patient[]>([]);
 
   const movingBackIds = useRef<Set<number>>(new Set());
+  const activeDragRef = useRef<{
+    patient: Patient | null;
+    sourceCubicle: string | null;
+  }>({ patient: null, sourceCubicle: null });
+
+  const assignedPatientsRef = useRef(assignedPatients);
+  useEffect(() => {
+    assignedPatientsRef.current = assignedPatients;
+  }, [assignedPatients]);
 
   const resetDrag = useCallback(() => {
     setDraggedPatient(null);
     setDragSourceCubicle(null);
     setDragOverCubicle(null);
     setDragPoint(null);
+    activeDragRef.current = { patient: null, sourceCubicle: null };
   }, []);
 
   useEffect(() => {
@@ -63,9 +73,11 @@ export function useDragAndDrop(
     (e: React.PointerEvent, patient: Patient) => {
       if (!canStartDrag(e)) return;
       e.preventDefault();
-      setDragPoint(pointOf(e));
+      const pt = pointOf(e);
+      setDragPoint(pt);
       setDraggedPatient(patient);
       setDragSourceCubicle(null);
+      activeDragRef.current = { patient, sourceCubicle: null };
     },
     []
   );
@@ -76,9 +88,11 @@ export function useDragAndDrop(
   const handleDragStartFromQueue = useCallback(
     (e: React.MouseEvent, patient: Patient) => {
       e.preventDefault();
-      setDragPoint(pointOf(e));
+      const pt = pointOf(e);
+      setDragPoint(pt);
       setDraggedPatient(patient);
       setDragSourceCubicle(null);
+      activeDragRef.current = { patient, sourceCubicle: null };
     },
     []
   );
@@ -91,9 +105,11 @@ export function useDragAndDrop(
       if (!canStartDrag(e)) return;
       e.preventDefault();
       e.stopPropagation();
-      setDragPoint(pointOf(e));
+      const pt = pointOf(e);
+      setDragPoint(pt);
       setDraggedPatient(patient);
       setDragSourceCubicle(cubicleNum);
+      activeDragRef.current = { patient, sourceCubicle: cubicleNum };
     },
     []
   );
@@ -105,9 +121,11 @@ export function useDragAndDrop(
     (e: React.MouseEvent, patient: Patient, cubicleNum: string) => {
       e.preventDefault();
       e.stopPropagation();
-      setDragPoint(pointOf(e));
+      const pt = pointOf(e);
+      setDragPoint(pt);
       setDraggedPatient(patient);
       setDragSourceCubicle(cubicleNum);
+      activeDragRef.current = { patient, sourceCubicle: cubicleNum };
     },
     []
   );
@@ -138,12 +156,10 @@ export function useDragAndDrop(
     }
   };
 
-  /**
-   * Sets up global pointer listeners during active drag operation.
-   */
-  const setupGlobalDragHandlers = (isDragEnabled: boolean) => {
+  useEffect(() => {
+    if (!draggedPatient) return;
+
     const handleGlobalPointerMove = (e: PointerEvent) => {
-      if (!draggedPatient) return;
       const pt = pointOf(e);
       setDragPoint(pt);
 
@@ -151,23 +167,25 @@ export function useDragAndDrop(
       setDragOverCubicle(targetCubicle);
     };
 
-    const handleGlobalPointerUp = async (e: PointerEvent) => {
-      if (!draggedPatient) {
+    const handleGlobalPointerUp = (e: PointerEvent) => {
+      const pt = pointOf(e);
+      const targetCubicle = findDropTarget(pt, 'data-cubicle');
+      const currentPatient = activeDragRef.current.patient ?? draggedPatient;
+      const currentSource = activeDragRef.current.sourceCubicle;
+
+      if (!currentPatient) {
         resetDrag();
         return;
       }
 
-      const pt = pointOf(e);
-      const targetCubicle = findDropTarget(pt, 'data-cubicle');
-
       if (targetCubicle) {
         // If dropped onto the same cubicle it originated from, no-op cleanly
-        if (dragSourceCubicle === targetCubicle) {
+        if (currentSource === targetCubicle) {
           resetDrag();
           return;
         }
 
-        const currentOccupancy = assignedPatients[targetCubicle]?.length || 0;
+        const currentOccupancy = assignedPatientsRef.current[targetCubicle]?.length || 0;
         if (currentOccupancy >= MAX_PATIENTS_PER_CUBICLE) {
           setDropFeedback({ target: targetCubicle, status: 'invalid' });
           setTimeout(() => setDropFeedback({ target: null, status: 'none' }), 400);
@@ -179,18 +197,18 @@ export function useDragAndDrop(
         setDropFeedback({ target: targetCubicle, status: 'success' });
         setTimeout(() => setDropFeedback({ target: null, status: 'none' }), 400);
 
-        if (dragSourceCubicle) {
+        if (currentSource) {
           // Reassign between cubicles
-          unpinConfirmedPatient?.(draggedPatient.id);
+          unpinConfirmedPatient?.(currentPatient.id);
           setAssignedPatients(prev => ({
             ...prev,
-            [dragSourceCubicle]: (prev[dragSourceCubicle] || []).filter(
-              p => p.id !== draggedPatient.id
+            [currentSource]: (prev[currentSource] || []).filter(
+              p => p.id !== currentPatient.id
             ),
             [targetCubicle]: [
               ...(prev[targetCubicle] || []),
               {
-                ...draggedPatient,
+                ...currentPatient,
                 cubicleNum: targetCubicle,
                 status: 'Assigned',
               },
@@ -198,9 +216,9 @@ export function useDragAndDrop(
           }));
 
           const nextPending = [
-            ...(pendingUpdatesRef?.current || []).filter(p => p.id !== draggedPatient.id),
+            ...(pendingUpdatesRef?.current || []).filter(p => p.id !== currentPatient.id),
             {
-              ...draggedPatient,
+              ...currentPatient,
               cubicleNum: targetCubicle,
               status: 'Assigned',
             },
@@ -211,14 +229,14 @@ export function useDragAndDrop(
           setPendingUpdates(nextPending);
         } else {
           // Assign from Queue to Cubicle
-          unpinConfirmedPatient?.(draggedPatient.id);
-          setOnProgressPatients(prev => prev.filter(p => p.id !== draggedPatient.id));
+          unpinConfirmedPatient?.(currentPatient.id);
+          setOnProgressPatients(prev => prev.filter(p => p.id !== currentPatient.id));
           setAssignedPatients(prev => ({
             ...prev,
             [targetCubicle]: [
               ...(prev[targetCubicle] || []),
               {
-                ...draggedPatient,
+                ...currentPatient,
                 cubicleNum: targetCubicle,
                 status: 'Assigned',
                 reg_end: now,
@@ -227,9 +245,9 @@ export function useDragAndDrop(
           }));
 
           const nextPending = [
-            ...(pendingUpdatesRef?.current || []).filter(p => p.id !== draggedPatient.id),
+            ...(pendingUpdatesRef?.current || []).filter(p => p.id !== currentPatient.id),
             {
-              ...draggedPatient,
+              ...currentPatient,
               cubicleNum: targetCubicle,
               status: 'Assigned',
               reg_end: now,
@@ -249,22 +267,31 @@ export function useDragAndDrop(
       resetDrag();
     };
 
-    if (draggedPatient && isDragEnabled) {
-      window.addEventListener('pointermove', handleGlobalGlobalPointerMove);
-      window.addEventListener('pointerup', handleGlobalPointerUp);
-      window.addEventListener('pointercancel', handleGlobalPointerCancel);
-    }
+    window.addEventListener('pointermove', handleGlobalPointerMove);
+    window.addEventListener('pointerup', handleGlobalPointerUp, true);
+    window.addEventListener('pointercancel', handleGlobalPointerCancel, true);
 
     return () => {
-      window.removeEventListener('pointermove', handleGlobalGlobalPointerMove);
-      window.removeEventListener('pointerup', handleGlobalPointerUp);
-      window.removeEventListener('pointercancel', handleGlobalPointerCancel);
+      window.removeEventListener('pointermove', handleGlobalPointerMove);
+      window.removeEventListener('pointerup', handleGlobalPointerUp, true);
+      window.removeEventListener('pointercancel', handleGlobalPointerCancel, true);
     };
+  }, [
+    draggedPatient,
+    resetDrag,
+    pendingUpdatesRef,
+    setAssignedPatients,
+    setOnProgressPatients,
+    unpinConfirmedPatient,
+  ]);
 
-    function handleGlobalGlobalPointerMove(ev: PointerEvent) {
-      handleGlobalPointerMove(ev);
-    }
-  };
+  /**
+   * Maintained for backward compatibility. Global drag listeners are now handled
+   * internally with captured window listeners to prevent teardown churn.
+   */
+  const setupGlobalDragHandlers = useCallback((_isDragEnabled?: boolean) => {
+    return () => {};
+  }, []);
 
   const dragOrigin = dragSourceCubicle ? `Cubicle ${dragSourceCubicle}` : 'Queue';
 
