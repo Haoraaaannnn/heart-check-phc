@@ -28,11 +28,9 @@ import { useStationClaim } from '@/hooks/useStationClaim';
 import { supabase } from '@/lib/supabase';
 
 /**
- * Screen Display Selector main page component.
- *
- * @returns JSX element.
+ * Screen Display Selector inner content component.
  */
-export default function SelectScreenPage() {
+function SelectScreenContent() {
   const router = useRouter();
   const searchParams = useSearchParams();
   const isForcedPasswordChange = searchParams.get('changePassword') === 'required';
@@ -250,5 +248,19 @@ export default function SelectScreenPage() {
         />
       )}
     </div>
+  );
+}
+
+/**
+ * Screen Display Selector main page component.
+ * Wrapped in Suspense boundary to support Next.js static prerendering with useSearchParams.
+ *
+ * @returns JSX element.
+ */
+export default function SelectScreenPage() {
+  return (
+    <React.Suspense fallback={<div className="min-h-screen bg-slate-50 dark:bg-slate-950" />}>
+      <SelectScreenContent />
+    </React.Suspense>
   );
 }
