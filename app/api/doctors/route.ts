@@ -56,7 +56,7 @@ export async function GET(request: Request) {
       occupiedBy: typeof station.id === 'number' ? cubicleOccupancy[station.id] ?? null : null,
     }));
 
-    const linkedIds = new Set(enrichedCubicles.filter(station => typeof station.id === 'number' && access.editableIds.includes(station.id)).map(station => station.doctorId));
+    const linkedIds = new Set(enrichedCubicles.filter((station: Record<string, unknown>) => typeof station.id === 'number' && access.editableIds.includes(station.id as number)).map((station: Record<string, unknown>) => station.doctorId));
     const editableDoctorIds = doctorRows.flatMap(doctor => typeof doctor.id === 'string' &&
       (access.admin || linkedIds.has(doctor.id)) ? [doctor.id] : []);
     return NextResponse.json(parseDoctorDirectory({ doctors: doctorRows, cubicles: enrichedCubicles,

@@ -22,6 +22,33 @@ import { sendQueueConfirmationSMS } from '@/app/actions/sendQueueConfirmationSMS
 import { computeEstimatedWaitMinutes } from '@/app/api/print-ticket/ewtComputation';
 import { getTimestamp } from '@/lib/logger';
 
+/** Maximum permitted fallback SMS dispatches per IP in the rolling window. */
+const SMS_FALLBACK_RATE_LIMIT_MAX = 5;
+/** Rolling rate limit window duration in milliseconds (5 minutes). */
+const SMS_FALLBACK_WINDOW_MS = 5 * 60 * 1000;
+const smsFallbackRateLimitMap = new Map<string, number[]>();
+
+function getClientIp(request: Request): string {
+  const forwarded = request.headers.get('x-forwarded-for');
+  if (forwarded) return forwarded.split(',')[0].trim();
+  const realIp = request.headers.get('x-real-ip');
+  if (realIp) return realIp.trim();
+  return 'internal-client';
+}
+
+function checkSmsFallbackRateLimit(ip: string): { allowed: boolean; retryAfterSeconds?: number } {
+  const now = Date.now();
+  const timestamps = (smsFallbackRateLimitMap.get(ip) || []).filter(ts => now - ts < SMS_FALLBACK_WINDOW_MS);
+  if (timestamps.length >= SMS_FALLBACK_RATE_LIMIT_MAX) {
+    const oldest = timestamps[0];
+    const retryAfterSeconds = Math.max(1, Math.ceil((oldest + SMS_FALLBACK_WINDOW_MS - now) / 1000));
+    return { allowed: false, retryAfterSeconds };
+  }
+  timestamps.push(now);
+  smsFallbackRateLimitMap.set(ip, timestamps);
+  return { allowed: true };
+}
+
 /**
  * Handles POST requests to deliver an SMS ticket to a patient's mobile device.
  *
@@ -30,6 +57,15 @@ import { getTimestamp } from '@/lib/logger';
  */
 export async function POST(request: Request) {
   try {
+    const clientIp = getClientIp(request);
+    const rateCheck = checkSmsFallbackRateLimit(clientIp);
+    if (!rateCheck.allowed) {
+      return NextResponse.json(
+        { success: false, error: 'Too many SMS requests. Please wait a few minutes before trying again.' },
+        { status: 429, headers: { 'Retry-After': String(rateCheck.retryAfterSeconds ?? 300) } }
+      );
+    }
+
     const body = await request.json().catch(() => ({}));
     const rawPatientNum = typeof body?.patientNum === 'string' ? body.patientNum.trim() : '';
     const rawPhoneNum = typeof body?.phoneNum === 'string' ? body.phoneNum.trim() : '';

@@ -106,7 +106,6 @@ export function useRegistrationRotate({ registrationPatients, onRotated, busyRef
 
         await callRotateApi(updates);
         await onRotated();
-        console.log('[registration-rotate] Rotation mutation successfully completed');
       } catch (err: unknown) {
         await onRotated().catch(() => console.error('[registration-rotate] Unable to refresh counter tickets.'));
         if (!(err instanceof RotationConflictError)) {

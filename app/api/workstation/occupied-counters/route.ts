@@ -27,7 +27,7 @@ export async function GET() {
         .order('counter_number', { ascending: true }),
       supabaseAdmin
         .from('user_counters')
-        .select('counter, user_id, users(id, username)'),
+        .select('counter, user_id'),
       supabaseAdmin
         .from('user_services')
         .select('user_id, service'),
@@ -51,21 +51,16 @@ export async function GET() {
       }
     }
 
-    // Map counter_number to active staff users and combined services
+    // Map counter_number to active staff presence and combined services
     const counterMap = new Map<
       number,
-      { users: { userId: number; username: string }[]; services: Set<string> }
+      { occupied: boolean; services: Set<string> }
     >();
 
     for (const row of userCountersResult.data ?? []) {
       if (!counterMap.has(row.counter)) {
-        counterMap.set(row.counter, { users: [], services: new Set() });
+        counterMap.set(row.counter, { occupied: true, services: new Set() });
       }
-      const userObj = row.users as { id?: number; username?: string } | null;
-      counterMap.get(row.counter)!.users.push({
-        userId: row.user_id,
-        username: userObj?.username || `staff-${row.user_id}`,
-      });
 
       const userSvcs = userServicesMap.get(row.user_id);
       if (userSvcs) {
@@ -79,7 +74,7 @@ export async function GET() {
 
     const counters = (countersResult.data ?? []).map(c => {
       const station = counterMap.get(c.counter_number);
-      const isOccupied = Boolean(station && station.users.length > 0);
+      const isOccupied = Boolean(station && station.occupied);
       const services = station ? Array.from(station.services) : [];
 
       // If counter label specifies a known service and services list is empty, honor label
@@ -108,7 +103,6 @@ export async function GET() {
         on_break: Boolean(c.on_break),
         occupied: isOccupied,
         services,
-        occupiedBy: station ? station.users : [],
       };
     });
 

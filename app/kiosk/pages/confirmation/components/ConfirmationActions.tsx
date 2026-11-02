@@ -65,28 +65,17 @@ export default function ConfirmationActions({
 
         // 1. If service requires age subcategories (Adult vs Pedia), route to subcategory selection
         if (service.has_subcategories) {
-            console.log(
-                `${getTimestamp()} [CONFIRMATION ACCEPTED] Subcategory service (${service.label_en}) - Redirecting to category selection - ServiceId: ${service.id}`
-            );
             navigate(buildUrl("/kiosk/pages/category-selection", service.label_en));
             return;
         }
 
         // 2. If service requires physical doctor cubicle selection directly, route to cubicle selection
         if (requiresDoctorSelection(service)) {
-            console.log(
-                `${getTimestamp()} [CONFIRMATION ACCEPTED] Cubicle service (${service.label_en}) - Redirecting to cubicle selection - ServiceId: ${service.id}`
-            );
             navigate(buildUrl("/kiosk/pages/kiosk-cubicle-selection", service.label_en));
             return;
         }
 
         // 3. Direct services route straight to phone number / queue ticket generation
-        console.log(
-            `${getTimestamp()} [CONFIRMATION ACCEPTED] Direct service (${service.label_en}) - Redirecting to SMS input - ServiceId: ${service.id}${
-                resolvedType ? ` - type: ${resolvedType}` : ""
-            }`
-        );
         navigate(buildUrl("/kiosk/pages/sms-input"));
     };
 

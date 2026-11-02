@@ -7,6 +7,7 @@
 import { useCallback, useState } from 'react';
 import { PatientStats, AnalyticsData } from '@/types/Types';
 import { DEFAULT_HOURLY_DATA } from '@/app/dashboard/pages/patients/constants/patients';
+import { supabase } from '@/lib/supabase';
 
 /**
  * Manages stats and hourly trend data derived from the FastAPI backend.
@@ -27,8 +28,14 @@ export function usePatientsAnalyticsData() {
 
   const fetchAnalyticsData = useCallback(async () => {
     try {
+      const { data: { session } } = await supabase.auth.getSession();
+      const headers: Record<string, string> = {};
+      if (session?.access_token) {
+        headers['Authorization'] = `Bearer ${session.access_token}`;
+      }
+
       const baseUrl = process.env.NEXT_PUBLIC_API_URL || 'http://localhost:8000';
-      const response = await fetch(`${baseUrl}/api/dashboard-data`);
+      const response = await fetch(`${baseUrl}/api/dashboard-data`, { headers });
       if (!response.ok) throw new Error(`Analytics API error: ${response.status}`);
       const analyticsData: AnalyticsData = await response.json();
 

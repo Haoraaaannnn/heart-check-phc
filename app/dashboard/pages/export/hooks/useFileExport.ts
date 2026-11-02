@@ -27,6 +27,7 @@ import {
   ExportOptions,
   ExportTelemetrySummary,
 } from '@/app/dashboard/pages/export/types/exportTypes';
+import { supabase } from '@/lib/supabase';
 
 /**
  * Return signature of the {@link useFileExport} hook.
@@ -113,8 +114,14 @@ export function useFileExport(): UseFileExportReturn {
     const timeoutId = setTimeout(() => controller.abort(), 10000);
 
     try {
+      const { data: { session } } = await supabase.auth.getSession();
+      const headers: Record<string, string> = {};
+      if (session?.access_token) {
+        headers['Authorization'] = `Bearer ${session.access_token}`;
+      }
+
       const url = `${API_BASE_URL}/api/available-export-dates${refresh ? '?refresh=true' : ''}`;
-      const res = await fetch(url, { signal: controller.signal });
+      const res = await fetch(url, { headers, signal: controller.signal });
 
       if (!res.ok) {
         throw new Error(T.errors.failedToFetchDates);
@@ -305,7 +312,14 @@ export function useFileExport(): UseFileExportReturn {
         params.set('format', 'csv');
       }
 
+      const { data: { session } } = await supabase.auth.getSession();
+      const headers: Record<string, string> = {};
+      if (session?.access_token) {
+        headers['Authorization'] = `Bearer ${session.access_token}`;
+      }
+
       const res = await fetch(`${API_BASE_URL}/api/export-excel?${params.toString()}`, {
+        headers,
         signal: controller.signal,
       });
 
