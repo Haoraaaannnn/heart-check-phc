@@ -46,6 +46,14 @@ export const ChangePasswordCard: React.FC<{ onSavingChange?: (saving: boolean) =
       setError('New password must be between 8 and 64 characters.');
       return;
     }
+    if (!/[A-Z]/.test(newPassword) || !/[a-z]/.test(newPassword) || !/[0-9]/.test(newPassword) || !/[^A-Za-z0-9]/.test(newPassword)) {
+      setError('New password must include uppercase and lowercase letters, a number, and a special character.');
+      return;
+    }
+    if (newPassword === currentPassword) {
+      setError('Choose a password different from your current password.');
+      return;
+    }
     if (newPassword !== confirmPassword) {
       setError(T.errorMismatch);
       return;
@@ -108,6 +116,18 @@ export const ChangePasswordCard: React.FC<{ onSavingChange?: (saving: boolean) =
       )}
 
       <form onSubmit={handleSubmit} className={S.passwordForm}>
+        <div className="rounded-lg border border-slate-200 bg-slate-50 p-3.5 text-xs text-slate-600 dark:border-slate-800 dark:bg-[#1f1f1f] dark:text-slate-300">
+          <p className="font-semibold text-slate-800 dark:text-slate-200">Password requirements:</p>
+          <ul className="mt-1.5 list-disc space-y-1 pl-4 text-slate-600 dark:text-slate-400">
+            <li>Between 8 and 64 characters (12 or more recommended)</li>
+            <li>Must include both uppercase and lowercase letters</li>
+            <li>Must include at least one number</li>
+            <li>Must include at least one special character or symbol (e.g., !@#$%^&*)</li>
+            <li>Must be different from your current password</li>
+            <li>Avoid common words, names, personal details, or repeated characters</li>
+          </ul>
+        </div>
+
         <div className={S.fieldGrid}>
         <div className={S.fieldGroup}>
           <label htmlFor="current-password" className={S.inputLabel}>
@@ -154,7 +174,6 @@ export const ChangePasswordCard: React.FC<{ onSavingChange?: (saving: boolean) =
           <div className="space-y-1 sm:col-span-2" aria-live="polite">
             <div className="flex gap-1" aria-hidden="true">{[1, 2, 3].map((step) => <span key={step} className={`h-1.5 flex-1 rounded ${step <= passwordStrength.score ? passwordStrength.tone : 'bg-slate-200 dark:bg-slate-700'}`} />)}</div>
             <p className="text-xs text-slate-600 dark:text-slate-300">Password strength: <span className="font-semibold">{passwordStrength.label}</span></p>
-            <p className="text-xs text-slate-500">Use 8–64 characters; 12 or more is recommended. Avoid common words and personal details. Numbers and symbols are optional.</p>
           </div>
 
           <div className={S.fieldGroup}>
