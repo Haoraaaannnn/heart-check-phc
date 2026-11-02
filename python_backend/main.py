@@ -942,7 +942,8 @@ async def import_file(
     try:
         file_bytes = await request.body()
     except Exception as e:
-        raise HTTPException(status_code=400, detail=f"Failed to read file payload: {e}")
+        print(f"Failed to read file payload: {e}")
+        raise HTTPException(status_code=400, detail="Failed to read file payload.")
 
     if not file_bytes:
         raise HTTPException(status_code=400, detail="Uploaded file payload is empty.")
@@ -965,10 +966,10 @@ async def import_file(
         raise HTTPException(status_code=422, detail=str(ve))
     except Exception as e:
         print("=" * 60)
-        print(f"IMPORT PARSING ERROR ({filename}) - FULL TRACEBACK:")
+        print(f"IMPORT PARSING ERROR ({safe_filename}) - FULL TRACEBACK:")
         traceback.print_exc()
         print("=" * 60)
-        raise HTTPException(status_code=500, detail=f"Failed to parse file: {e}")
+        raise HTTPException(status_code=500, detail="Failed to parse file. Please verify file format and columns.")
 
     # Prepare preview rows (first 10 records)
     preview_rows = records[:10]
@@ -995,10 +996,10 @@ async def import_file(
         inserted_count, errors = insert_records_batch(records, batch_size=batch_size)
     except Exception as e:
         print("=" * 60)
-        print(f"IMPORT INSERT ERROR ({filename}) - FULL TRACEBACK:")
+        print(f"IMPORT INSERT ERROR ({safe_filename}) - FULL TRACEBACK:")
         traceback.print_exc()
         print("=" * 60)
-        raise HTTPException(status_code=500, detail=f"Failed to write records to database: {e}")
+        raise HTTPException(status_code=500, detail="Failed to write records to database.")
 
     # Invalidate backend caches so new data is immediately reflected in analytics
     _monthly_cache.clear()
