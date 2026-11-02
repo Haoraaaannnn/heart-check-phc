@@ -173,8 +173,26 @@ export async function proxy(request: NextRequest) {
     /**
      * Login navigation and prefetch must never mutate a session shared by sibling tabs.
      * Explicit logout remains a POST action in /api/auth/logout.
+     * When arriving with an explicit sign-out/idle reason, invalidate lingering session cookies.
      */
     if (path === '/login') {
+        const reason = request.nextUrl.searchParams.get('reason');
+        if (reason === 'logout' || reason === 'idle') {
+            request.cookies.getAll().forEach((c) => {
+                if (c.name.startsWith('sb-')) {
+                    response.cookies.set(c.name, '', {
+                        path: '/',
+                        maxAge: 0,
+                        expires: new Date(0),
+                        sameSite: 'lax',
+                        secure: isSecure,
+                    });
+                }
+            });
+            response.headers.set('Cache-Control', 'no-store, no-cache, must-revalidate, proxy-revalidate');
+            return response;
+        }
+
         if (user) return redirectWithSession('/select-screen');
         response.headers.set('Cache-Control', 'no-store, no-cache, must-revalidate, proxy-revalidate');
         return response;

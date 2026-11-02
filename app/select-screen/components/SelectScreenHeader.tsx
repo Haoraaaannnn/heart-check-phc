@@ -37,6 +37,7 @@ export default function SelectScreenHeader({ staff, onSignOut }: SelectScreenHea
 
   const [mounted, setMounted] = useState(false);
   const [now, setNow] = useState<Date | null>(null);
+  const [isSigningOut, setIsSigningOut] = useState(false);
 
   const S = SELECT_SCREEN_STYLES.header;
   const H = SELECT_SCREEN_STYLES.hero;
@@ -57,6 +58,16 @@ export default function SelectScreenHeader({ staff, onSignOut }: SelectScreenHea
   };
 
   const staffInitial = staff?.username ? staff.username.charAt(0).toUpperCase() : 'U';
+
+  const handleSignOutClick = async () => {
+    if (isSigningOut) return;
+    setIsSigningOut(true);
+    try {
+      await onSignOut();
+    } catch {
+      setIsSigningOut(false);
+    }
+  };
 
   return (
     <>
@@ -98,12 +109,13 @@ export default function SelectScreenHeader({ staff, onSignOut }: SelectScreenHea
           {/* Sign Out Button */}
           <button
             type="button"
-            onClick={onSignOut}
+            onClick={handleSignOutClick}
+            disabled={isSigningOut}
             aria-label={T.signOutButton}
             title={T.signOutButton}
-            className={S.signOutBtn}
+            className={`${S.signOutBtn} ${isSigningOut ? 'opacity-50 cursor-not-allowed' : ''}`}
           >
-            <i className="bx bx-log-out" />
+            <i className={`bx ${isSigningOut ? 'bx-loader-alt animate-spin' : 'bx-log-out'}`} />
           </button>
         </div>
       </header>
