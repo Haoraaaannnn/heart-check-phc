@@ -25,9 +25,13 @@ export const ChangePasswordCard: React.FC<{ onSavingChange?: (saving: boolean) =
   const [currentPassword, setCurrentPassword] = useState('');
   const [newPassword, setNewPassword] = useState('');
   const [confirmPassword, setConfirmPassword] = useState('');
+  const [showCurrentPassword, setShowCurrentPassword] = useState(false);
+  const [showNewPassword, setShowNewPassword] = useState(false);
+  const [showConfirmPassword, setShowConfirmPassword] = useState(false);
   const [error, setError] = useState('');
   const [message, setMessage] = useState('');
   const [saving, setSaving] = useState(false);
+  const passwordStrength = getPasswordStrength(newPassword);
 
   /**
    * Handles password change request to the backend auth endpoint.
@@ -86,7 +90,7 @@ export const ChangePasswordCard: React.FC<{ onSavingChange?: (saving: boolean) =
           <i className={`bx bx-lock-alt ${S.cardIcon}`} aria-hidden="true" />
           <span>Change Password</span>
         </h3>
-        <p className={S.cardDescription}>Update your account password using your current password. Other device sessions will be signed out.</p>
+        <p className={S.cardDescription}>Enter your current password, then choose and confirm a new one. Other device sessions will be signed out after the update.</p>
       </div>
 
       {error && (
@@ -104,30 +108,34 @@ export const ChangePasswordCard: React.FC<{ onSavingChange?: (saving: boolean) =
       )}
 
       <form onSubmit={handleSubmit} className={S.passwordForm}>
+        <div className={S.fieldGrid}>
         <div className={S.fieldGroup}>
           <label htmlFor="current-password" className={S.inputLabel}>
             {T.currentPasswordLabel}
           </label>
+          <div className="relative">
           <input
-            type="password"
+            type={showCurrentPassword ? 'text' : 'password'}
             id="current-password"
             autoComplete="current-password"
             disabled={saving}
             value={currentPassword}
             onChange={(e) => setCurrentPassword(e.target.value)}
             placeholder={T.currentPasswordPlaceholder}
-            className={S.passwordInput}
+            className={`${S.passwordInput} pr-16`}
             required
           />
+          <PasswordVisibilityButton visible={showCurrentPassword} onToggle={() => setShowCurrentPassword((visible) => !visible)} label="current password" />
+          </div>
         </div>
 
-        <div className={S.fieldGrid}>
           <div className={S.fieldGroup}>
             <label htmlFor="new-password" className={S.inputLabel}>
               {T.newPasswordLabel}
             </label>
+            <div className="relative">
             <input
-              type="password"
+              type={showNewPassword ? 'text' : 'password'}
               id="new-password"
               autoComplete="new-password"
               minLength={8}
@@ -136,17 +144,26 @@ export const ChangePasswordCard: React.FC<{ onSavingChange?: (saving: boolean) =
               value={newPassword}
               onChange={(e) => setNewPassword(e.target.value)}
               placeholder={T.newPasswordPlaceholder}
-              className={S.passwordInput}
+              className={`${S.passwordInput} pr-16`}
               required
             />
+            <PasswordVisibilityButton visible={showNewPassword} onToggle={() => setShowNewPassword((visible) => !visible)} label="new password" />
+            </div>
+          </div>
+
+          <div className="space-y-1 sm:col-span-2" aria-live="polite">
+            <div className="flex gap-1" aria-hidden="true">{[1, 2, 3].map((step) => <span key={step} className={`h-1.5 flex-1 rounded ${step <= passwordStrength.score ? passwordStrength.tone : 'bg-slate-200 dark:bg-slate-700'}`} />)}</div>
+            <p className="text-xs text-slate-600 dark:text-slate-300">Password strength: <span className="font-semibold">{passwordStrength.label}</span></p>
+            <p className="text-xs text-slate-500">Use 8–64 characters; 12 or more is recommended. Avoid common words and personal details. Numbers and symbols are optional.</p>
           </div>
 
           <div className={S.fieldGroup}>
             <label htmlFor="confirm-password" className={S.inputLabel}>
               {T.confirmPasswordLabel}
             </label>
+            <div className="relative">
             <input
-              type="password"
+              type={showConfirmPassword ? 'text' : 'password'}
               id="confirm-password"
               autoComplete="new-password"
               minLength={8}
@@ -155,12 +172,13 @@ export const ChangePasswordCard: React.FC<{ onSavingChange?: (saving: boolean) =
               value={confirmPassword}
               onChange={(e) => setConfirmPassword(e.target.value)}
               placeholder={T.confirmPasswordPlaceholder}
-              className={S.passwordInput}
+              className={`${S.passwordInput} pr-16`}
               required
             />
+            <PasswordVisibilityButton visible={showConfirmPassword} onToggle={() => setShowConfirmPassword((visible) => !visible)} label="confirmation password" />
+            </div>
           </div>
         </div>
-
         <button
           type="submit"
           disabled={saving}
@@ -179,3 +197,20 @@ export const ChangePasswordCard: React.FC<{ onSavingChange?: (saving: boolean) =
     </div>
   );
 };
+
+/** @param password - Candidate password. @returns A length-focused strength indicator. */
+function getPasswordStrength(password: string): { label: string; score: number; tone: string } {
+  if (!password) return { label: 'Not entered', score: 0, tone: 'bg-slate-300' };
+  if (password.length < 8) return { label: 'Too short', score: 0, tone: 'bg-slate-300' };
+  if (/^(password|qwerty|letmein|welcome|admin)/i.test(password) || /(.)\1{3,}/.test(password)) {
+    return { label: 'Weak', score: 1, tone: 'bg-amber-500' };
+  }
+  if (password.length < 12) return { label: 'Weak', score: 1, tone: 'bg-amber-500' };
+  if (password.length < 16) return { label: 'Good', score: 2, tone: 'bg-lime-600' };
+  return { label: 'Strong', score: 3, tone: 'bg-emerald-600' };
+}
+
+/** @param props - Visibility button state. @returns A keyboard-accessible show/hide control. */
+function PasswordVisibilityButton({ visible, onToggle, label }: { visible: boolean; onToggle: () => void; label: string }) {
+  return <button type="button" onClick={onToggle} aria-label={`${visible ? 'Hide' : 'Show'} ${label}`} className="absolute right-3 top-1/2 -translate-y-1/2 p-1 text-lg text-slate-400 transition-colors hover:text-slate-700 dark:hover:text-[#f5f5f5]" tabIndex={-1}><i className={`bx ${visible ? 'bx-hide' : 'bx-show'}`} aria-hidden="true" /></button>;
+}

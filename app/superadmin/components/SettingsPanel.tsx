@@ -262,6 +262,12 @@ export function SettingsPanel({ focusSecurity = false }: SettingsPanelProps = {}
       </div>
 
       <div className={S.grid}>
+        <section className="md:col-span-2 space-y-4" aria-labelledby="queue-automation-heading">
+          <div className="border-b border-slate-200 pb-3 dark:border-slate-700">
+            <h3 id="queue-automation-heading" className="text-base font-bold text-slate-900 dark:text-[#f5f5f5]">Queue Automation</h3>
+            <p className="text-xs text-slate-500 dark:text-[#888888]">Configure automatic queue display rotation.</p>
+          </div>
+          <div className={S.grid}>
         {/* 1. Auto-Rotation Timeout */}
         <div className={S.card}>
           <div className={S.cardHeader}>
@@ -349,6 +355,16 @@ export function SettingsPanel({ focusSecurity = false }: SettingsPanelProps = {}
             )}
           </div>
         </div>
+
+          </div>
+        </section>
+
+        <section className="md:col-span-2 space-y-4" aria-labelledby="administrator-security-heading">
+          <div className="border-b border-slate-200 pb-3 dark:border-slate-700">
+            <h3 id="administrator-security-heading" className="text-base font-bold text-slate-900 dark:text-[#f5f5f5]">Administrator Security</h3>
+            <p className="text-xs text-slate-500 dark:text-[#888888]">Manage sign-in protection, session security, and your password.</p>
+          </div>
+          <div className={S.grid}>
 
         {/* 3. Max Login Attempts */}
         <div className={S.card}>
@@ -438,9 +454,12 @@ export function SettingsPanel({ focusSecurity = false }: SettingsPanelProps = {}
           </div>
         </div>
 
-        {/* 5. Change Password Card (Integrated Security Form) */}
+        {/* Security sessions and password management */}
         <SessionSecurityCard />
         <ChangePasswordCard />
+
+          </div>
+        </section>
 
         {/* 6. Queue Prefix and Room Mapping (full-width) */}
         <div className="md:col-span-2">

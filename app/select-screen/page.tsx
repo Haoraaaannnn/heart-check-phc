@@ -16,8 +16,7 @@
 'use client';
 
 import React, { useState } from 'react';
-import { useSearchParams } from 'next/navigation';
-import { useRouter } from 'next/navigation';
+import { useRouter, useSearchParams } from 'next/navigation';
 import { useCurrentStaff } from '@/app/select-screen/hooks/useCurrentStaff';
 import { SCREEN_OPTIONS, SELECT_SCREEN_STYLES } from '@/app/select-screen/constants/selectScreen';
 import { SELECT_SCREEN_TEXTS } from '@/app/select-screen/constants/selectScreenTexts';
@@ -53,8 +52,13 @@ export default function SelectScreenPage() {
   const [setupWorkstation, setSetupWorkstation] = useState<'registration' | 'nurse' | null>(null);
   const [newPassword, setNewPassword] = useState('');
   const [confirmPassword, setConfirmPassword] = useState('');
+  const [temporaryPassword, setTemporaryPassword] = useState('');
+  const [showTemporaryPassword, setShowTemporaryPassword] = useState(false);
+  const [showNewPassword, setShowNewPassword] = useState(false);
+  const [showConfirmPassword, setShowConfirmPassword] = useState(false);
   const [passwordError, setPasswordError] = useState('');
   const [passwordSaving, setPasswordSaving] = useState(false);
+  const passwordStrength = getPasswordStrength(newPassword);
 
   const handleForcedPasswordChange = async (event: React.FormEvent<HTMLFormElement>) => {
     event.preventDefault();
@@ -74,7 +78,7 @@ export default function SelectScreenPage() {
       const response = await fetch('/api/auth/change-password', {
         method: 'POST',
         headers: { 'Content-Type': 'application/json', Authorization: `Bearer ${session.access_token}` },
-        body: JSON.stringify({ force: true, newPassword }),
+        body: JSON.stringify({ force: true, currentPassword: temporaryPassword, newPassword }),
       });
       const result: unknown = await response.json();
       if (!response.ok) {
@@ -110,12 +114,13 @@ export default function SelectScreenPage() {
       <div className={S.page}>
         <main className="mx-auto flex min-h-screen w-full max-w-lg items-center px-5 py-10">
           <form onSubmit={handleForcedPasswordChange} className="w-full space-y-4 rounded-xl border border-slate-200 bg-white p-6 dark:border-slate-700 dark:bg-slate-900">
-            <h1 className="text-xl font-bold text-slate-900 dark:text-[#f5f5f5]">Set your personal password</h1>
-            <p className="text-sm text-slate-600 dark:text-[#aaa]">Change your temporary password to continue. Use 8–64 characters; 12 or more is recommended. Avoid common words and personal details. Character variety is optional.</p>
-            <label className="block space-y-1 text-sm font-medium" htmlFor="first-login-new-password">New password</label>
-            <input id="first-login-new-password" type="password" autoComplete="new-password" minLength={8} maxLength={64} required value={newPassword} onChange={(event) => setNewPassword(event.target.value)} className="w-full rounded-md border border-slate-300 bg-white px-3 py-2 text-slate-900 dark:border-slate-700 dark:bg-slate-950 dark:text-white" />
-            <label className="block space-y-1 text-sm font-medium" htmlFor="first-login-confirm-password">Confirm new password</label>
-            <input id="first-login-confirm-password" type="password" autoComplete="new-password" minLength={8} maxLength={64} required value={confirmPassword} onChange={(event) => setConfirmPassword(event.target.value)} className="w-full rounded-md border border-slate-300 bg-white px-3 py-2 text-slate-900 dark:border-slate-700 dark:bg-slate-950 dark:text-white" />
+            <h1 className="text-xl font-bold text-slate-900 dark:text-[#f5f5f5]">Change your temporary password</h1>
+            <p className="text-sm text-slate-600 dark:text-[#aaa]">Your account is ready. Confirm the temporary password, then choose a personal password to continue.</p>
+            <PasswordField id="first-login-temporary-password" label="Temporary password" autoComplete="current-password" value={temporaryPassword} onChange={setTemporaryPassword} visible={showTemporaryPassword} onToggle={() => setShowTemporaryPassword((visible) => !visible)} />
+            <PasswordField id="first-login-new-password" label="Choose a new password" autoComplete="new-password" value={newPassword} onChange={setNewPassword} visible={showNewPassword} onToggle={() => setShowNewPassword((visible) => !visible)} minLength={8} maxLength={64} />
+            <PasswordStrengthMeter strength={passwordStrength} />
+            <p className="text-xs text-slate-500">Use 8–64 characters; 12 or more is recommended. Avoid common words and personal details. Numbers and symbols are optional.</p>
+            <PasswordField id="first-login-confirm-password" label="Confirm your new password" autoComplete="new-password" value={confirmPassword} onChange={setConfirmPassword} visible={showConfirmPassword} onToggle={() => setShowConfirmPassword((visible) => !visible)} minLength={8} maxLength={64} />
             {passwordError && <p role="alert" className="text-sm text-red-700">{passwordError}</p>}
             <button type="submit" disabled={passwordSaving} className="w-full rounded-md bg-[#cc3535] px-4 py-2 font-semibold text-white disabled:opacity-60">{passwordSaving ? 'Updating…' : 'Update password and continue'}</button>
           </form>
@@ -247,6 +252,48 @@ export default function SelectScreenPage() {
           }}
         />
       )}
+    </div>
+  );
+}
+
+/** @param password - Candidate password. @returns A plain-language strength assessment. */
+function getPasswordStrength(password: string): { label: string; score: number } {
+  if (!password) return { label: 'Not entered', score: 0 };
+  let score = password.length >= 12 ? 2 : password.length >= 8 ? 1 : 0;
+  if (password.length >= 16) score += 1;
+  if (/(.)\1{3,}/.test(password)) score = Math.max(0, score - 1);
+  if (/^(password|qwerty|letmein|welcome|admin)/i.test(password)) score = 0;
+  if (password.length < 8) return { label: 'Too short', score: 0 };
+  if (score <= 1) return { label: 'Weak', score: 1 };
+  if (score === 2) return { label: 'Good', score: 2 };
+  return { label: 'Strong', score: 3 };
+}
+
+/** @param props - Password field configuration. @returns A labeled field with an accessible visibility toggle. */
+function PasswordField(props: {
+  id: string; label: string; autoComplete: string; value: string; onChange: (value: string) => void;
+  visible: boolean; onToggle: () => void; minLength?: number; maxLength?: number;
+}) {
+  return (
+    <div className="space-y-1">
+      <label className="block text-sm font-medium text-slate-800 dark:text-slate-200" htmlFor={props.id}>{props.label}</label>
+      <div className="relative">
+        <input id={props.id} type={props.visible ? 'text' : 'password'} autoComplete={props.autoComplete} minLength={props.minLength} maxLength={props.maxLength} required value={props.value} onChange={(event) => props.onChange(event.target.value)} className="w-full rounded-md border border-slate-300 bg-white px-3 py-2 pr-16 text-slate-900 focus:outline-none focus:ring-2 focus:ring-[#cc3535]/30 dark:border-slate-700 dark:bg-slate-950 dark:text-white" />
+        <button type="button" onClick={props.onToggle} aria-label={props.visible ? `Hide ${props.label.toLowerCase()}` : `Show ${props.label.toLowerCase()}`} className="absolute right-3 top-1/2 -translate-y-1/2 p-1 text-lg text-slate-400 transition-colors hover:text-slate-700 dark:hover:text-[#f5f5f5]" tabIndex={-1}>
+          <i className={`bx ${props.visible ? 'bx-hide' : 'bx-show'}`} aria-hidden="true" />
+        </button>
+      </div>
+    </div>
+  );
+}
+
+/** @param props - Current password strength. @returns A labeled strength meter. */
+function PasswordStrengthMeter({ strength }: { strength: { label: string; score: number } }) {
+  const tones = ['bg-slate-300', 'bg-amber-500', 'bg-lime-600', 'bg-emerald-600'];
+  return (
+    <div aria-live="polite" aria-label={`Password strength: ${strength.label}`} className="space-y-1">
+      <div className="flex gap-1" aria-hidden="true">{[1, 2, 3].map((step) => <span key={step} className={`h-1.5 flex-1 rounded ${step <= strength.score ? tones[strength.score] : 'bg-slate-200 dark:bg-slate-700'}`} />)}</div>
+      <p className="text-xs text-slate-600 dark:text-slate-300">Password strength: <span className="font-semibold">{strength.label}</span></p>
     </div>
   );
 }
