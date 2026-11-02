@@ -22,6 +22,14 @@ const geistMono = Geist_Mono({
 export const metadata: Metadata = {
   title: "Heart Check PHC",
   description: "Queueing Management System for the Out-Patient Department of Philippine Heart Center",
+  icons: {
+    icon: [
+      { url: "/favicon.ico", sizes: "any" },
+      { url: "/icons/logo-icon-colored.png", type: "image/png" },
+    ],
+    shortcut: "/favicon.ico",
+    apple: "/icons/logo-icon-colored.png",
+  },
 };
 
 /** @returns The application shell with one session coordinator per browser document. */
