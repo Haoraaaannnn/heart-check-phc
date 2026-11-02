@@ -24,6 +24,7 @@ import {
   ImportOptions,
   StagedFile,
 } from '@/app/dashboard/pages/import/types/importTypes';
+import { supabase } from '@/lib/supabase';
 
 const API_BASE = process.env.NEXT_PUBLIC_API_URL || 'http://localhost:8000';
 
@@ -182,9 +183,15 @@ export function useFileImport(): UseFileImportReturn {
           batch_size: String(options.batchSize),
         });
 
+        const { data: { session } } = await supabase.auth.getSession();
+        const headers: Record<string, string> = { 'Content-Type': 'application/octet-stream' };
+        if (session?.access_token) {
+          headers['Authorization'] = `Bearer ${session.access_token}`;
+        }
+
         const res = await fetch(`${API_BASE}/api/import-file?${qs.toString()}`, {
           method: 'POST',
-          headers: { 'Content-Type': 'application/octet-stream' },
+          headers,
           body: buffer,
           signal: controller.signal,
         });
@@ -250,9 +257,15 @@ export function useFileImport(): UseFileImportReturn {
           batch_size: String(options.batchSize),
         });
 
+        const { data: { session } } = await supabase.auth.getSession();
+        const headers: Record<string, string> = { 'Content-Type': 'application/octet-stream' };
+        if (session?.access_token) {
+          headers['Authorization'] = `Bearer ${session.access_token}`;
+        }
+
         const res = await fetch(`${API_BASE}/api/import-file?${qs.toString()}`, {
           method: 'POST',
-          headers: { 'Content-Type': 'application/octet-stream' },
+          headers,
           body: buffer,
           signal: controller.signal,
         });

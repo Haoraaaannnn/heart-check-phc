@@ -65,14 +65,7 @@ export function useAutoRotate({ onProgressPatients, assignedPatients, fetchData,
           !heldCubicles.has(p.cubicleNum) && isTimedOut(p, p.cubicle_top_started_at)
         );
 
-        console.log('[rotate] check result', {
-          timedOutOnProgress: timedOutOnProgress.map(p => p.patientNum),
-          timedOutAssigned: timedOutAssigned.map(p => p.patientNum),
-        });
-
         if (timedOutOnProgress.length === 0 && timedOutAssigned.length === 0) return;
-
-        console.log('[rotate] FIRING — rotating', timedOutOnProgress.length + timedOutAssigned.length, 'patients');
 
         const startOfDay = new Date(); startOfDay.setHours(0, 0, 0, 0);
         const { data: maxRow } = await supabase
@@ -145,8 +138,6 @@ export function useAutoRotate({ onProgressPatients, assignedPatients, fetchData,
           }));
         });
 
-        console.log('[rotate] DB updates to write:', { onProgressUpdates, assignedUpdates });
-
         if (onProgressUpdates.length > 0) {
           await callRotateApi(onProgressUpdates);
         }
@@ -155,7 +146,6 @@ export function useAutoRotate({ onProgressPatients, assignedPatients, fetchData,
         }
 
         await fetchData();
-        console.log('[rotate] rotation complete');
       } catch (err: unknown) {
         await fetchData().catch(() => console.error('[rotate] Unable to refresh the queue after a changed ticket.'));
         if (!(err instanceof RotationConflictError)) {

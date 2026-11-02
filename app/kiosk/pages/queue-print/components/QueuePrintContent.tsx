@@ -73,7 +73,7 @@ export default function QueuePrintContent({
     const [isFallbackActive, setIsFallbackActive] = useState<boolean>(false);
     const [fallbackCondition, setFallbackCondition] = useState<PrinterHardwareCondition>('not_detected');
     const [showNoticeModal, setShowNoticeModal] = useState<boolean>(false);
-    const [countdownSeconds, setCountdownSeconds] = useState<number>(7);
+    const [countdownSeconds, setCountdownSeconds] = useState<number>(10);
 
     useEffect(() => {
         if (cubicleNum && cubicleNum !== "---" && cubicleNum.toLowerCase() !== "waiting area") {
@@ -140,28 +140,12 @@ export default function QueuePrintContent({
                 if (patientRecord?.estimated_wait_minutes) {
                     setEstimatedWaitLabel(formatEwtLabel(patientRecord.estimated_wait_minutes));
                 }
-
-                console.log(`${getTimestamp()} [QUEUE PRINT PAGE] Loaded:`, {
-                    id: patientRecord?.id,
-                    created_at: patientRecord?.created_at,
-                    patientNum: patientRecord?.patientNum,
-                    hasPhone: Boolean(patientRecord?.phoneNum),
-                    service: patientRecord?.service,
-                    cubicle: dbCubicle,
-                    estimatedWaitMinutes: patientRecord?.estimated_wait_minutes,
-                });
-            } catch (err) {
-                const errorMessage = err instanceof Error ? err.message : String(err);
-                console.log(
-                    `${getTimestamp()} [QUEUE PRINT PAGE] Loaded - PatientNum: ${patientNum}, Service: ${serviceName} (DB Fetch Note: ${errorMessage})`
-                );
+            } catch {
+                // Ignore DB fetch note
             }
         };
 
         fetchAndLogPatientRecord();
-        console.log(
-            `${getTimestamp()} [PRINT JOB INITIATED] Preparing to send ticket to printer - Queue: ${patientNum}, Service: ${serviceName}, Cubicle: ${displayCubicle}`
-        );
 
         /**
          * Dispatches print payload to the hardware printer endpoint, which computes
@@ -169,9 +153,6 @@ export default function QueuePrintContent({
          */
         const printTicket = async () => {
             try {
-                console.log(
-                    `${getTimestamp()} [PRINT API CALL] Sending print request - Queue: ${patientNum}`
-                );
                 const response = await fetch("/api/print-ticket", {
                     method: "POST",
                     headers: { "Content-Type": "application/json" },
@@ -191,30 +172,20 @@ export default function QueuePrintContent({
                         setEstimatedWaitLabel(ewtDisplay);
                     }
 
-                    const printMethod = data?.data?.printMethod;
                     const escposBase64 = data?.data?.escposBase64;
                     const printedByServer = Boolean(data?.data?.printed);
 
                     if (printedByServer) {
-                        console.log(
-                            `${getTimestamp()} [PRINT SUCCESS] Printed by server via ${printMethod} - Queue: ${patientNum}, EWT: ${ewtDisplay || 'N/A'}`
-                        );
                         setIsFallbackActive(false);
-                        setCountdownSeconds(7);
+                        setCountdownSeconds(10);
                     } else if (escposBase64) {
                         // Dispatch to connected WebUSB / WebSerial printer on this client device
                         try {
                             const clientPrint = await printEscPos(escposBase64);
                             if (clientPrint.success) {
-                                console.log(
-                                    `${getTimestamp()} [PRINT SUCCESS] Printed via Client WebUSB/Serial - Queue: ${patientNum}, EWT: ${ewtDisplay || 'N/A'}`
-                                );
                                 setIsFallbackActive(false);
-                                setCountdownSeconds(7);
+                                setCountdownSeconds(10);
                             } else {
-                                console.log(
-                                    `${getTimestamp()} [PRINT FALLBACK] Client printer not ready (${clientPrint.message}) - Queue: ${patientNum}. Activating modal notice fallback.`
-                                );
                                 setIsFallbackActive(true);
                                 setFallbackCondition(
                                     hardwareStatus?.condition !== 'ready'
@@ -222,7 +193,7 @@ export default function QueuePrintContent({
                                         : 'not_detected'
                                 );
                                 setShowNoticeModal(true);
-                                setCountdownSeconds(25);
+                                setCountdownSeconds(10);
                             }
                         } catch (clientErr) {
                             console.warn(
@@ -232,7 +203,7 @@ export default function QueuePrintContent({
                             setIsFallbackActive(true);
                             setFallbackCondition('offline');
                             setShowNoticeModal(true);
-                            setCountdownSeconds(25);
+                            setCountdownSeconds(10);
                         }
                     } else {
                         // Server did not print and no client payload was returned
@@ -243,7 +214,7 @@ export default function QueuePrintContent({
                                 : 'not_detected'
                         );
                         setShowNoticeModal(true);
-                        setCountdownSeconds(25);
+                        setCountdownSeconds(10);
                     }
                 } else {
                     console.warn(
@@ -251,10 +222,11 @@ export default function QueuePrintContent({
                         response.status,
                         data.error || "Unknown error"
                     );
+                    setEstimatedWaitLabel((prev) => (prev === EWT_TEXTS.calculating ? EWT_TEXTS.about10to30 : prev));
                     setIsFallbackActive(true);
                     setFallbackCondition('offline');
                     setShowNoticeModal(true);
-                    setCountdownSeconds(25);
+                    setCountdownSeconds(10);
                 }
             } catch (error) {
                 const errorMessage = error instanceof Error ? error.message : String(error);
@@ -262,10 +234,11 @@ export default function QueuePrintContent({
                     `${getTimestamp()} [PRINT FETCH ERROR] Failed to call print API:`,
                     errorMessage
                 );
+                setEstimatedWaitLabel((prev) => (prev === EWT_TEXTS.calculating ? EWT_TEXTS.about10to30 : prev));
                 setIsFallbackActive(true);
                 setFallbackCondition('offline');
                 setShowNoticeModal(true);
-                setCountdownSeconds(25);
+                setCountdownSeconds(10);
             }
         };
 
@@ -275,9 +248,6 @@ export default function QueuePrintContent({
     // Live auto-close countdown ticking to redirect back to kiosk entrance
     useEffect(() => {
         if (countdownSeconds <= 0) {
-            console.log(
-                `${getTimestamp()} [REDIRECT TIMER] Countdown completed - Redirecting to entrance.`
-            );
             router.push("/kiosk/pages/kiosk-new-old-selection");
             return;
         }

@@ -34,3 +34,7 @@
 .transfer-workstation button {
   min-height: 2.75rem;
 }
+
+.transfer-workstation :is([role="dialog"], [data-modal="true"]) button {
+  min-height: auto;
+}

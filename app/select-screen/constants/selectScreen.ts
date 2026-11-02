@@ -39,6 +39,7 @@ export const REGISTRATION_ROLES: string[] = [
   'registration',
   'nurse',
   'staff',
+  'doctor',
   'admin',
   'superadmin',
 ];

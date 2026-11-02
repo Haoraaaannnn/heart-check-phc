@@ -275,12 +275,12 @@ body {
   0%,
   100% {
     background-color: #cc3535;
-    box-shadow: 0 0 0 0 rgba(245, 158, 11, 0), 0 10px 25px -5px rgba(204, 53, 53, 0.5);
+    box-shadow: inset 0 0 0 0 rgba(245, 158, 11, 0), 0 10px 25px -5px rgba(204, 53, 53, 0.5);
   }
 
   50% {
-    background-color: #3b0709;
-    box-shadow: 0 0 0 8px #fbbf24, 0 0 35px 8px rgba(251, 191, 36, 0.85);
+    background-color: #991b1b;
+    box-shadow: inset 0 0 0 6px #f59e0b, 0 0 25px rgba(245, 158, 11, 0.7);
   }
 }
 

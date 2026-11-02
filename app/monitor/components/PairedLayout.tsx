@@ -95,11 +95,11 @@ export function PairedLayout({
 
               const isLeftCalling = left?.patient && activeCall !== null &&
                 currentMs < activeCall.expiry &&
-                (activeCall.cubicle === left.cubicle || activeCall.ticket === left.patient.patientNum);
+                (activeCall.cubicle === left.cubicle || (Boolean(activeCall.ticket) && activeCall.ticket === left.patient.patientNum));
 
               const isRightCalling = right?.patient && activeCall !== null &&
                 currentMs < activeCall.expiry &&
-                (activeCall.cubicle === right.cubicle || activeCall.ticket === right.patient.patientNum);
+                (activeCall.cubicle === right.cubicle || (Boolean(activeCall.ticket) && activeCall.ticket === right.patient.patientNum));
 
               return (
                 <div key={rowIdx} className="grid grid-cols-4 gap-3 lg:gap-6 flex-1 min-h-0 items-stretch">
@@ -262,7 +262,7 @@ export function PairedLayout({
             const doctorName = pair.cubicle ? cubicleDoctorMap[pair.cubicle] : undefined;
             const isCalling = pair.patient && activeCall !== null &&
               currentMs < activeCall.expiry &&
-              (activeCall.cubicle === pair.cubicle || activeCall.ticket === pair.patient.patientNum);
+              (activeCall.cubicle === pair.cubicle || (Boolean(activeCall.ticket) && activeCall.ticket === pair.patient.patientNum));
 
             return (
               <div key={index} className={MONITOR_STYLES.pairedLayout.pairRow}>

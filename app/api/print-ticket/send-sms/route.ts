@@ -19,7 +19,35 @@ import { supabase } from '@/lib/supabase';
 import { createAdminClient } from '@/lib/supabase/admin';
 import { encryptPhoneNumber, maskPhoneNumber } from '@/lib/crypto/phoneEncryption';
 import { sendQueueConfirmationSMS } from '@/app/actions/sendQueueConfirmationSMS';
+import { computeEstimatedWaitMinutes } from '@/app/api/print-ticket/ewtComputation';
 import { getTimestamp } from '@/lib/logger';
+
+/** Maximum permitted fallback SMS dispatches per IP in the rolling window. */
+const SMS_FALLBACK_RATE_LIMIT_MAX = 5;
+/** Rolling rate limit window duration in milliseconds (5 minutes). */
+const SMS_FALLBACK_WINDOW_MS = 5 * 60 * 1000;
+const smsFallbackRateLimitMap = new Map<string, number[]>();
+
+function getClientIp(request: Request): string {
+  const forwarded = request.headers.get('x-forwarded-for');
+  if (forwarded) return forwarded.split(',')[0].trim();
+  const realIp = request.headers.get('x-real-ip');
+  if (realIp) return realIp.trim();
+  return 'internal-client';
+}
+
+function checkSmsFallbackRateLimit(ip: string): { allowed: boolean; retryAfterSeconds?: number } {
+  const now = Date.now();
+  const timestamps = (smsFallbackRateLimitMap.get(ip) || []).filter(ts => now - ts < SMS_FALLBACK_WINDOW_MS);
+  if (timestamps.length >= SMS_FALLBACK_RATE_LIMIT_MAX) {
+    const oldest = timestamps[0];
+    const retryAfterSeconds = Math.max(1, Math.ceil((oldest + SMS_FALLBACK_WINDOW_MS - now) / 1000));
+    return { allowed: false, retryAfterSeconds };
+  }
+  timestamps.push(now);
+  smsFallbackRateLimitMap.set(ip, timestamps);
+  return { allowed: true };
+}
 
 /**
  * Handles POST requests to deliver an SMS ticket to a patient's mobile device.
@@ -29,6 +57,15 @@ import { getTimestamp } from '@/lib/logger';
  */
 export async function POST(request: Request) {
   try {
+    const clientIp = getClientIp(request);
+    const rateCheck = checkSmsFallbackRateLimit(clientIp);
+    if (!rateCheck.allowed) {
+      return NextResponse.json(
+        { success: false, error: 'Too many SMS requests. Please wait a few minutes before trying again.' },
+        { status: 429, headers: { 'Retry-After': String(rateCheck.retryAfterSeconds ?? 300) } }
+      );
+    }
+
     const body = await request.json().catch(() => ({}));
     const rawPatientNum = typeof body?.patientNum === 'string' ? body.patientNum.trim() : '';
     const rawPhoneNum = typeof body?.phoneNum === 'string' ? body.phoneNum.trim() : '';
@@ -74,7 +111,7 @@ export async function POST(request: Request) {
     // Verify patient ticket exists in active queue records
     const { data: patientRecord, error: fetchError } = await dbClient
       .from('patients')
-      .select('id, patientNum, service, estimated_wait_minutes')
+      .select('id, patientNum, service, subcategory, created_at, estimated_wait_minutes')
       .eq('patientNum', rawPatientNum)
       .eq('is_historical', false)
       .order('created_at', { ascending: false })
@@ -94,7 +131,25 @@ export async function POST(request: Request) {
     }
 
     const serviceName = rawServiceName || patientRecord.service || 'General Service';
-    const ewtMinutes = rawEwtMinutes ?? patientRecord.estimated_wait_minutes ?? 15;
+    let ewtMinutes = rawEwtMinutes ?? patientRecord.estimated_wait_minutes;
+    if (ewtMinutes === null || ewtMinutes === undefined) {
+      try {
+        const ewtResult = await computeEstimatedWaitMinutes(
+          dbClient,
+          patientRecord.service || serviceName,
+          patientRecord.created_at,
+          patientRecord.subcategory
+        );
+        ewtMinutes = ewtResult.estimatedWaitMinutes;
+        await dbClient
+          .from('patients')
+          .update({ estimated_wait_minutes: ewtMinutes })
+          .eq('id', patientRecord.id)
+          .eq('is_historical', false);
+      } catch {
+        ewtMinutes = 15;
+      }
+    }
 
     // Encrypt phone number using AES-256-GCM before database persistence
     const encryptedPhone = encryptPhoneNumber(normalizedPhone);

@@ -15,7 +15,7 @@ function isRecord(value: unknown): value is Record<string, unknown> {
 export async function syncDoctorAccounts(options: { db: SupabaseClient; authId?: string }): Promise<void> {
   const { db } = options;
   let query = db.from('users').select('auth_id,username').eq('role', 'doctor');
-  let doctorQuery = db.from('doctors').select('auth_id');
+  let doctorQuery = db.from('doctors').select('id,auth_id,full_name');
   if (options.authId) {
     query = query.eq('auth_id', options.authId);
     doctorQuery = doctorQuery.eq('auth_id', options.authId);
@@ -33,6 +33,15 @@ export async function syncDoctorAccounts(options: { db: SupabaseClient; authId?:
     if (typeof account.auth_id !== 'string' || !account.auth_id || linked.has(account.auth_id)) continue;
     const name = typeof account.username === 'string' ? account.username.trim() : '';
     if (!name) throw new Error('A doctor account needs a username before it can be listed.');
+    const existingDoctor = doctorRows.find(
+      row => row.auth_id == null && typeof row.full_name === 'string' &&
+        row.full_name.trim().toLowerCase() === name.toLowerCase() && typeof row.id === 'string'
+    );
+    if (existingDoctor && typeof existingDoctor.id === 'string') {
+      await db.from('doctors').update({ auth_id: account.auth_id }).eq('id', existingDoctor.id);
+      linked.add(account.auth_id);
+      continue;
+    }
     missing.push({ auth_id: account.auth_id, full_name: name, active: true }); linked.add(account.auth_id);
   }
   if (missing.length === 0) return;

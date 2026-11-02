@@ -14,6 +14,7 @@ import React from 'react';
 import { useRouter } from 'next/navigation';
 import { MONITOR_STYLES } from '@/app/monitor/constants/monitorStyles';
 import { MONITOR_TEXTS } from '@/app/monitor/constants/monitorTexts';
+import { playInactivityChime } from '@/app/kiosk/lib/kioskChime';
 
 /** Props for {@link StartScreen}. */
 type StartScreenProps = {
@@ -65,8 +66,9 @@ export function StartScreen({ category, subcategory, onStart }: StartScreenProps
       <button
         type="button"
         onClick={() => {
-          const audio = new Audio();
-          audio.play().catch(() => {});
+          const unlock = new Audio('data:audio/wav;base64,UklGRigAAABXQVZFZm10IBIAAAABAAEARKwAAIhYAQACABAAAABkYXRhAgAAAAEA');
+          unlock.play().catch(() => {});
+          playInactivityChime();
           onStart();
         }}
         className={MONITOR_STYLES.startScreen.startButton}

@@ -24,6 +24,7 @@ import { useMonitorData } from '@/app/monitor/hooks/useMonitorData';
 import { useCustomMonitorData } from '@/app/monitor/hooks/useCustomMonitorData';
 import { useRealtimeSubscription } from '@/app/monitor/hooks/useRealtimeSubscription';
 import { MONITOR_STYLES } from '@/app/monitor/constants/monitorStyles';
+import { MONITOR_TEXTS } from '@/app/monitor/constants/monitorTexts';
 import { sortCubiclePatients } from '@/app/monitor/lib/sortCubiclePatients';
 
 /**
@@ -55,11 +56,12 @@ function formatMonitorTitle(services: string[]): string {
     return uniqueBases[0];
   }
 
-  const formatted = services.map(s => s.replace('-', ' - '));
-  if (formatted.length <= 3) {
-    return formatted.join(' • ');
+  if (services.length > 3) {
+    return MONITOR_TEXTS.customMonitor.title;
   }
-  return `${formatted.slice(0, 3).join(' • ')} +${formatted.length - 3} More`;
+
+  const formatted = services.map(s => s.replace('-', ' - '));
+  return formatted.join(' • ');
 }
 
 /**
@@ -187,7 +189,7 @@ function StandardCategoryMonitor({ categoryParam }: { categoryParam: string }) {
         cubicle: cubicleNum,
         patient: cubiclePatients[0] || null,
         nextPatient: cubiclePatients[1] || null,
-        upcomingPatients: cubiclePatients.slice(1, 5),
+        upcomingPatients: cubiclePatients.slice(1, 3),
         waitingCount: Math.max(0, cubiclePatients.length - 1),
       });
     }
@@ -203,7 +205,7 @@ function StandardCategoryMonitor({ categoryParam }: { categoryParam: string }) {
         cubicle: cubicleNum,
         patient: cubiclePatients[0] || null,
         nextPatient: cubiclePatients[1] || null,
-        upcomingPatients: cubiclePatients.slice(1, 5),
+        upcomingPatients: cubiclePatients.slice(1, 3),
         waitingCount: Math.max(0, cubiclePatients.length - 1),
       });
     }
@@ -215,7 +217,7 @@ function StandardCategoryMonitor({ categoryParam }: { categoryParam: string }) {
         cubicle: category,
         patient: cubiclePatients[0] || null,
         nextPatient: cubiclePatients[1] || null,
-        upcomingPatients: cubiclePatients.slice(1, 5),
+        upcomingPatients: cubiclePatients.slice(1, 3),
         waitingCount: Math.max(0, cubiclePatients.length - 1),
       });
     }

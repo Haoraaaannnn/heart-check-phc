@@ -26,11 +26,16 @@ import { supabase } from '@/lib/supabase';
  */
 export async function handleSignOut(redirectUrl: string = '/login'): Promise<void> {
   try {
-    // 1. Invoke server endpoint to destroy all Supabase session cookies
+    // 1. Invoke server endpoint to destroy all Supabase session cookies and release active desks
+    const sessionRes = typeof supabase.auth?.getSession === 'function'
+      ? await supabase.auth.getSession().catch(() => ({ data: { session: null } }))
+      : null;
+    const accessToken = sessionRes?.data?.session?.access_token;
     await fetch('/api/auth/logout', {
       method: 'POST',
       headers: {
         'Content-Type': 'application/json',
+        ...(accessToken ? { Authorization: `Bearer ${accessToken}` } : {}),
       },
     });
   } catch (error) {

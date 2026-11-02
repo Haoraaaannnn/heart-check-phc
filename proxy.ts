@@ -56,7 +56,7 @@ const ROLE_ROUTES: Record<string, string[]> = {
     "/superadmin": ["superadmin"],
     "/dashboard": ["admin", "superadmin"],
     "/nurse": ["nurse", "staff", "doctor", "admin", "superadmin"],
-    "/transfer": ["registration", "nurse", "staff", "admin", "superadmin"],
+    "/transfer": ["registration", "nurse", "staff", "doctor", "admin", "superadmin"],
     "/select-screen": [
         "superadmin",
         "admin",

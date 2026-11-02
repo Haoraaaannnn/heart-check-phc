@@ -87,6 +87,7 @@ export default function NursePage() {
   // Station Configuration State
   const {
     assignment: stationAssignment,
+    savedConfiguration,
     counters: availableCounters,
     cubicles: availableCubicles,
     services: availableStationServices,
@@ -409,6 +410,13 @@ export default function NursePage() {
               <p className="mt-2 text-sm text-slate-600 dark:text-[#a3a3a3] leading-relaxed">
                 {nurseTexts.unassignedDesc}
               </p>
+              <button
+                type="button"
+                onClick={() => setShowStationModal(true)}
+                className="mt-5 px-5 py-2.5 rounded-xl bg-[#a8071a] text-white font-bold text-xs hover:bg-[#850615] transition cursor-pointer shadow-xs"
+              >
+                Configure Station
+              </button>
             </div>
           </div>
         ) : (
@@ -484,6 +492,7 @@ export default function NursePage() {
           onClose={() => setShowStationModal(false)}
           workstation="nurse"
           currentAssignment={stationAssignment}
+          savedConfiguration={savedConfiguration}
           counters={availableCounters}
           cubicles={availableCubicles}
           services={availableStationServices}

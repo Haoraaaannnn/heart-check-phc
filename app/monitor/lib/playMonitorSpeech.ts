@@ -21,7 +21,7 @@ function playOfflineSpeech(text: string, repeats: number, signal: AbortSignal): 
       }
       count++;
       const utterance = new SpeechSynthesisUtterance(text);
-      utterance.rate = 0.95;
+      utterance.rate = 1.0;
       utterance.pitch = 1.0;
       utterance.onend = () => speakNext();
       utterance.onerror = () => resolve();
@@ -51,6 +51,7 @@ export async function playMonitorSpeech(text: string, repeats: number, signal: A
     if (!response.ok) throw new Error('Monitor speech unavailable.');
     const url = URL.createObjectURL(await response.blob());
     const audio = new Audio(url);
+    audio.playbackRate = 1.0;
     try {
       for (let index = 0; index < repeats && !signal.aborted; index++) {
         await new Promise<void>((resolve, reject) => {
@@ -66,6 +67,7 @@ export async function playMonitorSpeech(text: string, repeats: number, signal: A
           audio.onerror = () => finish(new Error('Monitor audio playback failed.'));
           signal.addEventListener('abort', abort, { once: true });
           audio.currentTime = 0;
+          audio.playbackRate = 1.0;
           if (signal.aborted) abort();
           else void audio.play().catch(error => finish(error));
         });

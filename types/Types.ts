@@ -124,6 +124,7 @@ export type Cubicle = {
   room: number;
   subcategory?: string | null;
   doctorId?: string | null;
+  occupiedBy?: { userId: number; username: string } | null;
 };
 
 export type Doctor = {
