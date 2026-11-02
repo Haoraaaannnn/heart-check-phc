@@ -118,7 +118,15 @@ export function StaffSessionProvider({ children }: { children: React.ReactNode }
     const policyTimer = setInterval(() => void refreshPolicy(), 60000);
     const { data: listener } = supabase.auth.onAuthStateChange((event, session) => {
       if (disposed) return;
-      if (event === 'SIGNED_OUT') { clock = null; window.location.replace('/login'); }
+      if (event === 'SIGNED_OUT') {
+        clock = null;
+        let target = '/login';
+        try {
+          const custom = sessionStorage.getItem('phc_signout_redirect');
+          if (custom) target = custom;
+        } catch { /* use default /login */ }
+        window.location.replace(target);
+      }
       else if (event === 'SIGNED_IN' && session) {
         if (userId && userId !== session.user.id) { window.location.replace('/select-screen'); return; }
         const key = sessionActivityKey(session.access_token, session.user.id);

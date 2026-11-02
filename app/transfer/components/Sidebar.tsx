@@ -63,6 +63,7 @@ export function Sidebar({
 }: SidebarProps) {
   const router = useRouter();
   const [dbServices, setDbServices] = useState<Service[]>([]);
+  const [isSigningOut, setIsSigningOut] = useState(false);
 
   useEffect(() => {
     const fetchServices = () => {
@@ -114,7 +115,13 @@ export function Sidebar({
   }, [catalogServices]);
 
   const handleLogout = async () => {
-    await handleSignOut();
+    if (isSigningOut) return;
+    setIsSigningOut(true);
+    try {
+      await handleSignOut();
+    } catch {
+      setIsSigningOut(false);
+    }
   };
 
   return (
@@ -243,16 +250,19 @@ export function Sidebar({
         <button
           type="button"
           onClick={handleLogout}
+          disabled={isSigningOut}
           title={transferTexts.logoutLabel}
           aria-label={transferTexts.logoutLabel}
           className={`w-full flex items-center ${
             isExpanded ? 'justify-start px-3' : 'justify-center px-0'
-          } py-2 rounded-xl text-slate-500 hover:text-[#cc3535] hover:bg-red-50 dark:text-[#d4d4d4] dark:hover:text-[#f87171] dark:hover:bg-red-950/30 transition-colors font-medium text-sm cursor-pointer`}
+          } py-2 rounded-xl text-slate-500 hover:text-[#cc3535] hover:bg-red-50 dark:text-[#d4d4d4] dark:hover:text-[#f87171] dark:hover:bg-red-950/30 transition-colors font-medium text-sm cursor-pointer ${
+            isSigningOut ? 'opacity-50 cursor-not-allowed' : ''
+          }`}
         >
-          <i className={`bx ${SIDEBAR_ICONS.logout} text-xl shrink-0`} aria-hidden="true" />
+          <i className={`bx ${isSigningOut ? 'bx-loader-alt animate-spin' : SIDEBAR_ICONS.logout} text-xl shrink-0`} aria-hidden="true" />
           {isExpanded && (
             <span className="text-xs font-semibold ml-3 truncate animate-in fade-in duration-200">
-              {transferTexts.logoutLabel}
+              {isSigningOut ? 'Signing out...' : transferTexts.logoutLabel}
             </span>
           )}
         </button>

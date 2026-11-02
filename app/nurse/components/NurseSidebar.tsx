@@ -68,6 +68,7 @@ export function NurseSidebar({
 
   // Real-time synchronization with services catalog for dynamic custom icons
   const [dbServices, setDbServices] = React.useState<Array<{ label_en: string; icon_src: string }>>([]);
+  const [isSigningOut, setIsSigningOut] = React.useState(false);
 
   React.useEffect(() => {
     let isDisposed = false;
@@ -140,7 +141,13 @@ export function NurseSidebar({
   );
 
   const handleLogout = async () => {
-    await handleSignOut();
+    if (isSigningOut) return;
+    setIsSigningOut(true);
+    try {
+      await handleSignOut();
+    } catch {
+      setIsSigningOut(false);
+    }
   };
 
   return (
@@ -373,16 +380,19 @@ export function NurseSidebar({
         <button
           type="button"
           onClick={handleLogout}
+          disabled={isSigningOut}
           title={nurseTexts.logoutLabel}
           aria-label={nurseTexts.logoutLabel}
           className={`w-full flex items-center ${
             isExpanded ? 'justify-start px-3' : 'justify-center px-0'
-          } py-2 rounded-xl text-slate-500 hover:text-[#cc3535] hover:bg-red-50 dark:text-[#a3a3a3] dark:hover:text-[#f87171] dark:hover:bg-red-950/30 transition-colors font-medium text-sm cursor-pointer`}
+          } py-2 rounded-xl text-slate-500 hover:text-[#cc3535] hover:bg-red-50 dark:text-[#a3a3a3] dark:hover:text-[#f87171] dark:hover:bg-red-950/30 transition-colors font-medium text-sm cursor-pointer ${
+            isSigningOut ? 'opacity-50 cursor-not-allowed' : ''
+          }`}
         >
-          <i className={`bx ${SIDEBAR_ICONS.logout} text-xl shrink-0`} aria-hidden="true" />
+          <i className={`bx ${isSigningOut ? 'bx-loader-alt animate-spin' : SIDEBAR_ICONS.logout} text-xl shrink-0`} aria-hidden="true" />
           {isExpanded && (
             <span className="text-sm font-semibold ml-3 truncate animate-in fade-in duration-200">
-              {nurseTexts.logoutLabel}
+              {isSigningOut ? 'Signing out...' : nurseTexts.logoutLabel}
             </span>
           )}
         </button>

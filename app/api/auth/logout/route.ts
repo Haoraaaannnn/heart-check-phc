@@ -128,11 +128,17 @@ async function releaseActiveWorkstationOnLogout(authId: string): Promise<void> {
  * @returns JSON response indicating successful sign-out.
  */
 export async function POST(request: Request): Promise<NextResponse> {
+  let cookieStore: Awaited<ReturnType<typeof cookies>> | null = null;
+  const proto = request.headers.get('x-forwarded-proto');
+  const isSecure =
+    proto === 'https' ||
+    new URL(request.url).protocol === 'https:' ||
+    request.headers.get('referer')?.startsWith('https:') ||
+    request.headers.get('origin')?.startsWith('https:') ||
+    false;
+
   try {
-    const isSecure =
-      request.headers.get('x-forwarded-proto') === 'https' ||
-      new URL(request.url).protocol === 'https:';
-    const cookieStore = await cookies();
+    cookieStore = await cookies();
 
     const supabase = createServerClient(
       process.env.NEXT_PUBLIC_SUPABASE_URL!,
@@ -140,11 +146,12 @@ export async function POST(request: Request): Promise<NextResponse> {
       {
         cookies: {
           getAll() {
-            return cookieStore.getAll();
+            return cookieStore?.getAll() ?? [];
           },
           setAll(cookiesToSet) {
+            if (!cookieStore) return;
             cookiesToSet.forEach(({ name, value, options }) =>
-              cookieStore.set(name, value, options)
+              cookieStore?.set(name, value, options)
             );
           },
         },
@@ -152,45 +159,55 @@ export async function POST(request: Request): Promise<NextResponse> {
     );
 
     // Resolve user auth id from Bearer token or SSR session before signing out
-    let authId: string | null = null;
-    const authHeader = request.headers.get('Authorization') || request.headers.get('authorization');
-    if (authHeader && authHeader.startsWith('Bearer ')) {
-      const token = authHeader.substring(7).trim();
-      if (token) {
-        const { data: userData } = await supabaseAdmin.auth.getUser(token);
+    try {
+      let authId: string | null = null;
+      const authHeader = request.headers.get('Authorization') || request.headers.get('authorization');
+      if (authHeader && authHeader.startsWith('Bearer ')) {
+        const token = authHeader.substring(7).trim();
+        if (token) {
+          const { data: userData } = await supabaseAdmin.auth.getUser(token);
+          if (userData?.user?.id) {
+            authId = userData.user.id;
+          }
+        }
+      }
+
+      if (!authId) {
+        const { data: userData } = await supabase.auth.getUser();
         if (userData?.user?.id) {
           authId = userData.user.id;
         }
       }
-    }
 
-    if (!authId) {
-      const { data: userData } = await supabase.auth.getUser();
-      if (userData?.user?.id) {
-        authId = userData.user.id;
+      if (authId) {
+        await releaseActiveWorkstationOnLogout(authId);
       }
-    }
-
-    if (authId) {
-      await releaseActiveWorkstationOnLogout(authId);
+    } catch (workstationErr) {
+      console.warn('[LOGOUT] Workstation release non-fatal warning:', workstationErr);
     }
 
     // Revoke Supabase auth session
-    await supabase.auth.signOut({ scope: 'local' });
+    try {
+      await supabase.auth.signOut({ scope: 'local' });
+    } catch (signOutErr) {
+      console.warn('[LOGOUT] Local signOut non-fatal warning:', signOutErr);
+    }
 
     // Explicitly destroy all session cookies matching Supabase prefix
-    const allCookies = cookieStore.getAll();
-    allCookies.forEach((cookie) => {
-      if (cookie.name.startsWith('sb-')) {
-        cookieStore.set(cookie.name, '', {
-          path: '/',
-          maxAge: 0,
-          expires: new Date(0),
-          sameSite: 'lax',
-          secure: isSecure,
-        });
-      }
-    });
+    if (cookieStore) {
+      const allCookies = cookieStore.getAll();
+      allCookies.forEach((cookie) => {
+        if (cookie.name.startsWith('sb-')) {
+          cookieStore?.set(cookie.name, '', {
+            path: '/',
+            maxAge: 0,
+            expires: new Date(0),
+            sameSite: 'lax',
+            secure: isSecure,
+          });
+        }
+      });
+    }
 
     const response = NextResponse.json({ success: true });
     response.headers.set(
@@ -209,9 +226,31 @@ export async function POST(request: Request): Promise<NextResponse> {
           ? String((error as { message: unknown }).message)
           : String(error);
     console.error('[LOGOUT SERVER ERROR]:', message);
-    return NextResponse.json(
-      { error: 'Failed to terminate session cleanly.' },
-      { status: 500 }
-    );
+
+    // Emergency cookie eviction fallback even if unexpected runtime failure occurs
+    if (cookieStore) {
+      try {
+        const allCookies = cookieStore.getAll();
+        allCookies.forEach((cookie) => {
+          if (cookie.name.startsWith('sb-')) {
+            cookieStore?.set(cookie.name, '', {
+              path: '/',
+              maxAge: 0,
+              expires: new Date(0),
+              sameSite: 'lax',
+              secure: isSecure,
+            });
+          }
+        });
+      } catch (evictErr) {
+        console.error('[LOGOUT] Fallback eviction error:', evictErr);
+      }
+    }
+
+    const response = NextResponse.json({ success: true, warning: 'Session ended with warnings.' });
+    response.headers.set('Cache-Control', 'no-store, no-cache, must-revalidate, proxy-revalidate');
+    response.headers.set('Pragma', 'no-cache');
+    response.headers.set('Expires', '0');
+    return response;
   }
 }

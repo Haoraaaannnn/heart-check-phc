@@ -47,6 +47,7 @@ export function DashboardHeader({ onOpenMobileDrawer }: DashboardHeaderProps) {
   const [userName, setUserName] = useState('');
   const [userRole, setUserRole] = useState<string>(DASHBOARD_NAV_TEXTS.actions.defaultRole);
   const [mounted, setMounted] = useState(false);
+  const [isSigningOut, setIsSigningOut] = useState(false);
 
   const { resolvedTheme, setTheme } = useTheme();
 
@@ -127,7 +128,13 @@ export function DashboardHeader({ onOpenMobileDrawer }: DashboardHeaderProps) {
    * Handles user session termination and route redirection to login.
    */
   const onSignOut = async () => {
-    await handleSignOut();
+    if (isSigningOut) return;
+    setIsSigningOut(true);
+    try {
+      await handleSignOut();
+    } catch {
+      setIsSigningOut(false);
+    }
   };
 
   const isDark = mounted && resolvedTheme === 'dark';
@@ -305,11 +312,12 @@ export function DashboardHeader({ onOpenMobileDrawer }: DashboardHeaderProps) {
         <button
           type="button"
           onClick={onSignOut}
-          className={S.signOutButton}
+          disabled={isSigningOut}
+          className={`${S.signOutButton} ${isSigningOut ? 'opacity-50 cursor-not-allowed' : ''}`}
           title={T.actions.signOut}
           aria-label={T.actions.signOut}
         >
-          <i className="bx bx-log-out" aria-hidden="true" />
+          <i className={`bx ${isSigningOut ? 'bx-loader-alt animate-spin' : 'bx-log-out'}`} aria-hidden="true" />
         </button>
       </div>
     </header>

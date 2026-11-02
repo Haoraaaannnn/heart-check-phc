@@ -69,7 +69,15 @@ export function useStaffAuthorization(roles: readonly string[], workstation?: st
     scheduleCheck();
     const { data: listener } = supabase.auth.onAuthStateChange(event => {
       if (disposed) return;
-      if (event === 'SIGNED_OUT') { ++requestId; window.location.replace('/login'); }
+      if (event === 'SIGNED_OUT') {
+        ++requestId;
+        let target = '/login';
+        try {
+          const custom = sessionStorage.getItem('phc_signout_redirect');
+          if (custom) target = custom;
+        } catch { /* use default /login */ }
+        window.location.replace(target);
+      }
       else if (event === 'SIGNED_IN') { ++requestId; scheduleCheck(); }
     });
     return () => {
