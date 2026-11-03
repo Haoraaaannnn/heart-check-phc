@@ -12,15 +12,14 @@
 		X-Content-Type-Options "nosniff"
 		X-Frame-Options "SAMEORIGIN"
 		Referrer-Policy "strict-origin-when-cross-origin"
+		Content-Security-Policy "default-src 'self'; script-src 'self' 'unsafe-inline' 'unsafe-eval'; style-src 'self' 'unsafe-inline'; img-src 'self' data: blob: https:; font-src 'self' data:; connect-src 'self' https://*.supabase.co wss://*.supabase.co https://api.deepgram.com; media-src 'self' blob: data:; frame-ancestors 'self';"
 	}
 
 	# Python FastAPI Backend Endpoints (Port 8000)
 	@fastapi {
 		path /api/dashboard-data*
 		path /api/daily-drilldown*
-		path /api/available-years*
 		path /api/available-export-dates*
-		path /api/monthly-breakdown/*
 		path /api/export-excel*
 		path /api/import-file*
 		path /health

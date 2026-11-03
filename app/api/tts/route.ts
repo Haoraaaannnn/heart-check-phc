@@ -234,7 +234,7 @@ export async function POST(request: Request) {
       return new Response(cachedBuffer, {
         status: 200,
         headers: {
-          'Content-Type': 'audio/mp3',
+          'Content-Type': 'audio/mpeg',
           'Cache-Control': 'public, max-age=3600, s-maxage=3600',
           'X-Cache-Lookup': 'HIT',
         },
@@ -279,7 +279,7 @@ export async function POST(request: Request) {
     return new Response(audioBuffer, {
       status: 200,
       headers: {
-        'Content-Type': 'audio/mp3',
+        'Content-Type': 'audio/mpeg',
         'Cache-Control': 'public, max-age=3600, s-maxage=3600',
         'X-Cache-Lookup': 'MISS',
       },

@@ -4,6 +4,7 @@ import { NextResponse } from 'next/server'
 import { createClient } from '@supabase/supabase-js'
 import { requireSuperadmin } from '@/lib/supabase/superadminGuard'
 import { hasValidAssignments, isRecord } from './input'
+import crypto from 'node:crypto'
 
 import { getDefaultWorkstationsForRole } from '@/constants/workstations'
 
@@ -11,12 +12,11 @@ const supabaseUrl = process.env.NEXT_PUBLIC_SUPABASE_URL
 const serviceKey = process.env.SUPABASE_SERVICE_ROLE_KEY
 if (!supabaseUrl || !serviceKey) throw new Error('Account service configuration is missing')
 const supabaseAdmin = createClient(supabaseUrl, serviceKey)
-/** @param options - Account details and creation time. @returns A readable temporary password personalized to the account. */
-function createTemporaryPassword(options: { username: string; role: string; createdAt: Date; counter: number }): string {
-  const usernamePart = options.username.trim().replace(/[^a-z0-9]/gi, '').slice(0, 10)
-  const rolePart = options.role.replace(/[^a-z0-9]/gi, '')
-  const createdDate = options.createdAt.toISOString().slice(0, 10).replaceAll('-', '')
-  return `${usernamePart}${rolePart}${createdDate}${String(options.counter).padStart(2, '0')}`
+
+/** @returns A cryptographically random temporary password meeting length and complexity rules. */
+function createTemporaryPassword(): string {
+  const randomHex = crypto.randomBytes(6).toString('hex')
+  return `Hc#${randomHex}!26`
 }
 
 /** @param request - Authorized account details. @returns Creation result and credentials for the superadmin. */
@@ -47,8 +47,7 @@ export async function POST(request: Request) {
 
     const email = accountEmail({ username, role })
     if (!email) return NextResponse.json({ error: 'Use 1–32 letters, numbers, underscores or hyphens; start with a letter or number.' }, { status: 400 })
-    const createdAt = new Date()
-    const password = createTemporaryPassword({ username, role, createdAt, counter: 1 })
+    const password = createTemporaryPassword()
     const effectiveRole = role
     const effectiveWorkstations = Array.isArray(workstationAccess)
       ? workstationAccess

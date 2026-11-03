@@ -27,11 +27,9 @@ import { useStationClaim } from '@/hooks/useStationClaim';
 import { supabase } from '@/lib/supabase';
 
 /**
- * Screen Display Selector main page component.
- *
- * @returns JSX element.
+ * Screen Display Selector inner content component.
  */
-export default function SelectScreenPage() {
+function SelectScreenContent() {
   const router = useRouter();
   const searchParams = useSearchParams();
   const isForcedPasswordChange = searchParams.get('changePassword') === 'required';
@@ -41,6 +39,7 @@ export default function SelectScreenPage() {
 
   const {
     assignment,
+    savedConfiguration,
     counters,
     cubicles,
     services,
@@ -231,6 +230,7 @@ export default function SelectScreenPage() {
           onClose={() => setSetupWorkstation(null)}
           workstation={setupWorkstation}
           currentAssignment={assignment}
+          savedConfiguration={savedConfiguration}
           counters={counters}
           cubicles={cubicles}
           services={services}
@@ -295,5 +295,19 @@ function PasswordStrengthMeter({ strength }: { strength: { label: string; score:
       <div className="flex gap-1" aria-hidden="true">{[1, 2, 3].map((step) => <span key={step} className={`h-1.5 flex-1 rounded ${step <= strength.score ? tones[strength.score] : 'bg-slate-200 dark:bg-slate-700'}`} />)}</div>
       <p className="text-xs text-slate-600 dark:text-slate-300">Password strength: <span className="font-semibold">{strength.label}</span></p>
     </div>
+  );
+}
+
+/**
+ * Screen Display Selector main page component.
+ * Wrapped in Suspense boundary to support Next.js static prerendering with useSearchParams.
+ *
+ * @returns JSX element.
+ */
+export default function SelectScreenPage() {
+  return (
+    <React.Suspense fallback={<div className="min-h-screen bg-slate-50 dark:bg-slate-950" />}>
+      <SelectScreenContent />
+    </React.Suspense>
   );
 }

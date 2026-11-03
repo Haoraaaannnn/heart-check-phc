@@ -19,6 +19,7 @@ import {
   ANALYTICS_ICONS,
 } from '@/app/dashboard/pages/analytics/constants/analytics';
 import { ANALYTICS_TEXTS } from '@/app/dashboard/pages/analytics/constants/analyticsTexts';
+import { supabase } from '@/lib/supabase';
 
 /**
  * Supported date selection modes for Excel export.
@@ -128,7 +129,13 @@ export default function ExportExcelModal({
     setIsLoadingDates(true);
 
     const baseUrl = process.env.NEXT_PUBLIC_API_URL || 'http://localhost:8000';
-    fetch(`${baseUrl}/api/available-export-dates`)
+    supabase.auth.getSession().then(({ data: { session } }) => {
+      const headers: Record<string, string> = {};
+      if (session?.access_token) {
+        headers['Authorization'] = `Bearer ${session.access_token}`;
+      }
+      return fetch(`${baseUrl}/api/available-export-dates`, { headers });
+    })
       .then((res) => {
         if (!res.ok) throw new Error('Failed to load available export dates');
         return res.json() as Promise<AvailableExportDatesResponse>;
@@ -306,7 +313,13 @@ export default function ExportExcelModal({
         params.set('service', selectedService);
       }
 
-      const res = await fetch(`${baseUrl}/api/export-excel?${params.toString()}`);
+      const { data: { session } } = await supabase.auth.getSession();
+      const headers: Record<string, string> = {};
+      if (session?.access_token) {
+        headers['Authorization'] = `Bearer ${session.access_token}`;
+      }
+
+      const res = await fetch(`${baseUrl}/api/export-excel?${params.toString()}`, { headers });
 
       if (!res.ok) {
         let errorMsg = T.defaultError;

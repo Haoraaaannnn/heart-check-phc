@@ -201,8 +201,14 @@ export function CubicleCard({
 
           return (
             <div
-              onPointerDown={e => onPointerDown?.(e, topPatient, cubicle.cubicleNum)}
-              onMouseDown={e => onDragStart?.(e, topPatient, cubicle.cubicleNum)}
+              onPointerDown={e => {
+                if (!isDraggable) return;
+                onPointerDown?.(e, topPatient, cubicle.cubicleNum);
+              }}
+              onMouseDown={e => {
+                if (!isDraggable) return;
+                onDragStart?.(e, topPatient, cubicle.cubicleNum);
+              }}
               onClick={handleTopPatientClick}
               style={isTopSelected ? TransferStyle.selectedPatientRow : undefined}
               className={
@@ -311,8 +317,14 @@ export function CubicleCard({
             return (
               <span
                 key={p.id}
-                onPointerDown={e => onPointerDown?.(e, p, cubicle.cubicleNum)}
-                onMouseDown={e => onDragStart?.(e, p, cubicle.cubicleNum)}
+                onPointerDown={e => {
+                  if (!isDraggable) return;
+                  onPointerDown?.(e, p, cubicle.cubicleNum);
+                }}
+                onMouseDown={e => {
+                  if (!isDraggable) return;
+                  onDragStart?.(e, p, cubicle.cubicleNum);
+                }}
                 onClick={e => {
                   e.stopPropagation();
                   onSelectPatient?.(p, cubicle.cubicleNum);

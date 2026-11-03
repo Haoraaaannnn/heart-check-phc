@@ -543,15 +543,13 @@ def insert_records_batch(records: list[dict], batch_size: int = 500) -> tuple[in
             try:
                 resp = client.post(url, headers=headers, json=batch)
                 if resp.status_code not in (200, 201):
-                    err_msg = f"HTTP {resp.status_code}: {resp.text}"
-                    print(f"Error inserting batch {i}..{i + len(batch)}: {err_msg}")
-                    errors.append(err_msg)
+                    print(f"Error inserting batch {i}..{i + len(batch)}: HTTP {resp.status_code}: {resp.text}")
+                    errors.append(f"Database insertion failed with status code {resp.status_code}.")
                     break
                 inserted += len(batch)
             except Exception as e:
-                err_msg = str(e)
-                print(f"Error inserting batch {i}..{i + len(batch)}: {err_msg}")
-                errors.append(err_msg)
+                print(f"Error inserting batch {i}..{i + len(batch)}: {e}")
+                errors.append("Database communication failure during batch insertion.")
                 break
 
     return inserted, errors

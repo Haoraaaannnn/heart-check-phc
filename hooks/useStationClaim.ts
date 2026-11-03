@@ -57,6 +57,7 @@ export interface UseStationClaimReturn {
   saving: boolean;
   error: string | null;
   assignment: CurrentStationAssignment;
+  savedConfiguration: CurrentStationAssignment | null;
   counters: AvailableCounter[];
   cubicles: AvailableCubicle[];
   services: StationServiceOption[];
@@ -85,6 +86,7 @@ export function useStationClaim(): UseStationClaimReturn {
     cubicleId: null,
     services: [],
   });
+  const [savedConfiguration, setSavedConfiguration] = useState<CurrentStationAssignment | null>(null);
   const [counters, setCounters] = useState<AvailableCounter[]>([]);
   const [cubicles, setCubicles] = useState<AvailableCubicle[]>([]);
   const [services, setServices] = useState<StationServiceOption[]>([]);
@@ -117,6 +119,7 @@ export function useStationClaim(): UseStationClaimReturn {
       if (!mountedRef.current) return;
 
       setAssignment(data.currentAssignment || { counter: null, cubicleId: null, services: [] });
+      setSavedConfiguration(data.savedConfiguration || null);
       setCounters(data.counters || []);
       setCubicles(data.cubicles || []);
       setServices(data.services || []);
@@ -139,11 +142,25 @@ export function useStationClaim(): UseStationClaimReturn {
     const channel = supabase
       .channel('staff-station-claim-realtime')
       .on('postgres_changes', { event: '*', schema: 'public', table: 'user_counters' }, () => void refresh())
+      .on('postgres_changes', { event: '*', schema: 'public', table: 'user_cubicles' }, () => void refresh())
       .on('postgres_changes', { event: '*', schema: 'public', table: 'counters' }, () => void refresh())
+      .on('postgres_changes', { event: '*', schema: 'public', table: 'cubicle' }, () => void refresh())
       .subscribe();
+
+    const handleFocus = () => void refresh();
+    if (typeof window !== 'undefined') {
+      window.addEventListener('focus', handleFocus);
+    }
+
+    // Periodic 30-second synchronization fallback for live occupancy changes
+    const pollInterval = setInterval(() => void refresh(), 30_000);
 
     return () => {
       mountedRef.current = false;
+      clearInterval(pollInterval);
+      if (typeof window !== 'undefined') {
+        window.removeEventListener('focus', handleFocus);
+      }
       void supabase.removeChannel(channel);
     };
   }, [refresh]);
@@ -184,17 +201,21 @@ export function useStationClaim(): UseStationClaimReturn {
 
         if (mountedRef.current) {
           if (params.workstation === 'registration') {
-            setAssignment((prev) => ({
-              ...prev,
+            const nextAssignment: CurrentStationAssignment = {
               counter: params.counter ?? null,
+              cubicleId: null,
               services: params.services,
-            }));
+            };
+            setAssignment(nextAssignment);
+            setSavedConfiguration(nextAssignment);
           } else {
-            setAssignment((prev) => ({
-              ...prev,
+            const nextAssignment: CurrentStationAssignment = {
+              counter: null,
               cubicleId: params.cubicleId ?? null,
               services: params.services,
-            }));
+            };
+            setAssignment(nextAssignment);
+            setSavedConfiguration(nextAssignment);
           }
         }
 
@@ -288,6 +309,7 @@ export function useStationClaim(): UseStationClaimReturn {
     saving,
     error,
     assignment,
+    savedConfiguration,
     counters,
     cubicles,
     services,

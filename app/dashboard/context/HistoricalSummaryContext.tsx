@@ -108,8 +108,14 @@ export function HistoricalSummaryProvider({ children }: { children: ReactNode })
     }
 
     try {
+      const { data: { session } } = await supabase.auth.getSession();
+      const headers: Record<string, string> = {};
+      if (session?.access_token) {
+        headers['Authorization'] = `Bearer ${session.access_token}`;
+      }
+
       const apiBase = process.env.NEXT_PUBLIC_API_URL || (typeof window !== 'undefined' ? '' : 'http://localhost:8000');
-      const res = await fetch(`${apiBase}/api/dashboard-data?range=all`);
+      const res = await fetch(`${apiBase}/api/dashboard-data?range=all`, { headers });
       if (!res.ok) throw new Error(`Server error: ${res.status}`);
       const json = (await res.json()) as HistoricalSummaryPayload;
 

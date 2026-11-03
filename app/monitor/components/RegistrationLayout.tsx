@@ -117,6 +117,11 @@ export function RegistrationLayout({ patients }: RegistrationLayoutProps) {
         setActiveCall({ ticket: item.ticket, counterNum: item.counterNum, expiry: Date.now() + 15000 });
         try { await playMonitorSpeech(message, 2, controller.signal); }
         catch (error) { if (!controller.signal.aborted) console.warn('Registration monitor call failed:', error); }
+        finally {
+          if (pendingAnnouncements.current.length === 0) {
+            setActiveCall(null);
+          }
+        }
       }
     } finally { isProcessing.current = false; }
   };
@@ -251,9 +256,9 @@ export function RegistrationLayout({ patients }: RegistrationLayoutProps) {
                         </div>
                       </div>
 
-                      {/* Positions 2, 3, 4 of waiting: 3-column structured queue roster */}
+                      {/* Position 2 of waiting: Second in line (only accept 3 numbers per queue including now serving) */}
                       <div className={MONITOR_STYLES.registrationLayout.fourSubQueueGrid}>
-                        {[2, 3, 4].map(pos => {
+                        {[2].map(pos => {
                           const wp = waitingPatients[pos - 1];
                           return (
                             <div
@@ -274,10 +279,10 @@ export function RegistrationLayout({ patients }: RegistrationLayoutProps) {
                         })}
                       </div>
 
-                      {/* Overflow indicator when more than 4 patients are in the queue */}
-                      {waitingPatients.length > 4 && (
+                      {/* Overflow indicator when more than 2 waiting patients are in the queue */}
+                      {waitingPatients.length > 2 && (
                         <div className={MONITOR_STYLES.registrationLayout.fourMoreWaitingFooter}>
-                          +{waitingPatients.length - 4}{MONITOR_TEXTS.registrationLayout.moreWaitingSuffix}
+                          +{waitingPatients.length - 2}{MONITOR_TEXTS.registrationLayout.moreWaitingSuffix}
                         </div>
                       )}
                     </div>
@@ -383,9 +388,9 @@ export function RegistrationLayout({ patients }: RegistrationLayoutProps) {
                       </span>
                     </div>
 
-                    {/* Positions 2, 3, 4 of waiting: Ordered Sub-queue Roster with high-readability tickets */}
+                    {/* Position 2 of waiting: Ordered Sub-queue (only accept 3 numbers per queue including now serving) */}
                     <div className={MONITOR_STYLES.registrationLayout.columnUpcomingRoster}>
-                      {[2, 3, 4].map(pos => {
+                      {[2].map(pos => {
                         const wp = waitingPatients[pos - 1];
                         return wp ? (
                           <div key={wp.id} className={MONITOR_STYLES.registrationLayout.columnUpcomingRow}>
@@ -412,9 +417,9 @@ export function RegistrationLayout({ patients }: RegistrationLayoutProps) {
                           </div>
                         );
                       })}
-                      {waitingPatients.length > 4 && (
+                      {waitingPatients.length > 2 && (
                         <div className="text-center text-[10px] sm:text-[11px] font-bold text-slate-500 py-0.5 flex-shrink-0">
-                          +{waitingPatients.length - 4} more waiting
+                          +{waitingPatients.length - 2} more waiting
                         </div>
                       )}
                     </div>

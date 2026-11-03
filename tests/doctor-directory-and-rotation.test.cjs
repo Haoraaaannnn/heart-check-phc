@@ -36,6 +36,7 @@ function store({ role = 'nurse', rejectWrites = false, accounts = [], doctors, c
     const query = {
       select() { return this; }, order() { return this; }, limit() { return this; },
       eq(key, value) { filters.push(row => row[key] === value); return this; },
+      neq(key, value) { filters.push(row => row[key] !== value); return this; },
       is(key, value) { filters.push(row => (row[key] ?? null) === value); return this; },
       in(key, values) { filters.push(row => values.includes(row[key])); return this; },
       insert(value) { operation = 'insert'; payload = value; return this; },

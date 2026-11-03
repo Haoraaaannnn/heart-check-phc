@@ -132,10 +132,10 @@ export function TableLayout({
                     const sortedPatients = sortCubiclePatients(patientsInCubicle);
                     const activePatient = sortedPatients[0];
                     const waitingPatients = sortedPatients.slice(1);
-                    const remainingWaiting = waitingPatients.length > 4 ? waitingPatients.length - 4 : 0;
+                    const remainingWaiting = waitingPatients.length > 2 ? waitingPatients.length - 2 : 0;
                     const isCalling = activePatient && activeCall !== null &&
                       currentMs < activeCall.expiry &&
-                      (activeCall.cubicle === cubicle.cubicleNum || activeCall.ticket === activePatient.patientNum);
+                      (activeCall.cubicle === cubicle.cubicleNum || (activeCall.ticket && activeCall.ticket === activePatient.patientNum));
 
                     return (
                       <td key={cubicle.id} className={MONITOR_STYLES.tableLayout.cubicleCell}>
@@ -164,7 +164,7 @@ export function TableLayout({
                                 </span>
                               </div>
 
-                              {/* Minimum 4 upcoming queue roster excluding serving number */}
+                              {/* Upcoming queue roster (up to 2 waiting, max 3 numbers per queue including now serving) */}
                               <div className={MONITOR_STYLES.tableLayout.upcomingRosterCard}>
                                 <div className={MONITOR_STYLES.tableLayout.upcomingRosterHeader}>
                                   <span className={MONITOR_STYLES.tableLayout.nextBadge}>
@@ -176,7 +176,7 @@ export function TableLayout({
                                 </div>
 
                                 <div className="flex flex-col gap-1 w-full min-h-0 flex-1 justify-around">
-                                  {[1, 2, 3, 4].map(pos => {
+                                  {[1, 2].map(pos => {
                                     const wp = waitingPatients[pos - 1];
                                     const isHero = pos === 1;
                                     return (

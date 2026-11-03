@@ -22,8 +22,13 @@ function parseCubicle(value: unknown): Cubicle | null {
       typeof value.room !== 'number' || !Number.isSafeInteger(value.room) ||
       !(value.subcategory == null || typeof value.subcategory === 'string') ||
       !(value.doctorId == null || typeof value.doctorId === 'string')) return null;
+  const occupiedBy = isDoctorRecord(value.occupiedBy) &&
+      typeof value.occupiedBy.userId === 'number' && Number.isSafeInteger(value.occupiedBy.userId) &&
+      typeof value.occupiedBy.username === 'string'
+    ? { userId: value.occupiedBy.userId, username: value.occupiedBy.username }
+    : null;
   return { id: value.id, cubicleNum: value.cubicleNum, category: value.category, room: value.room,
-    subcategory: value.subcategory ?? null, doctorId: value.doctorId ?? null };
+    subcategory: value.subcategory ?? null, doctorId: value.doctorId ?? null, occupiedBy };
 }
 
 /** @param value - API response. @returns Validated directory and server-owned editing capabilities. */

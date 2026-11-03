@@ -112,43 +112,123 @@ export async function GET(request: Request) {
       .eq('user_id', staffUser.id),
     supabaseAdmin
       .from('user_counters')
-      .select('counter, user_id, users(id, username)'),
+      .select('counter, user_id, users(id, username, auth_id)'),
     supabaseAdmin
       .from('user_cubicles')
-      .select('cubicle_id, user_id, users(id, username)'),
+      .select('cubicle_id, user_id, users(id, username, auth_id)'),
   ]);
 
   if (countersResult.error || cubiclesResult.error || servicesResult.error) {
     return NextResponse.json({ error: 'Unable to retrieve station metadata.' }, { status: 500 });
   }
 
-  // Map counter occupancy by other users
-  const counterOccupancy: Record<number, { userId: number; username: string }> = {};
-  for (const item of allOccupiedCountersResult.data ?? []) {
-    const userObj = item.users as any;
-    if (item.user_id !== staffUser.id && userObj?.username) {
-      counterOccupancy[item.counter] = {
-        userId: item.user_id,
-        username: userObj.username,
-      };
+  // Verify active status of occupants in user_counters and user_cubicles
+  const nowEpoch = Date.now();
+  const MAX_SESSION_AGE_MS = 12 * 60 * 60 * 1000; // 12 hours shift window
+
+  // Load auth users to check active status and last_sign_in_at if listUsers is available
+  const authUserMap = new Map<string, { lastSignInAt: number }>();
+  if (typeof supabaseAdmin.auth?.admin?.listUsers === 'function') {
+    try {
+      const { data: authUsersResult } = await supabaseAdmin.auth.admin.listUsers({ perPage: 100 });
+      for (const u of authUsersResult?.users ?? []) {
+        const lastSignIn = u.last_sign_in_at ? new Date(u.last_sign_in_at).getTime() : 0;
+        authUserMap.set(u.id, { lastSignInAt: lastSignIn });
+      }
+    } catch {
+      // Ignore auth user listing errors in restricted test environments
     }
   }
 
-  // Map cubicle occupancy by other users
+  const staleUserIds = new Set<number>();
+  const isUserStale = (userId: number, authId?: string | null): boolean => {
+    if (userId === staffUser.id) return false;
+    if (authUserMap.size === 0) return false;
+    if (!authId) return true;
+    const authData = authUserMap.get(authId);
+    if (!authData) return true;
+    if (authData.lastSignInAt === 0) return true;
+    if (nowEpoch - authData.lastSignInAt > MAX_SESSION_AGE_MS) return true;
+    return false;
+  };
+
+  // Map counter occupancy by other users, omitting stale records
+  const counterOccupancy: Record<number, { userId: number; username: string }> = {};
+  for (const item of allOccupiedCountersResult.data ?? []) {
+    const userObj = item.users as { id?: number; username?: string; auth_id?: string } | null;
+    if (item.user_id !== staffUser.id && userObj?.username) {
+      if (isUserStale(item.user_id, userObj.auth_id)) {
+        staleUserIds.add(item.user_id);
+        continue;
+      }
+      if (!counterOccupancy[item.counter]) {
+        counterOccupancy[item.counter] = {
+          userId: item.user_id,
+          username: userObj.username,
+        };
+      }
+    }
+  }
+
+  // Map cubicle occupancy by other users, omitting stale records
   const cubicleOccupancy: Record<number, { userId: number; username: string }> = {};
   for (const item of allOccupiedCubiclesResult.data ?? []) {
-    const userObj = item.users as any;
+    const userObj = item.users as { id?: number; username?: string; auth_id?: string } | null;
     if (item.user_id !== staffUser.id && userObj?.username) {
-      cubicleOccupancy[item.cubicle_id] = {
-        userId: item.user_id,
-        username: userObj.username,
-      };
+      if (isUserStale(item.user_id, userObj.auth_id)) {
+        staleUserIds.add(item.user_id);
+        continue;
+      }
+      if (!cubicleOccupancy[item.cubicle_id]) {
+        cubicleOccupancy[item.cubicle_id] = {
+          userId: item.user_id,
+          username: userObj.username,
+        };
+      }
     }
+  }
+
+  // Asynchronously purge stale claims from inactive sessions
+  if (staleUserIds.size > 0) {
+    const staleArray = Array.from(staleUserIds);
+    void (async () => {
+      try {
+        const { data: staleUsers } = await supabaseAdmin
+          .from('users')
+          .select('auth_id')
+          .in('id', staleArray);
+        const staleAuthIds = (staleUsers ?? []).map((u) => u.auth_id).filter((id): id is string => typeof id === 'string');
+        if (staleAuthIds.length > 0) {
+          const { data: staleDoctors } = await supabaseAdmin
+            .from('doctors')
+            .select('id')
+            .in('auth_id', staleAuthIds);
+          const staleDoctorIds = (staleDoctors ?? []).map((d) => d.id).filter((id): id is string => typeof id === 'string');
+          if (staleDoctorIds.length > 0) {
+            await supabaseAdmin.from('cubicle').update({ doctorId: null }).in('doctorId', staleDoctorIds);
+          }
+        }
+        await Promise.all([
+          supabaseAdmin.from('user_counters').delete().in('user_id', staleArray),
+          supabaseAdmin.from('user_cubicles').delete().in('user_id', staleArray),
+        ]);
+      } catch (staleErr) {
+        console.warn('[STATION CLAIM] Error purging stale sessions:', staleErr);
+      }
+    })();
   }
 
   const savedCounters = (userCountersResult.data ?? []).map((c) => c.counter);
   const savedCubicles = (userCubiclesResult.data ?? []).map((c) => c.cubicle_id);
   const savedServices = (userServicesResult.data ?? []).map((s) => s.service);
+
+  const rawConfig = guard.user.user_metadata?.station_config;
+  const savedConfig = (rawConfig && typeof rawConfig === 'object' ? rawConfig : null) as {
+    workstation?: string;
+    counter?: number | null;
+    cubicleId?: number | null;
+    services?: string[];
+  } | null;
 
   return NextResponse.json(
     {
@@ -162,6 +242,7 @@ export async function GET(request: Request) {
         cubicleId: savedCubicles[0] ?? null,
         services: savedServices,
       },
+      savedConfiguration: savedConfig,
       counters: (countersResult.data ?? []).map((c) => ({
         counter_number: c.counter_number,
         label: c.label || `Counter ${c.counter_number}`,
@@ -251,8 +332,29 @@ export async function POST(request: Request) {
       return NextResponse.json({ error: 'Selected counter is not available or inactive.' }, { status: 400 });
     }
 
-    // Atomic station claim: Remove existing counter assignments for caller, insert single counter
-    await supabaseAdmin.from('user_counters').delete().eq('user_id', staffUser.id);
+    // Verify counter is not actively occupied by another staff account
+    const { data: existingCounterOccupant } = await supabaseAdmin
+      .from('user_counters')
+      .select('user_id, users(username)')
+      .eq('counter', counterNum)
+      .neq('user_id', staffUser.id)
+      .maybeSingle();
+
+    if (existingCounterOccupant) {
+      const occupantObj = existingCounterOccupant.users as { username?: string } | null;
+      const occupantName = occupantObj?.username || 'another staff account';
+      return NextResponse.json(
+        { error: `Counter ${counterNum} is currently in use by ${occupantName}. Other accounts cannot select this counter while occupied.` },
+        { status: 409 }
+      );
+    }
+
+    // Atomic station claim: Remove existing desk assignments for caller
+    await Promise.all([
+      supabaseAdmin.from('user_counters').delete().eq('user_id', staffUser.id),
+      supabaseAdmin.from('user_cubicles').delete().eq('user_id', staffUser.id),
+    ]);
+
     const { error: insertCounterErr } = await supabaseAdmin.from('user_counters').insert({
       user_id: staffUser.id,
       counter: counterNum,
@@ -269,6 +371,25 @@ export async function POST(request: Request) {
       service,
     }));
     await supabaseAdmin.from('user_services').insert(serviceRows);
+
+    // Save configuration per account into user_metadata so it is remembered on next login
+    try {
+      const existingMeta = (guard.user.user_metadata ?? {}) as Record<string, unknown>;
+      await supabaseAdmin.auth.admin.updateUserById(guard.user.id, {
+        user_metadata: {
+          ...existingMeta,
+          station_config: {
+            workstation: 'registration',
+            counter: counterNum,
+            cubicleId: null,
+            services: cleanServices,
+            updatedAt: new Date().toISOString(),
+          },
+        },
+      });
+    } catch (metaErr) {
+      console.warn('[STATION CLAIM] Could not save station_config to user_metadata:', metaErr);
+    }
 
     // Automatically trigger queue balance/equal distribution across open counters serving these services
     try {
@@ -296,7 +417,7 @@ export async function POST(request: Request) {
     // Verify cubicle exists
     const { data: cubicleRecord } = await supabaseAdmin
       .from('cubicle')
-      .select('id, cubicleNum, room, category')
+      .select('id, cubicleNum, room, category, doctorId')
       .eq('id', cubicleId)
       .maybeSingle();
 
@@ -304,8 +425,62 @@ export async function POST(request: Request) {
       return NextResponse.json({ error: 'Selected cubicle does not exist.' }, { status: 400 });
     }
 
-    // Atomic station claim: Remove existing cubicle assignments for caller, insert single cubicle
-    await supabaseAdmin.from('user_cubicles').delete().eq('user_id', staffUser.id);
+    // Verify cubicle is not actively occupied by another staff account
+    const { data: existingCubicleOccupant } = await supabaseAdmin
+      .from('user_cubicles')
+      .select('user_id, users(username)')
+      .eq('cubicle_id', cubicleId)
+      .neq('user_id', staffUser.id)
+      .maybeSingle();
+
+    if (existingCubicleOccupant) {
+      const occupantObj = existingCubicleOccupant.users as { username?: string } | null;
+      const occupantName = occupantObj?.username || 'another staff account';
+      return NextResponse.json(
+        { error: `${cubicleRecord.cubicleNum || `Cubicle ${cubicleId}`} is currently in use by ${occupantName}. Other accounts cannot select this cubicle while occupied.` },
+        { status: 409 }
+      );
+    }
+
+    // Verify cubicle is not actively occupied by another doctor account
+    if (cubicleRecord.doctorId) {
+      const { data: cubicleDoctor } = await supabaseAdmin
+        .from('doctors')
+        .select('id, full_name, auth_id')
+        .eq('id', cubicleRecord.doctorId)
+        .maybeSingle();
+
+      if (cubicleDoctor?.auth_id && cubicleDoctor.auth_id !== guard.user.id) {
+        const { data: docUser } = await supabaseAdmin
+          .from('users')
+          .select('id')
+          .eq('auth_id', cubicleDoctor.auth_id)
+          .maybeSingle();
+
+        if (docUser?.id) {
+          const { data: docOccupant } = await supabaseAdmin
+            .from('user_cubicles')
+            .select('cubicle_id')
+            .eq('user_id', docUser.id)
+            .eq('cubicle_id', cubicleId)
+            .maybeSingle();
+
+          if (docOccupant) {
+            return NextResponse.json(
+              { error: `${cubicleRecord.cubicleNum || `Cubicle ${cubicleId}`} is currently in use by Dr. ${cubicleDoctor.full_name}. Other accounts cannot select this cubicle while occupied.` },
+              { status: 409 }
+            );
+          }
+        }
+      }
+    }
+
+    // Atomic station claim: Remove existing desk assignments for caller
+    await Promise.all([
+      supabaseAdmin.from('user_counters').delete().eq('user_id', staffUser.id),
+      supabaseAdmin.from('user_cubicles').delete().eq('user_id', staffUser.id),
+    ]);
+
     const { error: insertCubicleErr } = await supabaseAdmin.from('user_cubicles').insert({
       user_id: staffUser.id,
       cubicle_id: cubicleId,
@@ -315,6 +490,33 @@ export async function POST(request: Request) {
       return NextResponse.json({ error: 'Failed to assign cubicle.' }, { status: 500 });
     }
 
+    // If caller is a physician, link this cubicle to doctor record and detach any previous cubicle
+    let doctorIdToLink: string | null = null;
+    const { data: doctorByAuth } = await supabaseAdmin
+      .from('doctors')
+      .select('id')
+      .eq('auth_id', guard.user.id)
+      .maybeSingle();
+
+    if (doctorByAuth?.id) {
+      doctorIdToLink = doctorByAuth.id;
+    } else if (staffUser.username) {
+      const { data: doctorByName } = await supabaseAdmin
+        .from('doctors')
+        .select('id')
+        .ilike('full_name', `%${staffUser.username.trim()}%`)
+        .maybeSingle();
+      if (doctorByName?.id) {
+        doctorIdToLink = doctorByName.id;
+        await supabaseAdmin.from('doctors').update({ auth_id: guard.user.id }).eq('id', doctorByName.id);
+      }
+    }
+
+    if (doctorIdToLink) {
+      await supabaseAdmin.from('cubicle').update({ doctorId: null }).eq('doctorId', doctorIdToLink);
+      await supabaseAdmin.from('cubicle').update({ doctorId: doctorIdToLink }).eq('id', cubicleId);
+    }
+
     // Atomic services update
     await supabaseAdmin.from('user_services').delete().eq('user_id', staffUser.id);
     const serviceRows = cleanServices.map((service) => ({
@@ -322,6 +524,25 @@ export async function POST(request: Request) {
       service,
     }));
     await supabaseAdmin.from('user_services').insert(serviceRows);
+
+    // Save configuration per account into user_metadata so it is remembered on next login
+    try {
+      const existingMeta = (guard.user.user_metadata ?? {}) as Record<string, unknown>;
+      await supabaseAdmin.auth.admin.updateUserById(guard.user.id, {
+        user_metadata: {
+          ...existingMeta,
+          station_config: {
+            workstation: 'nurse',
+            counter: null,
+            cubicleId,
+            services: cleanServices,
+            updatedAt: new Date().toISOString(),
+          },
+        },
+      });
+    } catch (metaErr) {
+      console.warn('[STATION CLAIM] Could not save station_config to user_metadata:', metaErr);
+    }
 
     return NextResponse.json({
       success: true,
@@ -353,6 +574,17 @@ export async function DELETE(request: Request) {
 
   const { searchParams } = new URL(request.url);
   const workstation = searchParams.get('workstation');
+
+  // Detach doctor assignment if caller has an active doctor directory record
+  const { data: doctorRow } = await supabaseAdmin
+    .from('doctors')
+    .select('id')
+    .eq('auth_id', guard.user.id)
+    .maybeSingle();
+
+  if (doctorRow?.id && (workstation === 'nurse' || !workstation)) {
+    await supabaseAdmin.from('cubicle').update({ doctorId: null }).eq('doctorId', doctorRow.id);
+  }
 
   if (workstation === 'registration') {
     await Promise.all([

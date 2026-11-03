@@ -106,7 +106,7 @@ export async function POST(request: Request) {
     // PostgREST maybeSingle errors when queue numbers repeat across days or test batches.
     let query = dbClient
       .from('patients')
-      .select('id, created_at, patientNum, phoneNum, service, cubicleNum, preferredCubicleNums, estimated_wait_minutes')
+      .select('id, created_at, patientNum, phoneNum, service, subcategory, cubicleNum, preferredCubicleNums, estimated_wait_minutes')
       .eq('is_historical', false);
 
     if (patientId) {
@@ -160,12 +160,14 @@ export async function POST(request: Request) {
         : targetCubicle.replace(/^cubicle\s*/i, '');
 
     // 1. Calculate or reuse Estimated Wait Time (EWT)
+    const serviceForEwt = patientRecord.service || displayService;
     let ewtMinutes: number = patientRecord.estimated_wait_minutes ?? 15;
     if (patientRecord.estimated_wait_minutes === null || patientRecord.estimated_wait_minutes === undefined) {
       const ewtResult = await computeEstimatedWaitMinutes(
         dbClient,
-        displayService,
-        patientRecord.created_at
+        serviceForEwt,
+        patientRecord.created_at,
+        patientRecord.subcategory
       );
       ewtMinutes = ewtResult.estimatedWaitMinutes;
 

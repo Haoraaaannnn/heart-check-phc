@@ -59,8 +59,10 @@ export async function POST(request: Request) {
         process.env.NEXT_PUBLIC_SUPABASE_URL!,
         process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY!
       )
+      const rawOrigin = request.headers.get('origin') || (request.url ? new URL(request.url).origin : '');
+      const siteUrl = (process.env.NEXT_PUBLIC_SITE_URL || rawOrigin || 'http://localhost:3000').replace(/\/+$/, '');
       await supabaseAnon.auth.resetPasswordForEmail(normalizedEmail, {
-        redirectTo: `${process.env.NEXT_PUBLIC_SITE_URL}/reset-password`,
+        redirectTo: `${siteUrl}/reset-password`,
       })
     }
 

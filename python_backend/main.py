@@ -79,6 +79,86 @@ _daily_drilldown_cache: dict[str, tuple[float, dict]] = {}
 _dashboard_cache: dict[str, tuple[float, dict]] = {}
 
 
+def verify_auth_token(request: Request, allowed_roles: list[str] | None = None) -> dict:
+    """
+    Validates caller authentication via Supabase Bearer JWT token, service-role secret,
+    or browser session cookies. If allowed_roles is provided, validates that the user's
+    role in the users table matches one of the permitted roles.
+    """
+    auth_header = request.headers.get("authorization", "").strip()
+    token = ""
+    if auth_header.startswith("Bearer "):
+        token = auth_header[7:].strip()
+
+    # 1. Allow server-to-server calls authenticated by service role key
+    service_key = os.environ.get("SUPABASE_SERVICE_ROLE_KEY")
+    if token and service_key and token == service_key:
+        return {"id": "service-role", "role": "superadmin"}
+
+    # 2. Cookie fallback for same-origin browser clients
+    if not token:
+        for cookie_name, cookie_val in request.cookies.items():
+            if "auth-token" in cookie_name and cookie_val:
+                try:
+                    import json
+                    parsed = json.loads(cookie_val)
+                    if isinstance(parsed, list) and len(parsed) > 0 and isinstance(parsed[0], str):
+                        token = parsed[0]
+                    elif isinstance(parsed, dict) and "access_token" in parsed:
+                        token = str(parsed["access_token"])
+                except Exception:
+                    pass
+                if not token and cookie_val:
+                    token = cookie_val
+                break
+
+    if not token:
+        raise HTTPException(status_code=401, detail="Authentication credentials required.")
+
+    if not SUPABASE_URL or not SUPABASE_KEY:
+        raise HTTPException(status_code=500, detail="Database authentication service is not configured.")
+
+    try:
+        auth_resp = _http_client.get(
+            f"{SUPABASE_URL}/auth/v1/user",
+            headers={
+                "Authorization": f"Bearer {token}",
+                "apikey": SUPABASE_KEY,
+            },
+            timeout=5.0,
+        )
+        if auth_resp.status_code != 200:
+            raise HTTPException(status_code=401, detail="Invalid or expired session token.")
+        user_data = auth_resp.json()
+    except HTTPException:
+        raise
+    except Exception as exc:
+        raise HTTPException(status_code=401, detail=f"Authentication verification failed: {exc}")
+
+    user_id = user_data.get("id")
+    if not user_id:
+        raise HTTPException(status_code=401, detail="Invalid user authentication payload.")
+
+    if allowed_roles:
+        try:
+            resp = _http_client.get(
+                f"{SUPABASE_URL}/rest/v1/users?select=id,role&auth_id=eq.{user_id}",
+                headers=_supabase_headers(),
+                timeout=5.0,
+            )
+            rows = resp.json() if resp.status_code == 200 else []
+            user_role = (rows[0].get("role", "") if rows else "").strip().lower()
+            if not user_role or user_role not in [r.lower() for r in allowed_roles]:
+                raise HTTPException(status_code=403, detail="Forbidden: Insufficient privileges.")
+            user_data["role"] = user_role
+        except HTTPException:
+            raise
+        except Exception as exc:
+            raise HTTPException(status_code=500, detail=f"Failed to verify staff permissions: {exc}")
+
+    return user_data
+
+
 def _supabase_headers() -> dict:
     if not SUPABASE_URL or not SUPABASE_KEY:
         raise RuntimeError("Supabase URL/key are not configured.")
@@ -280,7 +360,8 @@ def health_check():
 
 
 @app.get("/api/dashboard-data")
-def get_dashboard_data(range: str = DEFAULT_RANGE):
+def get_dashboard_data(request: Request, range: str = DEFAULT_RANGE):
+    verify_auth_token(request, allowed_roles=["superadmin", "admin", "registration", "staff", "nurse", "doctor"])
     now = time.time()
     cached = _dashboard_cache.get(range)
     if cached and (now - cached[0]) < CACHE_TTL_SECONDS:
@@ -327,11 +408,12 @@ def get_dashboard_data(range: str = DEFAULT_RANGE):
 
 
 @app.get("/api/daily-drilldown")
-def get_daily_drilldown(date_param: str = Query(..., alias="date")):
+def get_daily_drilldown(request: Request, date_param: str = Query(..., alias="date")):
     """
     Returns granular hourly distribution, bottleneck breakdown,
     stage dwell times, and operational metrics for a specific calendar date (Asia/Manila).
     """
+    verify_auth_token(request, allowed_roles=["superadmin", "admin", "registration", "staff", "nurse", "doctor"])
     cleaned_date = date_param.strip()
     try:
         target_date = datetime.strptime(cleaned_date, "%Y-%m-%d").date()
@@ -492,7 +574,7 @@ def get_available_years():
 
 
 @app.get("/api/available-export-dates")
-def get_available_export_dates(refresh: bool = False):
+def get_available_export_dates(request: Request, refresh: bool = False):
     """
     Returns the distinct years and calendar months that contain usable patient
     queue records (reg_start) for PHC Time and Motion Analysis Excel export.
@@ -500,6 +582,7 @@ def get_available_export_dates(refresh: bool = False):
     Cached for CACHE_TTL_SECONDS to avoid repeated table scans.
     Pass ?refresh=true to invalidate and recompute the cache.
     """
+    verify_auth_token(request, allowed_roles=["superadmin", "admin", "registration", "staff", "nurse", "doctor"])
     global _export_dates_cache
 
     now = time.time()
@@ -684,6 +767,7 @@ def get_empty_data():
     
 @app.get("/api/export-excel")
 def export_excel(
+    request: Request,
     range: str | None = None,
     month: str | None = None,
     date_param: str | None = Query(None, alias="date"),
@@ -700,6 +784,7 @@ def export_excel(
     3. range="90d" | "180d" | "365d" | "all" for rolling range or all-dates exports.
     4. format="xlsx" | "csv" for workbook or tabular comma-separated values.
     """
+    verify_auth_token(request, allowed_roles=["superadmin", "admin", "registration", "staff", "nurse", "doctor"])
     target_year: int | None = None
     target_month: int | None = None
     specific_date: date | None = None
@@ -847,6 +932,7 @@ async def import_file(
     When mode='inspect', parses the file and returns summary metrics and preview rows without inserting.
     When mode='commit', writes valid records to Supabase patients table in batches.
     """
+    verify_auth_token(request, allowed_roles=["superadmin", "admin"])
     global _monthly_cache, _years_cache, _export_dates_cache, _daily_drilldown_cache, _dashboard_cache
 
     content_length = request.headers.get("content-length")
@@ -856,7 +942,8 @@ async def import_file(
     try:
         file_bytes = await request.body()
     except Exception as e:
-        raise HTTPException(status_code=400, detail=f"Failed to read file payload: {e}")
+        print(f"Failed to read file payload: {e}")
+        raise HTTPException(status_code=400, detail="Failed to read file payload.")
 
     if not file_bytes:
         raise HTTPException(status_code=400, detail="Uploaded file payload is empty.")
@@ -879,10 +966,10 @@ async def import_file(
         raise HTTPException(status_code=422, detail=str(ve))
     except Exception as e:
         print("=" * 60)
-        print(f"IMPORT PARSING ERROR ({filename}) - FULL TRACEBACK:")
+        print(f"IMPORT PARSING ERROR ({safe_filename}) - FULL TRACEBACK:")
         traceback.print_exc()
         print("=" * 60)
-        raise HTTPException(status_code=500, detail=f"Failed to parse file: {e}")
+        raise HTTPException(status_code=500, detail="Failed to parse file. Please verify file format and columns.")
 
     # Prepare preview rows (first 10 records)
     preview_rows = records[:10]
@@ -909,10 +996,10 @@ async def import_file(
         inserted_count, errors = insert_records_batch(records, batch_size=batch_size)
     except Exception as e:
         print("=" * 60)
-        print(f"IMPORT INSERT ERROR ({filename}) - FULL TRACEBACK:")
+        print(f"IMPORT INSERT ERROR ({safe_filename}) - FULL TRACEBACK:")
         traceback.print_exc()
         print("=" * 60)
-        raise HTTPException(status_code=500, detail=f"Failed to write records to database: {e}")
+        raise HTTPException(status_code=500, detail="Failed to write records to database.")
 
     # Invalidate backend caches so new data is immediately reflected in analytics
     _monthly_cache.clear()
