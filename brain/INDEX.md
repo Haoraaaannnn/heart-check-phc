@@ -23,6 +23,7 @@ The single source of truth for system implementation:
 | :--- | :--- |
 | **Visual Design & UI Standards** | [docs/specifications/DESIGN.md](../docs/specifications/DESIGN.md) — Master design system, colors, surfaces, typography, separation of concerns. |
 | **Product Requirements (PRD)** | [docs/specifications/PRD.md](../docs/specifications/PRD.md) — Core problem statement, OPD objectives, roles, and scope boundaries. |
+| **Requirements Specification (SRS)** | [docs/specifications/REQUIREMENTS.md](../docs/specifications/REQUIREMENTS.md) — Functional and non-functional requirements (academic thesis modular format) grounded in active codebase. |
 | **System Architecture** | [docs/specifications/ARCHITECTURE.md](../docs/specifications/ARCHITECTURE.md) — Full-stack topology, Next.js route mapping, inter-service contracts. |
 | **Database & RLS Policies** | [docs/specifications/DATABASE_SCHEMA.md](../docs/specifications/DATABASE_SCHEMA.md) — PostgreSQL schemas, active RLS policies, phone encryption. |
 | **Security Architecture** | [docs/specifications/SECURITY.md](../docs/specifications/SECURITY.md) — Server-side route guards, service-role isolation, rate-limiting. |

@@ -41,23 +41,28 @@ This is explicitly a **collaborative integration** with PHC's existing infrastru
   - Viewport-pinned layout with sticky breadcrumb and back button navigation
 - Global reusable component architecture (`BackButton`, `ScrollArea`, `NotificationBadge`)
 - Full analytics dashboard (`/dashboard`):
-  - Modular subpage architecture (`/dashboard/pages/` — Overview, Patients, Analytics, Cubicles) conforming to `AGENTS.md`
+  - Modular subpage architecture (`/dashboard/pages/` — Overview, Patients, Analytics, Cubicles, Import, Export) conforming to `AGENTS.md`
   - Descriptive, diagnostic, predictive (forecasting), and prescriptive tiers
   - Automated PHC-compliant Excel workbook export (`/api/export-excel`, `export.py`, `ExportExcelButton.tsx`)
-- Superadmin system administration (`/superadmin`, `/superadmin/customization`):
+  - Graphical drag-and-drop historical data import interface (`/dashboard/pages/import/`)
+- Hybrid Estimated Wait Time (EWT) computation surfaced across kiosk display, thermal receipts, and UniSMS cellular alerts
+- Deepgram Aura Text-to-Speech (TTS) natural speech synthesis proxy (`/api/tts`) for audio patient callouts
+- Offline-resilient Write-Ahead Logging (WAL) outbox via IndexedDB (`lib/offlineQueue.ts`) for nurse and transfer workstations
+- Superadmin system administration (`/superadmin`, `/superadmin/customization`, `/superadmin/facilities`):
   - User account provisioning, role management, and service/room/cubicle mapping
+  - Dynamic ticket prefix configuration (`queue_prefix`, `queue_pad_length`) and hardware printer pairing
 - Secure authentication & password management:
   - Account login, session verification, and forgot/reset-password flow with attempt rate-limiting tables
 - Historical data import and integration (PHC's existing Excel-based records, March 2024–December 2025)
 - Queueing theory modeling (M/M/1 per service/cubicle; Erlang C as theoretical benchmark)
-- Role-based access control at both the data layer (RLS) and route layer (middleware)
+- Role-based access control at both the data layer (RLS) and route layer (Next.js server proxy)
 
 ### Out of Scope (for this thesis iteration)
 
 - Live production deployment on PHC's on-premises infrastructure (planned as a follow-up handoff, not required for Chapter 4)
-- Per-patient dynamic wait-time prediction (planned future ML addition, not part of current deliverable)
-- Bottleneck/anomaly detection (planned future addition, scoped as future work if time-constrained)
-- Offline mode (unnecessary — on-prem deployment means no internet dependency, LAN uptime is PHC MIS's responsibility)
+- Per-patient dynamic wait-time prediction via deep regression (planned future ML addition beyond hybrid EWT)
+- Autonomous anomaly detection (planned future addition, scoped as future work if time-constrained)
+- Standalone offline kiosk ticketing without local database connectivity (kiosk requires active LAN/database connectivity to allocate sequential ticket codes atomically)
 - Appointment scheduling / priority triage logic — PHC's cardiac-focused patient population doesn't fit a general "seniors/PWD first" triage model the way a general-purpose government queue system might
 
 ## Success Criteria (Chapter 4)

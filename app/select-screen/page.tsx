@@ -66,6 +66,14 @@ function SelectScreenContent() {
       setPasswordError('Password must be between 8 and 64 characters.');
       return;
     }
+    if (!/[A-Z]/.test(newPassword) || !/[a-z]/.test(newPassword) || !/[0-9]/.test(newPassword) || !/[^A-Za-z0-9]/.test(newPassword)) {
+      setPasswordError('Password must include uppercase and lowercase letters, a number, and a special character.');
+      return;
+    }
+    if (newPassword === temporaryPassword) {
+      setPasswordError('Choose a password different from your temporary password.');
+      return;
+    }
     if (newPassword !== confirmPassword) {
       setPasswordError('Passwords do not match.');
       return;
@@ -115,10 +123,22 @@ function SelectScreenContent() {
           <form onSubmit={handleForcedPasswordChange} className="w-full space-y-4 rounded-xl border border-slate-200 bg-white p-6 dark:border-slate-700 dark:bg-slate-900">
             <h1 className="text-xl font-bold text-slate-900 dark:text-[#f5f5f5]">Change your temporary password</h1>
             <p className="text-sm text-slate-600 dark:text-[#aaa]">Your account is ready. Confirm the temporary password, then choose a personal password to continue.</p>
+
+            <div className="rounded-lg border border-slate-200 bg-slate-50 p-3.5 text-xs text-slate-600 dark:border-slate-800 dark:bg-slate-950 dark:text-slate-300">
+              <p className="font-semibold text-slate-800 dark:text-slate-200">Password requirements:</p>
+              <ul className="mt-1.5 list-disc space-y-1 pl-4 text-slate-600 dark:text-slate-400">
+                <li>Between 8 and 64 characters (12 or more recommended)</li>
+                <li>Must include both uppercase and lowercase letters</li>
+                <li>Must include at least one number</li>
+                <li>Must include at least one special character or symbol (e.g., !@#$%^&*)</li>
+                <li>Must be different from your temporary password</li>
+                <li>Avoid common words, names, personal details, or repeated characters</li>
+              </ul>
+            </div>
+
             <PasswordField id="first-login-temporary-password" label="Temporary password" autoComplete="current-password" value={temporaryPassword} onChange={setTemporaryPassword} visible={showTemporaryPassword} onToggle={() => setShowTemporaryPassword((visible) => !visible)} />
             <PasswordField id="first-login-new-password" label="Choose a new password" autoComplete="new-password" value={newPassword} onChange={setNewPassword} visible={showNewPassword} onToggle={() => setShowNewPassword((visible) => !visible)} minLength={8} maxLength={64} />
             <PasswordStrengthMeter strength={passwordStrength} />
-            <p className="text-xs text-slate-500">Use 8–64 characters; 12 or more is recommended. Avoid common words and personal details. Numbers and symbols are optional.</p>
             <PasswordField id="first-login-confirm-password" label="Confirm your new password" autoComplete="new-password" value={confirmPassword} onChange={setConfirmPassword} visible={showConfirmPassword} onToggle={() => setShowConfirmPassword((visible) => !visible)} minLength={8} maxLength={64} />
             {passwordError && <p role="alert" className="text-sm text-red-700">{passwordError}</p>}
             <button type="submit" disabled={passwordSaving} className="w-full rounded-md bg-[#cc3535] px-4 py-2 font-semibold text-white disabled:opacity-60">{passwordSaving ? 'Updating…' : 'Update password and continue'}</button>

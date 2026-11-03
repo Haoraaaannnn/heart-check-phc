@@ -33,6 +33,12 @@ export async function POST(request: Request) {
     if (!isPasswordLengthAllowed(newPassword)) {
       return NextResponse.json({ error: 'New password must be between 8 and 64 characters.' }, { status: 400 })
     }
+    if (!/[A-Z]/.test(newPassword) || !/[a-z]/.test(newPassword) || !/[0-9]/.test(newPassword) || !/[^A-Za-z0-9]/.test(newPassword)) {
+      return NextResponse.json({ error: 'New password must include uppercase and lowercase letters, a number, and a special character.' }, { status: 400 })
+    }
+    if (!/[A-Z]/.test(newPassword) || !/[a-z]/.test(newPassword) || !/[0-9]/.test(newPassword) || !/[^A-Za-z0-9]/.test(newPassword)) {
+      return NextResponse.json({ error: 'New password must include uppercase and lowercase letters, a number, and a special character.' }, { status: 400 })
+    }
     if (newPassword === currentPassword) return NextResponse.json({ error: 'Choose a password different from your current password.' }, { status: 400 })
     const url = process.env.NEXT_PUBLIC_SUPABASE_URL
     const anonKey = process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY

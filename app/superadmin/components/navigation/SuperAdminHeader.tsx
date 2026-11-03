@@ -43,6 +43,7 @@ export function SuperAdminHeader({ onOpenMobileDrawer }: SuperAdminHeaderProps) 
   const searchParams = useSearchParams();
 
   const [userEmail, setUserEmail] = useState('');
+  const [isSigningOut, setIsSigningOut] = useState(false);
   const [mounted, setMounted] = useState(false);
 
   const { resolvedTheme, setTheme } = useTheme();
@@ -76,7 +77,13 @@ export function SuperAdminHeader({ onOpenMobileDrawer }: SuperAdminHeaderProps) 
   }, []);
 
   const handleSignOut = async () => {
-    await executeSignOut();
+    if (isSigningOut) return;
+    setIsSigningOut(true);
+    try {
+      await executeSignOut();
+    } catch {
+      setIsSigningOut(false);
+    }
   };
 
   const isDark = mounted && resolvedTheme === 'dark';
@@ -204,11 +211,12 @@ export function SuperAdminHeader({ onOpenMobileDrawer }: SuperAdminHeaderProps) 
         <button
           type="button"
           onClick={handleSignOut}
-          className={S.signOutButton}
+          disabled={isSigningOut}
+          className={`${S.signOutButton} ${isSigningOut ? 'opacity-50 cursor-not-allowed' : ''}`}
           title={T.signOut}
           aria-label={T.signOut}
         >
-          <i className="bx bx-log-out" aria-hidden="true" />
+          <i className={`bx ${isSigningOut ? 'bx-loader-alt animate-spin' : 'bx-log-out'}`} aria-hidden="true" />
         </button>
       </div>
     </header>
