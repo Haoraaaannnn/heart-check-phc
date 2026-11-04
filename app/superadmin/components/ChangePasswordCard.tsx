@@ -46,10 +46,6 @@ export const ChangePasswordCard: React.FC<{ onSavingChange?: (saving: boolean) =
       setError('New password must be between 8 and 64 characters.');
       return;
     }
-    if (!/[A-Z]/.test(newPassword) || !/[a-z]/.test(newPassword) || !/[0-9]/.test(newPassword) || !/[^A-Za-z0-9]/.test(newPassword)) {
-      setError('New password must include uppercase and lowercase letters, a number, and a special character.');
-      return;
-    }
     if (newPassword === currentPassword) {
       setError('Choose a password different from your current password.');
       return;
@@ -120,9 +116,8 @@ export const ChangePasswordCard: React.FC<{ onSavingChange?: (saving: boolean) =
           <p className="font-semibold text-slate-800 dark:text-slate-200">Password requirements:</p>
           <ul className="mt-1.5 list-disc space-y-1 pl-4 text-slate-600 dark:text-slate-400">
             <li>Between 8 and 64 characters (12 or more recommended)</li>
-            <li>Must include both uppercase and lowercase letters</li>
-            <li>Must include at least one number</li>
-            <li>Must include at least one special character or symbol (e.g., !@#$%^&*)</li>
+            <li>Letters, numbers, and symbols can be used in any combination</li>
+            <li>Longer passwords are recommended; 12 or more characters is a good target</li>
             <li>Must be different from your current password</li>
             <li>Avoid common words, names, personal details, or repeated characters</li>
           </ul>

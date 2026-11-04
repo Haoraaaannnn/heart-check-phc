@@ -25,19 +25,10 @@ export async function POST(request: Request) {
     const body: unknown = await request.json()
     const passwords = parsePasswords(body)
     const isForcedChange = typeof body === 'object' && body !== null && 'force' in body && body.force === true
-    if (!passwords) {
-      if (!isForcedChange) return NextResponse.json({ error: 'Current and new password are required.' }, { status: 400 })
-    }
-    const newPassword = passwords?.newPassword ?? (typeof body === 'object' && body !== null && 'newPassword' in body && typeof body.newPassword === 'string' ? body.newPassword : '')
-    const currentPassword = passwords?.currentPassword ?? ''
+    if (!passwords) return NextResponse.json({ error: 'Current and new password are required.' }, { status: 400 })
+    const { currentPassword, newPassword } = passwords
     if (!isPasswordLengthAllowed(newPassword)) {
       return NextResponse.json({ error: 'New password must be between 8 and 64 characters.' }, { status: 400 })
-    }
-    if (!/[A-Z]/.test(newPassword) || !/[a-z]/.test(newPassword) || !/[0-9]/.test(newPassword) || !/[^A-Za-z0-9]/.test(newPassword)) {
-      return NextResponse.json({ error: 'New password must include uppercase and lowercase letters, a number, and a special character.' }, { status: 400 })
-    }
-    if (!/[A-Z]/.test(newPassword) || !/[a-z]/.test(newPassword) || !/[0-9]/.test(newPassword) || !/[^A-Za-z0-9]/.test(newPassword)) {
-      return NextResponse.json({ error: 'New password must include uppercase and lowercase letters, a number, and a special character.' }, { status: 400 })
     }
     if (newPassword === currentPassword) return NextResponse.json({ error: 'Choose a password different from your current password.' }, { status: 400 })
     const url = process.env.NEXT_PUBLIC_SUPABASE_URL
@@ -47,13 +38,11 @@ export async function POST(request: Request) {
     const clientOptions = { auth: { persistSession: false, autoRefreshToken: false, detectSessionInUrl: false } }
     const supabaseAnon = createClient(url, anonKey, clientOptions)
     const supabaseAdmin = createClient(url, serviceKey, clientOptions)
-    if (!isForcedChange) {
-      const email = guard.user.email
-      if (!email) return NextResponse.json({ error: 'Account has no email on file.' }, { status: 400 })
-      const { data: verified, error: signInError } = await supabaseAnon.auth.signInWithPassword({ email, password: currentPassword })
-      if (signInError || verified.user?.id !== guard.user.id) {
-        return NextResponse.json({ error: 'Current password is incorrect.' }, { status: 401 })
-      }
+    const email = guard.user.email
+    if (!email) return NextResponse.json({ error: 'Account has no email on file.' }, { status: 400 })
+    const { data: verified, error: signInError } = await supabaseAnon.auth.signInWithPassword({ email, password: currentPassword })
+    if (signInError || verified.user?.id !== guard.user.id) {
+      return NextResponse.json({ error: 'Current password is incorrect.' }, { status: 401 })
     }
 
     const { data: authUser } = await supabaseAdmin.auth.admin.getUserById(guard.user.id)

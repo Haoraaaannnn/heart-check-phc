@@ -238,7 +238,7 @@ export async function proxy(request: NextRequest) {
 
         if (
             user.user_metadata?.must_change_password === true &&
-            path !== '/select-screen'
+            (path !== '/select-screen' || request.nextUrl.searchParams.get('changePassword') !== 'required')
         ) {
             return redirectWithSession('/select-screen?changePassword=required');
         }

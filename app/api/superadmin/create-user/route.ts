@@ -4,7 +4,6 @@ import { NextResponse } from 'next/server'
 import { createClient } from '@supabase/supabase-js'
 import { requireSuperadmin } from '@/lib/supabase/superadminGuard'
 import { hasValidAssignments, isRecord } from './input'
-import crypto from 'node:crypto'
 
 import { getDefaultWorkstationsForRole } from '@/constants/workstations'
 
@@ -13,10 +12,12 @@ const serviceKey = process.env.SUPABASE_SERVICE_ROLE_KEY
 if (!supabaseUrl || !serviceKey) throw new Error('Account service configuration is missing')
 const supabaseAdmin = createClient(supabaseUrl, serviceKey)
 
-/** @returns A cryptographically random temporary password meeting length and complexity rules. */
-function createTemporaryPassword(): string {
-  const randomHex = crypto.randomBytes(6).toString('hex')
-  return `Hc#${randomHex}!26`
+/** @param options - Account data used to create a recognizable temporary password. @returns Username, role, and creation date. */
+function createTemporaryPassword(options: { username: string; role: string; createdAt: Date }): string {
+  const usernamePart = options.username.trim().replace(/[^a-z0-9]/gi, '').slice(0, 32)
+  const rolePart = options.role
+  const createdDate = options.createdAt.toISOString().slice(0, 10).replaceAll('-', '')
+  return `${usernamePart}${rolePart}${createdDate}`
 }
 
 /** @param request - Authorized account details. @returns Creation result and credentials for the superadmin. */
@@ -47,7 +48,7 @@ export async function POST(request: Request) {
 
     const email = accountEmail({ username, role })
     if (!email) return NextResponse.json({ error: 'Use 1–32 letters, numbers, underscores or hyphens; start with a letter or number.' }, { status: 400 })
-    const password = createTemporaryPassword()
+    const password = createTemporaryPassword({ username, role, createdAt: new Date() })
     const effectiveRole = role
     const effectiveWorkstations = Array.isArray(workstationAccess)
       ? workstationAccess
@@ -66,6 +67,9 @@ export async function POST(request: Request) {
     })
 
     if (authError || !authData.user) {
+      if (authError?.code === 'weak_password') {
+        return NextResponse.json({ error: 'The generated temporary password was rejected by the Supabase Auth password settings. Review the project minimum length and required character types.' }, { status: 400 })
+      }
       return NextResponse.json({ error: 'Account could not be created. This username and role may already exist.' }, { status: 400 })
     }
 
