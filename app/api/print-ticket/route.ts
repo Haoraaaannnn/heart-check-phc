@@ -194,18 +194,28 @@ export async function POST(request: Request) {
       }
     }
 
-    // 2. Dispatch queue confirmation SMS asynchronously if phone number is registered
+    // 2. Await queue confirmation SMS so the serverless request remains active until dispatch completes.
     if (patientRecord.phoneNum) {
-      sendQueueConfirmationSMS({
-        phoneNum: patientRecord.phoneNum, patientNum: queueNumber, serviceName: displayService,
-        ewtMinutes, patientId: patientRecord.id,
-      }).catch((smsErr) => {
+      try {
+        const smsResult = await sendQueueConfirmationSMS({
+          phoneNum: patientRecord.phoneNum, patientNum: queueNumber, serviceName: displayService,
+          ewtMinutes, patientId: patientRecord.id,
+        });
+        if (!smsResult.success) {
+          console.warn(
+            '%s [PRINT CONFIRMATION SMS FAILED] Ticket %s: %s',
+            getTimestamp(),
+            patientRecord.patientNum,
+            smsResult.error
+          );
+        }
+      } catch {
         console.warn(
-          '%s [PRINT CONFIRMATION SMS ERROR] Failed to send SMS: %s',
+          '%s [PRINT CONFIRMATION SMS ERROR] Dispatch failed for Ticket %s.',
           getTimestamp(),
-          smsErr instanceof Error ? smsErr.message : String(smsErr)
+          patientRecord.patientNum
         );
-      });
+      }
     }
 
     console.log('%s [PRINT REQUEST] Verified print job: %s', getTimestamp(), JSON.stringify({
