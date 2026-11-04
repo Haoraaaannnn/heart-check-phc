@@ -32,17 +32,17 @@ export function useCubicleData() {
 
     if (failOnError && (error || !data)) throw new Error('Unable to load stations. Please retry.');
     if (!error && data) {
-      setCubicles(data as Cubicle[]);
-
       const doctorNameMap = await getCachedDoctorsMap(supabase);
       const map: Record<string, string> = {};
+      const assignedCubicles = (data as Cubicle[]).filter(c => c.doctorId);
 
-      (data as Cubicle[]).forEach(c => {
+      assignedCubicles.forEach(c => {
         if (c.doctorId && doctorNameMap[c.doctorId]) {
           map[c.cubicleNum] = doctorNameMap[c.doctorId];
         }
       });
 
+      setCubicles(assignedCubicles);
       setCubicleDoctorMap(map);
     }
   }, []);
