@@ -36,11 +36,10 @@ export async function POST(request: Request) {
     if (!/[A-Z]/.test(newPassword) || !/[a-z]/.test(newPassword) || !/[0-9]/.test(newPassword) || !/[^A-Za-z0-9]/.test(newPassword)) {
       return NextResponse.json({ error: 'New password must include uppercase and lowercase letters, a number, and a special character.' }, { status: 400 })
     }
-    if (newPassword === currentPassword) return NextResponse.json({ error: 'Choose a password different from your current password.' }, { status: 400 })
-    if (!guard.user.email) {
-      return NextResponse.json({ error: 'Account has no email on file.' }, { status: 400 })
+    if (!/[A-Z]/.test(newPassword) || !/[a-z]/.test(newPassword) || !/[0-9]/.test(newPassword) || !/[^A-Za-z0-9]/.test(newPassword)) {
+      return NextResponse.json({ error: 'New password must include uppercase and lowercase letters, a number, and a special character.' }, { status: 400 })
     }
-
+    if (newPassword === currentPassword) return NextResponse.json({ error: 'Choose a password different from your current password.' }, { status: 400 })
     const url = process.env.NEXT_PUBLIC_SUPABASE_URL
     const anonKey = process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY
     const serviceKey = process.env.SUPABASE_SERVICE_ROLE_KEY
@@ -48,18 +47,19 @@ export async function POST(request: Request) {
     const clientOptions = { auth: { persistSession: false, autoRefreshToken: false, detectSessionInUrl: false } }
     const supabaseAnon = createClient(url, anonKey, clientOptions)
     const supabaseAdmin = createClient(url, serviceKey, clientOptions)
-    const { data: verified, error: signInError } = await supabaseAnon.auth.signInWithPassword({
-      email: guard.user.email,
-      password: currentPassword,
-    })
+    if (!isForcedChange) {
+      const email = guard.user.email
+      if (!email) return NextResponse.json({ error: 'Account has no email on file.' }, { status: 400 })
+      const { data: verified, error: signInError } = await supabaseAnon.auth.signInWithPassword({ email, password: currentPassword })
+      if (signInError || verified.user?.id !== guard.user.id) {
+        return NextResponse.json({ error: 'Current password is incorrect.' }, { status: 401 })
+      }
+    }
+
     const { data: authUser } = await supabaseAdmin.auth.admin.getUserById(guard.user.id)
     if (isForcedChange && authUser.user?.user_metadata?.must_change_password !== true) {
       return NextResponse.json({ error: 'This password change is not required for your account.' }, { status: 400 })
     }
-    if (signInError || verified.user?.id !== guard.user.id) {
-      return NextResponse.json({ error: 'Current password is incorrect.' }, { status: 401 })
-    }
-
     const { error } = await supabaseAdmin.auth.admin.updateUserById(guard.user.id, { password: newPassword })
     if (error) {
       await supabaseAnon.auth.signOut({ scope: 'local' })
