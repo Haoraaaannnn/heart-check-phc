@@ -452,7 +452,7 @@ def generate_visual_figures(df_raw, df_a, df_b, baseline, mm1_a, mm1_b, comp_a, 
     rects2 = ax.barh(y + height/2, val_b, height, label="Scenario B (Heart Check PHC Digital)", color=COLOR_DIGITAL, alpha=0.9, edgecolor="black", linewidth=0.8)
 
     ax.set_xlabel("Mean Duration (Minutes)", fontweight="bold")
-    ax.set_title("Figure 4.1: Stage-by-Stage Outpatient Flow Duration Comparison", fontweight="bold", pad=14)
+    ax.set_title("Stage-by-Stage Outpatient Flow Duration Comparison", fontweight="bold", pad=14)
     ax.set_yticks(y)
     ax.set_yticklabels(stages, fontweight="medium")
     ax.legend(loc="lower right", frameon=True)
@@ -484,7 +484,7 @@ def generate_visual_figures(df_raw, df_a, df_b, baseline, mm1_a, mm1_b, comp_a, 
     ax.axvline(OPD_TARGET_MINUTES, color="#b91c1c", linestyle="--", linewidth=2.2, label=f"PHC Standard Target ({OPD_TARGET_MINUTES} min)")
     ax.axvline(PHC_EXCEL_WAITING_TIME_TARGET_MINUTES, color="#475569", linestyle=":", linewidth=2.0, label=f"PHC Maximum Ceiling ({PHC_EXCEL_WAITING_TIME_TARGET_MINUTES} min)")
 
-    ax.set_title("Figure 4.2: Total OPD Visit Duration Distribution & Compliance Left-Shift (N = 26,753)", fontweight="bold", pad=14)
+    ax.set_title("Total OPD Visit Duration Distribution & Compliance Left-Shift (N = 26,753)", fontweight="bold", pad=14)
     ax.set_xlabel("Total Outpatient Visit Duration (Minutes)", fontweight="bold")
     ax.set_ylabel("Probability Density", fontweight="bold")
     ax.set_xlim(0, 300)
@@ -529,7 +529,7 @@ def generate_visual_figures(df_raw, df_a, df_b, baseline, mm1_a, mm1_b, comp_a, 
                 xy=(150, comp_b["w150_pct"]), xytext=(160, comp_b["w150_pct"] + 4),
                 arrowprops=dict(arrowstyle="->", color=COLOR_DIGITAL, lw=1.2), fontsize=10, fontweight="bold", color=COLOR_DIGITAL)
 
-    ax.set_title("Figure 4.3: Empirical Cumulative Distribution Function (ECDF) of Total Outpatient Stay", fontweight="bold", pad=14)
+    ax.set_title("Empirical Cumulative Distribution Function (ECDF) of Total Outpatient Stay", fontweight="bold", pad=14)
     ax.set_xlabel("Outpatient Stay Duration (Minutes)", fontweight="bold")
     ax.set_ylabel("Cumulative Percentage of Patients Completed (%)", fontweight="bold")
     ax.set_xlim(20, 260)
@@ -578,7 +578,7 @@ def generate_visual_figures(df_raw, df_a, df_b, baseline, mm1_a, mm1_b, comp_a, 
 
     ax.axvspan(0.85, 1.0, color="#fee2e2", alpha=0.4, label="Unstable / Severe Congestion Zone (rho >= 0.85)")
 
-    ax.set_title("Figure 4.4: Registration Desk M/M/1 Queue Operating Curve (Peak Morning Surge)", fontweight="bold", pad=14)
+    ax.set_title("Registration Desk M/M/1 Queue Operating Curve (Peak Morning Surge)", fontweight="bold", pad=14)
     ax.set_xlabel("Traffic Intensity (rho = lambda / mu)", fontweight="bold")
     ax.set_ylabel("Average Queue Waiting Time Wq (Minutes)", fontweight="bold")
     ax.set_xlim(0.45, 0.95)
@@ -622,7 +622,7 @@ def generate_visual_figures(df_raw, df_a, df_b, baseline, mm1_a, mm1_b, comp_a, 
     lines2, labels2 = ax2.get_legend_handles_labels()
     ax1.legend(lines1 + lines2, labels1 + labels2, loc="upper right", frameon=True)
 
-    ax1.set_title("Figure 4.5: Hourly OPD Patient Intake Volume and Waiting Surge Profile", fontweight="bold", pad=14)
+    ax1.set_title("Hourly OPD Patient Intake Volume and Waiting Surge Profile", fontweight="bold", pad=14)
     plt.tight_layout()
     fig.savefig(os.path.join(FIGURES_DIR, "fig4_5_hourly_intake_congestion.png"))
     fig.savefig(os.path.join(FIGURES_DIR, "fig4_5_hourly_intake_congestion.pdf"))
@@ -673,7 +673,7 @@ def generate_visual_figures(df_raw, df_a, df_b, baseline, mm1_a, mm1_b, comp_a, 
     for i, v in enumerate(df_sens["comp_pct"]):
         ax3.text(i, v + 0.4, f"{v:.2f}%", ha="center", fontweight="bold")
 
-    fig.suptitle("Figure 4.6: Sensitivity Analysis Across Kiosk Pre-Fill Desk Savings (1.0 to 3.0 Minutes)", fontweight="bold", y=1.03)
+    fig.suptitle("Sensitivity Analysis Across Kiosk Pre-Fill Desk Savings (1.0 to 3.0 Minutes)", fontweight="bold", y=1.03)
     plt.tight_layout()
     fig.savefig(os.path.join(FIGURES_DIR, "fig4_6_sensitivity_analysis.png"))
     fig.savefig(os.path.join(FIGURES_DIR, "fig4_6_sensitivity_analysis.pdf"))
@@ -719,7 +719,7 @@ def generate_visual_figures(df_raw, df_a, df_b, baseline, mm1_a, mm1_b, comp_a, 
     ax.set_xticklabels(sim_hours)
     ax.set_xlabel("Clinic Operating Timeline (08:00 AM to 04:00 PM)", fontweight="bold")
     ax.set_ylabel("Patients Waiting in Registration Queue (Q(t))", fontweight="bold")
-    ax.set_title("Figure 4.7: Dynamic Discrete-Event Queue Backlog Simulation Trajectory", fontweight="bold", pad=14)
+    ax.set_title("Dynamic Discrete-Event Queue Backlog Simulation Trajectory", fontweight="bold", pad=14)
     ax.legend(loc="upper right", frameon=True)
     ax.set_xlim(0, sim_minutes - 1)
 

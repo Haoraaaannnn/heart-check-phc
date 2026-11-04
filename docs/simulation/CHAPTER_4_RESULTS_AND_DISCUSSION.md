@@ -149,15 +149,15 @@ Evaluating the patient journey stage-by-stage reveals where operational efficien
 ### Table 4.2: Outpatient Flow Comparative Analysis (Scenario A vs. Scenario B)
 *Source: `python_backend/output/tables/table4_2_stage_comparison.csv`*
 
-| Outpatient Journey Stage | Scenario A (Manual) | Scenario B (Digital) | Time Saved | Percentage Reduction | Status / Attribution |
-| :--- | :---: | :---: | :---: | :---: | :--- |
-| **Ticket / Stub Acquisition** | 3.51 min | 0.67 min | **2.84 min** | **-80.96%** | Automated thermal ticket issuance |
-| **Queue Callout Latency** | 1.50 min | 0.00 min | **1.50 min** | **-100.0%** | Digital visual displays + TTS callouts |
-| **Registration Desk Service** | 31.63 min | 29.65 min | **1.98 min** | **-6.26%** | Demographic pre-fill verification |
-| **Wait for Doctor Consultation** | 93.56 min | 93.56 min | 0.00 min | 0.00% | Preserved clinical constant |
-| **Physician Consultation Service** | 11.60 min | 11.60 min | 0.00 min | 0.00% | Preserved clinical constant |
-| **Carry-Out Service** | 7.56 min | 7.56 min | 0.00 min | 0.00% | Preserved clinical constant |
-| **TOTAL OPD VISIT DURATION** | **149.36 min** | **143.04 min** | **6.32 min** | **-4.23%** | **Statistically Significant ($p < 0.0001$)** |
+| Outpatient Journey Stage           | Scenario A (Manual) | Scenario B (Digital) |  Time Saved  | Percentage Reduction | Status / Attribution                         |
+| :--------------------------------- | :-----------------: | :------------------: | :----------: | :------------------: | :------------------------------------------- |
+| **Ticket / Stub Acquisition**      |      3.51 min       |       0.67 min       | **2.84 min** |     **-80.96%**      | Automated thermal ticket issuance            |
+| **Queue Callout Latency**          |      1.50 min       |       0.00 min       | **1.50 min** |     **-100.0%**      | Digital visual displays + TTS callouts       |
+| **Registration Desk Service**      |      31.63 min      |      29.65 min       | **1.98 min** |      **-6.26%**      | Demographic pre-fill verification            |
+| **Wait for Doctor Consultation**   |      93.56 min      |      93.56 min       |   0.00 min   |        0.00%         | Preserved clinical constant                  |
+| **Physician Consultation Service** |      11.60 min      |      11.60 min       |   0.00 min   |        0.00%         | Preserved clinical constant                  |
+| **Carry-Out Service**              |      7.56 min       |       7.56 min       |   0.00 min   |        0.00%         | Preserved clinical constant                  |
+| **TOTAL OPD VISIT DURATION**       |   **149.36 min**    |    **143.04 min**    | **6.32 min** |      **-4.23%**      | **Statistically Significant ($p < 0.0001$)** |
 
 ```
 Figure 4.1 Reference:
