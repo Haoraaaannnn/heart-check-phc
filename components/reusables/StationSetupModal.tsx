@@ -43,6 +43,12 @@ export interface StationSetupModalProps {
   onSuccess?: () => void;
 }
 
+interface RoomOption {
+  room: number;
+  displayName: string;
+  count: number;
+}
+
 export function StationSetupModal({
   isOpen,
   onClose,
@@ -73,13 +79,35 @@ export function StationSetupModal({
     return services;
   }, [services]);
 
-  // Distinct room numbers available for cubicles
-  const availableRooms = useMemo(() => {
-    const set = new Set<number>();
+  // Distinct rooms available for cubicles with clinical service/subcategory display names
+  const availableRooms = useMemo<RoomOption[]>(() => {
+    const roomMap = new Map<number, { room: number; categories: Set<string>; count: number }>();
+
     cubicles.forEach((c) => {
-      if (c.room) set.add(c.room);
+      if (!c.room) return;
+      let entry = roomMap.get(c.room);
+      if (!entry) {
+        entry = { room: c.room, categories: new Set<string>(), count: 0 };
+        roomMap.set(c.room, entry);
+      }
+      entry.count += 1;
+      if (c.category) {
+        const label = c.subcategory ? `${c.category} (${c.subcategory})` : c.category;
+        entry.categories.add(label);
+      }
     });
-    return Array.from(set).sort((a, b) => a - b);
+
+    return Array.from(roomMap.values())
+      .sort((a, b) => a.room - b.room)
+      .map((item) => {
+        const catLabels = Array.from(item.categories);
+        const displayName = catLabels.length > 0 ? catLabels.join(' / ') : `Room ${item.room}`;
+        return {
+          room: item.room,
+          displayName,
+          count: item.count,
+        };
+      });
   }, [cubicles]);
 
   // Sync state when modal opens or currentAssignment/savedConfiguration updates
@@ -274,7 +302,7 @@ export function StationSetupModal({
                 <button
                   type="button"
                   onClick={() => setSelectedRoomTab('all')}
-                  className={`px-3 py-1.5 rounded-xl text-xs font-bold transition cursor-pointer touch-manipulation active:scale-[0.98] ${
+                  className={`px-3 py-1.5 rounded-xl text-xs font-bold whitespace-nowrap transition cursor-pointer touch-manipulation active:scale-[0.98] ${
                     selectedRoomTab === 'all'
                       ? 'bg-[#a8071a] text-white shadow-xs'
                       : 'bg-slate-100 dark:bg-[#202020] text-slate-600 dark:text-[#a3a3a3] hover:bg-slate-200 dark:hover:bg-[#282828] active:bg-slate-300 dark:active:bg-[#333333]'
@@ -282,23 +310,20 @@ export function StationSetupModal({
                 >
                   All Rooms ({cubicles.length})
                 </button>
-                {availableRooms.map((r) => {
-                  const countInRoom = cubicles.filter((c) => c.room === r).length;
-                  return (
-                    <button
-                      key={r}
-                      type="button"
-                      onClick={() => setSelectedRoomTab(String(r))}
-                      className={`px-3 py-1.5 rounded-xl text-xs font-bold transition cursor-pointer touch-manipulation active:scale-[0.98] ${
-                        selectedRoomTab === String(r)
-                          ? 'bg-[#a8071a] text-white shadow-xs'
-                          : 'bg-slate-100 dark:bg-[#202020] text-slate-600 dark:text-[#a3a3a3] hover:bg-slate-200 dark:hover:bg-[#282828] active:bg-slate-300 dark:active:bg-[#333333]'
-                      }`}
-                    >
-                      Room {r} ({countInRoom})
-                    </button>
-                  );
-                })}
+                {availableRooms.map((r) => (
+                  <button
+                    key={r.room}
+                    type="button"
+                    onClick={() => setSelectedRoomTab(String(r.room))}
+                    className={`px-3 py-1.5 rounded-xl text-xs font-bold whitespace-nowrap transition cursor-pointer touch-manipulation active:scale-[0.98] ${
+                      selectedRoomTab === String(r.room)
+                        ? 'bg-[#a8071a] text-white shadow-xs'
+                        : 'bg-slate-100 dark:bg-[#202020] text-slate-600 dark:text-[#a3a3a3] hover:bg-slate-200 dark:hover:bg-[#282828] active:bg-slate-300 dark:active:bg-[#333333]'
+                    }`}
+                  >
+                    {r.displayName} ({r.count})
+                  </button>
+                ))}
               </div>
             )}
 
@@ -385,6 +410,7 @@ export function StationSetupModal({
                           }`}
                         >
                           Room {cub.room} · {cub.category}
+                          {cub.subcategory ? ` (${cub.subcategory})` : ''}
                         </span>
                         {isOccupiedByOther && (
                           <span className="mt-1.5 text-[9px] leading-tight px-1.5 py-0.5 rounded font-medium bg-amber-50 dark:bg-amber-950/50 text-amber-700 dark:text-amber-300 border border-amber-200 dark:border-amber-900/50 whitespace-nowrap">
