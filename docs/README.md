@@ -20,6 +20,10 @@ In addition, feature-level developer manuals reside inside each subsystem module
 ```
 docs/
 ├── README.md                              # Master documentation portal (this file)
+├── DOCKER_OFFLINE_EXECUTION_GUIDE.md      # Docker offline execution manual & 1-command sync
+├── THESIS_WEB_DEPLOYMENT_GUIDE.md         # Vercel & Render cloud deployment guide
+├── VERCEL_TABLET_USB_PRINTER_SETUP.md     # Tablet WebUSB thermal printer bridge guide
+├── CLOUDFLARE_TUNNEL_SETUP_GUIDE.md       # HTTPS tunnel guide for cloud-to-local communication
 ├── checklists/                            # Quality Assurance, Security Audits & Roadmap Trackers
 │   ├── README.md                          # Dedicated checklists directory index
 │   ├── IMPROVEMENTS_AND_FEATURE_CHECKLIST.md  # Master roadmap & feature backlog checklist

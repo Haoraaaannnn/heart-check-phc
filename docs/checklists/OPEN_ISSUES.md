@@ -30,7 +30,7 @@ These items are operational infrastructure tasks reserved for on-site deployment
 | Item ID | Category | Target Subsystem | Scope & Technical Requirement |
 | :--- | :--- | :--- | :--- |
 | **FUT-001** | Network Security | Reverse Proxy / LAN | Configure Nginx or Caddy reverse proxy with internal TLS/HTTPS certificates on the PHC hospital LAN server, enforcing HTTP Strict Transport Security (HSTS). |
-| **FUT-002** | Infrastructure | Deployment Packaging | Package Next.js and FastAPI services into multi-stage `Dockerfile` and `docker-compose.yml` configurations for hospital IT/MIS server deployment. |
+| **FUT-002** | Infrastructure | Deployment Packaging (Completed) | Packaged Next.js and FastAPI services into multi-stage `Dockerfile` and `docker-compose.yml` with 1-command cloud database sync for offline mode and hospital on-prem handoff ([`docs/DOCKER_OFFLINE_EXECUTION_GUIDE.md`](file:///home/jensen/Github-Repositories/heart-check-phc/docs/DOCKER_OFFLINE_EXECUTION_GUIDE.md)). |
 | **FUT-003** | Hardware Security | Physical Kiosks | Deploy physical kiosk terminals in dedicated OS Kiosk Mode (Windows Assigned Access or ChromeOS Kiosk), disabling physical USB ports and context menus. |
 | **FUT-004** | Governance | Audit Logging | Implement a dedicated `audit_logs` table with a PostgreSQL trigger capturing all administrative overrides, user role edits, and manual ticket deletions. |
 | **FUT-005** | Fallback Architecture | Queue Telemetry | Evaluate standalone WebSocket polling fallback via FastAPI if hospital IT chooses to migrate off Supabase Cloud to an isolated local PostgreSQL server. |

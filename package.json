@@ -9,6 +9,7 @@
     "build": "next build --webpack",
     "start": "node ./scripts/start-https.mjs",
     "start:plain": "next start -H 0.0.0.0 -p 3000",
+    "db:sync": "node ./scripts/sync-offline-db.mjs",
     "lint": "eslint"
   },
   "dependencies": {

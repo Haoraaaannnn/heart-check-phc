@@ -1,0 +1,31 @@
+# Version control and editor files
+.git
+.gitignore
+.obsidian
+.vscode
+.agents
+
+# Build artifacts and local dependencies
+.next
+node_modules
+npm-debug.log*
+yarn-debug.log*
+yarn-error.log*
+tsconfig.tsbuildinfo
+
+# Secret environment files
+.env*.local
+
+# Documentation and specifications
+docs/
+brain/
+*.md
+
+# Python Backend (isolated in its own container)
+python_backend/
+
+# Test suites and certificates
+tests/
+certificates/
+supabase/.temp/
+
