@@ -8,6 +8,7 @@ import {
   generateCubicleNums,
   removeCubicleDependencies,
 } from '@/lib/supabase/facilityHelpers';
+import { invalidateFacilityMetadataCache } from '@/lib/cache/facilityMetadataCache';
 
 export async function GET(request: Request) {
   const guard = await requireSuperadmin(request);
@@ -118,20 +119,26 @@ export async function PUT(request: Request) {
     .from('cubicle').select('"cubicleNum"').eq('id', id).single();
   if (!current) return NextResponse.json({ error: 'Cubicle not found.' }, { status: 404 });
 
-  if (current.cubicleNum !== name) {
-    if (await cubicleNumExists(name, id)) {
-      return NextResponse.json({ error: `"${name}" already exists.` }, { status: 409 });
-    }
-    if ((await countActiveAtCubicles([current.cubicleNum])) > 0) {
-      return NextResponse.json(
-        { error: 'Patients are currently assigned to this cubicle. Rename it once it is empty.' },
-        { status: 409 }
-      );
-    }
+  if (current.cubicleNum === name) {
+    return NextResponse.json({ success: true });
+  }
+
+  if (await cubicleNumExists(name, id)) {
+    return NextResponse.json({ error: `"${name}" already exists.` }, { status: 409 });
   }
 
   const { error } = await supabaseAdmin.from('cubicle').update({ cubicleNum: name }).eq('id', id);
   if (error) return NextResponse.json({ error: error.message }, { status: 400 });
+
+  // Cascade rename to non-historical patients to maintain queue consistency
+  await supabaseAdmin
+    .from('patients')
+    .update({ cubicleNum: name })
+    .eq('cubicleNum', current.cubicleNum)
+    .eq('is_historical', false);
+
+  invalidateFacilityMetadataCache('cubicles');
+
   return NextResponse.json({ success: true });
 }
 
