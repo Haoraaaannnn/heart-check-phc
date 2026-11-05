@@ -142,10 +142,10 @@ export const LANDING_TEXTS = {
     brandName: 'Heart Check PHC',
     institutionFull: 'Philippine Heart Center — Out-Patient Department',
     address: 'East Avenue, Diliman, Quezon City, Metro Manila, Philippines',
-    versionBadge: 'v2.4 Enterprise Edition',
+    versionBadge: 'Academic Thesis Edition',
     copyright: 'Philippine Heart Center. All rights reserved.',
     disclaimer:
-      'This clinical queue management platform is an authorized internal system of the Philippine Heart Center Out-Patient Department. Unauthorized access or tampering is strictly prohibited under Philippine Republic Act No. 10173 (Data Privacy Act of 2012).',
+      'This clinical queue management platform is developed as an academic thesis research project for the Philippine Heart Center Out-Patient Department. Data handling adheres to Philippine Republic Act No. 10173 (Data Privacy Act of 2012).',
     loginLink: 'Staff Login',
     documentationLink: 'System Documentation',
   },

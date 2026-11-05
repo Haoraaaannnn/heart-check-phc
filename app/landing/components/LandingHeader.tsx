@@ -2,7 +2,7 @@
  * @fileoverview Top navigation header component for the Public Landing Page.
  *
  * Renders the Philippine Heart Center brand badge, live Manila-time clock,
- * light/dark theme toggle, and direct navigation trigger for staff authentication.
+ * and light/dark theme toggle.
  *
  * @module app/landing/components/LandingHeader
  */
@@ -10,7 +10,6 @@
 'use client';
 
 import React, { useState, useEffect } from 'react';
-import { useRouter } from 'next/navigation';
 import { useTheme } from 'next-themes';
 import { formatManilaDate, formatManilaTime } from '@/utils/formatDateTime';
 import { LANDING_TEXTS } from '@/app/landing/constants/landingTexts';
@@ -24,7 +23,6 @@ import { toggleThemeWithRipple } from '@/lib/theme/themeTransition';
  * @returns JSX element.
  */
 export function LandingHeader() {
-  const router = useRouter();
   const { resolvedTheme, setTheme } = useTheme();
 
   const [mounted, setMounted] = useState(false);
@@ -51,10 +49,10 @@ export function LandingHeader() {
     <header className={S.root}>
       {/* Brand Identity */}
       <div className={S.brandGroup}>
-        <BrandLogo variant="full" className="h-12 w-auto" />
+        <BrandLogo variant="icon" className="h-10 w-auto" />
       </div>
 
-      {/* Right Controls: Manila Clock, Theme Toggle, Login */}
+      {/* Right Controls: Manila Clock, Theme Toggle */}
       <div className={S.rightGroup}>
         {now && (
           <div className={S.clockContainer}>
@@ -71,16 +69,6 @@ export function LandingHeader() {
           className={S.themeButton}
         >
           <i className={`bx ${isDark ? 'bx-sun' : 'bx-moon'}`} />
-        </button>
-
-        {/* Staff Login CTA */}
-        <button
-          type="button"
-          onClick={() => router.push('/login')}
-          className={S.loginButton}
-        >
-          <i className="bx bx-log-in-circle text-sm" />
-          <span>{T.staffLoginBtn}</span>
         </button>
       </div>
     </header>

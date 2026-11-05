@@ -2,7 +2,7 @@
  * @fileoverview Hero presentation component for the Public Landing Page.
  *
  * Showcases the platform's core clinical purpose, institution branding,
- * Staff Login action trigger, and live operational status indicators.
+ * and live operational status indicators.
  *
  * @module app/landing/components/LandingHero
  */
@@ -10,9 +10,9 @@
 'use client';
 
 import React from 'react';
-import { useRouter } from 'next/navigation';
 import { LANDING_TEXTS } from '@/app/landing/constants/landingTexts';
 import { LANDING_STYLES } from '@/app/landing/constants/landingStyles';
+import { BrandLogo } from '@/components/reusables/BrandLogo';
 
 /**
  * High-impact hero section for the landing page.
@@ -20,7 +20,6 @@ import { LANDING_STYLES } from '@/app/landing/constants/landingStyles';
  * @returns JSX element.
  */
 export function LandingHero() {
-  const router = useRouter();
   const S = LANDING_STYLES.hero;
   const T = LANDING_TEXTS.hero;
 
@@ -28,26 +27,18 @@ export function LandingHero() {
     <section className={S.section}>
       <div className={S.container}>
 
-        {/* Main Heading: Heart Check PHC */}
-        <h1 className={S.title}>
-          {T.mainTitle}{' '}
-          <span className={S.accentText}>{T.mainTitleAccent}</span>
+        {/* Full Brand Identity Logo */}
+        <div className="flex justify-center mb-6 sm:mb-8">
+          <BrandLogo variant="full" className="h-64 sm:h-80 md:h-[26rem] lg:h-[32rem] xl:h-[36rem] w-auto max-w-full" />
+        </div>
+
+        {/* Accessible heading for screen readers and SEO */}
+        <h1 className="sr-only">
+          {T.mainTitle} {T.mainTitleAccent}
         </h1>
 
         {/* Subtitle / Platform Overview */}
         <p className={S.description}>{T.subheading}</p>
-
-        {/* Call-to-Action: Staff Login Only */}
-        <div className={S.ctaGroup}>
-          <button
-            type="button"
-            onClick={() => router.push('/login')}
-            className={S.primaryCta}
-          >
-            <i className="bx bx-log-in-circle text-lg" />
-            <span>{T.primaryCta}</span>
-          </button>
-        </div>
 
         {/* Operational Telemetry Pill Bar */}
         <div className={S.telemetryBar}>
@@ -74,3 +65,4 @@ export function LandingHero() {
     </section>
   );
 }
+
