@@ -3,24 +3,24 @@
  * @description Image, layout, and presentation settings for the kiosk inactivity slideshow.
  *
  * @remarks
- * The slideshow reuses the numbered images stored in `public/images`; no
- * image files are copied or modified by the idle flow.
+ * Displays the instructional guide posters stored in `public/instuctions`
+ * to educate patients on using the self-service kiosk during idle periods.
  */
 
 import { CSSProperties } from "react";
 import { themeColors } from "@/constants/colors";
 import { kioskTypography } from "@/constants/kiosk";
 
-/** Existing public image paths displayed by the kiosk idle slideshow. */
+/** Public instructional guide poster image paths displayed by the kiosk idle slideshow. */
 export const IDLE_SLIDESHOW_IMAGES = [
-    "/images/1.jpg",
-    "/images/2.jpg",
-    "/images/3.jpg",
+    "/instuctions/instruction1.jpg",
+    "/instuctions/instruction2.jpg",
+    "/instuctions/instruction3.jpg",
 ] as const;
 
 /** Inline presentation styles for the full-screen slideshow control and tap prompt. */
 export const IdleRedirectStyle = {
-    /** Full-screen interactive activation button covering the entire viewport. */
+    /** Full-screen interactive activation button covering the entire viewport. Seamless neutral tone matching poster edges. */
     slideshowButton: {
         position: "fixed",
         inset: 0,
@@ -28,7 +28,7 @@ export const IdleRedirectStyle = {
         height: "100dvh",
         padding: 0,
         border: 0,
-        backgroundColor: "#000",
+        backgroundColor: "#f4f5f0",
         cursor: "pointer",
         zIndex: 100,
     },
@@ -39,9 +39,9 @@ export const IdleRedirectStyle = {
         left: 0,
         right: 0,
         width: "100%",
-        minHeight: "clamp(120px, 16vh, 160px)",
+        minHeight: "clamp(100px, 14vh, 140px)",
         background:
-            "linear-gradient(to top, rgba(0, 0, 0, 0.85) 0%, rgba(0, 0, 0, 0.81) 8%, rgba(0, 0, 0, 0.73) 16%, rgba(0, 0, 0, 0.62) 25%, rgba(0, 0, 0, 0.50) 35%, rgba(0, 0, 0, 0.37) 46%, rgba(0, 0, 0, 0.25) 58%, rgba(0, 0, 0, 0.15) 70%, rgba(0, 0, 0, 0.07) 82%, rgba(0, 0, 0, 0.02) 92%, rgba(0, 0, 0, 0) 100%)",
+            "linear-gradient(to top, rgba(0, 0, 0, 0.75) 0%, rgba(0, 0, 0, 0.60) 25%, rgba(0, 0, 0, 0.35) 55%, rgba(0, 0, 0, 0.10) 80%, rgba(0, 0, 0, 0) 100%)",
         pointerEvents: "none",
         zIndex: 102,
         display: "flex",
@@ -102,13 +102,13 @@ export const IdleRedirectStyle = {
 /** Tailwind classes for slideshow image visibility, transitions, and tap prompt badge. */
 export const IdleRedirectClasses = {
     /**
-     * Returns cover-fit and cross-fade classes for one slideshow image.
+     * Returns contain-fit, GPU-accelerated cross-fade classes for one slideshow image.
      *
      * @param isActive - Whether the image is the currently selected slide.
-     * @returns Image classes with the appropriate opacity state.
+     * @returns Image classes with the appropriate opacity and transition state.
      */
     image: (isActive: boolean): string =>
-        `object-cover transition-opacity duration-700 ${isActive ? "opacity-100" : "opacity-0"}`,
+        `object-contain select-none pointer-events-none transition-opacity duration-700 ease-in-out will-change-[opacity] ${isActive ? "opacity-100 z-10" : "opacity-0 z-0"}`,
 
     /**
      * Subtle pulse animation for the tap prompt badge.

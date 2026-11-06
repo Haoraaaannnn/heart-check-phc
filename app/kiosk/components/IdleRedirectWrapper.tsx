@@ -130,19 +130,16 @@ export default function IdleRedirectWrapper() {
     // Start 1-second ticking countdown
     if (countdownIntervalRef.current) clearInterval(countdownIntervalRef.current);
     countdownIntervalRef.current = setInterval(() => {
-      setRemainingSeconds((prev) => {
-        if (prev <= 1) {
-          if (countdownIntervalRef.current) {
-            clearInterval(countdownIntervalRef.current);
-            countdownIntervalRef.current = null;
-          }
-          handleInactivityTimeout();
-          return 0;
-        }
-        return prev - 1;
-      });
+      setRemainingSeconds((prev) => (prev > 0 ? prev - 1 : 0));
     }, 1000);
-  }, [handleInactivityTimeout]);
+  }, []);
+
+  // Safely trigger inactivity timeout outside the render phase when the countdown reaches zero
+  useEffect(() => {
+    if (isWarningOpen && remainingSeconds === 0) {
+      handleInactivityTimeout();
+    }
+  }, [isWarningOpen, remainingSeconds, handleInactivityTimeout]);
 
   /**
    * Dismisses the warning modal, clears the countdown interval, and restarts the 45-second timer.
