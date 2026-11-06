@@ -1,12 +1,12 @@
 /**
  * @fileoverview Full-screen idle destination for the kiosk patient flow.
  * @module app/kiosk/slideshow/page
- * @remarks Uses the existing public slideshow images and kiosk-owned route, timing, style, and text constants.
+ * @remarks Displays instructional guide slides and handles instant touch/keyboard activation back to check-in.
  */
 "use client";
 
 import Image from "next/image";
-import { useEffect, useState } from "react";
+import { useCallback, useEffect, useState } from "react";
 import { useRouter } from "next/navigation";
 import {
   IDLE_SLIDESHOW_IMAGES,
@@ -21,18 +21,27 @@ import {
 import KioskTapPrompt from "@/app/kiosk/slideshow/components/KioskTapPrompt";
 
 /**
- * Full-screen idle screen that cycles through the kiosk's existing images across the entire screen.
+ * Full-screen idle screen that cycles through instructional guide slides.
  *
  * @remarks
  * Activating the screen returns the kiosk to the patient-type selection
- * route. Image order and timing are controlled by kiosk constants. The
- * slideshow spans the entire display viewport and features an elevated "Tap to Start" prompt.
+ * route. Route prefetching ensures immediate transition on touch. All
+ * instruction images are preloaded with high priority for seamless cross-fading.
  *
  * @returns The full-screen, accessible idle slideshow.
  */
 export default function KioskIdleSlideshowPage() {
   const router = useRouter();
   const [activeSlide, setActiveSlide] = useState(0);
+
+  const handleActivate = useCallback(() => {
+    router.replace(KIOSK_ROUTES.NEW_OLD_SELECTION);
+  }, [router]);
+
+  useEffect(() => {
+    // Prefetch destination so check-in begins instantly without network delay.
+    router.prefetch(KIOSK_ROUTES.NEW_OLD_SELECTION);
+  }, [router]);
 
   useEffect(() => {
     const intervalId = window.setInterval(() => {
@@ -51,7 +60,12 @@ export default function KioskIdleSlideshowPage() {
         aria-label={IdleRedirectTexts.activateKiosk}
         className="fixed inset-0 z-[100] block h-dvh w-dvw overflow-hidden"
         style={IdleRedirectStyle.slideshowButton}
-        onClick={() => router.replace(KIOSK_ROUTES.NEW_OLD_SELECTION)}
+        onClick={handleActivate}
+        onKeyDown={(event) => {
+          if (event.key === "Enter" || event.key === " " || event.key === "Escape") {
+            handleActivate();
+          }
+        }}
       >
         {IDLE_SLIDESHOW_IMAGES.map((imagePath, index) => (
           <Image
@@ -60,7 +74,9 @@ export default function KioskIdleSlideshowPage() {
             alt=""
             fill
             sizes="100vw"
-            priority={index === 0}
+            priority
+            quality={90}
+            draggable={false}
             className={IdleRedirectClasses.image(index === activeSlide)}
           />
         ))}
