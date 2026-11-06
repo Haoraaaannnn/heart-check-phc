@@ -3,5 +3,11 @@ __pycache__/
 *.pyc
 .env
 .env.local
+.env.*
 .git
-
+.gitignore
+.pytest_cache/
+output/
+simulated_patients.csv
+chapter4_simulation.ipynb
+dropped_rows_*.csv

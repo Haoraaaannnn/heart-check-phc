@@ -29,7 +29,7 @@ export function LandingHero() {
 
         {/* Full Brand Identity Logo */}
         <div className="flex justify-center mb-6 sm:mb-8">
-          <BrandLogo variant="full" className="h-64 sm:h-80 md:h-[26rem] lg:h-[32rem] xl:h-[36rem] w-auto max-w-full" />
+          <BrandLogo variant="full" className="h-48 sm:h-60 md:h-72 lg:h-80 xl:h-[22rem] w-auto max-w-full" />
         </div>
 
         {/* Accessible heading for screen readers and SEO */}

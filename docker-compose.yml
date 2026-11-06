@@ -1,0 +1,76 @@
+# ==============================================================================
+# Heart Check PHC - Offline Demonstration Docker Compose Stack
+# Orchestrates FastAPI Analytics Backend and Next.js Frontend for Offline LAN
+# ==============================================================================
+
+services:
+  # ----------------------------------------------------------------------------
+  # 1. Python Analytics & Forecasting Engine (FastAPI)
+  # ----------------------------------------------------------------------------
+  python_backend:
+    build:
+      context: ./python_backend
+      dockerfile: Dockerfile
+    container_name: heartcheck-python-backend
+    restart: unless-stopped
+    ports:
+      - "8000:8000"
+    environment:
+      - PORT=8000
+      - ALLOWED_ORIGINS=http://localhost:3000,http://127.0.0.1:3000,http://frontend:3000,http://localhost:8000
+      - NEXT_PUBLIC_SUPABASE_URL=${NEXT_PUBLIC_SUPABASE_URL:-http://host.docker.internal:54321}
+      - SUPABASE_SERVICE_ROLE_KEY=${SUPABASE_SERVICE_ROLE_KEY}
+    extra_hosts:
+      - "host.docker.internal:host-gateway"
+    healthcheck:
+      test: ["CMD-SHELL", "python -c \"import urllib.request; urllib.request.urlopen('http://localhost:8000/health')\" || exit 1"]
+      interval: 15s
+      timeout: 5s
+      retries: 3
+      start_period: 10s
+    networks:
+      - heartcheck-network
+
+  # ----------------------------------------------------------------------------
+  # 2. Next.js Frontend Workstations (Kiosk, Monitor, Nurse, Transfer, Dashboard)
+  # ----------------------------------------------------------------------------
+  frontend:
+    build:
+      context: .
+      dockerfile: Dockerfile
+      args:
+        NEXT_PUBLIC_SUPABASE_URL: ${NEXT_PUBLIC_SUPABASE_URL:-http://host.docker.internal:54321}
+        NEXT_PUBLIC_SUPABASE_ANON_KEY: ${NEXT_PUBLIC_SUPABASE_ANON_KEY}
+        NEXT_PUBLIC_API_URL: ${NEXT_PUBLIC_API_URL:-http://localhost:8000}
+    container_name: heartcheck-frontend
+    restart: unless-stopped
+    ports:
+      - "3000:3000"
+    environment:
+      - NODE_ENV=production
+      - PORT=3000
+      - INTERNAL_API_URL=http://python_backend:8000
+      - NEXT_PUBLIC_SUPABASE_URL=${NEXT_PUBLIC_SUPABASE_URL:-http://host.docker.internal:54321}
+      - NEXT_PUBLIC_SUPABASE_ANON_KEY=${NEXT_PUBLIC_SUPABASE_ANON_KEY}
+      - SUPABASE_SERVICE_ROLE_KEY=${SUPABASE_SERVICE_ROLE_KEY}
+      - DEMO_MODE=${DEMO_MODE:-true}
+      - DEEPGRAM_API_KEY=${DEEPGRAM_API_KEY}
+      - UNISMS_API_KEY=${UNISMS_API_KEY}
+    extra_hosts:
+      - "host.docker.internal:host-gateway"
+    depends_on:
+      python_backend:
+        condition: service_healthy
+    healthcheck:
+      test: ["CMD-SHELL", "node -e 'require(\"http\").get(\"http://127.0.0.1:3000\", (res) => process.exit(res.statusCode < 500 ? 0 : 1))' || exit 1"]
+      interval: 20s
+      timeout: 5s
+      retries: 3
+      start_period: 15s
+    networks:
+      - heartcheck-network
+
+networks:
+  heartcheck-network:
+    driver: bridge
+

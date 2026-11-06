@@ -148,7 +148,7 @@ The Python backend powers statistical forecasting, ARIMA time-series modeling, b
 | :---: | :---: | :--- | :--- | :--- |
 | [ ] | Non-Priority | **FastAPI Endpoint Rate Limiting (`slowapi`)** | Apply token-bucket rate limiting to public analytics endpoints to prevent denial-of-service degradation. | [python_backend/main.py](file:///home/jensen/Github-Repositories/heart-check-phc/python_backend/main.py) |
 | [ ] | Non-Priority | **FastAPI Native Background Task Caching** | Replace in-memory global timestamp caching with explicit background tasks (`BackgroundTasks` or Redis) to pre-compute heavy ARIMA and Linear Regression runs. | [python_backend/main.py](file:///home/jensen/Github-Repositories/heart-check-phc/python_backend/main.py) |
-| [ ] | Optional | **Docker Containerization for On-Prem PHC MIS Handoff** | Package Next.js and FastAPI services into multi-stage `Dockerfile` and `docker-compose.yml` configurations for hospital on-premise server deployment. | `Dockerfile`, `docker-compose.yml` |
+| [x] | Completed | **Docker Containerization for On-Prem PHC MIS Handoff & Offline Mode** | Package Next.js and FastAPI services into multi-stage `Dockerfile` and `docker-compose.yml` configurations for hospital on-premise and offline deployment. | `Dockerfile`, `docker-compose.yml`, [`docs/DOCKER_OFFLINE_EXECUTION_GUIDE.md`](file:///home/jensen/Github-Repositories/heart-check-phc/docs/DOCKER_OFFLINE_EXECUTION_GUIDE.md) |
 
 ---
 

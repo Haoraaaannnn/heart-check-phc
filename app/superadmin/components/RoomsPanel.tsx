@@ -22,6 +22,7 @@ import { FACILITIES_TEXTS } from '@/app/superadmin/facilities/constants/faciliti
 import { FACILITIES_STYLES } from '@/app/superadmin/facilities/constants/facilitiesStyles';
 import { SUPERADMIN_STYLES } from '@/app/superadmin/constants/superadminStyles';
 import type { QueuePrefixRow } from '@/app/superadmin/components/QueuePrefixPanel';
+import { invalidateFacilityMetadataCache } from '@/lib/cache/facilityMetadataCache';
 
 interface Cubicle {
   id: number;
@@ -260,7 +261,7 @@ export function RoomsPanel() {
         case 'renameRoom':
           await adminApi('/api/superadmin/rooms', 'PUT', {
             category: modal.group.category,
-            subcategory: modal.group.subcategory,
+            subcategory: modal.group.subcategory ?? null,
             room: modal.group.room,
             newRoom: Number(fRoom),
           });
@@ -276,7 +277,7 @@ export function RoomsPanel() {
         case 'editCubicle':
           await adminApi('/api/superadmin/cubicles', 'PUT', {
             id: modal.cubicle.id,
-            cubicleNum: fName,
+            cubicleNum: fName.trim(),
           });
           break;
         case 'confirm':
@@ -284,7 +285,8 @@ export function RoomsPanel() {
           break;
       }
       setModal(null);
-      await load();
+      invalidateFacilityMetadataCache('cubicles');
+      await Promise.all([load(), loadPrefixMap()]);
     } catch (err: unknown) {
       setModalError(err instanceof Error ? err.message : 'Operation failed.');
     } finally {
@@ -630,7 +632,13 @@ export function RoomsPanel() {
                     {T.cancelButton}
                   </button>
                   <button type="submit" disabled={saving} className={B.primary}>
-                    {saving ? T.savingButton : T.saveButton}
+                    {saving
+                      ? T.savingButton
+                      : modal.type === 'editCubicle'
+                      ? 'Update Cubicle'
+                      : modal.type === 'renameRoom'
+                      ? 'Update Room Number'
+                      : T.saveButton}
                   </button>
                 </div>
               </form>

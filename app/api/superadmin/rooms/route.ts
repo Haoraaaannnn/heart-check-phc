@@ -7,6 +7,7 @@ import {
   generateCubicleNums,
   removeCubicleDependencies,
 } from '@/lib/supabase/facilityHelpers';
+import { invalidateFacilityMetadataCache } from '@/lib/cache/facilityMetadataCache';
 
 const roomQuery = (category: string, subcategory: string | null, room: number, select: string, head = false) =>
   forSubcategory(
@@ -65,46 +66,68 @@ export async function PUT(request: Request) {
     return NextResponse.json({ error: `Room ${newRoom} already exists for this service.` }, { status: 409 });
   }
 
-  const cubicleNums = rows.map((r: any) => r.cubicleNum);
-  const activeCount = await countActiveAtCubicles(cubicleNums);
-  if (activeCount > 0) {
-    const { data: blockingPatients } = await supabaseAdmin
-      .from('patients')
-      .select('patientNum, status, cubicleNum')
-      .in('cubicleNum', cubicleNums)
-      .neq('status', 'Done')
-      .neq('status', 'Idle')
-      .neq('status', 'Removed');
+  const escapeRegExp = (value: string) =>
+    value.replace(/[.*+?^${}()|[\]\\]/g, '\\$&');
 
-    const details = (blockingPatients ?? [])
-      .map(p => `${p.patientNum} (${p.status})`)
-      .join(', ');
+  const safeRoom = escapeRegExp(String(room));
+  const pattern = new RegExp(`(?<!\\d)R${safeRoom}(?!\\d)`);
 
-    return NextResponse.json(
-      {
-        error: `Active patient(s) assigned to ${cubicleNums.join(', ')}: ${details || activeCount}. Complete or clear them before renumbering.`,
-      },
-      { status: 409 }
-    );
-  }
-const escapeRegExp = (value: string) =>
-  value.replace(/[.*+?^${}()|[\]\\]/g, '\\$&');
+  for (const row of rows as Array<{ id: number; cubicleNum: string }>) {
+    const oldCubicleNum = row.cubicleNum;
+    const newCubicleNum = pattern.test(oldCubicleNum)
+      ? oldCubicleNum.replace(pattern, `R${newRoom}`)
+      : oldCubicleNum;
 
-const safeRoom = escapeRegExp(String(room));
-
-const pattern = new RegExp(`(?<!\\d)R${safeRoom}(?!\\d)`);
-  for (const row of rows as any[]) {
     const { error } = await supabaseAdmin
       .from('cubicle')
-      .update({ room: newRoom, cubicleNum: row.cubicleNum.replace(pattern, `R${newRoom}`) })
+      .update({ room: newRoom, cubicleNum: newCubicleNum })
       .eq('id', row.id);
+
     if (error) return NextResponse.json({ error: error.message }, { status: 400 });
+
+    if (oldCubicleNum !== newCubicleNum) {
+      await supabaseAdmin
+        .from('patients')
+        .update({ cubicleNum: newCubicleNum })
+        .eq('cubicleNum', oldCubicleNum)
+        .eq('is_historical', false);
+    }
   }
 
   await forSubcategory(
     supabaseAdmin.from('user_rooms').update({ room: newRoom }).eq('service', category).eq('room', room),
     subcategory
   );
+
+  // Synchronize room change into queue_prefix_map setting
+  try {
+    const { data: settingData } = await supabaseAdmin
+      .from('app_settings')
+      .select('value')
+      .eq('key', 'queue_prefix_map')
+      .maybeSingle();
+
+    if (settingData?.value) {
+      const parsed: unknown = JSON.parse(settingData.value);
+      if (Array.isArray(parsed)) {
+        const updated = parsed.map((item: Record<string, unknown>) => {
+          const matchSub = subcategory ? item.subcategory === subcategory : !item.subcategory;
+          if (item.service === category && matchSub && Number(item.room) === room) {
+            return { ...item, room: newRoom };
+          }
+          return item;
+        });
+        await supabaseAdmin
+          .from('app_settings')
+          .update({ value: JSON.stringify(updated) })
+          .eq('key', 'queue_prefix_map');
+      }
+    }
+  } catch (prefixErr) {
+    console.warn('[ROOM RENAME PREFIX MAP SYNC ERROR]', prefixErr);
+  }
+
+  invalidateFacilityMetadataCache('cubicles');
 
   return NextResponse.json({ success: true });
 }
