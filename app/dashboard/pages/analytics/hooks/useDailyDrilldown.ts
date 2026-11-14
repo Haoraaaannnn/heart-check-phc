@@ -10,6 +10,7 @@
 'use client';
 
 import { useState, useCallback, useRef, useEffect } from 'react';
+import { supabase } from '@/lib/supabase';
 
 export interface DrilldownStage {
   /** Unique stage identifier (e.g., kiosk_to_registration_wait). */
@@ -109,10 +110,17 @@ export function useDailyDrilldown(initialDate: string | null = null) {
   const cacheRef = useRef<Record<string, DailyDrilldownData>>({});
   const activeControllerRef = useRef<AbortController | null>(null);
 
-  const fetchDrilldown = useCallback((dateStr: string) => {
+  const fetchDrilldown = useCallback(async (dateStr: string) => {
+    const trimmedDate = dateStr.trim();
+    if (!/^\d{4}-\d{2}-\d{2}$/.test(trimmedDate)) {
+      setError('Invalid date parameter format.');
+      setLoading(false);
+      return;
+    }
+
     // 1. Check local cache
-    if (cacheRef.current[dateStr]) {
-      setDrilldownData(cacheRef.current[dateStr]);
+    if (cacheRef.current[trimmedDate]) {
+      setDrilldownData(cacheRef.current[trimmedDate]);
       setLoading(false);
       setError(null);
       return;
@@ -129,39 +137,70 @@ export function useDailyDrilldown(initialDate: string | null = null) {
     setLoading(true);
     setError(null);
 
+    const timeoutDurationMs = 10_000;
     const timeoutId = setTimeout(() => {
       controller.abort();
-    }, 10_000); // 10-second resilient timeout
+    }, timeoutDurationMs);
 
-    const baseUrl = process.env.NEXT_PUBLIC_API_URL || 'http://localhost:8000';
+    try {
+      const { data: sessionData, error: sessionError } = await supabase.auth.getSession();
+      if (sessionError || !sessionData.session?.access_token) {
+        clearTimeout(timeoutId);
+        if (activeControllerRef.current === controller) {
+          setError('Authentication session not found. Please log in.');
+          setLoading(false);
+          activeControllerRef.current = null;
+        }
+        return;
+      }
 
-    fetch(`${baseUrl}/api/daily-drilldown?date=${encodeURIComponent(dateStr)}`, {
-      signal: controller.signal,
-    })
-      .then((res) => {
+      if (controller.signal.aborted) {
         clearTimeout(timeoutId);
-        if (!res.ok) {
-          throw new Error(`Server returned status ${res.status}`);
-        }
-        return res.json() as Promise<DailyDrilldownData>;
-      })
-      .then((json) => {
-        cacheRef.current[dateStr] = json;
-        setDrilldownData(json);
-        setLoading(false);
-        setError(null);
-        activeControllerRef.current = null;
-      })
-      .catch((err: any) => {
-        clearTimeout(timeoutId);
-        if (err.name === 'AbortError') {
-          // Ignore cancelled requests due to date switching
-          return;
-        }
-        setError(err.message || 'Failed to load drill-down metrics');
-        setLoading(false);
-        activeControllerRef.current = null;
+        return;
+      }
+
+      const headers: Record<string, string> = {
+        Authorization: `Bearer ${sessionData.session.access_token}`,
+      };
+
+      const baseUrl = process.env.NEXT_PUBLIC_API_URL || 'http://localhost:8000';
+      const response = await fetch(`${baseUrl}/api/daily-drilldown?date=${encodeURIComponent(trimmedDate)}`, {
+        signal: controller.signal,
+        headers,
       });
+
+      clearTimeout(timeoutId);
+
+      if (!response.ok) {
+        if (response.status === 401) {
+          throw new Error('Session expired or unauthorized. Please re-login.');
+        }
+        if (response.status === 403) {
+          throw new Error('Forbidden: Insufficient privileges for analytics drill-down.');
+        }
+        throw new Error(`Server returned status ${response.status}`);
+      }
+
+      const json = (await response.json()) as DailyDrilldownData;
+      cacheRef.current[trimmedDate] = json;
+
+      if (activeControllerRef.current === controller) {
+        setDrilldownData(json);
+        setError(null);
+        setLoading(false);
+        activeControllerRef.current = null;
+      }
+    } catch (err: unknown) {
+      clearTimeout(timeoutId);
+      if (controller.signal.aborted || (err instanceof DOMException && err.name === 'AbortError')) {
+        return;
+      }
+      if (activeControllerRef.current === controller) {
+        setError(err instanceof Error ? err.message : 'Failed to load drill-down metrics');
+        setLoading(false);
+        activeControllerRef.current = null;
+      }
+    }
   }, []);
 
   const selectDate = useCallback(
