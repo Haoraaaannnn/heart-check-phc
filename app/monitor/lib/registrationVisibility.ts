@@ -12,14 +12,24 @@ export function isVisibleRegistrationPatient(patient: RegistrationSnapshot): boo
 }
 
 /**
- * Keeps a staffed counter on screen while its existing intake queue drains during a break.
- * @param options - Current physical counter status and live ticket snapshot.
+ * Resolves visible registration counters for public waiting room displays.
+ * When showAllCounters is enabled, displays all administratively active counters
+ * so monitors show open and unavailable desks simultaneously.
+ *
+ * @param options - Current physical counter status, live ticket snapshot, and optional visibility mode.
  * @returns Visible counter numbers; this function never grants assignment or transfer permission.
  */
 export function visibleRegistrationCounters(options: {
   counters: Pick<OccupiedCounterInfo, 'counter_number' | 'active' | 'occupied' | 'on_break'>[];
   patients: RegistrationSnapshot[];
+  showAllCounters?: boolean;
 }): number[] {
+  if (options.showAllCounters) {
+    return options.counters
+      .filter(counter => counter.active !== false)
+      .map(counter => counter.counter_number)
+      .sort((first, second) => first - second);
+  }
   const occupiedQueues = new Set(options.patients.filter(isVisibleRegistrationPatient).map(patient => patient.counter));
   return options.counters.filter(counter => counter.active && counter.occupied && (!counter.on_break || occupiedQueues.has(counter.counter_number)))
     .map(counter => counter.counter_number).sort((first, second) => first - second);

@@ -33,23 +33,21 @@ test('A break counter stays visible only while it has a live unfinished intake t
   assert.deepEqual([...counterRules.filterEligibleCounters(counters, 'Consultation').map(counter => counter.counter_number)], [2]);
 });
 
-test('The standard registration monitor removes a break counter as soon as its final patient leaves', () => {
+test('The standard registration monitor keeps all active counters open and shows unavailable for unoccupied counters', () => {
   let cursor = 0; const jsx = (type, props) => ({ type, props });
   const api = load('app/monitor/components/RegistrationLayout.tsx', {
     'react/jsx-runtime': { jsx, jsxs: jsx }, react: { useState: initial => [cursor++ === 0 ? counters : typeof initial === 'function' ? initial() : initial, () => {}],
       useRef: value => ({ current: value }), useEffect() {}, useMemo: callback => callback() },
-    '@/lib/counters': {}, '@/lib/supabase': { supabase: {} }, '@/app/monitor/lib/registrationVisibility': rules,
+    '@/lib/counters': {}, '@/lib/facilities': { DEFAULT_COUNTERS: [1, 2, 3, 4, 5] }, '@/lib/supabase': { supabase: {} },
+    '@/app/monitor/lib/registrationVisibility': rules,
     '@/utils/formatTicketSpeech': {}, '@/app/monitor/hooks/useMonitorCalls': { useMonitorCalls() {} }, '@/app/monitor/lib/playMonitorSpeech': {},
-    '@/app/monitor/constants/monitorStyles': { MONITOR_STYLES: { registrationLayout: {} } },
+    '@/app/monitor/constants/monitorStyles': { MONITOR_STYLES: { registrationLayout: { fourGridContainer: 'fourGridContainer' } } },
     '@/app/monitor/constants/monitorTexts': { MONITOR_TEXTS: { registrationLayout: {} } },
   });
-  /** Finds the monitor's actual column grid without reproducing its visibility calculation. */
-  function columnCount(patients) {
-    cursor = 0; const tree = api.RegistrationLayout({ patients });
-    return tree.props.children.props.children.props.style.gridTemplateColumns;
-  }
-  assert.equal(columnCount([patient]), 'repeat(2, minmax(0, 1fr))');
-  assert.equal(columnCount([]), 'repeat(1, minmax(0, 1fr))');
+  cursor = 0; const treeWithPatient = api.RegistrationLayout({ patients: [patient] });
+  cursor = 0; const treeEmpty = api.RegistrationLayout({ patients: [] });
+  assert.equal(treeWithPatient.props.children.props.children.props.className, 'fourGridContainer');
+  assert.equal(treeEmpty.props.children.props.children.props.className, 'fourGridContainer');
 });
 
 test('The custom monitor retains break patients but does not count their counter as open', async () => {
