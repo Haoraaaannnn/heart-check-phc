@@ -27,6 +27,23 @@ export async function syncDoctorAccounts(options: { db: SupabaseClient; authId?:
   const accountRows: unknown = accounts; const doctorRows: unknown = doctors;
   if (accountError || doctorError || !Array.isArray(accountRows) || !Array.isArray(doctorRows) ||
       !accountRows.every(isRecord) || !doctorRows.every(isRecord)) throw new Error('Doctor accounts could not be loaded.');
+  // When performing directory-wide sync, purge any unlinked or non-doctor records
+  if (!options.authId) {
+    const validDoctorAuthIds = new Set(
+      accountRows
+        .map(row => (typeof row.auth_id === 'string' ? row.auth_id : null))
+        .filter((id): id is string => Boolean(id))
+    );
+    const orphanDoctors = doctorRows.filter(
+      row => typeof row.id === 'string' && (!row.auth_id || !validDoctorAuthIds.has(row.auth_id as string))
+    );
+    if (orphanDoctors.length > 0) {
+      const orphanIds = orphanDoctors.map(row => row.id as string);
+      await db.from('cubicle').update({ doctorId: null }).in('doctorId', orphanIds);
+      await db.from('doctors').delete().in('id', orphanIds);
+    }
+  }
+
   const linked = new Set(doctorRows.map(row => row.auth_id));
   const missing: { auth_id: string; full_name: string; active: boolean }[] = [];
   for (const account of accountRows) {

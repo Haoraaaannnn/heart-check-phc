@@ -11,8 +11,10 @@ function parseDoctor(value: unknown): Doctor | null {
   if (!isDoctorRecord(value) || typeof value.id !== 'string' || typeof value.full_name !== 'string' ||
       typeof value.active !== 'boolean' || !(value.specialty == null || typeof value.specialty === 'string') ||
       !(value.auth_id == null || typeof value.auth_id === 'string')) return null;
+  const userId = typeof value.userId === 'number' && Number.isSafeInteger(value.userId) ? value.userId : null;
+  const username = typeof value.username === 'string' ? value.username : null;
   return { id: value.id, full_name: value.full_name, active: value.active,
-    specialty: value.specialty ?? null, auth_id: value.auth_id ?? null };
+    specialty: value.specialty ?? null, auth_id: value.auth_id ?? null, userId, username };
 }
 
 /** @param value - External station row. @returns Validated station or null. */

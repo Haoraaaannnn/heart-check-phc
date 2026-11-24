@@ -135,6 +135,8 @@ export type Doctor = {
   auth_id?: string | null;
   active: boolean;
   created_at?: string;
+  userId?: number | null;
+  username?: string | null;
 };
 export type CubicleSelectorType = {
   id: number;
