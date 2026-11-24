@@ -140,9 +140,11 @@ export function QuickAssignDropdown({
   }, [pendingTarget, onClose]);
 
   const isFromCubicle = sourceType === 'cubicle';
-  const availableCubicles = cubicles.filter(
-    c => !currentCubicleNum || c.cubicleNum !== currentCubicleNum
-  );
+  const availableCubicles = cubicles.filter(c => {
+    if (currentCubicleNum && c.cubicleNum === currentCubicleNum) return false;
+    // Only show stations that have an available assigned doctor or active staff account
+    return Boolean(cubicleDoctorMap[c.cubicleNum] || c.occupiedBy);
+  });
 
   /**
    * Dispatches assignment with in-button spinner and closes the modal.

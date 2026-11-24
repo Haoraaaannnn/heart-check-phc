@@ -47,8 +47,20 @@ python_backend/__pycache__/
 python_backend/data_entries
 *.pyc
 
-# Obsidian && 2nd Brain
+# Obsidian && images
 .obsidian
+
+# Thesis Research Artifacts & Local Documents (Local Only - Preserved on Disk)
+*.pdf
+*.bak
+*.backup
+/docs/flowcharts/
+/docs/paper/
+/docs/simulation/
+/docs/checklists/
+/docs/reports/
+python_backend/output/
+
 
 # Local Supabase Docker Demo Stack
 /supabase/

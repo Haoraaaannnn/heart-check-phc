@@ -37,12 +37,32 @@ export async function GET(request: Request) {
     if (access.admin || access.role === 'nurse' || access.role === 'doctor') {
       await syncDoctorAccounts({ db: access.db, ...(access.role === 'doctor' ? { authId: access.authId } : {}) });
     }
-    const [doctorsRes, userCubiclesRes] = await Promise.all([
+    const [doctorsRes, userCubiclesRes, doctorUsersRes] = await Promise.all([
       access.db.from('doctors').select('id,full_name,specialty,active,auth_id').order('full_name'),
       access.db.from('user_cubicles').select('cubicle_id, user_id, users(id, username)'),
+      access.db.from('users').select('id, username, auth_id').eq('role', 'doctor'),
     ]);
     const doctorRows: unknown = doctorsRes.data;
     if (doctorsRes.error || !Array.isArray(doctorRows) || !doctorRows.every(isDoctorRecord)) throw new Error('Directory read failed.');
+
+    const userByAuth = new Map<string, { userId: number; username: string }>();
+    for (const u of (doctorUsersRes.data ?? []) as Array<Record<string, unknown>>) {
+      if (typeof u.auth_id === 'string' && typeof u.id === 'number' && typeof u.username === 'string') {
+        userByAuth.set(u.auth_id, { userId: u.id, username: u.username });
+      }
+    }
+
+    // Only present physicians backed by real authenticated doctor accounts
+    const verifiedDoctorRows = doctorRows
+      .filter(doc => typeof doc.auth_id === 'string' && userByAuth.has(doc.auth_id))
+      .map(doc => {
+        const u = userByAuth.get(doc.auth_id as string);
+        return {
+          ...doc,
+          userId: u?.userId ?? null,
+          username: u?.username ?? null,
+        };
+      });
 
     const cubicleOccupancy: Record<number, { userId: number; username: string }> = {};
     for (const item of (userCubiclesRes.data ?? []) as Array<Record<string, unknown>>) {
@@ -57,9 +77,11 @@ export async function GET(request: Request) {
     }));
 
     const linkedIds = new Set(enrichedCubicles.filter((station: Record<string, unknown>) => typeof station.id === 'number' && access.editableIds.includes(station.id as number)).map((station: Record<string, unknown>) => station.doctorId));
-    const editableDoctorIds = doctorRows.flatMap(doctor => typeof doctor.id === 'string' &&
-      (access.admin || linkedIds.has(doctor.id)) ? [doctor.id] : []);
-    return NextResponse.json(parseDoctorDirectory({ doctors: doctorRows, cubicles: enrichedCubicles,
+    const editableDoctorIds = verifiedDoctorRows.flatMap(doctor => {
+      const docId = 'id' in doctor && typeof doctor.id === 'string' ? doctor.id : null;
+      return docId && (access.admin || linkedIds.has(docId)) ? [docId] : [];
+    });
+    return NextResponse.json(parseDoctorDirectory({ doctors: verifiedDoctorRows, cubicles: enrichedCubicles,
       canManageDirectory: access.admin, editableCubicleIds: access.editableIds, editableDoctorIds }), { headers: HEADERS });
   } catch {
     return NextResponse.json({ error: 'Unable to load doctor accounts and assignments. Please retry.' }, { status: 503, headers: HEADERS });
@@ -87,9 +109,13 @@ async function saveDoctor(options: { db: SupabaseClient; body: Record<string, un
     const { data, error } = await db.from('doctors').update({ active: body.active }).eq('id', body.id).select('id').maybeSingle();
     return !error && isDoctorRecord(data) && data.id === body.id;
   }
+  if (body.action === 'create') {
+    // Physician profiles must correspond to real user accounts created in Superadmin
+    return false;
+  }
   const fields = doctorFields(body);
   if (!fields || (body.action === 'update' && !isDoctorId(body.id))) return false;
-  const query = body.action === 'create' ? db.from('doctors').insert(fields) : db.from('doctors').update(fields).eq('id', body.id);
+  const query = db.from('doctors').update(fields).eq('id', body.id);
   const { data, error } = await query.select('id').maybeSingle();
   return !error && isDoctorRecord(data) && isDoctorId(data.id);
 }
@@ -98,7 +124,7 @@ async function saveDoctor(options: { db: SupabaseClient; body: Record<string, un
 async function assignDoctor(options: { db: SupabaseClient; body: Record<string, unknown> }): Promise<{ ok: boolean; error?: string }> {
   const { db, body } = options;
   if (typeof body.cubicleId !== 'number' || !Number.isSafeInteger(body.cubicleId) || body.cubicleId < 1 ||
-      !(body.doctorId === null || isDoctorId(body.doctorId)) || !(body.expectedDoctorId === null || isDoctorId(body.expectedDoctorId))) {
+      !(body.doctorId === null || isDoctorId(body.doctorId))) {
     return { ok: false, error: 'Invalid cubicle or physician identifier.' };
   }
 
@@ -156,16 +182,30 @@ async function assignDoctor(options: { db: SupabaseClient; body: Record<string, 
       await db.from('user_cubicles').insert({ user_id: doctorUserId, cubicle_id: body.cubicleId });
     }
   } else if (cubicleOccupant) {
-    // Unassigning: cannot unassign if an active logged-in account is in the cubicle
-    const occupantUser = cubicleOccupant.users as { username?: string } | null;
-    return {
-      ok: false,
-      error: `Cannot unassign this cubicle because ${occupantUser?.username || 'a staff member'} is currently logged in.`,
-    };
+    // Unassigning: check if the occupant is the doctor currently assigned to this cubicle
+    const { data: currentCubicle } = await db.from('cubicle').select('doctorId').eq('id', body.cubicleId).maybeSingle();
+    let currentDoctorUserId: number | null = null;
+    if (currentCubicle?.doctorId) {
+      const { data: curDoc } = await db.from('doctors').select('auth_id').eq('id', currentCubicle.doctorId).maybeSingle();
+      if (curDoc?.auth_id) {
+        const { data: u } = await db.from('users').select('id').eq('auth_id', curDoc.auth_id).maybeSingle();
+        if (u?.id && typeof u.id === 'number') currentDoctorUserId = u.id;
+      }
+    }
+
+    const occupantUser = cubicleOccupant.users as { username?: string; id?: number } | null;
+    if (occupantUser && currentDoctorUserId && occupantUser.id === currentDoctorUserId) {
+      // It is the doctor themselves being unassigned - release user_cubicles so the station is freed
+      await db.from('user_cubicles').delete().eq('cubicle_id', body.cubicleId).eq('user_id', currentDoctorUserId);
+    } else if (occupantUser) {
+      return {
+        ok: false,
+        error: `Cannot unassign this cubicle because ${occupantUser.username || 'a staff member'} is currently logged in.`,
+      };
+    }
   }
 
-  let query = db.from('cubicle').update({ doctorId: body.doctorId }).eq('id', body.cubicleId);
-  query = body.expectedDoctorId === null ? query.is('doctorId', null) : query.eq('doctorId', body.expectedDoctorId);
+  const query = db.from('cubicle').update({ doctorId: body.doctorId }).eq('id', body.cubicleId);
   const { data, error } = await query.select('id,doctorId').maybeSingle();
   const saved = !error && isDoctorRecord(data) && data.id === body.cubicleId && data.doctorId === body.doctorId;
   return saved ? { ok: true } : { ok: false, error: 'Cubicle assignment could not be saved. Please retry.' };

@@ -56,10 +56,10 @@ export const STATUS_STYLES: Record<StatusGroupKey, StatusStyle> = {
   serving: {
     label: 'Serving',
     badge:
-      'bg-emerald-100 text-emerald-800 border border-emerald-300 dark:bg-emerald-950/70 dark:text-emerald-300 dark:border-emerald-800/80',
-    dot: 'bg-emerald-500 animate-pulse',
-    text: 'text-emerald-700 dark:text-emerald-400',
-    hex: '#10b981',
+      'bg-blue-100 text-blue-800 border border-blue-300 dark:bg-blue-950/70 dark:text-blue-300 dark:border-blue-800/80',
+    dot: 'bg-blue-500 animate-pulse',
+    text: 'text-blue-700 dark:text-blue-400',
+    hex: '#2563eb',
   },
   idle: {
     label: 'Idle',

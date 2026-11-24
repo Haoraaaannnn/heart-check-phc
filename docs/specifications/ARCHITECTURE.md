@@ -165,6 +165,36 @@ Forecasting is deliberately framed as a **strategic policy decision-support tool
 | Icons              | Boxicons (`boxicons`), centralized via `constants/icons.ts`                      |
 | Auth               | Supabase Auth + `@supabase/ssr`                                                  |
 
+## Network Resilience & Weak-Signal Architecture (Dual-Mode)
+
+At PHC's Outpatient Department, network traffic over hospital WiFi or mobile hotspots can experience packet delay or temporary drops. The system employs a dual-mode resilience layer ensuring zero queue disruption:
+
+1. **Supabase WebSocket Socket Tuning (`lib/supabase.ts`):**
+   - `heartbeatIntervalMs: 25_000`: Keep-alive pings sent every 25 seconds for prompt disconnect detection.
+   - `timeout: 60_000`: Grace window extended to 60 seconds, preventing premature channel tear-downs during temporary lag.
+   - `reconnectAfterMs`: Exponential stepped backoff (2s floor, 10s ceiling).
+2. **Monotonic Fetch Sequence Guard (Anti-Teleportation):**
+   - State-fetching hooks maintain a monotonic request counter (`fetchSeqRef`). Stale, out-of-order HTTP responses delayed in transit are discarded, ensuring fresh data is never overwritten by delayed queries.
+3. **Channel Health & 2-Second Hysteresis Buffer:**
+   - Prevents rapid poll start/stop thrashing when WebSocket status flickers between `SUBSCRIBED` and `TIMED_OUT`. A 2-second grace buffer is enforced before falling back to interval polling.
+4. **Concurrency & Trailing-Edge Throttle (500ms):**
+   - Colliding requests from WebSocket events and fallback timers are throttled with a 500ms lock, firing trailing queries only when the window clears.
+5. **Offline Write-Ahead Logging (WAL) Outbox:**
+   - Nurse and Transfer stations maintain an IndexedDB outbox queue (`lib/offlineQueue.ts`). If clinical status mutations occur during an internet drop, writes are committed to the local browser database and automatically replayed in strict order when connectivity restores.
+
+---
+
+## Architectural Philosophy: The Decoupled Standard
+
+The engineering standard of Heart Check PHC is the strict separation of presentation, user-facing text, visual styling, layout mechanics, and business logic:
+
+1. **Presentation Layer (`components/`):** Pure composable UI assembling JSX. Monolithic files mixing state, styling, and copy are strictly prohibited.
+2. **Text Dictionaries (`constants/<feature>Texts.ts`):** All bilingual (Filipino / English) labels, button titles, modal copy, and table headers are centralized as immutable `as const` dictionaries.
+3. **Style & Token Dictionaries (`constants/<feature>Styles.ts` or `<feature>.ts`):** All styling tokens, Tailwind class strings, and dimensional measurements are exported as typed constants.
+4. **Custom Hooks (`hooks/`):** Encapsulate real-time subscriptions, Supabase queries, and optimistic mutations.
+
+---
+
 ## Known Architectural Trade-offs (for thesis documentation)
 
 - **Single unified `patients` table** for both live queue and historical data, rather than two separate tables — chosen to avoid duplicating logic across live/historical code paths and to keep forecasting queries simple. Rows are distinguished via `is_historical`.
@@ -173,4 +203,4 @@ Forecasting is deliberately framed as a **strategic policy decision-support tool
 
 ---
 
-_Last updated: 2026-10-15 — Reflects system state including RLS/middleware security pass, transfer dashboard Pointer Drag and FIFO queue redesign, and reusable component integration._
+_Last updated: 2026-11-24 — Consolidated platform architecture integrating Next.js 15 App Router, FastAPI analytics pipeline, M/M/1 queueing models, Dual-Mode Network Resilience, and the Decoupled Standard._

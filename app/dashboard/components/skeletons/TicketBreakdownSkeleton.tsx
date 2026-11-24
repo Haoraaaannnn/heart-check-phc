@@ -50,7 +50,7 @@ export function TicketBreakdownSkeleton(): React.ReactElement {
             <div key={key} className={D.row}>
               <div className={D.dot} />
               <div className={D.rowLabel} />
-              <div className="flex-1" />
+              <div className={D.barTrack} />
               <div className={D.count} />
             </div>
           ))}

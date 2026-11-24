@@ -236,22 +236,16 @@ export function DoctorsPanel() {
             </h2>
             <p className="text-xs text-slate-500 dark:text-[#888888] mt-0.5">
               {canManageDirectory
-                ? 'Select a physician below to view and assign cubicle stations, or add new physicians.'
+                ? 'Select a physician below to view and assign cubicle stations.'
                 : editableCubicleIds.length > 0
                 ? 'Select a physician to assign to your stations. You can edit doctors assigned to your stations.'
                 : 'Doctor directory. An administrator must assign a station before you can edit its doctors.'}
             </p>
           </div>
 
-          {canManageDirectory && (
-            <button
-              type="button"
-              onClick={handleAddClick}
-              className={doctorsPanelStyles.addDoctorBtn}
-            >
-              {transferTexts.addDoctorBtn}
-            </button>
-          )}
+          <div className="text-xs text-slate-500 dark:text-slate-400 font-medium">
+            Doctor accounts are managed under <span className="font-semibold text-slate-700 dark:text-slate-300">Superadmin &gt; Users</span>
+          </div>
         </div>
 
         {/* Quick Stats Pill Strip */}
@@ -532,7 +526,15 @@ export function DoctorsPanel() {
                       const isThisDoctor = !!selectedDoctor && cube.doctorId === selectedDoctor.id;
                       const isOtherDoctor = !!cube.doctorId && !isThisDoctor;
                       const isSaving = savingCubicleId === cube.id;
-                      const isOccupiedByOther = Boolean(cube.occupiedBy && (!selectedDoctor || cube.occupiedBy.username !== selectedDoctor.full_name));
+                      const isOccupiedByOther = Boolean(
+                        cube.occupiedBy && (
+                          !selectedDoctor || (
+                            selectedDoctor.userId != null
+                              ? cube.occupiedBy.userId !== selectedDoctor.userId
+                              : cube.occupiedBy.username !== (selectedDoctor.username || selectedDoctor.full_name)
+                          )
+                        )
+                      );
 
                       return (
                         <button
@@ -585,11 +587,11 @@ export function DoctorsPanel() {
 
                           {/* Doctor Assignment Status */}
                           <div className="w-full">
-                            {cube.occupiedBy ? (
+                            {isOccupiedByOther ? (
                               <div className="flex flex-col gap-1 min-w-0">
                                 <span className="text-[9px] leading-tight px-1.5 py-0.5 rounded font-medium bg-amber-50 dark:bg-amber-950/50 text-amber-700 dark:text-amber-300 border border-amber-200 dark:border-amber-900/50 whitespace-nowrap inline-flex items-center gap-1">
                                   <i className="bx bx-lock-alt text-xs text-amber-600 dark:text-amber-400" />
-                                  <span>In use: {cube.occupiedBy.username} (Locked)</span>
+                                  <span>In use: {cube.occupiedBy?.username} (Locked)</span>
                                 </span>
                               </div>
                             ) : assignedName ? (

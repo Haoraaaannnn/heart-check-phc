@@ -40,6 +40,7 @@ export default function TicketStatusBreakdown({
       title={C.title}
       subtitle={C.subtitle}
       icon={C.icon}
+      className="h-full flex flex-col justify-between"
       action={
         isMounted && stats.todayCount > 0 ? (
           <span className="inline-flex items-center gap-1.5 rounded-lg border border-line bg-surface-muted px-2.5 py-1 text-xs font-semibold text-content-muted whitespace-nowrap">
@@ -66,43 +67,45 @@ export default function TicketStatusBreakdown({
         />
 
         <div className={S.list}>
-          {TICKET_BREAKDOWN_ROWS.map((row) => {
-            const style = STATUS_STYLES[row.group];
-            const rowCount = isMounted ? stats[row.statKey] : 0;
-            const rowPct =
-              isMounted && stats.todayCount > 0
-                ? Math.round((rowCount / stats.todayCount) * 100)
-                : 0;
+          <div className={S.rowsWrap}>
+            {TICKET_BREAKDOWN_ROWS.map((row) => {
+              const style = STATUS_STYLES[row.group];
+              const rowCount = isMounted ? stats[row.statKey] : 0;
+              const rowPct =
+                isMounted && stats.todayCount > 0
+                  ? Math.round((rowCount / stats.todayCount) * 100)
+                  : 0;
 
-            return (
-              <div key={row.group} className={S.row}>
-                <span className="flex min-w-[110px] flex-1 items-center gap-2 font-semibold text-content-muted whitespace-nowrap">
-                  <span className={S.dot} style={{ backgroundColor: style.hex }} />
-                  {row.label}
-                </span>
-                <div className={S.barTrack}>
-                  <div
-                    className={S.barFill}
-                    style={{
-                      width: `${Math.min(rowPct, 100)}%`,
-                      backgroundColor: style.hex,
-                    }}
-                  />
-                </div>
-                <div className="flex items-center justify-end gap-1.5 shrink-0 min-w-[70px]">
-                  <span className={`${S.count} ${style.text}`}>
-                    {isMounted ? rowCount : '--'}
+              return (
+                <div key={row.group} className={S.row}>
+                  <span className={S.rowLabel}>
+                    <span className={S.dot} style={{ backgroundColor: style.hex }} />
+                    {row.label}
                   </span>
-                  <span className="text-[11px] font-mono font-semibold text-content-muted tabular-nums">
-                    ({isMounted ? `${rowPct}%` : '--'})
-                  </span>
+                  <div className={S.barTrack}>
+                    <div
+                      className={S.barFill}
+                      style={{
+                        width: `${Math.min(rowPct, 100)}%`,
+                        backgroundColor: style.hex,
+                      }}
+                    />
+                  </div>
+                  <div className={S.countGroup}>
+                    <span className={`${S.count} ${style.text}`}>
+                      {isMounted ? rowCount : '--'}
+                    </span>
+                    <span className={S.percent}>
+                      ({isMounted ? `${rowPct}%` : '--'})
+                    </span>
+                  </div>
                 </div>
-              </div>
-            );
-          })}
+              );
+            })}
+          </div>
 
           {isMounted && stats.todayCount > 0 && (
-            <div className="mt-2 pt-2 border-t border-line/60 flex items-center justify-between text-[11px] text-content-muted">
+            <div className={S.footerRow}>
               <span>Operational Yield:</span>
               <span className="font-mono font-bold text-content">
                 {stats.served} out of {stats.todayCount} completed ({servedPercent}%)
