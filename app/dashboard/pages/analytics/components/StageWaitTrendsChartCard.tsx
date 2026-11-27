@@ -173,8 +173,13 @@ export default function StageWaitTrendsChartCard({
             <ComposedChart
               data={data}
               margin={{ top: 12, right: 12, left: -16, bottom: 0 }}
-              onClick={(e: { activePayload?: Array<{ payload?: StageTrendRow }> } | null) => {
-                const row = e?.activePayload?.[0]?.payload;
+              onClick={(nextState) => {
+                if (typeof nextState.activeLabel === 'string' && nextState.activeLabel) {
+                  onSelectDate(nextState.activeLabel);
+                  return;
+                }
+                const idx = typeof nextState.activeTooltipIndex === 'number' ? nextState.activeTooltipIndex : -1;
+                const row = idx >= 0 ? data[idx] : undefined;
                 const dateVal = row?.date || row?.visit_date;
                 if (dateVal) onSelectDate(dateVal);
               }}
