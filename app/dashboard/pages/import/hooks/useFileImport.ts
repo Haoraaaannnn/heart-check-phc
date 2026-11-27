@@ -26,7 +26,7 @@ import {
 } from '@/app/dashboard/pages/import/types/importTypes';
 import { supabase } from '@/lib/supabase';
 
-const API_BASE = process.env.NEXT_PUBLIC_API_URL || 'http://localhost:8000';
+const API_BASE = process.env.NEXT_PUBLIC_API_URL || '';
 
 /**
  * Hook return contract for managing the file import workflow.

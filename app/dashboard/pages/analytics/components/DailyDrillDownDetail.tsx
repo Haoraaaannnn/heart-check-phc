@@ -11,6 +11,7 @@
 'use client';
 
 import { formatMinutesToHMS } from '@/utils/formatMinutesToHMS';
+import AnalyticsExplainer from '@/app/dashboard/pages/analytics/components/AnalyticsExplainer';
 import { ANALYTICS_STYLES } from '@/app/dashboard/pages/analytics/constants/analytics';
 import { ANALYTICS_TEXTS } from '@/app/dashboard/pages/analytics/constants/analyticsTexts';
 import type { DailyDrilldownData } from '@/app/dashboard/pages/analytics/hooks/useDailyDrilldown';
@@ -73,6 +74,7 @@ export default function DailyDrillDownDetail({
 }: DailyDrillDownDetailProps) {
   const S = ANALYTICS_STYLES.drilldown;
   const T = ANALYTICS_TEXTS.drilldown;
+  const stageTexts = ANALYTICS_TEXTS.bottleneckTable;
   const tableStyles = ANALYTICS_STYLES.table;
   const badgeStyles = ANALYTICS_STYLES.levelBadge;
 
@@ -128,6 +130,9 @@ export default function DailyDrillDownDetail({
           </button>
         </div>
       </div>
+
+      {/* Plain-English Guide */}
+      <AnalyticsExplainer summary={T.explainer} />
 
       {/* Loading state with fallback metrics */}
       {loading && !drilldown && (
@@ -188,7 +193,7 @@ export default function DailyDrillDownDetail({
           </span>
           <div className="mt-1 flex items-center gap-2 flex-wrap">
             <span className={`${badgeStyles.base} ${statusBadgeClass}`}>
-              {systemStatus}
+              {stageTexts.levels[systemStatus as keyof typeof stageTexts.levels] ?? systemStatus}
             </span>
           </div>
         </div>
@@ -234,10 +239,18 @@ export default function DailyDrillDownDetail({
               <tbody>
                 {stages.map((stage) => {
                   const badgeStyle = badgeStyles[stage.level] || badgeStyles['No Data'];
+                  const stageDef = stageTexts.stageDefinitions[stage.stage_key];
                   return (
                     <tr key={stage.stage_key} className={tableStyles.row}>
-                      <td className={`${tableStyles.td} whitespace-nowrap font-bold text-content`}>
-                        {stage.stage_label}
+                      <td className={`${tableStyles.td} min-w-[210px]`}>
+                        <span className="font-bold text-content whitespace-nowrap">
+                          {stage.stage_label}
+                        </span>
+                        {stageDef && (
+                          <p className="mt-0.5 text-xs text-content-subtle leading-snug">
+                            {stageDef}
+                          </p>
+                        )}
                       </td>
                       <td className={`${tableStyles.td} whitespace-nowrap font-mono text-content`}>
                         {stage.level === 'No Data' ? '—' : formatMinutesToHMS(stage.avg_minutes)}
@@ -247,7 +260,7 @@ export default function DailyDrillDownDetail({
                       </td>
                       <td className={`${tableStyles.td} whitespace-nowrap`}>
                         <span className={`${badgeStyles.base} ${badgeStyle}`}>
-                          {stage.level}
+                          {stageTexts.levels[stage.level] ?? stage.level}
                         </span>
                       </td>
                       <td className={`${tableStyles.td} max-w-md leading-relaxed text-content-muted break-words`}>

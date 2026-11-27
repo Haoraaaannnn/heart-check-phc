@@ -140,7 +140,7 @@ export const METRIC_RANGE_CONFIG: Record<
     onQueueSubtitle: 'Waiting to be served',
     servedLabel: 'Served',
     servedSubtitle: "Today's completed",
-    avgWaitSubtitle: 'Active queue average',
+    avgWaitSubtitle: 'Ticket creation to doctor call (active + completed)',
   },
   yesterday: {
     totalLabel: 'Total Patients Yesterday',
@@ -149,7 +149,7 @@ export const METRIC_RANGE_CONFIG: Record<
     onQueueSubtitle: 'Ended day waiting',
     servedLabel: 'Served Yesterday',
     servedSubtitle: 'Completed consultations',
-    avgWaitSubtitle: 'Full day average',
+    avgWaitSubtitle: 'Full day average (ticket to doctor call)',
   },
   '7d': {
     totalLabel: 'Total Patients (7 Days)',
@@ -158,7 +158,7 @@ export const METRIC_RANGE_CONFIG: Record<
     onQueueSubtitle: 'Cumulative pending',
     servedLabel: 'Total Served (7d)',
     servedSubtitle: 'Completed consultations',
-    avgWaitSubtitle: '7-day rolling average',
+    avgWaitSubtitle: '7-day average wait before seeing doctor',
   },
   mtd: {
     totalLabel: 'Total Patients (Month-to-Date)',
@@ -167,7 +167,7 @@ export const METRIC_RANGE_CONFIG: Record<
     onQueueSubtitle: 'Month pending tickets',
     servedLabel: 'Total Served (MTD)',
     servedSubtitle: 'Month completed consultations',
-    avgWaitSubtitle: 'Month rolling average',
+    avgWaitSubtitle: 'Month average wait before seeing doctor',
   },
 };
 
@@ -204,13 +204,13 @@ export const METRIC_CARDS: readonly MetricCardConfig[] = [
 export const SECTIONS = {
   serviceQueue: {
     title: 'Service Queue Overview',
-    subtitle: 'Patients in queue right now',
+    subtitle: 'Share of active patients waiting or in service across each clinic',
     icon: 'bx-bar-chart-alt-2',
     centerLabel: 'Patients',
   },
   ticketStatus: {
     title: 'Ticket Status Breakdown',
-    subtitle: "Today's tickets by status",
+    subtitle: "How today's tickets are split between served, serving, waiting, and idle",
     icon: 'bx-pie-chart-alt-2',
     centerLabel: 'Served',
   },
@@ -232,7 +232,7 @@ export const SECTIONS = {
   },
   hourlyArrivals: {
     title: 'Hourly Patient Arrivals',
-    subtitle: 'Number of patients registered per hour today',
+    subtitle: 'Total patients checked in during each clinic hour today',
     icon: 'bx-bar-chart-alt-2',
     loadingText: 'Loading chart...',
     tooltipSeriesLabel: 'Arrivals',

@@ -1,70 +1,106 @@
 /**
- * @fileoverview Volume and wait-time charts component for the Analytics dashboard page.
+ * @fileoverview Volume and wait-time charts orchestrator component for the Analytics dashboard.
  *
- * Renders daily patient volume with 7-day trailing moving average,
- * hourly arrival pattern curves, and stage-by-stage wait time trends.
- * Supports interactive chart drill-down on dates and bars to inspect
- * that day's granular hourly arrivals and queue bottleneck breakdown.
+ * Coordinates daily patient volume, hourly arrival/process curves, interactive
+ * single-day drill-down inspection, and stage-by-stage wait time trends.
  *
  * @module app/dashboard/pages/analytics/components/VolumeAndWaitCharts
  */
 
 'use client';
 
-import { useState, useMemo } from 'react';
-import {
-  ComposedChart,
-  Bar,
-  Line,
-  Cell,
-  ReferenceLine,
-  XAxis,
-  YAxis,
-  CartesianGrid,
-  Tooltip,
-  Legend,
-  ResponsiveContainer,
-} from 'recharts';
-import DashboardCard from '@/app/dashboard/components/DashboardCard';
+import { useMemo } from 'react';
 import { useDashboardTheme } from '@/app/dashboard/hooks/useDashboardTheme';
-import {
-  ANALYTICS_STYLES,
-  STAGE_LINES,
-  DRILLDOWN_CHART_COLORS,
-  HOURLY_STAGE_COLORS,
-} from '@/app/dashboard/pages/analytics/constants/analytics';
+import { ANALYTICS_STYLES } from '@/app/dashboard/pages/analytics/constants/analytics';
 import { ANALYTICS_TEXTS } from '@/app/dashboard/pages/analytics/constants/analyticsTexts';
-import { useDailyDrilldown } from '@/app/dashboard/pages/analytics/hooks/useDailyDrilldown';
+import {
+  useDailyDrilldown,
+  type DrilldownHourlyPoint,
+} from '@/app/dashboard/pages/analytics/hooks/useDailyDrilldown';
+import DailyVolumeChartCard, {
+  type DailyVolumeRow,
+} from '@/app/dashboard/pages/analytics/components/DailyVolumeChartCard';
+import HourlyPatternChartCard, {
+  type HourlyChartPoint,
+} from '@/app/dashboard/pages/analytics/components/HourlyPatternChartCard';
+import StageWaitTrendsChartCard, {
+  type StageTrendRow,
+} from '@/app/dashboard/pages/analytics/components/StageWaitTrendsChartCard';
 import DailyDrillDownDetail from '@/app/dashboard/pages/analytics/components/DailyDrillDownDetail';
-import { formatMinutesToHMS, formatMinutesToHM, formatDurationString } from '@/utils/formatMinutesToHMS';
+
+interface RawDailySummaryRow {
+  date?: string;
+  visit_date?: string;
+  total_patients?: number;
+  avg_total_time?: number | null;
+  avg_wait_registration?: number | null;
+  avg_service_registration?: number | null;
+  avg_wait_consultation?: number | null;
+  avg_service_consultation?: number | null;
+  avg_service_carryout?: number | null;
+}
+
+interface RawHourlyPatternRow {
+  hour: number;
+  time_label: string;
+  avg_patients?: number;
+  kiosk_patients?: number | null;
+  reg_patients?: number;
+  consult_patients?: number;
+  carryout_patients?: number;
+  avg_wait_registration?: number | null;
+  avg_service_registration?: number | null;
+  avg_wait_consultation?: number | null;
+  avg_service_consultation?: number | null;
+  avg_service_carryout?: number | null;
+}
 
 interface VolumeAndWaitChartsProps {
   /** Array of daily summary logs. */
-  dailySummary: any[];
+  dailySummary: RawDailySummaryRow[];
   /** Array of hourly pattern intake points. */
-  hourlyPattern: any[];
+  hourlyPattern: RawHourlyPatternRow[];
 }
 
+type EnrichedDailyRow = DailyVolumeRow & StageTrendRow & {
+  avg_total_time?: number;
+  avg_wait_registration?: number;
+  avg_wait_consultation?: number;
+};
+
 /**
- * Adds a trailing N-day moving average alongside the raw daily volume.
+ * Adds a trailing N-day moving average alongside raw daily volume.
  *
- * @param data - Array of daily records.
+ * @param data - Normalized daily records.
  * @param windowSize - Rolling window day count.
- * @returns Array of daily records enriched with moving_avg.
+ * @returns Array of daily records enriched with `moving_avg`.
  */
-function withMovingAverage(data: any[], windowSize: number) {
+function withMovingAverage(
+  data: Array<RawDailySummaryRow & { date: string; visit_date: string }>,
+  windowSize: number
+): EnrichedDailyRow[] {
   return data.map((row, i) => {
     const start = Math.max(0, i - windowSize + 1);
     const windowSlice = data.slice(start, i + 1);
     const avg =
       windowSlice.reduce((sum, r) => sum + (r.total_patients || 0), 0) / windowSlice.length;
-    return { ...row, moving_avg: Math.round(avg * 10) / 10 };
+    return {
+      date: row.date,
+      visit_date: row.visit_date,
+      total_patients: row.total_patients ?? 0,
+      moving_avg: Math.round(avg * 10) / 10,
+      avg_wait_registration: row.avg_wait_registration ?? undefined,
+      avg_service_registration: row.avg_service_registration ?? undefined,
+      avg_wait_consultation: row.avg_wait_consultation ?? undefined,
+      avg_service_consultation: row.avg_service_consultation ?? undefined,
+      avg_service_carryout: row.avg_service_carryout ?? undefined,
+      avg_total_time: row.avg_total_time ?? undefined,
+    };
   });
 }
 
 /**
  * Multi-chart section displaying volume history, hourly patterns, and wait time curves.
- * Allows interactive drill-down on any date or bar across timeline charts.
  *
  * @param props - Component properties.
  * @returns JSX element.
@@ -86,7 +122,6 @@ export default function VolumeAndWaitCharts({
     retry,
   } = useDailyDrilldown();
 
-  // Normalize daily records to ensure date / visit_date consistency
   const enrichedDaily = useMemo(() => {
     const normalized = (dailySummary || []).map((row) => {
       const dateVal = row.date || row.visit_date || '';
@@ -99,11 +134,10 @@ export default function VolumeAndWaitCharts({
     return withMovingAverage(normalized, 7);
   }, [dailySummary]);
 
-  // Extract fallback summary from daily records if drilldown is still loading
   const fallbackSummary = useMemo(() => {
     if (!selectedDate) return undefined;
     const match = enrichedDaily.find(
-      (d) => (d.date || d.visit_date) === selectedDate,
+      (d) => (d.date || d.visit_date) === selectedDate
     );
     if (!match) return undefined;
     return {
@@ -113,9 +147,6 @@ export default function VolumeAndWaitCharts({
       avg_wait_consultation: match.avg_wait_consultation,
     };
   }, [selectedDate, enrichedDaily]);
-
-  type HourlyViewMode = 'volume' | 'waittime' | 'intake';
-  const [hourlyMode, setHourlyMode] = useState<HourlyViewMode>('volume');
 
   const isHistorical = Boolean(
     drilldownData?.is_historical ?? drilldownData?.summary?.is_historical
@@ -132,12 +163,12 @@ export default function VolumeAndWaitCharts({
     );
   }, [selectedDate, drilldownData, hourlyPattern]);
 
-  // Merge hourly distribution data when a date is selected for comparison
-  const activeHourlyData = useMemo(() => {
+  const activeHourlyData: HourlyChartPoint[] = useMemo(() => {
     const baseHourly = hourlyPattern || [];
-    if (!selectedDate || !drilldownData?.hourly_pattern || drilldownData.hourly_pattern.length === 0) {
+    if (!selectedDate || !drilldownData?.hourly_pattern?.length) {
       return baseHourly.map((hp) => ({
-        ...hp,
+        hour: hp.hour,
+        time_label: hp.time_label,
         avg_patients: hp.avg_patients ?? 0,
         selected_day_patients: undefined,
         kiosk_patients: hp.kiosk_patients ?? undefined,
@@ -152,17 +183,18 @@ export default function VolumeAndWaitCharts({
       }));
     }
 
-    const drilldownMap = new Map<number, any>();
+    const drilldownMap = new Map<number, DrilldownHourlyPoint>();
     for (const point of drilldownData.hourly_pattern) {
       drilldownMap.set(point.hour, point);
     }
 
     return baseHourly.map((hp) => {
       const dd = drilldownMap.get(hp.hour);
-      const dayIntake = dd?.avg_patients ?? 0;
       return {
-        ...hp,
-        selected_day_patients: dayIntake,
+        hour: hp.hour,
+        time_label: hp.time_label,
+        avg_patients: hp.avg_patients ?? 0,
+        selected_day_patients: dd?.avg_patients ?? 0,
         kiosk_patients:
           dd?.kiosk_patients !== null && dd?.kiosk_patients !== undefined
             ? dd.kiosk_patients
@@ -192,7 +224,6 @@ export default function VolumeAndWaitCharts({
     fontWeight: 600,
   };
 
-  /** Handles date selection from any timeline chart. */
   const handleDateSelect = (dateStr?: string) => {
     if (!dateStr) return;
     selectDate(dateStr);
@@ -200,7 +231,6 @@ export default function VolumeAndWaitCharts({
 
   return (
     <div className="flex flex-col gap-6">
-      {/* Interactive Drill-Down Tip / Notice */}
       {!selectedDate && (
         <div className={ANALYTICS_STYLES.drilldown.hintBanner}>
           <div className={ANALYTICS_STYLES.drilldown.hintContent}>
@@ -210,368 +240,27 @@ export default function VolumeAndWaitCharts({
         </div>
       )}
 
-      {/* Top 2 Charts: Daily Volume & Hourly Arrival */}
       <div className={ANALYTICS_STYLES.chartGrid}>
-        {/* 1. Daily Volume Chart */}
-        <DashboardCard
-          title={T.dailyVolumeTitle}
-          subtitle={
-            selectedDate
-              ? `${T.dailyVolumeSubtitle} (Selected: ${selectedDate})`
-              : T.dailyVolumeSubtitle
-          }
-          icon="bx-bar-chart-alt-2"
-        >
-          <div className="h-[280px] w-full">
-            <ResponsiveContainer width="100%" height="100%">
-              <ComposedChart
-                data={enrichedDaily}
-                margin={{ top: 10, right: 10, left: -20, bottom: 0 }}
-                onClick={(e: any) => {
-                  if (e && e.activePayload && e.activePayload.length > 0) {
-                    const row = e.activePayload[0].payload;
-                    const dateVal = row.date || row.visit_date;
-                    if (dateVal) handleDateSelect(dateVal);
-                  }
-                }}
-                style={{ cursor: 'pointer' }}
-              >
-                <CartesianGrid strokeDasharray="3 3" stroke={gridColor} />
-                <XAxis
-                  dataKey="date"
-                  tick={{ fontSize: 10, fill: axisColor }}
-                  tickFormatter={(d: string) => (d ? d.slice(5) : '')}
-                  axisLine={{ stroke: gridColor }}
-                  tickLine={false}
-                />
-                <YAxis
-                  allowDecimals={false}
-                  tick={{ fontSize: 10, fill: axisColor }}
-                  axisLine={{ stroke: gridColor }}
-                  tickLine={false}
-                />
-                <Tooltip
-                  contentStyle={tooltipStyle}
-                  formatter={(val: any, name: any, item: any) => {
-                    const row = item?.payload;
-                    const rowDate = row?.date || row?.visit_date;
-                    const label = name === T.series.dailyPatients ? `${val} patients` : val;
-                    return [
-                      label,
-                      rowDate === selectedDate
-                        ? `${name} (Active Selection)`
-                        : `${name} — ${T.chartClickTooltip} ${rowDate}`,
-                    ];
-                  }}
-                />
-                <Legend wrapperStyle={{ fontSize: '11px', paddingTop: '10px' }} />
-                <Bar
-                  dataKey="total_patients"
-                  name={T.series.dailyPatients}
-                  radius={[3, 3, 0, 0]}
-                  cursor="pointer"
-                  onClick={(data: any) => {
-                    const dateVal = data?.date || data?.visit_date;
-                    if (dateVal) handleDateSelect(dateVal);
-                  }}
-                >
-                  {enrichedDaily.map((entry) => {
-                    const entryDate = entry.date || entry.visit_date;
-                    const isSelected = entryDate === selectedDate;
-                    return (
-                      <Cell
-                        key={`volume-bar-${entryDate}`}
-                        fill={
-                          isSelected
-                            ? DRILLDOWN_CHART_COLORS.barActive
-                            : DRILLDOWN_CHART_COLORS.barNormal
-                        }
-                        fillOpacity={selectedDate ? (isSelected ? 1 : 0.45) : 0.85}
-                        stroke={isSelected ? '#1e40af' : undefined}
-                        strokeWidth={isSelected ? 1.5 : 0}
-                      />
-                    );
-                  })}
-                </Bar>
-                <Line
-                  type="monotone"
-                  dataKey="moving_avg"
-                  name={T.series.movingAvg}
-                  stroke={DRILLDOWN_CHART_COLORS.movingAvg}
-                  strokeWidth={2.5}
-                  strokeDasharray="4 4"
-                  dot={false}
-                />
-                {selectedDate && (
-                  <ReferenceLine
-                    x={selectedDate}
-                    stroke={DRILLDOWN_CHART_COLORS.referenceLine}
-                    strokeDasharray="3 3"
-                    strokeWidth={2}
-                  />
-                )}
-              </ComposedChart>
-            </ResponsiveContainer>
-          </div>
-        </DashboardCard>
+        <DailyVolumeChartCard
+          data={enrichedDaily}
+          selectedDate={selectedDate}
+          axisColor={axisColor}
+          gridColor={gridColor}
+          onSelectDate={handleDateSelect}
+        />
 
-        {/* 2. Hourly Arrival Pattern Chart */}
-        <DashboardCard
-          title={T.hourlyPatternTitle}
-          subtitle={
-            selectedDate
-              ? `${T.hourlyDrilldownSubtitle} (${selectedDate})`
-              : T.hourlyPatternSubtitle
-          }
-          icon="bx-time-five"
-        >
-          {/* Top Controls: Mode Switcher & Drill-down Active Badge */}
-          <div className="mb-3 flex flex-col gap-2.5 sm:flex-row sm:items-center sm:justify-between text-xs">
-            {/* View Mode Toggle */}
-            <div className={ANALYTICS_STYLES.hourlyToggle.container}>
-              <button
-                type="button"
-                onClick={() => setHourlyMode('volume')}
-                className={`${ANALYTICS_STYLES.hourlyToggle.btnBase} ${
-                  hourlyMode === 'volume'
-                    ? ANALYTICS_STYLES.hourlyToggle.btnActive
-                    : ANALYTICS_STYLES.hourlyToggle.btnIdle
-                }`}
-              >
-                <i className="bx bx-group text-xs" />
-                <span>{T.modes.volume}</span>
-              </button>
-              <button
-                type="button"
-                onClick={() => setHourlyMode('waittime')}
-                className={`${ANALYTICS_STYLES.hourlyToggle.btnBase} ${
-                  hourlyMode === 'waittime'
-                    ? ANALYTICS_STYLES.hourlyToggle.btnActive
-                    : ANALYTICS_STYLES.hourlyToggle.btnIdle
-                }`}
-              >
-                <i className="bx bx-timer text-xs" />
-                <span>{T.modes.waittime}</span>
-              </button>
-              <button
-                type="button"
-                onClick={() => setHourlyMode('intake')}
-                className={`${ANALYTICS_STYLES.hourlyToggle.btnBase} ${
-                  hourlyMode === 'intake'
-                    ? ANALYTICS_STYLES.hourlyToggle.btnActive
-                    : ANALYTICS_STYLES.hourlyToggle.btnIdle
-                }`}
-              >
-                <i className="bx bx-line-chart text-xs" />
-                <span>{T.modes.intake}</span>
-              </button>
-            </div>
-
-            {/* Drilldown status & reset button if date active */}
-            {selectedDate && (
-              <div className="flex items-center gap-2">
-                <span className="inline-flex items-center gap-1.5 rounded-lg bg-slate-100 text-slate-800 dark:bg-[#242424] dark:text-[#f5f5f5] px-2.5 py-1 font-bold border border-slate-200 dark:border-[#2e2e2e]">
-                  <i className="bx bx-calendar text-xs" />
-                  <span>Drill-Down: {selectedDate}</span>
-                </span>
-                <button
-                  type="button"
-                  onClick={clearSelectedDate}
-                  className="inline-flex items-center gap-1 text-[11px] font-semibold text-content-muted hover:text-content transition cursor-pointer underline"
-                >
-                  <i className="bx bx-reset text-xs" />
-                  <span>{T.resetButton}</span>
-                </button>
-              </div>
-            )}
-          </div>
-
-          {/* Historical notice when kiosk ticketing data is unavailable */}
-          {selectedDate && (isHistorical || !hasKioskData) && (
-            <div className="mb-2.5 flex items-center gap-2 rounded-lg bg-amber-50/80 px-3 py-1.5 text-[11px] font-medium text-amber-800 border border-amber-200/80 dark:bg-amber-950/30 dark:text-amber-300 dark:border-amber-800/40">
-              <i className="bx bx-info-circle text-sm shrink-0" />
-              <span>{T.historicalNotice}</span>
-            </div>
-          )}
-
-          <div className="h-[280px] w-full">
-            <ResponsiveContainer width="100%" height="100%">
-              <ComposedChart
-                data={activeHourlyData}
-                margin={{ top: 10, right: 10, left: -20, bottom: 0 }}
-              >
-                <CartesianGrid strokeDasharray="3 3" stroke={gridColor} />
-                <XAxis
-                  dataKey="time_label"
-                  tick={{ fontSize: 10, fill: axisColor }}
-                  axisLine={{ stroke: gridColor }}
-                  tickLine={false}
-                />
-                <YAxis
-                  allowDecimals={hourlyMode === 'waittime'}
-                  tick={{ fontSize: 10, fill: axisColor }}
-                  tickFormatter={
-                    hourlyMode === 'waittime'
-                      ? (mins: number) => formatMinutesToHM(mins)
-                      : (pts: number) => `${pts}`
-                  }
-                  axisLine={{ stroke: gridColor }}
-                  tickLine={false}
-                />
-                <Tooltip
-                  contentStyle={tooltipStyle}
-                  formatter={(val: any, name: any) => {
-                    if (val === undefined || val === null) {
-                      return ['N/A', name];
-                    }
-                    if (hourlyMode === 'waittime') {
-                      return [formatDurationString(val), name];
-                    }
-                    return [`${val} patients`, name];
-                  }}
-                />
-                <Legend wrapperStyle={{ fontSize: '11px', paddingTop: '10px' }} />
-
-                {/* 1. Patients by Stage Mode */}
-                {hourlyMode === 'volume' && (
-                  <>
-                    {hasKioskData && (
-                      <Line
-                        type="monotone"
-                        dataKey="kiosk_patients"
-                        name={T.series.kioskPatients}
-                        stroke={HOURLY_STAGE_COLORS.kiosk}
-                        strokeWidth={2}
-                        dot={{ r: 3, fill: HOURLY_STAGE_COLORS.kiosk }}
-                        connectNulls={false}
-                      />
-                    )}
-                    <Line
-                      type="monotone"
-                      dataKey="reg_patients"
-                      name={T.series.regPatients}
-                      stroke={HOURLY_STAGE_COLORS.registration}
-                      strokeWidth={2}
-                      dot={{ r: 3, fill: HOURLY_STAGE_COLORS.registration }}
-                    />
-                    <Line
-                      type="monotone"
-                      dataKey="consult_patients"
-                      name={T.series.withDoctorPatients}
-                      stroke={HOURLY_STAGE_COLORS.withDoctor}
-                      strokeWidth={2}
-                      dot={{ r: 3, fill: HOURLY_STAGE_COLORS.withDoctor }}
-                    />
-                    <Line
-                      type="monotone"
-                      dataKey="carryout_patients"
-                      name={T.series.carryoutPatients}
-                      stroke={HOURLY_STAGE_COLORS.carryout}
-                      strokeWidth={2}
-                      dot={{ r: 3, fill: HOURLY_STAGE_COLORS.carryout }}
-                    />
-                    <Line
-                      type="monotone"
-                      dataKey="avg_patients"
-                      name={T.series.rangeAverage}
-                      stroke={HOURLY_STAGE_COLORS.benchmark}
-                      strokeWidth={1.5}
-                      strokeDasharray="3 3"
-                      dot={false}
-                      strokeOpacity={0.65}
-                    />
-                  </>
-                )}
-
-                {/* 2. Wait Times by Stage Mode */}
-                {hourlyMode === 'waittime' && (
-                  <>
-                    {hasKioskData && (
-                      <Line
-                        type="monotone"
-                        dataKey="avg_wait_registration"
-                        name={T.series.waitReg}
-                        stroke={HOURLY_STAGE_COLORS.kiosk}
-                        strokeWidth={2}
-                        dot={{ r: 3, fill: HOURLY_STAGE_COLORS.kiosk }}
-                        connectNulls={false}
-                      />
-                    )}
-                    <Line
-                      type="monotone"
-                      dataKey="avg_service_registration"
-                      name={T.series.servReg}
-                      stroke={HOURLY_STAGE_COLORS.registration}
-                      strokeWidth={2}
-                      dot={{ r: 3, fill: HOURLY_STAGE_COLORS.registration }}
-                      connectNulls={false}
-                    />
-                    <Line
-                      type="monotone"
-                      dataKey="avg_wait_consultation"
-                      name={T.series.waitConsult}
-                      stroke={HOURLY_STAGE_COLORS.waitDoctor}
-                      strokeWidth={2}
-                      dot={{ r: 3, fill: HOURLY_STAGE_COLORS.waitDoctor }}
-                      connectNulls={false}
-                    />
-                    <Line
-                      type="monotone"
-                      dataKey="avg_service_consultation"
-                      name={T.series.servConsult}
-                      stroke={HOURLY_STAGE_COLORS.withDoctor}
-                      strokeWidth={2}
-                      dot={{ r: 3, fill: HOURLY_STAGE_COLORS.withDoctor }}
-                      connectNulls={false}
-                    />
-                    <Line
-                      type="monotone"
-                      dataKey="avg_service_carryout"
-                      name={T.series.servCarry}
-                      stroke={HOURLY_STAGE_COLORS.carryout}
-                      strokeWidth={2}
-                      dot={{ r: 3, fill: HOURLY_STAGE_COLORS.carryout }}
-                      connectNulls={false}
-                    />
-                  </>
-                )}
-
-                {/* 3. Overall Intake Mode */}
-                {hourlyMode === 'intake' && (
-                  <>
-                    {selectedDate && (
-                      <Line
-                        type="monotone"
-                        dataKey="selected_day_patients"
-                        name={`${T.series.selectedDayPatients} (${selectedDate})`}
-                        stroke={HOURLY_STAGE_COLORS.intake}
-                        strokeWidth={2.5}
-                        dot={{ r: 3.5, fill: HOURLY_STAGE_COLORS.intake }}
-                      />
-                    )}
-                    <Line
-                      type="monotone"
-                      dataKey="avg_patients"
-                      name={selectedDate ? T.series.rangeAverage : T.series.avgPatients}
-                      stroke={HOURLY_STAGE_COLORS.benchmark}
-                      strokeWidth={selectedDate ? 1.5 : 2.5}
-                      strokeDasharray={selectedDate ? '3 3' : undefined}
-                      dot={
-                        selectedDate
-                          ? false
-                          : { r: 3, fill: HOURLY_STAGE_COLORS.benchmark }
-                      }
-                      strokeOpacity={selectedDate ? 0.65 : 1}
-                    />
-                  </>
-                )}
-              </ComposedChart>
-            </ResponsiveContainer>
-          </div>
-        </DashboardCard>
+        <HourlyPatternChartCard
+          data={activeHourlyData}
+          selectedDate={selectedDate}
+          isHistorical={isHistorical}
+          hasKioskData={hasKioskData}
+          axisColor={axisColor}
+          gridColor={gridColor}
+          tooltipStyle={tooltipStyle}
+          onClearSelectedDate={clearSelectedDate}
+        />
       </div>
 
-      {/* 3. Detailed Daily Drill-Down Panel (shown when a date is selected) */}
       {selectedDate && (
         <DailyDrillDownDetail
           date={selectedDate}
@@ -584,90 +273,14 @@ export default function VolumeAndWaitCharts({
         />
       )}
 
-      {/* 4. Stage-by-Stage Wait Time Trends (Timeline Chart) */}
-      <DashboardCard
-        title={T.stageWaitTitle}
-        subtitle={
-          selectedDate
-            ? `${T.stageWaitSubtitle} (Selected: ${selectedDate})`
-            : T.stageWaitSubtitle
-        }
-        icon="bx-timer"
-      >
-        <div className="h-[300px] w-full">
-          <ResponsiveContainer width="100%" height="100%">
-            <ComposedChart
-              data={enrichedDaily}
-              margin={{ top: 10, right: 10, left: -20, bottom: 0 }}
-              onClick={(e: any) => {
-                if (e && e.activePayload && e.activePayload.length > 0) {
-                  const row = e.activePayload[0].payload;
-                  const dateVal = row.date || row.visit_date;
-                  if (dateVal) handleDateSelect(dateVal);
-                }
-              }}
-              style={{ cursor: 'pointer' }}
-            >
-              <CartesianGrid strokeDasharray="3 3" stroke={gridColor} />
-              <XAxis
-                dataKey="date"
-                tick={{ fontSize: 10, fill: axisColor }}
-                tickFormatter={(d: string) => (d ? d.slice(5) : '')}
-                axisLine={{ stroke: gridColor }}
-                tickLine={false}
-              />
-              <YAxis
-                tick={{ fontSize: 10, fill: axisColor }}
-                tickFormatter={(mins: number) => formatMinutesToHM(mins)}
-                axisLine={{ stroke: gridColor }}
-                tickLine={false}
-              />
-              <Tooltip
-                contentStyle={tooltipStyle}
-                formatter={(val: any, name: any, item: any) => {
-                  const row = item?.payload;
-                  const rowDate = row?.date || row?.visit_date;
-                  const durationStr =
-                    typeof val === 'number' ? formatMinutesToHMS(val) : '—';
-                  return [
-                    durationStr,
-                    rowDate === selectedDate
-                      ? `${name} (Active Selection)`
-                      : `${name} — ${T.chartClickTooltip} ${rowDate}`,
-                  ];
-                }}
-              />
-              <Legend wrapperStyle={{ fontSize: '11px', paddingTop: '10px' }} />
-              {STAGE_LINES.map((line) => (
-                <Line
-                  key={line.dataKey}
-                  type="monotone"
-                  dataKey={line.dataKey}
-                  name={line.name}
-                  stroke={line.color}
-                  strokeWidth={2}
-                  dot={false}
-                  connectNulls={false}
-                />
-              ))}
-              {selectedDate && (
-                <ReferenceLine
-                  x={selectedDate}
-                  stroke={DRILLDOWN_CHART_COLORS.referenceLine}
-                  strokeDasharray="3 3"
-                  strokeWidth={2}
-                  label={{
-                    value: selectedDate.slice(5),
-                    fill: axisColor,
-                    fontSize: 10,
-                    position: 'top',
-                  }}
-                />
-              )}
-            </ComposedChart>
-          </ResponsiveContainer>
-        </div>
-      </DashboardCard>
+      <StageWaitTrendsChartCard
+        data={enrichedDaily}
+        selectedDate={selectedDate}
+        axisColor={axisColor}
+        gridColor={gridColor}
+        tooltipStyle={tooltipStyle}
+        onSelectDate={handleDateSelect}
+      />
     </div>
   );
 }

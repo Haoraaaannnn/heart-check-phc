@@ -15,7 +15,7 @@
 import { ExportDateMode, ExportFileFormat, ExportOptions } from '@/app/dashboard/pages/export/types/exportTypes';
 
 /** API base route for backend analytics requests. */
-export const API_BASE_URL = process.env.NEXT_PUBLIC_API_URL || 'http://localhost:8000';
+export const API_BASE_URL = process.env.NEXT_PUBLIC_API_URL || '';
 
 /** Network request timeout in milliseconds for export generation (30 seconds). */
 export const EXPORT_FETCH_TIMEOUT_MS = 30000;

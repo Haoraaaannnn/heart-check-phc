@@ -457,7 +457,7 @@ export function useOverviewData(): UseOverviewDataResult {
    */
   const fetchAvailableDates = useCallback(async () => {
     try {
-      const baseUrl = process.env.NEXT_PUBLIC_API_URL || 'http://localhost:8000';
+      const baseUrl = process.env.NEXT_PUBLIC_API_URL || '';
       const res = await fetch(`${baseUrl}/api/available-export-dates`);
       if (res.ok) {
         const data = (await res.json()) as { days?: string[] };

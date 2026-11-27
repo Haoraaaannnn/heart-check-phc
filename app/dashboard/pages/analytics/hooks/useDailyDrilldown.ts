@@ -163,7 +163,7 @@ export function useDailyDrilldown(initialDate: string | null = null) {
         Authorization: `Bearer ${sessionData.session.access_token}`,
       };
 
-      const baseUrl = process.env.NEXT_PUBLIC_API_URL || 'http://localhost:8000';
+      const baseUrl = process.env.NEXT_PUBLIC_API_URL || '';
       const response = await fetch(`${baseUrl}/api/daily-drilldown?date=${encodeURIComponent(trimmedDate)}`, {
         signal: controller.signal,
         headers,

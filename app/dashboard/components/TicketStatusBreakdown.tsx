@@ -106,7 +106,7 @@ export default function TicketStatusBreakdown({
 
           {isMounted && stats.todayCount > 0 && (
             <div className={S.footerRow}>
-              <span>Operational Yield:</span>
+              <span>Completion Rate:</span>
               <span className="font-mono font-bold text-content">
                 {stats.served} out of {stats.todayCount} completed ({servedPercent}%)
               </span>

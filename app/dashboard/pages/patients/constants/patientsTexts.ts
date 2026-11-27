@@ -46,13 +46,13 @@ export const PATIENTS_TEXTS = {
   charts: {
     distribution: {
       title: 'Service Distribution',
-      subtitle: 'Patient share by medical department',
-      historicalFallbackNote: 'No patients today — showing historical service mix',
+      subtitle: 'Share of patients across each medical department (% of total visits)',
+      historicalFallbackNote: 'No patients today — showing historical share across medical departments',
       empty: 'No service data available.',
     },
     hourlyFlow: {
       title: 'Hourly Patient Flow',
-      subtitle: 'Patient intake distribution across clinic hours',
+      subtitle: 'Total patient check-ins recorded during each clinic hour today',
       empty: 'No hourly flow recorded today.',
       patientsLabel: 'Patients',
     },
