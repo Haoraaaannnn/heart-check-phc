@@ -246,6 +246,59 @@ export const ANALYTICS_STYLES = {
     historicalPill: 'bg-amber-50 text-amber-700 border-amber-200 dark:bg-amber-950/40 dark:text-amber-300 dark:border-amber-800/60',
     livePill: 'bg-cyan-50 text-cyan-700 border-cyan-200 dark:bg-cyan-950/40 dark:text-cyan-300 dark:border-cyan-800/60',
   },
+
+  /** Plain-English explainer box used across cards and charts. */
+  explainer: {
+    root: 'rounded-xl border border-line bg-surface-muted/70 px-4 py-3 text-xs leading-relaxed text-content-muted flex flex-col gap-3',
+    topRow: 'flex flex-col gap-2 sm:flex-row sm:items-center sm:justify-between',
+    summaryText: 'text-xs leading-relaxed text-content-muted',
+    prefix: 'font-bold text-content',
+    toggleBtn:
+      'inline-flex items-center gap-1 self-start sm:self-auto shrink-0 rounded-lg border border-line bg-surface px-2.5 py-1 text-[11px] font-semibold text-content hover:bg-surface-muted transition cursor-pointer whitespace-nowrap',
+    detailsGrid: 'grid grid-cols-1 gap-2.5 border-t border-line pt-3 md:grid-cols-3',
+    detailCard: 'rounded-lg border border-line bg-surface p-3 flex flex-col gap-1',
+    detailLabel: 'text-[10px] font-bold uppercase tracking-wider text-content-subtle',
+    detailText: 'text-xs leading-relaxed text-content-muted',
+  },
+
+  /** Summary strip shown inside Daily Volume and other redesigned charts. */
+  chartStatsStrip: {
+    grid: 'grid grid-cols-2 gap-2.5 sm:grid-cols-4',
+    card: 'rounded-xl border border-line bg-surface-muted px-3 py-2.5 flex flex-col',
+    label: 'text-[10px] font-bold uppercase tracking-wider text-content-subtle',
+    value: 'mt-0.5 text-base font-extrabold text-content font-mono tabular-nums',
+    sub: 'text-[11px] text-content-muted',
+  },
+
+  /** Stage filter pills for Stage-by-Stage Wait Time Trends. */
+  stageFilter: {
+    bar: 'flex flex-wrap items-center justify-between gap-2.5',
+    pillGroup: 'flex flex-wrap items-center gap-1.5',
+    pillBase:
+      'inline-flex items-center gap-1.5 rounded-lg border px-2.5 py-1 text-[11px] font-semibold transition cursor-pointer select-none whitespace-nowrap',
+    pillActive: 'border-line bg-surface text-content shadow-2xs',
+    pillMuted: 'border-line/60 bg-surface-muted/40 text-content-subtle opacity-60 hover:opacity-90',
+    dot: 'h-2 w-2 rounded-full shrink-0',
+  },
+
+  /** Visual compliance progress bar inside PHCComplianceSummary. */
+  complianceBar: {
+    wrap: 'flex items-center gap-2.5 justify-end min-w-[140px]',
+    track: 'h-2 w-24 rounded-full bg-slate-200 dark:bg-[#262626] overflow-hidden shrink-0',
+    fill: 'h-full rounded-full transition-all duration-300',
+  },
+
+  /** Interpretation grid for Forecast statistics (Slope, R², AIC, σ²). */
+  forecastGuide: {
+    grid3: 'grid grid-cols-1 gap-3 md:grid-cols-3',
+    grid2: 'grid grid-cols-1 gap-3 md:grid-cols-2',
+    card: 'rounded-xl border border-line bg-surface-muted p-3.5 flex flex-col gap-1',
+    eyebrow: 'text-[10px] font-bold uppercase tracking-wider text-content-subtle',
+    headline: 'text-sm font-extrabold text-content',
+    explain: 'text-xs leading-relaxed text-content-muted',
+    cheatSheetGrid: 'grid grid-cols-1 gap-2.5 sm:grid-cols-2 lg:grid-cols-4 pt-1',
+    cheatCard: 'rounded-lg border border-line bg-surface-muted/60 p-3 flex flex-col gap-1',
+  },
 } as const;
 
 /** Chart color tokens for interactive drill-downs. */
@@ -254,6 +307,7 @@ export const DRILLDOWN_CHART_COLORS = {
   barActive: '#1d4ed8',
   barHover: '#2563eb',
   movingAvg: '#f59e0b',
+  overallAvg: '#64748b',
   hourlyDayIntake: '#2563eb',
   hourlyRangeAvg: '#cc3535',
   referenceLine: '#2563eb',
@@ -261,12 +315,12 @@ export const DRILLDOWN_CHART_COLORS = {
 
 /** Queue stage line colors for wait-time trend charts. */
 export const STAGE_LINES = [
-  { dataKey: 'avg_wait_registration', name: 'Kiosk Wait', color: '#06b6d4' },
-  { dataKey: 'avg_service_registration', name: 'Registration Duration', color: '#f59e0b' },
-  { dataKey: 'avg_wait_consultation', name: 'Wait for Doctor', color: '#8b5cf6' },
-  { dataKey: 'avg_service_consultation', name: 'With Doctor (Consultation)', color: '#10b981' },
-  { dataKey: 'avg_service_carryout', name: 'Carryout Duration', color: '#ec4899' },
-  { dataKey: 'avg_total_time', name: 'Total Journey', color: '#3b82f6' },
+  { dataKey: 'avg_wait_registration', name: 'Kiosk Wait', color: '#06b6d4', isTotal: false },
+  { dataKey: 'avg_service_registration', name: 'Registration Duration', color: '#f59e0b', isTotal: false },
+  { dataKey: 'avg_wait_consultation', name: 'Wait for Doctor', color: '#8b5cf6', isTotal: false },
+  { dataKey: 'avg_service_consultation', name: 'With Doctor (Consultation)', color: '#10b981', isTotal: false },
+  { dataKey: 'avg_service_carryout', name: 'Carryout Duration', color: '#ec4899', isTotal: false },
+  { dataKey: 'avg_total_time', name: 'Total Journey', color: '#3b82f6', isTotal: true },
 ] as const;
 
 /** Palette tokens for per-stage hourly distribution curves. */

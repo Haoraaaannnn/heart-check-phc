@@ -34,7 +34,7 @@ export function usePatientsAnalyticsData() {
         headers['Authorization'] = `Bearer ${session.access_token}`;
       }
 
-      const baseUrl = process.env.NEXT_PUBLIC_API_URL || 'http://localhost:8000';
+      const baseUrl = process.env.NEXT_PUBLIC_API_URL || '';
       const response = await fetch(`${baseUrl}/api/dashboard-data`, { headers });
       if (!response.ok) throw new Error(`Analytics API error: ${response.status}`);
       const analyticsData: AnalyticsData = await response.json();

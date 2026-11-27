@@ -2,7 +2,8 @@
  * @fileoverview Linear Regression Forecast component for the Analytics dashboard page.
  *
  * Charts historical registration points against the calculated linear regression line,
- * highlighting the next-day point forecast, slope, R² goodness of fit, and model comparisons.
+ * highlighting the next-day point forecast, plain-English interpretations of slope and R²,
+ * chart legend, custom tooltip, and algorithm comparison table.
  *
  * @module app/dashboard/pages/analytics/components/LRForecast
  */
@@ -17,28 +18,128 @@ import {
   YAxis,
   CartesianGrid,
   Tooltip,
+  Legend,
   ResponsiveContainer,
   ReferenceDot,
 } from 'recharts';
 import DashboardCard from '@/app/dashboard/components/DashboardCard';
+import AnalyticsExplainer from '@/app/dashboard/pages/analytics/components/AnalyticsExplainer';
 import { useDashboardTheme } from '@/app/dashboard/hooks/useDashboardTheme';
-import AlgorithmComparisonTable from '@/app/dashboard/pages/analytics/components/AlgorithmComparisonTable';
+import AlgorithmComparisonTable, {
+  type AlgorithmMetricEntry,
+} from '@/app/dashboard/pages/analytics/components/AlgorithmComparisonTable';
 import { ANALYTICS_STYLES } from '@/app/dashboard/pages/analytics/constants/analytics';
 import { ANALYTICS_TEXTS } from '@/app/dashboard/pages/analytics/constants/analyticsTexts';
 
+interface LRRawData {
+  labels?: string[];
+  actual?: number[];
+  lr_line?: number[];
+  trend?: string;
+  slope?: number;
+  r2?: number;
+  r_squared?: number;
+  forecast_date?: string;
+  forecast_value?: number;
+}
+
+interface LRChartPoint {
+  date?: string;
+  actual?: number | null;
+  lr_line?: number;
+  forecast?: number;
+}
+
+interface ComputationalForecastingData {
+  evaluation_metrics?: Record<string, AlgorithmMetricEntry>;
+  best_algorithm?: string;
+  algorithmic_conclusion?: string;
+  next_day_forecast?: number;
+}
+
 interface LRForecastProps {
   /** Raw linear regression stats from the backend. */
-  lrRaw: any;
+  lrRaw: LRRawData;
   /** Processed chart coordinates for scatter and regression lines. */
-  lrChartData: any[];
+  lrChartData: LRChartPoint[];
   /** Color string representing trend (e.g. rising/falling). */
   trendColor: string;
   /** Background color string representing trend. */
   trendBg: string;
   /** Computational forecasting summary object. */
-  computationalForecasting: any;
+  computationalForecasting?: ComputationalForecastingData;
   /** AIC value for ARIMA comparison. */
   arimaAic: number | null;
+}
+
+interface LRTooltipProps {
+  active?: boolean;
+  payload?: ReadonlyArray<{ payload?: LRChartPoint }>;
+  forecastDate?: string;
+}
+
+/**
+ * Custom plain-English tooltip for the Linear Regression chart.
+ */
+function LRChartTooltip({ active, payload, forecastDate }: LRTooltipProps) {
+  if (!active || !payload || payload.length === 0) return null;
+  const row = payload[0]?.payload;
+  if (!row) return null;
+
+  const isForecastPoint = Boolean(forecastDate && row.date === forecastDate);
+
+  return (
+    <div className="rounded-xl border border-line bg-surface p-3 shadow-lg text-xs">
+      <p className="font-extrabold text-content">
+        {row.date || '—'} {isForecastPoint ? '(Tomorrow Forecast)' : ''}
+      </p>
+      <div className="mt-1.5 flex flex-col gap-1">
+        {row.actual !== null && row.actual !== undefined && (
+          <div className="flex items-center justify-between gap-4">
+            <span className="text-content-muted">Actual Patients:</span>
+            <span className="font-mono font-bold text-blue-600 dark:text-blue-400">
+              {row.actual}
+            </span>
+          </div>
+        )}
+        {typeof row.lr_line === 'number' && (
+          <div className="flex items-center justify-between gap-4">
+            <span className="text-content-muted">
+              {isForecastPoint ? '5-Day Trend Forecast:' : 'Overall Trend Line:'}
+            </span>
+            <span className="font-mono font-bold text-amber-600 dark:text-amber-400">
+              {row.lr_line} patients
+            </span>
+          </div>
+        )}
+      </div>
+    </div>
+  );
+}
+
+/**
+ * Translates raw R² into a plain-English fit label.
+ */
+function describeR2Fit(r2: number | undefined): string {
+  if (r2 === undefined || isNaN(r2)) return 'Not enough data';
+  const pct = Math.round(r2 * 100);
+  if (r2 >= 0.6) return `${pct}% fit — steady straight-line trend`;
+  if (r2 >= 0.25) return `${pct}% fit — moderate trend with daily swings`;
+  return `${pct}% fit — high day-to-day variation (not a straight line)`;
+}
+
+/**
+ * Translates raw slope into an everyday patients-per-day description.
+ */
+function describeSlope(slope: number | undefined, trend: string | undefined): string {
+  if (slope === undefined || isNaN(slope)) return 'Steady';
+  const rounded = slope.toFixed(2);
+  if (Math.abs(slope) < 0.05 || trend === 'stable') {
+    return `Flat (${rounded} patients/day) — roughly steady overall`;
+  }
+  const direction = slope > 0 ? 'Rising' : 'Dropping';
+  const sign = slope > 0 ? '+' : '';
+  return `${direction} (${sign}${rounded} patients/clinic day on average)`;
 }
 
 /**
@@ -57,6 +158,7 @@ export default function LRForecast({
 }: LRForecastProps) {
   const { isDark } = useDashboardTheme();
   const T = ANALYTICS_TEXTS.forecasts.lr;
+  const G = ANALYTICS_STYLES.forecastGuide;
 
   const axisColor = isDark ? '#9ca3af' : '#6b7280';
   const gridColor = isDark ? 'rgba(255, 255, 255, 0.08)' : 'rgba(0, 0, 0, 0.08)';
@@ -100,7 +202,12 @@ export default function LRForecast({
       icon="bx-line-chart-down"
       action={trendBadge}
     >
-      <div className="flex flex-col gap-6">
+      <div className="flex flex-col gap-5">
+        <AnalyticsExplainer
+          summary={T.explainer.summary}
+          details={T.explainer.details}
+        />
+
         {/* Next Day Pill Banner */}
         <div className={ANALYTICS_STYLES.forecastPill}>
           <span className="text-xs font-semibold text-content-muted">
@@ -112,16 +219,42 @@ export default function LRForecast({
           </span>
         </div>
 
+        {/* Plain-English Interpretation Cards */}
+        <div className={G.grid3}>
+          <div className={G.card}>
+            <span className={G.eyebrow}>{T.cards.trendTitle}</span>
+            <span className={G.headline}>{describeSlope(lrRaw?.slope, lrRaw?.trend)}</span>
+            <p className={G.explain}>
+              Slope tells you how fast average daily volume is climbing or falling across the entire date range.
+            </p>
+          </div>
+          <div className={G.card}>
+            <span className={G.eyebrow}>{T.cards.r2Title}</span>
+            <span className={G.headline}>{describeR2Fit(r2Value)}</span>
+            <p className={G.explain}>
+              Measures how closely daily visits stick to a straight line (100% = perfect line; low % = normal daily ups and downs).
+            </p>
+          </div>
+          <div className={G.card}>
+            <span className={G.eyebrow}>{T.cards.forecastTitle}</span>
+            <span className={G.headline}>
+              {lrRaw?.forecast_value ?? 0} {T.patientsUnit} ({lrRaw?.forecast_date || '—'})
+            </span>
+            <p className={G.explain}>{T.cards.forecastDesc}</p>
+          </div>
+        </div>
+
         {/* Forecast Chart */}
-        <div className="h-[280px] w-full">
+        <div className="h-[290px] w-full">
           <ResponsiveContainer width="100%" height="100%">
             <ComposedChart
               data={lrChartData}
-              margin={{ top: 10, right: 10, left: -20, bottom: 0 }}
+              margin={{ top: 10, right: 12, left: -16, bottom: 0 }}
             >
-              <CartesianGrid strokeDasharray="3 3" stroke={gridColor} />
+              <CartesianGrid strokeDasharray="3 3" stroke={gridColor} vertical={false} />
               <XAxis
                 dataKey="date"
+                minTickGap={28}
                 tick={{ fontSize: 10, fill: axisColor }}
                 tickFormatter={(d: string) => (d ? d.slice(5) : '')}
                 axisLine={{ stroke: gridColor }}
@@ -133,41 +266,31 @@ export default function LRForecast({
                 axisLine={{ stroke: gridColor }}
                 tickLine={false}
               />
-              <Tooltip
-                contentStyle={{
-                  backgroundColor: 'var(--color-surface, #ffffff)',
-                  borderColor: 'var(--color-line, #e5e7eb)',
-                  borderRadius: '12px',
-                  boxShadow: '0 10px 25px -5px rgba(0, 0, 0, 0.1)',
-                  color: 'var(--color-content, #1f2937)',
-                  fontSize: '12px',
-                  fontWeight: 600,
-                }}
-              />
-              {/* Actual Observations */}
+              <Tooltip content={<LRChartTooltip forecastDate={lrRaw?.forecast_date} />} />
+              <Legend wrapperStyle={{ fontSize: '11px', paddingTop: '10px' }} />
+
               <Scatter
-                name="Actual"
+                name={T.legend.actual}
                 dataKey="actual"
                 fill="#3b82f6"
+                fillOpacity={0.75}
                 shape="circle"
               />
-              {/* Linear Regression Line */}
               <Line
                 type="monotone"
                 dataKey="lr_line"
-                name="Regression Trend"
+                name={T.legend.trend}
                 stroke="#f59e0b"
                 strokeWidth={2.5}
                 strokeDasharray="8 4"
                 dot={false}
                 connectNulls={true}
               />
-              {/* Highlight forecasted next day */}
               {lrRaw?.forecast_date && lrRaw?.forecast_value !== undefined && (
                 <ReferenceDot
                   x={lrRaw.forecast_date}
                   y={lrRaw.forecast_value}
-                  r={6}
+                  r={7}
                   fill="#cc3535"
                   stroke="#ffffff"
                   strokeWidth={2}
@@ -177,11 +300,11 @@ export default function LRForecast({
           </ResponsiveContainer>
         </div>
 
-        {/* Algorithm Comparison Table */}
         <AlgorithmComparisonTable
           evaluationMetrics={computationalForecasting?.evaluation_metrics}
           bestAlgorithm={computationalForecasting?.best_algorithm}
           arimaAic={arimaAic}
+          algorithmicConclusion={computationalForecasting?.algorithmic_conclusion}
         />
       </div>
     </DashboardCard>

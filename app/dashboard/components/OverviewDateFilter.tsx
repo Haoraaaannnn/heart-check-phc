@@ -122,7 +122,7 @@ export default function OverviewDateFilter({
   // Self-contained fallback fetch if externalDates is not provided
   const fetchDatesFallback = useCallback(async () => {
     try {
-      const baseUrl = process.env.NEXT_PUBLIC_API_URL || 'http://localhost:8000';
+      const baseUrl = process.env.NEXT_PUBLIC_API_URL || '';
       const res = await fetch(`${baseUrl}/api/available-export-dates`);
       if (res.ok) {
         const data = (await res.json()) as { days?: string[] };

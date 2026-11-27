@@ -128,7 +128,7 @@ export default function ExportExcelModal({
     let isCancelled = false;
     setIsLoadingDates(true);
 
-    const baseUrl = process.env.NEXT_PUBLIC_API_URL || 'http://localhost:8000';
+    const baseUrl = process.env.NEXT_PUBLIC_API_URL || '';
     supabase.auth.getSession().then(({ data: { session } }) => {
       const headers: Record<string, string> = {};
       if (session?.access_token) {
@@ -293,7 +293,7 @@ export default function ExportExcelModal({
     setSuccess(false);
 
     try {
-      const baseUrl = process.env.NEXT_PUBLIC_API_URL || 'http://localhost:8000';
+      const baseUrl = process.env.NEXT_PUBLIC_API_URL || '';
       const params = new URLSearchParams();
       let downloadFilename = 'phc_time_motion_export.xlsx';
 
